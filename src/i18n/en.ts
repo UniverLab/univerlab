@@ -243,24 +243,24 @@ export const en = {
     'astro-denoise': {
       need: 'Telescope surveys drown faint galaxies in sensor noise.',
       tagline:
-        'Denoising benchmark research on DESC DC2 / LSST astronomical data.',
+        'Reproducible benchmarking of denoising methods — BM3D vs U-Net — on simulated LSST DC2 images.',
       koan: 'Most of the universe arrives as noise.',
       lede:
-        'This research track benchmarks denoising methods on <strong>DESC DC2 / LSST</strong> simulated data — measuring what each method preserves, what it invents, and what it destroys, so that cleaned images remain honest scientific evidence.',
+        'This research track benchmarks a classical baseline and a learned model — <strong>BM3D and U-Net</strong> — on simulated <strong>Vera Rubin Observatory (LSST DC2)</strong> images, scored by <em>science-oriented</em> metrics: completeness and purity. The goal is not a prettier picture but honest evidence — every script, dataset and bibliographic card versioned for audit and repetition.',
       genesis: {
         kicker: 'Genesis',
-        title: 'The thesis ahead.',
+        title: 'The graduate thesis.',
         body:
-          'My undergraduate thesis. It hasn’t started yet — but the lab is built to receive it, and the work will land here as it begins.',
+          'My graduate thesis — today a proposal: scientific context, problem statement, the DC2 datasets, and a reproducible literature review assisted by active learning. There are no final results yet; the experiments come next, and they will land here in the open as they run.',
       },
       followLab: 'Follow the lab ↗',
-      papersSoon: 'papers & datasets in preparation',
+      papersSoon: 'proposal & datasets in preparation',
       questions: {
         kicker: 'Questions under study',
         items: [
-          'Which denoisers preserve photometry instead of repainting it?',
-          'How do classical and learned methods degrade at LSST depth?',
-          'Can a benchmark make “cleaner” mean “more truthful”, not just “smoother”?',
+          'Can a denoiser raise completeness without hurting purity — or does it invent sources that were never there?',
+          'How does the classical baseline (BM3D) compare to a learned model (U-Net) at LSST DC2 depth?',
+          'Can the whole benchmark be reproducible end to end — versioned data, scripts and bibliography?',
         ],
       },
     },

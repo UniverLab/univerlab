@@ -244,24 +244,24 @@ export const es: Dict = {
     'astro-denoise': {
       need: 'Los sondeos de telescopios ahogan galaxias tenues en ruido de sensor.',
       tagline:
-        'Investigación de benchmark de denoising sobre datos astronómicos DESC DC2 / LSST.',
+        'Benchmark reproducible de métodos de denoising — BM3D vs U-Net — sobre imágenes simuladas LSST DC2.',
       koan: 'Casi todo el universo llega como ruido.',
       lede:
-        'Esta línea de investigación compara métodos de denoising sobre datos simulados <strong>DESC DC2 / LSST</strong> — midiendo qué preserva, qué inventa y qué destruye cada método, para que las imágenes limpias sigan siendo evidencia científica honesta.',
+        'Esta línea de investigación compara una línea base clásica y un modelo aprendido — <strong>BM3D y U-Net</strong> — sobre imágenes simuladas del <strong>Vera Rubin Observatory (LSST DC2)</strong>, evaluados con métricas <em>orientadas a la ciencia</em>: completitud y pureza. El objetivo no es una imagen más bonita, sino evidencia honesta — cada script, dataset y ficha bibliográfica versionado para auditar y repetir.',
       genesis: {
         kicker: 'Génesis',
-        title: 'La tesis por venir.',
+        title: 'La tesis de grado.',
         body:
-          'Mi tesis de pregrado. Aún no empieza — pero el laboratorio está construido para recibirla, y el trabajo aterrizará aquí a medida que arranque.',
+          'Mi tesis de grado — hoy una propuesta: contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica reproducible asistida por aprendizaje activo. Aún no hay resultados finales; los experimentos vienen después, y aterrizarán aquí, en abierto, a medida que se ejecuten.',
       },
       followLab: 'Sigue el laboratorio ↗',
-      papersSoon: 'artículos y datasets en preparación',
+      papersSoon: 'propuesta y datasets en preparación',
       questions: {
         kicker: 'Preguntas en estudio',
         items: [
-          '¿Qué métodos de denoising preservan la fotometría en vez de repintarla?',
-          '¿Cómo se degradan los métodos clásicos y los aprendidos a la profundidad de LSST?',
-          '¿Puede un benchmark hacer que “más limpio” signifique “más veraz”, no solo “más suave”?',
+          '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
+          '¿Cómo se compara la línea base clásica (BM3D) con un modelo aprendido (U-Net) a la profundidad de LSST DC2?',
+          '¿Puede el benchmark completo ser reproducible de extremo a extremo — datos, scripts y bibliografía versionados?',
         ],
       },
     },
