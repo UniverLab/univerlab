@@ -317,31 +317,75 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Starfield — faint stars teased out of noise. Astro Denoise. */
+  /* Starfield — stars drifting and twinkling, teased out of noise, with the
+     occasional shooting star. Astro Denoise. */
   starfield(ctx) {
     const { c } = ctx;
-    const N = Math.min(140, Math.floor((ctx.w * ctx.h) / 9000));
+    const N = Math.min(150, Math.floor((ctx.w * ctx.h) / 8000));
     const stars = Array.from({ length: N }, () => ({
       x: Math.random() * ctx.w,
       y: Math.random() * ctx.h,
-      r: rand(0.4, 1.5),
+      r: rand(0.4, 1.6),
       ph: rand(0, Math.PI * 2),
-      sp: rand(0.4, 1.4),
+      sp: rand(0.5, 1.7),
+      vy: rand(0.05, 0.28), // slow parallax drift
     }));
+    type Shot = { x: number; y: number; vx: number; vy: number; t: number; life: number };
+    let shot: Shot | null = null;
+    let nextShot = rand(1800, 4200);
+    let acc = 0;
+    let prevT = 0;
     return (t) => {
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
       c.clearRect(0, 0, ctx.w, ctx.h);
-      // sparse noise speckle that never resolves
       c.fillStyle = ctx.color;
+      // sparse noise speckle that never resolves
       for (let i = 0; i < 30; i++) {
         c.globalAlpha = 0.05;
         c.fillRect(Math.random() * ctx.w, Math.random() * ctx.h, 1, 1);
       }
       for (const s of stars) {
-        const tw = 0.35 + 0.4 * (0.5 + 0.5 * Math.sin(t * 0.001 * s.sp + s.ph));
+        s.y += s.vy;
+        if (s.y > ctx.h + 2) {
+          s.y = -2;
+          s.x = Math.random() * ctx.w;
+        }
+        const tw = 0.3 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.0016 * s.sp + s.ph));
         c.globalAlpha = tw;
         c.beginPath();
         c.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         c.fill();
+      }
+      // shooting star
+      acc += dt;
+      if (!shot && acc > nextShot) {
+        acc = 0;
+        nextShot = rand(3000, 7000);
+        shot = {
+          x: rand(0, ctx.w * 0.6),
+          y: rand(0, ctx.h * 0.4),
+          vx: rand(0.25, 0.5),
+          vy: rand(0.12, 0.24),
+          t: 0,
+          life: 900,
+        };
+      }
+      if (shot) {
+        shot.t += dt;
+        shot.x += shot.vx * dt;
+        shot.y += shot.vy * dt;
+        const k = shot.t / shot.life;
+        const fade = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8;
+        const len = 42;
+        c.globalAlpha = Math.max(0, fade) * 0.8;
+        c.strokeStyle = ctx.color;
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(shot.x, shot.y);
+        c.lineTo(shot.x - shot.vx * len, shot.y - shot.vy * len);
+        c.stroke();
+        if (k >= 1) shot = null;
       }
       c.globalAlpha = 1;
     };
@@ -350,13 +394,13 @@ const THEMES: Record<Theme, Runner> = {
   /* Forge — embers rising from the heat below, flickering. Texforge. */
   forge(ctx) {
     const { c } = ctx;
-    const N = Math.min(80, Math.floor((ctx.w * ctx.h) / 20000));
+    const N = Math.min(110, Math.floor((ctx.w * ctx.h) / 14000));
     const spawn = (initial: boolean) => ({
       x: rand(0, ctx.w),
       y: initial ? rand(0, ctx.h) : ctx.h + rand(0, 30),
       vy: rand(0.2, 0.6),
       ph: rand(0, Math.PI * 2),
-      s: rand(0.6, 1.8),
+      s: rand(0.8, 2.3),
     });
     const ps = Array.from({ length: N }, () => spawn(true));
     return (t) => {
@@ -366,9 +410,9 @@ const THEMES: Record<Theme, Runner> = {
         p.y -= p.vy;
         p.x += Math.sin(t * 0.001 + p.ph) * 0.35;
         if (p.y < -10) Object.assign(p, spawn(false));
-        const flick = 0.45 + 0.4 * Math.sin(t * 0.004 + p.ph * 5);
+        const flick = 0.6 + 0.35 * Math.sin(t * 0.004 + p.ph * 5);
         const heat = Math.max(0, p.y / ctx.h); // brighter near the bottom
-        c.globalAlpha = flick * (0.12 + 0.6 * heat);
+        c.globalAlpha = flick * (0.35 + 0.5 * heat);
         c.beginPath();
         c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
         c.fill();
@@ -386,7 +430,7 @@ const THEMES: Record<Theme, Runner> = {
     const x0 = (ctx.w - (lanes - 1) * gap) / 2;
     const laneX = (i: number) => x0 + i * gap;
     const vgap = 46;
-    const speed = 0.3;
+    const speed = 0.14;
     type Node = { x: number; y: number; px: number; py: number; r: number };
     let nodes: Node[] = [];
     let tipLane = Math.floor(lanes / 2);
@@ -395,12 +439,19 @@ const THEMES: Record<Theme, Runner> = {
     function addNode() {
       const py = tipY;
       const px = tipX;
-      if (Math.random() < 0.3) {
+      if (Math.random() < 0.5) {
         tipLane = Math.min(lanes - 1, Math.max(0, tipLane + (Math.random() < 0.5 ? -1 : 1)));
       }
       tipX = laneX(tipLane);
       tipY -= vgap;
       nodes.push({ x: tipX, y: tipY, px, py, r: rand(2.2, 3.4) });
+      // fork: a short branch splitting off into an adjacent lane
+      if (Math.random() < 0.5) {
+        const bl = Math.min(lanes - 1, Math.max(0, tipLane + (Math.random() < 0.5 ? -1 : 1)));
+        if (bl !== tipLane) {
+          nodes.push({ x: laneX(bl), y: tipY - rand(8, 20), px: tipX, py: tipY, r: rand(1.8, 2.8) });
+        }
+      }
     }
     while (tipY > -vgap) addNode();
     let prevT = 0;
@@ -418,8 +469,8 @@ const THEMES: Record<Theme, Runner> = {
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
       c.fillStyle = ctx.color;
-      c.lineWidth = 1.4;
-      c.globalAlpha = 0.3;
+      c.lineWidth = 1.1;
+      c.globalAlpha = 0.18;
       for (const n of nodes) {
         c.beginPath();
         c.moveTo(n.px, n.py);
@@ -431,7 +482,7 @@ const THEMES: Record<Theme, Runner> = {
         }
         c.stroke();
       }
-      c.globalAlpha = 0.7;
+      c.globalAlpha = 0.45;
       for (const n of nodes) {
         c.beginPath();
         c.arc(n.x, n.y, n.r, 0, Math.PI * 2);
