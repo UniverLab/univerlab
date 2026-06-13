@@ -127,23 +127,39 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Brian's Brain — the same 3-state automaton as the Canopy TUI. */
+  /* Brian's Brain — the same 3-state automaton as the Canopy TUI, drawn as
+     dots. Starts calm (sparse) and reseeds in small clusters when activity
+     fades, so the field revives instead of flickering into static. */
   brain(ctx) {
     const { c } = ctx;
     const cell = 15;
     let cols = 0;
     let rows = 0;
     let grid: Uint8Array;
+
     function init() {
       cols = Math.ceil(ctx.w / cell) + 1;
       rows = Math.ceil(ctx.h / cell) + 1;
       grid = new Uint8Array(cols * rows);
-      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.18 ? 1 : 0;
+      // start with little noise
+      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.06 ? 1 : 0;
     }
     init();
+
+    const idx = (x: number, y: number) => ((y + rows) % rows) * cols + ((x + cols) % cols);
+
+    // A cluster of adjacent firing cells: neighbours then see exactly 2 firing
+    // cells and ignite, so reseeding actually propagates instead of dying out.
+    function seedCluster() {
+      const x = Math.floor(Math.random() * cols);
+      const y = Math.floor(Math.random() * rows);
+      grid[idx(x, y)] = 1;
+      grid[idx(x + 1, y)] = 1;
+      grid[idx(x, y + 1)] = 1;
+    }
+
     let acc = 0;
     let prev = 0;
-    const at = (x: number, y: number) => grid[((y + rows) % rows) * cols + ((x + cols) % cols)];
     return (t) => {
       if (cols !== Math.ceil(ctx.w / cell) + 1) init();
       acc += prev ? t - prev : 0;
@@ -161,23 +177,31 @@ const THEMES: Record<Theme, Runner> = {
               let n = 0;
               for (let dy = -1; dy <= 1; dy++)
                 for (let dx = -1; dx <= 1; dx++)
-                  if ((dx || dy) && at(x + dx, y + dy) === 1) n++;
+                  if ((dx || dy) && grid[idx(x + dx, y + dy)] === 1) n++;
               next[y * cols + x] = n === 2 ? 1 : 0;
               if (n === 2) firing++;
             }
           }
         }
-        if (firing < 4) for (let i = 0; i < 30; i++) next[Math.floor(Math.random() * next.length)] = 1;
         grid = next;
+        // Stronger revival: kick in earlier and seed several propagating clusters.
+        const threshold = Math.max(10, Math.floor(grid.length * 0.012));
+        if (firing < threshold) {
+          const clusters = Math.max(5, Math.floor(grid.length * 0.0022));
+          for (let i = 0; i < clusters; i++) seedCluster();
+        }
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
+      c.fillStyle = ctx.color;
+      const cx = cell / 2;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const s = grid[y * cols + x];
           if (!s) continue;
-          c.globalAlpha = s === 1 ? 0.55 : 0.14;
-          c.fillStyle = ctx.color;
-          c.fillRect(x * cell, y * cell, cell - 2, cell - 2);
+          c.globalAlpha = s === 1 ? 0.7 : 0.16;
+          c.beginPath();
+          c.arc(x * cell + cx, y * cell + cx, s === 1 ? cell * 0.2 : cell * 0.12, 0, Math.PI * 2);
+          c.fill();
         }
       }
       c.globalAlpha = 1;
