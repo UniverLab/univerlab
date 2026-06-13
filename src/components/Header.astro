@@ -1,17 +1,34 @@
 ---
 import Mark from './Mark.astro';
-const nav = [
-  { href: '/experiments', label: 'Experiments' },
-  { href: '/research', label: 'Research' },
-  { href: '/manifesto', label: 'Manifesto' },
-  { href: '/people', label: 'People' },
-  { href: 'https://github.com/UniverLab', label: 'GitHub' },
-];
+import {
+  getLang,
+  useTranslations,
+  localizePath,
+  switchLangPath,
+  languages,
+} from '../i18n';
+
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
 const path = Astro.url.pathname;
+
+const nav = [
+  { href: localizePath('/experiments', lang), label: t.nav.experiments },
+  { href: localizePath('/research', lang), label: t.nav.research },
+  { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
+  { href: localizePath('/people', lang), label: t.nav.people },
+  { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+];
+const other = lang === 'en' ? 'es' : 'en';
+
+function isActive(href: string, current: string): boolean {
+  if (href === '/' || href === '/es') return current === href;
+  return current === href || current.startsWith(href + '/');
+}
 ---
 <header>
   <div class="wrap bar">
-    <a href="/" class="home" aria-label="UniverLab home">
+    <a href={localizePath('/', lang)} class="home" aria-label="UniverLab">
       <Mark size={26} />
       <span class="word">UNIVERLAB</span>
     </a>
@@ -19,13 +36,30 @@ const path = Astro.url.pathname;
       {nav.map((item) => (
         <a
           href={item.href}
-          class:list={['label', { active: path.startsWith(item.href) }]}
+          class:list={['label', { active: !item.ext && isActive(item.href, path) }]}
         >{item.label}</a>
       ))}
+      <a
+        class="label lang"
+        href={switchLangPath(Astro.url, other)}
+        data-set-lang={other}
+        hreflang={other}
+      >{languages[lang]}<span class="slash">/</span>{languages[other]}</a>
     </nav>
   </div>
   <hr class="rule" />
 </header>
+
+<script>
+  // Persist an explicit language choice so the pre-paint detector honours it.
+  document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
+    a.addEventListener('click', () => {
+      try {
+        localStorage.setItem('univerlab-lang', a.dataset.setLang!);
+      } catch (e) {}
+    });
+  });
+</script>
 
 <style>
   .bar {
@@ -35,18 +69,13 @@ const path = Astro.url.pathname;
     gap: 1rem;
     padding-block: 1.1rem;
   }
-  .home {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.65rem;
-    text-decoration: none;
-  }
-  .word {
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    letter-spacing: 0.32em;
-  }
-  nav { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+  .home { display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none; }
+  .word { font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.32em; }
+  nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: var(--ink-dim); }
   nav a:hover, nav a.active { color: var(--ink); }
+  .lang { display: inline-flex; gap: 0.25rem; }
+  .lang .slash { color: var(--ink-faint); }
+  .lang { color: var(--ink-faint); }
+  .lang:hover { color: var(--ink); }
 </style>

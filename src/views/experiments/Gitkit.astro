@@ -1,0 +1,42 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments.gitkit;
+---
+<ExperimentLayout id="gitkit">
+  <section class="wrap section">
+    <div class="term">
+      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit status</div>
+      <pre class="mono term-body"><code>Hooks:
+  ✓ conventional-commits (commit-msg)
+  ✓ no-secrets (pre-commit)
+
+.gitignore:        ✓ 15 patterns
+.gitattributes:    ✓ line-endings (eol=lf)
+
+Git config (global):
+  ✓ push.autoSetupRemote = true
+  ✓ diff.algorithm = histogram</code></pre>
+    </div>
+    <div class="features">
+      <span class="label">{e.features.kicker}</span>
+      <ul>
+        {e.features.items.map((f) => <li set:html={f} />)}
+      </ul>
+    </div>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
+  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
+  .term { border: 1px solid color-mix(in srgb, var(--gitkit) 30%, var(--line)); background: var(--bg-raise); }
+  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
+  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); }
+  .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .features :global(code) { color: var(--gitkit); font-size: 0.88em; }
+</style>

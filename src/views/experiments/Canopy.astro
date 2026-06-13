@@ -1,0 +1,40 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments.canopy;
+---
+<ExperimentLayout id="canopy">
+  <section class="wrap section">
+    <span class="label">{e.layer.kicker}</span>
+    <div class="cols">
+      {e.layer.cols.map(([h, b]) => (
+        <div class="col"><h3>{h}</h3><p>{b}</p></div>
+      ))}
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <span class="label">{e.tools.kicker}</span>
+    <ul class="tools">
+      {e.tools.items.map(([name, count]) => (
+        <li><span>{name}</span><span class="count mono">{count}</span></li>
+      ))}
+    </ul>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .section { padding-block: 2rem; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.4rem; }
+  .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+  .tools { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 38rem; }
+  .tools li {
+    display: flex; justify-content: space-between; padding-block: 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--canopy) 22%, var(--line));
+    color: var(--ink-dim);
+  }
+  .count { color: var(--canopy); }
+</style>

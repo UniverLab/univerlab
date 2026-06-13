@@ -1,0 +1,64 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Banner from '../components/Banner.astro';
+import { byId } from '../lib/experiments';
+import { getLang, useTranslations } from '../i18n';
+
+interface Props { id: string; }
+const { id } = Astro.props;
+const exp = byId(id);
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = (t.experiments as any)[id];
+const statusLabel = (t.status as any)[exp.status];
+---
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex}>
+  <div class="exp" style={`--essence: var(${exp.essenceVar})`}>
+    <section class="wrap hero">
+      <p class="label num">{exp.number} · {statusLabel}</p>
+      <Banner id={id} color={`var(${exp.essenceVar})`} />
+      <p class="koan">{e.koan}</p>
+      <p class="lede prose" set:html={e.lede} />
+      <div class="actions">
+        <a class="btn" href={exp.github}>{t.common.sourceDocs}</a>
+        <slot name="cta" />
+      </div>
+    </section>
+
+    <slot />
+
+    <section class="wrap genesis">
+      <span class="label">{e.genesis.kicker}</span>
+      <h2>{e.genesis.title}</h2>
+      <p class="prose" set:html={e.genesis.body} />
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .exp { --essence: var(--accent); }
+  .hero { padding-block: 3.5rem 2rem; display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+  .num { color: var(--essence); }
+  .koan { font-family: var(--font-serif); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
+  .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
+  :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
+  :global(.exp .lede code) { color: var(--essence); font-size: 0.9em; }
+
+  .actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--essence);
+    color: var(--essence);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .btn:hover { background: var(--essence); color: var(--bg); }
+
+  .genesis { padding-block: 2.5rem 4.5rem; max-width: 60ch; }
+  .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
+  .genesis .prose { color: var(--ink-dim); }
+  :global(.exp .genesis .prose strong) { color: var(--ink); font-weight: 500; }
+  :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
+  :global(.exp .genesis .prose em) { color: var(--essence); font-style: italic; }
+</style>

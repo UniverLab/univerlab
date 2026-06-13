@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Mark from '../components/Mark.astro';
+import { getLang, useTranslations } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const m = t.manifesto;
+---
+<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" bgColor="#a78bfa">
+  <section class="wrap opening">
+    <Mark size={56} color="var(--ink-dim)" />
+    <span class="label">{m.kicker}</span>
+    <h1>{m.title}</h1>
+    <p class="sub label">{m.sub}</p>
+    <blockquote class="prose">{m.epigraph}</blockquote>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section">
+    <span class="label">{m.pillarsTitle}</span>
+    <ol class="pillars">
+      {m.pillars.map(([name, body], i) => (
+        <li>
+          <span class="mono p-num">{String(i + 1).padStart(2, '0')}</span>
+          <div><h3>{name}</h3><p>{body}</p></div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section closing">
+    <p class="prose final">{m.closing}</p>
+    <p class="label">{m.why}</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .opening { padding-block: 4.5rem 3rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.9rem; }
+  h1 { font-family: var(--font-serif); font-size: clamp(2.3rem, 6vw, 3.8rem); }
+  .sub { margin: 0; }
+  blockquote { margin: 1.4rem 0 0; font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--ink-dim); border-left: 1px solid var(--ink-faint); padding-left: 1.4rem; }
+  .section { padding-block: 3rem; }
+  .pillars { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 2.2rem 3rem; }
+  .pillars li { display: flex; gap: 1.1rem; }
+  .p-num { color: var(--ink-faint); font-size: 0.8rem; padding-top: 0.3rem; }
+  .pillars h3 { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.08rem; margin-bottom: 0.4rem; }
+  .pillars p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+  .closing { padding-block: 3.5rem 5rem; }
+  .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.2rem; }
+</style>

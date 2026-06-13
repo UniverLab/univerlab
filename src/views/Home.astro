@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Mark from '../components/Mark.astro';
+import { experiments } from '../lib/experiments';
+import { getLang, useTranslations, localizePath } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+---
+<BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" bgColor="#a78bfa">
+  <section class="wrap hero">
+    <Mark size={84} />
+    <h1>{t.home.hero.title}</h1>
+    <p class="lede prose" set:html={t.home.hero.lede} />
+    <p class="label">{t.home.hero.tagline}</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Lineage / soul -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
+    <div class="prose"><p set:html={t.home.lineage.body} /></div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Experiments -->
+  <section class="wrap section">
+    <div class="section-head">
+      <span class="label">{t.home.experiments.kicker}</span>
+      <a class="label more" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
+    </div>
+    <ul class="grid">
+      {experiments.map((exp) => {
+        const e = (t.experiments as any)[exp.id];
+        return (
+          <li style={`--essence: var(${exp.essenceVar})`}>
+            <a class="card" href={localizePath(`/experiments/${exp.id}`, lang)}>
+              <div class="card-top">
+                <span class="label num">{exp.number}</span>
+                <span class="label status">{(t.status as any)[exp.status]}</span>
+              </div>
+              <h3>{exp.name}</h3>
+              <p class="need">{e.need}</p>
+              <p class="tagline">{e.tagline}</p>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Philosophy -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.philosophy.kicker}</span><h2>{t.home.philosophy.title}</h2></div>
+    <div class="prose">
+      <p set:html={t.home.philosophy.body} />
+      <ul class="values label">
+        {t.home.philosophy.values.map((v) => <li>{v}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Research directions -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.directions.kicker}</span><h2>{t.home.directions.title}</h2></div>
+    <div class="directions">
+      <div>
+        <span class="label">{t.home.directions.now}</span>
+        <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
+      </div>
+      <div>
+        <span class="label">{t.home.directions.next}</span>
+        <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Ethics -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.ethics.kicker}</span><h2>{t.home.ethics.title}</h2></div>
+    <div class="prose">
+      <p>{t.home.ethics.body}</p>
+      <ul class="ethics">
+        {t.home.ethics.items.map(([h, d]) => (
+          <li><strong>{h}</strong><span>{d}</span></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 8vh, 5rem); display: flex; flex-direction: column; gap: 1.6rem; align-items: flex-start; }
+  .hero h1 { font-size: clamp(2.1rem, 5.5vw, 3.6rem); max-width: 18ch; }
+  .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
+  :global(.lede strong) { color: var(--ink); font-weight: 500; }
+
+  .section { padding-block: 3.2rem; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
+  .more { text-decoration: none; }
+  .more:hover { color: var(--ink); }
+
+  .grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+  }
+  .card { display: block; background: color-mix(in srgb, var(--bg) 78%, transparent); padding: 1.6rem; height: 100%; text-decoration: none; transition: background 0.15s ease; backdrop-filter: blur(2px); }
+  .card:hover { background: var(--bg-raise); }
+  .card:hover h3 { color: var(--essence); }
+  .card-top { display: flex; justify-content: space-between; margin-bottom: 1.4rem; }
+  .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
+  .num { color: var(--essence); }
+  .need { font-family: var(--font-serif); font-style: italic; color: var(--ink-dim); font-size: 0.92rem; margin: 0.5rem 0 0.7rem; }
+  .tagline { font-size: 0.92rem; margin: 0; color: var(--ink-dim); }
+
+  .two-col { display: grid; grid-template-columns: minmax(14rem, 1fr) 2fr; gap: 2.5rem; }
+  .two-col h2 { font-size: 1.7rem; margin-top: 0.7rem; max-width: 16ch; }
+  @media (max-width: 50rem) { .two-col { grid-template-columns: 1fr; } }
+  :global(.section .prose a) { color: var(--ink); }
+
+  .values { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem 1.5rem; }
+  .values li::before { content: '— '; color: var(--ink-faint); }
+
+  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .directions ul { list-style: none; padding: 0; margin: 0.8rem 0 0; color: var(--ink-dim); }
+  .directions li { padding-block: 0.35rem; border-bottom: 1px solid var(--line); }
+  @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
+
+  .ethics { list-style: none; padding: 0; margin: 1.4rem 0 0; }
+  .ethics li { display: flex; flex-direction: column; gap: 0.2rem; padding-block: 0.7rem; border-bottom: 1px solid var(--line); }
+  .ethics strong { color: var(--ink); font-weight: 500; }
+  .ethics span { color: var(--ink-dim); font-size: 0.95rem; }
+</style>

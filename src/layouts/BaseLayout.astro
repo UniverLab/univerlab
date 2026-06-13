@@ -1,27 +1,54 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ThemeBackground from '../components/ThemeBackground.astro';
+import { getLang, useTranslations } from '../i18n';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
+  bg?: 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'drift';
+  bgColor?: string;
 }
-const {
-  title,
-  description = 'UniverLab — an independent computational laboratory publishing open experiments.',
-} = Astro.props;
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astro.props;
 ---
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Pre-paint language detection: first-time visitors whose system is in
+         Spanish are sent to /es once; an explicit choice is always respected. -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('univerlab-lang');
+          var path = location.pathname;
+          var onEs = path === '/es' || path.indexOf('/es/') === 0;
+          if (!stored) {
+            var sys = (navigator.language || 'en').toLowerCase().slice(0, 2);
+            if (sys === 'es' && !onEs) {
+              localStorage.setItem('univerlab-lang', 'es');
+              location.replace('/es' + (path === '/' ? '' : path));
+              return;
+            }
+          } else if (stored === 'es' && !onEs) {
+            location.replace('/es' + (path === '/' ? '' : path));
+          } else if (stored === 'en' && onEs) {
+            location.replace(path.replace(/^\/es/, '') || '/');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
+    <ThemeBackground theme={bg} color={bgColor} />
     <Header />
     <main>
       <slot />

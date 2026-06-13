@@ -1,0 +1,24 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments['astro-denoise'];
+---
+<ExperimentLayout id="astro-denoise">
+  <span slot="cta" class="papers mono">{e.papersSoon}</span>
+
+  <section class="wrap section">
+    <span class="label">{e.questions.kicker}</span>
+    <ul class="qs">
+      {e.questions.items.map((q) => <li>{q}</li>)}
+    </ul>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .papers { color: var(--ink-faint); font-size: 0.8rem; }
+  .section { padding-block: 1.5rem 2rem; }
+  .qs { list-style: none; padding: 0; margin: 1.2rem 0 0; max-width: 40rem; }
+  .qs li { padding-block: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--astro-denoise) 20%, var(--line)); color: var(--ink-dim); }
+</style>

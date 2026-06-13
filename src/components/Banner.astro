@@ -1,0 +1,27 @@
+---
+// Renders an experiment's README ASCII banner in its essence color. The art
+// is each project's own signature — representative, and on-brand for the lab.
+import { banners } from '../lib/banners';
+interface Props { id: string; color: string; }
+const { id, color } = Astro.props;
+const art = banners[id];
+---
+{art && (
+  <pre class="banner" style={`--c: ${color}`} aria-hidden="true"><code>{art}</code></pre>
+)}
+
+<style>
+  .banner {
+    margin: 0;
+    overflow-x: auto;
+    color: var(--c);
+    font-family: var(--font-mono);
+    font-size: clamp(0.3rem, 1.15vw, 0.62rem);
+    line-height: 1.05;
+    opacity: 0.92;
+    /* let the glyph density carry the color without a hard block */
+    text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
+    scrollbar-width: none;
+  }
+  .banner::-webkit-scrollbar { display: none; }
+</style>

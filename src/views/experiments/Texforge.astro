@@ -1,0 +1,54 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments.texforge;
+---
+<ExperimentLayout id="texforge">
+  <section class="wrap section">
+    <div class="galley">
+      <pre class="mono plate"><code>$ texforge new quantum-paper
+$ cd quantum-paper
+$ texforge build
+  ◇ quantum-paper.pdf</code></pre>
+      <div class="colophon">
+        <span class="label">{e.press.kicker}</span>
+        <ul>
+          {e.press.items.map(([term, def]) => (
+            <li><strong>{term}</strong> — {def}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <div class="sub">
+      <span class="label">{e.subproject.kicker}</span>
+      <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
+      <p set:html={e.subproject.body} />
+    </div>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .section { padding-block: 1.5rem; }
+  .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
+  @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
+  .plate {
+    margin: 0; padding: 1.6rem;
+    border: 1px solid color-mix(in srgb, var(--texforge) 35%, var(--line));
+    background: var(--bg-raise); color: var(--texforge);
+    font-size: 0.9rem; line-height: 1.9;
+    box-shadow: 0.5rem 0.5rem 0 color-mix(in srgb, var(--texforge) 14%, transparent);
+  }
+  .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .colophon li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; margin-right: 0.3rem; }
+  .sub { max-width: 46rem; }
+  .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+  .sub h3 a { color: var(--texforge); text-decoration: none; }
+  .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
+  .sub :global(code) { color: var(--texforge); font-size: 0.9em; }
+</style>

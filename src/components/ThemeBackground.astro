@@ -1,0 +1,40 @@
+---
+// A fixed, behind-content canvas that lazy-loads its animation only after the
+// page has fully loaded — keeping first paint light. One theme per surface.
+interface Props {
+  theme?: 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'drift';
+  color?: string;
+}
+const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
+---
+<canvas class="bg" data-theme={theme} data-color={color} aria-hidden="true"></canvas>
+
+<script>
+  import type { startBackground as Start } from '../scripts/backgrounds';
+  const run = () => {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas.bg');
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    import('../scripts/backgrounds').then(({ startBackground }) => {
+      (startBackground as typeof Start)(
+        canvas,
+        (canvas.dataset.theme as any) || 'drift',
+        canvas.dataset.color || '#b9b6ae'
+      );
+    });
+  };
+  if (document.readyState === 'complete') run();
+  else window.addEventListener('load', run, { once: true });
+</script>
+
+<style>
+  .bg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+</style>
