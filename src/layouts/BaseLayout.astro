@@ -14,6 +14,26 @@ interface Props {
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astro.props;
+
+const site = Astro.site ?? new URL('https://univerlab.dev');
+const path = Astro.url.pathname;
+const canonical = new URL(path, site).href;
+const ogImage = new URL('/og.png', site).href;
+// hreflang alternates — only for localized pages (docs are English-only).
+const isDocs = path.includes('/docs');
+const stripped = path.replace(/^\/es(?=\/|$)/, '') || '/';
+const enHref = new URL(stripped, site).href;
+const esHref = new URL('/es' + (stripped === '/' ? '' : stripped), site).href;
+
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'UniverLab',
+  url: site.href,
+  logo: new URL('/favicon.svg', site).href,
+  description: t.meta.description,
+  sameAs: ['https://github.com/UniverLab'],
+};
 ---
 <!doctype html>
 <html lang={lang}>
@@ -22,7 +42,30 @@ const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astr
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0b0e" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    {!isDocs && (
+      <>
+        <link rel="alternate" hreflang="en" href={enHref} />
+        <link rel="alternate" hreflang="es" href={esHref} />
+        <link rel="alternate" hreflang="x-default" href={enHref} />
+      </>
+    )}
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="UniverLab" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
     <!-- Pre-paint language detection: first-time visitors whose system is in
          Spanish are sent to /es once; an explicit choice is always respected. -->
     <script is:inline>

@@ -21,5 +21,8 @@
   "homepage": "https://github.com/UniverLab/univerlab#readme",
   "devDependencies": {
     "astro": "^6.4.6"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3"
   }
 }

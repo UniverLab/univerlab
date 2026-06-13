@@ -21,6 +21,13 @@ const nav = [
 ];
 const other = lang === 'en' ? 'es' : 'en';
 
+// Docs are English-only and have no /es mirror, so switching language from a
+// docs page would 404. Send it to that experiment's page in the other locale.
+const docsMatch = path.match(/^\/(?:es\/)?experiments\/([^/]+)\/docs/);
+const toggleHref = docsMatch
+  ? localizePath(`/experiments/${docsMatch[1]}`, other)
+  : switchLangPath(Astro.url, other);
+
 function isActive(href: string, current: string): boolean {
   if (href === '/' || href === '/es') return current === href;
   return current === href || current.startsWith(href + '/');
@@ -41,7 +48,7 @@ function isActive(href: string, current: string): boolean {
       ))}
       <a
         class="label lang"
-        href={switchLangPath(Astro.url, other)}
+        href={toggleHref}
         data-set-lang={other}
         hreflang={other}
       >{languages[lang]}<span class="slash">/</span>{languages[other]}</a>
