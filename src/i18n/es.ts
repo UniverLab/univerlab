@@ -20,9 +20,15 @@ export const es: Dict = {
     license: 'Experimentos con licencia MIT',
   },
   common: {
-    sourceDocs: 'Código y docs ↗',
+    repo: 'GitHub ↗',
+    docs: 'Documentación →',
+    install: 'Instalar',
+    copy: 'Copiar',
+    copied: 'Copiado',
     allExperiments: 'Todos los experimentos →',
     inPreparation: 'en preparación',
+    docsHome: 'Documentación',
+    onThisExperiment: 'Experimento',
   },
   status: {
     active: 'activo',

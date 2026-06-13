@@ -20,9 +20,23 @@ const statusLabel = (t.status as any)[exp.status];
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
       <div class="actions">
-        <a class="btn" href={exp.github}>{t.common.sourceDocs}</a>
+        <a class="btn" href={exp.github}>{t.common.repo}</a>
+        {exp.hasDocs && (
+          <a class="btn ghost" href={`/experiments/${id}/docs`}>{t.common.docs}</a>
+        )}
         <slot name="cta" />
       </div>
+      {exp.install && (
+        <div class="install">
+          <span class="label">{t.common.install}</span>
+          <div class="cmd">
+            <code>{exp.install}</code>
+            <button class="copy" type="button" data-cmd={exp.install} title={t.common.copy} aria-label={t.common.copy}>
+              <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+            </button>
+          </div>
+        </div>
+      )}
     </section>
 
     <slot />
@@ -54,6 +68,29 @@ const statusLabel = (t.status as any)[exp.status];
     font-size: 0.85rem;
   }
   .btn:hover { background: var(--essence); color: var(--bg); }
+  .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
+  .btn.ghost:hover { border-color: var(--essence); color: var(--essence); background: transparent; }
+
+  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; }
+  .cmd {
+    display: flex; align-items: stretch; gap: 0;
+    border: 1px solid var(--line); background: var(--bg-raise);
+  }
+  .cmd code {
+    flex: 1; padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink-dim);
+    overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  }
+  .cmd code::-webkit-scrollbar { display: none; }
+  .cmd code::before { content: '$ '; color: var(--essence); }
+  .copy {
+    border: 0; border-left: 1px solid var(--line); background: transparent;
+    color: var(--ink-dim); cursor: pointer; padding: 0 0.9rem; font-size: 0.95rem;
+    font-family: var(--font-mono); transition: color 0.15s ease;
+  }
+  .copy:hover { color: var(--essence); }
+  .copy .copy-done { display: none; color: var(--essence); }
+  .copy.done .copy-idle { display: none; }
+  .copy.done .copy-done { display: inline; }
 
   .genesis { padding-block: 2.5rem 4.5rem; max-width: 60ch; }
   .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
@@ -62,3 +99,15 @@ const statusLabel = (t.status as any)[exp.status];
   :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
   :global(.exp .genesis .prose em) { color: var(--essence); font-style: italic; }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button.copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.cmd || '');
+        btn.classList.add('done');
+        setTimeout(() => btn.classList.remove('done'), 1600);
+      } catch (e) {}
+    });
+  });
+</script>

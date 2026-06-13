@@ -19,9 +19,15 @@ export const en = {
     license: 'MIT-licensed experiments',
   },
   common: {
-    sourceDocs: 'Source & docs ↗',
+    repo: 'GitHub ↗',
+    docs: 'Documentation →',
+    install: 'Install',
+    copy: 'Copy',
+    copied: 'Copied',
     allExperiments: 'All experiments →',
     inPreparation: 'in preparation',
+    docsHome: 'Documentation',
+    onThisExperiment: 'Experiment',
   },
   status: {
     active: 'active',

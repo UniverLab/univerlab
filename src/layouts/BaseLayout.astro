@@ -28,8 +28,10 @@ const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astr
     <script is:inline>
       (function () {
         try {
-          var stored = localStorage.getItem('univerlab-lang');
           var path = location.pathname;
+          // Documentation is English-only and has no /es mirror — never redirect it.
+          if (path.indexOf('/docs') !== -1) return;
+          var stored = localStorage.getItem('univerlab-lang');
           var onEs = path === '/es' || path.indexOf('/es/') === 0;
           if (!stored) {
             var sys = (navigator.language || 'en').toLowerCase().slice(0, 2);
