@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { experiments } from '../../lib/experiments';
+---
+<BaseLayout title="Experiments — UniverLab">
+  <section class="wrap head">
+    <span class="label">Index</span>
+    <h1>Experiments</h1>
+    <p class="prose intro">
+      The fundamental unit of UniverLab is the experiment. Experiments are not
+      products — they are ongoing explorations. They may mature, remain active
+      for decades, or evolve into new research. Each one begins with a real
+      need.
+    </p>
+  </section>
+
+  <div class="wrap">
+    <ol class="list">
+      {experiments.map((exp) => (
+        <li style={`--essence: ${exp.essence}`}>
+          <a href={`/experiments/${exp.id}`} class="row">
+            <span class="label num">{exp.number}</span>
+            <span class="name">{exp.name}</span>
+            <span class="tagline">{exp.tagline}</span>
+            <span class="label status">{exp.status}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</BaseLayout>
+
+<style>
+  .head { padding-block: 4rem 2.5rem; }
+  .head h1 { font-size: clamp(2rem, 5vw, 3rem); margin-block: 0.6rem 1rem; }
+  .intro { color: var(--ink-dim); }
+
+  .list { list-style: none; margin: 0 0 5rem; padding: 0; border-top: 1px solid var(--line); }
+  .row {
+    display: grid;
+    grid-template-columns: 6rem 11rem 1fr 6rem;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding-block: 1.3rem;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .row:hover { background: var(--bg-raise); }
+  .row:hover .name { color: var(--essence); }
+  .num { color: var(--essence); }
+  .name { font-size: 1.15rem; transition: color 0.15s ease; }
+  .tagline { color: var(--ink-dim); font-size: 0.95rem; }
+  .status { text-align: right; }
+  @media (max-width: 50rem) {
+    .row { grid-template-columns: 5rem 1fr 5rem; }
+    .tagline { display: none; }
+  }
+</style>

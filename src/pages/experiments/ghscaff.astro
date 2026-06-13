@@ -1,0 +1,123 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// Ghscaff — the scaffold. Essence: structural steel around a rising
+// building; everything bolted, level, and load-bearing from day one.
+const steps = [
+  'Repository basics',
+  'Visibility & ownership',
+  'Team access',
+  'Language template',
+  'Branches',
+  'Features & license',
+  'Review & confirm',
+];
+---
+<BaseLayout
+  title="Ghscaff — UniverLab"
+  description="Ghscaff: an interactive wizard that scaffolds and enforces conventions on GitHub repositories."
+>
+  <div class="site-frame">
+    <section class="wrap hero">
+      <p class="label num">EXP-003 · ACTIVE</p>
+      <h1>Ghscaff</h1>
+      <p class="koan">A building is only as straight as its scaffold.</p>
+      <p class="lede prose">
+        Creating a GitHub repository properly is a dozen forgettable steps:
+        boilerplate, CI workflows, labels, branch protection, team
+        permissions, secrets. Ghscaff raises the whole structure in one
+        conversational wizard — and because every operation is
+        <strong>idempotent</strong>, it can re-level any existing repository
+        without tearing it down.
+      </p>
+      <div class="actions">
+        <a class="btn" href="https://github.com/UniverLab/ghscaff">Source &amp; docs ↗</a>
+        <code class="install">cargo install ghscaff</code>
+      </div>
+    </section>
+
+    <section class="wrap section">
+      <div class="frame">
+        <span class="label">Seven lifts</span>
+        <ol class="lifts">
+          {steps.map((step, i) => (
+            <li>
+              <span class="mono tick">{String(i + 1).padStart(2, '0')}</span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="specsheet">
+        <span class="label">Structural details</span>
+        <ul>
+          <li>Tokens live in an <strong>encrypted vault</strong> (XSalsa20-Poly1305), bound to your user, host and binary — never in env vars or plain text.</li>
+          <li>One atomic <code>chore: init repository</code> commit carries all boilerplate — no noisy file-by-file history.</li>
+          <li>Seven standard labels enforced on every run; drift is corrected, not accumulated.</li>
+          <li><code>--dry-run</code> previews every change without a single API call.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Scaffold essence: diagonal bracing lines rising behind the hero */
+  .site-frame {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        color-mix(in srgb, var(--gitkit) 4%, transparent) 0 1px,
+        transparent 1px 3.2rem
+      ),
+      radial-gradient(50rem 24rem at 75% -8%, color-mix(in srgb, var(--gitkit) 8%, transparent), transparent 62%);
+  }
+  .hero { padding-block: 4.5rem 2rem; }
+  .num { color: var(--gitkit); }
+  h1 { font-size: clamp(2.4rem, 6vw, 4rem); margin-block: 0.5rem; }
+  .koan { font-family: var(--font-serif); font-style: italic; color: var(--gitkit); opacity: 0.85; margin: 0 0 1.4rem; }
+  .lede { color: var(--ink-dim); font-size: 1.08rem; }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  .actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 2rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--gitkit);
+    color: var(--gitkit);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .btn:hover { background: var(--gitkit); color: var(--bg); }
+  .install { color: var(--ink-dim); font-size: 0.85rem; }
+
+  .section {
+    padding-block: 3rem 4rem;
+    display: grid;
+    grid-template-columns: minmax(15rem, 1fr) 1.4fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
+
+  .lifts { list-style: none; margin: 1.2rem 0 0; padding: 0; }
+  .lifts li {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    padding-block: 0.6rem;
+    border-left: 2px solid color-mix(in srgb, var(--gitkit) 45%, var(--line));
+    padding-left: 1rem;
+  }
+  .tick { color: var(--gitkit); font-size: 0.8rem; }
+
+  .specsheet ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .specsheet li {
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 0.97rem;
+  }
+  .specsheet strong { color: var(--ink); font-weight: 500; }
+  .specsheet code { color: var(--gitkit); font-size: 0.88em; }
+</style>

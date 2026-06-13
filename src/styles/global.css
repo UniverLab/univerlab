@@ -1,0 +1,82 @@
+/* UniverLab — design tokens and base styles.
+   Aesthetic: an open computational laboratory. Minimal, technical, calm,
+   timeless. No SaaS gradients, no marketing chrome. */
+
+:root {
+  /* Ink & paper (dark lab) */
+  --bg: #0a0b0e;
+  --bg-raise: #101218;
+  --ink: #e8e6e1;
+  --ink-dim: #9a9890;
+  --ink-faint: #55534e;
+  --line: #23252c;
+
+  /* Lab accent — neutral, used sparingly */
+  --accent: #b9b6ae;
+
+  /* Experiment essences */
+  --canopy: #5dd39e;
+  --texforge: #e0a458;
+  --gitkit: #7ee081;
+  --cadforge: #6ec6e6;
+  --astro-denoise: #a78bfa;
+
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+
+  --measure: 64ch;
+  --space: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.65;
+  scroll-behavior: smooth;
+}
+
+body { margin: 0; min-height: 100vh; }
+
+::selection { background: var(--ink); color: var(--bg); }
+
+h1, h2, h3 {
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+a { color: inherit; text-decoration-color: var(--ink-faint); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+
+code, .mono { font-family: var(--font-mono); }
+
+/* Structural primitives */
+.wrap {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space);
+}
+
+.rule { border: 0; border-top: 1px solid var(--line); margin: 0; }
+
+/* Lab label — small caps monospace metadata, the site's signature */
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.prose { max-width: var(--measure); }
+.prose p { margin: 0 0 1.1em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,47 @@
+---
+import Mark from './Mark.astro';
+---
+<footer>
+  <hr class="rule" />
+  <div class="wrap inner">
+    <div class="left">
+      <Mark size={20} color="var(--ink-faint)" />
+      <p class="quote">
+        “We are the eyes of the universe opening after a long sleep.
+        Our work is to create, care, and understand.”
+      </p>
+    </div>
+    <div class="right label">
+      <a href="https://github.com/UniverLab">github.com/UniverLab</a>
+      <span>SCI · CLI · BIO</span>
+      <span>MIT-licensed experiments</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding-block: 2.2rem 3rem;
+  }
+  .left { display: flex; gap: 1rem; align-items: flex-start; max-width: 34rem; }
+  .quote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+  }
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    text-align: right;
+  }
+  .right a { text-decoration: none; }
+  .right a:hover { color: var(--ink); }
+</style>

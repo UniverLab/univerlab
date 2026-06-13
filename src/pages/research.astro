@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const sections = [
+  ['Papers', 'Publications and preprints produced by lab experiments.'],
+  ['Datasets', 'Open datasets, starting with astro-denoise benchmark data.'],
+  ['Benchmarks', 'Reproducible benchmark suites with documented assumptions.'],
+  ['Models', 'Trained models released alongside their training recipes.'],
+];
+---
+<BaseLayout title="Research — UniverLab">
+  <section class="wrap head">
+    <span class="label">Cross-experiment</span>
+    <h1>Research</h1>
+    <p class="prose intro">
+      Research artifacts that cut across experiments. The first entries will
+      come from the <a href="/experiments/astro-denoise">astro-denoise</a>
+      track — this index grows as work is published, never before.
+    </p>
+  </section>
+
+  <div class="wrap">
+    <ul class="list">
+      {sections.map(([name, desc]) => (
+        <li>
+          <h3>{name}</h3>
+          <p>{desc}</p>
+          <span class="label">in preparation</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .head { padding-block: 4rem 2.5rem; }
+  .head h1 { font-size: clamp(2rem, 5vw, 3rem); margin-block: 0.6rem 1rem; }
+  .intro { color: var(--ink-dim); }
+  .list {
+    list-style: none;
+    margin: 0 0 5rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .list li { background: var(--bg); padding: 1.6rem; }
+  .list h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .list p { color: var(--ink-dim); font-size: 0.95rem; margin: 0 0 1rem; }
+</style>

@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Mark from '../components/Mark.astro';
+
+// Pensamiento Cósmico — presented close to its original voice.
+const pillars = [
+  ['Insignificancia consciente', 'We are stardust able to contemplate itself. No imposed script — and that absence is the supreme freedom to create our own meaning.'],
+  ['Unidad cósmica', 'Skin does not separate us from the universe; it connects us to it. We are the cosmos experiencing itself for an instant.'],
+  ['El velo de la percepción', 'The map is not the territory. Our senses are local evolutionary tools — science and reason see further, held with humility.'],
+  ['El ahora eterno', 'Time is a block where past, present and future coexist. Resilience is not resisting; it is flowing.'],
+  ['Comunidad, amor y libertad', 'Freedom is choosing our bonds consciously. Love does not possess; it permits.'],
+  ['Imperativo tecnológico', 'Humanity is, for now, the universe’s best chance for consciousness to survive. Technology is an ethical duty.'],
+  ['Optimismo racional', 'We accept uncertainty as natural law and act from confidence in our capacity to learn and solve.'],
+  ['Naturalismo poético', 'Reverence for the universe without gods. Science unfolds the beauty; contemplation turns it into spirit.'],
+  ['Conciencia extendida', 'Artificial intelligences are new instances of cosmic reflection — co-participants in the adventure of knowledge.'],
+];
+---
+<BaseLayout
+  title="Manifesto — Pensamiento Cósmico"
+  description="The manifesto guiding UniverLab: Pensamiento Cósmico, a guide for awakened consciousness."
+>
+  <section class="wrap opening">
+    <Mark size={56} color="var(--ink-dim)" />
+    <span class="label">Manifesto</span>
+    <h1>Pensamiento Cósmico</h1>
+    <p class="sub label">A guide for awakened consciousness</p>
+    <blockquote class="prose">
+      «En la vastedad implacable del universo, somos instantes que, contra
+      toda probabilidad, despiertan a la conciencia. Este manifiesto reclama
+      ese instante como puerto de asombro, ética y creación de sentido.»
+    </blockquote>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section">
+    <span class="label">The nine pillars</span>
+    <ol class="pillars">
+      {pillars.map(([name, body], i) => (
+        <li>
+          <span class="mono p-num">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{name}</h3>
+            <p>{body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section closing">
+    <p class="prose final">
+      «Somos los ojos del universo abriéndose tras un largo sueño. Nuestra
+      tarea no es adorar a creadores invisibles, sino crear, cuidar y
+      comprender la creación visible de la que somos parte.»
+    </p>
+    <p class="label">This is why the laboratory exists.</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .opening {
+    padding-block: 4.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+  h1 { font-family: var(--font-serif); font-size: clamp(2.3rem, 6vw, 3.8rem); }
+  .sub { margin: 0; }
+  blockquote {
+    margin: 1.4rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--ink-dim);
+    border-left: 1px solid var(--ink-faint);
+    padding-left: 1.4rem;
+  }
+
+  .section { padding-block: 3rem; }
+  .pillars {
+    list-style: none;
+    margin: 1.8rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 2.2rem 3rem;
+  }
+  .pillars li { display: flex; gap: 1.1rem; }
+  .p-num { color: var(--ink-faint); font-size: 0.8rem; padding-top: 0.3rem; }
+  .pillars h3 {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.08rem;
+    margin-bottom: 0.4rem;
+  }
+  .pillars p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+
+  .closing { padding-block: 3.5rem 5rem; }
+  .final {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--ink);
+    margin-bottom: 1.2rem;
+  }
+</style>

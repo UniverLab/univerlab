@@ -1,0 +1,134 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// Canopy — the forest layer where everything connects.
+// Essence: deep forest at dusk; organic, layered, alive.
+const tools = [
+  ['Agent management', 12],
+  ['Workflow engine', 15],
+  ['Intelligence graph', 6],
+  ['Seed identities', 5],
+  ['Multi-agent sync', 4],
+  ['Projects · RAG · Protocol', 4],
+];
+---
+<BaseLayout
+  title="Canopy — UniverLab"
+  description="Canopy: an agent operations center — orchestration, memory and coordination for AI sessions."
+>
+  <div class="forest">
+    <section class="wrap hero">
+      <p class="label num">EXP-004 · ACTIVE</p>
+      <h1>Canopy</h1>
+      <p class="koan">In a forest, the canopy is where the crowns touch —
+        separate trees, one living layer.</p>
+      <p class="lede prose">
+        AI agents forget everything and work blind to each other. Canopy is a
+        self-contained MCP server and terminal UI that turns one machine into
+        an <strong>agent operations center</strong>: sessions in real
+        terminals, background agents on schedules and file events, a knowledge
+        graph that persists what agents learn, and a sync layer so they stop
+        stepping on each other.
+      </p>
+      <div class="actions">
+        <a class="btn" href="https://github.com/UniverLab/harness-canopy">Source &amp; docs ↗</a>
+        <code class="install">cargo install harness-canopy</code>
+      </div>
+    </section>
+
+    <!-- branching divider -->
+    <svg class="branches" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
+      <g stroke="var(--canopy)" stroke-opacity="0.35" fill="none" stroke-width="1.5">
+        <path d="M0 70 Q 300 70 480 40 T 1200 20" />
+        <path d="M480 40 Q 560 30 600 8" />
+        <path d="M480 40 Q 540 44 580 60" />
+        <path d="M250 62 Q 300 50 330 28" />
+        <path d="M850 28 Q 900 24 940 6" />
+        <path d="M850 28 Q 890 36 930 52" />
+      </g>
+    </svg>
+
+    <section class="wrap section">
+      <span class="label">The living layer</span>
+      <div class="cols">
+        <div class="col">
+          <h3>It remembers</h3>
+          <p>A project-scoped knowledge graph stores facts, patterns and
+          session summaries. Every session starts where the last one ended —
+          agents stop rediscovering the same codebase.</p>
+        </div>
+        <div class="col">
+          <h3>It coordinates</h3>
+          <p>Agents declare missions, report workspace stability and broadcast
+          messages. The canopy knows the workspace “vibe” before anyone
+          touches a file.</p>
+        </div>
+        <div class="col">
+          <h3>It grows identities</h3>
+          <p>Seeds are persistent, evolvable agent identities — directives and
+          traits in plain TOML. An agent can refine its own identity over
+          time, like a tree adding rings.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section">
+      <span class="label">46 MCP tools</span>
+      <ul class="tools">
+        {tools.map(([name, count]) => (
+          <li><span>{name}</span><span class="count mono">{count}</span></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Forest essence: green dusk light pooling at the top of the page */
+  .forest {
+    background:
+      radial-gradient(60rem 28rem at 18% -8%, color-mix(in srgb, var(--canopy) 13%, transparent), transparent 65%),
+      radial-gradient(48rem 22rem at 85% 0%, color-mix(in srgb, var(--canopy) 6%, transparent), transparent 60%);
+  }
+  .hero { padding-block: 4.5rem 2rem; }
+  .num { color: var(--canopy); }
+  h1 { font-size: clamp(2.4rem, 6vw, 4rem); margin-block: 0.5rem; }
+  .koan {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--canopy);
+    opacity: 0.85;
+    margin: 0 0 1.4rem;
+  }
+  .lede { color: var(--ink-dim); font-size: 1.08rem; }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  .actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 2rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--canopy);
+    color: var(--canopy);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .btn:hover { background: var(--canopy); color: var(--bg); }
+  .install { color: var(--ink-dim); font-size: 0.85rem; }
+
+  .branches { display: block; width: 100%; height: 5rem; }
+
+  .section { padding-block: 2.5rem 3.5rem; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.6rem; }
+  .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+
+  .tools { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 38rem; }
+  .tools li {
+    display: flex;
+    justify-content: space-between;
+    padding-block: 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--canopy) 22%, var(--line));
+    color: var(--ink-dim);
+  }
+  .count { color: var(--canopy); }
+</style>

@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// Gitkit — the workbench. Essence: phosphor terminal, the commit graph as
+// craft; everything is a clean line on dark glass.
+---
+<BaseLayout
+  title="Gitkit — UniverLab"
+  description="Gitkit: guided git repository setup — hooks, ignores, attributes and config in one flow."
+>
+  <div class="phosphor">
+    <section class="wrap hero">
+      <div class="copy">
+        <p class="label num">EXP-002 · ACTIVE</p>
+        <h1>Gitkit</h1>
+        <p class="koan">// the ritual, automated</p>
+        <p class="lede prose">
+          Every new repository repeats the same setup ritual: pick a
+          gitignore, normalize line endings, install hooks, set the config you
+          always set. Gitkit folds the ritual into one guided flow — then
+          saves it as a <strong>build</strong> you can re-apply to any project
+          with a single command.
+        </p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/UniverLab/gitkit">Source &amp; docs ↗</a>
+          <code class="install">cargo install gitkit</code>
+        </div>
+      </div>
+
+      <!-- commit graph as identity -->
+      <svg class="graph" viewBox="0 0 220 260" aria-hidden="true">
+        <g stroke="var(--gitkit)" stroke-width="2" fill="none" opacity="0.9">
+          <path d="M60 20 V 240" />
+          <path d="M60 70 C 60 100, 150 90, 150 120 V 170 C 150 200, 60 190, 60 215" />
+        </g>
+        <g fill="var(--bg)" stroke="var(--gitkit)" stroke-width="2">
+          <circle cx="60" cy="20" r="6" />
+          <circle cx="60" cy="70" r="6" />
+          <circle cx="150" cy="120" r="6" />
+          <circle cx="150" cy="170" r="6" />
+          <circle cx="60" cy="215" r="6" />
+          <circle cx="60" cy="240" r="6" fill="var(--gitkit)" />
+        </g>
+        <g class="mono labels" fill="var(--ink-faint)" font-size="9">
+          <text x="78" y="23">init</text>
+          <text x="78" y="73">hooks</text>
+          <text x="166" y="123">ignore</text>
+          <text x="166" y="173">config</text>
+          <text x="78" y="218">merge</text>
+          <text x="78" y="246">ready</text>
+        </g>
+      </svg>
+    </section>
+
+    <section class="wrap section">
+      <div class="term">
+        <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit status</div>
+        <pre class="mono term-body"><code>Hooks:
+  ✓ conventional-commits (commit-msg)
+  ✓ no-secrets (pre-commit)
+
+.gitignore:        ✓ 15 patterns
+.gitattributes:    ✓ line-endings (eol=lf)
+
+Git config (global):
+  ✓ push.autoSetupRemote = true
+  ✓ diff.algorithm = histogram</code></pre>
+      </div>
+      <div class="features">
+        <span class="label">One flow</span>
+        <ul>
+          <li>Built-in hooks: conventional commits, secret detection, branch naming — embedded, offline.</li>
+          <li>Every gitignore.io template plus curated git config presets, applied idempotently.</li>
+          <li><code>gitkit clone</code> bootstraps a repo the moment it lands on disk.</li>
+          <li>Builds: save a setup once, apply it to every future project.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Phosphor essence: green glow on dark glass, terminal-first */
+  .phosphor {
+    background:
+      radial-gradient(50rem 26rem at 12% -6%, color-mix(in srgb, var(--gitkit) 10%, transparent), transparent 62%);
+  }
+  .hero {
+    padding-block: 4.5rem 2rem;
+    display: grid;
+    grid-template-columns: 1.5fr minmax(12rem, 1fr);
+    gap: 2rem;
+    align-items: center;
+  }
+  @media (max-width: 50rem) { .hero { grid-template-columns: 1fr; } .graph { display: none; } }
+  .num { color: var(--gitkit); }
+  h1 { font-family: var(--font-mono); font-size: clamp(2.2rem, 5.5vw, 3.6rem); margin-block: 0.5rem; }
+  .koan { font-family: var(--font-mono); color: var(--gitkit); opacity: 0.8; margin: 0 0 1.4rem; font-size: 0.95rem; }
+  .lede { color: var(--ink-dim); font-size: 1.08rem; }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  .actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 2rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--gitkit);
+    color: var(--gitkit);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .btn:hover { background: var(--gitkit); color: var(--bg); }
+  .install { color: var(--ink-dim); font-size: 0.85rem; }
+
+  .graph { width: 100%; max-width: 14rem; justify-self: end; }
+  .labels { font-family: var(--font-mono); }
+
+  .section {
+    padding-block: 3rem 4rem;
+    display: grid;
+    grid-template-columns: minmax(20rem, 1.1fr) 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
+
+  .term { border: 1px solid color-mix(in srgb, var(--gitkit) 30%, var(--line)); background: var(--bg-raise); }
+  .term-bar {
+    padding: 0.5rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); }
+
+  .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .features li {
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 0.97rem;
+  }
+  .features code { color: var(--gitkit); font-size: 0.88em; }
+</style>

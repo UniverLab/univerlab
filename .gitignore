@@ -20,3 +20,9 @@ skills-lock.json
 .astro
 
 # End of https://www.toptal.com/developers/gitignore/api/astro
+
+# Node
+node_modules/
+dist/
+.astro/
+npm-debug.log*

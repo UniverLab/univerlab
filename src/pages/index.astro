@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Mark from '../components/Mark.astro';
+import { experiments } from '../lib/experiments';
+
+const directions = [
+  ['Now', ['Developer experience', 'CLI design', 'AI-assisted workflows']],
+  ['Next', ['Computational science', 'Bioinformatics', 'Simulation', 'CAD', 'Knowledge systems']],
+] as const;
+---
+<BaseLayout title="UniverLab — an open computational laboratory">
+  <!-- Hero -->
+  <section class="wrap hero">
+    <Mark size={84} />
+    <h1>An independent computational laboratory.</h1>
+    <p class="lede prose">
+      UniverLab designs, builds and publishes <strong>open experiments</strong>.
+      Every experiment begins with a real need and produces open knowledge —
+      tools, libraries, datasets, papers. The experiment is the project;
+      artifacts are its outputs.
+    </p>
+    <p class="label">SCI · CLI · BIO — direction, not scope</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Experiments -->
+  <section class="wrap section">
+    <div class="section-head">
+      <span class="label">01 — Experiments</span>
+      <a class="label more" href="/experiments">All experiments →</a>
+    </div>
+    <ul class="grid">
+      {experiments.map((exp) => (
+        <li style={`--essence: ${exp.essence}`}>
+          <a class="card" href={`/experiments/${exp.id}`}>
+            <div class="card-top">
+              <span class="label num">{exp.number}</span>
+              <span class="label status">{exp.status}</span>
+            </div>
+            <h3>{exp.name}</h3>
+            <p class="need">{exp.need}</p>
+            <p class="tagline">{exp.tagline}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Philosophy -->
+  <section class="wrap section two-col">
+    <div>
+      <span class="label">02 — Philosophy</span>
+      <h2>Technology is not the goal.</h2>
+    </div>
+    <div class="prose">
+      <p>
+        The laboratory is guided by <a href="/manifesto">Pensamiento Cósmico</a>:
+        technology as the medium through which curiosity becomes reality.
+        Software should outlive trends. Knowledge should remain open.
+      </p>
+      <ul class="values label">
+        <li>Open knowledge</li>
+        <li>Reproducible engineering</li>
+        <li>Scientific thinking</li>
+        <li>Simplicity</li>
+        <li>Long-term thinking</li>
+        <li>Human–AI collaboration</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Research directions -->
+  <section class="wrap section two-col">
+    <div>
+      <span class="label">03 — Research directions</span>
+      <h2>Where the lab is looking.</h2>
+    </div>
+    <div class="directions">
+      {directions.map(([when, items]) => (
+        <div>
+          <span class="label">{when}</span>
+          <ul>
+            {items.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 8vh, 5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    align-items: flex-start;
+  }
+  .hero h1 {
+    font-size: clamp(2.1rem, 5.5vw, 3.6rem);
+    max-width: 18ch;
+  }
+  .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  .section { padding-block: 3.5rem; }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2rem;
+  }
+  .more { text-decoration: none; }
+  .more:hover { color: var(--ink); }
+
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .card {
+    display: block;
+    background: var(--bg);
+    padding: 1.6rem;
+    height: 100%;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .card:hover { background: var(--bg-raise); }
+  .card:hover h3 { color: var(--essence); }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.4rem;
+  }
+  .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
+  .num { color: var(--essence); }
+  .need {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--ink-dim);
+    font-size: 0.92rem;
+    margin: 0.5rem 0 0.7rem;
+  }
+  .tagline { font-size: 0.92rem; margin: 0; color: var(--ink-dim); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1fr) 2fr;
+    gap: 2.5rem;
+  }
+  .two-col h2 { font-size: 1.7rem; margin-top: 0.7rem; max-width: 14ch; }
+  @media (max-width: 50rem) { .two-col { grid-template-columns: 1fr; } }
+
+  .values {
+    list-style: none;
+    padding: 0;
+    margin: 1.4rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0.6rem 1.5rem;
+  }
+  .values li::before { content: '— '; color: var(--ink-faint); }
+
+  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .directions ul { list-style: none; padding: 0; margin: 0.8rem 0 0; color: var(--ink-dim); }
+  .directions li { padding-block: 0.35rem; border-bottom: 1px solid var(--line); }
+  @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
+</style>

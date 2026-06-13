@@ -1,0 +1,42 @@
+---
+// The UniverLab mark: a rounded cube (the lab, the container) holding a
+// six-armed star — part asterisk, part tree, part neuron. Vector redraw of
+// the original logo so it stays crisp at any size.
+interface Props {
+  size?: number;
+  color?: string;
+}
+const { size = 48, color = 'currentColor' } = Astro.props;
+---
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 100 100"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <!-- rounded hexagonal cube shell -->
+  <path
+    d="M50 6
+       L83 24.5
+       Q89 28 89 35
+       L89 65
+       Q89 72 83 75.5
+       L50 94
+       L17 75.5
+       Q11 72 11 65
+       L11 35
+       Q11 28 17 24.5
+       Z"
+    stroke={color}
+    stroke-width="9"
+    stroke-linejoin="round"
+  />
+  <!-- six-armed star / tree -->
+  <g stroke={color} stroke-width="7" stroke-linecap="round">
+    <line x1="50" y1="22" x2="50" y2="78" />
+    <line x1="27" y1="36" x2="73" y2="64" />
+    <line x1="73" y1="36" x2="27" y2="64" />
+  </g>
+</svg>
