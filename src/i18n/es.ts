@@ -39,14 +39,14 @@ export const es: Dict = {
     hero: {
       title: 'Un laboratorio computacional independiente.',
       lede:
-        'UniverLab diseña, construye y publica <strong>experimentos abiertos</strong>. Cada experimento nace de una necesidad real y produce conocimiento abierto — herramientas, librerías, datasets, artículos. El experimento es el proyecto; los artefactos son sus resultados.',
-      tagline: 'SCI · CLI · BIO — dirección, no alcance',
+        'UniverLab funciona con un solo ciclo: una necesidad real se vuelve un <strong>experimento abierto</strong>, y el experimento produce conocimiento abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un subproducto.',
+      tagline: 'SCI · CLI · BIO',
     },
     lineage: {
       kicker: '00 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es una colección de repositorios. El laboratorio comenzó como un puñado de skills para el trabajo diario; uno de ellos creció hasta volverse <a href="/experiments/canopy">Canopy</a>, un sistema de agentes que — desde muy temprano — se usó para construir al propio Canopy y a cada experimento que vino después. Las herramientas de aquí no son productos separados: son el laboratorio fabricando sus propios instrumentos.',
+        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/experiments/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: son un laboratorio forjando sus propios instrumentos.',
     },
     experiments: { kicker: '01 — Experimentos' },
     philosophy: {
@@ -108,7 +108,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'El que empezó todo.',
         body:
-          'Empezó como una carpeta de skills para el trabajo diario. Luego un descubrimiento: los harness de agentes tenían un <strong>modo headless</strong> del que casi nadie hablaba. Escribí scripts con cron para lanzar tareas a través de él — demasiado para un skill, y los modelos de entonces no podían seguir las instrucciones. Así que se volvió un MCP llamado <em>task-trigger</em>. Pero corría a ciegas en segundo plano; solo el agente lo veía. Lo deprecié y construí una TUI. Feature tras feature, y un cambio de nombre después, se convirtió en Canopy. Desde muy temprano, Canopy se usó para construir a Canopy — y al resto de este laboratorio.',
+          'Empezó como una carpeta de skills para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un <strong>modo headless</strong>, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un MCP: <em>task-trigger</em>. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una TUI — luego scheduling, memoria, sync, identidades, y un nombre nuevo. Canopy. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
       },
       layer: {
         kicker: 'La capa viva',
@@ -141,7 +141,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
         body:
-          'Una tesis de maestría, escrita con asistencia de IA. Overleaf y yo nunca nos llevamos bien, y TeXstudio implicaba una instalación pesada de MiKTeX; VSCode implicaba una pila de extensiones. Quería diagramas Mermaid — declarativos, como piensan los modelos — pero eso arrastraba Node y archivos <code>.mmd</code>. Escribí un latexmake que renderizaba los diagramas faltantes bajo demanda. Funcionaba, a duras penas: demasiadas dependencias, y para encontrar un solo error el modelo tenía que leer el enorme log de compilación de LaTeX. Texforge es lo que deseé que existiera: un binario, un skill, fricción casi nula.',
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. Texforge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
       },
       press: {
         kicker: 'Toda la imprenta',
@@ -172,7 +172,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Un salto de línea que no se portaba bien.',
         body:
-          'Mac del trabajo, Windows en casa, agentes en WSL. Los commits pasaban cambiando nada más que los saltos de línea — Windows reescribiéndolos en silencio. Arreglarlo me llevó a <code>.gitattributes</code>, y esa madriguera me llevó a los git hooks: potentes, integrados, y casi nadie los usa, porque configurarlos en cada repo es un fastidio. Gitkit hace que el fastidio desaparezca.',
+          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a <code>.gitattributes</code>. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque montarlos en cada repo es un fastidio. Así que borré el fastidio. Eso es gitkit.',
       },
       features: {
         kicker: 'Un solo flujo',
@@ -195,7 +195,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'La misma configuración, una y otra vez.',
         body:
-          'Varios proyectos en Rust, la misma configuración de GitHub cada vez — etiquetas, protección de ramas, CI, secretos. El trabajo replicable hecho a mano es solo desgaste. Ghscaff convierte el ritual en un asistente, y lo hace idempotente para que las convenciones nunca se desvíen.',
+          'Proyecto nuevo en Rust. Las mismas etiquetas, la misma protección de ramas, el mismo CI, los mismos secretos. Otra vez. Y otra. El trabajo replicable hecho a mano no es oficio — es desgaste. Ghscaff corre el ritual entero en un asistente, de forma idempotente, para que tus convenciones se sostengan en vez de desviarse.',
       },
       lifts: {
         kicker: 'Siete niveles',
@@ -237,7 +237,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
         body:
-          'Mi esposa es arquitecta, en plena especialización. No existe un flujo de vibe-coding para CAD — sencillamente no existe. Todos muestran generación de imágenes, pero las imágenes no son deterministas, y el trabajo real está en los planos. Cadforge es una apuesta por otro paradigma: CAD declarativo, asistido por IA, donde el dibujo es código fuente.',
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. No existe el vibe-coding para CAD. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los planos. Cadforge es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
       },
       notes: {
         items: [
@@ -258,7 +258,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'La tesis de grado.',
         body:
-          'Mi tesis de grado — hoy una propuesta: contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica reproducible asistida por aprendizaje activo. Aún no hay resultados finales; los experimentos vienen después, y aterrizarán aquí, en abierto, a medida que se ejecuten.',
+          'Mi tesis de grado. Ahora mismo es una propuesta — contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica hecha reproducible con aprendizaje activo. Aún sin resultados. Pero el laboratorio se construyó para sostener trabajo exactamente así, y cuando los experimentos corran, correrán en abierto — aquí mismo.',
       },
       followLab: 'Sigue el laboratorio ↗',
       papersSoon: 'propuesta y datasets en preparación',

@@ -1,12 +1,26 @@
 ---
-// The UniverLab mark: a rounded cube (the lab, the container) holding a
-// six-armed star — part asterisk, part tree, part neuron. Vector redraw of
-// the original logo so it stays crisp at any size.
+// The UniverLab mark, traced from the logo: a cube of three rounded white
+// faces, split by seams, with a six-armed asterisk cut into it. Drawn as a
+// single filled hexagon masked by the six radiating arms (3 cube seams +
+// 3 star arms), so it keeps a single fill color and works on any background.
 interface Props {
   size?: number;
   color?: string;
 }
 const { size = 48, color = 'currentColor' } = Astro.props;
+const uid = 'ulab-' + Math.random().toString(36).slice(2, 9);
+
+// Rounded hexagon (cube silhouette).
+const hex =
+  'M59.43 12.65 L75.57 22.35 Q85 28 85 39 L85 60 Q85 71 75.57 76.65 ' +
+  'L59.43 86.35 Q50 92 40.57 86.35 L24.43 76.65 Q15 71 15 60 L15 39 ' +
+  'Q15 28 24.43 22.35 L40.57 12.65 Q50 7 59.43 12.65 Z';
+
+// Six arms from the centre: up-left / up-right / down are the cube seams
+// (reach the edge); up / down-left / down-right are the star arms (shorter).
+const arms =
+  'M50 49 L17.1 30 M50 49 L82.9 30 M50 49 L50 87 ' +
+  'M50 49 L50 21 M50 49 L29 62 M50 49 L71 62';
 ---
 <svg
   width={size}
@@ -16,27 +30,11 @@ const { size = 48, color = 'currentColor' } = Astro.props;
   xmlns="http://www.w3.org/2000/svg"
   aria-hidden="true"
 >
-  <!-- rounded hexagonal cube shell -->
-  <path
-    d="M50 6
-       L83 24.5
-       Q89 28 89 35
-       L89 65
-       Q89 72 83 75.5
-       L50 94
-       L17 75.5
-       Q11 72 11 65
-       L11 35
-       Q11 28 17 24.5
-       Z"
-    stroke={color}
-    stroke-width="9"
-    stroke-linejoin="round"
-  />
-  <!-- six-armed star / tree -->
-  <g stroke={color} stroke-width="7" stroke-linecap="round">
-    <line x1="50" y1="22" x2="50" y2="78" />
-    <line x1="27" y1="36" x2="73" y2="64" />
-    <line x1="73" y1="36" x2="27" y2="64" />
-  </g>
+  <defs>
+    <mask id={uid}>
+      <path d={hex} fill="#fff" />
+      <path d={arms} stroke="#000" stroke-width="5.4" stroke-linecap="round" />
+    </mask>
+  </defs>
+  <path d={hex} fill={color} mask={`url(#${uid})`} />
 </svg>

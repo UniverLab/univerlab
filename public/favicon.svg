@@ -1,9 +1,10 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" rx="18" fill="#0a0b0e"/>
-  <path d="M50 12 L78 27.5 Q83 30.5 83 36.5 L83 63.5 Q83 69.5 78 72.5 L50 88 L22 72.5 Q17 69.5 17 63.5 L17 36.5 Q17 30.5 22 27.5 Z" stroke="#e8e6e1" stroke-width="8" stroke-linejoin="round"/>
-  <g stroke="#e8e6e1" stroke-width="6" stroke-linecap="round">
-    <line x1="50" y1="26" x2="50" y2="74"/>
-    <line x1="30" y1="38" x2="70" y2="62"/>
-    <line x1="70" y1="38" x2="30" y2="62"/>
-  </g>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="fav">
+      <path d="M59.43 12.65 L75.57 22.35 Q85 28 85 39 L85 60 Q85 71 75.57 76.65 L59.43 86.35 Q50 92 40.57 86.35 L24.43 76.65 Q15 71 15 60 L15 39 Q15 28 24.43 22.35 L40.57 12.65 Q50 7 59.43 12.65 Z" fill="#fff"/>
+      <path d="M50 49 L17.1 30 M50 49 L82.9 30 M50 49 L50 87 M50 49 L50 21 M50 49 L29 62 M50 49 L71 62" stroke="#000" stroke-width="5.4" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="#0a0b0e"/>
+  <path d="M59.43 12.65 L75.57 22.35 Q85 28 85 39 L85 60 Q85 71 75.57 76.65 L59.43 86.35 Q50 92 40.57 86.35 L24.43 76.65 Q15 71 15 60 L15 39 Q15 28 24.43 22.35 L40.57 12.65 Q50 7 59.43 12.65 Z" fill="#e8e6e1" mask="url(#fav)"/>
 </svg>

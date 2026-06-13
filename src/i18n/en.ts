@@ -38,14 +38,14 @@ export const en = {
     hero: {
       title: 'An independent computational laboratory.',
       lede:
-        'UniverLab designs, builds and publishes <strong>open experiments</strong>. Every experiment begins with a real need and produces open knowledge — tools, libraries, datasets, papers. The experiment is the project; artifacts are its outputs.',
-      tagline: 'SCI · CLI · BIO — direction, not scope',
+        'UniverLab runs on one loop: a real need becomes an <strong>open experiment</strong>, and the experiment produces open knowledge — tools, libraries, datasets, papers. The experiment is the work; everything it ships is a byproduct.',
+      tagline: 'SCI · CLI · BIO',
     },
     lineage: {
       kicker: '00 — Origin',
       title: 'It began with one experiment that learned to build the others.',
       body:
-        'This is not a collection of repositories. The lab started as a handful of skills for everyday work; one of them grew into <a href="/experiments/canopy">Canopy</a>, an agent system that — from very early on — was used to build Canopy itself and every experiment that followed. The tools here are not separate products. They are the lab building its own instruments.',
+        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/experiments/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale. They’re a lab forging its own instruments.',
     },
     experiments: { kicker: '01 — Experiments' },
     philosophy: {
@@ -107,7 +107,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'The one that started it all.',
         body:
-          'It began as a folder of skills for everyday work. Then a discovery: agent harnesses had a <strong>headless mode</strong> almost no one talked about. I wrote cron scripts to launch tasks through it — too much for a skill, and the models of the day couldn’t follow the instructions. So it became an MCP called <em>task-trigger</em>. But it ran blind in the background; only the agent could see it. I deprecated that and built a TUI. Feature after feature, a rename later, it became Canopy. From very early on, Canopy was used to build Canopy — and the rest of this lab.',
+          'It started as a folder of skills for work. Then I noticed what nobody was talking about: agent harnesses shipped a <strong>headless mode</strong>, just sitting there unused. I wired cron jobs to fire tasks through it — too much for a skill, and the models of the day choked on the instructions. So it became an MCP: <em>task-trigger</em>. It worked, but it ran blind in the background; only the agent ever saw what happened. Not enough. I killed it and built a TUI — then scheduling, memory, sync, identities, and a new name. Canopy. By then the twist was complete: Canopy was building Canopy, and everything else in this lab.',
       },
       layer: {
         kicker: 'The living layer',
@@ -140,7 +140,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
         body:
-          'A master’s thesis, written with AI assistance. Overleaf and I never got along, and TeXstudio meant a heavy MiKTeX install; VSCode meant an extension stack. I wanted Mermaid diagrams — declarative, the way models think — but that dragged in Node and <code>.mmd</code> files. I wrote a latexmake that rendered missing diagrams on demand. It worked, barely: too many dependencies, and to find a single error the model had to read the enormous LaTeX build log. Texforge is what I wished existed: one binary, one skill, near-zero friction.',
+          'A master’s thesis, written with AI in the loop. Overleaf wanted my money or my patience; TeXstudio dragged in MiKTeX; VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. Texforge is the tool I should have had from the start: one binary, one skill, zero ceremony.',
       },
       press: {
         kicker: 'The whole press',
@@ -171,7 +171,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'A line-ending that wouldn’t behave.',
         body:
-          'Work Mac, home Windows, agents on WSL. Commits kept going through that changed nothing but line endings — Windows quietly rewriting them. Fixing it led me to <code>.gitattributes</code>, and that rabbit hole led to git hooks: powerful, built in, and almost nobody uses them, because setting them up in every repo is a chore. Gitkit makes the chore disappear.',
+          'It started with a commit that changed nothing — just line endings, silently rewritten somewhere between my work Mac, my Windows box and the agents on WSL. Chasing it down led me to <code>.gitattributes</code>. That led to git hooks: built into git, genuinely powerful, and ignored by almost everyone — because wiring them into every repo is a chore. So I deleted the chore. That’s gitkit.',
       },
       features: {
         kicker: 'One flow',
@@ -194,7 +194,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'The same setup, again and again.',
         body:
-          'Several Rust projects, the same GitHub setup each time — labels, branch protection, CI, secrets. Replicable work done by hand is just toil. Ghscaff turns the ritual into one wizard, and makes it idempotent so the conventions never drift.',
+          'New Rust project. Same labels, same branch protection, same CI, same secrets. Again. And again. Replicable work you do by hand isn’t craft — it’s toil. Ghscaff runs the whole ritual in one wizard, idempotently, so your conventions hold the line instead of drifting.',
       },
       lifts: {
         kicker: 'Seven lifts',
@@ -236,7 +236,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'For the architect in the house.',
         body:
-          'My wife is an architect, mid-specialization. There is no vibe-coding flow for CAD — it simply doesn’t exist. Everyone demos image generation, but images aren’t deterministic, and the real work lives in the plans. Cadforge is a bet on a different paradigm: declarative, AI-assisted CAD where the drawing is source code.',
+          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. There’s no vibe-coding for CAD. The whole internet is drunk on image generation, but images lie, and the real work lives in the plans. Cadforge is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
       },
       notes: {
         items: [
@@ -257,7 +257,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'The graduate thesis.',
         body:
-          'My graduate thesis — today a proposal: scientific context, problem statement, the DC2 datasets, and a reproducible literature review assisted by active learning. There are no final results yet; the experiments come next, and they will land here in the open as they run.',
+          'My graduate thesis. Right now it’s a proposal — scientific context, problem statement, the DC2 datasets, and a literature review made reproducible with active learning. No results yet. But the lab was built to hold work exactly like this, and when the experiments run, they’ll run in the open — right here.',
       },
       followLab: 'Follow the lab ↗',
       papersSoon: 'proposal & datasets in preparation',
