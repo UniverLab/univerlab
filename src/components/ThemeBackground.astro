@@ -2,7 +2,7 @@
 // A fixed, behind-content canvas that lazy-loads its animation only after the
 // page has fully loaded — keeping first paint light. One theme per surface.
 interface Props {
-  theme?: 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'drift';
+  theme?: 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'forge' | 'gitgraph' | 'scaffold' | 'drift';
   color?: string;
 }
 const { theme = 'drift', color = '#b9b6ae' } = Astro.props;

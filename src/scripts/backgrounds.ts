@@ -3,7 +3,15 @@
  *  prefers-reduced-motion. Each theme is intentionally light: small element
  *  counts, capped DPR, and animation paused while the tab is hidden. */
 
-type Theme = 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'drift';
+type Theme =
+  | 'cosmic'
+  | 'brain'
+  | 'primitives'
+  | 'starfield'
+  | 'forge'
+  | 'gitgraph'
+  | 'scaffold'
+  | 'drift';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -334,6 +342,184 @@ const THEMES: Record<Theme, Runner> = {
         c.beginPath();
         c.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
+  /* Forge — embers rising from the heat below, flickering. Texforge. */
+  forge(ctx) {
+    const { c } = ctx;
+    const N = Math.min(80, Math.floor((ctx.w * ctx.h) / 20000));
+    const spawn = (initial: boolean) => ({
+      x: rand(0, ctx.w),
+      y: initial ? rand(0, ctx.h) : ctx.h + rand(0, 30),
+      vy: rand(0.2, 0.6),
+      ph: rand(0, Math.PI * 2),
+      s: rand(0.6, 1.8),
+    });
+    const ps = Array.from({ length: N }, () => spawn(true));
+    return (t) => {
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      c.fillStyle = ctx.color;
+      for (const p of ps) {
+        p.y -= p.vy;
+        p.x += Math.sin(t * 0.001 + p.ph) * 0.35;
+        if (p.y < -10) Object.assign(p, spawn(false));
+        const flick = 0.45 + 0.4 * Math.sin(t * 0.004 + p.ph * 5);
+        const heat = Math.max(0, p.y / ctx.h); // brighter near the bottom
+        c.globalAlpha = flick * (0.12 + 0.6 * heat);
+        c.beginPath();
+        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
+  /* Gitgraph — a commit graph flowing down its lanes, branching and merging.
+     Gitkit. */
+  gitgraph(ctx) {
+    const { c } = ctx;
+    const gap = 72;
+    const lanes = Math.max(2, Math.floor((ctx.w - 80) / gap));
+    const x0 = (ctx.w - (lanes - 1) * gap) / 2;
+    const laneX = (i: number) => x0 + i * gap;
+    const vgap = 46;
+    const speed = 0.3;
+    type Node = { x: number; y: number; px: number; py: number; r: number };
+    let nodes: Node[] = [];
+    let tipLane = Math.floor(lanes / 2);
+    let tipX = laneX(tipLane);
+    let tipY = ctx.h;
+    function addNode() {
+      const py = tipY;
+      const px = tipX;
+      if (Math.random() < 0.3) {
+        tipLane = Math.min(lanes - 1, Math.max(0, tipLane + (Math.random() < 0.5 ? -1 : 1)));
+      }
+      tipX = laneX(tipLane);
+      tipY -= vgap;
+      nodes.push({ x: tipX, y: tipY, px, py, r: rand(2.2, 3.4) });
+    }
+    while (tipY > -vgap) addNode();
+    let prevT = 0;
+    return (t) => {
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
+      const dy = speed * dt;
+      for (const n of nodes) {
+        n.y += dy;
+        n.py += dy;
+      }
+      tipY += dy;
+      while (tipY > -vgap) addNode();
+      nodes = nodes.filter((n) => n.y < ctx.h + 80);
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      c.strokeStyle = ctx.color;
+      c.fillStyle = ctx.color;
+      c.lineWidth = 1.4;
+      c.globalAlpha = 0.3;
+      for (const n of nodes) {
+        c.beginPath();
+        c.moveTo(n.px, n.py);
+        if (Math.abs(n.x - n.px) < 0.5) {
+          c.lineTo(n.x, n.y);
+        } else {
+          const my = (n.py + n.y) / 2;
+          c.bezierCurveTo(n.px, my, n.x, my, n.x, n.y);
+        }
+        c.stroke();
+      }
+      c.globalAlpha = 0.7;
+      for (const n of nodes) {
+        c.beginPath();
+        c.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
+  /* Scaffold — an orthogonal frame, braced diagonally and bolted at the
+     joints. Ghscaff. */
+  scaffold(ctx) {
+    const { c } = ctx;
+    const g = 84;
+    let cols = 0;
+    let rows = 0;
+    const dims = () => {
+      cols = Math.ceil(ctx.w / g) + 1;
+      rows = Math.ceil(ctx.h / g) + 1;
+    };
+    dims();
+    type Brace = { gx: number; gy: number; diag: number; t: number; life: number };
+    const braces: Brace[] = [];
+    const add = () =>
+      braces.push({
+        gx: Math.floor(rand(0, cols - 1)),
+        gy: Math.floor(rand(0, rows - 1)),
+        diag: Math.random() < 0.5 ? 0 : 1,
+        t: 0,
+        life: rand(2600, 4200),
+      });
+    for (let i = 0; i < 5; i++) add();
+    let spawnAcc = 0;
+    let prevT = 0;
+    return (t) => {
+      if (cols !== Math.ceil(ctx.w / g) + 1) dims();
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
+      spawnAcc += dt;
+      if (spawnAcc > 520 && braces.length < 14) {
+        spawnAcc = 0;
+        add();
+      }
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      c.strokeStyle = ctx.color;
+      c.lineWidth = 1;
+      // standing frame (faint)
+      c.globalAlpha = 0.06;
+      c.beginPath();
+      for (let x = 0; x <= cols; x++) {
+        c.moveTo(x * g, 0);
+        c.lineTo(x * g, ctx.h);
+      }
+      for (let y = 0; y <= rows; y++) {
+        c.moveTo(0, y * g);
+        c.lineTo(ctx.w, y * g);
+      }
+      c.stroke();
+      // diagonal braces drawing in, then fading
+      for (let i = braces.length - 1; i >= 0; i--) {
+        const b = braces[i];
+        b.t += dt;
+        const k = b.t / b.life;
+        if (k >= 1) {
+          braces.splice(i, 1);
+          continue;
+        }
+        const grow = Math.min(1, k * 3);
+        const fade = k > 0.72 ? 1 - (k - 0.72) / 0.28 : 1;
+        const x = b.gx * g;
+        const y = b.gy * g;
+        c.globalAlpha = 0.5 * fade;
+        c.beginPath();
+        if (b.diag === 0) {
+          c.moveTo(x, y);
+          c.lineTo(x + g * grow, y + g * grow);
+        } else {
+          c.moveTo(x + g, y);
+          c.lineTo(x + g - g * grow, y + g * grow);
+        }
+        c.stroke();
+        if (grow > 0.5) {
+          c.globalAlpha = 0.55 * fade;
+          c.fillStyle = ctx.color;
+          for (const [bx, by] of [[x, y], [x + g, y], [x, y + g], [x + g, y + g]]) {
+            c.fillRect(bx - 1.5, by - 1.5, 3, 3);
+          }
+        }
       }
       c.globalAlpha = 1;
     };
