@@ -208,34 +208,39 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Primitives — lines, arcs and point maps emerging at random positions,
-     animating their parameter, then fading. The CAD drafting feel. */
+  /* Primitives — lines, arcs, bézier curves and dimension lines (cotas)
+     emerging at random positions, drawing themselves in, then fading. The
+     CAD drafting feel: geometry appearing on the sheet. */
   primitives(ctx) {
     const { c } = ctx;
-    type P = { kind: number; x: number; y: number; r: number; a0: number; t: number; life: number };
+    type P = { kind: number; x: number; y: number; r: number; a0: number; bend: number; t: number; life: number };
     const items: P[] = [];
     let spawnAcc = 0;
     let prev = 0;
-    const add = () => items.push({
-      kind: Math.floor(rand(0, 3)),
-      x: rand(0.1, 0.9) * ctx.w,
-      y: rand(0.1, 0.9) * ctx.h,
-      r: rand(40, 130),
-      a0: rand(0, Math.PI * 2),
-      t: 0,
-      life: rand(2600, 4200),
-    });
+    const add = () =>
+      items.push({
+        kind: Math.floor(rand(0, 4)), // 0 line · 1 arc · 2 curve · 3 cota
+        x: rand(0.1, 0.9) * ctx.w,
+        y: rand(0.12, 0.88) * ctx.h,
+        r: rand(50, 150),
+        a0: rand(0, Math.PI * 2),
+        bend: rand(0.35, 0.85) * (Math.random() < 0.5 ? -1 : 1),
+        t: 0,
+        life: rand(2800, 4400),
+      });
     return (t) => {
       const dt = prev ? t - prev : 16;
       prev = t;
       spawnAcc += dt;
-      if (spawnAcc > 700 && items.length < 9) {
+      if (spawnAcc > 650 && items.length < 9) {
         spawnAcc = 0;
         add();
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
       c.fillStyle = ctx.color;
+      c.lineWidth = 1;
+      c.font = '10px ui-monospace, monospace';
       for (let i = items.length - 1; i >= 0; i--) {
         const p = items[i];
         p.t += dt;
@@ -244,29 +249,61 @@ const THEMES: Record<Theme, Runner> = {
           items.splice(i, 1);
           continue;
         }
-        const grow = Math.min(1, k * 3); // draw-in over first third
-        const fade = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
+        const grow = Math.min(1, k * 3); // draw-in over the first third
+        const fade = k > 0.72 ? 1 - (k - 0.72) / 0.28 : 1;
         c.globalAlpha = 0.5 * fade;
+
+        const ca = Math.cos(p.a0);
+        const sa = Math.sin(p.a0);
+        const px = -sa; // unit perpendicular
+        const py = ca;
+
         c.beginPath();
         if (p.kind === 0) {
-          // semicircle sweeping its angle
-          c.arc(p.x, p.y, p.r, p.a0, p.a0 + Math.PI * grow);
-        } else if (p.kind === 1) {
-          // line drawing in
+          // straight line drawing in
           c.moveTo(p.x, p.y);
-          c.lineTo(p.x + Math.cos(p.a0) * p.r * grow, p.y + Math.sin(p.a0) * p.r * grow);
+          c.lineTo(p.x + ca * p.r * grow, p.y + sa * p.r * grow);
+          c.stroke();
+        } else if (p.kind === 1) {
+          // arc / semicircle sweeping its angle open
+          c.arc(p.x, p.y, p.r, p.a0, p.a0 + Math.PI * grow);
+          c.stroke();
+        } else if (p.kind === 2) {
+          // quadratic bézier curve, sampled up to `grow`
+          const ex = p.x + ca * p.r;
+          const ey = p.y + sa * p.r;
+          const cxp = (p.x + ex) / 2 + px * p.r * p.bend;
+          const cyp = (p.y + ey) / 2 + py * p.r * p.bend;
+          const steps = 26;
+          const upto = Math.max(1, Math.ceil(steps * grow));
+          c.moveTo(p.x, p.y);
+          for (let s = 1; s <= upto; s++) {
+            const tt = (s / steps);
+            const u = 1 - tt;
+            c.lineTo(
+              u * u * p.x + 2 * u * tt * cxp + tt * tt * ex,
+              u * u * p.y + 2 * u * tt * cyp + tt * tt * ey
+            );
+          }
+          c.stroke();
         } else {
-          // point map appearing
-          const pts = Math.floor(grow * 9);
-          for (let n = 0; n < pts; n++) {
-            const px = p.x + Math.cos(p.a0 + n) * (p.r * 0.5) + (n % 3) * 10;
-            const py = p.y + Math.sin(p.a0 + n) * (p.r * 0.5) + Math.floor(n / 3) * 10;
-            c.moveTo(px, py);
-            c.arc(px, py, 1.5, 0, Math.PI * 2);
+          // dimension line (cota): extension line + end ticks + measured value
+          const ex = p.x + ca * p.r * grow;
+          const ey = p.y + sa * p.r * grow;
+          const tick = 5;
+          c.moveTo(p.x, p.y);
+          c.lineTo(ex, ey);
+          c.moveTo(p.x - px * tick, p.y - py * tick);
+          c.lineTo(p.x + px * tick, p.y + py * tick);
+          c.moveTo(ex - px * tick, ey - py * tick);
+          c.lineTo(ex + px * tick, ey + py * tick);
+          c.stroke();
+          if (grow > 0.35) {
+            const val = ((p.r * grow) / 20).toFixed(2);
+            c.globalAlpha = 0.6 * fade;
+            c.fillText(val, (p.x + ex) / 2 + px * 9, (p.y + ey) / 2 + py * 9);
           }
         }
-        c.stroke();
-        if (p.kind === 2) c.fill();
       }
       c.globalAlpha = 1;
     };
