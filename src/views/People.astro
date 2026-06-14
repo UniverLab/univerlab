@@ -1,9 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getLang, useTranslations } from '../i18n';
+import { getContributors } from '../lib/contributors';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const p = t.people;
+const contributors = await getContributors();
 ---
 <BaseLayout title={`${p.title} — UniverLab`} bg="cosmic" bgColor="#a78bfa">
   <section class="wrap head">
@@ -31,6 +33,22 @@ const p = t.people;
         <a class="label" href="https://github.com/UniverLab">{p.contributors.link}</a>
       </li>
     </ul>
+
+    {contributors.length > 0 && (
+      <section class="wall">
+        <span class="label">{p.wall.kicker}</span>
+        <ul class="avatars">
+          {contributors.map((c) => (
+            <li>
+              <a href={c.url} title={`${c.contributions} ${p.wall.commits}`}>
+                <img src={c.avatar} alt={c.login} width="48" height="48" loading="lazy" />
+                <span class="who">{c.login}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
   </div>
 </BaseLayout>
 
@@ -42,4 +60,12 @@ const p = t.people;
   .list h3 { font-size: 1.15rem; }
   .list p { color: var(--ink-dim); font-size: 0.95rem; margin: 0; }
   :global(.list p a) { color: var(--ink); }
+
+  .wall { margin: 0 0 5rem; }
+  .avatars { list-style: none; margin: 1.2rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1.4rem 1.6rem; }
+  .avatars a { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--ink-dim); }
+  .avatars img { border-radius: 50%; border: 1px solid var(--line); background: var(--line); filter: grayscale(1); transition: filter 0.2s ease, transform 0.2s ease; }
+  .avatars a:hover img { filter: grayscale(0); transform: translateY(-2px); }
+  .avatars a:hover { color: var(--ink); }
+  .who { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; }
 </style>

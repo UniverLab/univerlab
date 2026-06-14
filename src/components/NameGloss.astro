@@ -1,0 +1,101 @@
+---
+// The name, opening and closing. "UNIVER" and "LAB" stay put — at rest the
+// wordmark reads UNIVERLAB and the line below shows the slogan. Between beats,
+// LAB slides right to open a gap and the sense suffix is revealed in it
+// (universe / universal / university) while the line below crossfades to that
+// sense's gloss; then it closes back to UNIVERLAB + slogan. One shared line,
+// so nothing sits empty. Reduced-motion / no-JS users get the resting state.
+interface Sense { suffix: string; gloss: string; }
+interface Props { senses: Sense[]; tagline: string; }
+const { senses, tagline } = Astro.props;
+const first = senses[0];
+---
+<div class="namegloss" data-senses={JSON.stringify(senses)} data-tagline={tagline}>
+  <span class="wordmark">univer<span class="suffix">{first.suffix}</span>lab</span>
+  <span class="subline slogan">{tagline}</span>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.namegloss').forEach((el) => {
+    const senses = JSON.parse(el.dataset.senses || '[]') as { suffix: string; gloss: string }[];
+    const tagline = el.dataset.tagline || '';
+    const suffix = el.querySelector<HTMLElement>('.suffix');
+    const subline = el.querySelector<HTMLElement>('.subline');
+    if (senses.length < 1 || !suffix || !subline) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const OPEN_MS = 2800; // word open on a sense — time to read the gloss
+    const CLOSED_MS = 1900; // word closed as UNIVERLAB + slogan
+    const GAP = 12; // px of breathing room before LAB so the word reads clear
+    let i = 0;
+    let open = false;
+
+    const swapSub = (text: string, slogan: boolean) => {
+      subline.classList.add('fade');
+      setTimeout(() => {
+        subline.textContent = text;
+        subline.classList.toggle('slogan', slogan);
+        subline.classList.remove('fade');
+      }, 220);
+    };
+
+    const tick = () => {
+      if (!open) {
+        open = true;
+        el.classList.add('open');
+        suffix.textContent = senses[i].suffix; // swap while collapsed
+        suffix.style.width = suffix.scrollWidth + GAP + 'px'; // LAB slides right
+        swapSub(senses[i].gloss, false);
+        setTimeout(tick, OPEN_MS);
+      } else {
+        open = false;
+        el.classList.remove('open');
+        suffix.style.width = '0px'; // LAB slides back, word closes
+        swapSub(tagline, true);
+        i = (i + 1) % senses.length;
+        setTimeout(tick, CLOSED_MS);
+      }
+    };
+    setTimeout(tick, CLOSED_MS); // start at rest, then open
+  });
+</script>
+
+<style>
+  .namegloss { display: flex; flex-direction: column; gap: 0.25rem; }
+  .wordmark {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 1.05rem;
+    line-height: 1.1;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  /* The revealed morpheme: collapses to zero width when closed (no padding, so
+     UNIVER and LAB sit flush as one word — extra room is added in JS instead). */
+  .suffix {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    width: 0;
+    opacity: 0;
+    color: var(--accent);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+  }
+  .open .suffix { opacity: 1; }
+
+  /* One shared line: the slogan at rest, the sense gloss while open. */
+  .subline {
+    min-height: 1.4em;
+    color: var(--ink-dim);
+    transition: opacity 0.22s ease;
+  }
+  .subline.fade { opacity: 0; }
+  .subline:not(.slogan) { font-family: var(--font-serif); font-style: italic; font-size: 1rem; }
+  .subline.slogan {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+  }
+</style>

@@ -7,13 +7,19 @@ import {
   switchLangPath,
   languages,
 } from '../i18n';
+import { experiments } from '../lib/experiments';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const path = Astro.url.pathname;
 
+// Experiments now live at the root (/canopy, /canopy/docs, …). Detect when the
+// current page is one so the "Experiments" nav item still lights up.
+const seg = path.replace(/^\/es(?=\/|$)/, '').split('/').filter(Boolean)[0] ?? '';
+const onExperiment = experiments.some((e) => e.id === seg);
+
 const nav = [
-  { href: localizePath('/experiments', lang), label: t.nav.experiments },
+  { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/research', lang), label: t.nav.research },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: localizePath('/people', lang), label: t.nav.people },
@@ -23,9 +29,9 @@ const other = lang === 'en' ? 'es' : 'en';
 
 // Docs are English-only and have no /es mirror, so switching language from a
 // docs page would 404. Send it to that experiment's page in the other locale.
-const docsMatch = path.match(/^\/(?:es\/)?experiments\/([^/]+)\/docs/);
+const docsMatch = path.match(/^\/([^/]+)\/docs/);
 const toggleHref = docsMatch
-  ? localizePath(`/experiments/${docsMatch[1]}`, other)
+  ? localizePath(`/${docsMatch[1]}`, other)
   : switchLangPath(Astro.url, other);
 
 function isActive(href: string, current: string): boolean {
@@ -39,11 +45,20 @@ function isActive(href: string, current: string): boolean {
       <Mark size={26} />
       <span class="word">UNIVERLAB</span>
     </a>
-    <nav>
+    <button
+      type="button"
+      class="burger"
+      aria-label="Menu"
+      aria-expanded="false"
+      aria-controls="site-nav"
+    >
+      <span class="bars"></span>
+    </button>
+    <nav id="site-nav">
       {nav.map((item) => (
         <a
           href={item.href}
-          class:list={['label', { active: !item.ext && isActive(item.href, path) }]}
+          class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)) }]}
         >{item.label}</a>
       ))}
       <a
@@ -66,10 +81,31 @@ function isActive(href: string, current: string): boolean {
       } catch (e) {}
     });
   });
+
+  // Mobile nav: the burger toggles the collapsed menu open/closed.
+  const burger = document.querySelector<HTMLButtonElement>('.burger');
+  const siteNav = document.getElementById('site-nav');
+  if (burger && siteNav) {
+    const setOpen = (open: boolean) => {
+      siteNav.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+    };
+    burger.addEventListener('click', () =>
+      setOpen(burger.getAttribute('aria-expanded') !== 'true'),
+    );
+    // Close after following a link or pressing Escape.
+    siteNav.querySelectorAll('a').forEach((a) =>
+      a.addEventListener('click', () => setOpen(false)),
+    );
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  }
 </script>
 
 <style>
   .bar {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -85,4 +121,57 @@ function isActive(href: string, current: string): boolean {
   .lang .slash { color: var(--ink-faint); }
   .lang { color: var(--ink-faint); }
   .lang:hover { color: var(--ink); }
+
+  /* Hamburger button — hidden until the nav no longer fits comfortably. */
+  .burger {
+    display: none;
+    position: relative;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink-dim);
+  }
+  .burger:hover { color: var(--ink); }
+  .burger .bars,
+  .burger .bars::before,
+  .burger .bars::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    width: 1.1rem;
+    height: 1.5px;
+    background: currentColor;
+    transform: translateX(-50%);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .burger .bars { top: 50%; transform: translate(-50%, -50%); }
+  .burger .bars::before { top: -6px; }
+  .burger .bars::after { top: 6px; }
+  /* Morph into an X when open. */
+  .burger[aria-expanded='true'] .bars { background: transparent; }
+  .burger[aria-expanded='true'] .bars::before { top: 0; transform: translateX(-50%) rotate(45deg); }
+  .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
+
+  @media (max-width: 890px) {
+    .burger { display: inline-flex; }
+    nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.1rem;
+      margin-top: 1px;
+      padding: 1.2rem 0 1.4rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+    nav.open { display: flex; }
+  }
 </style>

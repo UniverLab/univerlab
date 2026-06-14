@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Mark from '../components/Mark.astro';
+import NameGloss from '../components/NameGloss.astro';
 import { experiments } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
@@ -8,10 +9,12 @@ const t = useTranslations(lang);
 ---
 <BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" bgColor="#a78bfa">
   <section class="wrap hero">
-    <Mark size={84} />
+    <div class="brandline">
+      <Mark size={76} />
+      <NameGloss senses={t.home.hero.senses} tagline={t.home.hero.tagline} />
+    </div>
     <h1>{t.home.hero.title}</h1>
     <p class="lede prose" set:html={t.home.hero.lede} />
-    <p class="label">{t.home.hero.tagline}</p>
   </section>
 
   <hr class="rule" />
@@ -32,13 +35,13 @@ const t = useTranslations(lang);
     </div>
     <ul class="grid">
       {experiments.map((exp) => {
-        const e = (t.experiments as any)[exp.id];
+        const e = t.experiments[exp.id];
         return (
-          <li style={`--essence: var(${exp.essenceVar})`}>
-            <a class="card" href={localizePath(`/experiments/${exp.id}`, lang)}>
+          <li style={`--essence: ${exp.essenceHex}`}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)}>
               <div class="card-top">
                 <span class="label num">{exp.number}</span>
-                <span class="label status">{(t.status as any)[exp.status]}</span>
+                <span class="label status">{t.status[exp.status]}</span>
               </div>
               <h3>{exp.name}</h3>
               <p class="need">{e.need}</p>
@@ -98,6 +101,9 @@ const t = useTranslations(lang);
 
 <style>
   .hero { padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 8vh, 5rem); display: flex; flex-direction: column; gap: 1.6rem; align-items: flex-start; }
+  /* Logo anchors the name gloss to its right (wordmark + a shared line that
+     holds the slogan at rest, the sense gloss while open). */
+  .brandline { display: flex; align-items: center; gap: 1.5rem; }
   .hero h1 { font-size: clamp(2.1rem, 5.5vw, 3.6rem); max-width: 18ch; }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
   :global(.lede strong) { color: var(--ink); font-weight: 500; }

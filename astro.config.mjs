@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://univerlab.dev',
+  site: 'https://univerlab.org',
   i18n: {
     locales: ['en', 'es'],
     defaultLocale: 'en',

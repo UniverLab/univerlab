@@ -15,14 +15,14 @@ const t = useTranslations(lang);
   <div class="wrap">
     <ol class="list">
       {experiments.map((exp) => {
-        const e = (t.experiments as any)[exp.id];
+        const e = t.experiments[exp.id];
         return (
-          <li style={`--essence: var(${exp.essenceVar})`}>
-            <a href={localizePath(`/experiments/${exp.id}`, lang)} class="row">
+          <li style={`--essence: ${exp.essenceHex}`}>
+            <a href={localizePath(`/${exp.id}`, lang)} class="row">
               <span class="label num">{exp.number}</span>
               <span class="name">{exp.name}</span>
               <span class="tagline">{e.tagline}</span>
-              <span class="label status">{(t.status as any)[exp.status]}</span>
+              <span class="label status">{t.status[exp.status]}</span>
             </a>
           </li>
         );

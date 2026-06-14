@@ -3,15 +3,7 @@
  *  prefers-reduced-motion. Each theme is intentionally light: small element
  *  counts, capped DPR, and animation paused while the tab is hidden. */
 
-type Theme =
-  | 'cosmic'
-  | 'brain'
-  | 'primitives'
-  | 'starfield'
-  | 'forge'
-  | 'gitgraph'
-  | 'scaffold'
-  | 'drift';
+import type { BgTheme as Theme } from '../lib/experiments';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -135,32 +127,51 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Brian's Brain — the same 3-state automaton as the Canopy TUI, drawn as
-     dots. Starts calm (sparse) and reseeds in small clusters when activity
-     fades, so the field revives instead of flickering into static. */
+  /* Brian's Brain — the same 3-state automaton as the Canopy TUI, rendered the
+     way the terminal draws it: in Braille glyphs (U+2800–U+28FF). The automaton
+     runs on a fine sub-grid and every 2×4 block of cells is packed into one
+     Braille character, so the field reads as varied glyphs instead of uniform
+     dots. Firing cells are drawn bright, dying cells faint. Starts sparse and
+     reseeds in small clusters when activity fades, so it revives instead of
+     flickering into static. */
   brain(ctx) {
     const { c } = ctx;
-    const cell = 15;
-    let cols = 0;
-    let rows = 0;
+    // On-screen size of one Braille character; each packs 2×4 automaton cells.
+    const charW = 9;
+    const charH = 16;
+    // Sub-cell → Braille dot bit, indexed [row 0..3][col 0..1].
+    const DOT = [
+      [0x01, 0x08],
+      [0x02, 0x10],
+      [0x04, 0x20],
+      [0x40, 0x80],
+    ];
+    const glyph = (mask: number) => String.fromCharCode(0x2800 + mask);
+
+    let cols = 0; // character columns
+    let rows = 0; // character rows
+    let gw = 0; // sub-grid width  (cols × 2)
+    let gh = 0; // sub-grid height (rows × 4)
     let grid: Uint8Array;
 
     function init() {
-      cols = Math.ceil(ctx.w / cell) + 1;
-      rows = Math.ceil(ctx.h / cell) + 1;
-      grid = new Uint8Array(cols * rows);
+      cols = Math.ceil(ctx.w / charW) + 1;
+      rows = Math.ceil(ctx.h / charH) + 1;
+      gw = cols * 2;
+      gh = rows * 4;
+      grid = new Uint8Array(gw * gh);
       // start with little noise
-      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.06 ? 1 : 0;
+      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.03 ? 1 : 0;
     }
     init();
 
-    const idx = (x: number, y: number) => ((y + rows) % rows) * cols + ((x + cols) % cols);
+    const idx = (x: number, y: number) => ((y + gh) % gh) * gw + ((x + gw) % gw);
 
     // A cluster of adjacent firing cells: neighbours then see exactly 2 firing
     // cells and ignite, so reseeding actually propagates instead of dying out.
     function seedCluster() {
-      const x = Math.floor(Math.random() * cols);
-      const y = Math.floor(Math.random() * rows);
+      const x = Math.floor(Math.random() * gw);
+      const y = Math.floor(Math.random() * gh);
       grid[idx(x, y)] = 1;
       grid[idx(x + 1, y)] = 1;
       grid[idx(x, y + 1)] = 1;
@@ -169,47 +180,63 @@ const THEMES: Record<Theme, Runner> = {
     let acc = 0;
     let prev = 0;
     return (t) => {
-      if (cols !== Math.ceil(ctx.w / cell) + 1) init();
+      if (cols !== Math.ceil(ctx.w / charW) + 1) init();
       acc += prev ? t - prev : 0;
       prev = t;
       if (acc > 130) {
         acc = 0;
         const next = new Uint8Array(grid.length);
         let firing = 0;
-        for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-            const s = grid[y * cols + x];
-            if (s === 1) next[y * cols + x] = 2; // firing -> dying
-            else if (s === 2) next[y * cols + x] = 0; // dying -> ready
+        for (let y = 0; y < gh; y++) {
+          for (let x = 0; x < gw; x++) {
+            const s = grid[y * gw + x];
+            if (s === 1) next[y * gw + x] = 2; // firing -> dying
+            else if (s === 2) next[y * gw + x] = 0; // dying -> ready
             else {
               let n = 0;
               for (let dy = -1; dy <= 1; dy++)
                 for (let dx = -1; dx <= 1; dx++)
                   if ((dx || dy) && grid[idx(x + dx, y + dy)] === 1) n++;
-              next[y * cols + x] = n === 2 ? 1 : 0;
+              next[y * gw + x] = n === 2 ? 1 : 0;
               if (n === 2) firing++;
             }
           }
         }
         grid = next;
-        // Stronger revival: kick in earlier and seed several propagating clusters.
-        const threshold = Math.max(10, Math.floor(grid.length * 0.012));
+        // Gentle revival: only step in once activity is low, with a few
+        // propagating clusters so the field stays sparse rather than busy.
+        const threshold = Math.max(8, Math.floor(grid.length * 0.006));
         if (firing < threshold) {
-          const clusters = Math.max(5, Math.floor(grid.length * 0.0022));
+          const clusters = Math.max(3, Math.floor(grid.length * 0.0012));
           for (let i = 0; i < clusters; i++) seedCluster();
         }
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.fillStyle = ctx.color;
-      const cx = cell / 2;
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          const s = grid[y * cols + x];
-          if (!s) continue;
-          c.globalAlpha = s === 1 ? 0.7 : 0.16;
-          c.beginPath();
-          c.arc(x * cell + cx, y * cell + cx, s === 1 ? cell * 0.2 : cell * 0.12, 0, Math.PI * 2);
-          c.fill();
+      c.textBaseline = 'top';
+      c.font = `${charH}px ui-monospace, "DejaVu Sans Mono", monospace`;
+      for (let cy = 0; cy < rows; cy++) {
+        for (let cx = 0; cx < cols; cx++) {
+          let fire = 0;
+          let dying = 0;
+          for (let r = 0; r < 4; r++) {
+            for (let col = 0; col < 2; col++) {
+              const s = grid[(cy * 4 + r) * gw + (cx * 2 + col)];
+              if (s === 1) fire |= DOT[r][col];
+              else if (s === 2) dying |= DOT[r][col];
+            }
+          }
+          if (!fire && !dying) continue;
+          const px = cx * charW;
+          const py = cy * charH;
+          if (dying) {
+            c.globalAlpha = 0.12;
+            c.fillText(glyph(dying), px, py);
+          }
+          if (fire) {
+            c.globalAlpha = 0.45;
+            c.fillText(glyph(fire), px, py);
+          }
         }
       }
       c.globalAlpha = 1;

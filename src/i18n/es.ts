@@ -11,13 +11,12 @@ export const es: Dict = {
     experiments: 'Experimentos',
     research: 'Investigación',
     manifesto: 'Manifiesto',
-    people: 'Personas',
+    people: 'Colaboradores',
     github: 'GitHub',
   },
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
-    license: 'Experimentos con licencia MIT',
   },
   common: {
     repo: 'GitHub ↗',
@@ -37,16 +36,23 @@ export const es: Dict = {
   },
   home: {
     hero: {
-      title: 'Un laboratorio computacional independiente.',
+      title: 'Somos el universo, observándose a sí mismo.',
       lede:
         'UniverLab funciona con un solo ciclo: una necesidad real se vuelve un <strong>experimento abierto</strong>, y el experimento produce conocimiento abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un subproducto.',
       tagline: 'SCI · CLI · BIO',
+      // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
+      // rotan, desplegando universo / universal / universidad.
+      senses: [
+        { suffix: 'so', gloss: 'un laboratorio del universo' },
+        { suffix: 'sal', gloss: 'conocimiento universal, abierto por defecto' },
+        { suffix: 'sidad', gloss: 'una universidad sin muros' },
+      ],
     },
     lineage: {
       kicker: '00 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/experiments/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: son un laboratorio forjando sus propios instrumentos.',
+        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: somos el universo forjando sus propios instrumentos para seguir estudiándose.',
     },
     experiments: { kicker: '01 — Experimentos' },
     philosophy: {
@@ -83,7 +89,7 @@ export const es: Dict = {
       body:
         'Tratamos el software como una práctica moral, no solo técnica — una lectura directa del pensamiento que guía al laboratorio.',
       items: [
-        ['Aumentar la agencia humana', 'Construir herramientas que den más alcance a las personas, no más dependencia.'],
+        ['Ampliar el alcance de las personas', 'Construir herramientas que den más alcance a las personas, no más dependencia.'],
         ['Preferir la transparencia', 'Elegir sistemas transparentes por encima de la comodidad de la caja negra.'],
         ['Equilibrar velocidad y responsabilidad', 'Avanzar rápido donde es seguro; responder por lo que publicamos.'],
         ['Mantener el conocimiento reproducible', 'La ciencia y la ingeniería deben poder repetirse para ser confiables.'],
@@ -141,7 +147,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
         body:
-          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. Texforge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
       },
       press: {
         kicker: 'Toda la imprenta',
@@ -190,12 +196,12 @@ export const es: Dict = {
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
-        'Crear un repositorio como se debe son una docena de pasos olvidables. Ghscaff levanta toda la estructura en un asistente conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
+        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un asistente conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
       genesis: {
         kicker: 'Génesis',
         title: 'La misma configuración, una y otra vez.',
         body:
-          'Proyecto nuevo en Rust. Las mismas etiquetas, la misma protección de ramas, el mismo CI, los mismos secretos. Otra vez. Y otra. El trabajo replicable hecho a mano no es oficio — es desgaste. Ghscaff corre el ritual entero en un asistente, de forma idempotente, para que tus convenciones se sostengan en vez de desviarse.',
+          'Proyecto nuevo en Rust. Las mismas etiquetas, la misma protección de ramas, el mismo CI, los mismos secretos. Otra vez. Y otra. El trabajo replicable hecho a mano no es oficio — es desgaste. ghScaff corre el ritual entero en un asistente, de forma idempotente, para que tus convenciones se sostengan en vez de desviarse.',
       },
       lifts: {
         kicker: 'Siete niveles',
@@ -227,22 +233,22 @@ export const es: Dict = {
       },
     },
     cadforge: {
-      need: 'Los planos arquitectónicos son dibujos sin semántica — imposibles de versionar o automatizar.',
+      need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
-        'Arquitectura como Código: CAD 2D declarativo compilado de forma determinista a DXF.',
-      koan: 'El plano no se dibuja. Se declara.',
+        'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      koan: 'El dibujo no se dibuja. Se declara.',
       lede:
-        'Cadforge trata un plano como código fuente: la geometría se declara en TOML, se previsualiza en vivo en el navegador y se compila a un <strong>DXF idéntico bit a bit</strong> cada vez. Ahora <code>git diff</code> funciona sobre edificios.',
+        'cadForge trata un dibujo CAD como código fuente: la geometría se declara en TOML, se previsualiza en vivo en el navegador y se compila a un <strong>DXF idéntico bit a bit</strong> cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
       genesis: {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
         body:
-          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. No existe el vibe-coding para CAD. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los planos. Cadforge es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadForge es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
       },
       notes: {
         items: [
           'Servidor de vista previa en vivo: edita un archivo <code>.cf</code> y el navegador se actualiza al guardar. Los errores se superponen en vez de romper.',
-          'Hecho para agentes de IA: <code>cadforge schema</code> enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan <em>ver</em> el plano.',
+          'Hecho para agentes de IA: <code>cadforge schema</code> enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan <em>ver</em> el dibujo.',
           'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
         ],
       },
@@ -298,7 +304,7 @@ export const es: Dict = {
     kicker: 'Entre experimentos',
     title: 'Investigación',
     intro:
-      'Artefactos de investigación que cruzan los experimentos. Las primeras entradas vendrán de la línea <a href="/experiments/astro-denoise">astro-denoise</a> — este índice crece a medida que se publica trabajo, nunca antes.',
+      'Artefactos de investigación que cruzan los experimentos. Las primeras entradas vendrán de la línea <a href="/astro-denoise">astro-denoise</a> — este índice crece a medida que se publica trabajo, nunca antes.',
     items: [
       ['Artículos', 'Publicaciones y preprints producidos por los experimentos del laboratorio.'],
       ['Datasets', 'Datasets abiertos, empezando por los datos de benchmark de astro-denoise.'],
@@ -308,7 +314,7 @@ export const es: Dict = {
   },
   people: {
     kicker: 'El laboratorio',
-    title: 'Personas',
+    title: 'Colaboradores',
     founder: {
       role: 'Fundador',
       name: 'Jheison Martinez',
@@ -320,7 +326,7 @@ export const es: Dict = {
       role: 'Colaboradores IA',
       name: 'Modelos de lenguaje',
       body:
-        'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/experiments/canopy">Canopy</a>. Su rol se reconoce, no se oculta.',
+        'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy">Canopy</a>. Su rol se reconoce, no se oculta.',
     },
     contributors: {
       role: 'Colaboradores',
@@ -328,6 +334,10 @@ export const es: Dict = {
       body:
         'Cada experimento acepta issues y pull requests enfocados. Conventional commits, pruebas antes de los PR, documentación actualizada con el comportamiento.',
       link: 'github.com/UniverLab ↗',
+    },
+    wall: {
+      kicker: 'En los repositorios',
+      commits: 'commits',
     },
   },
 };

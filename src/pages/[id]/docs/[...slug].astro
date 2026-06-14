@@ -1,9 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
-import DocsLayout from '../../../../layouts/DocsLayout.astro';
+import DocsLayout from '../../../layouts/DocsLayout.astro';
+import { experiments } from '../../../lib/experiments';
 
 export async function getStaticPaths() {
-  const ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadforge'];
+  const ids = experiments.filter((e) => e.hasDocs).map((e) => e.id);
   const paths = [];
   for (const id of ids) {
     const entries = await getCollection(`docs-${id}` as any);

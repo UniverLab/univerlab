@@ -15,12 +15,12 @@ const { id, title, description, links, current } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-const base = `/experiments/${id}/docs`;
+const base = `/${id}/docs`;
 ---
 <BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg="drift" bgColor={exp.essenceHex}>
-  <div class="wrap docs" style={`--essence: var(${exp.essenceVar})`}>
+  <div class="wrap docs" style={`--essence: ${exp.essenceHex}`}>
     <aside>
-      <a class="back label" href={`/experiments/${id}`}>← {exp.name}</a>
+      <a class="back label" href={`/${id}`}>← {exp.name}</a>
       <span class="label head">{t.common.docsHome}</span>
       <nav>
         {links.map((l) => (

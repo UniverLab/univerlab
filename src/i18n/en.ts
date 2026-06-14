@@ -10,13 +10,12 @@ export const en = {
     experiments: 'Experiments',
     research: 'Research',
     manifesto: 'Manifesto',
-    people: 'People',
+    people: 'Collaborators',
     github: 'GitHub',
   },
   footer: {
     quote:
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
-    license: 'MIT-licensed experiments',
   },
   common: {
     repo: 'GitHub ↗',
@@ -36,16 +35,23 @@ export const en = {
   },
   home: {
     hero: {
-      title: 'An independent computational laboratory.',
+      title: 'We are the universe, observing itself.',
       lede:
         'UniverLab runs on one loop: a real need becomes an <strong>open experiment</strong>, and the experiment produces open knowledge — tools, libraries, datasets, papers. The experiment is the work; everything it ships is a byproduct.',
       tagline: 'SCI · CLI · BIO',
+      // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
+      // universe / universal / university — a laboratory of the universe.
+      senses: [
+        { suffix: 'se', gloss: 'a laboratory of the universe' },
+        { suffix: 'sal', gloss: 'universal knowledge, open by default' },
+        { suffix: 'sity', gloss: 'a university without walls' },
+      ],
     },
     lineage: {
       kicker: '00 — Origin',
       title: 'It began with one experiment that learned to build the others.',
       body:
-        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/experiments/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale. They’re a lab forging its own instruments.',
+        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale. We are the universe forging its own instruments to keep studying itself.',
     },
     experiments: { kicker: '01 — Experiments' },
     philosophy: {
@@ -82,7 +88,7 @@ export const en = {
       body:
         'We treat software as a moral practice, not only a technical one — a direct reading of the lab’s guiding thought.',
       items: [
-        ['Increase human agency', 'Build tools that give people more reach, not more dependency.'],
+        ['Expand people’s reach', 'Build tools that give people more reach, not more dependency.'],
         ['Prefer transparency', 'Choose transparent systems over black-box convenience.'],
         ['Balance speed with accountability', 'Move fast where it is safe; answer for what we ship.'],
         ['Keep knowledge reproducible', 'Science and engineering must be repeatable to be trusted.'],
@@ -140,7 +146,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
         body:
-          'A master’s thesis, written with AI in the loop. Overleaf wanted my money or my patience; TeXstudio dragged in MiKTeX; VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. Texforge is the tool I should have had from the start: one binary, one skill, zero ceremony.',
+          'A master’s thesis, written with AI in the loop. Overleaf wanted my money or my patience; TeXstudio dragged in MiKTeX; VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. TexForge is the tool I should have had from the start: one binary, one skill, zero ceremony.',
       },
       press: {
         kicker: 'The whole press',
@@ -189,12 +195,12 @@ export const en = {
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
-        'Creating a repository properly is a dozen forgettable steps. Ghscaff raises the whole structure in one conversational wizard — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
+        'Creating a repository properly is a dozen forgettable steps. ghScaff raises the whole structure in one conversational wizard — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
       genesis: {
         kicker: 'Genesis',
         title: 'The same setup, again and again.',
         body:
-          'New Rust project. Same labels, same branch protection, same CI, same secrets. Again. And again. Replicable work you do by hand isn’t craft — it’s toil. Ghscaff runs the whole ritual in one wizard, idempotently, so your conventions hold the line instead of drifting.',
+          'New Rust project. Same labels, same branch protection, same CI, same secrets. Again. And again. Replicable work you do by hand isn’t craft — it’s toil. ghScaff runs the whole ritual in one wizard, idempotently, so your conventions hold the line instead of drifting.',
       },
       lifts: {
         kicker: 'Seven lifts',
@@ -226,22 +232,22 @@ export const en = {
       },
     },
     cadforge: {
-      need: 'Architectural plans are drawings without semantics — impossible to diff or automate.',
+      need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
-        'Architecture as Code: declarative 2D CAD compiled deterministically to DXF.',
-      koan: 'The plan is not drawn. It is declared.',
+        'CAD as code: declarative geometry compiled deterministically to DXF.',
+      koan: 'The drawing is not drawn. It is declared.',
       lede:
-        'Cadforge treats a floor plan like source code: geometry declared in TOML, previewed live in the browser, compiled to a <strong>bit-identical DXF</strong> every time. <code>git diff</code> works on buildings now.',
+        'cadForge treats a CAD drawing like source code: geometry declared in TOML, previewed live in the browser, compiled to a <strong>bit-identical DXF</strong> every time. <code>git diff</code> works on drawings now.',
       genesis: {
         kicker: 'Genesis',
         title: 'For the architect in the house.',
         body:
-          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. There’s no vibe-coding for CAD. The whole internet is drunk on image generation, but images lie, and the real work lives in the plans. Cadforge is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
+          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. The vibe-coding equivalent for CAD simply didn’t exist: no AI-assisted drawing that behaved like real engineering. The whole internet is drunk on image generation, but images lie, and the real work lives in the drawings. cadForge is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
       },
       notes: {
         items: [
           'Live preview server: edit a <code>.cf</code> file, the browser updates on save. Errors overlay instead of crashing.',
-          'Built for AI agents: <code>cadforge schema</code> teaches the language in one command; previews ship per-entity bounding boxes so agents can <em>see</em> the plan.',
+          'Built for AI agents: <code>cadforge schema</code> teaches the language in one command; previews ship per-entity bounding boxes so agents can <em>see</em> the drawing.',
           'Deterministic DXF out, legacy DXF in — existing drawings migrate into the declarative workflow.',
         ],
       },
@@ -297,7 +303,7 @@ export const en = {
     kicker: 'Cross-experiment',
     title: 'Research',
     intro:
-      'Research artifacts that cut across experiments. The first entries will come from the <a href="/experiments/astro-denoise">astro-denoise</a> track — this index grows as work is published, never before.',
+      'Research artifacts that cut across experiments. The first entries will come from the <a href="/astro-denoise">astro-denoise</a> track — this index grows as work is published, never before.',
     items: [
       ['Papers', 'Publications and preprints produced by lab experiments.'],
       ['Datasets', 'Open datasets, starting with astro-denoise benchmark data.'],
@@ -307,7 +313,7 @@ export const en = {
   },
   people: {
     kicker: 'The laboratory',
-    title: 'People',
+    title: 'Collaborators',
     founder: {
       role: 'Founder',
       name: 'Jheison Martinez',
@@ -319,7 +325,7 @@ export const en = {
       role: 'AI collaborators',
       name: 'Language models',
       body:
-        'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/experiments/canopy">Canopy</a>. Their role is acknowledged, not hidden.',
+        'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy">Canopy</a>. Their role is acknowledged, not hidden.',
     },
     contributors: {
       role: 'Contributors',
@@ -328,7 +334,13 @@ export const en = {
         'Every experiment accepts issues and focused pull requests. Conventional commits, tests before PRs, docs updated with behavior.',
       link: 'github.com/UniverLab ↗',
     },
+    wall: {
+      kicker: 'Across the repositories',
+      commits: 'commits',
+    },
   },
 };
 
 export type Dict = typeof en;
+/** Union of experiment ids — the single source of truth is the copy dictionary. */
+export type ExperimentId = keyof Dict['experiments'];

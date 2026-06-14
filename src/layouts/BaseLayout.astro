@@ -2,20 +2,21 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ThemeBackground from '../components/ThemeBackground.astro';
+import type { BgTheme } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
-  bg?: 'cosmic' | 'brain' | 'primitives' | 'starfield' | 'forge' | 'gitgraph' | 'scaffold' | 'drift';
+  bg?: BgTheme;
   bgColor?: string;
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astro.props;
 
-const site = Astro.site ?? new URL('https://univerlab.dev');
+const site = Astro.site ?? new URL('https://univerlab.org');
 const path = Astro.url.pathname;
 const canonical = new URL(path, site).href;
 const ogImage = new URL('/og.png', site).href;

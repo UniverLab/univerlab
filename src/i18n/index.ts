@@ -1,6 +1,8 @@
 import { en, type Dict } from './en';
 import { es } from './es';
 
+export type { Dict, ExperimentId } from './en';
+
 export const languages = { en: 'EN', es: 'ES' } as const;
 export type Lang = keyof typeof languages;
 export const defaultLang: Lang = 'en';
@@ -21,8 +23,8 @@ export function useTranslations(lang: Lang): Dict {
 /** Prefix an app-absolute path ("/experiments") for the given language.
  *  English is unprefixed; Spanish gets a /es prefix. */
 export function localizePath(path: string, lang: Lang): string {
-  const clean = path === '/' ? '' : path;
-  return lang === 'es' ? `/es${clean}` || '/es' : path;
+  if (lang !== 'es') return path;
+  return path === '/' ? '/es' : `/es${path}`;
 }
 
 /** Given the current URL and a target language, return the equivalent path. */

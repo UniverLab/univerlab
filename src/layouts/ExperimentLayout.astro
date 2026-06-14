@@ -1,37 +1,48 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
-import { byId } from '../lib/experiments';
+import { byId, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
 
-interface Props { id: string; }
+interface Props { id: ExperimentId; }
 const { id } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-const e = (t.experiments as any)[id];
-const statusLabel = (t.status as any)[exp.status];
+const e = t.experiments[id];
+const statusLabel = t.status[exp.status];
 ---
 <BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex}>
-  <div class="exp" style={`--essence: var(${exp.essenceVar})`}>
+  <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · {statusLabel}</p>
-      <Banner id={id} color={`var(${exp.essenceVar})`} />
+      <Banner id={id} color={exp.essenceHex} />
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
       <div class="actions">
         <a class="btn" href={exp.github}>{t.common.repo}</a>
         {exp.hasDocs && (
-          <a class="btn ghost" href={`/experiments/${id}/docs`}>{t.common.docs}</a>
+          <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
         )}
         <slot name="cta" />
       </div>
       {exp.install && (
-        <div class="install">
-          <span class="label">{t.common.install}</span>
+        <div class="install" data-install>
+          <div class="install-head">
+            <span class="label">{t.common.install}</span>
+            {exp.install.windows && (
+              <div class="os-tabs" role="tablist" aria-label="Platform">
+                <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
+                <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
+              </div>
+            )}
+          </div>
           <div class="cmd">
-            <code>{exp.install}</code>
-            <button class="copy" type="button" data-cmd={exp.install} title={t.common.copy} aria-label={t.common.copy}>
+            <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
+            {exp.install.windows && (
+              <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
+            )}
+            <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
               <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
             </button>
           </div>
@@ -72,16 +83,27 @@ const statusLabel = (t.status as any)[exp.status];
   .btn.ghost:hover { border-color: var(--essence); color: var(--essence); background: transparent; }
 
   .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; }
+  .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .os-tabs { display: inline-flex; gap: 0.9rem; }
+  .os-tab {
+    border: 0; background: none; cursor: pointer; padding: 0;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-faint); transition: color 0.15s ease;
+  }
+  .os-tab:hover { color: var(--ink-dim); }
+  .os-tab[aria-selected='true'] { color: var(--essence); }
   .cmd {
     display: flex; align-items: stretch; gap: 0;
     border: 1px solid var(--line); background: var(--bg-raise);
   }
-  .cmd code {
+  .cmd-line {
     flex: 1; padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink-dim);
     overflow-x: auto; white-space: nowrap; scrollbar-width: none;
   }
-  .cmd code::-webkit-scrollbar { display: none; }
-  .cmd code::before { content: '$ '; color: var(--essence); }
+  .cmd-line[hidden] { display: none; }
+  .cmd-line::-webkit-scrollbar { display: none; }
+  .cmd-line[data-os='unix']::before { content: '$ '; color: var(--essence); }
+  .cmd-line[data-os='windows']::before { content: '> '; color: var(--essence); }
   .copy {
     border: 0; border-left: 1px solid var(--line); background: transparent;
     color: var(--ink-dim); cursor: pointer; padding: 0 0.9rem; font-size: 0.95rem;
@@ -101,13 +123,33 @@ const statusLabel = (t.status as any)[exp.status];
 </style>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('button.copy').forEach((btn) => {
-    btn.addEventListener('click', async () => {
+  // Install block: pick the platform tab (defaulting to the detected OS) and
+  // copy whichever command is currently shown.
+  document.querySelectorAll<HTMLElement>('[data-install]').forEach((box) => {
+    const lines = Array.from(box.querySelectorAll<HTMLElement>('.cmd-line'));
+    const tabs = Array.from(box.querySelectorAll<HTMLButtonElement>('.os-tab'));
+    const copy = box.querySelector<HTMLButtonElement>('.copy');
+
+    const select = (os: string) => {
+      lines.forEach((l) => (l.hidden = l.dataset.os !== os));
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.os === os)));
+    };
+
+    if (tabs.length) {
+      select(/Windows/i.test(navigator.userAgent) ? 'windows' : 'unix');
+      tabs.forEach((t) => t.addEventListener('click', () => select(t.dataset.os || 'unix')));
+    }
+
+    copy?.addEventListener('click', async () => {
+      const active = lines.find((l) => !l.hidden);
+      if (!active) return;
       try {
-        await navigator.clipboard.writeText(btn.dataset.cmd || '');
-        btn.classList.add('done');
-        setTimeout(() => btn.classList.remove('done'), 1600);
-      } catch (e) {}
+        await navigator.clipboard.writeText(active.textContent || '');
+        copy.classList.add('done');
+        setTimeout(() => copy.classList.remove('done'), 1600);
+      } catch {
+        // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
+      }
     });
   });
 </script>
