@@ -3,13 +3,15 @@ import Mark from './Mark.astro';
 import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+
+const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
 ---
 <footer>
   <hr class="rule" />
   <div class="wrap inner">
     <div class="left">
       <Mark size={20} color="var(--ink-faint)" />
-      <p class="quote">{t.footer.quote}</p>
+      {!isManifesto && <p class="quote">{t.footer.quote}</p>}
     </div>
     <div class="right label">
       <a href="https://github.com/UniverLab">github.com/UniverLab</a>

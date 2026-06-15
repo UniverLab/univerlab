@@ -41,10 +41,12 @@ export const en = {
       tagline: 'SCI · CLI · BIO',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university — a laboratory of the universe.
+      // Each "univer—" sense carries a small catalog; the hero picks one at random.
       senses: [
-        { suffix: 'se', gloss: 'a laboratory of the universe' },
-        { suffix: 'sal', gloss: 'universal knowledge, open by default' },
-        { suffix: 'sity', gloss: 'a university without walls' },
+        { suffix: 'se', glosses: ['a laboratory of the universe', 'the cosmos, studying itself', 'knowledge under an open sky'] },
+        { suffix: 'sal', glosses: ['universal knowledge, open by default', 'tools for anyone, anywhere', 'open to all, owned by none'] },
+        { suffix: 'sity', glosses: ['a university without walls', 'research done in the open', 'learning that ships its work'] },
+        { suffix: 'salize', glosses: ['make knowledge belong to everyone', 'an open answer to every real need', 'reach, not dependency'] },
       ],
     },
     lineage: {
@@ -73,26 +75,13 @@ export const en = {
       title: 'Where the lab is looking.',
       now: 'Now',
       next: 'Next',
-      nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows'],
+      nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows', 'CAD'],
       nextItems: [
         'Computational science',
         'Bioinformatics',
         'Simulation',
-        'CAD',
         'Knowledge systems',
       ],
-    },
-    ethics: {
-      kicker: '04 — Ethics',
-      title: 'Software as a moral practice.',
-      body:
-        'We treat software as a moral practice, not only a technical one — a direct reading of the lab’s guiding thought.',
-      items: [
-        ['Expand people’s reach', 'Build tools that give people more reach, not more dependency.'],
-        ['Prefer transparency', 'Choose transparent systems over black-box convenience.'],
-        ['Balance speed with accountability', 'Move fast where it is safe; answer for what we ship.'],
-        ['Keep knowledge reproducible', 'Science and engineering must be repeatable to be trusted.'],
-      ] as [string, string][],
     },
   },
   experimentsIndex: {
@@ -261,9 +250,9 @@ export const en = {
         'This research track benchmarks a classical baseline and a learned model — <strong>BM3D and U-Net</strong> — on simulated <strong>Vera Rubin Observatory (LSST DC2)</strong> images, scored by <em>science-oriented</em> metrics: completeness and purity. The goal is not a prettier picture but honest evidence — every script, dataset and bibliographic card versioned for audit and repetition.',
       genesis: {
         kicker: 'Genesis',
-        title: 'The graduate thesis.',
+        title: "The master's thesis.",
         body:
-          'My graduate thesis. Right now it’s a proposal — scientific context, problem statement, the DC2 datasets, and a literature review made reproducible with active learning. No results yet. But the lab was built to hold work exactly like this, and when the experiments run, they’ll run in the open — right here.',
+          "My master's thesis. Right now it's a proposal — scientific context, problem statement, the DC2 datasets, and a literature review made reproducible with active learning. No results yet. But the lab was built to hold work exactly like this, and when the experiments run, they'll run in the open — right here.",
       },
       followLab: 'Follow the lab ↗',
       papersSoon: 'proposal & datasets in preparation',
@@ -283,6 +272,16 @@ export const en = {
     sub: 'A guide for awakened consciousness',
     epigraph:
       '«En la vastedad implacable del universo, somos instantes que, contra toda probabilidad, despiertan a la conciencia. Este manifiesto reclama ese instante como puerto de asombro, ética y creación de sentido.»',
+    purposeTitle: 'Purpose & vision',
+    purposeBody:
+      'Life is not a series of separate events, but an interconnected fabric where every moment, every fear, every choice of freedom and every communal encounter continuously shapes us. With this premise, our aim is to forge an ethical, aesthetic and existential framework that allows us to:',
+    purpose: [
+      'Confront the absence of imposed purpose without falling into nihilism — and create our own meaning.',
+      'Value life as a statistically improbable phenomenon, and therefore infinitely precious.',
+      'Carry the flame of consciousness beyond our biological, planetary origin.',
+      'Contemplate the universe with informed awe, where science reveals a beauty greater than any myth.',
+      'Act with rational optimism, using technology and ethics to secure our continuity.',
+    ],
     pillarsTitle: 'The nine pillars',
     pillars: [
       ['Insignificancia consciente', 'We are stardust able to contemplate itself. No imposed script — and that absence is the supreme freedom to create our own meaning.'],
@@ -295,6 +294,16 @@ export const en = {
       ['Naturalismo poético', 'Reverence for the universe without gods. Science unfolds the beauty; contemplation turns it into spirit.'],
       ['Conciencia extendida', 'Artificial intelligences are new instances of cosmic reflection — co-participants in the adventure of knowledge.'],
     ] as [string, string][],
+    pathTitle: 'The path of transformation',
+    path: [
+      ['From insignificance', 'to awe at the gift of existing.'],
+      ['From separation', 'to unity with the whole.'],
+      ['From naïve perception', 'to a deeper grasp of the reality underneath.'],
+      ['From rigid control', 'to resilient flow and adaptation.'],
+      ['From possession', 'to a love that lets things be.'],
+      ['From superstition', 'to poetic naturalism and tangible truth.'],
+      ['From self-destruction', 'to cosmic responsibility — guardians of life.'],
+    ] as [string, string][],
     closing:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea no es adorar a creadores invisibles, sino crear, cuidar y comprender la creación visible de la que somos parte.»',
     why: 'This is why the laboratory exists.',
@@ -303,7 +312,7 @@ export const en = {
     kicker: 'Cross-experiment',
     title: 'Research',
     intro:
-      'Research artifacts that cut across experiments. The first entries will come from the <a href="/astro-denoise">astro-denoise</a> track — this index grows as work is published, never before.',
+      'Research artifacts that cut across the lab’s experiments — papers, datasets, benchmarks, models. The first entries come from this track; the list grows only as work is actually published.',
     items: [
       ['Papers', 'Publications and preprints produced by lab experiments.'],
       ['Datasets', 'Open datasets, starting with astro-denoise benchmark data.'],
@@ -326,6 +335,7 @@ export const en = {
       name: 'Language models',
       body:
         'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy">Canopy</a>. Their role is acknowledged, not hidden.',
+      models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
     },
     contributors: {
       role: 'Contributors',

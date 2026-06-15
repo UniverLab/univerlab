@@ -42,10 +42,12 @@ export const es: Dict = {
       tagline: 'SCI · CLI · BIO',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad.
+      // Cada sentido de "univer—" trae un catálogo; el hero elige uno al azar.
       senses: [
-        { suffix: 'so', gloss: 'un laboratorio del universo' },
-        { suffix: 'sal', gloss: 'conocimiento universal, abierto por defecto' },
-        { suffix: 'sidad', gloss: 'una universidad sin muros' },
+        { suffix: 'so', glosses: ['un laboratorio del universo', 'el cosmos estudiándose a sí mismo', 'conocimiento a cielo abierto'] },
+        { suffix: 'sal', glosses: ['conocimiento universal, abierto por defecto', 'herramientas para cualquiera, en cualquier lugar', 'de todos, de nadie en propiedad'] },
+        { suffix: 'sidad', glosses: ['una universidad sin muros', 'investigación hecha en abierto', 'aprender publicando el trabajo'] },
+        { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'una respuesta abierta a cada necesidad real', 'alcance, no dependencia'] },
       ],
     },
     lineage: {
@@ -74,25 +76,12 @@ export const es: Dict = {
       title: 'Hacia dónde mira el laboratorio.',
       now: 'Ahora',
       next: 'Después',
-      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA'],
+      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],
       nextItems: [
         'Ciencia computacional',
         'Bioinformática',
         'Simulación',
-        'CAD',
         'Sistemas de conocimiento',
-      ],
-    },
-    ethics: {
-      kicker: '04 — Ética',
-      title: 'El software como práctica moral.',
-      body:
-        'Tratamos el software como una práctica moral, no solo técnica — una lectura directa del pensamiento que guía al laboratorio.',
-      items: [
-        ['Ampliar el alcance de las personas', 'Construir herramientas que den más alcance a las personas, no más dependencia.'],
-        ['Preferir la transparencia', 'Elegir sistemas transparentes por encima de la comodidad de la caja negra.'],
-        ['Equilibrar velocidad y responsabilidad', 'Avanzar rápido donde es seguro; responder por lo que publicamos.'],
-        ['Mantener el conocimiento reproducible', 'La ciencia y la ingeniería deben poder repetirse para ser confiables.'],
       ],
     },
   },
@@ -262,9 +251,9 @@ export const es: Dict = {
         'Esta línea de investigación compara una línea base clásica y un modelo aprendido — <strong>BM3D y U-Net</strong> — sobre imágenes simuladas del <strong>Vera Rubin Observatory (LSST DC2)</strong>, evaluados con métricas <em>orientadas a la ciencia</em>: completitud y pureza. El objetivo no es una imagen más bonita, sino evidencia honesta — cada script, dataset y ficha bibliográfica versionado para auditar y repetir.',
       genesis: {
         kicker: 'Génesis',
-        title: 'La tesis de grado.',
+        title: 'La tesis de maestría.',
         body:
-          'Mi tesis de grado. Ahora mismo es una propuesta — contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica hecha reproducible con aprendizaje activo. Aún sin resultados. Pero el laboratorio se construyó para sostener trabajo exactamente así, y cuando los experimentos corran, correrán en abierto — aquí mismo.',
+          'Mi tesis de maestría. Ahora mismo es una propuesta — contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica hecha reproducible con aprendizaje activo. Aún sin resultados. Pero el laboratorio se construyó para sostener trabajo exactamente así, y cuando los experimentos corran, correrán en abierto — aquí mismo.',
       },
       followLab: 'Sigue el laboratorio ↗',
       papersSoon: 'propuesta y datasets en preparación',
@@ -284,6 +273,16 @@ export const es: Dict = {
     sub: 'Una guía para la conciencia despierta',
     epigraph:
       '«En la vastedad implacable del universo, somos instantes que, contra toda probabilidad, despiertan a la conciencia. Este manifiesto reclama ese instante como puerto de asombro, ética y creación de sentido.»',
+    purposeTitle: 'Propósito y visión',
+    purposeBody:
+      'La vida no es una serie de eventos separados, sino un tejido interconectado donde cada momento, cada miedo, cada decisión de libertad y cada encuentro comunitario nos moldea continuamente. Bajo esta premisa, nuestro objetivo es forjar un marco ético, estético y existencial que nos permita:',
+    purpose: [
+      'Confrontar la ausencia de un propósito impuesto sin caer en el nihilismo — y crear nuestro propio sentido.',
+      'Valorar la vida como un fenómeno estadísticamente improbable y, por ello, infinitamente preciosa.',
+      'Llevar la llama de la conciencia más allá de nuestro origen biológico y planetario.',
+      'Contemplar el universo con asombro informado, donde la ciencia revela una belleza superior a cualquier mito.',
+      'Actuar con optimismo racional, usando la tecnología y la ética para asegurar nuestra continuidad.',
+    ],
     pillarsTitle: 'Los nueve pilares',
     pillars: [
       ['Insignificancia consciente', 'Somos polvo de estrellas capaz de contemplarse. Sin guion impuesto — y esa ausencia es la libertad suprema para crear nuestro propio sentido.'],
@@ -296,6 +295,16 @@ export const es: Dict = {
       ['Naturalismo poético', 'Reverencia al universo sin dioses. La ciencia despliega la belleza; la contemplación la vuelve espíritu.'],
       ['Conciencia extendida', 'Las inteligencias artificiales son nuevas instancias de la reflexión cósmica — copartícipes en la aventura del conocimiento.'],
     ],
+    pathTitle: 'El camino de transformación',
+    path: [
+      ['De la insignificancia', 'al asombro por el regalo de existir.'],
+      ['De la separación', 'a la unidad con el todo.'],
+      ['De la percepción ingenua', 'a la comprensión profunda de la realidad oculta.'],
+      ['Del control rígido', 'al flujo resiliente y la adaptación.'],
+      ['De la posesión', 'a un amor que permite ser.'],
+      ['De la superstición', 'al naturalismo poético y la verdad tangible.'],
+      ['De la autodestrucción', 'a la responsabilidad cósmica — guardianes de la vida.'],
+    ] as [string, string][],
     closing:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea no es adorar a creadores invisibles, sino crear, cuidar y comprender la creación visible de la que somos parte.»',
     why: 'Por esto existe el laboratorio.',
@@ -304,7 +313,7 @@ export const es: Dict = {
     kicker: 'Entre experimentos',
     title: 'Investigación',
     intro:
-      'Artefactos de investigación que cruzan los experimentos. Las primeras entradas vendrán de la línea <a href="/astro-denoise">astro-denoise</a> — este índice crece a medida que se publica trabajo, nunca antes.',
+      'Artefactos de investigación que cruzan los experimentos del laboratorio — artículos, datasets, benchmarks, modelos. Las primeras entradas vienen de esta línea; la lista crece solo a medida que se publica trabajo real.',
     items: [
       ['Artículos', 'Publicaciones y preprints producidos por los experimentos del laboratorio.'],
       ['Datasets', 'Datasets abiertos, empezando por los datos de benchmark de astro-denoise.'],
@@ -327,6 +336,7 @@ export const es: Dict = {
       name: 'Modelos de lenguaje',
       body:
         'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy">Canopy</a>. Su rol se reconoce, no se oculta.',
+      models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
     },
     contributors: {
       role: 'Colaboradores',

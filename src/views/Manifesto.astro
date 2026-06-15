@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Mark from '../components/Mark.astro';
 import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -8,11 +7,20 @@ const m = t.manifesto;
 ---
 <BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" bgColor="#a78bfa">
   <section class="wrap opening">
-    <Mark size={56} color="var(--ink-dim)" />
     <span class="label">{m.kicker}</span>
     <h1>{m.title}</h1>
     <p class="sub label">{m.sub}</p>
     <blockquote class="prose">{m.epigraph}</blockquote>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section purpose-section">
+    <span class="label">{m.purposeTitle}</span>
+    <p class="purpose-body">{m.purposeBody}</p>
+    <ol class="purpose-list">
+      {m.purpose.map((p) => <li>{p}</li>)}
+    </ol>
   </section>
 
   <hr class="rule" />
@@ -31,6 +39,17 @@ const m = t.manifesto;
 
   <hr class="rule" />
 
+  <section class="wrap section">
+    <span class="label">{m.pathTitle}</span>
+    <ul class="path">
+      {m.path.map(([from, to]) => (
+        <li><span class="from">{from}</span><span class="arrow">→</span><span class="to">{to}</span></li>
+      ))}
+    </ul>
+  </section>
+
+  <hr class="rule" />
+
   <section class="wrap section closing">
     <p class="prose final">{m.closing}</p>
     <p class="label">{m.why}</p>
@@ -39,15 +58,62 @@ const m = t.manifesto;
 
 <style>
   .opening { padding-block: 4.5rem 3rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.9rem; }
-  h1 { font-family: var(--font-serif); font-size: clamp(2.3rem, 6vw, 3.8rem); }
+  h1 { font-size: clamp(2.3rem, 6vw, 3.8rem); }
   .sub { margin: 0; }
   blockquote { margin: 1.4rem 0 0; font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--ink-dim); border-left: 1px solid var(--ink-faint); padding-left: 1.4rem; }
   .section { padding-block: 3rem; }
+
+  /* Purpose & Vision — prose + numbered list */
+  .purpose-section { max-width: 52rem; }
+  .purpose-body {
+    margin: 1.4rem 0 1.6rem;
+    color: var(--ink-dim);
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+  .purpose-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: purpose;
+  }
+  .purpose-list li {
+    counter-increment: purpose;
+    display: flex;
+    gap: 1.6rem;
+    align-items: baseline;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .purpose-list li:first-child { border-top: 1px solid var(--line); }
+  .purpose-list li::before {
+    content: counter(purpose, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    padding-top: 0.22rem;
+    min-width: 1.8rem;
+  }
+
   .pillars { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 2.2rem 3rem; }
   .pillars li { display: flex; gap: 1.1rem; }
   .p-num { color: var(--ink-faint); font-size: 0.8rem; padding-top: 0.3rem; }
   .pillars h3 { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.08rem; margin-bottom: 0.4rem; }
   .pillars p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+  /* The path of transformation — from → to pairs */
+  .path { list-style: none; margin: 1.8rem 0 0; padding: 0; }
+  .path li { display: grid; grid-template-columns: 1fr auto 1.4fr; gap: 1.2rem; align-items: baseline; padding-block: 0.8rem; border-bottom: 1px solid var(--line); }
+  .path li:first-child { border-top: 1px solid var(--line); }
+  .path .from { font-family: var(--font-serif); font-style: italic; color: var(--ink-dim); }
+  .path .arrow { color: var(--ink-faint); }
+  .path .to { color: var(--ink); }
+  @media (max-width: 38rem) { .path li { grid-template-columns: 1fr; gap: 0.15rem; } .path .arrow { display: none; } }
+
   .closing { padding-block: 3.5rem 5rem; }
   .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.2rem; }
 </style>

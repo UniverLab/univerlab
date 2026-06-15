@@ -2,10 +2,11 @@
 // The name, opening and closing. "UNIVER" and "LAB" stay put — at rest the
 // wordmark reads UNIVERLAB and the line below shows the slogan. Between beats,
 // LAB slides right to open a gap and the sense suffix is revealed in it
-// (universe / universal / university) while the line below crossfades to that
-// sense's gloss; then it closes back to UNIVERLAB + slogan. One shared line,
-// so nothing sits empty. Reduced-motion / no-JS users get the resting state.
-interface Sense { suffix: string; gloss: string; }
+// (universe / universal / university / universalize) while the line below
+// crossfades to a phrase picked at random from that word's catalog; then it
+// closes back to UNIVERLAB + slogan. One shared line, so nothing sits empty.
+// Reduced-motion / no-JS users get the resting state.
+interface Sense { suffix: string; glosses: string[]; }
 interface Props { senses: Sense[]; tagline: string; }
 const { senses, tagline } = Astro.props;
 const first = senses[0];
@@ -17,7 +18,7 @@ const first = senses[0];
 
 <script>
   document.querySelectorAll<HTMLElement>('.namegloss').forEach((el) => {
-    const senses = JSON.parse(el.dataset.senses || '[]') as { suffix: string; gloss: string }[];
+    const senses = JSON.parse(el.dataset.senses || '[]') as { suffix: string; glosses: string[] }[];
     const tagline = el.dataset.tagline || '';
     const suffix = el.querySelector<HTMLElement>('.suffix');
     const subline = el.querySelector<HTMLElement>('.subline');
@@ -45,7 +46,8 @@ const first = senses[0];
         el.classList.add('open');
         suffix.textContent = senses[i].suffix; // swap while collapsed
         suffix.style.width = suffix.scrollWidth + GAP + 'px'; // LAB slides right
-        swapSub(senses[i].gloss, false);
+        const cat = senses[i].glosses; // a fresh phrase from this word's catalog
+        swapSub(cat[Math.floor(Math.random() * cat.length)], false);
         setTimeout(tick, OPEN_MS);
       } else {
         open = false;
@@ -85,8 +87,11 @@ const first = senses[0];
   .open .suffix { opacity: 1; }
 
   /* One shared line: the slogan at rest, the sense gloss while open. */
+  /* Fixed line box (absolute, not em) so swapping the mono slogan for the
+     serif gloss never changes the block height — otherwise the wordmark jumps. */
   .subline {
-    min-height: 1.4em;
+    min-height: 1.5rem;
+    line-height: 1.5rem;
     color: var(--ink-dim);
     transition: opacity 0.22s ease;
   }

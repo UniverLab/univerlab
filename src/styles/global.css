@@ -18,6 +18,7 @@
   --canopy: #5dd39e;
   --texforge: #e0a458;
   --gitkit: #7ee081;
+  --ghscaff: #e6c84a;
   --cadforge: #6ec6e6;
   --astro-denoise: #a78bfa;
 
@@ -47,8 +48,16 @@ body { margin: 0; min-height: 100vh; }
 h1, h2, h3 {
   font-weight: 500;
   line-height: 1.15;
-  letter-spacing: -0.015em;
   margin: 0;
+}
+
+h1, h2 {
+  font-family: var(--font-serif);
+  letter-spacing: 0;
+}
+
+h3 {
+  letter-spacing: -0.01em;
 }
 
 a { color: inherit; text-decoration-color: var(--ink-faint); text-underline-offset: 3px; }

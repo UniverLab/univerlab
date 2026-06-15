@@ -20,9 +20,8 @@ const onExperiment = experiments.some((e) => e.id === seg);
 
 const nav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
-  { href: localizePath('/research', lang), label: t.nav.research },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
-  { href: localizePath('/people', lang), label: t.nav.people },
+  { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';

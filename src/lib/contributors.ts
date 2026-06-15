@@ -68,7 +68,9 @@ async function load(): Promise<Contributor[]> {
     if (!Array.isArray(list)) continue;
     for (const c of list) {
       if (c.type !== 'User') continue; // skip dependabot and other bots
-      if (c.login.toLowerCase() === FOUNDER) continue;
+      // TEMP: founder exclusion disabled to preview the wall with everyone.
+      void FOUNDER; // keep the constant referenced while the filter is off
+      // if (c.login.toLowerCase() === FOUNDER) continue;
       const existing = totals.get(c.login);
       if (existing) {
         existing.contributions += c.contributions;

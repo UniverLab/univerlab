@@ -44,7 +44,7 @@ export const experiments: Experiment[] = [
   { id: 'canopy', name: 'Harness Canopy', number: 'EXP-004', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', install: unix('harness-canopy'), hasDocs: true },
   { id: 'texforge', name: 'TexForge', number: 'EXP-001', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', install: both('texforge'), hasDocs: true },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-002', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/gitkit', bg: 'gitgraph', install: both('gitkit'), hasDocs: true },
-  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-003', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', install: both('ghscaff'), hasDocs: true },
+  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-003', status: 'active', essenceHex: '#e6c84a', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', install: both('ghscaff'), hasDocs: true },
   { id: 'cadforge', name: 'cadForge', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', install: both('cadforge'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield' },
 ];

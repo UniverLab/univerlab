@@ -344,51 +344,119 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Starfield — stars drifting and twinkling, teased out of noise, with the
-     occasional shooting star. Astro Denoise. */
+  /* Starfield — small, white stars sweeping in slow arcs (the pole sits well
+     below the frame, so paths curve instead of closing into circles), each
+     twinkling on its own, with frequent shooting stars, a few stars that fringe
+     like a lens aberration, and slow aurora curtains. Astro Denoise. */
   starfield(ctx) {
     const { c } = ctx;
     const N = Math.min(150, Math.floor((ctx.w * ctx.h) / 8000));
-    const stars = Array.from({ length: N }, () => ({
-      x: Math.random() * ctx.w,
-      y: Math.random() * ctx.h,
-      r: rand(0.4, 1.6),
-      ph: rand(0, Math.PI * 2),
-      sp: rand(0.5, 1.7),
-      vy: rand(0.05, 0.28), // slow parallax drift
-    }));
+    const poleX = ctx.w * 0.5;
+    const poleY = ctx.h * 1.9; // pole far below the frame → arcs, not circles
+    const stars = Array.from({ length: N }, () => {
+      const dx = Math.random() * ctx.w - poleX;
+      const dy = Math.random() * ctx.h - poleY;
+      return {
+        rad: Math.hypot(dx, dy),
+        ang: Math.atan2(dy, dx),
+        r: rand(0.4, 1.5),
+        ph: rand(0, Math.PI * 2),
+        sp: rand(0.3, 2.4), // twinkle speed — wide spread, so none sync up
+        base: rand(0.25, 0.7), // resting brightness
+        amp: rand(0.2, 0.6), // twinkle depth
+        chroma: Math.random() < 0.22, // a few fringe like a lens aberration
+      };
+    });
+    const OMEGA = 0.000013; // sky rotation (rad/ms) — gentle sweep along the arc
     type Shot = { x: number; y: number; vx: number; vy: number; t: number; life: number };
     let shot: Shot | null = null;
-    let nextShot = rand(1800, 4200);
+    let nextShot = rand(1000, 2800);
     let acc = 0;
+    // aurora curtains — slow undulating bands near the top (green + essence)
+    const aurora = [
+      { color: 'rgb(110,231,183)', yBase: ctx.h * 0.14, amp: 26, freq: 0.005, sp: 0.00028, ph: 0, h: 120, a: 0.09 },
+      { color: ctx.color, yBase: ctx.h * 0.23, amp: 38, freq: 0.0038, sp: 0.0002, ph: 1.7, h: 150, a: 0.08 },
+    ];
     let prevT = 0;
     return (t) => {
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       c.clearRect(0, 0, ctx.w, ctx.h);
-      c.fillStyle = ctx.color;
+
+      // aurora curtains, drawn behind the stars — two harmonics on the top edge,
+      // a rippling thickness, a slow vertical bob, and a faint shimmer
+      for (const a of aurora) {
+        const step = Math.max(8, ctx.w / 64);
+        const bob = Math.sin(t * 0.00008 + a.ph) * 16;
+        const top = (x: number) =>
+          a.yBase + bob +
+          Math.sin(x * a.freq + t * a.sp + a.ph) * a.amp +
+          Math.sin(x * a.freq * 2.3 - t * a.sp * 1.6 + a.ph) * a.amp * 0.4;
+        const thick = (x: number) => a.h + Math.sin(x * a.freq * 1.7 + t * a.sp * 1.3 + a.ph) * 26;
+        c.beginPath();
+        for (let x = 0; x <= ctx.w; x += step) {
+          const y = top(x);
+          x === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+        }
+        for (let x = ctx.w; x >= 0; x -= step) {
+          c.lineTo(x, top(x) + thick(x));
+        }
+        c.closePath();
+        const g = c.createLinearGradient(0, a.yBase + bob - a.amp, 0, a.yBase + bob + a.amp + a.h + 26);
+        g.addColorStop(0, 'transparent');
+        g.addColorStop(0.5, a.color);
+        g.addColorStop(1, 'transparent');
+        c.globalAlpha = a.a * (0.7 + 0.3 * Math.sin(t * 0.00022 + a.ph));
+        c.fillStyle = g;
+        c.fill();
+      }
+
       // sparse noise speckle that never resolves
+      c.fillStyle = 'rgb(255,255,255)';
       for (let i = 0; i < 30; i++) {
         c.globalAlpha = 0.05;
         c.fillRect(Math.random() * ctx.w, Math.random() * ctx.h, 1, 1);
       }
+
+      // stars — rigid rotation around the pole, each twinkling on its own
       for (const s of stars) {
-        s.y += s.vy;
-        if (s.y > ctx.h + 2) {
-          s.y = -2;
-          s.x = Math.random() * ctx.w;
+        s.ang += OMEGA * dt;
+        let x = poleX + s.rad * Math.cos(s.ang);
+        let y = poleY + s.rad * Math.sin(s.ang);
+        if (x < -4 || x > ctx.w + 4 || y < -4 || y > ctx.h + 4) {
+          // swept off the frame — re-seed somewhere visible, keep rotating
+          const ndx = Math.random() * ctx.w - poleX;
+          const ndy = Math.random() * ctx.h - poleY;
+          s.rad = Math.hypot(ndx, ndy);
+          s.ang = Math.atan2(ndy, ndx);
+          x = poleX + s.rad * Math.cos(s.ang);
+          y = poleY + s.rad * Math.sin(s.ang);
         }
-        const tw = 0.3 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.0016 * s.sp + s.ph));
+        let tw = s.base + s.amp * Math.sin(t * 0.0016 * s.sp + s.ph);
+        tw = tw < 0 ? 0 : tw > 1 ? 1 : tw;
+        if (s.chroma) {
+          c.globalAlpha = tw * 0.45;
+          c.fillStyle = 'rgb(255,90,90)';
+          c.beginPath();
+          c.arc(x - 1.2, y, s.r, 0, Math.PI * 2);
+          c.fill();
+          c.fillStyle = 'rgb(90,170,255)';
+          c.beginPath();
+          c.arc(x + 1.2, y, s.r, 0, Math.PI * 2);
+          c.fill();
+        }
         c.globalAlpha = tw;
+        c.fillStyle = '#eef2ff';
         c.beginPath();
-        c.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        c.arc(x, y, s.r, 0, Math.PI * 2);
         c.fill();
       }
-      // shooting star
+
+      // shooting stars (frequent)
       acc += dt;
       if (!shot && acc > nextShot) {
         acc = 0;
-        nextShot = rand(3000, 7000);
+        nextShot = rand(1400, 3600);
         shot = {
           x: rand(0, ctx.w * 0.6),
           y: rand(0, ctx.h * 0.4),
@@ -405,8 +473,8 @@ const THEMES: Record<Theme, Runner> = {
         const k = shot.t / shot.life;
         const fade = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8;
         const len = 42;
-        c.globalAlpha = Math.max(0, fade) * 0.8;
-        c.strokeStyle = ctx.color;
+        c.globalAlpha = Math.max(0, fade) * 0.85;
+        c.strokeStyle = '#eef2ff';
         c.lineWidth = 1.2;
         c.beginPath();
         c.moveTo(shot.x, shot.y);
