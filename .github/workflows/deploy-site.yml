@@ -1,0 +1,56 @@
+name: Deploy site (Cloudflare Pages)
+
+# The landing globs each tool repo's docs/ at build time (../<repo>/docs).
+# Cloudflare Pages' own Git build only checks out THIS repo, so the docs would
+# be missing. Instead we build here in CI: check out this repo plus a
+# sparse-checkout of just the docs/ folder of each sibling, then publish dist
+# with Wrangler. Fires on push to main (after demos land) or manually.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout landing
+        uses: actions/checkout@v4
+        with:
+          path: univerlab
+
+      # Sibling repos — ONLY their docs/ folder (sparse checkout, cone mode).
+      # These org repos are public, so the default token can read them.
+      - uses: actions/checkout@v4
+        with: { repository: UniverLab/harness-canopy, path: harness-canopy, sparse-checkout: docs }
+      - uses: actions/checkout@v4
+        with: { repository: UniverLab/texforge, path: texforge, sparse-checkout: docs }
+      - uses: actions/checkout@v4
+        with: { repository: UniverLab/gitkit, path: gitkit, sparse-checkout: docs }
+      - uses: actions/checkout@v4
+        with: { repository: UniverLab/ghscaff, path: ghscaff, sparse-checkout: docs }
+      - uses: actions/checkout@v4
+        with: { repository: UniverLab/cadforge, path: cadforge, sparse-checkout: docs }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: univerlab/package-lock.json
+
+      - name: Build
+        working-directory: univerlab
+        env:
+          # Lifts the GitHub API rate limit when fetching the contributors wall.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The project name must match the Pages project you create in the dashboard.
+          command: pages deploy univerlab/dist --project-name=univerlab
