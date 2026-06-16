@@ -32,7 +32,7 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
     <div class="marquee">
       <ul class="track">
         {logos.map((l) => <li><img src={l.src} alt={l.alt} loading="lazy" /></li>)}
-        {[0, 1].map(() => logos.map((l) => <li aria-hidden="true"><img src={l.src} alt="" loading="lazy" /></li>))}
+        {[0, 1, 2].map(() => logos.map((l) => <li aria-hidden="true"><img src={l.src} alt="" loading="lazy" /></li>))}
       </ul>
     </div>
   </section>
@@ -81,12 +81,12 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
     list-style: none; margin: 0; padding: 0;
     display: flex; align-items: center; gap: 4.5rem;
     width: max-content;
-    animation: logo-slide 32s linear infinite;
+    /* 4 identical copies, shift exactly half → the loop point is invisible */
+    animation: logo-slide 64s linear infinite;
   }
-  .marquee:hover .track { animation-play-state: paused; }
   .track li { flex: none; }
   .track img { height: 2.6rem; width: auto; display: block; opacity: 0.92; }
-  @keyframes logo-slide { to { transform: translateX(-33.333%); } }
+  @keyframes logo-slide { to { transform: translateX(-50%); } }
   @media (prefers-reduced-motion: reduce) {
     .track { animation: none; flex-wrap: wrap; width: auto; gap: 2.5rem 4rem; }
     .marquee { -webkit-mask-image: none; mask-image: none; }
