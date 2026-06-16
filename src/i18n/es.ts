@@ -258,7 +258,6 @@ export const es: Dict = {
       followLab: 'Sigue el laboratorio ↗',
       papersSoon: 'propuesta y datasets en preparación',
       proposalCta: 'Leer la propuesta (PDF) ↗',
-      affiliations: 'Datos y afiliaciones',
       questions: {
         kicker: 'Preguntas en estudio',
         items: [

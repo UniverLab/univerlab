@@ -257,7 +257,6 @@ export const en = {
       followLab: 'Follow the lab ↗',
       papersSoon: 'proposal & datasets in preparation',
       proposalCta: 'Read the proposal (PDF) ↗',
-      affiliations: 'Data & affiliations',
       questions: {
         kicker: 'Questions under study',
         items: [
