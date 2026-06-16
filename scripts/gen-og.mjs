@@ -19,11 +19,11 @@ const W = 1200;
 const H = 630;
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="#0a0b0e"/>
-  <svg x="300" y="252" width="126" height="126" viewBox="0 0 500 500" fill="#eef2ff">
+  <svg x="330" y="252" width="126" height="126" viewBox="0 0 500 500" fill="#eef2ff">
     ${faces.map((d) => `<path d="${d}"/>`).join('\n    ')}
   </svg>
-  <text x="470" y="308" font-family="DejaVu Sans Mono" font-size="62" font-weight="400" letter-spacing="11" fill="#eef2ff">UNIVER LAB</text>
-  <text x="473" y="352" font-family="DejaVu Sans Mono" font-size="23" letter-spacing="11" fill="#8b9099">SCI · CLI · BIO</text>
+  <text x="500" y="306" font-family="DejaVu Sans Mono" font-size="60" font-weight="500" letter-spacing="5" fill="#eef2ff">UNIVERLAB</text>
+  <text x="503" y="348" font-family="DejaVu Sans Mono" font-size="22" letter-spacing="8" fill="#8b9099">SCI · CLI · BIO</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png().toFile(join(root, 'public', 'og.png'));
