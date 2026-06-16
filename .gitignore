@@ -26,3 +26,4 @@ node_modules/
 dist/
 .astro/
 npm-debug.log*
+*:Zone.Identifier
