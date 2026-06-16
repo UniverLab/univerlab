@@ -57,6 +57,8 @@ function isActive(href: string, current: string): boolean {
       {nav.map((item) => (
         <a
           href={item.href}
+          target={item.ext ? '_blank' : undefined}
+          rel={item.ext ? 'noopener noreferrer' : undefined}
           class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)) }]}
         >{item.label}</a>
       ))}

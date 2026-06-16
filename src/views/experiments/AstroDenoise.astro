@@ -18,7 +18,7 @@ const logos = [
 const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
 ---
 <ExperimentLayout id="astro-denoise">
-  <a slot="cta" class="proposal" href={proposalUrl}>{e.proposalCta}</a>
+  <a slot="cta" class="proposal" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
   <span slot="cta" class="papers mono">{e.papersSoon}</span>
 
   <section class="wrap section">

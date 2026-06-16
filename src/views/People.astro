@@ -19,7 +19,7 @@ const contributors = await getContributors();
         <span class="label">{p.founder.role}</span>
         <h3>{p.founder.name}</h3>
         <p>{p.founder.body}</p>
-        <a class="label" href="https://github.com/JheisonMB">{p.founder.link}</a>
+        <a class="label" href="https://github.com/JheisonMB" target="_blank" rel="noopener noreferrer">{p.founder.link}</a>
       </li>
       <li>
         <span class="label">{p.ai.role}</span>
@@ -33,7 +33,7 @@ const contributors = await getContributors();
         <span class="label">{p.contributors.role}</span>
         <h3>{p.contributors.name}</h3>
         <p>{p.contributors.body}</p>
-        <a class="label" href="https://github.com/UniverLab">{p.contributors.link}</a>
+        <a class="label" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{p.contributors.link}</a>
       </li>
     </ul>
 
@@ -43,7 +43,7 @@ const contributors = await getContributors();
         <ul class="avatars">
           {contributors.map((c) => (
             <li>
-              <a href={c.url} title={`${c.contributions} ${p.wall.commits}`}>
+              <a href={c.url} title={`${c.contributions} ${p.wall.commits}`} target="_blank" rel="noopener noreferrer">
                 <img src={c.avatar} alt={c.login} width="48" height="48" loading="lazy" />
                 <span class="who">{c.login}</span>
               </a>

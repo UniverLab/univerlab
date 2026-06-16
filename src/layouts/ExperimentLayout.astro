@@ -20,7 +20,7 @@ const statusLabel = t.status[exp.status];
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
       <div class="actions">
-        <a class="btn" href={exp.github}>{t.common.repo}</a>
+        <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
         {exp.hasDocs && (
           <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
         )}
