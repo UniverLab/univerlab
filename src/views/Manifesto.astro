@@ -5,7 +5,7 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const m = t.manifesto;
 ---
-<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" bgColor="#a78bfa">
+<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" bgColor="#d3bf72">
   <section class="wrap opening">
     <span class="label">{m.kicker}</span>
     <h1>{m.title}</h1>
@@ -21,6 +21,21 @@ const m = t.manifesto;
     <ol class="purpose-list">
       {m.purpose.map((p) => <li>{p}</li>)}
     </ol>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap section imperatives-section">
+    <span class="label">{m.imperativesTitle}</span>
+    <ol class="imperatives">
+      {m.imperatives.map(([name, body]) => (
+        <li>
+          <span class="mono imp-name">{name}</span>
+          <blockquote class="prose">{body}</blockquote>
+        </li>
+      ))}
+    </ol>
+    <p class="imp-note">{m.imperativesNote}</p>
   </section>
 
   <hr class="rule" />
@@ -50,8 +65,25 @@ const m = t.manifesto;
 
   <hr class="rule" />
 
+  <section class="wrap section works-section">
+    <span class="label">{m.worksTitle}</span>
+    <p class="works-body">{m.worksBody}</p>
+    <ul class="works">
+      {m.works.map(([name, desc]) => (
+        <li>
+          <span class="badge label">{m.worksBadge}</span>
+          <h3>{name}</h3>
+          <p>{desc}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <hr class="rule" />
+
   <section class="wrap section closing">
     <p class="prose final">{m.closing}</p>
+    <p class="note">{m.note}</p>
     <p class="label">{m.why}</p>
   </section>
 </BaseLayout>
@@ -100,6 +132,12 @@ const m = t.manifesto;
     min-width: 1.8rem;
   }
 
+  /* The two imperatives — the core derivation, shown as quoted statements */
+  .imperatives { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; gap: 2rem; max-width: 52rem; }
+  .imp-name { display: block; color: var(--ink); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.7rem; }
+  .imperatives blockquote { margin: 0; font-family: var(--font-serif); font-size: 1.12rem; line-height: 1.6; color: var(--ink-dim); border-left: 2px solid var(--ink-faint); padding-left: 1.3rem; }
+  .imp-note { max-width: 52rem; margin: 2rem 0 0; color: var(--ink-faint); font-size: 0.92rem; line-height: 1.65; }
+
   .pillars { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 2.2rem 3rem; }
   .pillars li { display: flex; gap: 1.1rem; }
   .p-num { color: var(--ink-faint); font-size: 0.8rem; padding-top: 0.3rem; }
@@ -114,6 +152,30 @@ const m = t.manifesto;
   .path .to { color: var(--ink); }
   @media (max-width: 38rem) { .path li { grid-template-columns: 1fr; gap: 0.15rem; } .path .arrow { display: none; } }
 
+  /* In development — future documents, as cards (mirrors astro-denoise) */
+  .works-body { max-width: 46rem; margin: 1.2rem 0 0; color: var(--ink-dim); font-size: 0.98rem; line-height: 1.65; }
+  .works { list-style: none; margin: 1.6rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1rem; }
+  .works li {
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border: 1px solid var(--line);
+    border-left: 2px solid transparent;
+    padding: 1.6rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    transition: background 0.15s ease, border-left-color 0.15s ease;
+    backdrop-filter: blur(2px);
+  }
+  .works li:hover { background: var(--bg-raise); border-left-color: var(--accent); }
+  .works .badge {
+    display: inline-block; align-self: flex-start;
+    padding: 0.15rem 0.45rem; margin-bottom: 0.3rem;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+    border-radius: 2px; font-size: 0.65rem;
+  }
+  .works h3 { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.1rem; margin: 0; color: var(--ink); }
+  .works p { color: var(--ink-dim); font-size: 0.92rem; margin: 0; line-height: 1.6; }
+
   .closing { padding-block: 3.5rem 5rem; }
-  .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.2rem; }
+  .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.4rem; }
+  .closing .note { max-width: 46rem; margin: 0 0 1.6rem; color: var(--ink-faint); font-size: 0.92rem; line-height: 1.65; }
 </style>

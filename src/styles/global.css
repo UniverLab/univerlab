@@ -11,16 +11,17 @@
   --ink-faint: #55534e;
   --line: #23252c;
 
-  /* Lab accent — neutral, used sparingly */
-  --accent: #b9b6ae;
+  /* UniverLab accent — the lab's own colour (yellow), reserved for the main site */
+  --accent: #e6c84a;
 
   /* Experiment essences */
   --canopy: #5dd39e;
   --texforge: #e0a458;
-  --gitkit: #7ee081;
-  --ghscaff: #e6c84a;
+  --gitkit: #d977a8;
+  --ghscaff: #7ee081;
   --cadforge: #6ec6e6;
   --astro-denoise: #a78bfa;
+  --demo-stage: #ef8354;
 
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
   --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -85,6 +86,9 @@ code, .mono { font-family: var(--font-mono); }
 
 .prose { max-width: var(--measure); }
 .prose p { margin: 0 0 1.1em; }
+/* Emphasis: a few important words carry the page's colour — the UniverLab
+   yellow on the core pages, the experiment's own essence on its page. */
+strong { color: var(--essence, var(--accent)); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

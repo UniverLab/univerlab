@@ -19,6 +19,7 @@ const TOOLS: Record<string, { repo: string; win: boolean }> = {
   gitkit: { repo: 'gitkit', win: true },
   ghscaff: { repo: 'ghscaff', win: true },
   cadforge: { repo: 'cadforge', win: true },
+  'demo-stage': { repo: 'demo-stage', win: true },
 };
 
 const raw = (repo: string, file: string) =>

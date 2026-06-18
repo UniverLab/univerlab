@@ -47,11 +47,18 @@ interface GhContributor {
 }
 
 // Memoised for the process lifetime so dev reloads and multi-page builds
-// hit the API once, not on every render.
+// hit the API once, not on every render. A failed/rate-limited fetch yields an
+// empty list, which we deliberately do NOT memoise — otherwise one transient
+// 403 early in a long dev session would keep the wall empty until restart.
 let cache: Promise<Contributor[]> | null = null;
 
 export function getContributors(): Promise<Contributor[]> {
-  if (!cache) cache = load();
+  if (!cache) {
+    cache = load().then((list) => {
+      if (list.length === 0) cache = null; // don't cache an empty/failed fetch — allow a retry
+      return list;
+    });
+  }
   return cache;
 }
 

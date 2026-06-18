@@ -1,0 +1,39 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments['demo-stage'];
+---
+<ExperimentLayout id="demo-stage">
+  <section class="wrap section">
+    <div class="term">
+      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> demo export --target html</div>
+      <pre class="mono term-body"><code>$ demo record -o macro.raw.toml
+$ demo normalize macro.raw.toml
+  → demo.toml (8 steps)
+$ demo check demo.toml
+  ok: demo.toml is valid
+$ demo export demo.toml --target html
+  → dist/demo.html</code></pre>
+    </div>
+    <div class="features">
+      <span class="label">{e.pipeline.kicker}</span>
+      <ul>
+        {e.pipeline.items.map((f) => <li set:html={f} />)}
+      </ul>
+    </div>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
+  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
+  .term { border: 1px solid color-mix(in srgb, var(--demo-stage) 30%, var(--line)); background: var(--bg-raise); }
+  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
+  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); }
+  .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .features :global(code) { color: var(--demo-stage); font-size: 0.88em; }
+</style>

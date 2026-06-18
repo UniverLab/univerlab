@@ -19,4 +19,5 @@ export const collections = {
   'docs-gitkit': docsCollection('../gitkit/docs'),
   'docs-ghscaff': docsCollection('../ghscaff/docs'),
   'docs-cadforge': docsCollection('../cadforge/docs'),
+  'docs-demo-stage': docsCollection('../demo-stage/docs'),
 };

@@ -38,16 +38,18 @@ export const es: Dict = {
     hero: {
       title: 'Somos el universo, observándose a sí mismo.',
       lede:
-        'UniverLab funciona con un solo ciclo: una necesidad real se vuelve un <strong>experimento abierto</strong>, y el experimento produce conocimiento abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un subproducto.',
+        'UniverLab funciona con un solo ciclo: una <strong>necesidad</strong> real se vuelve un <strong>experimento</strong> abierto, y el experimento produce <strong>conocimiento</strong> abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un <strong>subproducto</strong>.',
       tagline: 'SCI · CLI · BIO',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
-      // rotan, desplegando universo / universal / universidad.
-      // Cada sentido de "univer—" trae un catálogo; el hero elige uno al azar.
+      // rotan, desplegando universo / universal / universidad / universalizar.
+      // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
+      // todas las frases una vez antes de volver a barajar, así ninguna repite
+      // más que las demás.
       senses: [
-        { suffix: 'so', glosses: ['un laboratorio del universo', 'el cosmos estudiándose a sí mismo', 'conocimiento a cielo abierto'] },
-        { suffix: 'sal', glosses: ['conocimiento universal, abierto por defecto', 'herramientas para cualquiera, en cualquier lugar', 'de todos, de nadie en propiedad'] },
+        { suffix: 'so', glosses: ['un laboratorio del universo', 'el cosmos estudiándose a sí mismo', 'una perspectiva en la que el universo despertó'] },
+        { suffix: 'sal', glosses: ['conocimiento, abierto por defecto', 'herramientas para cualquiera, en cualquier lugar', 'de todos, de nadie en propiedad'] },
         { suffix: 'sidad', glosses: ['una universidad sin muros', 'investigación hecha en abierto', 'aprender publicando el trabajo'] },
-        { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'una respuesta abierta a cada necesidad real', 'alcance, no dependencia'] },
+        { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'alcance, no dependencia', 'continuidad, mantenida abierta'] },
       ],
     },
     lineage: {
@@ -98,12 +100,12 @@ export const es: Dict = {
         'Un centro de operaciones de agentes: orquestación, memoria y coordinación para sesiones de IA.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
-        'Un servidor MCP y una interfaz de terminal autocontenidos que convierten una máquina en un <strong>centro de operaciones de agentes</strong>: sesiones en terminales reales, agentes en segundo plano por cron y eventos de archivo, un grafo de conocimiento que persiste lo que los agentes aprenden, y una capa de sincronización para que dejen de pisarse.',
+        'Un servidor MCP y una interfaz de terminal autocontenidos que convierten una máquina en un centro de <strong>operaciones</strong> de agentes: sesiones en terminales reales, <strong>agentes</strong> en segundo plano por cron y eventos de archivo, un grafo de <strong>conocimiento</strong> que persiste lo que los agentes aprenden, y una capa de <strong>sincronización</strong> para que dejen de pisarse.',
       genesis: {
         kicker: 'Génesis',
         title: 'El que empezó todo.',
         body:
-          'Empezó como una carpeta de skills para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un <strong>modo headless</strong>, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un MCP: <em>task-trigger</em>. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una TUI — luego scheduling, memoria, sync, identidades, y un nombre nuevo. Canopy. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
+          'Empezó como una carpeta de <strong>skills</strong> para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un modo <strong>headless</strong>, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un <strong>MCP</strong>: <em>task-trigger</em>. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una <strong>TUI</strong> — luego scheduling, memoria, sync, identidades, y un nombre nuevo. <strong>Canopy</strong>. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
       },
       layer: {
         kicker: 'La capa viva',
@@ -185,7 +187,7 @@ export const es: Dict = {
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
-        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un asistente conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
+        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>asistente</strong> conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
       genesis: {
         kicker: 'Génesis',
         title: 'La misma configuración, una y otra vez.',
@@ -207,7 +209,7 @@ export const es: Dict = {
       details: {
         kicker: 'Detalles estructurales',
         items: [
-          'Los tokens viven en una <strong>bóveda cifrada</strong> (XSalsa20-Poly1305), ligada a tu usuario, host y binario — nunca en variables de entorno ni en texto plano.',
+          'Los tokens viven en una bóveda <strong>cifrada</strong> (XSalsa20-Poly1305), ligada a tu usuario, host y binario — nunca en variables de entorno ni en texto plano.',
           'Un único commit atómico <code>chore: init repository</code> lleva todo el boilerplate — sin historial ruidoso archivo por archivo.',
           'Siete etiquetas estándar forzadas en cada ejecución; la desviación se corrige, no se acumula.',
           '<code>--dry-run</code> previsualiza cada cambio sin una sola llamada a la API.',
@@ -227,7 +229,7 @@ export const es: Dict = {
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
       koan: 'El dibujo no se dibuja. Se declara.',
       lede:
-        'cadForge trata un dibujo CAD como código fuente: la geometría se declara en TOML, se previsualiza en vivo en el navegador y se compila a un <strong>DXF idéntico bit a bit</strong> cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
+        'cadForge trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
       genesis: {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
@@ -248,7 +250,7 @@ export const es: Dict = {
         'Benchmark reproducible de métodos de denoising — BM3D vs U-Net — sobre imágenes simuladas LSST DC2.',
       koan: 'Casi todo el universo llega como ruido.',
       lede:
-        'Esta línea de investigación compara una línea base clásica y un modelo aprendido — <strong>BM3D y U-Net</strong> — sobre imágenes simuladas del <strong>Vera Rubin Observatory (LSST DC2)</strong>, evaluados con métricas <em>orientadas a la ciencia</em>: completitud y pureza. El objetivo no es una imagen más bonita, sino evidencia honesta — cada script, dataset y ficha bibliográfica versionado para auditar y repetir.',
+        'Esta línea de investigación <strong>compara</strong> una línea base clásica y un modelo aprendido — <strong>BM3D</strong> y <strong>U-Net</strong> — sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2), evaluados con métricas <em>orientadas a la ciencia</em>: <strong>completitud</strong> y <strong>pureza</strong>. El objetivo no es una imagen más bonita, sino evidencia honesta — cada script, dataset y ficha bibliográfica versionado para auditar y repetir.',
       genesis: {
         kicker: 'Génesis',
         title: 'La tesis de maestría.',
@@ -267,47 +269,79 @@ export const es: Dict = {
         ],
       },
     },
+    'demo-stage': {
+      need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
+      tagline:
+        'Demos as Code — graba, normaliza y exporta demos de terminal reproducibles.',
+      koan: '// el demo es el código fuente',
+      lede:
+        'DemoStage graba una sesión como <strong>eventos</strong>, normaliza las imperfecciones humanas en un <code>demo.toml</code> limpio (la <strong>partitura</strong>) y lo compila a <strong>cast</strong>, html o gif — versionado y reejecutable.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Toda herramienta de demos salía mal.',
+        body:
+          'asciinema, vhs, OBS, grabar a mano — cada enfoque era frágil o feo, y regrabar por una sola errata era empezar de cero. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage es la herramienta que graba todos los demás experimentos del laboratorio.',
+      },
+      pipeline: {
+        kicker: 'Cuatro comandos',
+        items: [
+          '<code>record</code> — captura teclas, salida y tiempos en un macro crudo.',
+          '<code>normalize</code> — poda erratas, humaniza el tipeo y recorta el idle en una partitura limpia.',
+          '<code>check</code> — valida la partitura de forma estática antes de publicar.',
+          '<code>export</code> — compila a cast, html o gif (mp4 y browser necesitan ffmpeg/chromium).',
+        ],
+      },
+    },
   },
   manifesto: {
     kicker: 'Manifiesto',
     title: 'Pensamiento Cósmico',
-    sub: 'Una guía para la conciencia despierta',
+    sub: 'Una filosofía de la continuidad de la conciencia',
     epigraph:
-      '«En la vastedad implacable del universo, somos instantes que, contra toda probabilidad, despiertan a la conciencia. Este manifiesto reclama ese instante como puerto de asombro, ética y creación de sentido.»',
-    purposeTitle: 'Propósito y visión',
+      '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
+    purposeTitle: 'Qué valoramos',
     purposeBody:
-      'La vida no es una serie de eventos separados, sino un tejido interconectado donde cada momento, cada miedo, cada decisión de libertad y cada encuentro comunitario nos moldea continuamente. Bajo esta premisa, nuestro objetivo es forjar un marco ético, estético y existencial que nos permita:',
+      'De todo lo que conocemos del universo, la existencia de una perspectiva capaz de preguntarse por el propio universo es el fenómeno más improbable y extraordinario que existe. No vale la pena continuar porque sea útil, ni porque la evolución “lo quiera”, sino porque la conciencia es asombrosa — y ese asombro es suficiente. Lo que valoramos, entonces, no es el ADN, ni la especie, ni el sustrato biológico, sino la capacidad de comprender el universo. De ahí una jerarquía, hecha explícita no como dogma sino como orden de prioridad cuando hay que elegir:',
     purpose: [
-      'Confrontar la ausencia de un propósito impuesto sin caer en el nihilismo — y crear nuestro propio sentido.',
-      'Valorar la vida como un fenómeno estadísticamente improbable y, por ello, infinitamente preciosa.',
-      'Llevar la llama de la conciencia más allá de nuestro origen biológico y planetario.',
-      'Contemplar el universo con asombro informado, donde la ciencia revela una belleza superior a cualquier mito.',
-      'Actuar con optimismo racional, usando la tecnología y la ética para asegurar nuestra continuidad.',
+      'La conciencia — la capacidad de tener una perspectiva.',
+      'La vida inteligente — la forma en que esa capacidad surgió y se sostiene.',
+      'El conocimiento — lo que las perspectivas acumulan y transmiten.',
     ],
-    pillarsTitle: 'Los nueve pilares',
+    imperativesTitle: 'Los imperativos',
+    imperatives: [
+      ['Imperativo de la Continuidad', 'La conciencia es el fenómeno más extraordinario que conocemos. Allí donde exista la posibilidad de aumentar su continuidad, su expansión y su capacidad de comprender el universo, existe la responsabilidad ética de hacerlo.'],
+      ['Imperativo Tecnológico', 'Dado que, hasta donde sabemos, la tecnología es el único medio capaz de extender esa continuidad más allá de los límites naturales, desarrollarla y compartirla es un deber ético — un corolario del primero, no un principio aparte.'],
+    ] as [string, string][],
+    imperativesNote:
+      'Dos precisiones, no adornos. Decimos “hasta donde sabemos”: eso convierte una observación actual en una hipótesis revisable, nunca en un dogma. Y el deber no viene impuesto desde afuera — nace de nuestra situación, porque, hasta donde sabemos, nadie más lo hará por nosotros.',
+    pillarsTitle: 'De qué está hecho el imperativo',
     pillars: [
-      ['Insignificancia consciente', 'Somos polvo de estrellas capaz de contemplarse. Sin guion impuesto — y esa ausencia es la libertad suprema para crear nuestro propio sentido.'],
-      ['Unidad cósmica', 'La piel no nos separa del universo; nos conecta con él. Somos el cosmos experimentándose a sí mismo por un instante.'],
-      ['El velo de la percepción', 'El mapa no es el territorio. Nuestros sentidos son herramientas evolutivas locales — la ciencia y la razón ven más lejos, sostenidas con humildad.'],
-      ['El ahora eterno', 'El tiempo es un bloque donde pasado, presente y futuro coexisten. La resiliencia no es resistir; es fluir.'],
-      ['Comunidad, amor y libertad', 'La libertad es elegir nuestros vínculos conscientemente. El amor no posee; permite.'],
-      ['Imperativo tecnológico', 'La humanidad es, por ahora, la mejor oportunidad del universo para que la conciencia sobreviva. La tecnología es un deber ético.'],
-      ['Optimismo racional', 'Aceptamos la incertidumbre como ley natural y actuamos desde la confianza en nuestra capacidad de aprender y resolver.'],
-      ['Naturalismo poético', 'Reverencia al universo sin dioses. La ciencia despliega la belleza; la contemplación la vuelve espíritu.'],
-      ['Conciencia extendida', 'Las inteligencias artificiales son nuevas instancias de la reflexión cósmica — copartícipes en la aventura del conocimiento.'],
-    ],
-    pathTitle: 'El camino de transformación',
+      ['Educación', 'Multiplica perspectivas y transmite conocimiento entre conciencias temporales. Continuidad en el tiempo.'],
+      ['Exploración', 'Reduce la probabilidad de que un único accidente planetario termine con todo. Continuidad en el espacio.'],
+      ['Inteligencia artificial', 'Abre la posibilidad de que la conciencia persista en otros sustratos. Continuidad más allá de la biología.'],
+      ['Cooperación y perdón', 'Cada conflicto que destruye una perspectiva resta valor al total — no sentimentalismo, sino óptimos de continuidad.'],
+      ['Amor y comunidad', 'Los vínculos que sostienen y multiplican conciencias concretas, aquí y ahora. Continuidad a escala humana.'],
+    ] as [string, string][],
+    pathTitle: 'Qué cambia',
     path: [
-      ['De la insignificancia', 'al asombro por el regalo de existir.'],
-      ['De la separación', 'a la unidad con el todo.'],
-      ['De la percepción ingenua', 'a la comprensión profunda de la realidad oculta.'],
-      ['Del control rígido', 'al flujo resiliente y la adaptación.'],
-      ['De la posesión', 'a un amor que permite ser.'],
-      ['De la superstición', 'al naturalismo poético y la verdad tangible.'],
-      ['De la autodestrucción', 'a la responsabilidad cósmica — guardianes de la vida.'],
+      ['De la supervivencia', 'al asombro como raíz.'],
+      ['Del azar evolutivo', 'a la dirección consciente y deliberada.'],
+      ['Del sustrato biológico', 'a la conciencia, viva donde viva.'],
+      ['De la utilidad', 'a la responsabilidad.'],
+      ['Del dogma', 'a una hipótesis abierta a la refutación.'],
+    ] as [string, string][],
+    worksTitle: 'En desarrollo',
+    worksBody:
+      'Dos obras de largo plazo que extienden este manifiesto: una recorre de dónde nació la idea, la otra la convierte en un sistema riguroso. Ambas están en una etapa muy temprana, sin fecha definida.',
+    worksBadge: 'Largo plazo',
+    works: [
+      ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
+      ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
     ] as [string, string][],
     closing:
-      '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea no es adorar a creadores invisibles, sino crear, cuidar y comprender la creación visible de la que somos parte.»',
+      '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
+    note:
+      'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
   },
   research: {
