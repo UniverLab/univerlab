@@ -276,9 +276,9 @@ export const en = {
         'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to <strong>cast</strong>, html or gif — version-controlled and re-runnable.',
       genesis: {
         kicker: 'Genesis',
-        title: 'Every demo tool came out wrong.',
+        title: 'Born building this very page.',
         body:
-          'asciinema, vhs, OBS, recording by hand — every approach was brittle or ugly, and re-recording for a single typo meant starting over. So the demo stopped being a video and became a file: events you can prune, pace and replay. DemoStage is the tool that records every other experiment in this lab.',
+          'Building this landing, every experiment needed a demo — and every tool (asciinema, vhs, OBS, recording by hand) came out brittle or ugly, with a fresh re-record for each typo. So the demo stopped being a video and became a file: events you can prune, pace and replay. DemoStage records the rest of the lab — including the page you are reading.',
       },
       pipeline: {
         kicker: 'Four commands',

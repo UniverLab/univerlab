@@ -278,9 +278,9 @@ export const es: Dict = {
         'DemoStage graba una sesión como <strong>eventos</strong>, normaliza las imperfecciones humanas en un <code>demo.toml</code> limpio (la <strong>partitura</strong>) y lo compila a <strong>cast</strong>, html o gif — versionado y reejecutable.',
       genesis: {
         kicker: 'Génesis',
-        title: 'Toda herramienta de demos salía mal.',
+        title: 'Nació construyendo esta misma página.',
         body:
-          'asciinema, vhs, OBS, grabar a mano — cada enfoque era frágil o feo, y regrabar por una sola errata era empezar de cero. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage es la herramienta que graba todos los demás experimentos del laboratorio.',
+          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: 'Cuatro comandos',
