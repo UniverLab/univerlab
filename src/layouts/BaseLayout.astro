@@ -11,10 +11,22 @@ interface Props {
   description?: string;
   bg?: BgTheme;
   bgColor?: string;
+  /** Core pages: shift the palette progressively with the time of day. */
+  circadian?: boolean;
+  /** Docs: render the background animation in a neutral grey, not the accent. */
+  mutedCanvas?: boolean;
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-const { title, description = t.meta.description, bg = 'cosmic', bgColor } = Astro.props;
+const {
+  title,
+  description = t.meta.description,
+  bg = 'cosmic',
+  bgColor,
+  circadian = false,
+  mutedCanvas = false,
+} = Astro.props;
+const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 
 const site = Astro.site ?? new URL('https://univerlab.org');
 const path = Astro.url.pathname;
@@ -92,9 +104,92 @@ const orgJsonLd = {
         } catch (e) {}
       })();
     </script>
+    {circadian && (
+      <script is:inline>
+        // Circadian palette. Polarity (light by day, dark by night) NEVER
+        // interpolates across — that mid-point is grey mush with no contrast.
+        // Instead: day = always light (dark ink), night = always dark (light
+        // ink); within each we only interpolate WARMTH, so dawn/dusk are the warm
+        // ends. The light↔dark flip is the sunrise/sunset, estimated for the
+        // visitor's latitude & season (see below). Pre-paint, so no flash.
+        // Landing is always circadian; docs may force day/night via
+        // `univerlab-doc-theme`.
+        (function () {
+          try {
+            // Day: cool at noon, warm at the edges (morning/golden hour).
+            // `--canvas-color`: accent-tinted dots (landing). `--canvas-mute`: a
+            // neutral grey for docs, where the animation differentiates the tool
+            // but must stay calm under the uniform UniverLab accent.
+            var DAY_COOL = { '--bg': '#fbfbfa', '--bg-raise': '#f1f1ee', '--ink': '#1a1c1e', '--ink-dim': '#555a61', '--ink-faint': '#8b9099', '--line': '#e4e2dc', '--accent': '#9a7b16', '--canvas-color': '#b59a3a', '--canvas-mute': '#b3b4ae' };
+            var DAY_WARM = { '--bg': '#f7efe4', '--bg-raise': '#efe5d6', '--ink': '#241f18', '--ink-dim': '#5f574b', '--ink-faint': '#948975', '--line': '#e6dac6', '--accent': '#b5791f', '--canvas-color': '#cf9a3a', '--canvas-mute': '#bdb5a6' };
+            // Night: warm just after dusk, cool in the deep night.
+            var NIGHT_WARM = { '--bg': '#1a1822', '--bg-raise': '#221f2b', '--ink': '#ece3d6', '--ink-dim': '#b0a596', '--ink-faint': '#756b5f', '--line': '#2e2a36', '--accent': '#e8a24a', '--canvas-color': '#e0a24a', '--canvas-mute': '#565160' };
+            var NIGHT_COOL = { '--bg': '#0f1115', '--bg-raise': '#15181d', '--ink': '#e3e6e8', '--ink-dim': '#a8adb5', '--ink-faint': '#6b7178', '--line': '#23262c', '--accent': '#e6c84a', '--canvas-color': '#d3bf72', '--canvas-mute': '#474a54' };
+
+            function hx(c) { return [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)]; }
+            function lerp(c1, c2, t) {
+              var x = hx(c1), y = hx(c2);
+              function h2(n) { return ('0' + Math.round(n).toString(16)).slice(-2); }
+              return '#' + h2(x[0] + (y[0] - x[0]) * t) + h2(x[1] + (y[1] - x[1]) * t) + h2(x[2] + (y[2] - x[2]) * t);
+            }
+            function mix(a, b, f) { var o = {}; for (var k in a) o[k] = lerp(a[k], b[k], f); return o; }
+
+            // The day/night switch lives only in docs; the landing is always
+            // circadian, so it never honours a forced choice.
+            var forced = null;
+            try {
+              if (location.pathname.indexOf('/docs') !== -1) {
+                forced = localStorage.getItem('univerlab-doc-theme');
+              }
+            } catch (e) {}
+
+            var pal;
+            if (forced === 'day') {
+              pal = mix(DAY_COOL, DAY_WARM, 0.15);
+            } else if (forced === 'night') {
+              pal = NIGHT_COOL;
+            } else {
+              var d = new Date();
+              var hour = d.getHours() + d.getMinutes() / 60;
+              var y = d.getFullYear();
+              // Estimate sunrise/sunset for the visitor's latitude & season,
+              // cheaply, with no geolocation prompt:
+              //  - No DST observed → almost certainly low latitude → 12h day (6–18).
+              //  - DST observed → mid/high latitude → seasonal swing; hemisphere
+              //    from the sign of the Jan vs Jul UTC offset; a smooth cosine of
+              //    the day-of-year (no month-bucket jumps), ±2.5h.
+              var kJan = new Date(y, 0, 1).getTimezoneOffset();
+              var kJul = new Date(y, 6, 1).getTimezoneOffset();
+              var half = 6;
+              if (kJan !== kJul) {
+                var southern = kJan < kJul;
+                var doy = Math.floor((d - new Date(y, 0, 0)) / 86400000);
+                var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25); // +1 ≈ N summer solstice
+                if (southern) s = -s;
+                half = 6 + 2.5 * s;
+              }
+              var sunrise = 12 - half;
+              var sunset = 12 + half;
+              if (hour >= sunrise && hour < sunset) {
+                var t = (hour - sunrise) / (sunset - sunrise);
+                var warm = Math.abs(t - 0.5) * 2; // warm at the edges, cool at noon
+                pal = mix(DAY_COOL, DAY_WARM, warm);
+              } else {
+                var sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
+                var nightLen = 24 - (sunset - sunrise);
+                var g = nightLen > 0 ? sinceSunset / nightLen : 0;
+                pal = mix(NIGHT_WARM, NIGHT_COOL, Math.min(g * 2, 1)); // warm dusk → cool night
+              }
+            }
+            var root = document.documentElement;
+            for (var key in pal) { root.style.setProperty(key, pal[key]); }
+          } catch (e) {}
+        })();
+      </script>
+    )}
   </head>
   <body>
-    <ThemeBackground theme={bg} color={bgColor} />
+    <ThemeBackground theme={bg} color={canvasColor} />
     <Header />
     <main>
       <slot />

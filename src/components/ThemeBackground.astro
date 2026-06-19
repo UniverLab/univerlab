@@ -17,11 +17,22 @@ const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
     const canvas = document.querySelector<HTMLCanvasElement>('canvas.bg');
     if (!canvas) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // `auto` (circadian landing) → time-of-day accent; `auto-mute` (docs) → a
+    // neutral grey so the animation differentiates the tool without shouting.
+    const raw = canvas.dataset.color || '#b9b6ae';
+    const cs = getComputedStyle(document.documentElement);
+    const tok = (name: string) => cs.getPropertyValue(name).trim();
+    let color = raw;
+    if (raw === 'auto') {
+      color = tok('--canvas-color') || tok('--accent') || '#b9b6ae';
+    } else if (raw === 'auto-mute') {
+      color = tok('--canvas-mute') || tok('--ink-faint') || '#b9b6ae';
+    }
     import('../scripts/backgrounds').then(({ startBackground }) => {
       (startBackground as typeof Start)(
         canvas,
         (canvas.dataset.theme as BgTheme) || 'drift',
-        canvas.dataset.color || '#b9b6ae'
+        color
       );
     });
   };
@@ -37,6 +48,6 @@ const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
     height: 100vh;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.55;
+    opacity: 0.68;
   }
 </style>

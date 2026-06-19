@@ -5,7 +5,7 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const m = t.manifesto;
 ---
-<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" bgColor="#d3bf72">
+<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" circadian>
   <section class="wrap opening">
     <span class="label">{m.kicker}</span>
     <h1>{m.title}</h1>
