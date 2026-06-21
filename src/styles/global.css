@@ -19,7 +19,7 @@
   --texforge: #e0a458;
   --gitkit: #d977a8;
   --ghscaff: #7ee081;
-  --cadforge: #6ec6e6;
+  --cadspec: #6ec6e6;
   --astro-denoise: #a78bfa;
   --demo-stage: #ef8354;
 
@@ -76,7 +76,7 @@ html[data-surface='scaffold'] {
   --line: #1f261f;
 }
 
-/* cadforge — architect's plan: clean, light and geometric, near-black ink on a
+/* cadspec — architect's plan: clean, light and geometric, near-black ink on a
    cool white sheet. */
 html[data-surface='blueprint'] {
   --bg: #f6f8fa;

@@ -214,7 +214,7 @@ html[data-surface='scaffold'] .koan {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   cadforge · `blueprint` — an architect's plan: clean, light and geometric.
+   cadspec · `blueprint` — an architect's plan: clean, light and geometric.
 
    Near-black ink on a white sheet, two faint centre-line axes, generous space.
    No neon, no busy grid — precision carries it. (Key name kept for stability.)
@@ -351,7 +351,7 @@ html[data-surface='paper'] .hero::after {
   border-bottom: 1px solid var(--ink);
 }
 
-/* cadforge · blueprint — an architect's plan: a clean white sheet, a thin frame
+/* cadspec · blueprint — an architect's plan: a clean white sheet, a thin frame
    with a small registration mark, and a light titleblock in the corner. */
 html[data-surface='blueprint'] .hero {
   position: relative;
@@ -372,7 +372,7 @@ html[data-surface='blueprint'] .hero::before {
   background: var(--bg-raise);
 }
 html[data-surface='blueprint'] .hero::after {
-  content: 'cadFORGE\A PLAN · 1:1 · SHEET 01';
+  content: 'cadSpec\A PLAN · 1:1 · SHEET 01';
   white-space: pre;
   text-align: right;
   line-height: 1.7;

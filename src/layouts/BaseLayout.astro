@@ -39,7 +39,7 @@ const {
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: paper (a typeset page stays still),
-// studio (a lit stage, not drift), and blueprint (cadforge's clean plan — calm
+// studio (a lit stage, not drift), and blueprint (cadspec's clean plan — calm
 // and geometric, no animation). ghscaff (scaffold) keeps its live drawing.
 const stillSurface = ['paper', 'studio', 'blueprint'].includes(surface ?? '');
 const colorScheme = ['paper', 'blueprint'].includes(surface ?? '') ? 'light' : 'dark';

@@ -49,7 +49,7 @@ export const experiments: Experiment[] = [
   { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', install: both('texforge'), hasDocs: true },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#d977a8', github: 'https://github.com/UniverLab/gitkit', bg: 'gitgraph', surface: 'vcs', install: both('gitkit'), hasDocs: true },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'scaffold', install: both('ghscaff'), hasDocs: true },
-  { id: 'cadforge', name: 'cadForge', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', surface: 'blueprint', install: both('cadforge'), hasDocs: true },
+  { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', surface: 'blueprint', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
   { id: 'demo-stage', name: 'DemoStage', number: 'EXP-007', status: 'beta', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demo-stage', bg: 'drift', surface: 'studio', install: both('demo-stage'), hasDocs: true },
 ];

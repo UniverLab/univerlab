@@ -225,23 +225,23 @@ export const es: Dict = {
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
     },
-    cadforge: {
+    cadspec: {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
       koan: 'El dibujo no se dibuja. Se declara.',
       lede:
-        'cadForge trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
+        'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
       genesis: {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
         body:
-          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadForge es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
       },
       notes: {
         items: [
           'Servidor de vista previa en vivo: edita un archivo <code>.cf</code> y el navegador se actualiza al guardar. Los errores se superponen en vez de romper.',
-          'Hecho para agentes de IA: <code>cadforge schema</code> enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan <em>ver</em> el dibujo.',
+          'Hecho para agentes de IA: <code>cadspec schema</code> enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan <em>ver</em> el dibujo.',
           'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
         ],
       },

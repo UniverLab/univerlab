@@ -223,23 +223,23 @@ export const en = {
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
     },
-    cadforge: {
+    cadspec: {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
       koan: 'The drawing is not drawn. It is declared.',
       lede:
-        'cadForge treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
+        'cadSpec treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
       genesis: {
         kicker: 'Genesis',
         title: 'For the architect in the house.',
         body:
-          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. The vibe-coding equivalent for CAD simply didn’t exist: no AI-assisted drawing that behaved like real engineering. The whole internet is drunk on image generation, but images lie, and the real work lives in the drawings. cadForge is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
+          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. The vibe-coding equivalent for CAD simply didn’t exist: no AI-assisted drawing that behaved like real engineering. The whole internet is drunk on image generation, but images lie, and the real work lives in the drawings. cadSpec is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
       },
       notes: {
         items: [
           'Live preview server: edit a <code>.cf</code> file, the browser updates on save. Errors overlay instead of crashing.',
-          'Built for AI agents: <code>cadforge schema</code> teaches the language in one command; previews ship per-entity bounding boxes so agents can <em>see</em> the drawing.',
+          'Built for AI agents: <code>cadspec schema</code> teaches the language in one command; previews ship per-entity bounding boxes so agents can <em>see</em> the drawing.',
           'Deterministic DXF out, legacy DXF in — existing drawings migrate into the declarative workflow.',
         ],
       },

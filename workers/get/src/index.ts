@@ -18,7 +18,8 @@ const TOOLS: Record<string, { repo: string; win: boolean }> = {
   texforge: { repo: 'texforge', win: true },
   gitkit: { repo: 'gitkit', win: true },
   ghscaff: { repo: 'ghscaff', win: true },
-  cadforge: { repo: 'cadforge', win: true },
+  cadspec: { repo: 'cadforge', win: true }, // slug renamed; repo until GitHub rename
+
   'demo-stage': { repo: 'demo-stage', win: true },
 };
 
