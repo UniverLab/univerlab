@@ -27,6 +27,7 @@ export const en = {
     inPreparation: 'in preparation',
     docsHome: 'Documentation',
     onThisExperiment: 'Experiment',
+    skipToContent: 'Skip to content',
   },
   status: {
     active: 'active',
@@ -37,7 +38,7 @@ export const en = {
     hero: {
       title: 'We are the universe, observing itself.',
       lede:
-        'UniverLab runs on one loop: a real <strong>need</strong> becomes an open <strong>experiment</strong>, and the experiment produces open <strong>knowledge</strong> — tools, libraries, datasets, papers. The experiment is the work; everything it ships is a <strong>byproduct</strong>.',
+        'UniverLab follows one simple loop: a real <strong>need</strong> becomes an open <strong>experiment</strong>, and that experiment gives back open <strong>knowledge</strong> — tools, libraries, datasets, papers. The experiment is the work; everything it ships is a <strong>byproduct</strong>.',
       tagline: 'SCI · CLI · BIO',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
@@ -89,11 +90,11 @@ export const en = {
     kicker: 'Index',
     title: 'Experiments',
     intro:
-      'The fundamental unit of UniverLab is the experiment. Experiments are not products — they are ongoing explorations. They may mature, remain active for decades, or evolve into new research. Each one begins with a real need.',
+      'The fundamental unit of UniverLab is the experiment. Experiments are not products — they are ongoing explorations. They may mature, stay active for decades, or grow into new research. Each one starts with a real need — usually one we ran into ourselves.',
   },
   experiments: {
     canopy: {
-      need: 'AI agents forget everything and work blind to each other.',
+      need: 'Your AI agents forget everything between sessions — and they can’t see what the others are doing.',
       tagline:
         'An agent operations center: orchestration, memory, and coordination for AI sessions.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
@@ -130,8 +131,9 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
+      figure: 'Fig. 1 · texforge build',
       lede:
-        'A single Rust binary that scaffolds, lints, formats and compiles documents — the LaTeX engine arrives by itself on first build, and Mermaid or Graphviz diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
+        'A single Rust binary that scaffolds, lints, formats and compiles documents — the LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
@@ -144,7 +146,7 @@ export const en = {
           ['Compose', 'templates with placeholders that already know your name.'],
           ['Proof', 'a linter that catches broken refs, missing files and unclosed environments before the press runs.'],
           ['Set', 'one canonical format, like rustfmt for .tex. Clean diffs forever.'],
-          ['Illustrate', 'Mermaid and Graphviz blocks become figures at build time, rendered in pure Rust.'],
+          ['Illustrate', 'Mermaid, Graphviz and D2 blocks become figures at build time, rendered in pure Rust.'],
           ['Print', 'Tectonic compiles deterministically; watch mode reprints as you write.'],
         ] as [string, string][],
       },
@@ -157,7 +159,7 @@ export const en = {
       },
     },
     gitkit: {
-      need: 'Every new repository repeats the same setup ritual, by hand.',
+      need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
       koan: '// the ritual, automated',
@@ -193,7 +195,7 @@ export const en = {
           'New Rust project. Same labels, same branch protection, same CI, same secrets. Again. And again. Replicable work you do by hand isn’t craft — it’s toil. ghScaff runs the whole ritual in one wizard, idempotently, so your conventions hold the line instead of drifting.',
       },
       lifts: {
-        kicker: 'Seven lifts',
+        kicker: '7 lifts',
         items: [
           'Repository basics',
           'Visibility & ownership',
@@ -281,7 +283,7 @@ export const en = {
           'Building this landing, every experiment needed a demo — and every tool (asciinema, vhs, OBS, recording by hand) came out brittle or ugly, with a fresh re-record for each typo. So the demo stopped being a video and became a file: events you can prune, pace and replay. DemoStage records the rest of the lab — including the page you are reading.',
       },
       pipeline: {
-        kicker: 'Four commands',
+        kicker: '4 commands',
         items: [
           '<code>record</code> — capture keystrokes, output and timing into a raw macro.',
           '<code>normalize</code> — prune typos, humanize typing, trim idle into a clean score.',
@@ -375,7 +377,7 @@ export const en = {
       role: 'Contributors',
       name: 'You, possibly',
       body:
-        'Every experiment accepts issues and focused pull requests. Conventional commits, tests before PRs, docs updated with behavior.',
+        'We’d genuinely welcome your help. Every experiment takes issues and focused pull requests — just keep to conventional commits, add tests before a PR, and update the docs alongside any change in behavior.',
       link: 'github.com/UniverLab ↗',
     },
     wall: {

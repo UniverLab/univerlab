@@ -28,6 +28,7 @@ export const es: Dict = {
     inPreparation: 'en preparación',
     docsHome: 'Documentación',
     onThisExperiment: 'Experimento',
+    skipToContent: 'Saltar al contenido',
   },
   status: {
     active: 'activo',
@@ -38,7 +39,7 @@ export const es: Dict = {
     hero: {
       title: 'Somos el universo, observándose a sí mismo.',
       lede:
-        'UniverLab funciona con un solo ciclo: una <strong>necesidad</strong> real se vuelve un <strong>experimento</strong> abierto, y el experimento produce <strong>conocimiento</strong> abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un <strong>subproducto</strong>.',
+        'UniverLab sigue un ciclo sencillo: una <strong>necesidad</strong> real se vuelve un <strong>experimento</strong> abierto, y ese experimento devuelve <strong>conocimiento</strong> abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un <strong>subproducto</strong>.',
       tagline: 'SCI · CLI · BIO',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
@@ -91,11 +92,11 @@ export const es: Dict = {
     kicker: 'Índice',
     title: 'Experimentos',
     intro:
-      'La unidad fundamental de UniverLab es el experimento. Los experimentos no son productos — son exploraciones en curso. Pueden madurar, seguir activos durante décadas o convertirse en nueva investigación. Cada uno nace de una necesidad real.',
+      'La unidad fundamental de UniverLab es el experimento. Los experimentos no son productos — son exploraciones en curso. Pueden madurar, seguir activos durante décadas o convertirse en nueva investigación. Cada uno nace de una necesidad real — casi siempre una que vivimos nosotros mismos.',
   },
   experiments: {
     canopy: {
-      need: 'Los agentes de IA lo olvidan todo y trabajan ciegos entre sí.',
+      need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
       tagline:
         'Un centro de operaciones de agentes: orquestación, memoria y coordinación para sesiones de IA.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
@@ -132,8 +133,9 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
+      figure: 'Fig. 1 · texforge build',
       lede:
-        'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid o Graphviz se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -146,7 +148,7 @@ export const es: Dict = {
           ['Componer', 'plantillas con placeholders que ya saben tu nombre.'],
           ['Corregir', 'un linter que detecta referencias rotas, archivos faltantes y entornos sin cerrar antes de imprimir.'],
           ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
-          ['Ilustrar', 'los bloques Mermaid y Graphviz se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
           ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
         ],
       },
@@ -159,7 +161,7 @@ export const es: Dict = {
       },
     },
     gitkit: {
-      need: 'Cada repositorio nuevo repite el mismo ritual de configuración, a mano.',
+      need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
       koan: '// el ritual, automatizado',
@@ -195,7 +197,7 @@ export const es: Dict = {
           'Proyecto nuevo en Rust. Las mismas etiquetas, la misma protección de ramas, el mismo CI, los mismos secretos. Otra vez. Y otra. El trabajo replicable hecho a mano no es oficio — es desgaste. ghScaff corre el ritual entero en un asistente, de forma idempotente, para que tus convenciones se sostengan en vez de desviarse.',
       },
       lifts: {
-        kicker: 'Siete niveles',
+        kicker: '7 niveles',
         items: [
           'Datos del repositorio',
           'Visibilidad y propiedad',
@@ -283,7 +285,7 @@ export const es: Dict = {
           'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
-        kicker: 'Cuatro comandos',
+        kicker: '4 comandos',
         items: [
           '<code>record</code> — captura teclas, salida y tiempos en un macro crudo.',
           '<code>normalize</code> — poda erratas, humaniza el tipeo y recorta el idle en una partitura limpia.',
@@ -377,7 +379,7 @@ export const es: Dict = {
       role: 'Colaboradores',
       name: 'Tú, quizá',
       body:
-        'Cada experimento acepta issues y pull requests enfocados. Conventional commits, pruebas antes de los PR, documentación actualizada con el comportamiento.',
+        'Nos encantaría contar con tu ayuda. Cada experimento acepta issues y pull requests enfocados — basta con seguir conventional commits, añadir pruebas antes del PR y actualizar la documentación junto con cualquier cambio de comportamiento.',
       link: 'github.com/UniverLab ↗',
     },
     wall: {
