@@ -18,20 +18,26 @@ const path = Astro.url.pathname;
 const seg = path.replace(/^\/es(?=\/|$)/, '').split('/').filter(Boolean)[0] ?? '';
 const onExperiment = experiments.some((e) => e.id === seg);
 
+// On docs pages the header mutates: GitHub points at the project's own repo
+// (not the org), and the language toggle becomes a light/dark theme toggle
+// (docs are English-only).
+const docsMatch = path.match(/^\/([^/]+)\/docs/);
+const docExp = docsMatch ? experiments.find((e) => e.id === docsMatch[1]) : undefined;
+const isDocs = !!docExp;
+const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
+// Docs inherit their project's polarity; light surfaces are paper/blueprint/studio.
+const docDefaultDark = docExp
+  ? !['paper', 'blueprint'].includes(docExp.surface ?? '')
+  : true;
+
 const nav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: localizePath('/contributors', lang), label: t.nav.people },
-  { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+  { href: githubHref, label: t.nav.github, ext: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';
-
-// Docs are English-only and have no /es mirror, so switching language from a
-// docs page would 404. Send it to that experiment's page in the other locale.
-const docsMatch = path.match(/^\/([^/]+)\/docs/);
-const toggleHref = docsMatch
-  ? localizePath(`/${docsMatch[1]}`, other)
-  : switchLangPath(Astro.url, other);
+const toggleHref = switchLangPath(Astro.url, other);
 
 function isActive(href: string, current: string): boolean {
   if (href === '/' || href === '/es') return current === href;
@@ -42,7 +48,7 @@ function isActive(href: string, current: string): boolean {
   <div class="wrap bar">
     <a href={localizePath('/', lang)} class="home" aria-label="UniverLab">
       <Mark size={26} />
-      <span class="word">UNIVERLAB</span>
+      <span class="word" translate="no">UNIVERLAB</span>
     </a>
     <button
       type="button"
@@ -62,12 +68,21 @@ function isActive(href: string, current: string): boolean {
           class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)) }]}
         >{item.label}</a>
       ))}
-      <a
-        class="label lang"
-        href={toggleHref}
-        data-set-lang={other}
-        hreflang={other}
-      >{languages[lang]}<span class="slash">/</span>{languages[other]}</a>
+      {isDocs ? (
+        <button
+          type="button"
+          class="label theme-toggle"
+          data-doc-default-dark={String(docDefaultDark)}
+          aria-label="Toggle theme"
+        >{docDefaultDark ? 'LIGHT' : 'DARK'}</button>
+      ) : (
+        <a
+          class="label lang"
+          href={toggleHref}
+          data-set-lang={other}
+          hreflang={other}
+        >{languages[other]}</a>
+      )}
     </nav>
   </div>
   <hr class="rule" />
@@ -82,6 +97,28 @@ function isActive(href: string, current: string): boolean {
       } catch (e) {}
     });
   });
+
+  // Docs theme toggle: docs default to their project's polarity; the reader can
+  // force light/dark. The label always shows the TARGET theme, resolved from the
+  // stored override (if any) over the project default.
+  const tt = document.querySelector<HTMLButtonElement>('.theme-toggle');
+  if (tt) {
+    const KEY = 'univerlab-doc-theme';
+    const defaultDark = tt.dataset.docDefaultDark === 'true';
+    let forced = '';
+    try {
+      forced = localStorage.getItem(KEY) || '';
+    } catch (e) {}
+    const current = forced || (defaultDark ? 'dark' : 'light');
+    const target = current === 'dark' ? 'light' : 'dark';
+    tt.textContent = target.toUpperCase();
+    tt.addEventListener('click', () => {
+      try {
+        localStorage.setItem(KEY, target);
+      } catch (e) {}
+      location.reload();
+    });
+  }
 
   // Mobile nav: the burger toggles the collapsed menu open/closed.
   const burger = document.querySelector<HTMLButtonElement>('.burger');
@@ -118,10 +155,13 @@ function isActive(href: string, current: string): boolean {
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: var(--ink-dim); }
   nav a:hover, nav a.active { color: var(--ink); }
-  .lang { display: inline-flex; gap: 0.25rem; }
-  .lang .slash { color: var(--ink-faint); }
-  .lang { color: var(--ink-faint); }
-  .lang:hover { color: var(--ink); }
+  .lang, .theme-toggle { color: var(--ink-faint); }
+  .lang:hover, .theme-toggle:hover { color: var(--ink); }
+  /* The theme toggle is a button but must read like the mono nav labels. */
+  .theme-toggle {
+    border: 0; background: none; padding: 0; cursor: pointer;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+  }
 
   /* Hamburger button — hidden until the nav no longer fits comfortably. */
   .burger {

@@ -8,10 +8,13 @@ const e = t.experiments.texforge;
 <ExperimentLayout id="texforge">
   <section class="wrap section">
     <div class="galley">
-      <pre class="mono plate"><code>$ texforge new quantum-paper
+      <figure class="plate-fig">
+        <pre class="mono plate"><code>$ texforge new quantum-paper
 $ cd quantum-paper
 $ texforge build
   ◇ quantum-paper.pdf</code></pre>
+        <figcaption class="fig-cap">{e.figure}</figcaption>
+      </figure>
       <div class="colophon">
         <span class="label">{e.press.kicker}</span>
         <ul>
@@ -36,12 +39,21 @@ $ texforge build
   .section { padding-block: 1.5rem; }
   .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
+  /* The command listing is set as a numbered figure — the same slot a recorded
+     DemoStage clip (gif / asciinema cast) drops into later, captioned the same
+     way, so a moving demo reads as "Fig. 1" rather than a marketing video. */
+  .plate-fig { margin: 0; }
   .plate {
     margin: 0; padding: 1.6rem;
     border: 1px solid color-mix(in srgb, var(--texforge) 35%, var(--line));
     background: var(--bg-raise); color: var(--texforge);
     font-size: 0.9rem; line-height: 1.9;
     box-shadow: 0.5rem 0.5rem 0 color-mix(in srgb, var(--texforge) 14%, transparent);
+  }
+  .fig-cap {
+    margin-top: 0.6rem; font-family: var(--font-mono);
+    font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--ink-faint);
   }
   .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .colophon li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }

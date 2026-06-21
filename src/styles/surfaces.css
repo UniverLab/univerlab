@@ -1,0 +1,454 @@
+/* Per-experiment surface skins.
+
+   The UniverLab frame stays constant — header, footer, mono labels, the
+   EXP→name→koan→lede→install→genesis architecture. What changes per surface is
+   the *skin*: typographic voice, motif, and how the hero states its thesis.
+   `global.css` sets each surface's substrate palette; this file dresses it.
+
+   "Un edificio, muchas salas." */
+
+/* A real <h1> with the experiment name now lives in every hero (an a11y/SEO
+   win). By default the ASCII banner is the visual signature and the name is
+   read only by assistive tech. Surfaces that aren't terminal-native reveal the
+   name as a typeset masthead instead. */
+.exp-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Light surfaces print the banner in ink — no terminal phosphor glow. The dark
+   surfaces keep the essence-tinted, glowing banner (it reads as the prompt). */
+html[data-surface='paper'] .banner,
+html[data-surface='scaffold'] .banner {
+  color: var(--ink);
+  text-shadow: none;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   texforge · `paper` — a galley proof the tool itself set.
+
+   Not "cream + display Didone + terracotta" (the templated editorial look):
+   grounded instead in journal/TeX typesetting — a restrained masthead, a
+   sturdy low-contrast serif (Spectral), justified & hyphenated body, oldstyle
+   figures, and a single vermilion proofreader's change-bar as the one accent.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='paper'] {
+  /* The page is typeset: serif body, serif display. Labels stay mono. */
+  --font-body: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-serif: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  /* Vermilion — the proofreader's mark / change-bar. Used once. */
+  --proof: #b2362c;
+}
+
+html[data-surface='paper'] .exp {
+  font-variant-numeric: oldstyle-nums;
+}
+
+/* The hero becomes a title block, ruled off by the proof change-bar. */
+html[data-surface='paper'] .hero {
+  border-left: 2px solid var(--proof);
+  padding-left: clamp(1.1rem, 3vw, 1.8rem);
+}
+html[data-surface='paper'] .num {
+  color: var(--proof);
+}
+
+/* The ASCII banner stays — it is each experiment's own signature mark. On paper
+   it reads like a letterpress masthead; the editorial voice comes from how the
+   text is *set*, not from removing the art. */
+
+/* Koan as an indented epigraph, ruled with a faint proof mark. */
+html[data-surface='paper'] .koan {
+  font-size: 1.15rem;
+  padding-left: 1rem;
+  border-left: 1px solid color-mix(in srgb, var(--proof) 50%, var(--line));
+}
+
+/* Lede & genesis set as a justified, hyphenated column — and the lede opens
+   with a drop cap, the oldest editorial signal there is. */
+html[data-surface='paper'] .lede,
+html[data-surface='paper'] .genesis .prose {
+  text-align: justify;
+  hyphens: auto;
+}
+html[data-surface='paper'] .lede::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 3.2em;
+  line-height: 0.76;
+  padding: 0.05em 0.14em 0 0;
+  color: var(--ink);
+}
+
+/* A centered asterism breaks the page before the origin note — the classic
+   book section divider — and the genesis is set as a numbered section. */
+html[data-surface='paper'] .genesis::before {
+  content: '⁂';
+  display: block;
+  margin: 0 0 2rem;
+  text-align: center;
+  max-width: 60ch;
+  color: var(--ink-faint);
+  font-size: 1.3rem;
+}
+html[data-surface='paper'] .genesis .label::before {
+  content: '§ ';
+  color: var(--proof);
+}
+html[data-surface='paper'] .genesis h2 {
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   canopy · `tui` — modern TUI / DevOS.
+
+   The whole interface reads as a terminal: headings set in the mono signature
+   face, the koan typed as a shell comment. The ASCII banner stays as the
+   prompt's masthead; the cold slate palette does the rest.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='tui'] {
+  --font-serif: var(--font-mono);
+}
+html[data-surface='tui'] .genesis h2 {
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+html[data-surface='tui'] .koan {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.95rem;
+  opacity: 1;
+}
+html[data-surface='tui'] .koan::before {
+  content: '# ';
+  color: var(--ink-faint);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   gitkit · `vcs` — a commit on the git graph.
+
+   The hero hangs off a graph gutter — a vertical edge with a commit node — and
+   the koan is typed like a commit subject. Mono throughout; magenta is the ref.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='vcs'] {
+  --font-serif: var(--font-mono);
+}
+html[data-surface='vcs'] .hero {
+  position: relative;
+  padding-left: 2.1rem;
+}
+html[data-surface='vcs'] .hero::before {
+  content: '';
+  position: absolute;
+  left: 0.45rem;
+  top: 0.9rem;
+  bottom: 0;
+  border-left: 2px solid color-mix(in srgb, var(--essence) 45%, var(--line));
+}
+html[data-surface='vcs'] .hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--essence);
+}
+html[data-surface='vcs'] .koan {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.95rem;
+  opacity: 1;
+}
+html[data-surface='vcs'] .koan::before {
+  content: 'commit ';
+  color: var(--ink-faint);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ghscaff · `scaffold` — construction drawing (the blueprint look lives here).
+
+   A dark technical sheet with green major/minor ruling and the live drawing
+   canvas; the scaffolding reads as a set of construction drawings.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='scaffold'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  /* Green ruling on the dark sheet — major every fifth line, like a real drawing. */
+  --grid: color-mix(in srgb, #7ee081 11%, transparent);
+  --grid-major: color-mix(in srgb, #7ee081 24%, transparent);
+}
+html[data-surface='scaffold'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-major) 1.2px, transparent 1.2px),
+    linear-gradient(90deg, var(--grid-major) 1.2px, transparent 1.2px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 12rem 12rem, 12rem 12rem, 2.2rem 2.2rem, 2.2rem 2.2rem;
+}
+html[data-surface='scaffold'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+}
+html[data-surface='scaffold'] .koan {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   cadforge · `blueprint` — an architect's plan: clean, light and geometric.
+
+   Near-black ink on a white sheet, two faint centre-line axes, generous space.
+   No neon, no busy grid — precision carries it. (Key name kept for stability.)
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='blueprint'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+html[data-surface='blueprint'] .exp {
+  /* The light brand cyan has no contrast on white — accents use a darker teal. */
+  --essence: #156c80 !important;
+}
+/* Two faint axes cross the sheet — a clean geometric plan motif, not a grid. */
+html[data-surface='blueprint'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px));
+}
+html[data-surface='blueprint'] .banner {
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-surface='blueprint'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+html[data-surface='blueprint'] .koan {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   astro-denoise · `observatory` — the night sky.
+
+   The starfield canvas carries the motif; type goes quiet and scientific —
+   light, wide-tracked grotesque — so the page feels like an instrument readout.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='observatory'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+html[data-surface='observatory'] h2,
+html[data-surface='observatory'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+html[data-surface='observatory'] .koan {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   demo-stage · `studio` — a recording stage.
+
+   A soft spotlight pools behind the hero; headings are a confident grotesque
+   display. The warm-neutral backdrop lets the coral key light read.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='studio'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+/* A lit stage: a bright coral pool up top, a hot white centre, and a dark
+   vignette closing in at the edges — strong light/dark, no ambient drift. */
+html[data-surface='studio'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(52% 38% at 50% 2%, color-mix(in srgb, var(--essence) 28%, transparent), transparent 60%),
+    radial-gradient(40% 28% at 50% 5%, rgba(255, 255, 255, 0.07), transparent 60%),
+    radial-gradient(145% 135% at 50% 26%, transparent 50%, rgba(0, 0, 0, 0.55) 100%);
+}
+html[data-surface='studio'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+}
+html[data-surface='studio'] .koan {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: italic;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Per-surface HERO layouts — each experiment's hero has its own structure, not
+   just its own colour/type. The shared pieces (num · banner · koan · lede ·
+   actions · install) are reflowed/framed differently per surface.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* canopy · tui — the hero is a terminal window. */
+html[data-surface='tui'] .hero {
+  position: relative;
+  margin-top: 1rem;
+  padding: 0 1.4rem 1.8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-raise) 72%, transparent);
+}
+html[data-surface='tui'] .hero::before {
+  content: '● ● ●     ~/canopy';
+  display: block;
+  margin: 0 -1.4rem 1.6rem;
+  padding: 0.55rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+/* texforge · paper — a journal title page: ruled top and bottom, proof bar left. */
+html[data-surface='paper'] .hero {
+  border-top: 1px solid var(--ink);
+  padding-top: 1.6rem;
+}
+html[data-surface='paper'] .hero::after {
+  content: '';
+  align-self: stretch;
+  margin-top: 1.4rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+/* cadforge · blueprint — an architect's plan: a clean white sheet, a thin frame
+   with a small registration mark, and a light titleblock in the corner. */
+html[data-surface='blueprint'] .hero {
+  position: relative;
+  margin-top: 1rem;
+  padding: 1.9rem;
+  border: 1px solid var(--line);
+  background-color: var(--bg-raise);
+}
+html[data-surface='blueprint'] .hero::before {
+  /* registration mark — a small geometric plan detail at the corner */
+  content: '';
+  position: absolute;
+  top: -4.5px;
+  left: -4.5px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--essence);
+  background: var(--bg-raise);
+}
+html[data-surface='blueprint'] .hero::after {
+  content: 'cadFORGE\A PLAN · 1:1 · SHEET 01';
+  white-space: pre;
+  text-align: right;
+  line-height: 1.7;
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  padding: 0.5rem 0.8rem;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--bg-raise);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--essence);
+}
+
+/* ghscaff · scaffold — a construction-drawing panel: a dark card lifted off the
+   ruled sheet (like canopy's window), a green structural border, and coupler
+   nodes at the corners (the clamps that hold a scaffold together). */
+html[data-surface='scaffold'] .hero {
+  position: relative;
+  margin-top: 1.4rem;
+  padding: 1.7rem;
+  border: 1.5px solid color-mix(in srgb, var(--essence) 45%, var(--line));
+  background-color: color-mix(in srgb, var(--bg-raise) 78%, transparent);
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(circle at 0 0, var(--essence) 3.5px, transparent 4px),
+    radial-gradient(circle at 100% 0, var(--essence) 3.5px, transparent 4px),
+    radial-gradient(circle at 0 100%, var(--essence) 3.5px, transparent 4px),
+    radial-gradient(circle at 100% 100%, var(--essence) 3.5px, transparent 4px);
+}
+html[data-surface='scaffold'] .hero::before {
+  content: 'SCAFFOLD · FRAME 01';
+  position: absolute;
+  top: 0;
+  left: 1.2rem;
+  transform: translateY(-50%);
+  padding: 0 0.5rem;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+}
+
+/* astro-denoise · observatory — a centred instrument readout on the starfield. */
+html[data-surface='observatory'] .hero {
+  align-items: center;
+  text-align: center;
+}
+html[data-surface='observatory'] .num {
+  letter-spacing: 0.3em;
+}
+html[data-surface='observatory'] .lede {
+  margin-inline: auto;
+}
+
+/* demo-stage · studio — the hero is a framed screen with a REC tally, lit by
+   the spotlight behind it. */
+html[data-surface='studio'] .hero {
+  position: relative;
+  margin-top: 1rem;
+  padding: 1.7rem;
+  border: 1px solid color-mix(in srgb, var(--essence) 45%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-raise) 45%, transparent);
+}
+html[data-surface='studio'] .hero::before {
+  content: '● REC';
+  position: absolute;
+  top: 0.9rem;
+  right: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--essence);
+}

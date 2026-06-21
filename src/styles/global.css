@@ -31,6 +31,82 @@
   --space: clamp(1rem, 2.5vw, 1.75rem);
 }
 
+/* Fixed per-experiment surfaces (set as data-surface on <html>). They override
+   only the substrate tokens; each experiment keeps its own --essence accent. */
+
+/* texforge — editorial / classic print: warm paper, near-black ink. */
+html[data-surface='paper'] {
+  --bg: #f5f5f3;
+  --bg-raise: #ffffff;
+  --ink: #1b1b1a;
+  --ink-dim: #54514c;
+  --ink-faint: #8a857d;
+  --line: #e3ded4;
+}
+
+/* canopy — modern TUI / DevOS: cold slate dark, blue-grey ink. */
+html[data-surface='tui'] {
+  --bg: #0d0e10;
+  --bg-raise: #131519;
+  --ink: #cdd6df;
+  --ink-dim: #8b97a3;
+  --ink-faint: #58616b;
+  --line: #20242a;
+}
+
+/* gitkit — version control: a neutral graphite code-editor / diff viewer.
+   Truly hueless grey (not the cold slate of tui, not phosphor green). */
+html[data-surface='vcs'] {
+  --bg: #131316;
+  --bg-raise: #1a1a1e;
+  --ink: #d7d7db;
+  --ink-dim: #8d8d94;
+  --ink-faint: #5a5a61;
+  --line: #26262c;
+}
+
+/* ghscaff — construction drawing: a dark technical sheet with green ruling. (The
+   blueprint look moved here; scaffolding reads as construction drawings.) */
+html[data-surface='scaffold'] {
+  --bg: #0c100e;
+  --bg-raise: #121712;
+  --ink: #d6e0d8;
+  --ink-dim: #8c988f;
+  --ink-faint: #586259;
+  --line: #1f261f;
+}
+
+/* cadforge — architect's plan: clean, light and geometric, near-black ink on a
+   cool white sheet. */
+html[data-surface='blueprint'] {
+  --bg: #f6f8fa;
+  --bg-raise: #ffffff;
+  --ink: #15202a;
+  --ink-dim: #4d5a64;
+  --ink-faint: #8a97a0;
+  --line: #dde5ea;
+}
+
+/* astro-denoise — observatory: deep space, a violet-black night sky. */
+html[data-surface='observatory'] {
+  --bg: #0a0911;
+  --bg-raise: #110f1b;
+  --ink: #ddd9e8;
+  --ink-dim: #8f8aa3;
+  --ink-faint: #5b566e;
+  --line: #1e1b2c;
+}
+
+/* demo-stage — recording studio: a warm neutral seamless backdrop (coral pops). */
+html[data-surface='studio'] {
+  --bg: #15130f;
+  --bg-raise: #1d1a15;
+  --ink: #e9e3d9;
+  --ink-dim: #9a9286;
+  --ink-faint: #635c50;
+  --line: #2a261f;
+}
+
 * { box-sizing: border-box; }
 
 html {
@@ -65,6 +141,41 @@ a { color: inherit; text-decoration-color: var(--ink-faint); text-underline-offs
 a:hover { text-decoration-color: currentColor; }
 
 code, .mono { font-family: var(--font-mono); }
+
+/* Headings avoid widows/orphans (no awkward last-line single word). */
+h1, h2, h3 { text-wrap: balance; }
+
+/* Tabular figures so counts/labels line up. */
+code, .mono, .label { font-variant-numeric: tabular-nums; }
+
+/* Visible keyboard focus everywhere — never rely on a removed outline. Uses the
+   ink colour so it contrasts on every surface (light or dark). */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* No 300ms double-tap delay on controls. */
+button, a, summary, [role='button'] { touch-action: manipulation; }
+
+/* Skip link — hidden until focused, then drops into view (keyboard a11y). */
+.skip-link {
+  position: fixed;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  background: var(--bg-raise);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.skip-link:focus { transform: translateY(0); }
 
 /* Structural primitives */
 .wrap {

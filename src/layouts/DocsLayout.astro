@@ -17,8 +17,8 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const base = `/${id}/docs`;
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} circadian mutedCanvas>
-  <div class="wrap docs">
+<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} bgColor={exp.essenceHex} surface={exp.surface} docTheme>
+  <div class="wrap docs" style={`--essence: ${exp.essenceHex}`}>
     <aside>
       <a class="back label" href={`/${id}`}>← {exp.name}</a>
       <span class="label head">{t.common.docsHome}</span>
@@ -30,11 +30,6 @@ const base = `/${id}/docs`;
           >{l.title}</a>
         ))}
       </nav>
-      <div class="theme-switch" role="group" aria-label="Theme">
-        <button type="button" data-doc-theme="" class="ts label">Auto</button>
-        <button type="button" data-doc-theme="day" class="ts label">Day</button>
-        <button type="button" data-doc-theme="night" class="ts label">Night</button>
-      </div>
     </aside>
     <article class="prose-doc">
       <slot />
@@ -54,7 +49,7 @@ const base = `/${id}/docs`;
 
   aside { position: sticky; top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
   @media (max-width: 52rem) { aside { position: static; } }
-  .back { text-decoration: none; color: var(--accent); margin-bottom: 0.8rem; }
+  .back { text-decoration: none; color: var(--essence); margin-bottom: 0.8rem; }
   .head { color: var(--ink-faint); margin-bottom: 0.3rem; }
   nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
   .item {
@@ -63,20 +58,9 @@ const base = `/${id}/docs`;
     border-left: 1px solid transparent;
   }
   .item:hover { color: var(--ink); }
-  .item.active { color: var(--accent); border-left-color: var(--accent); }
+  .item.active { color: var(--essence); border-left-color: var(--essence); }
 
   .prose-doc { max-width: 46rem; min-width: 0; }
-
-  /* Day/night switch (docs only; landing stays circadian) */
-  .theme-switch { display: flex; gap: 0.4rem; margin-top: 1.6rem; }
-  .ts {
-    background: none; border: 1px solid var(--line); color: var(--ink-faint);
-    padding: 0.2rem 0.5rem; border-radius: 3px; cursor: pointer;
-    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em;
-    text-transform: uppercase; transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .ts:hover { color: var(--ink-dim); }
-  .ts.active { color: var(--accent); border-color: var(--accent); }
 </style>
 
 <style is:global>
@@ -85,13 +69,13 @@ const base = `/${id}/docs`;
   .prose-doc h2 { font-size: 1.35rem; margin: 2.4rem 0 0.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
   .prose-doc h3 { font-size: 1.08rem; margin: 1.8rem 0 0.6rem; }
   .prose-doc p, .prose-doc li { color: var(--ink-dim); line-height: 1.7; }
-  .prose-doc a { color: var(--accent); }
+  .prose-doc a { color: var(--essence); }
   .prose-doc strong { color: var(--ink); font-weight: 500; }
   .prose-doc ul, .prose-doc ol { padding-left: 1.2rem; }
   .prose-doc li { margin: 0.3rem 0; }
   .prose-doc code {
     font-family: var(--font-mono); font-size: 0.86em;
-    background: var(--bg-raise); padding: 0.12em 0.38em; border-radius: 3px; color: var(--accent);
+    background: var(--bg-raise); padding: 0.12em 0.38em; border-radius: 3px; color: var(--essence);
   }
   .prose-doc pre {
     background: var(--bg-raise) !important; border: 1px solid var(--line);
@@ -103,29 +87,8 @@ const base = `/${id}/docs`;
   .prose-doc th { color: var(--ink); font-weight: 500; background: var(--bg-raise); }
   .prose-doc td { color: var(--ink-dim); }
   .prose-doc blockquote {
-    border-left: 2px solid var(--accent); margin: 1.2rem 0; padding: 0.2rem 0 0.2rem 1.1rem;
+    border-left: 2px solid var(--essence); margin: 1.2rem 0; padding: 0.2rem 0 0.2rem 1.1rem;
     color: var(--ink-dim); font-style: italic;
   }
   .prose-doc hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
 </style>
-
-<script>
-  // Day/night switch — sets the forced theme the pre-paint script reads, then
-  // reloads so it applies without a flash. Auto = circadian.
-  const KEY = 'univerlab-doc-theme';
-  let cur = '';
-  try {
-    cur = localStorage.getItem(KEY) || '';
-  } catch (e) {}
-  document.querySelectorAll<HTMLButtonElement>('[data-doc-theme]').forEach((b) => {
-    const v = b.dataset.docTheme || '';
-    if (v === cur) b.classList.add('active');
-    b.addEventListener('click', () => {
-      try {
-        if (v) localStorage.setItem(KEY, v);
-        else localStorage.removeItem(KEY);
-      } catch (e) {}
-      location.reload();
-    });
-  });
-</script>

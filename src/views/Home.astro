@@ -6,8 +6,18 @@ import { experiments } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+const site = Astro.site ?? new URL('https://univerlab.org');
+const webSite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'UniverLab',
+  url: site.href,
+  description: t.meta.description,
+  inLanguage: lang === 'es' ? 'es' : 'en',
+  publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+};
 ---
-<BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" circadian>
+<BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" circadian structuredData={webSite}>
   <section class="wrap hero">
     <div class="brandline">
       <Mark size={76} />

@@ -7,7 +7,7 @@ const { id, color } = Astro.props;
 const art = banners[id];
 ---
 {art && (
-  <pre class="banner" style={`--c: ${color}`} aria-hidden="true"><code>{art}</code></pre>
+  <pre class="banner" style={`--c: ${color}`} aria-hidden="true" translate="no"><code>{art}</code></pre>
 )}
 
 <style>
@@ -15,9 +15,12 @@ const art = banners[id];
     margin: 0;
     overflow-x: auto;
     color: var(--c);
-    font-family: var(--font-mono);
+    /* Block art (█ ░) needs a font whose blocks fill the cell edge-to-edge and a
+       line-height of 1 so rows touch — webfonts like Plex Mono leave seams, so
+       this stays on system monospace deliberately, not var(--font-mono). */
+    font-family: ui-monospace, 'DejaVu Sans Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
     font-size: clamp(0.3rem, 1.15vw, 0.62rem);
-    line-height: 1.05;
+    line-height: 1;
     opacity: 0.92;
     /* let the glyph density carry the color without a hard block */
     text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);

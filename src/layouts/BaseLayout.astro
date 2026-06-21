@@ -5,6 +5,7 @@ import ThemeBackground from '../components/ThemeBackground.astro';
 import type { BgTheme } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
 import '../styles/global.css';
+import '../styles/surfaces.css';
 
 interface Props {
   title: string;
@@ -15,6 +16,13 @@ interface Props {
   circadian?: boolean;
   /** Docs: render the background animation in a neutral grey, not the accent. */
   mutedCanvas?: boolean;
+  /** Experiment pages: a fixed visual surface (paper, tui, blueprint, …). */
+  surface?: string;
+  /** Docs: allow a reader light/dark override of the inherited project theme. */
+  docTheme?: boolean;
+  /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
+   *  alongside the site-wide Organization graph. */
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -25,8 +33,32 @@ const {
   bgColor,
   circadian = false,
   mutedCanvas = false,
+  surface,
+  docTheme = false,
+  structuredData,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
+// Surfaces that drop the ambient canvas: paper (a typeset page stays still),
+// studio (a lit stage, not drift), and blueprint (cadforge's clean plan — calm
+// and geometric, no animation). ghscaff (scaffold) keeps its live drawing.
+const stillSurface = ['paper', 'studio', 'blueprint'].includes(surface ?? '');
+const colorScheme = ['paper', 'blueprint'].includes(surface ?? '') ? 'light' : 'dark';
+
+// Only request the font families a given surface actually uses. Every page
+// needs Inter (body) + the mono signature; `paper` adds Spectral; the grotesque
+// surfaces add Space Grotesk; terminal surfaces (tui/vcs) and the core pages
+// need nothing more. This keeps unused webfonts off the page entirely.
+const fontFamilies = ['IBM+Plex+Mono:wght@400;500', 'Inter:wght@400;500;600'];
+if (surface === 'paper') {
+  fontFamilies.push('Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500');
+}
+if (['scaffold', 'blueprint', 'observatory', 'studio'].includes(surface ?? '')) {
+  fontFamilies.push('Space+Grotesk:wght@300;400;500;600');
+}
+const fontHref =
+  'https://fonts.googleapis.com/css2?' +
+  fontFamilies.map((f) => 'family=' + f).join('&') +
+  '&display=swap';
 
 const site = Astro.site ?? new URL('https://univerlab.org');
 const path = Astro.url.pathname;
@@ -49,16 +81,26 @@ const orgJsonLd = {
 };
 ---
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-surface={surface}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0a0b0e" />
+    <meta name="color-scheme" content={colorScheme} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
+    <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
+         labels); Inter is the default body. Per-surface display voices:
+         Spectral (paper/texforge — typeset serif), Space Grotesk (scaffold,
+         blueprint, observatory, studio — technical grotesque), and the mono
+         itself for the terminal surfaces (tui/canopy, vcs/gitkit). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-render-blocking: fetch as `print`, promote to `all` once loaded;
+         `display=swap` shows fallback text immediately. -->
+    <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href={fontHref} /></noscript>
     {!isDocs && (
       <>
         <link rel="alternate" hreflang="en" href={enHref} />
@@ -79,6 +121,10 @@ const orgJsonLd = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+    {structuredData &&
+      (Array.isArray(structuredData) ? structuredData : [structuredData]).map((d) => (
+        <script type="application/ld+json" set:html={JSON.stringify(d)} />
+      ))}
     <!-- Pre-paint language detection: first-time visitors whose system is in
          Spanish are sent to /es once; an explicit choice is always respected. -->
     <script is:inline>
@@ -187,11 +233,26 @@ const orgJsonLd = {
         })();
       </script>
     )}
+    {docTheme && (
+      <script is:inline>
+        // Docs default to their project's theme; the header toggle lets the
+        // reader force light/dark, overriding the static surface pre-paint.
+        (function () {
+          try {
+            var f = localStorage.getItem('univerlab-doc-theme');
+            var r = document.documentElement;
+            if (f === 'light') r.setAttribute('data-surface', 'paper');
+            else if (f === 'dark') r.removeAttribute('data-surface');
+          } catch (e) {}
+        })();
+      </script>
+    )}
   </head>
   <body>
-    <ThemeBackground theme={bg} color={canvasColor} />
+    <a href="#main" class="skip-link">{t.common.skipToContent}</a>
+    {!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />}
     <Header />
-    <main>
+    <main id="main">
       <slot />
     </main>
     <Footer />

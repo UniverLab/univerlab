@@ -24,6 +24,9 @@ export interface Experiment {
   essenceHex: string;
   github: string;
   bg: BgTheme;
+  /** Fixed visual surface (data-surface on <html>) for the page + its docs.
+   *  Omitted → the default dark lab theme. */
+  surface?: string;
   /** One-line install commands per platform, if the experiment ships a binary.
    *  `windows` is only set when the repo also provides a PowerShell installer. */
   install?: { unix: string; windows?: string };
@@ -31,23 +34,24 @@ export interface Experiment {
   hasDocs?: boolean;
 }
 
-const sh = (repo: string) =>
-  `curl -fsSL https://raw.githubusercontent.com/UniverLab/${repo}/main/scripts/install.sh | sh`;
-const ps = (repo: string) =>
-  `irm https://raw.githubusercontent.com/UniverLab/${repo}/main/scripts/install.ps1 | iex`;
+// Install commands go through the `get.univerlab.org` redirector worker (see
+// workers/get) — a clean, memorable URL that 302s to each repo's real script.
+// `slug` is the experiment id (the worker maps it to the repo).
+const sh = (slug: string) => `curl -fsSL https://get.univerlab.org/${slug} | sh`;
+const ps = (slug: string) => `irm https://get.univerlab.org/${slug}.ps1 | iex`;
 /** Unix-only installer (no PowerShell script published). */
-const unix = (repo: string) => ({ unix: sh(repo) });
+const unix = (slug: string) => ({ unix: sh(slug) });
 /** Cross-platform installer (both shell and PowerShell scripts published). */
-const both = (repo: string) => ({ unix: sh(repo), windows: ps(repo) });
+const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', install: unix('harness-canopy'), hasDocs: true },
-  { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', install: both('texforge'), hasDocs: true },
-  { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#d977a8', github: 'https://github.com/UniverLab/gitkit', bg: 'gitgraph', install: both('gitkit'), hasDocs: true },
-  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', install: both('ghscaff'), hasDocs: true },
-  { id: 'cadforge', name: 'cadForge', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', install: both('cadforge'), hasDocs: true },
-  { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield' },
-  { id: 'demo-stage', name: 'DemoStage', number: 'EXP-007', status: 'beta', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demo-stage', bg: 'drift', install: both('demo-stage'), hasDocs: true },
+  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', install: unix('canopy'), hasDocs: true },
+  { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', install: both('texforge'), hasDocs: true },
+  { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#d977a8', github: 'https://github.com/UniverLab/gitkit', bg: 'gitgraph', surface: 'vcs', install: both('gitkit'), hasDocs: true },
+  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'scaffold', install: both('ghscaff'), hasDocs: true },
+  { id: 'cadforge', name: 'cadForge', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', surface: 'blueprint', install: both('cadforge'), hasDocs: true },
+  { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
+  { id: 'demo-stage', name: 'DemoStage', number: 'EXP-007', status: 'beta', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demo-stage', bg: 'drift', surface: 'studio', install: both('demo-stage'), hasDocs: true },
 ];
 
 /** Look up an experiment by id, failing fast if the id is unknown. */
