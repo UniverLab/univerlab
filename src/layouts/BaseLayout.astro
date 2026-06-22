@@ -42,7 +42,7 @@ const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // studio (a lit stage, not drift), and blueprint (cadspec's clean plan — calm
 // and geometric, no animation). ghscaff (scaffold) keeps its live drawing.
 const stillSurface = ['paper', 'studio', 'blueprint'].includes(surface ?? '');
-const colorScheme = ['paper', 'blueprint'].includes(surface ?? '') ? 'light' : 'dark';
+const colorScheme = ['paper', 'blueprint', 'studio'].includes(surface ?? '') ? 'light' : 'dark';
 
 // Only request the font families a given surface actually uses. Every page
 // needs Inter (body) + the mono signature; `paper` adds Spectral; the grotesque

@@ -97,14 +97,15 @@ html[data-surface='observatory'] {
   --line: #1e1b2c;
 }
 
-/* demo-stage — recording studio: a warm neutral seamless backdrop (coral pops). */
+/* demo-stage — recording studio: a bright warm-white set; the black terminal
+   monitor and the coral REC carry the contrast. */
 html[data-surface='studio'] {
-  --bg: #15130f;
-  --bg-raise: #1d1a15;
-  --ink: #e9e3d9;
-  --ink-dim: #9a9286;
-  --ink-faint: #635c50;
-  --line: #2a261f;
+  --bg: #f6f3ee;
+  --bg-raise: #ffffff;
+  --ink: #221d18;
+  --ink-dim: #5b5249;
+  --ink-faint: #9a9082;
+  --line: #e6ded2;
 }
 
 * { box-sizing: border-box; }

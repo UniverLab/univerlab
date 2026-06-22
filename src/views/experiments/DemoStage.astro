@@ -48,23 +48,23 @@ $ demo export demo.toml --target html
   .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
 
-  /* Demo player — the artifact DemoStage outputs, rendered as a LIT screen
-     (light) floating in the dark studio: the two themes mixed, coral as key light. */
-  .player { margin: 0; border: 1px solid color-mix(in srgb, var(--demo-stage) 40%, #d8d0c4); border-radius: 9px; overflow: hidden; background: #f4f1ec; box-shadow: 0 20px 55px rgba(0, 0, 0, 0.5), 0 0 38px color-mix(in srgb, var(--demo-stage) 22%, transparent); }
-  .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid #e3dccf; font-size: 0.75rem; }
+  /* Demo player — a real terminal: a black monitor on the bright set, coral as
+     its phosphor. The dark/light contrast lives here. */
+  .player { margin: 0; border: 1px solid color-mix(in srgb, var(--demo-stage) 45%, #2a2520); border-radius: 9px; overflow: hidden; background: #14110d; box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22); }
+  .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid #2a241d; font-size: 0.75rem; }
   .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
   .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
-  .bar .name { margin-left: 0.5rem; color: #9b9384; }
+  .bar .name { margin-left: 0.5rem; color: #8a8175; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
-  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: #2b2620; min-height: 11.5rem; }
-  .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid #e3dccf; font-size: 0.72rem; }
+  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); min-height: 11.5rem; }
+  .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid #2a241d; font-size: 0.72rem; }
   .scrubber .play { color: var(--demo-stage); font-size: 0.7rem; }
-  .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #e2dacd; }
+  .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #322b22; }
   .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--demo-stage); border-radius: 2px; }
   .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--demo-stage); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--demo-stage) 70%, transparent); }
-  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: #c7bdac; transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
+  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: #4a4339; transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
   .scrubber .tick.on { background: var(--demo-stage); box-shadow: 0 0 6px color-mix(in srgb, var(--demo-stage) 70%, transparent); }
-  .scrubber .tc { color: #6b6356; }
+  .scrubber .tc { color: #9a9082; }
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
@@ -76,6 +76,24 @@ $ demo export demo.toml --target html
   // session, advances the scrubber, lights the step ticks, and loops. Honours
   // reduced-motion (leaves the static, fully-typed state) and only runs on screen.
   (function () {
+    // Hero REC — a live session clock (mm:ss): the time you've been on the page.
+    // Independent of the player, so it never freezes.
+    const hero = document.querySelector('.exp .hero');
+    if (hero) {
+      hero.classList.add('js-rec');
+      const rec = document.createElement('span');
+      rec.className = 'rec';
+      hero.appendChild(rec);
+      const t0 = Date.now();
+      const clock = () => {
+        const s = Math.floor((Date.now() - t0) / 1000);
+        rec.textContent = '● REC  ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      };
+      clock();
+      setInterval(clock, 1000);
+    }
+
+    // The player plays itself: typewriter + scrubber + lit step ticks, looping.
     const fig = document.getElementById('demo-player');
     if (!fig) return;
     const code = fig.querySelector('.body code');
@@ -84,7 +102,6 @@ $ demo export demo.toml --target html
     const tc = fig.querySelector('.tc');
     const ticks = Array.from(fig.querySelectorAll('.tick'));
     if (!code || !fill || !head || !tc) return;
-    let rec = null;
 
     const full = code.textContent;
     const total = full.length || 1;
@@ -98,7 +115,6 @@ $ demo export demo.toml --target html
       fill.style.right = (100 - p * 100).toFixed(2) + '%';
       head.style.left = (p * 100).toFixed(2) + '%';
       tc.textContent = '0:' + pad(Math.min(8, Math.round(p * 8)));
-      if (rec) rec.textContent = '● REC  0:' + pad(Math.min(8, Math.round(p * 8)));
       for (const t of ticks) {
         const tp = parseFloat(t.style.left) / 100;
         t.classList.toggle('on', p >= tp);
@@ -106,15 +122,6 @@ $ demo export demo.toml --target html
     }
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    // Swap the hero's static REC badge for a live one that counts in sync.
-    const hero = document.querySelector('.exp .hero');
-    if (hero) {
-      hero.classList.add('js-rec');
-      rec = document.createElement('span');
-      rec.className = 'rec';
-      hero.appendChild(rec);
-    }
 
     let start = null;
     let raf = null;

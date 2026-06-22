@@ -27,7 +27,7 @@ const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 // Docs inherit their project's polarity; light surfaces are paper/blueprint/studio.
 const docDefaultDark = docExp
-  ? !['paper', 'blueprint'].includes(docExp.surface ?? '')
+  ? !['paper', 'blueprint', 'studio'].includes(docExp.surface ?? '')
   : true;
 
 const nav = [
