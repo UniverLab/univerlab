@@ -7,16 +7,34 @@ const e = t.experiments['demo-stage'];
 ---
 <ExperimentLayout id="demo-stage">
   <section class="wrap section">
-    <div class="term">
-      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> demo export --target html</div>
-      <pre class="mono term-body"><code>$ demo record -o macro.raw.toml
+    <!-- The signature: the artifact DemoStage produces — a terminal demo with a
+         player scrubber, its steps marked along the timeline. -->
+    <figure class="player">
+      <div class="bar mono">
+        <span class="d r"></span><span class="d y"></span><span class="d g"></span>
+        <span class="name">demo.cast</span>
+      </div>
+      <pre class="mono body" translate="no"><code>$ demo record -o macro.raw.toml
 $ demo normalize macro.raw.toml
   → demo.toml (8 steps)
 $ demo check demo.toml
   ok: demo.toml is valid
 $ demo export demo.toml --target html
   → dist/demo.html</code></pre>
-    </div>
+      <div class="scrubber mono">
+        <span class="play" aria-hidden="true">▶</span>
+        <div class="track">
+          <span class="fill"></span>
+          <span class="tick" style="left:14%"></span>
+          <span class="tick" style="left:31%"></span>
+          <span class="tick" style="left:48%"></span>
+          <span class="tick" style="left:70%"></span>
+          <span class="tick" style="left:86%"></span>
+          <span class="head"></span>
+        </div>
+        <span class="tc">0:08</span>
+      </div>
+    </figure>
     <div class="features">
       <span class="label">{e.pipeline.kicker}</span>
       <ul>
@@ -29,10 +47,22 @@ $ demo export demo.toml --target html
 <style>
   .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
-  .term { border: 1px solid color-mix(in srgb, var(--demo-stage) 30%, var(--line)); background: var(--bg-raise); }
-  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
-  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
-  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); }
+
+  /* Demo player — the artifact DemoStage outputs. */
+  .player { margin: 0; border: 1px solid color-mix(in srgb, var(--demo-stage) 30%, var(--line)); border-radius: 8px; overflow: hidden; background: var(--bg-raise); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28); }
+  .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
+  .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+  .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
+  .bar .name { margin-left: 0.5rem; color: var(--ink-faint); }
+  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); }
+  .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid var(--line); font-size: 0.72rem; }
+  .scrubber .play { color: var(--demo-stage); font-size: 0.7rem; }
+  .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--demo-stage) 18%, var(--line)); }
+  .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--demo-stage); border-radius: 2px; }
+  .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--demo-stage); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--demo-stage) 65%, transparent); }
+  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: color-mix(in srgb, var(--ink-faint) 75%, transparent); transform: translateX(-50%); }
+  .scrubber .tc { color: var(--ink-dim); }
+
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
   .features :global(code) { color: var(--demo-stage); font-size: 0.88em; }

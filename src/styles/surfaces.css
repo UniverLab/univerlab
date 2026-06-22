@@ -443,7 +443,7 @@ html[data-surface='studio'] .hero {
   background: color-mix(in srgb, var(--bg-raise) 45%, transparent);
 }
 html[data-surface='studio'] .hero::before {
-  content: '● REC';
+  content: '● REC · 00:08';
   position: absolute;
   top: 0.9rem;
   right: 1.1rem;
