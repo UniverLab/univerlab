@@ -160,8 +160,8 @@ const THEMES: Record<Theme, Runner> = {
       gw = cols * 2;
       gh = rows * 4;
       grid = new Uint8Array(gw * gh);
-      // start with little noise
-      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.03 ? 1 : 0;
+      // start with very little noise — the field should read as sparse and quiet
+      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.012 ? 1 : 0;
     }
     init();
 
@@ -205,9 +205,9 @@ const THEMES: Record<Theme, Runner> = {
         grid = next;
         // Gentle revival: only step in once activity is low, with a few
         // propagating clusters so the field stays sparse rather than busy.
-        const threshold = Math.max(8, Math.floor(grid.length * 0.006));
+        const threshold = Math.max(5, Math.floor(grid.length * 0.0035));
         if (firing < threshold) {
-          const clusters = Math.max(3, Math.floor(grid.length * 0.0012));
+          const clusters = Math.max(2, Math.floor(grid.length * 0.0007));
           for (let i = 0; i < clusters; i++) seedCluster();
         }
       }
@@ -230,11 +230,11 @@ const THEMES: Record<Theme, Runner> = {
           const px = cx * charW;
           const py = cy * charH;
           if (dying) {
-            c.globalAlpha = 0.12;
+            c.globalAlpha = 0.07;
             c.fillText(glyph(dying), px, py);
           }
           if (fire) {
-            c.globalAlpha = 0.45;
+            c.globalAlpha = 0.26;
             c.fillText(glyph(fire), px, py);
           }
         }

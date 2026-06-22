@@ -48,13 +48,42 @@ $ git push
     const code = term.querySelector('.term-body code');
     if (!code) return;
     const full = code.textContent || '';
-    const total = full.length || 1;
-    const PLAY = 4200; // ms to type through
-    const HOLD = 2200; // ms to rest at the end before replaying
+    const lines = full.split('\n');
+    const isCmd = (ln) => ln.trimStart().startsWith('$');
 
-    function set(p) {
-      const n = Math.round(total * p);
-      code.textContent = full.slice(0, n) + (p < 1 ? '▋' : '');
+    // Command lines ($) are what the user types, so they appear letter by letter;
+    // every other line is console output and shows at once, right after.
+    const PER_CHAR = 40; // ms per typed character
+    const CMD_PAUSE = 350; // dwell after a command, before its output lands
+    const OUT_PAUSE = 600; // dwell after an output block, before the next command
+    const HOLD = 2200; // rest on the full session before replaying
+
+    const segs = [];
+    let cursor = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (isCmd(lines[i])) {
+        const dur = Math.max(1, lines[i].length) * PER_CHAR;
+        segs.push({ i, start: cursor, end: cursor + dur, type: 'type' });
+        cursor += dur + CMD_PAUSE;
+      } else {
+        segs.push({ i, start: cursor, end: cursor, type: 'instant' });
+        const nextIsCmd = i + 1 >= lines.length || isCmd(lines[i + 1]);
+        if (nextIsCmd) cursor += OUT_PAUSE;
+      }
+    }
+    const PLAY = cursor;
+
+    function render(e) {
+      const shown = [];
+      for (const s of segs) {
+        if (e >= s.end) { shown.push(lines[s.i]); continue; }
+        if (s.type === 'type' && e >= s.start) {
+          const frac = (e - s.start) / (s.end - s.start);
+          shown.push(lines[s.i].slice(0, Math.round(lines[s.i].length * frac)) + '▋');
+        }
+        break;
+      }
+      code.textContent = shown.join('\n');
     }
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -64,9 +93,9 @@ $ git push
     function frame(ts) {
       if (start === null) start = ts;
       const e = ts - start;
-      if (e <= PLAY) set(e / PLAY);
-      else if (e <= PLAY + HOLD) set(1);
-      else { start = ts; set(0); }
+      if (e <= PLAY) render(e);
+      else if (e <= PLAY + HOLD) render(PLAY);
+      else { start = ts; render(0); }
       raf = requestAnimationFrame(frame);
     }
     const io = new IntersectionObserver((entries) => {
