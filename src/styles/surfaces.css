@@ -202,21 +202,19 @@ html[data-surface='scaffold'] .koan {
 /* ─────────────────────────────────────────────────────────────────────────
    cadspec · `blueprint` — an architect's plan: clean, light and geometric.
 
-   Near-black ink on a white sheet over a faint static plan grid (moved here from
-   ghscaff). No neon — precision carries it. (Key name kept for stability.)
+   Near-black ink on a white sheet, two faint centre-line axes, generous space.
+   No neon, no busy grid — precision carries it. (Key name kept for stability.)
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='blueprint'] {
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  /* Plan grid: faint teal ruling on the white sheet, major every fifth line. */
-  --grid: color-mix(in srgb, #156c80 9%, transparent);
-  --grid-major: color-mix(in srgb, #156c80 18%, transparent);
 }
 html[data-surface='blueprint'] .exp {
   /* The light brand cyan has no contrast on white — accents use a darker teal. */
   --essence: #156c80 !important;
 }
-/* The static draughtsman's grid (it's an architect's plan). */
+/* Two faint axes cross the sheet — a clean geometric plan motif, not a grid
+   (a full grid was too heavy and hurt legibility). */
 html[data-surface='blueprint'] body::before {
   content: '';
   position: fixed;
@@ -224,11 +222,8 @@ html[data-surface='blueprint'] body::before {
   z-index: -2;
   pointer-events: none;
   background-image:
-    linear-gradient(var(--grid-major) 1.2px, transparent 1.2px),
-    linear-gradient(90deg, var(--grid-major) 1.2px, transparent 1.2px),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 12rem 12rem, 12rem 12rem, 2.4rem 2.4rem, 2.4rem 2.4rem;
+    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px));
 }
 html[data-surface='blueprint'] .banner {
   color: var(--ink);

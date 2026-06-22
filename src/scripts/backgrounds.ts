@@ -607,9 +607,9 @@ const THEMES: Record<Theme, Runner> = {
         gy: Math.floor(rand(0, rows - 1)),
         diag: Math.random() < 0.5 ? 0 : 1,
         t: 0,
-        life: rand(2600, 4200),
+        life: rand(7000, 12000),
       });
-    for (let i = 0; i < 5; i++) add();
+    for (let i = 0; i < 8; i++) add();
     let spawnAcc = 0;
     let prevT = 0;
     return (t) => {
@@ -617,15 +617,15 @@ const THEMES: Record<Theme, Runner> = {
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       spawnAcc += dt;
-      if (spawnAcc > 520 && braces.length < 14) {
+      if (spawnAcc > 700 && braces.length < 18) {
         spawnAcc = 0;
         add();
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
       c.lineWidth = 1;
-      // standing frame (faint)
-      c.globalAlpha = 0.06;
+      // standing frame — the persistent grid
+      c.globalAlpha = 0.13;
       c.beginPath();
       for (let x = 0; x <= cols; x++) {
         c.moveTo(x * g, 0);
@@ -636,7 +636,8 @@ const THEMES: Record<Theme, Runner> = {
         c.lineTo(ctx.w, y * g);
       }
       c.stroke();
-      // diagonal braces drawing in, then fading
+      // diagonal braces: paint in quickly, then hold (a persistent lattice that
+      // only fades gently at the very end) — the lines being drawn are the motion
       for (let i = braces.length - 1; i >= 0; i--) {
         const b = braces[i];
         b.t += dt;
@@ -645,8 +646,8 @@ const THEMES: Record<Theme, Runner> = {
           braces.splice(i, 1);
           continue;
         }
-        const grow = Math.min(1, k * 3);
-        const fade = k > 0.72 ? 1 - (k - 0.72) / 0.28 : 1;
+        const grow = Math.min(1, k * 12);
+        const fade = k > 0.85 ? 1 - (k - 0.85) / 0.15 : 1;
         const x = b.gx * g;
         const y = b.gy * g;
         c.globalAlpha = 0.5 * fade;
