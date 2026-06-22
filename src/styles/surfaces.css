@@ -32,6 +32,17 @@ html[data-surface='scaffold'] .banner {
   opacity: 1;
 }
 
+/* A blinking caret on the terminal surfaces (canopy/gitkit) — a small sign of
+   life. Auto-disabled under prefers-reduced-motion (global.css zeroes animation). */
+@keyframes cf-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+html[data-surface='tui'] .koan::after,
+html[data-surface='vcs'] .koan::after {
+  content: '▋';
+  margin-left: 0.18em;
+  color: var(--essence);
+  animation: cf-blink 1.06s infinite;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    texforge · `paper` — a galley proof the tool itself set.
 
@@ -429,8 +440,21 @@ html[data-surface='studio'] .hero {
   border-radius: 8px;
   background: color-mix(in srgb, var(--bg-raise) 45%, transparent);
 }
+/* Static fallback REC; the script swaps in a live, counting one (`.rec`). */
 html[data-surface='studio'] .hero::before {
-  content: '● REC · 00:08';
+  content: '● REC';
+  position: absolute;
+  top: 0.9rem;
+  right: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--essence);
+}
+html[data-surface='studio'] .hero.js-rec::before {
+  content: none;
+}
+html[data-surface='studio'] .hero .rec {
   position: absolute;
   top: 0.9rem;
   right: 1.1rem;
