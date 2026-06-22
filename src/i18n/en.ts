@@ -131,7 +131,7 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
-      figure: 'Fig. 1 · texforge build',
+      figures: ['build pipeline', 'document graph', 'build map'],
       lede:
         'A single Rust binary that scaffolds, lints, formats and compiles documents — the LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
       genesis: {

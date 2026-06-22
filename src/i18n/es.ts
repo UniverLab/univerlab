@@ -133,7 +133,7 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
-      figure: 'Fig. 1 · texforge build',
+      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
         'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
       genesis: {

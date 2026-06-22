@@ -5,14 +5,15 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.texforge;
 // Rendered via an expression: literal `{…}` in template text is read as JSX.
-const tfInitial = '\\begin{mermaid}\ngraph LR\n  parse --> typeset --> pdf\n\\end{mermaid}';
+const tfInitial =
+  '\\begin{mermaid}\nflowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log\n\\end{mermaid}';
 ---
 <ExperimentLayout id="texforge">
   <section class="wrap section">
     <div class="galley">
-      <figure class="plate-fig" id="tf-figure">
+      <figure class="plate-fig" id="tf-figure" data-figures={JSON.stringify(e.figures)}>
         <pre class="mono plate"><code>{tfInitial}</code></pre>
-        <figcaption class="fig-cap"><span class="fig-label">Fig. 1 · mermaid</span></figcaption>
+        <figcaption class="fig-cap"><span class="fig-label">Fig. 1 · {e.figures[0]} · mermaid</span></figcaption>
       </figure>
       <div class="colophon">
         <span class="label">{e.press.kicker}</span>
@@ -45,13 +46,16 @@ const tfInitial = '\\begin{mermaid}\ngraph LR\n  parse --> typeset --> pdf\n\\en
     const code = fig.querySelector('.plate code');
     const label = fig.querySelector('.fig-label');
     if (!code || !label) return;
+    let figures = [];
+    try { figures = JSON.parse(fig.dataset.figures || '[]'); } catch (err) {}
 
     const envs = [
-      { name: 'mermaid', src: 'graph LR\n  parse --> typeset --> pdf' },
-      { name: 'graphviz', src: 'digraph { spec -> figure }' },
-      { name: 'd2', src: 'idea -> figure: typeset' },
+      { name: 'mermaid', src: 'flowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log' },
+      { name: 'graphviz', src: 'digraph {\n  spec -> figures -> pdf\n  spec -> refs -> pdf\n}' },
+      { name: 'd2', src: 'spec -> typeset: lint\ntypeset -> pdf: tectonic\ndiagrams -> typeset\ndiagrams: mermaid | d2' },
     ];
     const block = (x) => '\\begin{' + x.name + '}\n' + x.src + '\n\\end{' + x.name + '}';
+    const caption = (n) => 'Fig. ' + (n + 1) + ' · ' + (figures[n] || '') + ' · ' + envs[n].name;
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -64,7 +68,7 @@ const tfInitial = '\\begin{mermaid}\ngraph LR\n  parse --> typeset --> pdf\n\\en
       label.classList.add('fade');
       setTimeout(() => {
         code.textContent = block(envs[i]);
-        label.textContent = 'Fig. ' + (i + 1) + ' · ' + envs[i].name;
+        label.textContent = caption(i);
         code.classList.remove('fade');
         label.classList.remove('fade');
       }, FADE);
@@ -95,7 +99,7 @@ const tfInitial = '\\begin{mermaid}\ngraph LR\n  parse --> typeset --> pdf\n\\en
     background: var(--bg-raise); color: var(--texforge);
     font-size: 0.9rem; line-height: 1.9;
     box-shadow: 0 12px 30px -16px rgba(60, 45, 30, 0.28);
-    min-height: 8.5rem;
+    min-height: 10.6rem; /* fits the tallest environment, so cycling never jumps */
   }
   .plate code { display: block; transition: opacity 0.26s ease; }
   .plate code.fade { opacity: 0; }
