@@ -4,16 +4,15 @@ import { getLang, useTranslations } from '../../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.texforge;
+// Rendered via an expression: literal `{…}` in template text is read as JSX.
+const tfInitial = '\\begin{mermaid}\ngraph LR\n  parse --> typeset --> pdf\n\\end{mermaid}';
 ---
 <ExperimentLayout id="texforge">
   <section class="wrap section">
     <div class="galley">
-      <figure class="plate-fig">
-        <pre class="mono plate"><code>$ texforge new quantum-paper
-$ cd quantum-paper
-$ texforge build
-  ◇ quantum-paper.pdf</code></pre>
-        <figcaption class="fig-cap">{e.figure}</figcaption>
+      <figure class="plate-fig" id="tf-figure">
+        <pre class="mono plate"><code>{tfInitial}</code></pre>
+        <figcaption class="fig-cap"><span class="fig-label">Fig. 1 · mermaid</span></figcaption>
       </figure>
       <div class="colophon">
         <span class="label">{e.press.kicker}</span>
@@ -35,26 +34,78 @@ $ texforge build
   </section>
 </ExperimentLayout>
 
+<script>
+  // The figure cycles through the custom diagram environments texforge
+  // intercepts — \begin{mermaid|graphviz|d2}…\end — each captioned as a figure,
+  // the same crossfade idea as the home wordmark. Reduced-motion rests on the
+  // first; pauses when scrolled off screen.
+  (function () {
+    const fig = document.getElementById('tf-figure');
+    if (!fig) return;
+    const code = fig.querySelector('.plate code');
+    const label = fig.querySelector('.fig-label');
+    if (!code || !label) return;
+
+    const envs = [
+      { name: 'mermaid', src: 'graph LR\n  parse --> typeset --> pdf' },
+      { name: 'graphviz', src: 'digraph { spec -> figure }' },
+      { name: 'd2', src: 'idea -> figure: typeset' },
+    ];
+    const block = (x) => '\\begin{' + x.name + '}\n' + x.src + '\n\\end{' + x.name + '}';
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const HOLD = 3400; // time to read each environment
+    const FADE = 260; // crossfade duration (matches the CSS transition)
+    let i = 0;
+    function swap() {
+      i = (i + 1) % envs.length;
+      code.classList.add('fade');
+      label.classList.add('fade');
+      setTimeout(() => {
+        code.textContent = block(envs[i]);
+        label.textContent = 'Fig. ' + (i + 1) + ' · ' + envs[i].name;
+        code.classList.remove('fade');
+        label.classList.remove('fade');
+      }, FADE);
+    }
+
+    let timer = 0;
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        clearInterval(timer);
+        if (en.isIntersecting) timer = window.setInterval(swap, HOLD);
+      }
+    });
+    io.observe(fig);
+  })();
+</script>
+
 <style>
   .section { padding-block: 1.5rem; }
   .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
-  /* The command listing is set as a numbered figure — the same slot a recorded
-     DemoStage clip (gif / asciinema cast) drops into later, captioned the same
-     way, so a moving demo reads as "Fig. 1" rather than a marketing video. */
+  /* A typeset figure plate, not a card: a hairline frame and the soft shadow of
+     a sheet on the desk — no hard offset. It cycles through the diagram
+     environments texforge intercepts, captioned "Fig. N · <env>". */
   .plate-fig { margin: 0; }
   .plate {
-    margin: 0; padding: 1.6rem;
-    border: 1px solid color-mix(in srgb, var(--texforge) 35%, var(--line));
+    margin: 0; padding: 1.9rem 2.1rem;
+    border: 1px solid var(--line);
     background: var(--bg-raise); color: var(--texforge);
     font-size: 0.9rem; line-height: 1.9;
-    box-shadow: 0.5rem 0.5rem 0 color-mix(in srgb, var(--texforge) 14%, transparent);
+    box-shadow: 0 12px 30px -16px rgba(60, 45, 30, 0.28);
+    min-height: 8.5rem;
   }
+  .plate code { display: block; transition: opacity 0.26s ease; }
+  .plate code.fade { opacity: 0; }
   .fig-cap {
-    margin-top: 0.6rem; font-family: var(--font-mono);
+    margin-top: 0.7rem; font-family: var(--font-mono);
     font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase;
     color: var(--ink-faint);
   }
+  .fig-label { transition: opacity 0.26s ease; }
+  .fig-label.fade { opacity: 0; }
   .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .colophon li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
   .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; margin-right: 0.3rem; }
