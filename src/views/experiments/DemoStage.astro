@@ -9,7 +9,7 @@ const e = t.experiments['demo-stage'];
   <section class="wrap section">
     <!-- The signature: the artifact DemoStage produces — a terminal demo with a
          player scrubber, its steps marked along the timeline. -->
-    <figure class="player">
+    <figure class="player" id="demo-player">
       <div class="bar mono">
         <span class="d r"></span><span class="d y"></span><span class="d g"></span>
         <span class="name">demo.cast</span>
@@ -54,16 +54,72 @@ $ demo export demo.toml --target html
   .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
   .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
   .bar .name { margin-left: 0.5rem; color: var(--ink-faint); }
-  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); }
+  /* min-height reserves the full session so the typewriter doesn't shift layout. */
+  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demo-stage); min-height: 11.5rem; }
   .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid var(--line); font-size: 0.72rem; }
   .scrubber .play { color: var(--demo-stage); font-size: 0.7rem; }
   .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--demo-stage) 18%, var(--line)); }
   .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--demo-stage); border-radius: 2px; }
   .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--demo-stage); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--demo-stage) 65%, transparent); }
-  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: color-mix(in srgb, var(--ink-faint) 75%, transparent); transform: translateX(-50%); }
+  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: color-mix(in srgb, var(--ink-faint) 75%, transparent); transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
+  .scrubber .tick.on { background: var(--demo-stage); box-shadow: 0 0 6px color-mix(in srgb, var(--demo-stage) 70%, transparent); }
   .scrubber .tc { color: var(--ink-dim); }
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
   .features :global(code) { color: var(--demo-stage); font-size: 0.88em; }
 </style>
+
+<script>
+  // The landing of a demo tool should itself be a demo: the player types the
+  // session, advances the scrubber, lights the step ticks, and loops. Honours
+  // reduced-motion (leaves the static, fully-typed state) and only runs on screen.
+  (function () {
+    const fig = document.getElementById('demo-player');
+    if (!fig) return;
+    const code = fig.querySelector('.body code');
+    const fill = fig.querySelector('.fill');
+    const head = fig.querySelector('.head');
+    const tc = fig.querySelector('.tc');
+    const ticks = Array.from(fig.querySelectorAll('.tick'));
+    if (!code || !fill || !head || !tc) return;
+
+    const full = code.textContent;
+    const total = full.length || 1;
+    const PLAY = 5000; // ms to play through
+    const HOLD = 1600; // ms to rest at the end before replaying
+    const pad = (n) => (n < 10 ? '0' + n : '' + n);
+
+    function set(p) {
+      const n = Math.round(total * p);
+      code.textContent = full.slice(0, n) + (p < 1 ? '▍' : '');
+      fill.style.right = (100 - p * 100).toFixed(2) + '%';
+      head.style.left = (p * 100).toFixed(2) + '%';
+      tc.textContent = '0:' + pad(Math.min(8, Math.round(p * 8)));
+      for (const t of ticks) {
+        const tp = parseFloat(t.style.left) / 100;
+        t.classList.toggle('on', p >= tp);
+      }
+    }
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let start = null;
+    let raf = null;
+    function frame(ts) {
+      if (start === null) start = ts;
+      const e = ts - start;
+      if (e <= PLAY) set(e / PLAY);
+      else if (e <= PLAY + HOLD) set(1);
+      else { start = ts; set(0); }
+      raf = requestAnimationFrame(frame);
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        if (en.isIntersecting && raf === null) { start = null; raf = requestAnimationFrame(frame); }
+        else if (!en.isIntersecting && raf !== null) { cancelAnimationFrame(raf); raf = null; }
+      }
+    });
+    io.observe(fig);
+  })();
+</script>
