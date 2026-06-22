@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLang, useTranslations, localizePath } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+---
+<BaseLayout title="404 — UniverLab" bg="drift">
+  <section class="wrap notfound">
+    <p class="label code">404</p>
+    <h1>This page drifted off the map.</h1>
+    <p class="lede">The page you’re looking for doesn’t exist — it may have moved, or never been written.</p>
+    <p class="links">
+      <a href={localizePath('/', lang)}>← UniverLab</a>
+      <a href={localizePath('/experiments', lang)}>{t.nav.experiments}</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-block: clamp(5rem, 18vh, 10rem);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem;
+  }
+  .code { color: var(--accent); }
+  .notfound h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); max-width: 18ch; }
+  .lede { color: var(--ink-dim); max-width: 48ch; margin: 0; }
+  .links { display: flex; gap: 1.6rem; margin-top: 0.6rem; }
+  .links a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+  .links a:hover { border-bottom-color: var(--accent); }
+</style>
