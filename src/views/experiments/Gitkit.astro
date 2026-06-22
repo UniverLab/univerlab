@@ -7,18 +7,14 @@ const e = t.experiments.gitkit;
 ---
 <ExperimentLayout id="gitkit">
   <section class="wrap section">
-    <div class="term">
-      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit status</div>
-      <pre class="mono term-body"><code>Hooks:
-  ✓ conventional-commits (commit-msg)
-  ✓ no-secrets (pre-commit)
-
-.gitignore:        ✓ 15 patterns
-.gitattributes:    ✓ line-endings (eol=lf)
-
-Git config (global):
-  ✓ push.autoSetupRemote = true
-  ✓ diff.algorithm = histogram</code></pre>
+    <div class="term" id="gitkit-term">
+      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit · commit</div>
+      <pre class="mono term-body"><code>$ git commit -m "feat: parse manifests"
+  ✓ conventional-commits  (commit-msg)
+  ✓ no-secrets            (pre-commit)
+[main 7f3a9c1] feat: parse manifests
+$ git push
+  → origin/main  ·  push.autoSetupRemote</code></pre>
     </div>
     <div class="features">
       <span class="label">{e.features.kicker}</span>
@@ -35,8 +31,50 @@ Git config (global):
   .term { border: 1px solid color-mix(in srgb, var(--gitkit) 30%, var(--line)); background: var(--bg-raise); }
   .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
   .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
-  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); }
+  /* min-height reserves the full session so the typewriter doesn't shift layout. */
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); min-height: 9rem; }
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
   .features :global(code) { color: var(--gitkit); font-size: 0.88em; }
 </style>
+
+<script>
+  // Like DemoStage's player: the terminal types its session out and loops, so a
+  // commit visibly runs the hooks. Honours reduced-motion (leaves the full text)
+  // and only animates while on screen.
+  (function () {
+    const term = document.getElementById('gitkit-term');
+    if (!term) return;
+    const code = term.querySelector('.term-body code');
+    if (!code) return;
+    const full = code.textContent || '';
+    const total = full.length || 1;
+    const PLAY = 4200; // ms to type through
+    const HOLD = 2200; // ms to rest at the end before replaying
+
+    function set(p) {
+      const n = Math.round(total * p);
+      code.textContent = full.slice(0, n) + (p < 1 ? '▋' : '');
+    }
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let start = null;
+    let raf = null;
+    function frame(ts) {
+      if (start === null) start = ts;
+      const e = ts - start;
+      if (e <= PLAY) set(e / PLAY);
+      else if (e <= PLAY + HOLD) set(1);
+      else { start = ts; set(0); }
+      raf = requestAnimationFrame(frame);
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        if (en.isIntersecting && raf === null) { start = null; raf = requestAnimationFrame(frame); }
+        else if (!en.isIntersecting && raf !== null) { cancelAnimationFrame(raf); raf = null; }
+      }
+    });
+    io.observe(term);
+  })();
+</script>

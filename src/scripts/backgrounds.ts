@@ -137,8 +137,8 @@ const THEMES: Record<Theme, Runner> = {
   brain(ctx) {
     const { c } = ctx;
     // On-screen size of one Braille character; each packs 2×4 automaton cells.
-    const charW = 9;
-    const charH = 16;
+    const charW = 14;
+    const charH = 24;
     // Sub-cell → Braille dot bit, indexed [row 0..3][col 0..1].
     const DOT = [
       [0x01, 0x08],
@@ -607,9 +607,9 @@ const THEMES: Record<Theme, Runner> = {
         gy: Math.floor(rand(0, rows - 1)),
         diag: Math.random() < 0.5 ? 0 : 1,
         t: 0,
-        life: rand(7000, 12000),
+        life: rand(3200, 5600),
       });
-    for (let i = 0; i < 8; i++) add();
+    for (let i = 0; i < 4; i++) add();
     let spawnAcc = 0;
     let prevT = 0;
     return (t) => {
@@ -617,7 +617,7 @@ const THEMES: Record<Theme, Runner> = {
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       spawnAcc += dt;
-      if (spawnAcc > 700 && braces.length < 18) {
+      if (spawnAcc > 1000 && braces.length < 9) {
         spawnAcc = 0;
         add();
       }
