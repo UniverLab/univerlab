@@ -17,7 +17,7 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const base = `/${id}/docs`;
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} bgColor={exp.essenceHex} surface={exp.surface} docTheme>
+<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} bgColor={exp.essenceHex} circadian mutedCanvas>
   <div class="wrap docs" style={`--essence: ${exp.essenceHex}`}>
     <aside>
       <a class="back label" href={`/${id}`}>← {exp.name}</a>

@@ -42,7 +42,7 @@ const softwareApp = exp.install
 <BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
-      <p class="label num">{exp.number} · {statusLabel}</p>
+      <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       <Banner id={id} color={exp.essenceHex} />
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
@@ -111,6 +111,9 @@ const softwareApp = exp.install
   .exp { --essence: var(--accent); }
   .hero { padding-block: 3.5rem 2rem; display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .num { color: var(--essence); }
+  .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
+  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
+  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
   .koan { font-family: var(--font-serif); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
   .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
   :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
