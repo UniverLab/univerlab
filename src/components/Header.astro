@@ -18,17 +18,12 @@ const path = Astro.url.pathname;
 const seg = path.replace(/^\/es(?=\/|$)/, '').split('/').filter(Boolean)[0] ?? '';
 const onExperiment = experiments.some((e) => e.id === seg);
 
-// On docs pages the header mutates: GitHub points at the project's own repo
-// (not the org), and the language toggle becomes a light/dark theme toggle
-// (docs are English-only).
+// On docs pages the header points GitHub at the project's own repo (not the org).
+// Docs are circadian like the rest of the site — no manual theme toggle.
 const docsMatch = path.match(/^\/([^/]+)\/docs/);
 const docExp = docsMatch ? experiments.find((e) => e.id === docsMatch[1]) : undefined;
 const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
-// Docs inherit their project's polarity; light surfaces are paper/blueprint/studio.
-const docDefaultDark = docExp
-  ? !['paper', 'blueprint', 'studio'].includes(docExp.surface ?? '')
-  : true;
 
 const nav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
@@ -69,12 +64,7 @@ function isActive(href: string, current: string): boolean {
         >{item.label}</a>
       ))}
       {isDocs ? (
-        <button
-          type="button"
-          class="label theme-toggle"
-          data-doc-default-dark={String(docDefaultDark)}
-          aria-label="Toggle theme"
-        >{docDefaultDark ? 'LIGHT' : 'DARK'}</button>
+        <span class="label lang-static" aria-hidden="true">EN</span>
       ) : (
         <a
           class="label lang"
@@ -86,6 +76,9 @@ function isActive(href: string, current: string): boolean {
     </nav>
   </div>
   <hr class="rule" />
+  <button class="celestial-btn" type="button" aria-label="Today in science">
+    <span class="celestial" aria-hidden="true"></span>
+  </button>
 </header>
 
 <script>
@@ -97,28 +90,6 @@ function isActive(href: string, current: string): boolean {
       } catch (e) {}
     });
   });
-
-  // Docs theme toggle: docs default to their project's polarity; the reader can
-  // force light/dark. The label always shows the TARGET theme, resolved from the
-  // stored override (if any) over the project default.
-  const tt = document.querySelector<HTMLButtonElement>('.theme-toggle');
-  if (tt) {
-    const KEY = 'univerlab-doc-theme';
-    const defaultDark = tt.dataset.docDefaultDark === 'true';
-    let forced = '';
-    try {
-      forced = localStorage.getItem(KEY) || '';
-    } catch (e) {}
-    const current = forced || (defaultDark ? 'dark' : 'light');
-    const target = current === 'dark' ? 'light' : 'dark';
-    tt.textContent = target.toUpperCase();
-    tt.addEventListener('click', () => {
-      try {
-        localStorage.setItem(KEY, target);
-      } catch (e) {}
-      location.reload();
-    });
-  }
 
   // Mobile nav: the burger toggles the collapsed menu open/closed.
   const burger = document.querySelector<HTMLButtonElement>('.burger');
@@ -141,7 +112,357 @@ function isActive(href: string, current: string): boolean {
   }
 </script>
 
+<script is:inline>
+  // Today in science — click the sun/moon for a historical science fact.
+  // Fetches Wikipedia's "On This Day" API in the page's language on click,
+  // with hardcoded sun/moon facts as fallback.
+  (function () {
+    var btn = document.querySelector('.celestial-btn');
+    if (!btn) return;
+    if (!document.documentElement.dataset.celestial) return;
+
+    var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+
+    var SUN_FACTS = {
+      en: [
+        'The Sun holds 99.86% of the Solar System\u2019s mass \u2014 everything else is debris.',
+        'Sunlight takes 8 minutes to reach Earth, but a photon takes ~170,000 years to escape the Sun\u2019s core.',
+        'The Sun\u2019s core burns at 15 million \u00b0C \u2014 hot enough to fuse hydrogen into helium.',
+        'The Sun loses 4 million tons of mass every second through nuclear fusion.',
+        'The Sun\u2019s magnetic field flips every ~11 years, reversing north and south poles.',
+        'One million Earths could fit inside the Sun.',
+        'The Sun rotates faster at its equator (25 days) than at its poles (35 days) \u2014 it is not a solid body.',
+        'The Sun is a G2V yellow dwarf, yet brighter than 85% of the Milky Way\u2019s stars.',
+        'The Sun was born from a collapsing cloud of gas and dust 4.6 billion years ago.',
+        'Every second, the Sun converts 600 million tons of hydrogen into helium.',
+      ],
+      es: [
+        'El Sol concentra el 99.86% de la masa del Sistema Solar \u2014 todo lo dem\u00e1s es escombros.',
+        'La luz del Sol tarda 8 minutos en llegar a la Tierra, pero un fot\u00f3n tarda ~170.000 a\u00f1os en escapar del n\u00facleo solar.',
+        'El n\u00facleo del Sol arde a 15 millones de \u00b0C \u2014 suficiente para fusionar hidr\u00f3geno en helio.',
+        'El Sol pierde 4 millones de toneladas de masa por segundo mediante fusi\u00f3n nuclear.',
+        'El campo magn\u00e9tico del Sol se invierte cada ~11 a\u00f1os, intercambiando los polos norte y sur.',
+        'Caben un mill\u00f3n de Tierras dentro del Sol.',
+        'El Sol rota m\u00e1s r\u00e1pido en su ecuador (25 d\u00edas) que en sus polos (35 d\u00edas) \u2014 no es un cuerpo s\u00f3lido.',
+        'El Sol es una enana amarilla G2V, pero m\u00e1s brillante que el 85% de las estrellas de la V\u00eda L\u00e1ctea.',
+        'El Sol naci\u00f3 del colapso de una nube de gas y polvo hace 4.600 millones de a\u00f1os.',
+        'Cada segundo, el Sol convierte 600 millones de toneladas de hidr\u00f3geno en helio.',
+      ],
+    };
+
+    var MOON_FACTS = {
+      en: [
+        'The Moon drifts away from Earth at 3.8 cm per year \u2014 about the speed your fingernails grow.',
+        'The Moon is tidally locked \u2014 it always shows the same face to Earth.',
+        'Moonquakes can last for over an hour; the dry Moon has no water to dampen vibrations.',
+        'Lunar temperatures swing from -173 \u00b0C at night to 127 \u00b0C in daylight.',
+        'A lunar day \u2014 sunrise to sunrise \u2014 lasts 29.5 Earth days.',
+        'The Moon\u2019s gravity is 1/6 of Earth\u2019s \u2014 you\u2019d weigh six times less.',
+        'The Moon has an exosphere: a few atoms per cubic centimeter, not a true atmosphere.',
+        'The South Pole-Aitken Basin is the Moon\u2019s largest crater: 2,500 km wide, 13 km deep.',
+        'During Apollo 11, lunar dust smelled like spent gunpowder \u2014 a mystery still unexplained.',
+        'The Moon stabilizes Earth\u2019s axial tilt; without it, our seasons would swing chaotically.',
+      ],
+      es: [
+        'La Luna se aleja de la Tierra 3.8 cm por a\u00f1o \u2014 tan r\u00e1pido como crecen tus u\u00f1as.',
+        'La Luna est\u00e1 anclada por mareas \u2014 siempre muestra la misma cara a la Tierra.',
+        'Los sismos lunares pueden durar m\u00e1s de una hora; la Luna seca no tiene agua que amortig\u00fce las vibraciones.',
+        'Las temperaturas lunares oscilan entre -173 \u00b0C de noche y 127 \u00b0C de d\u00eda.',
+        'Un d\u00eda lunar \u2014 del amanecer al amanecer \u2014 dura 29.5 d\u00edas terrestres.',
+        'La gravedad de la Luna es 1/6 de la terrestre \u2014 pesar\u00edas seis veces menos.',
+        'La Luna tiene una exosfera: unos pocos \u00e1tomos por cent\u00edmetro c\u00fabico, no una atm\u00f3sfera real.',
+        'La cuenca Polo Sur-Aitken es el mayor cr\u00e1ter lunar: 2.500 km de ancho, 13 km de profundidad.',
+        'Durante el Apolo 11, el polvo lunar ol\u00eda a p\u00f3lvora gastada \u2014 un misterio a\u00fan sin explicar.',
+        'La Luna estabiliza la inclinaci\u00f3n axial de la Tierra; sin ella, las estaciones ser\u00edan ca\u00f3ticas.',
+      ],
+    };
+
+    // Science filter for Wikipedia "On This Day" events. Stems are matched with
+    // indexOf against the lowercased text, so 'physic' catches physics/physicist
+    // and 'descubr' catches descubri\u00f3/descubrimiento. We keep an event only when
+    // it mentions science AND mentions no war/politics/religion/sport term \u2014 that
+    // second list is what keeps battles and coronations out of the feed.
+    var SCIENCE_EN = [
+      'science', 'scientist', 'physic', 'chemist', 'chemistry', 'biolog',
+      'astronom', 'telescope', 'observatory', 'planet', 'comet', 'asteroid',
+      'spacecraft', 'satellite', 'rocket', 'orbit', 'space probe', 'astronaut',
+      'cosmonaut', 'galaxy', 'supernova', 'eclipse', 'nasa', 'space station',
+      'mathematic', 'theorem', 'invent', 'patent', 'discover', 'experiment',
+      'laborator', 'vaccine', 'antibiotic', 'medicine', 'surgery', 'genome',
+      'dna', 'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
+      'evolution', 'fossil', 'dinosaur', 'geolog', 'microscope', 'electricity',
+      'transistor', 'computer', 'internet', 'engineer', 'particle', 'x-ray',
+      'periodic table', 'nobel prize in physics', 'nobel prize in chemistry',
+      'nobel prize in physiology', 'naturalist', 'observation of',
+    ];
+    var SCIENCE_ES = [
+      'ciencia', 'cient\u00edfic', 'f\u00edsic', 'qu\u00edmic', 'biolog',
+      'astronom', 'telescopio', 'observatorio', 'planeta', 'cometa', 'asteroide',
+      'nave espacial', 'sat\u00e9lite', 'cohete', '\u00f3rbita', 'sonda',
+      'astronauta', 'cosmonauta', 'galaxia', 'supernova', 'eclipse',
+      'estaci\u00f3n espacial', 'matem\u00e1tic', 'teorema', 'invent', 'patente',
+      'descubr', 'experimento', 'laboratorio', 'vacuna', 'antibi\u00f3tic',
+      'medicina', 'cirug\u00eda', 'genoma', 'adn', '\u00e1tomo', 'reactor nuclear',
+      'electr\u00f3n', 'cu\u00e1ntic', 'relatividad', 'evoluci\u00f3n', 'f\u00f3sil',
+      'dinosaurio', 'geolog', 'microscopio', 'electricidad', 'transistor',
+      'computador', 'ordenador', 'internet', 'ingenier', 'part\u00edcula',
+      'rayos x', 'tabla peri\u00f3dica', 'naturalista', 'premio nobel de f\u00edsica',
+      'premio nobel de qu\u00edmica', 'premio nobel de medicina',
+    ];
+    // War, politics, religion and sport terms that veto an event even if it also
+    // trips a science word (e.g. "nuclear weapon" in a war, a royal coronation).
+    var POLITICS_EN = [
+      'war', 'battle', 'treaty', 'election', 'president', 'king', 'queen',
+      'emperor', 'monarch', 'parliament', 'congress', 'army', 'military',
+      'troops', 'invasion', 'coup', 'revolution', 'independence', 'empire',
+      'dynasty', 'siege', 'rebellion', 'riot', 'massacre', 'genocide',
+      'dictator', 'assassinat', 'weapon', 'bombing', 'pope', 'bishop',
+      'saint', 'church', 'politician', 'senator', 'governor', 'minister',
+      // Sport & entertainment (substrings chosen to avoid collisions like
+      // 'cup'→occupied, 'league'→colleague, 'sport'→transport).
+      'championship', 'tournament', 'olympic', 'football', 'soccer',
+      'basketball', 'baseball', 'tennis', 'cricket', 'rugby', 'hockey',
+      'boxing', 'marathon', 'fifa', 'world cup', 'stadium', 'goalkeeper',
+      'midfielder', 'striker', 'film festival', 'box office',
+    ];
+    var POLITICS_ES = [
+      'guerra', 'batalla', 'tratado', 'elecci\u00f3n', 'elecciones', 'presidente',
+      'rey', 'reina', 'emperador', 'monarca', 'parlamento', 'congreso',
+      'ej\u00e9rcito', 'militar', 'tropas', 'invasi\u00f3n', 'golpe de estado',
+      'revoluci\u00f3n', 'independencia', 'imperio', 'dinast\u00eda', 'asedio',
+      'rebeli\u00f3n', 'disturbio', 'masacre', 'genocidio', 'dictador',
+      'asesinat', 'arma', 'bombardeo', 'papa', 'obispo', 'santo', 'iglesia',
+      'político', 'política', 'senador', 'gobernador', 'ministro',
+      // Deporte y espect\u00e1culo. 'deportiv' cubre deportivo/deportiva; evito
+      // 'liga' (obliga), 'gol' (golfo) y 'copa' suelto por colisiones.
+      'campeonato', 'torneo', 'ol\u00edmpic', 'deportiv', 'f\u00fatbol', 'futbol',
+      'baloncesto', 'b\u00e9isbol', 'tenis', 'cr\u00edquet', 'boxeo', 'marat\u00f3n',
+      'fifa', 'mundial', 'copa del mundo', 'estadio', 'goleador',
+      'futbolista', 'delantero', 'festival de cine', 'taquilla',
+    ];
+
+    // anniv/inYear frame each fact as history ("On a day like today \u00b7 In 1929 \u00b7
+    // \u2026") rather than news. born/died are sentence prefixes folded into the
+    // fact itself so the kicker stays a neutral anniversary line.
+    var I18N = {
+      en: { anniv: 'On a day like today', inYear: 'In', born: 'Birth of ', died: 'Death of ', sun: 'Sun \u00b7 fact', moon: 'Moon \u00b7 fact', link: 'Read on Wikipedia \u2192', mission: 'Earth Mission', sol: 'Sol', orbit: 'Orbit' },
+      es: { anniv: 'Un d\u00eda como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sun: 'Sol \u00b7 dato', moon: 'Luna \u00b7 dato', link: 'Ver en Wikipedia \u2192', mission: 'Misi\u00f3n Tierra', sol: 'Sol', orbit: '\u00d3rbita' },
+    };
+
+    function showPopup(data) {
+      var existing = document.querySelector('.otd-popup');
+      if (existing) existing.remove();
+
+      var popup = document.createElement('div');
+      popup.className = 'otd-popup';
+
+      var html = '<button class="otd-close" type="button" aria-label="Close">\u00d7</button>';
+      html += '<div class="otd-kicker">' + data.kicker + '</div>';
+      if (data.year) html += '<div class="otd-year">' + data.year + '</div>';
+      html += '<div class="otd-text">' + data.text + '</div>';
+      if (data.link) html += '<a class="otd-link" href="' + data.link + '" target="_blank" rel="noopener noreferrer">' + data.linkLabel + '</a>';
+      // The observer's place in time \u2014 ties the historical fact to the visitor's
+      // own present, the same instant seen at two scales.
+      if (data.observer) html += '<div class="otd-observer">' + data.observer + '</div>';
+
+      popup.innerHTML = html;
+
+      var rect = btn.getBoundingClientRect();
+      var popupWidth = Math.min(300, window.innerWidth - 24);
+      var left = rect.left + rect.width / 2 - popupWidth / 2;
+      left = Math.max(12, Math.min(left, window.innerWidth - popupWidth - 12));
+      var posY = rect.bottom + 8;
+
+      popup.style.position = 'fixed';
+      popup.style.top = posY + 'px';
+      popup.style.left = left + 'px';
+      popup.style.width = popupWidth + 'px';
+
+      document.body.appendChild(popup);
+
+      var close = function () { popup.remove(); };
+      popup.querySelector('.otd-close').addEventListener('click', close);
+
+      setTimeout(function () {
+        document.addEventListener('click', function outside(e) {
+          if (!popup.contains(e.target) && !btn.contains(e.target)) {
+            close();
+            document.removeEventListener('click', outside);
+          }
+        });
+        window.addEventListener('scroll', function onScroll() {
+          close();
+          window.removeEventListener('scroll', onScroll);
+        }, { passive: true });
+      }, 10);
+
+      document.addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+      });
+    }
+
+    // ---- Cache: prefetch the day's science facts once, serve clicks instantly.
+    // The first Wikipedia call is slow (cold), and a single fetched fact would
+    // repeat all day. So we fetch the whole filtered pool in the background on
+    // load and keep it in localStorage for the day; each click then pulls a
+    // random one with no network wait. The cache is keyed to today + language
+    // and is rebuilt when it is missing, stale, or empty.
+    var CACHE_KEY = 'univerlab-otd';
+    var MAX_LEN = 200; // drop narrative-length entries (e.g. long match reports)
+
+    var keywords = lang === 'es' ? SCIENCE_ES : SCIENCE_EN;
+    var politics = lang === 'es' ? POLITICS_ES : POLITICS_EN;
+
+    function todayKey() {
+      var n = new Date();
+      return n.getFullYear() + '-' +
+        String(n.getMonth() + 1).padStart(2, '0') + '-' +
+        String(n.getDate()).padStart(2, '0');
+    }
+
+    function passes(e) {
+      var text = e.text || '';
+      if (!text || text.length > MAX_LEN) return false;
+      var low = text.toLowerCase();
+      var hasScience = keywords.some(function (k) { return low.indexOf(k) !== -1; });
+      var hasPolitics = politics.some(function (k) { return low.indexOf(k) !== -1; });
+      return hasScience && !hasPolitics;
+    }
+
+    // Turn one feed category into normalized, length-sorted pool entries.
+    function collect(list, kind, limit) {
+      var arr = (list || []).filter(passes).map(function (e) {
+        var link = '';
+        try { link = e.pages[0].content_urls.desktop.page; } catch (x) {}
+        return { year: String(e.year || '?'), text: e.text || '', link: link, kind: kind };
+      });
+      arr.sort(function (a, b) { return a.text.length - b.text.length; });
+      return limit ? arr.slice(0, limit) : arr;
+    }
+
+    // All filtered events (the day's real science) plus a handful of the
+    // shortest scientist births and deaths for variety.
+    function buildPool(data) {
+      return collect(data.events, 'event', 0)
+        .concat(collect(data.births, 'born', 6))
+        .concat(collect(data.deaths, 'died', 4));
+    }
+
+    function readCache() {
+      try {
+        var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (!c || c.date !== todayKey() || c.lang !== lang || !c.items || !c.items.length) return null;
+        return c.items;
+      } catch (e) { return null; }
+    }
+
+    var fetching = false;
+    function fetchAndCache() {
+      if (fetching) return Promise.resolve(null);
+      fetching = true;
+      var now = new Date();
+      var mm = String(now.getMonth() + 1).padStart(2, '0');
+      var dd = String(now.getDate()).padStart(2, '0');
+      var url = 'https://' + lang + '.wikipedia.org/api/rest_v1/feed/onthisday/all/' + mm + '/' + dd;
+      return fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (res) { if (!res.ok) throw new Error('API ' + res.status); return res.json(); })
+        .then(function (data) {
+          var items = buildPool(data);
+          if (items.length) {
+            try {
+              localStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayKey(), lang: lang, items: items }));
+            } catch (e) {}
+          }
+          return items;
+        })
+        .finally(function () { fetching = false; });
+    }
+
+    // Warm the cache shortly after load, off the critical path, if today's
+    // facts are not already stored.
+    if (!readCache()) {
+      var warm = function () { fetchAndCache().catch(function () {}); };
+      if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 });
+      else setTimeout(warm, 1200);
+    }
+
+    function shuffle(a) {
+      a = a.slice();
+      for (var k = a.length - 1; k > 0; k--) {
+        var j = Math.floor(Math.random() * (k + 1));
+        var t = a[k]; a[k] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    // The visitor's position in Earth's current orbit, framed as a space-mission
+    // readout. Computed client-side (local date) so it is never stale, and
+    // leap-year aware (365/366). "Sol" borrows the mission term for a solar day.
+    function observerLine() {
+      var i = I18N[lang] || I18N.en;
+      var now = new Date();
+      var y = now.getFullYear();
+      var start = new Date(y, 0, 0);
+      var dayOfYear = Math.floor((now - start) / 86400000);
+      var total = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
+      var pct = (dayOfYear / total * 100).toFixed(1);
+      return i.mission + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
+    }
+
+    // Show order: events first (real history), each in a random order with no
+    // repeat, and only once every event is exhausted do births and deaths
+    // appear. When the whole queue drains it is rebuilt, restarting the cycle.
+    var queue = [];
+    var lastText = '';
+    function showFromPool(items) {
+      var i = I18N[lang] || I18N.en;
+      if (!queue.length) {
+        var events = items.filter(function (x) { return x.kind === 'event'; });
+        var extras = items.filter(function (x) { return x.kind !== 'event'; });
+        queue = shuffle(events).concat(shuffle(extras));
+      }
+      var it = queue.shift();
+      // Guard against showing the same fact twice across a queue rebuild.
+      if (it && it.text === lastText && queue.length) { queue.push(it); it = queue.shift(); }
+      lastText = it.text;
+      var prefix = it.kind === 'born' ? i.born : it.kind === 'died' ? i.died : '';
+      showPopup({
+        kicker: i.anniv,
+        year: i.inYear + ' ' + it.year,
+        text: prefix + it.text,
+        link: it.link,
+        linkLabel: i.link,
+        observer: observerLine(),
+      });
+    }
+
+    function showHardcoded() {
+      var i = I18N[lang] || I18N.en;
+      var isMoon = document.documentElement.dataset.celestial === 'moon';
+      var facts = isMoon ? (MOON_FACTS[lang] || MOON_FACTS.en) : (SUN_FACTS[lang] || SUN_FACTS.en);
+      showPopup({
+        kicker: isMoon ? i.moon : i.sun,
+        year: '',
+        text: facts[Math.floor(Math.random() * facts.length)],
+        link: '',
+        linkLabel: '',
+        observer: observerLine(),
+      });
+    }
+
+    btn.addEventListener('click', function () {
+      var items = readCache();
+      if (items) { showFromPool(items); return; }
+      // Nothing cached yet — show a hardcoded fact instantly so the click is
+      // never a dead end, and fetch in the background for next time.
+      showHardcoded();
+      fetchAndCache().catch(function () {});
+    });
+  })();
+</script>
+
 <style>
+  header { position: relative; }
   .bar {
     position: relative;
     display: flex;
@@ -155,12 +476,66 @@ function isActive(href: string, current: string): boolean {
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: var(--ink-dim); }
   nav a:hover, nav a.active { color: var(--ink); }
-  .lang, .theme-toggle { color: var(--ink-faint); }
-  .lang:hover, .theme-toggle:hover { color: var(--ink); }
-  /* The theme toggle is a button but must read like the mono nav labels. */
-  .theme-toggle {
-    border: 0; background: none; padding: 0; cursor: pointer;
-    font: inherit; letter-spacing: inherit; text-transform: inherit;
+  .lang, .lang-static { color: var(--ink-faint); }
+  .lang:hover { color: var(--ink); }
+
+  /* Sun by day, moon by night — a celestial body tracing the header rule like
+     the horizon. The button is a 28px hit area; the 8px celestial inside is the
+     visual. Position is set by the circadian script; on non-circadian pages the
+     vars are unset so it stays invisible. The 60s transition matches the update
+     interval, so it glides continuously rather than jumping. */
+  .celestial-btn {
+    position: absolute;
+    bottom: 0;
+    left: var(--sun-pos, -20px);
+    transform: translate(-50%, 50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 1;
+    transition: left 60s linear, opacity 0.4s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+  html[data-celestial] .celestial-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .celestial-btn:hover .celestial {
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  .celestial {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--celestial-color, transparent);
+    box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
+    transition: transform 0.2s ease, background 0.4s ease, box-shadow 0.4s ease;
+    pointer-events: none;
+  }
+  /* Moon — the terminator is a second circle (pseudo-element) sliding across
+     the disc. The intersection of two equal circles gives a curved terminator,
+     like a real moon. New moon: shadow centred (covers all). Full: offset =
+     diameter (no overlap). Waxing lit right; waning lit left. */
+  html[data-celestial='moon'] .celestial {
+    background: var(--celestial-color, transparent);
+    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--celestial-color, transparent) var(--moon-glow, 50%), transparent);
+    overflow: hidden;
+  }
+  html[data-celestial='moon'] .celestial::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--bg);
+    transform: translateX(var(--moon-offset, 0));
   }
 
   /* Hamburger button — hidden until the nav no longer fits comfortably. */
@@ -217,4 +592,81 @@ function isActive(href: string, current: string): boolean {
     }
     nav.open { display: flex; }
   }
+</style>
+
+<style is:global>
+  /* "Today in science" popup — a small card that drops from the sun/moon.
+     Appended to <body>, so it needs global scope. Uses the page's CSS vars
+     to blend with the circadian palette. */
+  .otd-popup {
+    position: fixed;
+    z-index: 100;
+    width: 300px;
+    max-width: calc(100vw - 24px);
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    padding: 1.1rem 1.2rem 1rem;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+    animation: otd-in 0.18s ease;
+  }
+  @keyframes otd-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .otd-popup .otd-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.6rem;
+  }
+  .otd-popup .otd-year {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+  .otd-popup .otd-text {
+    font-family: var(--font-serif);
+    font-size: 0.92rem;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    margin-bottom: 0.7rem;
+  }
+  .otd-popup .otd-link {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+  }
+  .otd-popup .otd-link:hover { text-decoration: underline; }
+  .otd-popup .otd-observer {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.01em;
+    color: var(--ink-faint);
+    white-space: nowrap;        /* keep the mission readout on one line */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .otd-popup .otd-close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.6rem;
+    border: 0;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    line-height: 1;
+  }
+  .otd-popup .otd-close:hover { color: var(--ink); }
 </style>
