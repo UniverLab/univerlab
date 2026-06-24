@@ -4,6 +4,19 @@ import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const m = t.manifesto;
+const c = t.cosmos;
+// Build the ring set: each horizon gets a main ring, plus two faint ghost
+// rings between it and the next — giving a sense of the vast empty space
+// between scales. The last horizon has no ghosts after it.
+const rings = c.address.flatMap((_, i) => {
+  const list = [{ i, ghost: false }];
+  if (i < c.address.length - 1) {
+    list.push({ i: i + 0.25, ghost: true });
+    list.push({ i: i + 0.5, ghost: true });
+    list.push({ i: i + 0.75, ghost: true });
+  }
+  return list;
+});
 ---
 <BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" circadian>
   <section class="wrap opening">
@@ -11,6 +24,88 @@ const m = t.manifesto;
     <h1>{m.title}</h1>
     <p class="sub label">{m.sub}</p>
     <blockquote class="prose">{m.epigraph}</blockquote>
+  </section>
+
+  <!-- The opening perspective. Before any argument, the scroll makes the wonder
+       visceral: 13.8B years fall past, the horizon zooms out to the whole
+       observable universe, and it all collapses back onto a single observer —
+       you — that wonders it exists. This hands straight into "What we value". -->
+  <section class="cosmos-section">
+    <div class="wrap cosmos-head">
+      <span class="label">{c.kicker}</span>
+    </div>
+    <div class="cosmos-scrolly" data-cosmos>
+      <div class="cosmos-sticky" style={`--levels:${c.address.length}`}>
+        <div class="cosmos-stage">
+          <!-- Phase 1: deep-time timeline (centered text, central axis) -->
+          <div class="tl-layer">
+            <h3 class="tl-title cosmos-h">{c.timelineTitle}</h3>
+            <span class="tl-axis" aria-hidden="true"></span>
+            <span class="tl-fill" aria-hidden="true"></span>
+            <ol class="tl-events">
+              {c.timeline.map(([fig, name, detail], idx) => (
+                <li class="tl-ev" style={`--at:${(idx / c.timeline.length).toFixed(3)}`}>
+                  <span class="tl-fig mono">{fig}</span>
+                  <span class="tl-name">{name}</span>
+                  <span class="tl-detail">{detail}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <!-- "You" — the last event of the timeline, outside tl-layer so it
+               survives the fade. It slides to center with the dot, grows, then
+               the text swaps to "Us" and it becomes the base of the pyramid. -->
+          <div class="you-us">
+            <span class="you-us-detail">{c.youDetail}</span>
+            <span class="you-us-text">{c.you}</span>
+          </div>
+          <!-- The observer dot — falls as the comet, then slides to center
+               with the "You" text, then shrinks as horizons expand. -->
+          <span class="observer" aria-hidden="true"></span>
+          <!-- Phase 2: zoom-out horizons — born from the bottom edge as a flat
+               line, curve to a full circle, shrink to a point, vanish. Ghost
+               rings between horizons suggest the vast empty space between
+               scales. -->
+          <div class="zo-layer">
+            <div class="zo-rings">
+              {rings.map((r) => (
+                <span class={`zo-ring${r.ghost ? ' zo-ghost' : ''}`} style={`--i:${r.i}`}></span>
+              ))}
+            </div>
+          </div>
+          <!-- Phase labels overlay -->
+          <div class="zo-title">
+            <h3 class="cosmos-h">{c.addressTitle}</h3>
+            <p class="address-intro">{c.addressIntro}</p>
+          </div>
+          <ol class="zo-labels">
+            {c.address.map(([name, scale], i) => (
+              <li class="zo-label" style={`--i:${i}`}>
+                <span class="zo-name">{name}</span>
+                <span class="zo-scale mono">{scale}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <!-- Accumulating address: an inverted pyramid that builds as you zoom
+             out. Each horizon appears big when its ring reaches full circle,
+             pushing previous levels down where they shrink — Us starts big,
+             then Earth pushes it down, Solar System pushes Earth down, etc.
+             The current level is always the biggest at top; past levels
+             dwindle toward invisibility, showing how infinitesimally small
+             we are within everything that contains us. -->
+        <ol class="zo-stack">
+          <li class="zo-stack-item zo-stack-us" style="--i:-0.5">
+            <span class="zo-stack-name">{c.us}</span>
+          </li>
+          {c.address.map(([name], i) => (
+            <li class="zo-stack-item" style={`--i:${i}`}>
+              <span class="zo-stack-name">{name}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
   </section>
 
   <hr class="rule" />
@@ -178,4 +273,499 @@ const m = t.manifesto;
   .closing { padding-block: 3.5rem 5rem; }
   .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.4rem; }
   .closing .note { max-width: 46rem; margin: 0 0 1.6rem; color: var(--ink-faint); font-size: 0.92rem; line-height: 1.65; }
+
+  /* Cosmic perspective — a single scroll-driven scene. A comet falls through
+     13.8B years of deep time, reaches "You" at the bottom, then that same
+     point slides to center and becomes the observer of a zoom-out through
+     cosmic scales — Earth to the observable universe. One --progress (0→1)
+     drives the whole sequence:
+       0 → 0.30   timeline (comet falls, events light up)
+       0.30 → 0.34  dot slides to center
+       0.34 → 0.40  pause — "You" appears, holds, crossfades to "Us"
+       0.40 → 1.0   zoom-out (rings expand past the observer) */
+  .cosmos-section { padding-block: 3rem; }
+  .cosmos-h {
+    font-family: var(--font-serif); font-style: italic; font-weight: 500;
+    font-size: 1.05rem; color: var(--ink); margin: 0;
+  }
+  .cosmos-scrolly { position: relative; margin-top: 1.6rem; }
+  .cosmos-sticky {
+    --progress: 0;
+    --p: var(--progress);
+    --dt: clamp(0, var(--p) / 0.30, 1);
+    --tx: clamp(0, (var(--p) - 0.30) / 0.04, 1);
+    --hold: clamp(0, (var(--p) - 0.34) / 0.06, 1);
+    --morph: clamp(0, (var(--p) - 0.37) / 0.03, 1);
+    --zm: clamp(0, (var(--p) - 0.40) / 0.60, 1);
+    --tl-fade: clamp(1 - (var(--p) - 0.26) / 0.08, 0, 1);
+    --zo-fade: clamp((var(--p) - 0.37) / 0.03, 0, 1);
+    --zoom: calc(var(--zm) * (var(--levels) - 0.5));
+    --wonder: clamp(0, (var(--p) - 0.95) / 0.04, 1);
+  }
+  /* Default height for touch (scroll-position mapping). JS overrides to a
+     short section on desktop where wheel momentum drives the animation. */
+  .cosmos-scrolly.scrolly { height: 500vh; margin-top: 0; }
+  .cosmos-scrolly.scrolly .cosmos-sticky {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .cosmos-stage {
+    position: relative;
+    width: 100%; max-width: min(42rem, 68vh);
+    height: 72vh; min-height: 26rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+  /* Subtle depth gradient — a faint radial glow from center that intensifies
+     with zoom, giving the rings a sense of receding into deep space. */
+  .cosmos-scrolly.scrolly .cosmos-stage::after {
+    content: ''; position: absolute; inset: -20%;
+    background: radial-gradient(circle at center,
+      color-mix(in srgb, var(--accent) calc(var(--zm) * 6%), transparent) 0%,
+      transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Phase 1: deep-time timeline — centered text, central axis. */
+  .tl-layer { position: absolute; inset: 0; opacity: var(--tl-fade); }
+  .tl-title { position: absolute; top: 0; left: 0; right: 0; }
+  .tl-axis, .tl-fill {
+    position: absolute; left: 50%; width: 2px; transform: translateX(-50%);
+  }
+  .tl-axis { top: 12%; bottom: 12%; background: var(--line); }
+  .tl-fill {
+    top: 12%; height: calc(var(--dt) * 76%);
+    background: linear-gradient(to bottom,
+      color-mix(in srgb, var(--accent) 10%, transparent), var(--accent));
+  }
+  .tl-events { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+  .tl-ev {
+    position: absolute; left: 0; right: 0;
+    top: calc(12% + var(--at) * 76%);
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.1rem;
+    opacity: calc(0.14 + 0.86 * clamp(0, (var(--dt) - var(--at) + 0.04) * 18, 1));
+    transition: opacity 0.25s linear;
+  }
+  .tl-ev::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--ink-faint);
+    margin-bottom: 0.18rem;
+  }
+  .tl-fig {
+    font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-faint);
+    background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
+  }
+  .tl-name {
+    font-family: var(--font-serif); color: var(--ink-dim); font-size: 1rem;
+    line-height: 1.2; background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
+  }
+  .tl-detail {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 0.8rem; color: var(--ink-faint); line-height: 1.35;
+    background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
+    opacity: clamp(0, (var(--dt) - var(--at)) * 12, 1);
+    transform: translateY(calc((1 - clamp(0, (var(--dt) - var(--at)) * 12, 1)) * 4px));
+  }
+  .tl-you::before { display: none; }
+  .tl-you .tl-name { font-style: italic; color: var(--ink); }
+
+  /* The observer — the single dot that falls as the comet through the
+     timeline, then slides to center, then shrinks as horizons expand. */
+  .observer {
+    position: absolute; left: 50%;
+    top: calc(12% + var(--dt) * 76% - var(--tx) * 38%);
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 18px 4px color-mix(in srgb, var(--accent) 65%, transparent);
+    --dot-scale: calc(1 - clamp(0, (var(--zm) - 0.1) / 0.3, 1) * 0.9);
+    transform: translate(-50%, -50%) scale(var(--dot-scale));
+    /* the dot travels all the way to the centre of the rings, even though the
+       "You/Us" label settles a little lower */
+    opacity: calc(1 - clamp(0, (var(--zm) - 0.3) / 0.2, 1));
+    z-index: 3;
+  }
+
+  /* "You" — the last timeline event, outside tl-layer so it survives the
+     fade. Sits at the bottom of the timeline like other events, then slides
+     to center with the dot, growing. At center it crossfades with "Us" (the
+     first item of the pyramid stack, positioned at center via transform).
+     When zoom begins, "Us" releases from the center transform and joins the
+     pyramid flex flow naturally. */
+  .you-us {
+    position: absolute; left: 50%;
+    top: calc(88% - var(--tx) * 15%);
+    transform: translate(-50%, -50%);
+    text-align: center; z-index: 4; pointer-events: none;
+    opacity: calc(clamp(0, (var(--dt) - 0.92) * 12, 1) * (1 - var(--morph)));
+  }
+  .you-us-text {
+    display: block;
+    font-family: var(--font-serif); font-style: italic;
+    font-size: calc(1rem + var(--tx) * 4rem);
+    color: var(--accent); white-space: nowrap; line-height: 1.1;
+  }
+  .you-us-detail {
+    display: block;
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 0.8rem; color: var(--ink-faint); line-height: 1.35;
+    margin-bottom: 0.18rem;
+    opacity: calc(clamp(0, (var(--dt) - 0.96) * 12, 1) * (1 - var(--tx)));
+    transform: translateY(calc((1 - clamp(0, (var(--dt) - 0.96) * 12, 1)) * 4px));
+  }
+
+  /* Phase 2: zoom-out horizons. Each ring's lifecycle (--g: 0→1):
+       0 → 0.5   born from below as a flat line, rises and curves into a full
+                 centered circle (scale 12 → 1, translateY 500% → 0)
+       0.5 → 1   shrinks in place to a point (scale 1 → 0.03, translateY 0)
+     Rings overlap: each starts appearing 0.15 before its turn, so the next
+     line is already rising as the current ring collapses to a point. Ghost
+     rings between horizons suggest the vast empty space between scales. */
+  .zo-layer { position: absolute; inset: 0; opacity: var(--zo-fade); }
+  .zo-rings { position: absolute; inset: 0; }
+  .zo-ring {
+    --i: 0;
+    position: absolute; top: 50%; left: 50%;
+    width: 100%; aspect-ratio: 1; border-radius: 50%;
+    border: 1px solid var(--ink-faint);
+    transform: translate(-50%, -50%);
+  }
+  .cosmos-scrolly.scrolly .zo-ring {
+    --g: calc(var(--zoom) - var(--i));
+    --gc: clamp(0, var(--g), 1);
+    --rise: clamp(0, var(--gc) * 2, 1);
+    --fall: clamp(0, (var(--gc) - 0.5) * 2, 1);
+    --ir: calc(1 - var(--rise));
+    --born: clamp(0, (var(--g) + 0.15) / 0.15, 1);
+    --dead: clamp(0, (var(--g) - 1) / 0.1, 1);
+    --vis: calc(var(--born) * (1 - var(--dead)));
+    --here: clamp(0, 1 - max(calc(var(--gc) - 0.5), calc(0.5 - var(--gc))) * 3, 1);
+    transform: translate(-50%, -50%)
+               translateY(calc(500% * var(--ir) * var(--ir) * var(--ir)))
+               scale(calc(1 + 11 * var(--ir) * var(--ir) - 0.97 * var(--fall) * var(--fall)));
+    opacity: var(--vis);
+    border-color: color-mix(in srgb, var(--accent) calc(var(--here) * 70%), var(--ink-faint));
+    border-width: calc(1px + var(--here) * 1.5px);
+    box-shadow: 0 0 calc(var(--here) * 26px) color-mix(in srgb, var(--accent) calc(var(--here) * 42%), transparent);
+  }
+  /* Ghost rings — same lifecycle, but faint and unhighlighted. */
+  .cosmos-scrolly.scrolly .zo-ring.zo-ghost {
+    border-color: color-mix(in srgb, var(--ink-faint) 22%, transparent);
+    border-width: 0.5px;
+    box-shadow: none;
+    opacity: calc(var(--vis) * 0.3);
+  }
+
+  /* Phase titles + zoom labels — centered overlays, crossfaded by phase. */
+  .zo-title {
+    position: absolute; top: calc(4% + 20px); left: 0; right: 0;
+    text-align: center; pointer-events: none;
+    opacity: var(--zo-fade);
+  }
+  .address-intro { margin: 0.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; }
+  .zo-labels {
+    position: absolute; bottom: 8%; left: 0; right: 0;
+    text-align: center; pointer-events: none;
+    opacity: var(--zo-fade);
+  }
+  .zo-label {
+    --g: calc(var(--zoom) - var(--i));
+    --vis: clamp(0, 1 - max(calc(var(--g) - 0.5), calc(0.5 - var(--g))) * 2.5, 1);
+    position: absolute; left: 0; right: 0; bottom: 0;
+    opacity: var(--vis);
+    transform: translateY(calc((1 - var(--vis)) * 12px));
+  }
+  .zo-name {
+    display: block; font-family: var(--font-serif); font-style: italic;
+    font-size: clamp(1.1rem, 3.5vw, 1.5rem); color: var(--ink);
+  }
+  .zo-scale {
+    display: block; margin-top: 0.15rem;
+    font-size: 0.74rem; letter-spacing: 0.1em; color: var(--ink-faint);
+  }
+
+  /* Accumulating address — a centered inverted pyramid that builds as you
+     zoom out. Each horizon appears big when its ring reaches full circle,
+     then shrinks as you continue past it and the next, wider horizon stacks
+     above. Us starts big when the dot reaches center, then Earth pushes it
+     down, Solar System pushes Earth down, etc. The current level is always
+     the biggest at top; past levels dwindle toward invisibility — showing
+     how infinitesimally small we are within everything that contains us. */
+  .cosmos-scrolly.scrolly .zo-labels { display: none; }
+  /* The stack is anchored at a fixed point a little below centre — exactly
+     where "You" lands and morphs into "Us". Us is the first item, at the
+     bottom of the column-reverse flow, so it stays put there; each new, wider
+     horizon rises above it while the older levels shrink in place. */
+  .zo-stack {
+    position: absolute; bottom: 28%; left: 50%;
+    transform: translateX(-50%);
+    list-style: none; margin: 0; padding: 0;
+    pointer-events: none; z-index: 3;
+    display: flex; flex-direction: column-reverse;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+    opacity: calc(var(--zo-fade) * var(--morph));
+  }
+  /* --g is how far zoom has travelled past this level (its "age"). The newest
+     level (g≈0) is the largest and accent-lit; each older level is divided
+     down, so two levels are never the same size. --appear ramps the size in
+     fast, so a level enters at full size (never tiny beside an older one);
+     --vis fades opacity a touch more gently. "observable universe" — the last
+     and longest label — reaches ~10rem and spills past the ring, by design. */
+  .zo-stack-item {
+    --g: calc(var(--zoom) - var(--i));
+    --appear: clamp(0, var(--g) / 0.04, 1);
+    --vis: clamp(0, var(--g) / 0.12, 1);
+    --sz: calc(10rem / (1 + clamp(0, var(--g), 8) * 1.2));
+    --scale: 1;
+    opacity: calc(var(--vis) * (1 - clamp(0, (var(--g) - 3) / 5, 1) * 0.55));
+    transition: opacity 0.3s linear;
+  }
+  .zo-stack-name {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: calc(var(--sz) * var(--appear) * var(--scale));
+    line-height: 1.1;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  /* Only "Us" (the first item, smallest, at the bottom) carries the accent —
+     every wider horizon, up to "observable universe", stays in quiet ink. */
+  .zo-stack-item:first-child .zo-stack-name { color: var(--accent); }
+  /* "Us" stays fully lit (not dimmed by age) and sits a little smaller — 60%
+     of what the size curve alone would give it. */
+  .zo-stack-us { --scale: 0.6; opacity: var(--vis); }
+
+  /* Closing beat — the wonder line fades in at the very end, centred inside the
+      final horizon, naming what the scene has been building toward. */
+  .scene-wonder {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) translateY(calc((1 - var(--wonder)) * 8px));
+    margin: 0; width: 80%; max-width: 22rem;
+    font-family: var(--font-serif); font-style: italic;
+    font-size: clamp(1.05rem, 3vw, 1.35rem); line-height: 1.4;
+    color: var(--ink); text-wrap: balance;
+    opacity: var(--wonder); z-index: 4; pointer-events: none;
+  }
+
+  /* Static fallback (no JS / reduced motion): both phases as flat, fully-lit
+     boards — a centered timeline list, then a nested diagram + address list. */
+  .cosmos-scrolly:not(.scrolly) .cosmos-sticky { height: auto; display: block; }
+  .cosmos-scrolly:not(.scrolly) .cosmos-stage { height: auto; min-height: 0; }
+  .cosmos-scrolly:not(.scrolly) .tl-layer,
+  .cosmos-scrolly:not(.scrolly) .zo-layer { position: static; opacity: 1; }
+  .cosmos-scrolly:not(.scrolly) .tl-title { position: static; margin-bottom: 1.6rem; opacity: 1; }
+  .cosmos-scrolly:not(.scrolly) .tl-axis,
+  .cosmos-scrolly:not(.scrolly) .tl-fill { display: none; }
+  .cosmos-scrolly:not(.scrolly) .tl-events { position: static; }
+  .cosmos-scrolly:not(.scrolly) .tl-ev {
+    position: static; transform: none; opacity: 1;
+    margin-bottom: 1.2rem;
+  }
+  .cosmos-scrolly:not(.scrolly) .tl-ev::before { display: none; }
+  .cosmos-scrolly:not(.scrolly) .tl-fig,
+  .cosmos-scrolly:not(.scrolly) .tl-name,
+  .cosmos-scrolly:not(.scrolly) .tl-detail { background: none; padding: 0; }
+  .cosmos-scrolly:not(.scrolly) .tl-detail { opacity: 1; transform: none; }
+  .cosmos-scrolly:not(.scrolly) .observer { display: none; }
+  .cosmos-scrolly:not(.scrolly) .you-us {
+    position: static; transform: none; opacity: 1;
+    margin-bottom: 1.2rem;
+  }
+  .cosmos-scrolly:not(.scrolly) .you-us-text { font-size: 1rem; }
+  .cosmos-scrolly:not(.scrolly) .you-us-you { opacity: 0; }
+  .cosmos-scrolly:not(.scrolly) .you-us-us { position: static; opacity: 1; }
+  .cosmos-scrolly:not(.scrolly) .you-us-detail { opacity: 1; transform: none; }
+  .cosmos-scrolly:not(.scrolly) .zo-rings {
+    position: relative; width: min(22rem, 68vw); margin: 0 auto 1.4rem;
+    aspect-ratio: 1;
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-ring {
+    transform: translate(-50%, -50%) scale(calc(1 - var(--i) * 0.12));
+    border-color: color-mix(in srgb, var(--ink-faint) 55%, transparent);
+    opacity: 1;
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-ring.zo-ghost { display: none; }
+  .cosmos-scrolly:not(.scrolly) .zo-title { position: static; opacity: 1; margin-bottom: 1rem; }
+  .cosmos-scrolly:not(.scrolly) .zo-labels {
+    position: static; opacity: 1; list-style: none; margin: 0; padding: 0; max-width: 30rem;
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-label {
+    position: static; opacity: 1; transform: none;
+    display: flex; justify-content: space-between; gap: 1rem; align-items: baseline;
+    padding-block: 0.55rem; border-bottom: 1px solid var(--line);
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-label:first-child { border-top: 1px solid var(--line); }
+  .cosmos-scrolly:not(.scrolly) .zo-label:first-child .zo-name { color: var(--accent); }
+  .cosmos-scrolly:not(.scrolly) .zo-name { font-size: 0.92rem; }
+  .cosmos-scrolly:not(.scrolly) .zo-scale { display: inline; margin: 0; }
+  .cosmos-scrolly:not(.scrolly) .zo-stack {
+    position: static; opacity: 1; list-style: none; margin: 0; padding: 0; max-width: 30rem;
+    transform: none; display: block;
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-stack-us { transform: none; }
+  .cosmos-scrolly:not(.scrolly) .zo-stack-item {
+    position: static; opacity: 1; transform: none;
+    display: flex; justify-content: space-between; gap: 1rem; align-items: baseline;
+    padding-block: 0.55rem; border-bottom: 1px solid var(--line);
+  }
+  .cosmos-scrolly:not(.scrolly) .zo-stack-item:first-child { border-top: 1px solid var(--line); }
+  .cosmos-scrolly:not(.scrolly) .zo-stack-item:first-child .zo-stack-name { color: var(--accent); }
+  .cosmos-scrolly:not(.scrolly) .zo-stack-name { font-size: 0.92rem; }
+  .cosmos-scrolly:not(.scrolly) .scene-wonder {
+    position: static; opacity: 1; transform: none;
+    width: auto; max-width: 34rem; margin: 1.6rem auto 0; text-align: center;
+  }
+
+  @media (max-width: 34rem) {
+    .cosmos-stage { max-width: min(100%, 68vh); }
+  }
+
+  /* Scrollytelling reveal — pure CSS scroll-driven. Every block and list item
+     rises and brightens as it scrolls up into the reading zone, tied to scroll
+     position: the effect plays live as you move and reverses when you scroll
+     back, so the page guides you idea by idea. Each list item gets its own
+     view() timeline, so they arrive in turn as the list passes. Where scroll
+     timelines are unsupported (or motion is reduced) nothing animates and the
+     page is fully visible — progressive enhancement, no JS needed. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .opening > *,
+      .section > *,
+      .purpose-list li,
+      .imperatives li,
+      .pillars li,
+      .path li,
+      .works li {
+        animation: step-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 28%;
+      }
+      /* The lists animate their items, so don't also animate the <ol> block. */
+      .purpose-list, .imperatives, .pillars, .path { animation: none; }
+      /* Dim sibling lines once they leave the top, keeping the eye on the
+         block currently in the reading zone. */
+      .imperatives li, .pillars li, .path li, .purpose-list li {
+        animation: step-rise linear both, step-dim linear both;
+        animation-timeline: view(), view();
+        animation-range: entry 0% cover 28%, exit 40% exit 100%;
+      }
+    }
+  }
+  @keyframes step-rise {
+    from { opacity: 0.12; transform: translateY(36px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes step-dim {
+    from { opacity: 1; }
+    to   { opacity: 0.35; }
+  }
 </style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = 'ontouchstart' in window && navigator.maxTouchPoints > 0;
+
+  const cosmos = document.querySelector<HTMLElement>('[data-cosmos]');
+  const sticky = cosmos?.querySelector<HTMLElement>('.cosmos-sticky');
+
+  if (cosmos && sticky && !reduce) {
+    cosmos.classList.add('scrolly');
+
+    if (isTouch) {
+      // Touch: map scroll position directly to progress.
+      let ticking = false;
+      const update = () => {
+        const total = cosmos.offsetHeight - window.innerHeight;
+        const scrolled = Math.min(Math.max(-cosmos.getBoundingClientRect().top, 0), Math.max(total, 1));
+        sticky.style.setProperty('--progress', (total > 0 ? scrolled / total : 0).toFixed(4));
+        ticking = false;
+      };
+      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      update();
+    } else {
+      // Desktop: cruise-control wheel capture. One scroll down starts the
+      // animation at a steady pace (~25s end-to-end); more scroll accelerates;
+      // scroll up stops; scroll up again reverses. The wheel is captured while
+      // the stage is pinned and released at the boundaries so the user can
+      // scroll past naturally.
+      cosmos.style.height = '200vh';
+
+      let progress = 0;
+      let velocity = 0;
+      const BASE = 1 / 1500;     // ~25s at 60fps
+      const MAX = BASE * 3;       // 3x = ~8s
+      const KICK = 0.00002;       // velocity per wheel unit
+      const SETTLE = 0.00005;     // velocity decay toward base per tick
+
+      const isActive = () => {
+        const r = cosmos.getBoundingClientRect();
+        return r.top <= 0 && r.bottom >= window.innerHeight;
+      };
+
+      // Always bound — check active inside, so there's no race between
+      // entering the section and the first wheel event.
+      const onWheel = (e: WheelEvent) => {
+        if (!isActive()) {
+          // Snap progress when out of view so re-entry starts from the right
+          // state (0 if below, 1 if above).
+          const r = cosmos.getBoundingClientRect();
+          if (r.bottom <= 0 && progress < 1) { progress = 1; sticky.style.setProperty('--progress', '1'); }
+          if (r.top >= window.innerHeight && progress > 0) { progress = 0; sticky.style.setProperty('--progress', '0'); }
+          return;
+        }
+
+        // At boundaries, release only in the "past" direction:
+        //   progress=1 + scroll down → release (continue past)
+        //   progress=0 + scroll up   → release (go back up)
+        //   progress=1 + scroll up   → capture (reverse animation)
+        //   progress=0 + scroll down → capture (start animation)
+        if (progress >= 0.999 && e.deltaY > 0) return;
+        if (progress <= 0.001 && e.deltaY < 0) return;
+
+        e.preventDefault();
+
+        if (e.deltaY > 0) {
+          // Forward: start from stop/reverse, or accelerate
+          if (velocity < BASE) velocity = BASE;
+          else velocity = Math.min(velocity + e.deltaY * KICK, MAX);
+        } else {
+          // Up: stop if going forward, then reverse on next scroll up
+          if (velocity > 0) velocity = 0;
+          else if (velocity === 0) velocity = -BASE;
+          else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK, -MAX);
+        }
+      };
+
+      window.addEventListener('wheel', onWheel, { passive: false });
+
+      let lastTime = 0;
+      const tick = (time: number) => {
+        if (!lastTime) lastTime = time;
+        const dt = Math.min((time - lastTime) / 16.67, 3);
+        lastTime = time;
+
+        // Velocity settles toward base speed (or -base). 0 stays 0 (stopped).
+        if (velocity > BASE) velocity = Math.max(velocity - SETTLE * dt, BASE);
+        else if (velocity < -BASE) velocity = Math.min(velocity + SETTLE * dt, -BASE);
+
+        // Integrate
+        if (velocity !== 0) {
+          progress += velocity * dt;
+          if (progress <= 0) { progress = 0; velocity = 0; }
+          if (progress >= 1) { progress = 1; velocity = 0; }
+          sticky.style.setProperty('--progress', progress.toFixed(4));
+        }
+
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+
+  // The section-by-section reveal is pure CSS (animation-timeline: view()) — no
+  // JS needed; it degrades to a fully-visible page where unsupported.
+</script>
