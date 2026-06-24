@@ -23,11 +23,15 @@
   border: 0;
 }
 
-/* Light surfaces print the banner in ink — no terminal phosphor glow. The dark
-   surfaces keep the essence-tinted, glowing banner (it reads as the prompt). */
+/* All surfaces except canopy print the banner in ink — light on dark, dark on
+   light — no terminal phosphor glow. Canopy (tui) is the exception: its banner
+   uses the wizard's green gradient, applied per-line in the Banner component. */
 html[data-surface='paper'] .banner,
 html[data-surface='scaffold'] .banner,
-html[data-surface='studio'] .banner {
+html[data-surface='studio'] .banner,
+html[data-surface='blueprint'] .banner,
+html[data-surface='vcs'] .banner,
+html[data-surface='observatory'] .banner {
   color: var(--ink);
   text-shadow: none;
   opacity: 1;
@@ -236,10 +240,6 @@ html[data-surface='blueprint'] body::before {
   background-image:
     linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px)),
     linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px));
-}
-html[data-surface='blueprint'] .banner {
-  color: var(--ink);
-  text-shadow: none;
 }
 html[data-surface='blueprint'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;

@@ -1,13 +1,31 @@
 ---
-// Renders an experiment's README ASCII banner in its essence color. The art
-// is each project's own signature — representative, and on-brand for the lab.
+// Renders an experiment's README ASCII banner. The art is each project's own
+// signature — representative, and on-brand for the lab. Most surfaces print it
+// in ink (dark on light, light on dark). Canopy is the exception: it uses the
+// same green gradient the CLI wizard prints line by line.
 import { banners } from '../lib/banners';
 interface Props { id: string; color: string; }
 const { id, color } = Astro.props;
 const art = banners[id];
+
+// Canopy's wizard gradient — 8 greens from light to dark, matching the CLI.
+const canopyGradient = [
+  '#9dcfa1', '#84be89', '#6cae71', '#559d5a',
+  '#3f8d44', '#2b7a30', '#1a6620', '#0c5212',
+];
+const useGradient = id === 'canopy';
+const lines = useGradient ? (art?.split('\n') ?? []) : [];
+const gradColor = (i: number) => {
+  const idx = Math.round((i / Math.max(1, lines.length - 1)) * (canopyGradient.length - 1));
+  return canopyGradient[Math.min(idx, canopyGradient.length - 1)];
+};
 ---
 {art && (
-  <pre class="banner" style={`--c: ${color}`} aria-hidden="true" translate="no"><code>{art}</code></pre>
+  <pre class="banner" class:list={{ gradient: useGradient }} style={useGradient ? undefined : `--c: ${color}`} aria-hidden="true" translate="no">
+    <code>{useGradient ? lines.map((line, i) => (
+      <span class="gline" style={`color: ${gradColor(i)}`}>{line}</span>
+    )) : art}</code>
+  </pre>
 )}
 
 <style>
@@ -27,4 +45,8 @@ const art = banners[id];
     scrollbar-width: none;
   }
   .banner::-webkit-scrollbar { display: none; }
+  /* Canopy's gradient — each line a different green, with a soft glow that
+     follows currentColor. The glow is subtle so the gradient still reads. */
+  .banner.gradient { color: var(--canopy); text-shadow: none; opacity: 1; }
+  .banner.gradient .gline { display: block; text-shadow: 0 0 14px color-mix(in srgb, currentColor 20%, transparent); }
 </style>
