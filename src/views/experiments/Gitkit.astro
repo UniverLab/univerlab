@@ -19,7 +19,7 @@ $ git push
     <div class="features">
       <span class="label">{e.features.kicker}</span>
       <ul>
-        {e.features.items.map((f) => <li set:html={f} />)}
+        {e.features.items.map((f) => <li><span class="chk" aria-hidden="true">✓</span><span set:html={f} /></li>)}
       </ul>
     </div>
   </section>
@@ -34,7 +34,8 @@ $ git push
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
   .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); min-height: 9rem; }
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
-  .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .features li { display: flex; gap: 0.7rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .chk { color: var(--gitkit); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
   .features :global(code) { color: var(--gitkit); font-size: 0.88em; }
 </style>
 

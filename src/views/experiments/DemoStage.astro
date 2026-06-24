@@ -38,7 +38,7 @@ $ demo export demo.toml --target html
     <div class="features">
       <span class="label">{e.pipeline.kicker}</span>
       <ul>
-        {e.pipeline.items.map((f) => <li set:html={f} />)}
+        {e.pipeline.items.map((f, i) => <li><span class="step">{String(i + 1).padStart(2, '0')}</span><span set:html={f} /></li>)}
       </ul>
     </div>
   </section>
@@ -67,7 +67,8 @@ $ demo export demo.toml --target html
   .scrubber .tc { color: #9a9082; }
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
-  .features li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .features li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .step { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; color: var(--demo-stage); flex: none; min-width: 1.5rem; }
   .features :global(code) { color: var(--demo-stage); font-size: 0.88em; }
 </style>
 

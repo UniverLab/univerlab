@@ -24,7 +24,7 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
   <section class="wrap section">
     <span class="label">{e.questions.kicker}</span>
     <ul class="qs">
-      {e.questions.items.map((q) => <li>{q}</li>)}
+      {e.questions.items.map((q, i) => <li><span class="qno">Q{i + 1}</span>{q}</li>)}
     </ul>
   </section>
 
@@ -64,7 +64,8 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
   .proposal:hover { background: var(--astro-denoise); color: var(--bg); }
   .section { padding-block: 1.5rem 2rem; }
   .qs { list-style: none; padding: 0; margin: 1.2rem 0 0; max-width: 40rem; }
-  .qs li { padding-block: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--astro-denoise) 20%, var(--line)); color: var(--ink-dim); }
+  .qs li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--astro-denoise) 20%, var(--line)); color: var(--ink-dim); }
+  .qno { font-family: var(--font-mono); font-size: 0.78rem; color: var(--astro-denoise); flex: none; }
 
   /* Affiliation / data-source logos — a slow band, shown as they ship (the
      brand-manual versions are already made for a dark background). */

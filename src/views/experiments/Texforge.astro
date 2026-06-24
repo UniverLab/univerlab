@@ -18,8 +18,8 @@ const tfInitial =
       <div class="colophon">
         <span class="label">{e.press.kicker}</span>
         <ul>
-          {e.press.items.map(([term, def]) => (
-            <li><strong>{term}</strong> — {def}</li>
+          {e.press.items.map(([term, def], i) => (
+            <li><span class="press-no">{String(i + 1).padStart(2, '0')}</span><strong>{term}</strong> — {def}</li>
           ))}
         </ul>
       </div>
@@ -111,8 +111,9 @@ const tfInitial =
   .fig-label { transition: opacity 0.26s ease; }
   .fig-label.fade { opacity: 0; }
   .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
-  .colophon li { padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; margin-right: 0.3rem; }
+  .colophon li { display: flex; align-items: baseline; gap: 0.8rem; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--proof); min-width: 1.5rem; }
+  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; }
   .sub { max-width: 46rem; }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
   .sub h3 a { color: var(--texforge); text-decoration: none; }
