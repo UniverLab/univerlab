@@ -87,6 +87,14 @@ export const es: Dict = {
         'Sistemas de conocimiento',
       ],
     },
+    closing: {
+      kicker: '04 — Por qué',
+      title: 'No es un laboratorio sobre el universo. Es un laboratorio del universo.',
+      body:
+        'UniverLab existe para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No software por el software, ni IA por la IA: herramientas que ayudan al universo a seguir comprendiéndose a sí mismo.',
+      manifesto: 'Leer el manifiesto →',
+      contribute: 'Colabora en GitHub ↗',
+    },
   },
   experimentsIndex: {
     kicker: 'Índice',
@@ -345,6 +353,42 @@ export const es: Dict = {
     note:
       'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
+  },
+  // Perspectiva cósmica — línea de tiempo profundo + dirección espacial, solo en
+  // el manifiesto. Cada cifra vive aquí una vez; nada se repite en el sitio.
+  cosmos: {
+    kicker: 'Perspectiva',
+    timelineTitle: 'Tiempo profundo',
+    timeline: [
+      ['13.8B', 'Universo', 'comienzan el espacio, el tiempo y la materia'],
+      ['4.54B', 'Tierra', 'un mundo se enfría junto a una estrella joven'],
+      ['540M', 'Vida compleja', 'la explosión cámbrica de formas de vida'],
+      ['300K', 'Homo sapiens', 'una mente que pregunta de dónde viene'],
+      ['80', 'Una vida humana', 'tu breve ventana para presenciarlo todo'],
+    ] as [string, string, string][],
+    you: 'Tú',
+    us: 'Nosotros',
+    youDetail: 'el universo, observándose',
+    addressTitle: 'Tu dirección cósmica',
+    addressIntro: 'Aleja la vista — cada paso, cien veces más ancho.',
+    // Beat final de la escena de apertura — nombra el asombro que venía
+    // construyendo y entrega a la filosofía ("Qué valoramos…").
+    wonder: 'Y una parte de él se asombra de existir.',
+    address: [
+      ['Tierra', 'r ≈ 6 400 km'],
+      ['Sistema Solar', 'Ø ≈ 9 Tm'],
+      ['Brazo de Orión', 'L ≈ 10 kly'],
+      ['Vía Láctea', 'Ø ≈ 100 kly'],
+      ['Grupo Local', 'Ø ≈ 10 Mly'],
+      ['Laniakea', 'Ø ≈ 520 Mly'],
+      ['Universo observable', 'Ø ≈ 93 Gly'],
+    ] as [string, string][],
+    // Easter egg del footer — la única metáfora de software del sitio. El click
+    // en la rama revela el último commit del universo (en inglés hardcodeado en
+    // el Footer, porque la salida de git no se localiza).
+    branch: 'branch: milky-way/main',
+    branchTooltip:
+      'La rama principal de la Vía Láctea: la línea de la historia cósmica en la que estamos.',
   },
   research: {
     kicker: 'Entre experimentos',

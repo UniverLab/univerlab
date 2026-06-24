@@ -85,6 +85,14 @@ export const en = {
         'Knowledge systems',
       ],
     },
+    closing: {
+      kicker: '04 — Why',
+      title: 'Not a lab about the universe. A lab of the universe.',
+      body:
+        'UniverLab exists to increase — even infinitesimally — the probability that knowledge and consciousness continue. Not software for its own sake, not AI for its own sake: tools that help the universe keep understanding itself.',
+      manifesto: 'Read the manifesto →',
+      contribute: 'Contribute on GitHub ↗',
+    },
   },
   experimentsIndex: {
     kicker: 'Index',
@@ -343,6 +351,42 @@ export const en = {
     note:
       'A living system: its axioms and derivations are written to be attacked, point by point. An idea that cannot be refuted cannot be held either.',
     why: 'This is why the laboratory exists.',
+  },
+  // Cosmic perspective — deep-time timeline + spatial address, shown only on the
+  // manifesto. Each figure lives here once; nothing repeats across the site.
+  cosmos: {
+    kicker: 'Perspective',
+    timelineTitle: 'Deep time',
+    timeline: [
+      ['13.8B', 'Universe', 'space, time and matter begin'],
+      ['4.54B', 'Earth', 'a world cools around a young star'],
+      ['540M', 'Complex life', 'the Cambrian burst of body plans'],
+      ['300K', 'Homo sapiens', 'a mind that asks where it came from'],
+      ['80', 'A human lifetime', 'your brief window to witness it all'],
+    ] as [string, string, string][],
+    you: 'You',
+    us: 'Us',
+    youDetail: 'the universe, observing itself',
+    addressTitle: 'Your cosmic address',
+    addressIntro: 'Zoom out — each step a hundred times wider.',
+    // Closing beat of the opening scene — names the wonder it has been building,
+    // and hands off to the philosophy ("What we value…").
+    wonder: 'And a part of it wonders that it exists.',
+    address: [
+      ['Earth', 'r ≈ 6 400 km'],
+      ['Solar System', 'Ø ≈ 9 Tm'],
+      ['Orion Arm', 'L ≈ 10 kly'],
+      ['Milky Way', 'Ø ≈ 100 kly'],
+      ['Local Group', 'Ø ≈ 10 Mly'],
+      ['Laniakea', 'Ø ≈ 520 Mly'],
+      ['Observable Universe', 'Ø ≈ 93 Gly'],
+    ] as [string, string][],
+    // Footer easter egg — the one software metaphor on the site. Clicking the
+    // branch reveals the universe's latest commit (hardcoded English in Footer,
+    // since git output is never localized).
+    branch: 'branch: milky-way/main',
+    branchTooltip:
+      'The main branch of the Milky Way — the line of cosmic history we are committed to.',
   },
   research: {
     kicker: 'Cross-experiment',
