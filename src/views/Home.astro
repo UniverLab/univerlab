@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Mark from '../components/Mark.astro';
-import NameGloss from '../components/NameGloss.astro';
 import { experiments } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
@@ -19,24 +17,12 @@ const webSite = {
 ---
 <BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" circadian structuredData={webSite}>
   <section class="wrap hero">
-    <div class="brandline">
-      <Mark size={76} />
-      <NameGloss senses={t.home.hero.senses} tagline={t.home.hero.tagline} />
-    </div>
     <h1>{t.home.hero.title}</h1>
     <p class="lede prose" set:html={t.home.hero.lede} />
     <div class="hero-cta">
       <a class="btn" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
       <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.nav.manifesto}</a>
     </div>
-  </section>
-
-  <hr class="rule" />
-
-  <!-- Lineage / soul -->
-  <section class="wrap section two-col">
-    <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
-    <div class="prose"><p set:html={t.home.lineage.body} /></div>
   </section>
 
   <hr class="rule" />
@@ -65,6 +51,14 @@ const webSite = {
         );
       })}
     </ul>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Lineage / origin: the genesis story, now after the experiments it produced -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
+    <div class="prose"><p set:html={t.home.lineage.body} /></div>
   </section>
 
   <hr class="rule" />
@@ -116,8 +110,7 @@ const webSite = {
   .hero { padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 8vh, 5rem); display: flex; flex-direction: column; gap: 1.6rem; align-items: flex-start; }
   /* Logo anchors the name gloss to its right (wordmark + a shared line that
      holds the slogan at rest, the sense gloss while open). */
-  .brandline { display: flex; align-items: center; gap: 1.5rem; }
-  .hero h1 { font-size: clamp(2.4rem, 6.5vw, 4.2rem); max-width: 20ch; line-height: 1.1; }
+  .hero h1 { font-size: clamp(2.4rem, 6.5vw, 4.2rem); max-width: 20ch; line-height: 1.1; text-wrap: balance; }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
 
