@@ -279,7 +279,7 @@ html[data-surface='observatory'] .koan {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   demo-stage · `studio` — a recording stage.
+   demostage · `studio` — a recording stage.
 
    A soft spotlight pools behind the hero; headings are a confident grotesque
    display. The warm-neutral backdrop lets the coral key light read.
@@ -428,7 +428,7 @@ html[data-surface='observatory'] .lede {
   margin-inline: auto;
 }
 
-/* demo-stage · studio — the hero is a framed screen with a REC tally, lit by
+/* demostage · studio — the hero is a framed screen with a REC tally, lit by
    the spotlight behind it. */
 html[data-surface='studio'] .hero {
   position: relative;

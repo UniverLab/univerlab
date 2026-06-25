@@ -279,13 +279,13 @@ export const es: Dict = {
         ],
       },
     },
-    'demo-stage': {
+    'demostage': {
       need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
       tagline:
-        'Demos as Code — graba, normaliza y exporta demos de terminal reproducibles.',
+        'Demos as Code — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, normaliza las imperfecciones humanas en un <code>demo.toml</code> limpio (la <strong>partitura</strong>) y lo compila a <strong>cast</strong>, html o gif — versionado y reejecutable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, normaliza las imperfecciones humanas en un <code>demo.toml</code> limpio (la <strong>partitura</strong>) y lo compila a gif o mp4 — versionado, reejecutable y diffable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
@@ -293,12 +293,11 @@ export const es: Dict = {
           'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
-        kicker: '4 comandos',
+        kicker: '3 comandos',
         items: [
-          '<code>record</code> — captura teclas, salida y tiempos en un macro crudo.',
-          '<code>normalize</code> — poda erratas, humaniza el tipeo y recorta el idle en una partitura limpia.',
-          '<code>check</code> — valida la partitura de forma estática antes de publicar.',
-          '<code>export</code> — compila a cast, html o gif (mp4 y browser necesitan ffmpeg/chromium).',
+          '<code>capture</code> — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un <code>.rec</code> fiel.',
+          '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
+          '<code>export</code> — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
         ],
       },
     },

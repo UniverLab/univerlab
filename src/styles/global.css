@@ -21,7 +21,7 @@
   --ghscaff: #7ee081;
   --cadspec: #6ec6e6;
   --astro-denoise: #a78bfa;
-  --demo-stage: #ef8354;
+  --demostage: #ef8354;
 
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
   --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -97,7 +97,7 @@ html[data-surface='observatory'] {
   --line: #1e1b2c;
 }
 
-/* demo-stage — recording studio: a bright warm-white set; the black terminal
+/* demostage — recording studio: a bright warm-white set; the black terminal
    monitor and the coral REC carry the contrast. */
 html[data-surface='studio'] {
   --bg: #f6f3ee;

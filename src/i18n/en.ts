@@ -277,13 +277,13 @@ export const en = {
         ],
       },
     },
-    'demo-stage': {
+    'demostage': {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
-        'Demos as Code — record, normalize and export reproducible terminal demos.',
+        'Demos as Code — capture, record and export reproducible terminal demos.',
       koan: '// the demo is the source',
       lede:
-        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to <strong>cast</strong>, html or gif — version-controlled and re-runnable.',
+        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born building this very page.',
@@ -291,12 +291,11 @@ export const en = {
           'Building this landing, every experiment needed a demo — and every tool (asciinema, vhs, OBS, recording by hand) came out brittle or ugly, with a fresh re-record for each typo. So the demo stopped being a video and became a file: events you can prune, pace and replay. DemoStage records the rest of the lab — including the page you are reading.',
       },
       pipeline: {
-        kicker: '4 commands',
+        kicker: '3 commands',
         items: [
-          '<code>record</code> — capture keystrokes, output and timing into a raw macro.',
-          '<code>normalize</code> — prune typos, humanize typing, trim idle into a clean score.',
-          '<code>check</code> — validate the score statically before it ships.',
-          '<code>export</code> — compile to cast, html or gif (mp4 and browser need ffmpeg/chromium).',
+          '<code>capture</code> — live capture: record the session, auto-normalize into a clean score and faithful <code>.rec</code>.',
+          '<code>record</code> — re-execute <code>demo.toml</code> cleanly, producing a humanized recording.',
+          '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
         ],
       },
     },

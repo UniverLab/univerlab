@@ -21,5 +21,5 @@ export const collections = {
   // NOTE: collection key renamed to cadspec; path still points at the real repo
   // dir `cadforge` until the GitHub repo is renamed.
   'docs-cadspec': docsCollection('../cadforge/docs'),
-  'docs-demo-stage': docsCollection('../demo-stage/docs'),
+  'docs-demostage': docsCollection('../demostage/docs'),
 };
