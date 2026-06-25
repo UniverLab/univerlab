@@ -410,7 +410,7 @@ export const en = {
       role: 'Founder',
       name: 'Jheison Martinez',
       body:
-        'Electronic engineer and tech lead, now studying a master’s in AI. A father drawn to biology, astronomy and consciousness, he reads each organism as the universe at a smaller scale, and builds UniverLab believing every conscious being owes something to the continuity of life and knowledge.',
+        'Electronic engineer and tech lead, now studying a master’s in AI. A father, long fascinated by biology and astronomy, who builds the open tools and experiments behind UniverLab.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {

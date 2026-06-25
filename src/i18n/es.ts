@@ -412,7 +412,7 @@ export const es: Dict = {
       role: 'Fundador',
       name: 'Jheison Martinez',
       body:
-        'Ingeniero electrónico y líder técnico, ahora cursando una maestría en IA. Padre, apasionado por la biología, la astronomía y la conciencia, lee cada organismo como el universo a menor escala, y construye UniverLab con la convicción de que todo ser consciente le debe algo a la continuidad de la vida y el conocimiento.',
+        'Ingeniero electrónico y líder técnico, ahora cursando una maestría en IA. Padre, fascinado desde siempre por la biología y la astronomía, que construye las herramientas y experimentos abiertos detrás de UniverLab.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {
