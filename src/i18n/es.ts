@@ -412,7 +412,7 @@ export const es: Dict = {
       role: 'Fundador',
       name: 'Jheison Martinez',
       body:
-        'Ingeniero electrónico y líder técnico — seis años construyendo sistemas reactivos para fintech y transporte — y ahora de lleno en una maestría en IA. De día entrega backends y CLIs; aquí ese oficio se vuelca hacia afuera en herramientas abiertas, flujos científicos y sistemas de agentes, casi todo en Rust. Padre y apasionado por la biología y el tiempo profundo, lee cada organismo como el universo a escala, y construye con la convicción de que todo ser consciente le debe algo a la continuidad de la vida y el conocimiento.',
+        'Ingeniero electrónico y líder técnico, ahora cursando una maestría en IA. Padre, apasionado por la biología, la astronomía y la conciencia, lee cada organismo como el universo a menor escala, y construye UniverLab con la convicción de que todo ser consciente le debe algo a la continuidad de la vida y el conocimiento.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {
