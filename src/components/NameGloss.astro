@@ -71,6 +71,7 @@ const first = senses[0];
       }, 220);
     };
 
+    let timer = 0;
     const tick = () => {
       if (!open) {
         open = true;
@@ -78,27 +79,48 @@ const first = senses[0];
         suffix.textContent = senses[i].suffix; // swap while collapsed
         suffix.style.width = suffix.scrollWidth + GAP + 'px'; // LAB slides right
         swapSub(nextGloss(i), false); // next phrase from this sense's shuffle bag
-        setTimeout(tick, OPEN_MS);
+        timer = window.setTimeout(tick, OPEN_MS);
       } else {
         open = false;
         el.classList.remove('open');
         suffix.style.width = '0px'; // LAB slides back, word closes
         swapSub(tagline, true);
         i = (i + 1) % senses.length;
-        setTimeout(tick, closedMs());
+        timer = window.setTimeout(tick, closedMs());
       }
     };
-    setTimeout(tick, closedMs()); // start at rest, then open
+
+    // Only cycle while the wordmark is on-screen: pause and reset to rest when
+    // it scrolls out of view, so an off-screen header costs nothing.
+    let running = false;
+    const start = () => { if (running) return; running = true; timer = window.setTimeout(tick, closedMs()); };
+    const stop = () => {
+      running = false;
+      clearTimeout(timer);
+      open = false;
+      el.classList.remove('open');
+      suffix.style.width = '0px';
+      subline.textContent = tagline;
+      subline.classList.add('slogan');
+      subline.classList.remove('fade');
+    };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) start(); else stop();
+      }, { threshold: 0 }).observe(el);
+    } else {
+      start();
+    }
   });
 </script>
 
 <style>
-  .namegloss { display: flex; flex-direction: column; gap: 0.25rem; }
+  .namegloss { display: flex; flex-direction: column; gap: var(--ng-gap, 0.25rem); }
   .wordmark {
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.28em;
-    font-size: 1.05rem;
+    font-size: var(--ng-word, 1.05rem);
     line-height: 1.1;
     color: var(--ink);
     white-space: nowrap;
@@ -111,7 +133,7 @@ const first = senses[0];
     vertical-align: bottom;
     width: 0;
     opacity: 0;
-    color: var(--accent);
+    color: var(--ng-suffix, var(--accent));
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
   }
   .open .suffix { opacity: 1; }
@@ -120,17 +142,17 @@ const first = senses[0];
   /* Fixed line box (absolute, not em) so swapping the mono slogan for the
      serif gloss never changes the block height — otherwise the wordmark jumps. */
   .subline {
-    min-height: 1.5rem;
-    line-height: 1.5rem;
+    min-height: var(--ng-line, 1.5rem);
+    line-height: var(--ng-line, 1.5rem);
     color: var(--ink-dim);
     transition: opacity 0.22s ease;
   }
   .subline.fade { opacity: 0; }
-  .subline:not(.slogan) { font-family: var(--font-serif); font-style: italic; font-size: 1rem; }
+  .subline:not(.slogan) { font-family: var(--font-serif); font-style: italic; font-size: var(--ng-gloss, 1rem); }
   .subline.slogan {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
-    letter-spacing: 0.34em;
+    font-size: var(--ng-slogan, 0.82rem);
+    letter-spacing: 0.2em;
     text-transform: uppercase;
   }
 </style>

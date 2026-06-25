@@ -1,5 +1,6 @@
 ---
 import Mark from './Mark.astro';
+import NameGloss from './NameGloss.astro';
 import {
   getLang,
   useTranslations,
@@ -42,8 +43,8 @@ function isActive(href: string, current: string): boolean {
 <header>
   <div class="wrap bar">
     <a href={localizePath('/', lang)} class="home" aria-label="UniverLab">
-      <Mark size={26} />
-      <span class="word" translate="no">UNIVERLAB</span>
+      <Mark size={42} />
+      <NameGloss senses={t.home.hero.senses} tagline={t.home.hero.tagline} />
     </a>
     <button
       type="button"
@@ -245,8 +246,8 @@ function isActive(href: string, current: string): boolean {
     // \u2026") rather than news. born/died are sentence prefixes folded into the
     // fact itself so the kicker stays a neutral anniversary line.
     var I18N = {
-      en: { anniv: 'On a day like today', inYear: 'In', born: 'Birth of ', died: 'Death of ', sun: 'Sun \u00b7 fact', moon: 'Moon \u00b7 fact', link: 'Read on Wikipedia \u2192', mission: 'Earth Mission', sol: 'Sol', orbit: 'Orbit' },
-      es: { anniv: 'Un d\u00eda como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sun: 'Sol \u00b7 dato', moon: 'Luna \u00b7 dato', link: 'Ver en Wikipedia \u2192', mission: 'Misi\u00f3n Tierra', sol: 'Sol', orbit: '\u00d3rbita' },
+      en: { anniv: 'On a day like today', inYear: 'In', born: 'Birth of ', died: 'Death of ', sun: 'Sun \u00b7 fact', moon: 'Moon \u00b7 fact', link: 'Read on Wikipedia \u2192', sol: 'Sol', orbit: 'Orbit' },
+      es: { anniv: 'Un d\u00eda como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sun: 'Sol \u00b7 dato', moon: 'Luna \u00b7 dato', link: 'Ver en Wikipedia \u2192', sol: 'Sol', orbit: '\u00d3rbita' },
     };
 
     function showPopup(data) {
@@ -406,7 +407,8 @@ function isActive(href: string, current: string): boolean {
       var dayOfYear = Math.floor((now - start) / 86400000);
       var total = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
       var pct = (dayOfYear / total * 100).toFixed(1);
-      return i.mission + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
+      // Mission codename: identical in every locale, stamped with the year.
+      return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
     }
 
     // Show order: events first (real history), each in a random order with no
@@ -471,8 +473,14 @@ function isActive(href: string, current: string): boolean {
     gap: 1rem;
     padding-block: 1.1rem;
   }
-  .home { display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none; }
-  .word { font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.32em; }
+  /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
+  .home {
+    display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none;
+    --ng-word: 1rem; --ng-line: 1rem; --ng-slogan: 0.66rem; --ng-gloss: 0.86rem; --ng-gap: 0.02rem;
+    /* The cycled suffix in a true gold (not the lemony circadian accent), so it
+       reads on both light and dark headers. */
+    --ng-suffix: #c9a227;
+  }
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: var(--ink-dim); }
   nav a:hover, nav a.active { color: var(--ink); }
