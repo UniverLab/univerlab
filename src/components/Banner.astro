@@ -3,10 +3,14 @@
 // signature — representative, and on-brand for the lab. Most surfaces print it
 // in ink (dark on light, light on dark). Canopy is the exception: it uses the
 // same green gradient the CLI wizard prints line by line.
+//
+// Metrics: banners are drawn for DejaVu Sans Mono (same font embedded in the
+// CLIs). IBM Plex Mono — the site mono — has different block-glyph widths, so
+// descenders (g, p, y, t, f) look shifted if we reuse --font-mono here.
 import { banners } from '../lib/banners';
 interface Props { id: string; color: string; }
 const { id, color } = Astro.props;
-const art = banners[id];
+const art = banners[id]?.replace(/^\r?\n/, '');
 
 // Canopy's wizard gradient — 8 greens from light to dark, matching the CLI.
 const canopyGradient = [
@@ -14,39 +18,55 @@ const canopyGradient = [
   '#3f8d44', '#2b7a30', '#1a6620', '#0c5212',
 ];
 const useGradient = id === 'canopy';
-const lines = useGradient ? (art?.split('\n') ?? []) : [];
+const lines = art?.split('\n') ?? [];
 const gradColor = (i: number) => {
   const idx = Math.round((i / Math.max(1, lines.length - 1)) * (canopyGradient.length - 1));
   return canopyGradient[Math.min(idx, canopyGradient.length - 1)];
 };
 ---
 {art && (
-  <pre class="banner" class:list={{ gradient: useGradient }} style={useGradient ? undefined : `--c: ${color}`} aria-hidden="true" translate="no">
-    <code>{useGradient ? lines.map((line, i) => (
-      <span class="gline" style={`color: ${gradColor(i)}`}>{line}</span>
-    )) : art}</code>
-  </pre>
+  useGradient ? (
+    <pre class="banner gradient" aria-hidden="true" translate="no"><code>{lines.map((line, i) => (
+        <span class="gline" style={`color: ${gradColor(i)}`}>{line}</span>
+      ))}</code></pre>
+  ) : (
+    <pre class="banner" style={`--c: ${color}`} aria-hidden="true" translate="no"><code>{art}</code></pre>
+  )
 )}
 
 <style>
+  @font-face {
+    font-family: 'DejaVu Sans Mono';
+    src: url('/fonts/DejaVuSansMono.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
   .banner {
     margin: 0;
     overflow-x: auto;
     color: var(--c);
-    /* Block art (█ ░) needs a font whose blocks fill the cell edge-to-edge and a
-       line-height of 1 so rows touch — webfonts like Plex Mono leave seams, so
-       this stays on system monospace deliberately, not var(--font-mono). */
-    font-family: ui-monospace, 'DejaVu Sans Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
-    font-size: clamp(0.3rem, 1.15vw, 0.62rem);
+    font-family: 'DejaVu Sans Mono', ui-monospace, monospace;
+    font-size: clamp(5px, 1.15vw, 10px);
     line-height: 1;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0;
+    letter-spacing: 0;
+    word-spacing: 0;
+    text-rendering: geometricPrecision;
     opacity: 0.92;
-    /* let the glyph density carry the color without a hard block */
     text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
     scrollbar-width: none;
   }
   .banner::-webkit-scrollbar { display: none; }
-  /* Canopy's gradient — each line a different green, with a soft glow that
-     follows currentColor. The glow is subtle so the gradient still reads. */
+  .banner code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-variant-numeric: normal;
+  }
   .banner.gradient { color: var(--canopy); text-shadow: none; opacity: 1; }
   .banner.gradient .gline { display: block; text-shadow: 0 0 14px color-mix(in srgb, currentColor 20%, transparent); }
 </style>
