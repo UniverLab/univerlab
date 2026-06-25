@@ -17,21 +17,26 @@ interface Props {
   caption: string;
 }
 const { src, poster, essence, label, caption } = Astro.props;
+const isGif = src.endsWith('.gif');
 ---
 <figure class="wrap demo-fig" id="demo" style={`--essence: ${essence}`}>
   <div class="demo-frame">
-    <video
-      class="demo-video"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="metadata"
-      poster={poster}
-      aria-label={caption}
-    >
-      <source src={src} type="video/mp4" />
-    </video>
+    {isGif ? (
+      <img class="demo-video" src={src} alt={caption} loading="lazy" />
+    ) : (
+      <video
+        class="demo-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster={poster}
+        aria-label={caption}
+      >
+        <source src={src} type="video/mp4" />
+      </video>
+    )}
   </div>
   <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
 </figure>

@@ -27,3 +27,7 @@ dist/
 .astro/
 npm-debug.log*
 *:Zone.Identifier
+
+# Demo media — large binary files, managed outside git
+public/demos/*.mp4
+public/demos/*.gif
