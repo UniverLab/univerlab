@@ -18,7 +18,7 @@ const rings = c.address.flatMap((_, i) => {
   return list;
 });
 ---
-<BaseLayout title={`${m.title} — UniverLab`} bg="cosmic" circadian>
+<BaseLayout title={`${m.title} — UniverLab`} description={`${m.title} — ${m.sub}.`} bg="cosmic" circadian>
   <section class="wrap opening">
     <span class="label">{m.kicker}</span>
     <h1>{m.title}</h1>
@@ -26,28 +26,37 @@ const rings = c.address.flatMap((_, i) => {
     <blockquote class="prose">{m.epigraph}</blockquote>
   </section>
 
-  <!-- The opening perspective. Before any argument, the scroll makes the wonder
-       visceral: 13.8B years fall past, the horizon zooms out to the whole
-       observable universe, and it all collapses back onto a single observer —
-       you — that wonders it exists. This hands straight into "What we value". -->
+  <hr class="rule" />
+
+  <section class="wrap section purpose-section">
+    <span class="label">{m.purposeTitle}</span>
+    <p class="purpose-body">{m.purposeBody}</p>
+    <ol class="purpose-list">
+      {m.purpose.map((p) => <li>{p}</li>)}
+    </ol>
+  </section>
+
+  <!-- The cosmic perspective, now placed AFTER the manifesto's first argument:
+       the scroll makes the wonder visceral — 13.8B years fall past, the horizon
+       zooms out to the whole observable universe, and it collapses back onto a
+       single observer who wonders it exists. It hands into the imperatives. -->
   <section class="cosmos-section">
     <div class="wrap cosmos-head">
       <span class="label">{c.kicker}</span>
     </div>
     <div class="cosmos-scrolly" data-cosmos>
-      <div class="cosmos-sticky" style={`--levels:${c.address.length}`}>
+      <div class="cosmos-sticky" style={`--levels:${c.address.length}; --tsteps:${c.timescales.length}`}>
         <div class="cosmos-stage">
-          <!-- Phase 1: deep-time timeline (centered text, central axis) -->
+          <!-- Phase 1: deep time as a decompressing scale bar. Scales stack
+               largest-first; one is in focus (tall, lit) while the rest are
+               hairlines. The focus descends as --tz travels 0 → N. -->
           <div class="tl-layer">
             <h3 class="tl-title cosmos-h">{c.timelineTitle}</h3>
-            <span class="tl-axis" aria-hidden="true"></span>
-            <span class="tl-fill" aria-hidden="true"></span>
-            <ol class="tl-events">
-              {c.timeline.map(([fig, name, detail], idx) => (
-                <li class="tl-ev" style={`--at:${(idx / c.timeline.length).toFixed(3)}`}>
-                  <span class="tl-fig mono">{fig}</span>
-                  <span class="tl-name">{name}</span>
-                  <span class="tl-detail">{detail}</span>
+            <ol class="tl-strata">
+              {c.timescales.map(([span, name], idx) => (
+                <li class="tl-stratum" style={`--i:${idx}`}>
+                  <span class="tl-span mono">{span}</span>
+                  <span class="tl-scale">{name}</span>
                 </li>
               ))}
             </ol>
@@ -86,6 +95,17 @@ const rings = c.address.flatMap((_, i) => {
               </li>
             ))}
           </ol>
+          <!-- Scale gauge — a dimension line drawn across whichever ring is at
+               full circle, labelled with that horizon's true size. It is the
+               spatial echo of the deep-time numbers: a measure on the circle. -->
+          <ol class="zo-gauges">
+            {c.address.map(([name, scale], i) => (
+              <li class="zo-gauge" style={`--i:${i}`}>
+                <span class="zo-gauge-bar" aria-hidden="true"></span>
+                <span class="zo-gauge-val mono">{scale}</span>
+              </li>
+            ))}
+          </ol>
         </div>
         <!-- Accumulating address: an inverted pyramid that builds as you zoom
              out. Each horizon appears big when its ring reaches full circle,
@@ -106,16 +126,6 @@ const rings = c.address.flatMap((_, i) => {
         </ol>
       </div>
     </div>
-  </section>
-
-  <hr class="rule" />
-
-  <section class="wrap section purpose-section">
-    <span class="label">{m.purposeTitle}</span>
-    <p class="purpose-body">{m.purposeBody}</p>
-    <ol class="purpose-list">
-      {m.purpose.map((p) => <li>{p}</li>)}
-    </ol>
   </section>
 
   <hr class="rule" />
@@ -279,10 +289,10 @@ const rings = c.address.flatMap((_, i) => {
      point slides to center and becomes the observer of a zoom-out through
      cosmic scales — Earth to the observable universe. One --progress (0→1)
      drives the whole sequence:
-       0 → 0.30   timeline (comet falls, events light up)
-       0.30 → 0.34  dot slides to center
-       0.34 → 0.40  pause — "You" appears, holds, crossfades to "Us"
-       0.40 → 1.0   zoom-out (rings expand past the observer) */
+       0 → 0.40   deep-time scale bar decompresses
+       0.40 → 0.44  dot slides to center
+       0.44 → 0.50  pause — "You" appears, holds, crossfades to "Us"
+       0.50 → 1.0   zoom-out (rings expand past the observer) */
   .cosmos-section { padding-block: 3rem; }
   .cosmos-h {
     font-family: var(--font-serif); font-style: italic; font-weight: 500;
@@ -292,19 +302,26 @@ const rings = c.address.flatMap((_, i) => {
   .cosmos-sticky {
     --progress: 0;
     --p: var(--progress);
-    --dt: clamp(0, var(--p) / 0.30, 1);
-    --tx: clamp(0, (var(--p) - 0.30) / 0.04, 1);
-    --hold: clamp(0, (var(--p) - 0.34) / 0.06, 1);
-    --morph: clamp(0, (var(--p) - 0.37) / 0.03, 1);
-    --zm: clamp(0, (var(--p) - 0.40) / 0.60, 1);
-    --tl-fade: clamp(1 - (var(--p) - 0.26) / 0.08, 0, 1);
-    --zo-fade: clamp((var(--p) - 0.37) / 0.03, 0, 1);
-    --zoom: calc(var(--zm) * (var(--levels) - 0.5));
+    --dt: clamp(0, var(--p) / 0.40, 1);
+    /* Deep-time focus: travels 0 → N across the scale bar, easing IN hard — the
+       vast scales crawl (the universe really lingers), then it quickens sharply
+       as time shrinks toward a human life. Big = slow, small = fast. */
+    --tz: calc(var(--tsteps, 6) * var(--dt) * (0.15 + 0.85 * var(--dt)));
+    --tx: clamp(0, (var(--p) - 0.40) / 0.04, 1);
+    --hold: clamp(0, (var(--p) - 0.44) / 0.06, 1);
+    --morph: clamp(0, (var(--p) - 0.47) / 0.03, 1);
+    --zm: clamp(0, (var(--p) - 0.50) / 0.50, 1);
+    --tl-fade: clamp(1 - (var(--p) - 0.36) / 0.08, 0, 1);
+    --zo-fade: clamp((var(--p) - 0.47) / 0.03, 0, 1);
+    /* Spatial zoom mirrors deep time, easing OUT — quick through the small
+       scales (Earth, Solar System) and slowing as the horizons grow toward the
+       observable universe. Same law as time: big = slow, small = fast. */
+    --zoom: calc((var(--levels) - 0.5) * var(--zm) * (1.6 - 0.6 * var(--zm)));
     --wonder: clamp(0, (var(--p) - 0.95) / 0.04, 1);
   }
   /* Default height for touch (scroll-position mapping). JS overrides to a
      short section on desktop where wheel momentum drives the animation. */
-  .cosmos-scrolly.scrolly { height: 500vh; margin-top: 0; }
+  .cosmos-scrolly.scrolly { height: 600vh; margin-top: 0; }
   .cosmos-scrolly.scrolly .cosmos-sticky {
     position: sticky; top: 0; height: 100vh;
     display: flex; align-items: center; justify-content: center;
@@ -327,49 +344,49 @@ const rings = c.address.flatMap((_, i) => {
     pointer-events: none; z-index: 0;
   }
 
-  /* Phase 1: deep-time timeline — centered text, central axis. */
+  /* Phase 1: deep time as a decompressing scale bar. A vertical stack of time
+     scales, the largest (the age of the universe) at the top. Each band's
+     height is proportional to how close it is to the focus --tz: the focused
+     band swells open ("decompresses") and is lit; the rest are squeezed to
+     hairlines. As --tz descends 0 → N the open fold travels down the bar, so
+     ever-finer scales of time unfold out of the compressed stack — the
+     immensity stays crushed above and below the one scale you are reading. */
   .tl-layer { position: absolute; inset: 0; opacity: var(--tl-fade); }
   .tl-title { position: absolute; top: 0; left: 0; right: 0; }
-  .tl-axis, .tl-fill {
-    position: absolute; left: 50%; width: 2px; transform: translateX(-50%);
+  .tl-strata {
+    position: absolute; top: 16%; bottom: 6%; left: 50%;
+    transform: translateX(-50%);
+    width: min(38rem, 94%);
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column;
   }
-  .tl-axis { top: 12%; bottom: 12%; background: var(--line); }
-  .tl-fill {
-    top: 12%; height: calc(var(--dt) * 76%);
-    background: linear-gradient(to bottom,
-      color-mix(in srgb, var(--accent) 10%, transparent), var(--accent));
+  .tl-stratum {
+    --d: calc(var(--tz) - var(--i));
+    --ad: max(var(--d), calc(-1 * var(--d)));
+    --f: clamp(0, 1 - var(--ad), 1);
+    flex: calc(1 / (1 + var(--ad) * var(--ad) * 3)) 1 0;
+    position: relative; min-height: 1px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: center; gap: 0.1rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--accent) calc(var(--f) * 60%), var(--line));
   }
-  .tl-events { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
-  .tl-ev {
-    position: absolute; left: 0; right: 0;
-    top: calc(12% + var(--at) * 76%);
-    transform: translateY(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 0.1rem;
-    opacity: calc(0.14 + 0.86 * clamp(0, (var(--dt) - var(--at) + 0.04) * 18, 1));
-    transition: opacity 0.25s linear;
+  .tl-stratum:first-child { border-top: 0; }
+  .tl-span {
+    font-family: var(--font-mono);
+    font-size: calc(0.82rem + var(--f) * var(--f) * 1.15rem);
+    line-height: 1.1; letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--accent) calc(var(--f) * 100%), var(--ink-faint));
+    opacity: clamp(0, var(--f) * 1.5, 1);
+    white-space: nowrap;
   }
-  .tl-ev::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--bg); border: 1px solid var(--ink-faint);
-    margin-bottom: 0.18rem;
-  }
-  .tl-fig {
-    font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-faint);
-    background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
-  }
-  .tl-name {
-    font-family: var(--font-serif); color: var(--ink-dim); font-size: 1rem;
-    line-height: 1.2; background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
-  }
-  .tl-detail {
+  .tl-scale {
     font-family: var(--font-serif); font-style: italic;
-    font-size: 0.8rem; color: var(--ink-faint); line-height: 1.35;
-    background: var(--bg); padding: 0 0.6rem; position: relative; z-index: 1;
-    opacity: clamp(0, (var(--dt) - var(--at)) * 12, 1);
-    transform: translateY(calc((1 - clamp(0, (var(--dt) - var(--at)) * 12, 1)) * 4px));
+    font-size: calc(0.82rem + var(--f) * 0.45rem);
+    color: var(--ink-dim);
+    opacity: clamp(0, (var(--f) - 0.12) * 1.7, 1);
+    white-space: nowrap;
   }
-  .tl-you::before { display: none; }
-  .tl-you .tl-name { font-style: italic; color: var(--ink); }
 
   /* The observer — the single dot that falls as the comet through the
      timeline, then slides to center, then shrinks as horizons expand. */
@@ -463,7 +480,10 @@ const rings = c.address.flatMap((_, i) => {
     text-align: center; pointer-events: none;
     opacity: var(--zo-fade);
   }
-  .address-intro { margin: 0.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; }
+  .address-intro { margin: 0; color: var(--ink-faint); font-size: 0.9rem; letter-spacing: 0.02em; }
+  /* In the animation the zoom-out header is a single quiet line ("Zoom out") —
+     the "cosmic address" title only shows in the static (no-JS) fallback. */
+  .cosmos-scrolly.scrolly .zo-title .cosmos-h { display: none; }
   .zo-labels {
     position: absolute; bottom: 8%; left: 0; right: 0;
     text-align: center; pointer-events: none;
@@ -537,6 +557,43 @@ const rings = c.address.flatMap((_, i) => {
      of what the size curve alone would give it. */
   .zo-stack-us { --scale: 0.6; opacity: var(--vis); }
 
+  /* Scale gauge — each horizon's true diameter, drawn as a dimension line that
+     appears only while its ring is at full circle (g ≈ 0.5), then fades as the
+     ring shrinks past. The spatial counterpart to the deep-time numbers. */
+  .zo-gauges { position: absolute; inset: 0; pointer-events: none; z-index: 2; list-style: none; margin: 0; padding: 0; }
+  .zo-gauge {
+    --g: calc(var(--zoom) - var(--i));
+    /* Same diameter law as the ring it measures, so the cota grows and shrinks
+       locked to its circle. */
+    --gc: clamp(0, var(--g), 1);
+    --rise: clamp(0, calc(var(--gc) * 2), 1);
+    --fall: clamp(0, calc((var(--gc) - 0.5) * 2), 1);
+    --ir: calc(1 - var(--rise));
+    --rs: calc(1 + 11 * var(--ir) * var(--ir) - 0.97 * var(--fall) * var(--fall));
+    /* Lasts from just before full circle through the whole collapse. */
+    --vis: clamp(0, min(calc((var(--g) - 0.4) / 0.12), calc((0.97 - var(--g)) / 0.14)), 1);
+    position: absolute; top: 50%; left: 50%;
+    width: calc(88% * var(--rs)); transform: translate(-50%, -50%);
+    opacity: calc(var(--vis) * var(--zo-fade) * (1 - var(--wonder)));
+  }
+  .zo-gauge-bar {
+    display: block; height: 1px; position: relative;
+    background: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .zo-gauge-bar::before, .zo-gauge-bar::after {
+    content: ''; position: absolute; top: -3px; width: 1px; height: 7px;
+    background: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .zo-gauge-bar::before { left: 0; }
+  .zo-gauge-bar::after { right: 0; }
+  .zo-gauge-val {
+    position: absolute; left: 50%; bottom: calc(100% + 0.35rem);
+    transform: translateX(-50%);
+    font-size: 0.66rem; letter-spacing: 0.06em; white-space: nowrap;
+    color: color-mix(in srgb, var(--accent) 80%, var(--ink-dim));
+    background: var(--bg); padding: 0 0.5rem;
+  }
+
   /* Closing beat — the wonder line fades in at the very end, centred inside the
       final horizon, naming what the scene has been building toward. */
   .scene-wonder {
@@ -555,19 +612,19 @@ const rings = c.address.flatMap((_, i) => {
   .cosmos-scrolly:not(.scrolly) .cosmos-stage { height: auto; min-height: 0; }
   .cosmos-scrolly:not(.scrolly) .tl-layer,
   .cosmos-scrolly:not(.scrolly) .zo-layer { position: static; opacity: 1; }
-  .cosmos-scrolly:not(.scrolly) .tl-title { position: static; margin-bottom: 1.6rem; opacity: 1; }
-  .cosmos-scrolly:not(.scrolly) .tl-axis,
-  .cosmos-scrolly:not(.scrolly) .tl-fill { display: none; }
-  .cosmos-scrolly:not(.scrolly) .tl-events { position: static; }
-  .cosmos-scrolly:not(.scrolly) .tl-ev {
-    position: static; transform: none; opacity: 1;
-    margin-bottom: 1.2rem;
+  .cosmos-scrolly:not(.scrolly) .tl-title { position: static; margin-bottom: 1.4rem; opacity: 1; }
+  .cosmos-scrolly:not(.scrolly) .tl-strata {
+    position: static; transform: none; width: auto; display: block;
   }
-  .cosmos-scrolly:not(.scrolly) .tl-ev::before { display: none; }
-  .cosmos-scrolly:not(.scrolly) .tl-fig,
-  .cosmos-scrolly:not(.scrolly) .tl-name,
-  .cosmos-scrolly:not(.scrolly) .tl-detail { background: none; padding: 0; }
-  .cosmos-scrolly:not(.scrolly) .tl-detail { opacity: 1; transform: none; }
+  .cosmos-scrolly:not(.scrolly) .tl-stratum {
+    flex: none; overflow: visible;
+    flex-direction: row; justify-content: space-between; align-items: baseline;
+    gap: 1rem; padding-block: 0.6rem;
+    border-top: 1px solid var(--line);
+  }
+  .cosmos-scrolly:not(.scrolly) .tl-stratum:first-child { border-top: 1px solid var(--line); }
+  .cosmos-scrolly:not(.scrolly) .tl-span { font-size: 0.92rem; color: var(--accent); opacity: 1; }
+  .cosmos-scrolly:not(.scrolly) .tl-scale { font-size: 0.92rem; opacity: 1; }
   .cosmos-scrolly:not(.scrolly) .observer { display: none; }
   .cosmos-scrolly:not(.scrolly) .you-us {
     position: static; transform: none; opacity: 1;
@@ -587,6 +644,7 @@ const rings = c.address.flatMap((_, i) => {
     opacity: 1;
   }
   .cosmos-scrolly:not(.scrolly) .zo-ring.zo-ghost { display: none; }
+  .cosmos-scrolly:not(.scrolly) .zo-gauges { display: none; }
   .cosmos-scrolly:not(.scrolly) .zo-title { position: static; opacity: 1; margin-bottom: 1rem; }
   .cosmos-scrolly:not(.scrolly) .zo-labels {
     position: static; opacity: 1; list-style: none; margin: 0; padding: 0; max-width: 30rem;
@@ -688,18 +746,21 @@ const rings = c.address.flatMap((_, i) => {
       update();
     } else {
       // Desktop: cruise-control wheel capture. One scroll down starts the
-      // animation at a steady pace (~25s end-to-end); more scroll accelerates;
-      // scroll up stops; scroll up again reverses. The wheel is captured while
-      // the stage is pinned and released at the boundaries so the user can
-      // scroll past naturally.
+      // animation (~25s end-to-end); more scroll accelerates it hard; scroll up
+      // reverses immediately and fast — a quick rewind back to the start. The
+      // wheel is captured while the stage is pinned and released at the
+      // boundaries so the user can scroll past naturally.
       cosmos.style.height = '200vh';
 
       let progress = 0;
       let velocity = 0;
-      const BASE = 1 / 1500;     // ~25s at 60fps
-      const MAX = BASE * 3;       // 3x = ~8s
-      const KICK = 0.00002;       // velocity per wheel unit
-      const SETTLE = 0.00005;     // velocity decay toward base per tick
+      const BASE = 1 / 1500;       // ~25s forward cruise at 60fps
+      const MAX_FWD = BASE * 5;    // hard forward acceleration (~5s end-to-end)
+      const REV_BASE = BASE * 5;   // one scroll up retreats fast straight away
+      const MAX_REV = BASE * 14;   // ...building to a near-instant rewind (~2s)
+      const KICK = 0.00004;        // snappier forward response per wheel unit
+      const KICK_REV = 0.00012;    // reverse builds even faster than forward
+      const SETTLE = 0.00005;      // velocity decay toward base per tick
 
       const isActive = () => {
         const r = cosmos.getBoundingClientRect();
@@ -729,14 +790,14 @@ const rings = c.address.flatMap((_, i) => {
         e.preventDefault();
 
         if (e.deltaY > 0) {
-          // Forward: start from stop/reverse, or accelerate
+          // Forward: kick to cruise, then accelerate hard toward the cap
           if (velocity < BASE) velocity = BASE;
-          else velocity = Math.min(velocity + e.deltaY * KICK, MAX);
+          else velocity = Math.min(velocity + e.deltaY * KICK, MAX_FWD);
         } else {
-          // Up: stop if going forward, then reverse on next scroll up
-          if (velocity > 0) velocity = 0;
-          else if (velocity === 0) velocity = -BASE;
-          else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK, -MAX);
+          // Up: retreat fast immediately (no "stop first"), then build to a
+          // near-instant rewind — scrolling back collapses the scene quickly.
+          if (velocity > -REV_BASE) velocity = -REV_BASE;
+          else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK_REV, -MAX_REV);
         }
       };
 
