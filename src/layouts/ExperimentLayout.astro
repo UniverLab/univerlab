@@ -133,12 +133,12 @@ const softwareApp = exp.install
   .hero-row.has-demo {
     display: grid;
     grid-template-columns: 1fr clamp(240px, 34%, 420px);
-    gap: 2rem 4rem;
-    align-items: start;
+    gap: 2rem 2rem;
+    align-items: center;
   }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
-  /* Demo column: outside the hero frame, flush top on wide screens. */
-  .demo-col { padding-top: 0.5rem; }
+  /* Demo column: centered vertically relative to the hero frame. */
+  .demo-col { padding-top: 0; }
 
   @media (max-width: 62rem) {
     .hero-row.has-demo { grid-template-columns: 1fr; }
