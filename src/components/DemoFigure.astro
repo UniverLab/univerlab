@@ -19,7 +19,7 @@ interface Props {
 const { src, poster, essence, label, caption } = Astro.props;
 const isGif = src.endsWith('.gif');
 ---
-<figure class="wrap demo-fig" id="demo" style={`--essence: ${essence}`}>
+<figure class="demo-fig" style={`--essence: ${essence}`}>
   <div class="demo-frame">
     {isGif ? (
       <img class="demo-video" src={src} alt={caption} loading="lazy" />
@@ -53,7 +53,7 @@ const isGif = src.endsWith('.gif');
 </script>
 
 <style>
-  .demo-fig { margin: 0 auto; padding-block: 0.4rem 0.6rem; }
+  .demo-fig { margin: 0; padding-block: 0.4rem 0.6rem; }
   .demo-frame {
     border: 1px solid var(--line);
     border-radius: 12px;
