@@ -410,7 +410,7 @@ export const en = {
       role: 'Founder',
       name: 'Jheison Martinez',
       body:
-        'Electronic engineer and software-development specialist, now a master’s student in Artificial Intelligence. Reflective by nature — stoicism and positive nihilism, motorcycles, astronomy and biology — with his family as his greatest joy and the hope of teaching one day. For now he builds UniverLab’s open experiments and tools.',
+        'Electronic engineer and software-development specialist, now a master’s student in Artificial Intelligence. Reflective by nature — stoicism and positive nihilism, astronomy and biology — with his family as his greatest joy and the hope of teaching one day. For now he builds UniverLab’s open experiments and tools.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {
