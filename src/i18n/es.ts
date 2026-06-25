@@ -54,12 +54,12 @@ export const es: Dict = {
       ],
     },
     lineage: {
-      kicker: '00 — Origen',
+      kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
         'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: somos el universo forjando sus propios instrumentos para seguir estudiándose.',
     },
-    experiments: { kicker: '01 — Experimentos' },
+    experiments: { kicker: '00 — Experimentos' },
     philosophy: {
       kicker: '02 — Filosofía',
       title: 'La tecnología no es el fin.',
@@ -91,7 +91,7 @@ export const es: Dict = {
       kicker: '04 — Por qué',
       title: 'No es un laboratorio sobre el universo. Es un laboratorio del universo.',
       body:
-        'UniverLab existe para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No software por el software, ni IA por la IA: herramientas que ayudan al universo a seguir comprendiéndose a sí mismo.',
+        'UniverLab existe para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No software por el software, ni IA por la IA: herramientas que ayudan al universo a seguir comprendiéndose a sí mismo. En la práctica, eso son CLIs de código abierto que puedes instalar hoy, experimentos que puedes reproducir y documentación que viaja con el código.',
       manifesto: 'Leer el manifiesto →',
       contribute: 'Colabora en GitHub ↗',
     },
@@ -359,18 +359,21 @@ export const es: Dict = {
   cosmos: {
     kicker: 'Perspectiva',
     timelineTitle: 'Tiempo profundo',
-    timeline: [
-      ['13.8B', 'Universo', 'comienzan el espacio, el tiempo y la materia'],
-      ['4.54B', 'Tierra', 'un mundo se enfría junto a una estrella joven'],
-      ['540M', 'Vida compleja', 'la explosión cámbrica de formas de vida'],
-      ['300K', 'Homo sapiens', 'una mente que pregunta de dónde viene'],
-      ['80', 'Una vida humana', 'tu breve ventana para presenciarlo todo'],
-    ] as [string, string, string][],
+    // El tiempo profundo como una barra de escalas que se descomprime desde el
+    // mayor lapso hasta una vida humana (y luego "Tú"): [duración, qué mide].
+    timescales: [
+      ['13 800 millones de años', 'La edad del universo'],
+      ['4600 millones de años', 'La vida del Sol'],
+      ['4500 millones de años', 'La existencia de la Tierra'],
+      ['3800 millones de años', 'La vida en la Tierra'],
+      ['300 000 años', 'Nuestra especie'],
+      ['80 años', 'Una vida humana'],
+    ] as [string, string][],
     you: 'Tú',
     us: 'Nosotros',
     youDetail: 'el universo, observándose',
     addressTitle: 'Tu dirección cósmica',
-    addressIntro: 'Aleja la vista — cada paso, cien veces más ancho.',
+    addressIntro: 'Aleja la vista',
     // Beat final de la escena de apertura — nombra el asombro que venía
     // construyendo y entrega a la filosofía ("Qué valoramos…").
     wonder: 'Y una parte de él se asombra de existir.',
@@ -409,7 +412,7 @@ export const es: Dict = {
       role: 'Fundador',
       name: 'Jheison Martinez',
       body:
-        'Ingeniero que explora la computación a través de experimentos abiertos — herramientas de desarrollo, flujos científicos y sistemas de agentes, mayormente en Rust.',
+        'Ingeniero electrónico y líder técnico — seis años construyendo sistemas reactivos para fintech y transporte — y ahora de lleno en una maestría en IA. De día entrega backends y CLIs; aquí ese oficio se vuelca hacia afuera en herramientas abiertas, flujos científicos y sistemas de agentes, casi todo en Rust. Padre y apasionado por la biología y el tiempo profundo, lee cada organismo como el universo a escala, y construye con la convicción de que todo ser consciente le debe algo a la continuidad de la vida y el conocimiento.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {

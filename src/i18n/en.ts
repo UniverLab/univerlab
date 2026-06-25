@@ -52,12 +52,12 @@ export const en = {
       ],
     },
     lineage: {
-      kicker: '00 — Origin',
+      kicker: '01 — Origin',
       title: 'It began with one experiment that learned to build the others.',
       body:
         'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale. We are the universe forging its own instruments to keep studying itself.',
     },
-    experiments: { kicker: '01 — Experiments' },
+    experiments: { kicker: '00 — Experiments' },
     philosophy: {
       kicker: '02 — Philosophy',
       title: 'Technology is not the goal.',
@@ -89,7 +89,7 @@ export const en = {
       kicker: '04 — Why',
       title: 'Not a lab about the universe. A lab of the universe.',
       body:
-        'UniverLab exists to increase — even infinitesimally — the probability that knowledge and consciousness continue. Not software for its own sake, not AI for its own sake: tools that help the universe keep understanding itself.',
+        'UniverLab exists to increase — even infinitesimally — the probability that knowledge and consciousness continue. Not software for its own sake, not AI for its own sake: tools that help the universe keep understanding itself. In practice, that means open-source CLIs you can install today, experiments you can reproduce, and docs that ship with the code.',
       manifesto: 'Read the manifesto →',
       contribute: 'Contribute on GitHub ↗',
     },
@@ -357,18 +357,21 @@ export const en = {
   cosmos: {
     kicker: 'Perspective',
     timelineTitle: 'Deep time',
-    timeline: [
-      ['13.8B', 'Universe', 'space, time and matter begin'],
-      ['4.54B', 'Earth', 'a world cools around a young star'],
-      ['540M', 'Complex life', 'the Cambrian burst of body plans'],
-      ['300K', 'Homo sapiens', 'a mind that asks where it came from'],
-      ['80', 'A human lifetime', 'your brief window to witness it all'],
-    ] as [string, string, string][],
+    // Deep time as a scale bar that decompresses from the largest span down to
+    // a human life (then "You"): [duration, what it measures], biggest first.
+    timescales: [
+      ['13.8 billion years', 'The age of the universe'],
+      ['4.6 billion years', "The Sun's lifetime"],
+      ['4.5 billion years', "Earth's existence"],
+      ['3.8 billion years', 'Life on Earth'],
+      ['300,000 years', 'Our species'],
+      ['80 years', 'A human life'],
+    ] as [string, string][],
     you: 'You',
     us: 'Us',
     youDetail: 'the universe, observing itself',
     addressTitle: 'Your cosmic address',
-    addressIntro: 'Zoom out — each step a hundred times wider.',
+    addressIntro: 'Zoom out',
     // Closing beat of the opening scene — names the wonder it has been building,
     // and hands off to the philosophy ("What we value…").
     wonder: 'And a part of it wonders that it exists.',
@@ -407,7 +410,7 @@ export const en = {
       role: 'Founder',
       name: 'Jheison Martinez',
       body:
-        'Engineer exploring computing through open experiments — developer tooling, scientific workflows, and agent systems, mostly in Rust.',
+        'Electronic engineer and tech lead — six years building reactive systems for fintech and transit — now deep in a master’s in AI. By day he ships backends and CLIs; here that craft turns outward into open tools, scientific workflows, and agent systems, mostly in Rust. A father drawn to biology and deep time, he reads each organism as the universe scaled down, and builds in the conviction that conscious beings owe something to the continuity of life and knowledge.',
       link: 'github.com/JheisonMB ↗',
     },
     ai: {
