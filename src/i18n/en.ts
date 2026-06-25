@@ -28,6 +28,8 @@ export const en = {
     docsHome: 'Documentation',
     onThisExperiment: 'Experiment',
     skipToContent: 'Skip to content',
+    demo: 'Watch demo',
+    demoBy: 'recorded with DemoStage',
   },
   status: {
     active: 'active',

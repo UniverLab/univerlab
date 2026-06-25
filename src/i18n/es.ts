@@ -29,6 +29,8 @@ export const es: Dict = {
     docsHome: 'Documentación',
     onThisExperiment: 'Experimento',
     skipToContent: 'Saltar al contenido',
+    demo: 'Ver demo',
+    demoBy: 'grabado con DemoStage',
   },
   status: {
     active: 'activo',

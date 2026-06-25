@@ -1,0 +1,74 @@
+---
+// A short screen-recording demo, shown as "Fig. 1" right after the hero — the
+// tool actually working, which is the most characteristic thing an experiment
+// page can show. Autoplays muted and loops like an animated figure; reduced-
+// motion visitors get it paused with controls instead. Rendered only when the
+// experiment has a `demo` clip, so it stays invisible until one is recorded.
+interface Props {
+  /** Path to the mp4 clip, e.g. '/demos/gitkit.mp4'. */
+  src: string;
+  /** Optional poster frame (jpg/png) shown before play / under reduced motion. */
+  poster?: string;
+  /** Experiment essence color for the frame glow. */
+  essence: string;
+  /** Figure label, e.g. "Fig. 1". */
+  label: string;
+  /** Figure caption, e.g. "GitKit — recorded with DemoStage". */
+  caption: string;
+}
+const { src, poster, essence, label, caption } = Astro.props;
+---
+<figure class="wrap demo-fig" id="demo" style={`--essence: ${essence}`}>
+  <div class="demo-frame">
+    <video
+      class="demo-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster={poster}
+      aria-label={caption}
+    >
+      <source src={src} type="video/mp4" />
+    </video>
+  </div>
+  <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
+</figure>
+
+<script>
+  // Quality floor: never autoplay motion for visitors who asked not to.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll<HTMLVideoElement>('video.demo-video').forEach((v) => {
+      v.removeAttribute('autoplay');
+      v.setAttribute('controls', '');
+      try { v.pause(); } catch (e) {}
+    });
+  }
+</script>
+
+<style>
+  .demo-fig { margin: 0 auto; padding-block: 0.4rem 0.6rem; }
+  .demo-frame {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-raise);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--essence) 18%, transparent),
+      0 22px 60px rgba(0, 0, 0, 0.3);
+  }
+  .demo-video { display: block; width: 100%; height: auto; }
+  .demo-cap {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    font-family: var(--font-serif);
+    font-style: italic;
+  }
+  .demo-cap .label {
+    font-style: normal;
+    color: var(--essence);
+    margin-right: 0.6rem;
+  }
+</style>

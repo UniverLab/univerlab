@@ -32,6 +32,10 @@ export interface Experiment {
   install?: { unix: string; windows?: string };
   /** Whether a docs/ folder exists to build documentation pages from. */
   hasDocs?: boolean;
+  /** Path to a short screen-recording demo (mp4), shown as "Fig. 1" on the
+   *  landing and behind the hero "Watch demo" button. Set to e.g.
+   *  '/demos/gitkit.mp4' once recorded; until then both stay hidden. */
+  demo?: string;
 }
 
 // Install commands go through the `get.univerlab.org` redirector worker (see

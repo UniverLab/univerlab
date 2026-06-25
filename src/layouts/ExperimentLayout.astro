@@ -1,6 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
+import DemoFigure from '../components/DemoFigure.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 
@@ -52,6 +53,9 @@ const softwareApp = exp.install
         {exp.hasDocs && (
           <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
         )}
+        {exp.demo && (
+          <a class="btn ghost" href="#demo">{t.common.demo}</a>
+        )}
         <slot name="cta" />
       </div>
       {exp.install && (
@@ -77,6 +81,17 @@ const softwareApp = exp.install
         </div>
       )}
     </section>
+
+    <!-- Fig. 1: the tool actually working, right after the pitch. Hidden until a
+         clip exists (exp.demo). The hero "Watch demo" button anchors here. -->
+    {exp.demo && (
+      <DemoFigure
+        src={exp.demo}
+        essence={exp.essenceHex}
+        label="Fig. 1"
+        caption={`${exp.name} — ${t.common.demoBy}`}
+      />
+    )}
 
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
