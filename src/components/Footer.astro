@@ -15,7 +15,15 @@ const footNav = [
 <footer>
   <div class="wrap inner">
     <div class="left">
-      <Mark size={32} />
+      <!-- Quiet click target: the mark links to this site's own repository. No
+           hover affordance — you only find it if you try it. -->
+      <a
+        class="mark-link"
+        href="https://github.com/UniverLab/univerlab"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="UniverLab website repository"
+      ><Mark size={32} /></a>
       {!isManifesto && <p class="quote">{t.footer.quote}</p>}
     </div>
     <nav class="foot-nav" aria-label={t.nav.experiments}>
@@ -82,6 +90,8 @@ Date:   now
     padding-block: 2.6rem 2rem;
   }
   .left { display: flex; gap: 1rem; align-items: flex-start; max-width: 34rem; }
+  /* No hover, no underline — a quiet, discoverable click target. */
+  .mark-link { display: inline-flex; line-height: 0; flex: none; }
   .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: 0.95rem; line-height: 1.55; }
   .foot-nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; height: 1.5rem; }
   .foot-nav a {
