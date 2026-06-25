@@ -42,48 +42,55 @@ const softwareApp = exp.install
 ---
 <BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
-    <!-- hero-row: acts as .wrap + optional two-column grid when a demo exists.
-         The demo aside sits outside the hero section so the hero frame stays clean. -->
-    <div class="hero-row" class:list={[{ 'has-demo': !!exp.demo }]}>
-      <section class="hero">
-        <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
-        <Banner id={id} color={exp.essenceHex} />
-        <h1 class="exp-name" translate="no">{exp.name}</h1>
-        <p class="koan">{e.koan}</p>
-        <p class="lede prose" set:html={e.lede} />
-        <div class="actions">
-          <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-          {exp.hasDocs && (
-            <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
-          )}
-          {exp.demo && (
-            <a class="btn ghost" href="#demo">{t.common.demo}</a>
-          )}
-          <slot name="cta" />
-        </div>
-        {exp.install && (
-          <div class="install" data-install>
-            <div class="install-head">
-              <span class="label">{t.common.install}</span>
-              {exp.install.windows && (
-                <div class="os-tabs" role="tablist" aria-label="Platform">
-                  <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
-                  <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
-                </div>
-              )}
-            </div>
-            <div class="cmd" translate="no">
-              <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
-              {exp.install.windows && (
-                <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
-              )}
-              <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-                <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
-              </button>
-            </div>
-          </div>
+    <section class="wrap hero">
+      <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
+      <Banner id={id} color={exp.essenceHex} />
+      <h1 class="exp-name" translate="no">{exp.name}</h1>
+      <p class="koan">{e.koan}</p>
+      <p class="lede prose" set:html={e.lede} />
+      <div class="actions">
+        <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
+        {exp.hasDocs && (
+          <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
         )}
+        {exp.demo && (
+          <a class="btn ghost" href="#demo">{t.common.demo}</a>
+        )}
+        <slot name="cta" />
+      </div>
+      {exp.install && (
+        <div class="install" data-install>
+          <div class="install-head">
+            <span class="label">{t.common.install}</span>
+            {exp.install.windows && (
+              <div class="os-tabs" role="tablist" aria-label="Platform">
+                <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
+                <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
+              </div>
+            )}
+          </div>
+          <div class="cmd" translate="no">
+            <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
+            {exp.install.windows && (
+              <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
+            )}
+            <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
+              <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+
+    <!-- The origin story is the strongest copy on the page — it comes right
+         after the hero, before the feature sections, not buried at the end. -->
+    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
+      <section class="wrap genesis">
+        <span class="label">{e.genesis.kicker}</span>
+        <h2>{e.genesis.title}</h2>
+        <p class="prose" set:html={e.genesis.body} />
       </section>
+
       {exp.demo && (
         <aside class="demo-col" id="demo" aria-label="Demo">
           <DemoFigure
@@ -95,14 +102,6 @@ const softwareApp = exp.install
         </aside>
       )}
     </div>
-
-    <!-- The origin story is the strongest copy on the page — it comes right
-         after the hero, before the feature sections, not buried at the end. -->
-    <section class="wrap genesis">
-      <span class="label">{e.genesis.kicker}</span>
-      <h2>{e.genesis.title}</h2>
-      <p class="prose" set:html={e.genesis.body} />
-    </section>
 
     <slot />
 
@@ -128,22 +127,23 @@ const softwareApp = exp.install
 <style>
   .exp { --essence: var(--accent); }
 
-  /* hero-row: wrap + optional two-column grid when a demo exists. */
-  .hero-row { max-width: 72rem; margin-inline: auto; padding-inline: var(--space); padding-block: 3.5rem 2rem; }
-  .hero-row.has-demo {
+  /* Hero */
+  .hero { padding-block: 3.5rem 2rem; }
+  .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+
+  /* Genesis row: two-column grid when a demo exists, single column otherwise. */
+  .genesis-row { max-width: 72rem; margin-inline: auto; padding-inline: var(--space); }
+  .genesis-row.has-demo {
     display: grid;
     grid-template-columns: 1fr clamp(240px, 38%, 480px);
     gap: 2rem 2rem;
     align-items: center;
   }
-  .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
-  /* Demo column: centered vertically relative to the hero frame. */
   .demo-col { padding-top: 0; }
 
   @media (max-width: 62rem) {
-    .hero-row.has-demo { grid-template-columns: 1fr; }
+    .genesis-row.has-demo { grid-template-columns: 1fr; }
     .demo-col { order: 1; padding-top: 0; max-width: 80%; margin-inline: auto; }
-    .hero { order: 0; }
   }
 
   .num { color: var(--essence); }
