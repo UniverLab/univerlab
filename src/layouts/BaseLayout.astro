@@ -158,6 +158,45 @@ const orgJsonLd = {
         } catch (e) {}
       })();
     </script>
+    <script is:inline>
+      // Celestial position — always runs so the sun/moon dot moves along the
+      // header rule on every page. Circadian pages add palette + color on top.
+      (function () {
+        function calc() {
+          var d = new Date();
+          var hour = d.getHours() + d.getMinutes() / 60;
+          var y = d.getFullYear();
+          var kJan = new Date(y, 0, 1).getTimezoneOffset();
+          var kJul = new Date(y, 6, 1).getTimezoneOffset();
+          var half = 6;
+          if (kJan !== kJul) {
+            var southern = kJan < kJul;
+            var doy = Math.floor((d - new Date(y, 0, 0)) / 86400000);
+            var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25);
+            if (southern) s = -s;
+            half = 6 + 2.5 * s;
+          }
+          var sunrise = 12 - half;
+          var sunset = 12 + half;
+          var isDay = hour >= sunrise && hour < sunset;
+          var pos;
+          if (isDay) {
+            pos = ((hour - sunrise) / (sunset - sunrise)) * 100;
+          } else {
+            var ss = hour >= sunset ? hour - sunset : hour + (24 - sunset);
+            var nl = 24 - (sunset - sunrise);
+            pos = (ss / nl) * 100;
+          }
+          document.documentElement.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
+          document.documentElement.dataset.celestial = isDay ? 'sun' : 'moon';
+        }
+        calc();
+        setInterval(calc, 60000);
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) calc();
+        });
+      })();
+    </script>
     {circadian && (
       <script is:inline>
         // Circadian palette. Polarity (light by day, dark by night) NEVER
@@ -245,6 +284,7 @@ const orgJsonLd = {
               }
               root.style.setProperty('--celestial-color', celestial);
               root.dataset.celestial = isDay ? 'sun' : 'moon';
+              root.dataset.circadian = 'true';
 
               // Moon phase — the terminator is modelled as a second circle
               // (pseudo-element) sliding across the disc. New moon: shadow

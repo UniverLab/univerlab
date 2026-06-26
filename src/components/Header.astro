@@ -517,28 +517,30 @@ function isActive(href: string, current: string): boolean {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--celestial-color, var(--accent));
-    box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
+    background: var(--celestial-color, var(--bg));
+    border: 1px solid var(--line);
+    box-shadow: none;
     transition: transform 0.2s ease, background 0.4s ease, box-shadow 0.4s ease;
     pointer-events: none;
   }
-  /* Non-circadian pages: subtle dot — fill with accent, border with line, no glow. */
-  html:not([data-celestial]) .celestial {
-    background: var(--accent);
-    border: 1px solid var(--line);
-    box-shadow: none;
+  /* Circadian pages: colored fill + glow, no border. */
+  html[data-circadian][data-celestial] .celestial {
+    border: 0;
+  }
+  html[data-circadian][data-celestial='sun'] .celestial {
+    box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
   }
   /* Moon — the terminator is a second circle (pseudo-element) sliding across
      the disc. The intersection of two equal circles gives a curved terminator,
      like a real moon. New moon: shadow centred (covers all). Full: offset =
      diameter (no overlap). Waxing lit right; waning lit left. */
-  html[data-celestial='moon'] .celestial {
+  html[data-circadian][data-celestial='moon'] .celestial {
     background: var(--celestial-color, transparent);
     box-shadow: 0 0 12px 1px color-mix(in srgb, var(--celestial-color, transparent) var(--moon-glow, 50%), transparent);
     border: 0;
     overflow: hidden;
   }
-  html[data-celestial='moon'] .celestial::before {
+  html[data-circadian][data-celestial='moon'] .celestial::before {
     content: '';
     position: absolute;
     inset: 0;
