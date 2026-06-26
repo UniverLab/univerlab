@@ -100,11 +100,53 @@ Example: a tool with id `widgetforge`, repo `UniverLab/widgetforge`.
    tool → repo entry to `workers/get/src/index.ts` so `get.univerlab.org/widgetforge`
    resolves.
 
-8. **Optional polish** — an ASCII banner in `src/lib/banners.ts` (keyed by id),
+8. **Command palette** — add the experiment ID to the `experimentIds` array in
+   `src/layouts/BaseLayout.astro` (inside the command palette script). This
+   makes `/widgetforge` available in the palette automatically.
+
+9. **Optional polish** — an ASCII banner in `src/lib/banners.ts` (keyed by id),
    and/or a new background runner in `src/scripts/backgrounds.ts` (add its name
    to the `BgTheme` union in `experiments.ts`).
 
 9. **Verify** — `npm run build`. It builds every page and enforces EN/ES parity.
+
+---
+
+## Keyboard shortcuts
+
+The landing is navigable via keyboard, inspired by Canopy's TUI navigation.
+
+| Shortcut | Action |
+|---|---|
+| `Shift+↑` | Previous experiment |
+| `Shift+↓` | Next experiment |
+| `Shift+←` | Go back (browser history) |
+| `Shift+→` | Go forward (browser history) |
+| `↑` / `↓` | Scroll up / down |
+| `h` | Home |
+| `e` | Experiments |
+| `m` | Manifesto |
+| `c` | Contributors |
+| `g` | GitHub |
+| `Esc` | Close active overlay |
+| `/` | Open command palette |
+| `?` | Open help / command list |
+
+### Command palette
+
+Press `/` to open a terminal-style command palette (dark, monospace, transparent).
+Commands are auto-generated from experiment IDs in `experiments.ts`.
+
+- **Tab** — autocomplete to the selected command
+- **↑↓** — navigate the command list
+- **Enter** — execute the selected command
+- **Esc** — close the palette
+
+Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`.
+Each experiment also gets a `/<id>` command (e.g. `/canopy`, `/texforge`).
+
+To add a new experiment command: add its ID to the `experimentIds` array in
+`src/layouts/BaseLayout.astro` (step 8 in the checklist above).
 
 ---
 
