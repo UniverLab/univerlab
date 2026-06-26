@@ -338,7 +338,7 @@ html[data-surface='tui'] .hero::before {
 /* texforge · paper — a journal title page: ruled top and bottom, proof bar left. */
 html[data-surface='paper'] .hero {
   border-top: 1px solid var(--ink);
-  padding-top: 2.6rem;
+  padding-top: 1.6rem;
 }
 html[data-surface='paper'] .hero::after {
   content: '';
