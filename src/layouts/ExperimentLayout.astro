@@ -50,13 +50,10 @@ const softwareApp = exp.install
       <p class="lede prose" set:html={e.lede} />
       <div class="actions">
         <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-        {exp.hasDocs && (
-          <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
-        )}
-        {exp.demo && (
-          <a class="btn ghost" href="#demo">{t.common.demo}</a>
-        )}
-        <slot name="cta" />
+          {exp.hasDocs && (
+            <a class="btn ghost" href={`/${id}/docs`}>{t.common.docs}</a>
+          )}
+          <slot name="cta" />
       </div>
       {exp.install && (
         <div class="install" data-install>
