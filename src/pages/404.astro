@@ -6,6 +6,24 @@ const t = useTranslations(lang);
 ---
 <BaseLayout title="404 — UniverLab" bg="drift">
   <section class="wrap notfound">
+    <pre class="ascii" aria-hidden="true">
+                                  
+		 o#'9MMHb':'-,o,
+	      .oH":HH$' "' ' -*R&o,
+	     dMMM*""'`'      .oM"HM?.
+	   ,MMM'          "HLbd ?&H\
+	  .:MH ."          ` MM  MM&b
+	 . "*H    -        &MMMMMMMMMH:
+         .    dboo        MMMMMMMMMMMM.       unknown
+	 .   dMMMMMMb      *MMMMMMMMMP.
+	 .    MMMMMMMP        *MMMMMP .
+	      `#MMMMM           MM6P ,
+	  '    `MMMP"           HM*`,
+	   '    :MM             .- ,
+	    '.   `#?..  .       ..'
+	       -.   .         .-
+		 ''-.oo,oo.-''
+    </pre>
     <p class="label code">404</p>
     <h1>This page drifted off the map.</h1>
     <p class="lede">The page you’re looking for doesn’t exist — it may have moved, or never been written.</p>
@@ -20,6 +38,13 @@ const t = useTranslations(lang);
   .notfound {
     padding-block: clamp(5rem, 18vh, 10rem);
     display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem;
+  }
+  .ascii {
+    font-size: 0.55rem;
+    line-height: 1.1;
+    color: #fff;
+    margin: 0;
+    max-width: 100%;
   }
   .code { color: var(--accent); }
   .notfound h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); max-width: 18ch; }
