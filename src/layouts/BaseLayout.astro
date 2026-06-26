@@ -502,6 +502,7 @@ https://github.com/UniverLab
         }
 
         // Global keyboard shortcuts.
+        var expFocusIndex = -1;
         document.addEventListener('keydown', function (e) {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
@@ -560,7 +561,7 @@ https://github.com/UniverLab
             return;
           }
 
-          // Shift+ArrowUp / Shift+ArrowDown → prev / next experiment or doc
+          // Shift+ArrowUp / Shift+ArrowDown → prev / next experiment, doc, or card focus
           if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
             // Experiment detail pages: use exp-nav-link
             var expNavLinks = document.querySelectorAll('a.exp-nav-link');
@@ -582,6 +583,19 @@ https://github.com/UniverLab
                 ? (curDoc < docItems.length - 1 ? curDoc + 1 : 0)
                 : (curDoc > 0 ? curDoc - 1 : docItems.length - 1);
               window.location.href = docItems[nextDoc].getAttribute('href') || '/';
+              return;
+            }
+            // Listing pages (home, experiments): focus cards
+            var cards = document.querySelectorAll('a.card, a.row');
+            if (cards.length > 1) {
+              e.preventDefault();
+              if (expFocusIndex === -1) expFocusIndex = e.key === 'ArrowDown' ? 0 : cards.length - 1;
+              else expFocusIndex = e.key === 'ArrowDown'
+                ? (expFocusIndex + 1) % cards.length
+                : (expFocusIndex - 1 + cards.length) % cards.length;
+              var card = cards[expFocusIndex];
+              card.focus({ preventScroll: true });
+              card.scrollIntoView({ block: 'nearest' });
               return;
             }
             return;
@@ -608,6 +622,15 @@ https://github.com/UniverLab
               if (found === -1) found = e.key === 'ArrowDown' ? targets.length - 1 : 0;
               targets[found].el.scrollIntoView({ block: 'start' });
               return;
+            }
+          }
+
+          // Enter → follow the focused card link (if palette is closed)
+          if (e.key === 'Enter' && !isOpen() && expFocusIndex !== -1) {
+            var focused = document.activeElement;
+            if (focused && focused.matches('a.card, a.row') && focused.hasAttribute('href')) {
+              e.preventDefault();
+              window.location.href = focused.getAttribute('href') || '/';
             }
           }
         });
