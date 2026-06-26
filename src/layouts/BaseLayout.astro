@@ -623,8 +623,26 @@ https://github.com/UniverLab
 
         // Global keyboard shortcuts.
         var expFocusIndex = -1;
+        var keySeq = '';
         document.addEventListener('keydown', function (e) {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+          // Easter egg: typing "42" shows the Answer.
+          keySeq += e.key;
+          if (keySeq.length > 10) keySeq = keySeq.slice(-10);
+          if (keySeq.indexOf('42') !== -1) {
+            keySeq = '';
+            var msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.92);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:0.9rem;padding:0.8rem 1.4rem;border-radius:8px;border:1px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 20px rgba(255,255,255,0.15);z-index:320;text-align:center;max-width:90vw;';
+            var lang = document.documentElement.lang || 'en';
+            var html = lang === 'es'
+              ? '<span style="color:#ffe264">42</span> — La <span style="color:#ffe264">Respuesta</span> a la Pregunta Fundamental de la <span style="color:#ffe264">Vida</span>, el <span style="color:#ffe264">Universo</span> y Todo lo <span style="color:#ffe264">Demás</span>.'
+              : '<span style="color:#ffe264">42</span> — The <span style="color:#ffe264">Answer</span> to the Ultimate Question of Life, the <span style="color:#ffe264">Universe</span>, and <span style="color:#ffe264">Everything</span>.';
+            msg.innerHTML = html;
+            document.body.appendChild(msg);
+            setTimeout(function () { msg.style.transition = 'opacity 0.5s'; msg.style.opacity = '0'; setTimeout(function () { msg.remove(); }, 500); }, 5000);
+            return;
+          }
 
           // / → open command palette
           if (e.key === '/') {
