@@ -20,6 +20,6 @@ export const collections = {
   'docs-ghscaff': docsCollection('../ghscaff/docs'),
   // NOTE: collection key renamed to cadspec; path still points at the real repo
   // dir `cadforge` until the GitHub repo is renamed.
-  'docs-cadspec': docsCollection('../cadforge/docs'),
+  'docs-cadspec': docsCollection('../cadspec/docs'),
   'docs-demostage': docsCollection('../demostage/docs'),
 };
