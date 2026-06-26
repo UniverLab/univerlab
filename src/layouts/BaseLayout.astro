@@ -548,8 +548,29 @@ https://github.com/UniverLab
             return;
           }
 
-          // Shift+Left / Shift+Right → prev / next doc page (docs only), else browser back/forward
-          if (e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+          // Shift+Left → go back, Shift+Right → go forward (browser history)
+          if (e.shiftKey && e.key === 'ArrowLeft') {
+            e.preventDefault();
+            history.back();
+            return;
+          }
+          if (e.shiftKey && e.key === 'ArrowRight') {
+            e.preventDefault();
+            history.forward();
+            return;
+          }
+
+          // Shift+ArrowUp / Shift+ArrowDown → prev / next experiment or doc
+          if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            // Experiment detail pages: use exp-nav-link
+            var expNavLinks = document.querySelectorAll('a.exp-nav-link');
+            if (expNavLinks.length) {
+              e.preventDefault();
+              var idx = e.key === 'ArrowDown' ? 1 : 0;
+              if (expNavLinks[idx]) window.location.href = expNavLinks[idx].getAttribute('href') || '/';
+              return;
+            }
+            // Docs pages: use sidebar nav
             var docItems = document.querySelectorAll('.docs nav .item');
             if (docItems.length > 1) {
               e.preventDefault();
@@ -557,24 +578,11 @@ https://github.com/UniverLab
               for (var d = 0; d < docItems.length; d++) {
                 if (docItems[d].classList.contains('active')) { curDoc = d; break; }
               }
-              var nextDoc = e.key === 'ArrowRight'
+              var nextDoc = e.key === 'ArrowDown'
                 ? (curDoc < docItems.length - 1 ? curDoc + 1 : 0)
                 : (curDoc > 0 ? curDoc - 1 : docItems.length - 1);
               window.location.href = docItems[nextDoc].getAttribute('href') || '/';
               return;
-            }
-            if (e.key === 'ArrowLeft') { e.preventDefault(); history.back(); }
-            if (e.key === 'ArrowRight') { e.preventDefault(); history.forward(); }
-            return;
-          }
-
-          // Shift+ArrowUp / Shift+ArrowDown → prev / next experiment (only on experiment pages)
-          if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-            var expNavLinks = document.querySelectorAll('a.exp-nav-link');
-            if (expNavLinks.length) {
-              e.preventDefault();
-              var idx = e.key === 'ArrowDown' ? 1 : 0;
-              if (expNavLinks[idx]) window.location.href = expNavLinks[idx].getAttribute('href') || '/';
             }
             return;
           }
@@ -582,28 +590,23 @@ https://github.com/UniverLab
           // ArrowUp / ArrowDown → jump between sections and cards on the page
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             var targets = [];
-            var seen = new Set();
-            document.querySelectorAll('section, a.card, a.row').forEach(function (el) {
-              var key = el.tagName + ':' + Math.round(el.getBoundingClientRect().top + window.scrollY);
-              if (!seen.has(key)) { seen.add(key); targets.push(el); }
+            document.querySelectorAll('section, a.card, a.row, .prose-doc h2').forEach(function (el) {
+              targets.push({ el: el, top: el.offsetTop });
             });
-            targets.sort(function (a, b) {
-              return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
-            });
+            targets.sort(function (a, b) { return a.top - b.top; });
             if (targets.length > 1) {
               e.preventDefault();
               var scrollY = window.scrollY;
               var found = -1;
               for (var i = 0; i < targets.length; i++) {
-                var top = targets[i].getBoundingClientRect().top + scrollY;
                 if (e.key === 'ArrowDown') {
-                  if (top > scrollY + 4) { found = i; break; }
+                  if (targets[i].top > scrollY + 4) { found = i; break; }
                 } else {
-                  if (top < scrollY - 4) { found = i; break; }
+                  if (targets[i].top < scrollY - 4) { found = i; break; }
                 }
               }
               if (found === -1) found = e.key === 'ArrowDown' ? targets.length - 1 : 0;
-              targets[found].scrollIntoView({ block: 'start' });
+              targets[found].el.scrollIntoView({ block: 'start' });
               return;
             }
           }
