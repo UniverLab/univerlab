@@ -118,12 +118,11 @@ The landing is navigable via keyboard, inspired by Canopy's TUI navigation.
 
 | Shortcut | Action |
 |---|---|
-| `↑` / `↓` | Navigate within page (cards on listing pages, sections elsewhere) |
-| `Shift+↑` | Previous experiment page |
-| `Shift+↓` | Next experiment page |
+| `↑` / `↓` | Jump between sections on the page |
+| `Shift+↑` | Previous experiment (experiment pages only) |
+| `Shift+↓` | Next experiment (experiment pages only) |
 | `Shift+←` | Go back (browser history) |
 | `Shift+→` | Go forward (browser history) |
-| `Enter` | Follow focused card link |
 | `h` | Home |
 | `e` | Experiments |
 | `m` | Manifesto |
