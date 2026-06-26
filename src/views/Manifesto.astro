@@ -767,6 +767,20 @@ const rings = c.address.flatMap((_, i) => {
         return r.top <= 0 && r.bottom >= window.innerHeight;
       };
 
+      // Auto-start the animation when the cosmos section is framed (pinned on
+      // screen). This covers keyboard navigation and any non-wheel scroll that
+      // lands on the section — the observer fires once, then disconnects.
+      let autoStarted = false;
+      const autoStart = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !autoStarted && velocity === 0) {
+            autoStarted = true;
+            velocity = BASE;
+          }
+        }
+      }, { threshold: 0.1 });
+      autoStart.observe(cosmos);
+
       // Always bound — check active inside, so there's no race between
       // entering the section and the first wheel event.
       const onWheel = (e: WheelEvent) => {

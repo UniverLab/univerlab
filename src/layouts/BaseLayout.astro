@@ -236,13 +236,8 @@ https://github.com/UniverLab
         // Both the landing and the docs are circadian.
         (function () {
           try {
-            // Day: cool at noon, warm at the edges (morning/golden hour).
-            // `--canvas-color`: accent-tinted dots (landing). `--canvas-mute`: a
-            // neutral grey for docs, where the animation differentiates the tool
-            // but must stay calm under the uniform UniverLab accent.
             var DAY_COOL = { '--bg': '#fbfbfa', '--bg-raise': '#f1f1ee', '--ink': '#1a1c1e', '--ink-dim': '#555a61', '--ink-faint': '#8b9099', '--line': '#e4e2dc', '--accent': '#9a7b16', '--canvas-color': '#b59a3a', '--canvas-mute': '#b3b4ae' };
             var DAY_WARM = { '--bg': '#f7efe4', '--bg-raise': '#efe5d6', '--ink': '#241f18', '--ink-dim': '#5f574b', '--ink-faint': '#948975', '--line': '#e6dac6', '--accent': '#b5791f', '--canvas-color': '#cf9a3a', '--canvas-mute': '#bdb5a6' };
-            // Night: warm just after dusk, cool in the deep night.
             var NIGHT_WARM = { '--bg': '#1a1822', '--bg-raise': '#221f2b', '--ink': '#ece3d6', '--ink-dim': '#b0a596', '--ink-faint': '#756b5f', '--line': '#2e2a36', '--accent': '#e8a24a', '--canvas-color': '#e0a24a', '--canvas-mute': '#565160' };
             var NIGHT_COOL = { '--bg': '#0f1115', '--bg-raise': '#15181d', '--ink': '#e3e6e8', '--ink-dim': '#a8adb5', '--ink-faint': '#6b7178', '--line': '#23262c', '--accent': '#e6c84a', '--canvas-color': '#d3bf72', '--canvas-mute': '#474a54' };
 
@@ -254,23 +249,22 @@ https://github.com/UniverLab
             }
             function mix(a, b, f) { var o = {}; for (var k in a) o[k] = lerp(a[k], b[k], f); return o; }
 
+            function applyPalette(pal) {
+              var root = document.documentElement;
+              for (var key in pal) { root.style.setProperty(key, pal[key]); }
+            }
+
             function calc() {
               var d = new Date();
               var hour = d.getHours() + d.getMinutes() / 60;
               var y = d.getFullYear();
-              // Estimate sunrise/sunset for the visitor's latitude & season,
-              // cheaply, with no geolocation prompt:
-              //  - No DST observed → almost certainly low latitude → 12h day (6–18).
-              //  - DST observed → mid/high latitude → seasonal swing; hemisphere
-              //    from the sign of the Jan vs Jul UTC offset; a smooth cosine of
-              //    the day-of-year (no month-bucket jumps), ±2.5h.
               var kJan = new Date(y, 0, 1).getTimezoneOffset();
               var kJul = new Date(y, 6, 1).getTimezoneOffset();
               var half = 6;
               if (kJan !== kJul) {
                 var southern = kJan < kJul;
                 var doy = Math.floor((d - new Date(y, 0, 0)) / 86400000);
-                var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25); // +1 ≈ N summer solstice
+                var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25);
                 if (southern) s = -s;
                 half = 6 + 2.5 * s;
               }
@@ -280,21 +274,16 @@ https://github.com/UniverLab
               var pal;
               if (isDay) {
                 var t = (hour - sunrise) / (sunset - sunrise);
-                var warm = Math.abs(t - 0.5) * 2; // warm at the edges, cool at noon
+                var warm = Math.abs(t - 0.5) * 2;
                 pal = mix(DAY_COOL, DAY_WARM, warm);
               } else {
                 var sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
                 var nightLen = 24 - (sunset - sunrise);
                 var g = nightLen > 0 ? sinceSunset / nightLen : 0;
-                pal = mix(NIGHT_WARM, NIGHT_COOL, Math.min(g * 2, 1)); // warm dusk → cool night
+                pal = mix(NIGHT_WARM, NIGHT_COOL, Math.min(g * 2, 1));
               }
-              var root = document.documentElement;
-              for (var key in pal) { root.style.setProperty(key, pal[key]); }
+              applyPalette(pal);
 
-              // Sun / moon on the header horizon — a celestial body tracing the
-              // rule line. Both travel left → right: sun from sunrise to sunset,
-              // moon from sunset to sunrise. The sun burns red at dawn/dusk and
-              // cools to gold at noon; the moon stays a quiet silver.
               var pos;
               if (isDay) {
                 pos = ((hour - sunrise) / (sunset - sunrise)) * 100;
@@ -303,6 +292,7 @@ https://github.com/UniverLab
                 var nl = 24 - (sunset - sunrise);
                 pos = (ss / nl) * 100;
               }
+              var root = document.documentElement;
               root.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
               var celestial;
               if (isDay) {
@@ -314,12 +304,6 @@ https://github.com/UniverLab
               root.dataset.celestial = isDay ? 'sun' : 'moon';
               root.dataset.circadian = 'true';
 
-              // Moon phase — the terminator is modelled as a second circle
-              // (pseudo-element) sliding across the disc. New moon: shadow
-              // circle centred → covers everything. Full: offset = diameter →
-              // no overlap → fully lit. Waxing: lit on the right (shadow slides
-              // left). Waning: lit on the left (shadow slides right). The
-              // intersection of two equal circles gives a curved terminator.
               var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
               var SYNODIC = 29.530588853;
               var dn = (d.getTime() - MOON_EPOCH) / 86400000;
@@ -327,17 +311,32 @@ https://github.com/UniverLab
               if (phase < 0) phase += 1;
               var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
               var waxing = phase < 0.5;
-              var moonOff = 8 * illum; /* 0 at new, 8 (diameter) at full */
+              var moonOff = 8 * illum;
               root.style.setProperty('--moon-offset', (waxing ? -moonOff : moonOff).toFixed(2) + 'px');
               root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
             }
 
-            calc();
-            // Recalculate every minute so the palette and celestial drift with
-            // the real time — no reload needed to cross sunrise/sunset.
+            // Expose applyTheme globally so the command palette can override.
+            window.applyTheme = function (mode) {
+              if (mode === 'day') {
+                applyPalette(DAY_COOL);
+                document.documentElement.dataset.celestial = 'sun';
+              } else if (mode === 'night') {
+                applyPalette(NIGHT_COOL);
+                document.documentElement.dataset.celestial = 'moon';
+              } else {
+                calc();
+              }
+            };
+
+            var saved = localStorage.getItem('univerlab-theme');
+            if (saved === 'day') { applyPalette(DAY_COOL); document.documentElement.dataset.celestial = 'sun'; document.documentElement.dataset.circadian = 'true'; }
+            else if (saved === 'night') { applyPalette(NIGHT_COOL); document.documentElement.dataset.celestial = 'moon'; document.documentElement.dataset.circadian = 'true'; }
+            else { calc(); }
+
             var timer = setInterval(calc, 60000);
             document.addEventListener('visibilitychange', function () {
-              if (!document.hidden) { calc(); clearInterval(timer); timer = setInterval(calc, 60000); }
+              if (!document.hidden && !localStorage.getItem('univerlab-theme')) { calc(); clearInterval(timer); timer = setInterval(calc, 60000); }
             });
           } catch (e) {}
         })();
@@ -362,6 +361,109 @@ https://github.com/UniverLab
         var base = lang === 'es' ? '/es' : '';
         var path = window.location.pathname;
 
+        // /find — open a search overlay for the current page / docs.
+        function openFind() {
+          var existing = document.querySelector('.find-overlay');
+          if (existing) { existing.remove(); return; }
+          var overlay = document.createElement('div');
+          overlay.className = 'find-overlay';
+          overlay.innerHTML = '<div class="find-bar">' +
+            '<input type="text" class="find-input" placeholder="Find..." autofocus />' +
+            '<span class="find-count"></span>' +
+            '<button class="find-prev" type="button" aria-label="Previous">&#9650;</button>' +
+            '<button class="find-next" type="button" aria-label="Next">&#9660;</button>' +
+            '<button class="find-close" type="button" aria-label="Close">&times;</button>' +
+            '</div>';
+          document.body.appendChild(overlay);
+          var input = overlay.querySelector('.find-input');
+          var count = overlay.querySelector('.find-count');
+          var highlights = [];
+          var current = -1;
+
+          function clearHighlights() {
+            highlights.forEach(function (h) {
+              var parent = h.parentNode;
+              if (parent) { parent.replaceChild(document.createTextNode(h.textContent), h); parent.normalize(); }
+            });
+            highlights = [];
+            current = -1;
+          }
+
+          function highlightAll(query) {
+            clearHighlights();
+            if (!query) { count.textContent = ''; return; }
+            var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+              acceptNode: function (n) {
+                if (n.parentElement && (n.parentElement.closest('.find-overlay') || n.parentElement.closest('script') || n.parentElement.closest('style'))) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+              }
+            });
+            var nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            var lower = query.toLowerCase();
+            nodes.forEach(function (node) {
+              var text = node.textContent;
+              var lowerText = text.toLowerCase();
+              var idx = lowerText.indexOf(lower);
+              if (idx === -1) return;
+              var frag = document.createDocumentFragment();
+              var last = 0;
+              while (idx !== -1) {
+                frag.appendChild(document.createTextNode(text.slice(last, idx)));
+                var span = document.createElement('mark');
+                span.className = 'find-hl';
+                span.textContent = text.slice(idx, idx + query.length);
+                frag.appendChild(span);
+                highlights.push(span);
+                last = idx + query.length;
+                idx = lowerText.indexOf(lower, last);
+              }
+              frag.appendChild(document.createTextNode(text.slice(last)));
+              node.parentNode.replaceChild(frag, node);
+            });
+            count.textContent = highlights.length ? '1/' + highlights.length : '0 results';
+            if (highlights.length) scrollToHighlight(0);
+          }
+
+          function scrollToHighlight(idx) {
+            if (!highlights.length) return;
+            highlights.forEach(function (h) { h.classList.remove('find-active'); });
+            current = ((idx % highlights.length) + highlights.length) % highlights.length;
+            highlights[current].classList.add('find-active');
+            highlights[current].scrollIntoView({ block: 'center' });
+            count.textContent = (current + 1) + '/' + highlights.length;
+          }
+
+          var debounce = null;
+          input.addEventListener('input', function () {
+            clearTimeout(debounce);
+            debounce = setTimeout(function () { highlightAll(input.value); }, 200);
+          });
+          overlay.querySelector('.find-next').addEventListener('click', function () { scrollToHighlight(current + 1); });
+          overlay.querySelector('.find-prev').addEventListener('click', function () { scrollToHighlight(current - 1); });
+          overlay.querySelector('.find-close').addEventListener('click', function () { clearHighlights(); overlay.remove(); });
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { clearHighlights(); overlay.remove(); }
+            if (e.key === 'Enter') { e.preventDefault(); scrollToHighlight(e.shiftKey ? current - 1 : current + 1); }
+          });
+          setTimeout(function () { input.focus(); }, 50);
+        }
+
+        // /theme submenu — replaces the command list with theme options.
+        function showThemeMenu() {
+          inSubmenu = true;
+          var themeCmds = [
+            { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); } },
+            { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); } },
+            { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); } },
+          ];
+          filtered = themeCmds;
+          selected = 0;
+          input.value = '/theme ';
+          open();
+          render();
+        }
+
         // Static commands — always available.
         var staticCmds = [
           { cmd: '/home', label: 'Home', href: base + '/' },
@@ -369,6 +471,8 @@ https://github.com/UniverLab
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors' },
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
+          { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
+          { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
         ];
 
         // Experiment IDs — auto-generated from the registry.
@@ -395,18 +499,21 @@ https://github.com/UniverLab
           return { cmd: '/' + id, label: id, href: base + '/' + id };
         });
 
-        // /docs — context-aware: if on an experiment page, link to its docs.
+        // /docs — only on experiment pages.
         var docMatch = path.match(/\/(?:es\/)?(\w[\w-]*)\/?$/);
         var currentExp = docMatch && experimentIds.indexOf(docMatch[1]) !== -1 ? docMatch[1] : null;
-        var docsCmd = { cmd: '/docs', label: currentExp ? 'Docs (' + currentExp + ')' : 'Docs', href: currentExp ? '/' + currentExp + '/docs' : '/experiments' };
-
-        var allCmds = [docsCmd].concat(staticCmds, experimentCmds);
+        var allCmds = staticCmds.concat(experimentCmds);
+        if (currentExp) {
+          allCmds.unshift({ cmd: '/docs', label: 'Docs (' + currentExp + ')', href: '/' + currentExp + '/docs' });
+        }
 
         var overlay = null;
         var input = null;
+        var overlay = null;
         var list = null;
         var selected = 0;
         var filtered = [];
+        var inSubmenu = false;
 
         function create() {
           overlay = document.createElement('div');
@@ -439,15 +546,28 @@ https://github.com/UniverLab
 
         function close() {
           if (overlay) overlay.classList.remove('open');
+          inSubmenu = false;
         }
 
         function isOpen() { return overlay && overlay.classList.contains('open'); }
 
         function filter(q) {
           q = q.toLowerCase().replace(/^\//, '');
-          filtered = q
-            ? allCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
-            : allCmds.slice();
+          if (inSubmenu) {
+            // In submenu: filter the theme options, not all commands.
+            var themeCmds = [
+              { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); } },
+              { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); } },
+              { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); } },
+            ];
+            filtered = q
+              ? themeCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
+              : themeCmds;
+          } else {
+            filtered = q
+              ? allCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
+              : allCmds.slice();
+          }
           selected = 0;
           render();
         }
@@ -546,6 +666,39 @@ https://github.com/UniverLab
             var dst = navEntry();
             if (dst.startsWith('http')) window.open(dst, '_blank', 'noopener');
             else window.location.href = dst;
+            return;
+          }
+
+          // i → scroll to top and open celestial fact popup
+          if (e.key === 'i') {
+            e.preventDefault();
+            if (window.scrollY < 10) {
+              var btn = document.querySelector('.celestial-btn');
+              if (btn) btn.click();
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Wait for scroll to fully stop before opening (the popup's own
+              // scroll-listener closes it if it fires during a scroll).
+              var scrollTimer = null;
+              var onScroll = function () {
+                clearTimeout(scrollTimer);
+                scrollTimer = setTimeout(function () {
+                  window.removeEventListener('scroll', onScroll);
+                  if (window.scrollY < 10) {
+                    var btn2 = document.querySelector('.celestial-btn');
+                    if (btn2) btn2.click();
+                  }
+                }, 150);
+              };
+              window.addEventListener('scroll', onScroll, { passive: true });
+            }
+            return;
+          }
+
+          // f → open find overlay
+          if (e.key === 'f') {
+            e.preventDefault();
+            openFind();
             return;
           }
 
@@ -711,6 +864,54 @@ https://github.com/UniverLab
       }
       .cmd-list::-webkit-scrollbar { width: 4px; }
       .cmd-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+      /* Find overlay */
+      .find-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 310;
+        display: flex;
+        justify-content: center;
+        padding-top: 0.75rem;
+        pointer-events: none;
+      }
+      .find-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(18, 18, 22, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.4rem 0.6rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        pointer-events: auto;
+        font-family: 'IBM Plex Mono', monospace;
+      }
+      .find-input {
+        background: none;
+        border: none;
+        color: #e0e0e0;
+        font-family: inherit;
+        font-size: 0.85rem;
+        width: 18rem;
+        outline: none;
+      }
+      .find-input::placeholder { color: rgba(255,255,255,0.3); }
+      .find-count { color: rgba(255,255,255,0.35); font-size: 0.75rem; min-width: 3.5rem; text-align: center; }
+      .find-prev, .find-next, .find-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.4);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.15rem 0.3rem;
+        border-radius: 3px;
+      }
+      .find-prev:hover, .find-next:hover { color: #e0e0e0; background: rgba(255,255,255,0.08); }
+      .find-close { font-size: 1rem; }
+      .find-close:hover { color: #e0e0e0; }
+      .find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
+      .find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
     </style>
   </body>
 </html>
