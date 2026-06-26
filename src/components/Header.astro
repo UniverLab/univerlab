@@ -120,7 +120,6 @@ function isActive(href: string, current: string): boolean {
   (function () {
     var btn = document.querySelector('.celestial-btn');
     if (!btn) return;
-    if (!document.documentElement.dataset.celestial) return;
 
     var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
 
@@ -489,13 +488,12 @@ function isActive(href: string, current: string): boolean {
 
   /* Sun by day, moon by night — a celestial body tracing the header rule like
      the horizon. The button is a 28px hit area; the 8px celestial inside is the
-     visual. Position is set by the circadian script; on non-circadian pages the
-     vars are unset so it stays invisible. The 60s transition matches the update
-     interval, so it glides continuously rather than jumping. */
+     visual. On circadian pages the script sets --sun-pos and --celestial-color;
+     on experiment pages the dot sits centered with the page's own accent. */
   .celestial-btn {
     position: absolute;
     bottom: 0;
-    left: var(--sun-pos, -20px);
+    left: var(--sun-pos, 50%);
     transform: translate(-50%, 50%);
     width: 28px;
     height: 28px;
@@ -505,10 +503,6 @@ function isActive(href: string, current: string): boolean {
     cursor: pointer;
     z-index: 1;
     transition: left 60s linear, opacity 0.4s ease;
-    opacity: 0;
-    pointer-events: none;
-  }
-  html[data-celestial] .celestial-btn {
     opacity: 1;
     pointer-events: auto;
   }
@@ -523,10 +517,16 @@ function isActive(href: string, current: string): boolean {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--celestial-color, transparent);
+    background: var(--celestial-color, var(--accent));
     box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
     transition: transform 0.2s ease, background 0.4s ease, box-shadow 0.4s ease;
     pointer-events: none;
+  }
+  /* Non-circadian pages: subtle dot — fill with accent, border with line, no glow. */
+  html:not([data-celestial]) .celestial {
+    background: var(--accent);
+    border: 1px solid var(--line);
+    box-shadow: none;
   }
   /* Moon — the terminator is a second circle (pseudo-element) sliding across
      the disc. The intersection of two equal circles gives a curved terminator,
@@ -535,6 +535,7 @@ function isActive(href: string, current: string): boolean {
   html[data-celestial='moon'] .celestial {
     background: var(--celestial-color, transparent);
     box-shadow: 0 0 12px 1px color-mix(in srgb, var(--celestial-color, transparent) var(--moon-glow, 50%), transparent);
+    border: 0;
     overflow: hidden;
   }
   html[data-celestial='moon'] .celestial::before {
