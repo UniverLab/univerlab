@@ -118,16 +118,17 @@ The landing is navigable via keyboard, inspired by Canopy's TUI navigation.
 
 | Shortcut | Action |
 |---|---|
-| `Shift+↑` | Previous experiment |
-| `Shift+↓` | Next experiment |
+| `↑` / `↓` | Navigate within page (cards on listing pages, sections elsewhere) |
+| `Shift+↑` | Previous experiment page |
+| `Shift+↓` | Next experiment page |
 | `Shift+←` | Go back (browser history) |
 | `Shift+→` | Go forward (browser history) |
-| `↑` / `↓` | Scroll up / down |
+| `Enter` | Follow focused card link |
 | `h` | Home |
 | `e` | Experiments |
 | `m` | Manifesto |
 | `c` | Contributors |
-| `g` | GitHub |
+| `g` | GitHub (experiment-specific when on an experiment page) |
 | `Esc` | Close active overlay |
 | `/` | Open command palette |
 | `?` | Open help / command list |

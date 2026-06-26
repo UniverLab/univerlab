@@ -561,28 +561,57 @@ https://github.com/UniverLab
             return;
           }
 
-          // Shift+ArrowUp / Shift+ArrowDown → move focus through experiment links
+          // Shift+ArrowUp / Shift+ArrowDown → previous / next experiment page
           if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-            var expNavLinks = document.querySelectorAll('a.exp-nav-link');
-            if (expNavLinks.length) {
-              // Experiment detail page: direct navigation
+            var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage'];
+            var curPath = window.location.pathname;
+            var curMatch = curPath.match(/\/(?:es\/)?(\w[\w-]*)\/?$/);
+            var curId = curMatch ? curMatch[1] : null;
+            var curIdx = curId ? expIds.indexOf(curId) : -1;
+            var nextIdx;
+            if (e.key === 'ArrowDown') {
+              nextIdx = curIdx === -1 ? 0 : (curIdx + 1) % expIds.length;
+            } else {
+              nextIdx = curIdx === -1 ? expIds.length - 1 : (curIdx - 1 + expIds.length) % expIds.length;
+            }
+            e.preventDefault();
+            window.location.href = base2 + '/' + expIds[nextIdx];
+            return;
+          }
+
+          // ArrowUp / ArrowDown → navigate within the page
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            // Cards: cycle through experiment links on listing pages
+            var cards = document.querySelectorAll('a.card, a.row');
+            if (cards.length > 1) {
               e.preventDefault();
-              var idx = e.key === 'ArrowDown' ? 1 : 0;
-              if (expNavLinks[idx]) window.location.href = expNavLinks[idx].getAttribute('href') || '/';
+              if (expFocusIndex === -1) expFocusIndex = e.key === 'ArrowDown' ? 0 : cards.length - 1;
+              else expFocusIndex = e.key === 'ArrowDown'
+                ? (expFocusIndex + 1) % cards.length
+                : (expFocusIndex - 1 + cards.length) % cards.length;
+              var card = cards[expFocusIndex];
+              card.focus({ preventScroll: true });
+              card.scrollIntoView({ block: 'nearest' });
               return;
             }
-            var listingLinks = document.querySelectorAll('a.card, a.row');
-            if (listingLinks.length) {
+            // Sections: jump between <section> elements
+            var sections = document.querySelectorAll('section');
+            if (sections.length > 1) {
               e.preventDefault();
-              if (expFocusIndex === -1) expFocusIndex = e.key === 'ArrowDown' ? 0 : listingLinks.length - 1;
-              else expFocusIndex = e.key === 'ArrowDown'
-                ? (expFocusIndex + 1) % listingLinks.length
-                : (expFocusIndex - 1 + listingLinks.length) % listingLinks.length;
-              var link = listingLinks[expFocusIndex];
-              link.focus({ preventScroll: true });
-              link.scrollIntoView({ block: 'nearest' });
+              var scrollY = window.scrollY;
+              var found = -1;
+              for (var i = 0; i < sections.length; i++) {
+                var top = sections[i].getBoundingClientRect().top + scrollY;
+                if (e.key === 'ArrowDown') {
+                  if (top > scrollY + 4) { found = i; break; }
+                } else {
+                  if (top < scrollY - 4) { found = i; break; }
+                }
+              }
+              if (found === -1) found = e.key === 'ArrowDown' ? sections.length - 1 : 0;
+              sections[found].scrollIntoView({ block: 'start' });
+              return;
             }
-            return;
           }
 
           // Enter → follow the focused experiment link (if palette is closed)
