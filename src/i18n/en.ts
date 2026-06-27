@@ -293,11 +293,13 @@ export const en = {
           'Building this landing, every experiment needed a demo — and every tool (asciinema, vhs, OBS, recording by hand) came out brittle or ugly, with a fresh re-record for each typo. So the demo stopped being a video and became a file: events you can prune, pace and replay. DemoStage records the rest of the lab — including the page you are reading.',
       },
       pipeline: {
-        kicker: '3 commands',
+        kicker: '5 commands',
         items: [
           '<code>capture</code> — live capture: record the session, auto-normalize into a clean score and faithful <code>.rec</code>.',
+          '<code>open</code> — reveal a browser scene (repo page, PDF, localhost) composited into the demo.',
           '<code>record</code> — re-execute <code>demo.toml</code> cleanly, producing a humanized recording.',
           '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
+          '<code>edit</code> — interactively edit timing and wait steps in a demo score.',
         ],
       },
     },

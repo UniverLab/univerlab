@@ -295,11 +295,13 @@ export const es: Dict = {
           'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
-        kicker: '3 comandos',
+        kicker: '5 comandos',
         items: [
           '<code>capture</code> — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un <code>.rec</code> fiel.',
+          '<code>open</code> — revela una escena de navegador (repo, PDF, localhost) compuesta en el demo.',
           '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
           '<code>export</code> — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
+          '<code>edit</code> — edita interactivamente los pasos de tiempo y espera en una partitura.',
         ],
       },
     },

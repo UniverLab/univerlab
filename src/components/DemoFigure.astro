@@ -24,32 +24,146 @@ const isGif = src.endsWith('.gif');
     {isGif ? (
       <img class="demo-video" src={src} alt={caption} loading="lazy" />
     ) : (
-      <video
-        class="demo-video"
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-        poster={poster}
-        aria-label={caption}
-      >
-        <source src={src} type="video/mp4" />
-      </video>
+      <div class="demo-player">
+        <video
+          class="demo-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster={poster}
+          aria-label={caption}
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+        <div class="demo-overlay">
+          <button class="demo-play-btn" type="button" aria-label="Play/Pause">
+            <span class="demo-icon-play">▶</span>
+            <span class="demo-icon-pause" style="display:none">❚❚</span>
+          </button>
+        </div>
+        <div class="demo-bar">
+          <div class="demo-progress"><div class="demo-fill"></div></div>
+        </div>
+      </div>
     )}
   </div>
   <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
 </figure>
 
-<script>
-  // Quality floor: never autoplay motion for visitors who asked not to.
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.querySelectorAll<HTMLVideoElement>('video.demo-video').forEach((v) => {
-      v.removeAttribute('autoplay');
-      v.setAttribute('controls', '');
-      try { v.pause(); } catch (e) {}
+<script is:inline>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll('.demo-player').forEach(function (box) {
+    var video = box.querySelector('video');
+    var overlay = box.querySelector('.demo-overlay');
+    var playIcon = box.querySelector('.demo-icon-play');
+    var pauseIcon = box.querySelector('.demo-icon-pause');
+    var fill = box.querySelector('.demo-fill');
+    if (!video || !overlay || !fill) return;
+
+    if (reduced) {
+      video.removeAttribute('autoplay');
+      video.pause();
+      video.controls = true;
+      overlay.style.display = 'none';
+      box.querySelector('.demo-bar').style.display = 'none';
+      return;
+    }
+
+    var hideTimer = null;
+
+    function showControls() {
+      overlay.style.opacity = '1';
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () {
+        if (!video.paused) {
+          overlay.style.opacity = '0';
+        }
+      }, 2000);
+    }
+
+    function togglePlay() {
+      if (video.paused) {
+        video.play();
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = '';
+      } else {
+        video.pause();
+        playIcon.style.display = '';
+        pauseIcon.style.display = 'none';
+        overlay.style.opacity = '1';
+      }
+    }
+
+    overlay.addEventListener('click', togglePlay);
+    video.addEventListener('click', togglePlay);
+    box.addEventListener('mousemove', showControls);
+    box.addEventListener('mouseenter', showControls);
+
+    video.addEventListener('play', function () {
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = '';
+      showControls();
     });
-  }
+    video.addEventListener('pause', function () {
+      playIcon.style.display = '';
+      pauseIcon.style.display = 'none';
+      overlay.style.opacity = '1';
+    });
+
+    video.addEventListener('timeupdate', function () {
+      if (video.duration) {
+        fill.style.width = (video.currentTime / video.duration * 100).toFixed(2) + '%';
+      }
+    });
+
+    // Seek: click or drag on the progress bar.
+    var bar = box.querySelector('.demo-bar');
+    if (!bar) return;
+
+    function seekFromEvent(e) {
+      var rect = bar.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      if (video.duration) {
+        video.currentTime = pct * video.duration;
+        fill.style.width = (pct * 100).toFixed(2) + '%';
+      }
+    }
+
+    var dragging = false;
+
+    bar.addEventListener('mousedown', function (e) {
+      dragging = true;
+      seekFromEvent(e);
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (dragging) seekFromEvent(e);
+    });
+
+    document.addEventListener('mouseup', function () {
+      dragging = false;
+    });
+
+    // Touch support
+    bar.addEventListener('touchstart', function (e) {
+      dragging = true;
+      seekFromEvent(e.touches[0]);
+    }, { passive: true });
+
+    bar.addEventListener('touchmove', function (e) {
+      if (dragging) seekFromEvent(e.touches[0]);
+    }, { passive: true });
+
+    bar.addEventListener('touchend', function () {
+      dragging = false;
+    });
+  });
+})();
 </script>
 
 <style>
@@ -64,6 +178,66 @@ const isGif = src.endsWith('.gif');
       0 22px 60px rgba(0, 0, 0, 0.3);
   }
   .demo-video { display: block; width: 100%; height: auto; }
+
+  /* Custom player wrapper */
+  .demo-player { position: relative; cursor: pointer; }
+  .demo-player video { display: block; width: 100%; height: auto; }
+
+  /* Play/pause overlay */
+  .demo-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .demo-play-btn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    transition: background 0.2s;
+  }
+  .demo-play-btn:hover { background: rgba(0, 0, 0, 0.6); }
+
+  /* Progress bar — always visible, thin visual but tall hit area */
+  .demo-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 14px;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .demo-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .demo-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--essence);
+    border-radius: 0 2px 2px 0;
+    transition: none;
+  }
+
   .demo-cap {
     margin-top: 0.8rem;
     font-size: 0.85rem;
