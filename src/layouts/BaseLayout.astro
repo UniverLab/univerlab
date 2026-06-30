@@ -21,6 +21,8 @@ interface Props {
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
    *  alongside the site-wide Organization graph. */
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  /** Hidden pages: prevent indexing by search engines. */
+  noindex?: boolean;
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -33,6 +35,7 @@ const {
   mutedCanvas = false,
   surface,
   structuredData,
+  noindex = false,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: paper (a typeset page stays still),
@@ -84,6 +87,7 @@ const orgJsonLd = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="color-scheme" content={colorScheme} />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfbfa" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115" />
@@ -473,6 +477,7 @@ https://github.com/UniverLab
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
           { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
+          { cmd: '/secret', label: 'Dead Ideas', href: base + '/secret' },
         ];
 
         // Experiment IDs — auto-generated from the registry.
