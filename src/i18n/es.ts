@@ -484,6 +484,7 @@ export const es: Dict = {
       body:
         'Ingeniero electrónico y especialista en desarrollo de software, ahora maestrante en Inteligencia Artificial. Reflexivo por naturaleza — el estoicismo y el nihilismo positivo, la astronomía y la biología —, con su familia como su mayor alegría y la ilusión de enseñar algún día. Por ahora construye los experimentos y herramientas abiertas de UniverLab.',
       link: 'github.com/JheisonMB ↗',
+      email: 'jheison.mb@univerlab.org',
     },
     ai: {
       role: 'Colaboradores IA',

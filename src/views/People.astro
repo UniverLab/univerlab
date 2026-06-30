@@ -20,6 +20,7 @@ const contributors = await getContributors();
         <h3>{p.founder.name}</h3>
         <p>{p.founder.body}</p>
         <a class="label" href="https://github.com/JheisonMB" target="_blank" rel="noopener noreferrer">{p.founder.link}</a>
+        <a class="label email" href={`mailto:${p.founder.email}`}>{p.founder.email}</a>
       </li>
       <li>
         <span class="label">{p.ai.role}</span>
@@ -79,4 +80,6 @@ const contributors = await getContributors();
   .avatars a:hover img { filter: grayscale(0); transform: translateY(-2px); }
   .avatars a:hover { color: var(--ink); }
   .who { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; }
+  .email { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); text-decoration: none; }
+  .email:hover { color: var(--accent); }
 </style>
