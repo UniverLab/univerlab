@@ -483,6 +483,16 @@ export const en = {
         what: 'Forest simulation for Canopy\'s idle terminal space — prey, predators, plants, and cellular-automaton rules to fill blank screen real estate.',
         why: 'Dropped in favor of the Brian\'s Brain automaton, which is simpler and already implemented. wildterm made it to a spec. Somewhere in a branch.',
       },
+      {
+        name: 'Canopy Remote',
+        what: 'A cross-platform mobile app for controlling Canopy from a phone — starting, stopping, and monitoring agents on the go.',
+        why: 'The attack surface is too wide. Exposing a daemon to the network — even on localhost — requires auth, encryption, and a considered threat model. None of that exists. Building the feature before the security layer is the wrong order.',
+      },
+      {
+        name: 'UniverLab Newsletter & Download Metrics',
+        what: 'A newsletter for lab updates and a metrics dashboard tracking downloads per CLI.',
+        why: 'Infrastructure cost and no good fit. Cloudflare Workers has no SMTP, so email delivery would need a third-party relay — a dependency for low-signal traffic. The download count can wait until the tools are worth counting.',
+      },
     ] as { name: string; what: string; why: string }[],
   },
   research: {

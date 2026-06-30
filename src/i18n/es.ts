@@ -485,6 +485,16 @@ export const es: Dict = {
         what: 'Simulación de bosque para el espacio ocioso del terminal de Canopy — presas, depredadores, plantas y reglas de autómata celular para llenar el espacio en blanco de la pantalla.',
         why: 'Descartado en favor del autómata de Brian\'s Brain, que es más simple y ya está implementado. wildterm llegó a tener spec. En algún branch.',
       },
+      {
+        name: 'Canopy Remote',
+        what: 'Una app móvil multiplataforma para controlar Canopy desde el teléfono — iniciar, detener y monitorear agentes en movimiento.',
+        why: 'La superficie de ataque es demasiado amplia. Exponer un daemon a la red — incluso en local — requiere auth, cifrado y un modelo de amenaza cuidadoso. Nada de eso existe. Construir la funcionalidad antes que la capa de seguridad es el orden equivocado.',
+      },
+      {
+        name: 'Newsletter y métricas de descargas',
+        what: 'Un newsletter para actualizaciones del lab y un dashboard de métricas de descargas por CLI.',
+        why: 'Costo de infra y ningún proveedor que encaje. Cloudflare Workers no tiene SMTP, así que el envío de correo requeriría un relay externo — una dependencia para tráfico de baja señal. El conteo puede esperar a que las herramientas valgan la pena contarlas.',
+      },
     ] as { name: string; what: string; why: string }[],
   },
   research: {
