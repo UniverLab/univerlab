@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { repository: UniverLab/ghscaff, path: ghscaff, sparse-checkout: docs }
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/cadforge, path: cadforge, sparse-checkout: docs }
+        with: { repository: UniverLab/cadspec, path: cadspec, sparse-checkout: docs }
       - uses: actions/checkout@v4
         with: { repository: UniverLab/demo-stage, path: demo-stage, sparse-checkout: docs }
 

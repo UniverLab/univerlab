@@ -18,8 +18,6 @@ export const collections = {
   'docs-texforge': docsCollection('../texforge/docs'),
   'docs-gitkit': docsCollection('../gitkit/docs'),
   'docs-ghscaff': docsCollection('../ghscaff/docs'),
-  // NOTE: collection key renamed to cadspec; path still points at the real repo
-  // dir `cadforge` until the GitHub repo is renamed.
   'docs-cadspec': docsCollection('../cadspec/docs'),
   'docs-demostage': docsCollection('../demostage/docs'),
 };
