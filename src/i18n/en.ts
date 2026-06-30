@@ -394,6 +394,73 @@ export const en = {
     branchTooltip:
       'The main branch of the Milky Way — the line of cosmic history we are committed to.',
   },
+  observatory: {
+    kicker: 'Observatory',
+    intro:
+      'The Imperative of Continuity is not only philosophy — it is a measurable trajectory. Four series, chosen not for optimism but for honesty: what is growing, and what we are losing.',
+    rising: 'Rising',
+    falling: 'Falling',
+    series: {
+      wikipedia: {
+        title: 'Human knowledge, written in common',
+        unit: 'thousand articles',
+        why: 'Wikipedia is the first time humanity has collectively written its knowledge in one place, freely, in every language. The curve is the Imperative of Continuity, measured.',
+      },
+      'life-expectancy': {
+        title: 'Years a life can hold',
+        unit: 'years',
+        why: 'From 47 years in 1950 to 73 in 2019 — not because people changed, but because knowledge accumulated and medicine spread. The dip in 2021 is the pandemic: no continuity curve is smooth.',
+      },
+      literacy: {
+        title: 'Minds that can read the record',
+        unit: '% of adults',
+        why: 'Literacy is how knowledge persists across generations. Each percentage point is a mind that can now read and add to the accumulated record of humanity.',
+      },
+      'living-planet': {
+        title: 'What we are losing',
+        unit: 'index (1970 = 100)',
+        why: 'The Living Planet Index tracks vertebrate population abundance since 1970. At 31 % of 1970 levels by 2020, A3 is not abstract — it is a downward line. Continuity must account for what we share the planet with.',
+      },
+    },
+    source: 'Source',
+    license: 'License',
+  },
+  secret: {
+    kicker: 'Dead ideas',
+    title: 'The Cemetery',
+    intro:
+      'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a graveyard.',
+    what: 'What it was',
+    why: 'Why it died',
+    epitaph: 'The record is kept because what dies here may live elsewhere.',
+    ideas: [
+      {
+        name: 'Códice',
+        what: 'Decentralized compute network for science — CPU sharing across nodes, with defined roles and a minimal instruction language (LIC).',
+        why: 'AI gradient vectors cannot be cleanly split and distributed; the latency is a fundamental problem. The model that works for BOINC-style compute breaks for deep learning inference.',
+      },
+      {
+        name: 'Knowledge + SM2 + Agents',
+        what: 'Personal memory system with spaced repetition (SM-2) and a pair of agents wired on top for review and generation.',
+        why: 'Cards generate friction when you\'re orchestrating agents — nobody stops to do flashcard review mid-session. The SM-2 attention loop and the agent work loop do not coexist well.',
+      },
+      {
+        name: 'Living Skills',
+        what: 'Skills that self-generate and evolve by observing the PTY stream of other agents in real time. Concept taken from Hermes Agent.',
+        why: 'An agent re-analyzing what other agents are doing is high cost and divides focus. Post-hoc, passive extraction might be feasible — but not while the agent is in the work loop.',
+      },
+      {
+        name: 'Semantic Genomic Chunking',
+        what: 'RAG-style chunking applied to the genome: split sequences by biological meaning (gene boundaries, regulatory regions) rather than arbitrary fixed windows.',
+        why: 'Just a concept. No implementation, no dataset, no collaborator. Seeded here because it might germinate somewhere else.',
+      },
+      {
+        name: 'wildterm',
+        what: 'Forest simulation for Canopy\'s idle terminal space — prey, predators, plants, and cellular-automaton rules to fill blank screen real estate.',
+        why: 'Dropped in favor of the Brian\'s Brain automaton, which is simpler and already implemented. wildterm made it to a spec. Somewhere in a branch.',
+      },
+    ] as { name: string; what: string; why: string }[],
+  },
   research: {
     kicker: 'Cross-experiment',
     title: 'Research',

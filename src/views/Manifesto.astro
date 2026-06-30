@@ -1,10 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getLang, useTranslations } from '../i18n';
+import { series, toSvgCoords, toSvgPoints, SVG_W, SVG_H, SVG_LPAD, SVG_TPAD, SVG_RPAD, SVG_BPAD } from '../data/observatory';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const m = t.manifesto;
 const c = t.cosmos;
+const obs = t.observatory;
 // Build the ring set: each horizon gets a main ring, plus two faint ghost
 // rings between it and the next — giving a sense of the vast empty space
 // between scales. The last horizon has no ghosts after it.
@@ -186,6 +188,77 @@ const rings = c.address.flatMap((_, i) => {
 
   <hr class="rule" />
 
+  <!-- Continuity Observatory — four data series that give the manifesto's
+       imperatives empirical weight. Build-time static data; no runtime fetch.
+       SVG charts include Y-axis labels and a hover crosshair (wired in the
+       script block below). -->
+  <section class="wrap section obs-section">
+    <span class="label">{obs.kicker}</span>
+    <p class="obs-intro">{obs.intro}</p>
+    <div class="obs-grid">
+      {series.map((s) => {
+        const copy = obs.series[s.id as keyof typeof obs.series];
+        const coords = toSvgCoords(s.points);
+        const pts = toSvgPoints(coords);
+        const rising = s.family !== 'fragility';
+        const yVals = s.points.map((p) => p.value);
+        const yMin = Math.min(...yVals);
+        const yMax = Math.max(...yVals);
+        const yTopPx = SVG_TPAD;
+        const yBotPx = SVG_H - SVG_BPAD;
+        const fmtY = (v: number) =>
+          v >= 1000 ? Math.round(v).toLocaleString('en-US') : v % 1 !== 0 ? v.toFixed(1) : String(v);
+        return (
+          <article class={`obs-card obs-${s.family}`}>
+            <header class="obs-card-head">
+              <span class={`obs-dir mono ${rising ? 'obs-up' : 'obs-down'}`} aria-hidden="true">
+                {rising ? '↑' : '↓'}
+              </span>
+              <h3 class="obs-title">{copy.title}</h3>
+            </header>
+            <div class="obs-chart">
+              <svg
+                viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+                class="obs-svg"
+                data-pts={JSON.stringify(coords)}
+                role="img"
+                aria-label={copy.title}
+              >
+                {/* Horizontal guide lines at top/bottom of chart area */}
+                <line x1={SVG_LPAD} y1={yTopPx} x2={SVG_W - SVG_RPAD} y2={yTopPx} class="obs-guide" />
+                <line x1={SVG_LPAD} y1={yBotPx} x2={SVG_W - SVG_RPAD} y2={yBotPx} class="obs-guide" />
+                {/* Y-axis value labels (left of chart) */}
+                <text x={SVG_LPAD - 3} y={yTopPx + 5} text-anchor="end" class="obs-axis-label">{fmtY(yMax)}</text>
+                <text x={SVG_LPAD - 3} y={yBotPx - 2} text-anchor="end" class="obs-axis-label">{fmtY(yMin)}</text>
+                {/* X-axis year labels */}
+                <text x={SVG_LPAD} y={SVG_H - 3} class="obs-axis-label">{s.points[0].year}</text>
+                <text x={SVG_W - SVG_RPAD} y={SVG_H - 3} text-anchor="end" class="obs-axis-label">{s.points[s.points.length - 1].year}</text>
+                {/* Data polyline */}
+                <polyline points={pts} class={`obs-line obs-line-${s.family}`} />
+                {/* Hover crosshair + dot — positioned by JS, hidden until hover */}
+                <line class="obs-crosshair" x1="0" y1={yTopPx} x2="0" y2={yBotPx} visibility="hidden" />
+                <circle class={`obs-dot obs-dot-${s.family}`} cx="0" cy="0" r="3" visibility="hidden" />
+              </svg>
+              {/* Strip below chart: updates year + value on hover */}
+              <div class="obs-hover-strip">
+                <span class="obs-hover-year mono">—</span>
+                <span class="obs-hover-val mono"></span>
+                <span class="obs-unit">{copy.unit}</span>
+              </div>
+            </div>
+            <p class="obs-why">{copy.why}</p>
+            <footer class="obs-attr">
+              <span class="obs-attr-source">{obs.source}: {s.source}</span>
+              <span class="obs-attr-license">{obs.license}: {s.license}</span>
+            </footer>
+          </article>
+        );
+      })}
+    </div>
+  </section>
+
+  <hr class="rule" />
+
   <section class="wrap section closing">
     <p class="prose final">{m.closing}</p>
     <p class="note">{m.note}</p>
@@ -279,6 +352,80 @@ const rings = c.address.flatMap((_, i) => {
   }
   .works h3 { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.1rem; margin: 0; color: var(--ink); }
   .works p { color: var(--ink-dim); font-size: 0.92rem; margin: 0; line-height: 1.6; }
+
+  /* Continuity Observatory — four interactive mini line-charts. Always 2×2
+     grid, responsive to 1 column on mobile. SVG has baked-in Y/X axis labels
+     and a JS-driven hover crosshair. */
+  .obs-section { padding-block: 3rem; }
+  .obs-intro { max-width: 52rem; margin: 1.2rem 0 2rem; color: var(--ink-dim); font-size: 1.02rem; line-height: 1.7; }
+  .obs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+  @media (max-width: 38rem) { .obs-grid { grid-template-columns: 1fr; } }
+
+  .obs-card {
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--line);
+    padding: 1.2rem 1.3rem 1rem;
+    display: flex; flex-direction: column; gap: 0.85rem;
+    transition: border-top-color 0.18s ease;
+    backdrop-filter: blur(2px);
+  }
+  .obs-card.obs-flourishing { border-top-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .obs-card.obs-knowledge { border-top-color: color-mix(in srgb, var(--accent) 90%, transparent); }
+  .obs-card.obs-fragility { border-top-color: #e0605a66; }
+
+  .obs-card-head { display: flex; align-items: flex-start; gap: 0.55rem; }
+  .obs-dir { font-size: 0.85rem; flex-shrink: 0; padding-top: 0.22rem; }
+  .obs-up { color: var(--accent); }
+  .obs-down { color: #e0605a; }
+  .obs-title { font-family: var(--font-serif); font-style: italic; font-size: 1.02rem; font-weight: 500; margin: 0; color: var(--ink); line-height: 1.35; }
+
+  /* Chart container + SVG */
+  .obs-chart { display: flex; flex-direction: column; }
+  .obs-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+
+  /* Data polyline */
+  .obs-line { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .obs-line-flourishing { stroke: var(--accent); }
+  .obs-line-knowledge { stroke: var(--accent); }
+  .obs-line-fragility { stroke: #e0605a; }
+
+  /* Y/X axis guide lines and labels (SVG elements) */
+  .obs-guide { stroke: var(--line); stroke-width: 0.5; }
+  .obs-axis-label { font-family: var(--font-mono); font-size: 7px; fill: var(--ink-faint); }
+
+  /* Hover crosshair line + value dot */
+  .obs-crosshair { stroke: var(--ink-faint); stroke-width: 0.8; stroke-dasharray: 2 2; }
+  .obs-dot-flourishing, .obs-dot-knowledge { fill: var(--accent); }
+  .obs-dot-fragility { fill: #e0605a; }
+
+  /* Hover strip below SVG: shows year + value + unit when mouse is over chart */
+  .obs-hover-strip {
+    display: flex; align-items: baseline; gap: 0.35rem;
+    padding: 0.3rem 0 0;
+    min-height: 1.55rem;
+    border-top: 1px solid var(--line);
+  }
+  .obs-hover-year { font-size: 0.74rem; color: var(--ink-dim); min-width: 2.5rem; }
+  .obs-hover-val { font-size: 0.82rem; color: var(--accent); }
+  .obs-card.obs-fragility .obs-hover-val { color: #e0605a; }
+  .obs-unit { font-size: 0.65rem; color: var(--ink-faint); }
+
+  .obs-why { margin: 0; color: var(--ink-dim); font-size: 0.9rem; line-height: 1.62; flex: 1; }
+
+  .obs-attr {
+    display: flex; flex-direction: column; gap: 0.1rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line);
+  }
+  .obs-attr-source, .obs-attr-license {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.02em; color: var(--ink-faint);
+  }
 
   .closing { padding-block: 3.5rem 5rem; }
   .final { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--ink); margin-bottom: 1.4rem; }
@@ -843,4 +990,74 @@ const rings = c.address.flatMap((_, i) => {
 
   // The section-by-section reveal is pure CSS (animation-timeline: view()) — no
   // JS needed; it degrades to a fully-visible page where unsupported.
+</script>
+
+<script>
+  // Observatory interactive hover: crosshair + data strip for each chart.
+  // SVG_W / SVG_LPAD must match the constants in observatory.ts.
+  const OBS_W = 280, OBS_LPAD = 38, OBS_RPAD = 4;
+
+  document.querySelectorAll<SVGSVGElement>('.obs-svg').forEach((svg) => {
+    const raw = svg.dataset.pts;
+    if (!raw) return;
+    type Coord = { year: number; value: number; x: number; y: number };
+    let pts: Coord[];
+    try { pts = JSON.parse(raw); } catch { return; }
+    if (!pts.length) return;
+
+    const crosshair = svg.querySelector<SVGLineElement>('.obs-crosshair');
+    const dot = svg.querySelector<SVGCircleElement>('.obs-dot');
+    const chart = svg.closest<HTMLElement>('.obs-chart');
+    const yearEl = chart?.querySelector<HTMLElement>('.obs-hover-year');
+    const valEl = chart?.querySelector<HTMLElement>('.obs-hover-val');
+
+    const closestPt = (svgX: number) =>
+      pts.reduce((best, p) =>
+        Math.abs(p.x - svgX) < Math.abs(best.x - svgX) ? p : best);
+
+    const fmtVal = (v: number) =>
+      v >= 1000 ? v.toLocaleString() : v % 1 !== 0 ? v.toFixed(1) : String(v);
+
+    const toSvgX = (clientX: number) => {
+      const r = svg.getBoundingClientRect();
+      return (clientX - r.left) * (OBS_W / r.width);
+    };
+
+    const showPt = (svgX: number) => {
+      const p = closestPt(svgX);
+      crosshair?.setAttribute('x1', p.x.toFixed(1));
+      crosshair?.setAttribute('x2', p.x.toFixed(1));
+      crosshair?.removeAttribute('visibility');
+      dot?.setAttribute('cx', p.x.toFixed(1));
+      dot?.setAttribute('cy', p.y.toFixed(1));
+      dot?.removeAttribute('visibility');
+      if (yearEl) yearEl.textContent = String(p.year);
+      if (valEl) valEl.textContent = fmtVal(p.value);
+    };
+
+    const hidePt = () => {
+      crosshair?.setAttribute('visibility', 'hidden');
+      dot?.setAttribute('visibility', 'hidden');
+      if (yearEl) yearEl.textContent = '—';
+      if (valEl) valEl.textContent = '';
+    };
+
+    svg.addEventListener('mousemove', (e) => {
+      const svgX = toSvgX(e.clientX);
+      if (svgX < OBS_LPAD || svgX > OBS_W - OBS_RPAD) { hidePt(); return; }
+      showPt(svgX);
+    });
+
+    svg.addEventListener('mouseleave', hidePt);
+
+    svg.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const svgX = toSvgX(e.touches[0].clientX);
+      if (svgX < OBS_LPAD || svgX > OBS_W - OBS_RPAD) { hidePt(); return; }
+      showPt(svgX);
+    }, { passive: false });
+
+    svg.addEventListener('touchend', hidePt);
+  });
 </script>

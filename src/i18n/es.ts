@@ -396,6 +396,73 @@ export const es: Dict = {
     branchTooltip:
       'La rama principal de la Vía Láctea: la línea de la historia cósmica en la que estamos.',
   },
+  observatory: {
+    kicker: 'Observatorio',
+    intro:
+      'El Imperativo de Continuidad no es solo filosofía — es una trayectoria medible. Cuatro series, elegidas no por optimismo sino por honestidad: lo que crece, y lo que estamos perdiendo.',
+    rising: 'En ascenso',
+    falling: 'En descenso',
+    series: {
+      wikipedia: {
+        title: 'El conocimiento humano, escrito en común',
+        unit: 'miles de artículos',
+        why: 'Wikipedia es la primera vez que la humanidad ha escrito colectivamente su conocimiento en un solo lugar, de forma libre, en todos los idiomas. La curva es el Imperativo de Continuidad, medido.',
+      },
+      'life-expectancy': {
+        title: 'Años que una vida puede abarcar',
+        unit: 'años',
+        why: 'De 47 años en 1950 a 73 en 2019 — no porque las personas cambiaran, sino porque el conocimiento se acumuló y la medicina se extendió. La caída de 2021 es la pandemia: ninguna curva de continuidad es suave.',
+      },
+      literacy: {
+        title: 'Mentes que pueden leer el registro',
+        unit: '% de adultos',
+        why: 'La alfabetización es cómo el conocimiento persiste entre generaciones. Cada punto porcentual es una mente que ahora puede leer y añadir al registro acumulado de la humanidad.',
+      },
+      'living-planet': {
+        title: 'Lo que estamos perdiendo',
+        unit: 'índice (1970 = 100)',
+        why: 'El Índice Planeta Vivo mide la abundancia de poblaciones de vertebrados desde 1970. Al 31 % de los niveles de 1970 en 2020, A3 no es abstracto — es una línea que desciende. La continuidad debe dar cuenta de lo que compartimos el planeta.',
+      },
+    },
+    source: 'Fuente',
+    license: 'Licencia',
+  },
+  secret: {
+    kicker: 'Ideas muertas',
+    title: 'El Cementerio',
+    intro:
+      'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un cementerio.',
+    what: 'Qué era',
+    why: 'Por qué murió',
+    epitaph: 'El registro existe porque lo que aquí muere puede vivir en otro lugar.',
+    ideas: [
+      {
+        name: 'Códice',
+        what: 'Red de cómputo descentralizado para ciencia — intercambio de CPU entre nodos, con roles definidos y un lenguaje de instrucciones básico (LIC).',
+        why: 'Los vectores de gradiente de IA no se pueden partir y distribuir limpiamente; la latencia es un problema de fondo. El modelo que funciona para BOINC se rompe con la inferencia de aprendizaje profundo.',
+      },
+      {
+        name: 'Conocimiento + SM2 + Agentes',
+        what: 'Sistema de memoria personal con repetición espaciada (SM-2) y un par de agentes encima para revisión y generación.',
+        why: 'Las tarjetas generan fricción cuando se están orquestando agentes — nadie para a hacer repaso de tarjetas en medio de una sesión. El bucle de atención SM-2 y el bucle de trabajo de los agentes no coexisten bien.',
+      },
+      {
+        name: 'Living Skills',
+        what: 'Skills que se auto-generan y evolucionan observando el stream de PTY de otros agentes en tiempo real. Concepto tomado de Hermes Agent.',
+        why: 'Un agente re-analizando lo que hacen los demás tiene un coste alto y divide el foco. La extracción post-hoc y pasiva podría ser viable — pero no mientras el agente está en el bucle de trabajo.',
+      },
+      {
+        name: 'Chunking Genómico Semántico',
+        what: 'Chunking estilo RAG aplicado al genoma: dividir secuencias por significado biológico (límites de genes, regiones reguladoras) en lugar de ventanas fijas arbitrarias.',
+        why: 'Solo un concepto. Sin implementación, sin dataset, sin colaborador. Sembrado aquí porque podría germinar en otro sitio.',
+      },
+      {
+        name: 'wildterm',
+        what: 'Simulación de bosque para el espacio ocioso del terminal de Canopy — presas, depredadores, plantas y reglas de autómata celular para llenar el espacio en blanco de la pantalla.',
+        why: 'Descartado en favor del autómata de Brian\'s Brain, que es más simple y ya está implementado. wildterm llegó a tener spec. En algún branch.',
+      },
+    ] as { name: string; what: string; why: string }[],
+  },
   research: {
     kicker: 'Entre experimentos',
     title: 'Investigación',
