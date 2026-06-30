@@ -36,6 +36,9 @@ export interface Experiment {
    *  landing and behind the hero "Watch demo" button. Set to e.g.
    *  '/demos/gitkit.mp4' once recorded; until then both stay hidden. */
   demo?: string;
+  /** External app URL for experiments that ship as a hosted web app instead of
+   *  (or in addition to) a CLI. Shown as a "Launch app" CTA on the hero. */
+  url?: string;
 }
 
 // Install commands go through the `get.univerlab.org` redirector worker (see
@@ -56,6 +59,7 @@ export const experiments: Experiment[] = [
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', surface: 'blueprint', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
   { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.gif' },
+  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#f5c842', github: 'https://github.com/UniverLab/quorum', bg: 'forge', url: 'https://quorum.univerlab.org' },
 ];
 
 /** Look up an experiment by id, failing fast if the id is unknown. */

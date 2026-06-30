@@ -31,6 +31,7 @@ export const es: Dict = {
     skipToContent: 'Saltar al contenido',
     demo: 'Ver demo',
     demoBy: 'grabado con DemoStage',
+    launch: 'Abrir app ↗',
   },
   status: {
     active: 'activo',
@@ -278,6 +279,29 @@ export const es: Dict = {
           '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
           '¿Cómo se compara la línea base clásica (BM3D) con un modelo aprendido (U-Net) a la profundidad de LSST DC2?',
           '¿Puede el benchmark completo ser reproducible de extremo a extremo — datos, scripts y bibliografía versionados?',
+        ],
+      },
+    },
+    'quorum': {
+      need: 'El planning poker acumula fricción — una cuenta SaaS, una invitación al servidor, una herramienta que nadie quería instalar.',
+      tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      koan: '// la estimación ya está en la sala',
+      lede:
+        'Quorum conecta a los planificadores <strong>punto a punto</strong> mediante WebRTC — sin relay, sin nube, sin cuenta. Comparte el enlace de la sala, elige una carta, y cuando todos votan el mazo se <strong>revela solo</strong>. Desconéctate y la sesión sigue viva; vuelve a conectar y el estado se sincroniza.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Un enlace, sin servidor.',
+        body:
+          'Cada sesión de planning poker significaba mandar a los compañeros a una herramienta SaaS, crear una sala y esperar que el plan gratuito siguiera funcionando. La pregunta era: ¿cómo sería un planning poker si se elimina el servidor por completo? La respuesta resultó ser una sola URL — abre dos pestañas y las pestañas se comunican entre sí. Quorum es lo que pasa cuando enrutas la señal por el tracker de BitTorrent en lugar de un centro de datos.',
+      },
+      how: {
+        kicker: 'Sesión P2P',
+        items: [
+          'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
+          'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
+          'Las cartas se revelan solas en cuanto todos votan — cuenta regresiva de 3 s para que nada sorprenda.',
+          'Carga una lista de historias (pega o CSV) y avanza por ellas en orden.',
+          'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
     },

@@ -30,6 +30,7 @@ export const en = {
     skipToContent: 'Skip to content',
     demo: 'Watch demo',
     demoBy: 'recorded with DemoStage',
+    launch: 'Launch app ↗',
   },
   status: {
     active: 'active',
@@ -276,6 +277,29 @@ export const en = {
           'Can a denoiser raise completeness without hurting purity — or does it invent sources that were never there?',
           'How does the classical baseline (BM3D) compare to a learned model (U-Net) at LSST DC2 depth?',
           'Can the whole benchmark be reproducible end to end — versioned data, scripts and bibliography?',
+        ],
+      },
+    },
+    'quorum': {
+      need: 'Planning poker piles up friction — a SaaS account, a server invite, a tool nobody wanted to install.',
+      tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
+      koan: '// the estimate is already in the room',
+      lede:
+        'Quorum connects planners <strong>peer-to-peer</strong> via WebRTC — no relay, no cloud, no account. Share the room link, pick a card, and when everyone votes the deck <strong>auto-reveals</strong>. Disconnect and the session stays alive; reconnect and the state syncs back.',
+      genesis: {
+        kicker: 'Genesis',
+        title: 'One link, no server.',
+        body:
+          'Every planning poker session meant sending teammates to a SaaS tool, creating a room, and hoping the free tier still worked. The question was: what does a planning poker app look like if you strip out the server entirely? The answer turned out to be a single URL — open two tabs and the tabs talk to each other. Quorum is what happens when you route the signal through the BitTorrent tracker instead of a data center.',
+      },
+      how: {
+        kicker: 'P2P session',
+        items: [
+          'Share the room URL — no sign-up, no invite flow.',
+          'Pick a card from the Fibonacci deck (0, 1, 2, 3, 5, 8, 13, 21, ?).',
+          'Cards auto-reveal the moment everyone votes — 3 s countdown so nothing surprises.',
+          'Load a story list (paste or CSV) and step through stories in order.',
+          'Disconnect and reconnect — state syncs back from any peer still in the room.',
         ],
       },
     },
