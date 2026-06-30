@@ -20,7 +20,7 @@ const contributors = await getContributors();
         <h3>{p.founder.name}</h3>
         <p>{p.founder.body}</p>
         <a class="label" href="https://github.com/JheisonMB" target="_blank" rel="noopener noreferrer">{p.founder.link}</a>
-        <a class="label email" href={`mailto:${p.founder.email}`}>{p.founder.email}</a>
+        <a class="email" href={`mailto:${p.founder.email}`}>{p.founder.email}</a>
       </li>
       <li>
         <span class="label">{p.ai.role}</span>
