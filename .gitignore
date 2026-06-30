@@ -26,6 +26,11 @@ node_modules/
 dist/
 .astro/
 npm-debug.log*
+
+# Local env — never commit tokens
+.env
+.env.local
+.env.*.local
 *:Zone.Identifier
 
 # Demo media — large binary files, managed outside git

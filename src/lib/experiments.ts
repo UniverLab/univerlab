@@ -55,7 +55,7 @@ export const experiments: Experiment[] = [
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#7ee081', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'scaffold', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadforge', bg: 'primitives', surface: 'blueprint', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
-  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'beta', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.gif' },
+  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.gif' },
 ];
 
 /** Look up an experiment by id, failing fast if the id is unknown. */

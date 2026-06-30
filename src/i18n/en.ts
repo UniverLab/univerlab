@@ -426,10 +426,10 @@ export const en = {
     license: 'License',
   },
   secret: {
-    kicker: 'Dead ideas',
-    title: 'The Cemetery',
+    kicker: 'Archived ideas',
+    title: 'The Archive',
     intro:
-      'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a graveyard.',
+      'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a record.',
     what: 'What it was',
     why: 'Why it died',
     epitaph: 'The record is kept because what dies here may live elsewhere.',

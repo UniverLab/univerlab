@@ -428,10 +428,10 @@ export const es: Dict = {
     license: 'Licencia',
   },
   secret: {
-    kicker: 'Ideas muertas',
-    title: 'El Cementerio',
+    kicker: 'Ideas archivadas',
+    title: 'El Archivo',
     intro:
-      'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un cementerio.',
+      'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
     why: 'Por qué murió',
     epitaph: 'El registro existe porque lo que aquí muere puede vivir en otro lugar.',
