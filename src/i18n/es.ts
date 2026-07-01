@@ -292,7 +292,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Un enlace, sin servidor.',
         body:
-          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio.',
+          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio. Se llama Quorum por la regla que lo rige: un quórum es la cantidad que una decisión necesita para valer — así las cartas quedan ocultas hasta que todos han jugado, y entonces se revelan a la vez.',
       },
       how: {
         kicker: 'Sesión P2P',

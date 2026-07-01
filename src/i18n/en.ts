@@ -290,7 +290,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'One link, no server.',
         body:
-          'Every estimation round meant routing the team through a server somewhere: create a room, share an invite, hope it still worked. The question was simple — what does planning poker look like if you remove the server entirely? The answer was a single URL. Open it and the browsers talk to each other directly, routing the signal through the BitTorrent tracker instead of a data centre. No host, nothing in the middle.',
+          'Every estimation round meant routing the team through a server somewhere: create a room, share an invite, hope it still worked. The question was simple — what does planning poker look like if you remove the server entirely? The answer was a single URL. Open it and the browsers talk to each other directly, routing the signal through the BitTorrent tracker instead of a data centre. No host, nothing in the middle. It’s called Quorum for the rule it runs on: a quorum is the count a decision needs to be valid — so the cards stay hidden until everyone has played, then flip at once.',
       },
       how: {
         kicker: 'P2P session',
