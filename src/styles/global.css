@@ -97,6 +97,17 @@ html[data-surface='observatory'] {
   --line: #1e1b2c;
 }
 
+/* quorum — warm earthen paper: a light ochre ground with dark umber ink, the
+   round table where estimates are laid down. Tones of clay and sand. */
+html[data-surface='quorum'] {
+  --bg: #faf6ec;
+  --bg-raise: #fffdf6;
+  --ink: #2c1e08;
+  --ink-dim: #6f5628;
+  --ink-faint: #a2895c;
+  --line: #e6d9bc;
+}
+
 /* demostage — recording studio: a bright warm-white set; the black terminal
    monitor and the coral REC carry the contrast. */
 html[data-surface='studio'] {

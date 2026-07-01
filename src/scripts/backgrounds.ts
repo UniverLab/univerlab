@@ -127,60 +127,6 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Mesh — peers drifting free and linking when they drift near, a decentralised
-     network that forms and dissolves with no central host. Quorum's P2P essence:
-     no gravity well (unlike cosmic), links fade with distance, nodes pulse. */
-  mesh(ctx) {
-    const { c } = ctx;
-    const N = Math.min(26, Math.max(10, Math.floor((ctx.w * ctx.h) / 46000)));
-    const ps = Array.from({ length: N }, () => ({
-      x: rand(0, ctx.w),
-      y: rand(0, ctx.h),
-      vx: rand(-0.18, 0.18),
-      vy: rand(-0.18, 0.18),
-      s: rand(1.4, 3.2),
-      ph: rand(0, Math.PI * 2),
-    }));
-    const LINK2 = 190 * 190; // squared px distance within which peers link
-    return (t) => {
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      for (const p of ps) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < -10) p.x = ctx.w + 10;
-        else if (p.x > ctx.w + 10) p.x = -10;
-        if (p.y < -10) p.y = ctx.h + 10;
-        else if (p.y > ctx.h + 10) p.y = -10;
-      }
-      // mesh links — brighter the closer two peers are
-      c.strokeStyle = ctx.color;
-      c.lineWidth = 1;
-      for (let i = 0; i < ps.length; i++) {
-        for (let j = i + 1; j < ps.length; j++) {
-          const dx = ps[i].x - ps[j].x;
-          const dy = ps[i].y - ps[j].y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < LINK2) {
-            c.globalAlpha = 0.14 * (1 - d2 / LINK2);
-            c.beginPath();
-            c.moveTo(ps[i].x, ps[i].y);
-            c.lineTo(ps[j].x, ps[j].y);
-            c.stroke();
-          }
-        }
-      }
-      // nodes — a gentle heartbeat
-      c.fillStyle = ctx.color;
-      for (const p of ps) {
-        c.globalAlpha = 0.55 + 0.35 * Math.sin(t * 0.0016 + p.ph);
-        c.beginPath();
-        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
-
   /* Brian's Brain — the same 3-state automaton as the Canopy TUI, rendered the
      way the terminal draws it: in Braille glyphs (U+2800–U+28FF). The automaton
      runs on a fine sub-grid and every 2×4 block of cells is packed into one

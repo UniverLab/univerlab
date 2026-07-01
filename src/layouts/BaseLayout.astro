@@ -41,8 +41,8 @@ const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: paper (a typeset page stays still),
 // studio (a lit stage, not drift), and blueprint (cadspec's clean plan — calm
 // and geometric, no animation). ghscaff (scaffold) keeps its live drawing.
-const stillSurface = ['paper', 'studio', 'blueprint'].includes(surface ?? '');
-const colorScheme = ['paper', 'blueprint', 'studio'].includes(surface ?? '') ? 'light' : 'dark';
+const stillSurface = ['paper', 'studio', 'blueprint', 'quorum'].includes(surface ?? '');
+const colorScheme = ['paper', 'blueprint', 'studio', 'quorum'].includes(surface ?? '') ? 'light' : 'dark';
 
 // Only request the font families a given surface actually uses. Every page
 // needs Inter (body) + the mono signature; `paper` adds Spectral; the grotesque
@@ -52,7 +52,7 @@ const fontFamilies = ['IBM+Plex+Mono:wght@400;500', 'Inter:wght@400;500;600'];
 if (surface === 'paper') {
   fontFamilies.push('Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500');
 }
-if (['scaffold', 'blueprint', 'observatory', 'studio'].includes(surface ?? '')) {
+if (['scaffold', 'blueprint', 'observatory', 'studio', 'quorum'].includes(surface ?? '')) {
   fontFamilies.push('Space+Grotesk:wght@300;400;500;600');
 }
 const fontHref =

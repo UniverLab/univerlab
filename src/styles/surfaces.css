@@ -255,6 +255,42 @@ html[data-surface='blueprint'] .koan {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   quorum · `quorum` — the round table.
+
+   A warm earthen page in tones of clay and sand; a soft overhead glow pools at
+   the top centre like a lamp over the table where the cards are laid. Type is a
+   clean grotesque; the koan reads as a shell comment.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='quorum'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+html[data-surface='quorum'] .exp {
+  /* The bright brand amber has no contrast on cream — accents use a deep ochre. */
+  --essence: #b3771f !important;
+}
+html[data-surface='quorum'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(120% 85% at 50% -12%, color-mix(in srgb, #c68a2e 14%, transparent), transparent 55%);
+}
+html[data-surface='quorum'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+html[data-surface='quorum'] .koan {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    astro-denoise · `observatory` — the night sky.
 
    The starfield canvas carries the motif; type goes quiet and scientific —

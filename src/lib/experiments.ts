@@ -12,8 +12,7 @@ export type BgTheme =
   | 'forge'
   | 'gitgraph'
   | 'scaffold'
-  | 'drift'
-  | 'mesh';
+  | 'drift';
 
 export interface Experiment {
   id: ExperimentId;
@@ -60,7 +59,7 @@ export const experiments: Experiment[] = [
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
   { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.gif' },
-  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#f5c842', github: 'https://github.com/UniverLab/quorum', bg: 'mesh', url: 'https://quorum.univerlab.org' },
+  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#c68a2e', github: 'https://github.com/UniverLab/quorum', bg: 'forge', surface: 'quorum', url: 'https://quorum.univerlab.org' },
 ];
 
 /** Look up an experiment by id, failing fast if the id is unknown. */
