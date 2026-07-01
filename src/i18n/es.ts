@@ -283,7 +283,7 @@ export const es: Dict = {
       },
     },
     'quorum': {
-      need: 'El planning poker acumula fricción — una cuenta SaaS, una invitación al servidor, una herramienta que nadie quería instalar.',
+      need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       koan: '// la estimación ya está en la sala',
       lede:
@@ -292,7 +292,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Un enlace, sin servidor.',
         body:
-          'Cada sesión de planning poker significaba mandar a los compañeros a una herramienta SaaS, crear una sala y esperar que el plan gratuito siguiera funcionando. La pregunta era: ¿cómo sería un planning poker si se elimina el servidor por completo? La respuesta resultó ser una sola URL — abre dos pestañas y las pestañas se comunican entre sí. Quorum es lo que pasa cuando enrutas la señal por el tracker de BitTorrent en lugar de un centro de datos.',
+          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio.',
       },
       how: {
         kicker: 'Sesión P2P',

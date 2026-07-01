@@ -281,7 +281,7 @@ export const en = {
       },
     },
     'quorum': {
-      need: 'Planning poker piles up friction — a SaaS account, a server invite, a tool nobody wanted to install.',
+      need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       koan: '// the estimate is already in the room',
       lede:
@@ -290,7 +290,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'One link, no server.',
         body:
-          'Every planning poker session meant sending teammates to a SaaS tool, creating a room, and hoping the free tier still worked. The question was: what does a planning poker app look like if you strip out the server entirely? The answer turned out to be a single URL — open two tabs and the tabs talk to each other. Quorum is what happens when you route the signal through the BitTorrent tracker instead of a data center.',
+          'Every estimation round meant routing the team through a server somewhere: create a room, share an invite, hope it still worked. The question was simple — what does planning poker look like if you remove the server entirely? The answer was a single URL. Open it and the browsers talk to each other directly, routing the signal through the BitTorrent tracker instead of a data centre. No host, nothing in the middle.',
       },
       how: {
         kicker: 'P2P session',
