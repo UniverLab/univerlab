@@ -39,9 +39,21 @@ function isActive(href: string, current: string): boolean {
   if (href === '/' || href === '/es') return current === href;
   return current === href || current.startsWith(href + '/');
 }
+
+// Wave strip that fills the bar's empty right side once the nav collapses to a
+// burger. One seamless sine tile (wavelength 30) across a 720-wide band so it
+// can flow via translate. Same motif as the brand banners.
+const waveA = 'M0,14 q15,-8 30,0' + ' t30,0'.repeat(23);
+const waveB = 'M0,15 q15,-5 30,0' + ' t30,0'.repeat(23);
 ---
 <header>
   <div class="wrap bar">
+    <span class="bar-waves" aria-hidden="true">
+      <svg viewBox="0 0 720 28">
+        <path d={waveB} fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-opacity="0.26" stroke-linecap="round"/>
+        <path d={waveA} fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-opacity="0.48" stroke-linecap="round"/>
+      </svg>
+    </span>
     <a href={localizePath('/', lang)} class="home" aria-label="UniverLab">
       <Mark size={42} />
       <NameGloss senses={t.home.hero.senses} tagline={t.home.hero.tagline} />
@@ -74,6 +86,12 @@ function isActive(href: string, current: string): boolean {
           hreflang={other}
         >{languages[other]}</a>
       )}
+      <span class="nav-waves" aria-hidden="true">
+        <svg viewBox="0 0 720 28">
+          <path d={waveB} fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-opacity="0.26" stroke-linecap="round"/>
+          <path d={waveA} fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-opacity="0.48" stroke-linecap="round"/>
+        </svg>
+      </span>
     </nav>
   </div>
   <hr class="rule" />
@@ -99,6 +117,8 @@ function isActive(href: string, current: string): boolean {
     const setOpen = (open: boolean) => {
       siteNav.classList.toggle('open', open);
       burger.setAttribute('aria-expanded', String(open));
+      // Waves are exclusive: bar strip when closed, menu strip when open.
+      siteNav.parentElement?.classList.toggle('menu-open', open);
     };
     burger.addEventListener('click', () =>
       setOpen(burger.getAttribute('aria-expanded') !== 'true'),
@@ -584,6 +604,8 @@ function isActive(href: string, current: string): boolean {
 
   @media (max-width: 1024px) {
     .burger { display: inline-flex; }
+    /* Keep the wordmark and burger above the wave band. */
+    .home, .burger { position: relative; z-index: 1; }
     nav {
       display: none;
       position: absolute;
@@ -595,13 +617,70 @@ function isActive(href: string, current: string): boolean {
       text-align: right;
       gap: 1.1rem;
       min-width: 11rem;
-      padding: 1.1rem 1.3rem;      /* breathing room around the options */
+      padding: 1.1rem 1.3rem 1.6rem; /* extra bottom room for the wave strip */
       background: var(--bg-raise);
       border: 1px solid var(--line);
       border-radius: 12px;
       box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+      overflow: hidden;              /* clip the wave strip to the rounded card */
     }
     nav.open { display: flex; }
+
+    /* The same motif also rides along the bottom of the open menu card. */
+    .nav-waves {
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 22px;
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);
+      mask-image: linear-gradient(90deg, transparent, #000 42%);
+    }
+    .nav-waves svg {
+      display: block;
+      width: 720px;
+      height: 28px;
+      animation: bar-wave-flow 6s linear infinite;
+    }
+
+    /* Once the nav collapses to a burger, waves fill the empty right side of
+       the bar — between the wordmark and the burger, faded off both. */
+    .bar-waves {
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 28px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent 40%, #000 56%, #000 86%, transparent 96%);
+      mask-image: linear-gradient(90deg, transparent 40%, #000 56%, #000 86%, transparent 96%);
+    }
+    /* When the menu opens its own wave strip appears, so drop the bar's. */
+    .bar.menu-open .bar-waves { display: none; }
+    .bar-waves svg {
+      display: block;
+      width: 720px;
+      height: 28px;
+      margin-left: auto;           /* anchor to the right, near the burger */
+      animation: bar-wave-flow 7s linear infinite;
+    }
+    @keyframes bar-wave-flow { to { transform: translateX(-30px); } }
+  }
+
+  /* Hidden on desktop, where the inline nav already fills the bar. Scoped to a
+     min-width query so it can't override the max-width rule above by source order. */
+  @media (min-width: 1025px) {
+    .bar-waves, .nav-waves { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-waves svg, .nav-waves svg { animation: none; }
   }
 </style>
 
