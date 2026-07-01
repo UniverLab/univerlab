@@ -256,12 +256,12 @@ export const en = {
       },
     },
     'astro-denoise': {
-      need: 'Telescope surveys drown faint galaxies in sensor noise.',
+      need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
-        'Reproducible benchmarking of denoising methods — BM3D vs U-Net — on simulated LSST DC2 images.',
+        'A reproducible benchmarking platform for astronomical denoising — judged on the science it recovers, not how clean it looks.',
       koan: 'Most of the universe arrives as noise.',
       lede:
-        'This research track <strong>benchmarks</strong> a classical baseline and a learned model — <strong>BM3D</strong> and <strong>U-Net</strong> — on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images, scored by <em>science-oriented</em> metrics: <strong>completeness</strong> and <strong>purity</strong>. The goal is not a prettier picture but honest evidence — every script, dataset and bibliographic card versioned for audit and repetition.',
+        'astro-denoise is a modular, reproducible <strong>benchmark</strong> for denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — a classical filter, a trained network — plugs into the same protocol and runs on the same patches, then is scored not by a cleaner picture but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalogue, matched against DC2’s truth. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references — the platform is built to hold whatever comes next.',
       genesis: {
         kicker: 'Genesis',
         title: "The master's thesis.",
@@ -275,8 +275,8 @@ export const en = {
         kicker: 'Questions under study',
         items: [
           'Can a denoiser raise completeness without hurting purity — or does it invent sources that were never there?',
-          'How does the classical baseline (BM3D) compare to a learned model (U-Net) at LSST DC2 depth?',
-          'Can the whole benchmark be reproducible end to end — versioned data, scripts and bibliography?',
+          'Which family of methods — classical filters or learned models — actually helps at LSST DC2 depth, and by how much?',
+          'Can the whole benchmark run reproducibly end to end — versioned data, methods, metrics and bibliography?',
         ],
       },
     },

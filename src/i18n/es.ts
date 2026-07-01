@@ -258,12 +258,12 @@ export const es: Dict = {
       },
     },
     'astro-denoise': {
-      need: 'Los sondeos de telescopios ahogan galaxias tenues en ruido de sensor.',
+      need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
-        'Benchmark reproducible de métodos de denoising — BM3D vs U-Net — sobre imágenes simuladas LSST DC2.',
+        'Una plataforma de benchmarking reproducible para denoising astronómico — juzgada por la ciencia que recupera, no por lo limpia que se vea.',
       koan: 'Casi todo el universo llega como ruido.',
       lede:
-        'Esta línea de investigación <strong>compara</strong> una línea base clásica y un modelo aprendido — <strong>BM3D</strong> y <strong>U-Net</strong> — sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2), evaluados con métricas <em>orientadas a la ciencia</em>: <strong>completitud</strong> y <strong>pureza</strong>. El objetivo no es una imagen más bonita, sino evidencia honesta — cada script, dataset y ficha bibliográfica versionado para auditar y repetir.',
+        'astro-denoise es un <strong>benchmark</strong> modular y reproducible para métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). Cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias — la plataforma está hecha para sostener lo que venga después.',
       genesis: {
         kicker: 'Génesis',
         title: 'La tesis de maestría.',
@@ -277,8 +277,8 @@ export const es: Dict = {
         kicker: 'Preguntas en estudio',
         items: [
           '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
-          '¿Cómo se compara la línea base clásica (BM3D) con un modelo aprendido (U-Net) a la profundidad de LSST DC2?',
-          '¿Puede el benchmark completo ser reproducible de extremo a extremo — datos, scripts y bibliografía versionados?',
+          '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — realmente ayuda a la profundidad de LSST DC2, y cuánto?',
+          '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
         ],
       },
     },
