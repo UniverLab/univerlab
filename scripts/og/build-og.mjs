@@ -79,8 +79,8 @@ const kickBaseline = centerY + MARK / 2 + 78;
 const kickerPath = spacedPath(ibmMed, kicker, kickX, kickBaseline, KICK, KICK_TRACK).d;
 
 const waves = [
-  { amp: 30, wl: 360, sw: 2.6, op: 0.5 },
-  { amp: 46, wl: 540, sw: 1.6, op: 0.24 },
+  { amp: 20, wl: 360, sw: 2.6, op: 0.5 },
+  { amp: 31, wl: 540, sw: 1.6, op: 0.24 },
 ]
   .map(({ amp, wl, sw, op }) =>
     `<path d="${wavePath(H - 96, amp, wl, W)}" fill="none" stroke="${ACCENT}" stroke-width="${sw}" stroke-opacity="${op}" stroke-linecap="round"/>`)
