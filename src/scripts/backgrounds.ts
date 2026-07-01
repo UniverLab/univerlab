@@ -127,6 +127,132 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
+  /* Golden fractal — the Fibonacci whirling squares (1,1,2,3,5,8,13,21…) with
+     the golden spiral they inscribe, drawn faint and static, while a sparkling
+     mote sweeps out along the spiral. A nod to the Fibonacci deck. Quorum. */
+  spiral(ctx) {
+    const { c } = ctx;
+    const K = Math.log(1.618) / (Math.PI / 2); // golden growth per radian
+    // Whirling-squares tiling in unit coords: each square's side follows the
+    // Fibonacci sequence, spiralling out left → top → right → bottom.
+    let bx = 0;
+    let by = 0;
+    let bw = 1;
+    let bh = 1;
+    const squares = [{ x: 0, y: 0, s: 1 }];
+    const dirs = ['left', 'top', 'right', 'bottom'];
+    for (let i = 0; i < 8; i++) {
+      const d = dirs[i % 4];
+      if (d === 'left') { const s = bh; bx -= s; bw += s; squares.push({ x: bx, y: by, s }); }
+      else if (d === 'top') { const s = bw; by -= s; bh += s; squares.push({ x: bx, y: by, s }); }
+      else if (d === 'right') { const s = bh; squares.push({ x: bx + bw, y: by, s }); bw += s; }
+      else { const s = bw; squares.push({ x: bx, y: by + bh, s }); bh += s; }
+    }
+    // Spiral pole ≈ the eye the squares whirl into.
+    const pu = 0.0;
+    const pv = 0.5;
+    const rMin = 0.28;
+    const rMax = Math.max(bw, bh) * 0.5;
+    const thMax = Math.log(rMax / rMin) / K;
+    const A = ctx.color.length === 7 ? ctx.color : '#e6b24a';
+
+    // A handful of sparks wander the spiral at once — a new one spawns every
+    // few seconds and lives ~10–15 s, so several drift about at any moment,
+    // each on its own erratic path (sometimes doubling back).
+    interface Spark { born: number; life: number; s0: number; drift: number; amp: number; w1: number; w2: number; p1: number; p2: number; }
+    const sparks: Spark[] = [];
+    let nextSpawn = 300 + Math.random() * 1200;
+    // Fold a value into [lo, hi] by reflection, so a spark bounces off the eye
+    // and the rim instead of clamping (and sticking) there.
+    const reflect = (q: number, lo: number, hi: number) => {
+      const r = hi - lo;
+      const m = (((q - lo) % (2 * r)) + 2 * r) % (2 * r);
+      return m <= r ? lo + m : hi - (m - r);
+    };
+
+    return (t) => {
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      // Fit the tiling to a tall region on the right, static.
+      const S = (ctx.h * 0.82) / bh;
+      const ox = ctx.w * 0.64 - (bx + bw / 2) * S;
+      const oy = ctx.h * 0.5 - (by + bh / 2) * S;
+      const toX = (u: number) => ox + u * S;
+      const toY = (v: number) => oy + v * S;
+
+      // Whirling squares — very faint structure.
+      c.strokeStyle = A;
+      c.lineWidth = 1;
+      c.globalAlpha = 0.13;
+      for (const q of squares) {
+        c.strokeRect(toX(q.x), toY(q.y), q.s * S, q.s * S);
+      }
+
+      // The golden spiral through them.
+      c.lineCap = 'round';
+      c.lineWidth = 1.3;
+      c.globalAlpha = 0.13;
+      c.beginPath();
+      for (let i = 0; i <= 220; i++) {
+        const th = (i / 220) * thMax;
+        const r = rMin * Math.exp(K * th);
+        const x = toX(pu + r * Math.cos(th));
+        const y = toY(pv + r * Math.sin(th));
+        i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.stroke();
+
+      // Spawn a new spark every 3–5 s.
+      if (t >= nextSpawn) {
+        sparks.push({
+          born: t,
+          life: 10000 + Math.random() * 5000, // 10–15 s
+          s0: 0.05 + Math.random() * 0.4,
+          drift: -0.2 + Math.random() * 0.7, // net drift; can wander inward
+          amp: 0.16 + Math.random() * 0.18,
+          w1: 0.0005 + Math.random() * 0.0007,
+          w2: 0.0011 + Math.random() * 0.001,
+          p1: Math.random() * 6.283,
+          p2: Math.random() * 6.283,
+        });
+        nextSpawn = t + 3000 + Math.random() * 2000; // 3–5 s
+      }
+      for (let k = sparks.length - 1; k >= 0; k--) {
+        const sp = sparks[k];
+        const lt = t - sp.born;
+        if (lt > sp.life) {
+          sparks.splice(k, 1);
+          continue;
+        }
+        const u = lt / sp.life;
+        const env = Math.min(1, u / 0.12) * Math.min(1, (1 - u) / 0.15); // fade in/out
+        let s = sp.s0 + sp.drift * u +
+          sp.amp * (Math.sin(lt * sp.w1 + sp.p1) + 0.6 * Math.sin(lt * sp.w2 + sp.p2));
+        s = reflect(s, 0.02, 0.98);
+        const rHead = rMin + s * (rMax - rMin);
+        const thHead = Math.log(rHead / rMin) / K;
+        const hx = toX(pu + rHead * Math.cos(thHead));
+        const hy = toY(pv + rHead * Math.sin(thHead));
+        const tw = 0.6 + 0.4 * Math.sin(t * 0.005 + sp.p1); // gentle twinkle
+        const rad = 7 * (0.8 + 0.2 * tw);
+        const g = c.createRadialGradient(hx, hy, 0, hx, hy, rad);
+        g.addColorStop(0, A + 'aa');
+        g.addColorStop(0.4, A + '2a');
+        g.addColorStop(1, A + '00');
+        c.globalAlpha = env;
+        c.fillStyle = g;
+        c.beginPath();
+        c.arc(hx, hy, rad, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = A;
+        c.globalAlpha = env * (0.35 + 0.35 * tw);
+        c.beginPath();
+        c.arc(hx, hy, 1.4, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
   /* Brian's Brain — the same 3-state automaton as the Canopy TUI, rendered the
      way the terminal draws it: in Braille glyphs (U+2800–U+28FF). The automaton
      runs on a fine sub-grid and every 2×4 block of cells is packed into one
