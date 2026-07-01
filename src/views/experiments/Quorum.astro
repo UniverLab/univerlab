@@ -4,26 +4,26 @@ import { getLang, useTranslations } from '../../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['quorum'];
+
+// The planning-poker deck, fanned like a hand. The middle card is lifted as if
+// it has just been played.
+const deck = ['0', '1', '2', '3', '5', '8', '13', '21', '?'];
+const mid = (deck.length - 1) / 2;
 ---
 <ExperimentLayout id="quorum">
   <a slot="cta" class="btn ghost launch" href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.common.launch}</a>
 
   <section class="wrap section">
-    <!-- P2P room visual: three cards floating in formation to suggest a
-         distributed table where no single node is the host. -->
-    <figure class="room-fig" aria-hidden="true">
-      <div class="table">
-        <div class="card c1"><span>5</span></div>
-        <div class="card c2"><span>8</span></div>
-        <div class="card c3"><span>3</span></div>
-        <div class="peer p1"></div>
-        <div class="peer p2"></div>
-        <div class="peer p3"></div>
-        <div class="conn conn-12"></div>
-        <div class="conn conn-13"></div>
-        <div class="conn conn-23"></div>
+    <!-- The deck, fanned like a hand of cards — the estimate about to be played. -->
+    <figure class="deck-fig" aria-hidden="true">
+      <div class="deck">
+        {deck.map((v, i) => (
+          <div class:list={['pc', { sel: i === mid }]} style={`--a:${(i - mid) * 8}deg`}>
+            <span>{v}</span>
+          </div>
+        ))}
       </div>
-      <p class="fig-label mono">P2P — no server</p>
+      <p class="fig-label mono">the deck</p>
     </figure>
 
     <div class="features">
@@ -50,76 +50,63 @@ const e = t.experiments['quorum'];
   }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
 
-  /* P2P room figure */
-  .room-fig {
+  /* Fanned planning-poker deck */
+  .deck-fig {
     margin: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.2rem;
+    gap: 1.8rem;
   }
-  .table {
+  .deck {
     position: relative;
-    width: 260px;
-    height: 220px;
+    width: 360px;
+    height: 230px;
   }
-
-  /* Peer nodes */
-  .peer {
+  /* Cards share a pivot below the fan and spread by rotation — a held hand.
+     The rank sits at the top of each card, so it shows even where they overlap. */
+  .pc {
     position: absolute;
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 50%;
-    background: var(--essence);
-    opacity: 0.55;
-  }
-  .p1 { top: 16px; left: 50%; transform: translateX(-50%); }
-  .p2 { bottom: 16px; left: 22%; }
-  .p3 { bottom: 16px; right: 22%; }
-
-  /* Connection lines */
-  .conn {
-    position: absolute;
-    background: color-mix(in srgb, var(--essence) 30%, transparent);
-    height: 1px;
-    transform-origin: left center;
-  }
-  .conn-12 { width: 108px; top: 20px; left: 88px; transform: rotate(62deg); }
-  .conn-13 { width: 108px; top: 20px; right: 48px; transform: rotate(118deg); }
-  .conn-23 { width: 90px; bottom: 20px; left: 68px; }
-
-  /* Floating cards */
-  .card {
-    position: absolute;
-    width: 52px;
-    height: 72px;
-    border-radius: 8px;
-    border: 1.5px solid color-mix(in srgb, var(--essence) 60%, transparent);
-    background: color-mix(in srgb, var(--essence) 10%, var(--bg));
+    left: 50%;
+    bottom: 6px;
+    width: 60px;
+    height: 86px;
+    margin-left: -30px;
+    border-radius: 9px;
+    border: 1.5px solid color-mix(in srgb, var(--essence) 55%, transparent);
+    background: color-mix(in srgb, var(--essence) 8%, var(--bg-raise));
     display: flex;
-    align-items: center;
     justify-content: center;
+    padding-top: 8px;
     font-family: var(--font-mono);
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1;
     color: var(--essence);
-    box-shadow: 0 6px 24px color-mix(in srgb, var(--essence) 15%, transparent);
+    transform-origin: 50% 250%;
+    transform: rotate(var(--a));
+    box-shadow: 0 8px 22px color-mix(in srgb, #000 45%, transparent);
   }
-  .c1 { top: 44px; left: 50%; transform: translateX(-50%); animation: float 4s ease-in-out infinite; }
-  .c2 { bottom: 44px; left: 14%; animation: float 4s ease-in-out infinite 1.3s; }
-  .c3 { bottom: 44px; right: 14%; animation: float 4s ease-in-out infinite 2.6s; }
+  /* The played card lifts off the fan and brightens. */
+  .pc.sel {
+    align-items: center;
+    padding-top: 0;
+    font-size: 1.5rem;
+    border-color: var(--essence);
+    background: color-mix(in srgb, var(--essence) 20%, var(--bg-raise));
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--essence) 28%, transparent);
+    transform: rotate(var(--a)) translateY(-26px);
+    z-index: 3;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pc.sel { animation: play 4.5s ease-in-out infinite; }
+    @keyframes play {
+      0%, 100% { transform: rotate(var(--a)) translateY(-26px); }
+      50%      { transform: rotate(var(--a)) translateY(-34px); }
+    }
+  }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-6px); }
-  }
-  .c1 { animation-name: float-center; }
-  @keyframes float-center {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(-6px); }
-  }
-
-  .fig-label { font-size: 0.75rem; color: var(--ink-dim); letter-spacing: 0.04em; }
+  .fig-label { font-size: 0.75rem; color: var(--ink-dim); letter-spacing: 0.16em; text-transform: uppercase; }
 
   /* Feature list */
   .features ol { list-style: none; padding: 0; margin: 1.2rem 0 0; }

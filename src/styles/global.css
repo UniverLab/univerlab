@@ -97,15 +97,15 @@ html[data-surface='observatory'] {
   --line: #1e1b2c;
 }
 
-/* quorum — warm earthen paper: a light ochre ground with dark umber ink, the
-   round table where estimates are laid down. Tones of clay and sand. */
+/* quorum — the card table under a lamp: a warm espresso ground, cream ink and
+   amber cards. Tones of wood and leather. */
 html[data-surface='quorum'] {
-  --bg: #faf6ec;
-  --bg-raise: #fffdf6;
-  --ink: #2c1e08;
-  --ink-dim: #6f5628;
-  --ink-faint: #a2895c;
-  --line: #e6d9bc;
+  --bg: #241a12;
+  --bg-raise: #2f2318;
+  --ink: #f2e7d3;
+  --ink-dim: #b8a583;
+  --ink-faint: #8a7a5e;
+  --line: #40331f;
 }
 
 /* demostage — recording studio: a bright warm-white set; the black terminal
