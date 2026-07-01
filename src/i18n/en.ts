@@ -285,7 +285,7 @@ export const en = {
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       koan: '// the estimate is already in the room',
       lede:
-        'Quorum connects planners <strong>peer-to-peer</strong> via WebRTC — no relay, no cloud, no account. Share the room link, pick a card, and when everyone votes the deck <strong>auto-reveals</strong>. Disconnect and the session stays alive; reconnect and the state syncs back.',
+        'Quorum is <strong>planning poker</strong> — the estimation ritual agile teams use to size a backlog: each person plays a card, the votes flip at once, and the disagreement is where the useful conversation starts. It runs <strong>peer-to-peer</strong> over WebRTC, so a shared room link is the whole app — no cloud, no account. The deck <strong>auto-reveals</strong> once everyone has voted; drop off and the session stays alive — reconnect and the state syncs back from any peer still in the room.',
       genesis: {
         kicker: 'Genesis',
         title: 'One link, no server.',

@@ -287,7 +287,7 @@ export const es: Dict = {
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       koan: '// la estimación ya está en la sala',
       lede:
-        'Quorum conecta a los planificadores <strong>punto a punto</strong> mediante WebRTC — sin relay, sin nube, sin cuenta. Comparte el enlace de la sala, elige una carta, y cuando todos votan el mazo se <strong>revela solo</strong>. Desconéctate y la sesión sigue viva; vuelve a conectar y el estado se sincroniza.',
+        'Quorum es <strong>planning poker</strong> — el ritual de estimación que los equipos ágiles usan para dimensionar el backlog: cada quien juega una carta, los votos se revelan a la vez, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC, así que un enlace de sala compartido es toda la app — sin nube, sin cuenta. El mazo se <strong>revela solo</strong> cuando todos han votado; si te caes la sesión sigue viva — te reconectas y el estado se sincroniza desde cualquier peer que siga en la sala.',
       genesis: {
         kicker: 'Génesis',
         title: 'Un enlace, sin servidor.',
