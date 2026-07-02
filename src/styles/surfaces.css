@@ -27,21 +27,21 @@
    light — no terminal phosphor glow. Canopy (tui) is the exception: its banner
    uses the wizard's green gradient, applied per-line in the Banner component. */
 html[data-surface='paper'] .banner,
-html[data-surface='scaffold'] .banner,
+html[data-surface='industrial'] .banner,
+html[data-surface='quorum'] .banner,
+html[data-surface='pastel'] .banner,
 html[data-surface='studio'] .banner,
 html[data-surface='blueprint'] .banner,
-html[data-surface='vcs'] .banner,
 html[data-surface='observatory'] .banner {
   color: var(--ink);
   text-shadow: none;
   opacity: 1;
 }
 
-/* A blinking caret on the terminal surfaces (canopy/gitkit) — a small sign of
+/* A blinking caret on the terminal surfaces (canopy) — a small sign of
    life. Auto-disabled under prefers-reduced-motion (global.css zeroes animation). */
 @keyframes cf-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-html[data-surface='tui'] .koan::after,
-html[data-surface='vcs'] .koan::after {
+html[data-surface='tui'] .koan::after {
   content: '▋';
   margin-left: 0.18em;
   color: var(--essence);
@@ -150,69 +150,79 @@ html[data-surface='tui'] .koan::before {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   gitkit · `vcs` — a commit on the git graph.
+   gitkit · `pastel` — the cherry on top.
 
-   The hero hangs off a graph gutter — a vertical edge with a commit node — and
-   the koan is typed like a commit subject. Mono throughout; magenta is the ref.
+   A soft lavender background with pink accents, like a dessert counter.
+   Rounded, playful, sweet. The hero is a soft card with pastel shadows.
    ───────────────────────────────────────────────────────────────────────── */
-html[data-surface='vcs'] {
-  --font-serif: var(--font-mono);
-}
-html[data-surface='vcs'] .hero {
-  position: relative;
-  padding-left: 2.1rem;
-}
-html[data-surface='vcs'] .hero::before {
-  content: '';
-  position: absolute;
-  left: 0.45rem;
-  top: 0.9rem;
-  bottom: 0;
-  border-left: 2px solid color-mix(in srgb, var(--essence) 45%, var(--line));
-}
-html[data-surface='vcs'] .hero::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.7rem;
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 2px solid var(--essence);
-}
-html[data-surface='vcs'] .koan {
-  font-family: var(--font-mono);
-  font-style: normal;
-  font-size: 0.95rem;
-  opacity: 1;
-}
-html[data-surface='vcs'] .koan::before {
-  content: 'commit ';
-  color: var(--ink-faint);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   ghscaff · `scaffold` — construction drawing (the blueprint look lives here).
-
-   A dark technical sheet; the live drawing canvas paints a subtle grid and
-   connects nodes — the scaffolding reads as construction drawings in motion.
-   ───────────────────────────────────────────────────────────────────────── */
-html[data-surface='scaffold'] {
+html[data-surface='pastel'] {
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
-/* No static grid here — the live drawing canvas paints its own subtle grid and
-   connects nodes. (The static grid moved to cadspec/blueprint.) */
-html[data-surface='scaffold'] .genesis h2 {
+html[data-surface='pastel'] .genesis h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+html[data-surface='pastel'] .koan {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.85;
+}
+/* A soft pastel glow from the top — like warm light on frosting. */
+html[data-surface='pastel'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, #e8a4c8 12%, transparent), transparent 55%);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ghscaff · `industrial` — a foundry floor.
+
+   Dark iron with copper accents; the hero reads as a riveted metal plate
+   with corner bolts. Type is a sturdy grotesque; the koan is stamped like
+   a serial plate. The canvas paints slow-turning gears and sparks.
+   ───────────────────────────────────────────────────────────────────────── */
+html[data-surface='industrial'] {
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+html[data-surface='industrial'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
-html[data-surface='scaffold'] .koan {
+html[data-surface='industrial'] .koan {
   font-family: 'Space Grotesk', sans-serif;
   font-style: normal;
   font-weight: 500;
   opacity: 1;
+}
+/* A faint copper warmth pools from the top — like heat rising from the forge. */
+html[data-surface='industrial'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    /* Corrugated metal texture — horizontal ridges like alfajor wafer */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      color-mix(in srgb, #b87333 4%, transparent) 3px,
+      color-mix(in srgb, #b87333 4%, transparent) 4px
+    ),
+    /* Subtle rust/oxidation patches */
+    radial-gradient(ellipse at 20% 30%, color-mix(in srgb, #8b4513 6%, transparent), transparent 40%),
+    radial-gradient(ellipse at 75% 70%, color-mix(in srgb, #654321 5%, transparent), transparent 35%),
+    /* Heat glow from above */
+    radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, #b87333 10%, transparent), transparent 55%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -417,10 +427,34 @@ html[data-surface='blueprint'] .hero::after {
   color: var(--essence);
 }
 
-/* ghscaff · scaffold — a construction-drawing panel: a dark card lifted off the
-   ruled sheet (like canopy's window), a green structural border, and coupler
-   nodes at the corners (the clamps that hold a scaffold together). */
-html[data-surface='scaffold'] .hero {
+/* gitkit · pastel — a soft card with rounded corners and pastel shadows,
+   like a macaron on a dessert counter. */
+html[data-surface='pastel'] .hero {
+  position: relative;
+  margin-top: 1rem;
+  padding: 1.7rem;
+  border: 1px solid color-mix(in srgb, var(--essence) 25%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-raise) 80%, transparent);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--essence) 8%, transparent);
+}
+html[data-surface='pastel'] .hero::before {
+  content: '🍒 gitkit';
+  position: absolute;
+  top: 0;
+  left: 1.2rem;
+  transform: translateY(-50%);
+  padding: 0 0.5rem;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+}
+
+/* ghscaff · industrial — a riveted iron plate: a dark card with copper bolts
+   at the corners and a stamped serial tag. The foundry floor. */
+html[data-surface='industrial'] .hero {
   position: relative;
   margin-top: 1.4rem;
   padding: 1.7rem;
@@ -428,14 +462,24 @@ html[data-surface='scaffold'] .hero {
   background-color: color-mix(in srgb, var(--bg-raise) 78%, transparent);
   background-origin: border-box;
   background-repeat: no-repeat;
+  /* Corner bolts + corrugated metal texture */
   background-image:
+    /* Corner bolts */
     radial-gradient(circle at 0 0, var(--essence) 3.5px, transparent 4px),
     radial-gradient(circle at 100% 0, var(--essence) 3.5px, transparent 4px),
     radial-gradient(circle at 0 100%, var(--essence) 3.5px, transparent 4px),
-    radial-gradient(circle at 100% 100%, var(--essence) 3.5px, transparent 4px);
+    radial-gradient(circle at 100% 100%, var(--essence) 3.5px, transparent 4px),
+    /* Corrugated texture inside the card */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--essence) 3%, transparent) 2px,
+      color-mix(in srgb, var(--essence) 3%, transparent) 3px
+    );
 }
-html[data-surface='scaffold'] .hero::before {
-  content: 'SCAFFOLD · FRAME 01';
+html[data-surface='industrial'] .hero::before {
+  content: 'ghScaff · PLATE 01';
   position: absolute;
   top: 0;
   left: 1.2rem;
