@@ -320,10 +320,10 @@ export const en = {
         kicker: '5 commands',
         items: [
           '<code>capture</code> — live capture: record the session, auto-normalize into a clean score and faithful <code>.rec</code>.',
-          '<code>open</code> — reveal a browser scene (repo page, PDF, localhost) composited into the demo.',
+          '<code>focus</code> — switch the live view to one or two sources (terminal, repo page, docs, localhost) — full screen, split or stacked, composited into the demo.',
           '<code>record</code> — re-execute <code>demo.toml</code> cleanly, producing a humanized recording.',
           '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
-          '<code>edit</code> — interactively edit timing and wait steps in a demo score.',
+          '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
     },

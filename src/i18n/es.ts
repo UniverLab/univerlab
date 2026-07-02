@@ -322,10 +322,10 @@ export const es: Dict = {
         kicker: '5 comandos',
         items: [
           '<code>capture</code> — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un <code>.rec</code> fiel.',
-          '<code>open</code> — revela una escena de navegador (repo, PDF, localhost) compuesta en el demo.',
+          '<code>focus</code> — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost) — pantalla completa, dividida o apilada, compuesta en el demo.',
           '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
           '<code>export</code> — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
-          '<code>edit</code> — edita interactivamente los pasos de tiempo y espera en una partitura.',
+          '<code>edit</code> — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
         ],
       },
     },
