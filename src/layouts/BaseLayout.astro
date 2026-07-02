@@ -42,17 +42,17 @@ const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // studio (a lit stage, not drift), and blueprint (cadspec's clean plan — calm
 // and geometric, no animation). ghscaff (scaffold) keeps its live drawing.
 const stillSurface = ['paper', 'studio', 'blueprint'].includes(surface ?? '');
-const colorScheme = ['paper', 'blueprint', 'studio'].includes(surface ?? '') ? 'light' : 'dark';
+const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
 // Only request the font families a given surface actually uses. Every page
 // needs Inter (body) + the mono signature; `paper` adds Spectral; the grotesque
-// surfaces add Space Grotesk; terminal surfaces (tui/vcs) and the core pages
+// surfaces add Space Grotesk; terminal surfaces (tui/canopy) and the core pages
 // need nothing more. This keeps unused webfonts off the page entirely.
 const fontFamilies = ['IBM+Plex+Mono:wght@400;500', 'Inter:wght@400;500;600'];
 if (surface === 'paper') {
   fontFamilies.push('Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500');
 }
-if (['scaffold', 'blueprint', 'observatory', 'studio', 'quorum'].includes(surface ?? '')) {
+if (['industrial', 'pastel', 'blueprint', 'observatory', 'studio', 'quorum'].includes(surface ?? '')) {
   fontFamilies.push('Space+Grotesk:wght@300;400;500;600');
 }
 const fontHref =
@@ -81,7 +81,7 @@ const orgJsonLd = {
 };
 ---
 <!doctype html>
-<html lang={lang} data-surface={surface}>
+<html lang={lang} data-surface={surface} style={bgColor ? `--accent: ${bgColor}` : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -97,7 +97,7 @@ const orgJsonLd = {
          labels); Inter is the default body. Per-surface display voices:
          Spectral (paper/texforge — typeset serif), Space Grotesk (scaffold,
          blueprint, observatory, studio — technical grotesque), and the mono
-         itself for the terminal surfaces (tui/canopy, vcs/gitkit). -->
+         itself for the terminal surfaces (tui/canopy) and the pastel surface (pastel/gitkit). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Non-render-blocking: fetch as `print`, promote to `all` once loaded;
@@ -325,11 +325,34 @@ https://github.com/UniverLab
               if (mode === 'day') {
                 applyPalette(DAY_COOL);
                 document.documentElement.dataset.celestial = 'sun';
+                document.documentElement.dataset.circadian = 'true';
               } else if (mode === 'night') {
                 applyPalette(NIGHT_COOL);
                 document.documentElement.dataset.celestial = 'moon';
+                document.documentElement.dataset.circadian = 'true';
               } else {
                 calc();
+              }
+              // Recalculate celestial color, moon phase, and sun position so
+              // the dot reflects the forced mode (manual override always runs).
+              if (mode !== 'circadian') {
+                var d = new Date();
+                var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
+                var SYNODIC = 29.530588853;
+                var dn = (d.getTime() - MOON_EPOCH) / 86400000;
+                var phase = (dn % SYNODIC) / SYNODIC;
+                if (phase < 0) phase += 1;
+                var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+                var waxing = phase < 0.5;
+                var moonOff = 8 * illum;
+                var root = document.documentElement;
+                root.style.setProperty('--moon-offset', (waxing ? -moonOff : moonOff).toFixed(2) + 'px');
+                root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
+                if (mode === 'night') {
+                  root.style.setProperty('--celestial-color', '#a8adb5');
+                } else {
+                  root.style.setProperty('--celestial-color', lerp(DAY_COOL['--canvas-color'], '#c83c2a', 0.3));
+                }
               }
             };
 
@@ -457,9 +480,9 @@ https://github.com/UniverLab
         function showThemeMenu() {
           inSubmenu = true;
           var themeCmds = [
-            { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); } },
-            { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); } },
-            { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); } },
+            { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); if (window.missionLog) window.missionLog.discover('theme'); } },
+            { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); if (window.missionLog) window.missionLog.discover('theme'); } },
+            { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); if (window.missionLog) window.missionLog.discover('theme'); } },
           ];
           filtered = themeCmds;
           selected = 0;
@@ -474,8 +497,69 @@ https://github.com/UniverLab
           { cmd: '/experiments', label: 'Experiments', href: base + '/experiments' },
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors' },
+          { cmd: '/random', label: 'Surprise me', action: function () {
+            if (window.missionLog) window.missionLog.discover('random');
+            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
+            var pages = ['/', '/experiments', '/manifesto', '/contributors', '/archive'];
+            var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
+            var history = [];
+            try { history = JSON.parse(localStorage.getItem('univerlab-random') || '[]'); } catch (e) {}
+            var fresh = all.filter(function (p) { return history.indexOf(p) === -1; });
+            if (!fresh.length) { fresh = all; history = []; }
+            var pick = fresh[Math.floor(Math.random() * fresh.length)];
+            history.push(pick);
+            if (history.length > 5) history = history.slice(-5);
+            try { localStorage.setItem('univerlab-random', JSON.stringify(history)); } catch (e) {}
+            window.location.href = pick;
+          }},
+          { cmd: '/today', label: 'Today in science', action: function () {
+            if (window.missionLog) window.missionLog.discover('today');
+            if (window.scrollY < 10) {
+              var btn = document.querySelector('.celestial-btn');
+              if (btn) btn.click();
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              var scrollTimer = null;
+              var onScroll = function () {
+                clearTimeout(scrollTimer);
+                scrollTimer = setTimeout(function () {
+                  window.removeEventListener('scroll', onScroll);
+                  if (window.scrollY < 10) {
+                    var btn2 = document.querySelector('.celestial-btn');
+                    if (btn2) btn2.click();
+                  }
+                }, 150);
+              };
+              window.addEventListener('scroll', onScroll, { passive: true });
+            }
+          }},
+          { cmd: '/up', label: 'Scroll to top', action: function () {
+            if (window.missionLog) window.missionLog.discover('up');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }},
+          { cmd: '/down', label: 'Scroll to bottom', action: function () {
+            if (window.missionLog) window.missionLog.discover('down');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }},
+          { cmd: '/log', label: 'Flight log', action: function () {
+            if (window.missionLog) window.missionLog.discover('log');
+            var bar = document.querySelector('.flight-bar');
+            if (bar) bar.click();
+          }},
+          { cmd: '/lang', label: 'Switch language', action: function () {
+            if (window.missionLog) window.missionLog.discover('lang');
+            var onEs = window.location.pathname.indexOf('/es') === 0;
+            var other = onEs ? 'en' : 'es';
+            try { localStorage.setItem('univerlab-lang', other); } catch (e) {}
+            var path = window.location.pathname;
+            if (onEs) {
+              window.location.href = path.replace(/^\/es/, '') || '/';
+            } else {
+              window.location.href = '/es' + (path === '/' ? '' : path);
+            }
+          }},
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
-          { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
+          { cmd: '/find', label: 'Find on page', action: function () { if (window.missionLog) window.missionLog.discover('find'); openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive' },
         ];
@@ -547,6 +631,7 @@ https://github.com/UniverLab
           input.value = '';
           selected = 0;
           filter('');
+          if (window.missionLog) window.missionLog.discover('palette');
           setTimeout(function () { input.focus(); }, 50);
         }
 
@@ -638,6 +723,7 @@ https://github.com/UniverLab
           if (keySeq.length > 10) keySeq = keySeq.slice(-10);
           if (keySeq.indexOf('42') !== -1) {
             keySeq = '';
+            if (window.missionLog) window.missionLog.discover('easter-42');
             var msg = document.createElement('div');
             msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.92);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:0.9rem;padding:0.8rem 1.4rem;border-radius:8px;border:1px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 20px rgba(255,255,255,0.15);z-index:320;text-align:center;max-width:90vw;';
             var lang = document.documentElement.lang || 'en';
@@ -687,6 +773,7 @@ https://github.com/UniverLab
           var navEntry = navMap[e.key];
           if (navEntry) {
             e.preventDefault();
+            if (window.missionLog) window.missionLog.discover('keyboard');
             var dst = navEntry();
             if (dst.startsWith('http')) window.open(dst, '_blank', 'noopener');
             else window.location.href = dst;
@@ -696,6 +783,7 @@ https://github.com/UniverLab
           // i → scroll to top and open celestial fact popup
           if (e.key === 'i') {
             e.preventDefault();
+            if (window.missionLog) window.missionLog.discover('celestial');
             if (window.scrollY < 10) {
               var btn = document.querySelector('.celestial-btn');
               if (btn) btn.click();
@@ -937,5 +1025,185 @@ https://github.com/UniverLab
       .find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
       .find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
     </style>
+    <style is:global>
+      /* Flight log popover — global scope, appended to body. */
+    </style>
+    <script is:inline>
+      // Flight log — terminal-style session record like spacecraft telemetry.
+      // Dispatch: window.flightLog.record('event-id')
+      // The bar on the footer fills as entries accumulate; click to open log.
+      (function () {
+        var STORAGE_KEY = 'univerlab-flight-log';
+        var MAX_ENTRIES = 100;
+        var EVENTS = {
+          // Core pages
+          manifesto:     'Session started: manifesto',
+          archive:       'Archive accessed',
+          contributors:  'Contributors wall viewed',
+          // Experiments (per-page)
+          'exp-canopy':       'Visited Harness Canopy',
+          'exp-texforge':     'Visited TexForge',
+          'exp-gitkit':       'Visited GitKit',
+          'exp-ghscaff':      'Visited ghScaff',
+          'exp-cadspec':      'Visited cadSpec',
+          'exp-astro-denoise':'Visited Astro Denoise',
+          'exp-demostage':    'Visited DemoStage',
+          'exp-quorum':       'Visited Quorum',
+          // Per-experiment install copy
+          'copy-canopy':       'Copied Canopy install command',
+          'copy-texforge':     'Copied TexForge install command',
+          'copy-gitkit':       'Copied GitKit install command',
+          'copy-ghscaff':      'Copied ghScaff install command',
+          'copy-cadspec':      'Copied cadSpec install command',
+          'copy-demostage':    'Copied DemoStage install command',
+          // Per-experiment docs
+          'docs-canopy':       'Opened Canopy docs',
+          'docs-texforge':     'Opened TexForge docs',
+          'docs-gitkit':       'Opened GitKit docs',
+          'docs-ghscaff':      'Opened ghScaff docs',
+          'docs-cadspec':      'Opened cadSpec docs',
+          'docs-demostage':    'Opened DemoStage docs',
+          'docs-quorum':       'Opened Quorum docs',
+          // Special interactions
+          'astro-denoise-pdf': 'Downloaded Astro Denoise proposal',
+          'quorum-launch':     'Launched Quorum app',
+          // Celestial / time
+          celestial:     'Celestial body observed',
+          'visit-day':   'Daytime session detected',
+          'visit-night': 'Nighttime session detected',
+          // Commands
+          palette:       'Command palette opened',
+          today:         'Command /today executed',
+          random:        'Command /random executed',
+          up:            'Command /up executed',
+          down:          'Command /down executed',
+          log:           'Flight log opened',
+          find:          'Page search activated',
+          theme:         'Visual theme reconfigured',
+          lang:          'Language subsystem switched',
+          // Interactions
+          keyboard:      'Keyboard navigation engaged',
+          'exp-nav':     'Inter-experiment navigation',
+          // Easter eggs
+          'easter-42':   'Input sequence "42" detected',
+          'footer-logo': 'Hidden repository link discovered',
+          'footer-commit':'Cosmic commit panel opened',
+        };
+
+        function read() {
+          try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; }
+        }
+        function write(arr) {
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(-MAX_ENTRIES))); } catch (e) {}
+        }
+
+        var bar = document.querySelector('.flight-bar');
+        var fill = document.querySelector('.flight-fill');
+        var logEl = null;
+
+        function solTs() {
+          var d = new Date();
+          var y = d.getFullYear();
+          var start = new Date(y, 0, 0);
+          var sol = Math.floor((d - start) / 86400000);
+          var hh = String(d.getHours()).padStart(2, '0');
+          var mm = String(d.getMinutes()).padStart(2, '0');
+          var ss = String(d.getSeconds()).padStart(2, '0');
+          return { sol: sol, time: hh + ':' + mm + ':' + ss };
+        }
+
+        function updateBar() {
+          var n = read().length;
+          var pct = Math.min(Math.round((n / 100) * 100), 100);
+          if (fill) fill.style.width = pct + '%';
+        }
+
+        function renderLog() {
+          var entries = read();
+          var inner = '<div class="flight-log-head">' +
+            '<span class="flight-log-title">Flight Log</span>' +
+            '<button class="flight-log-close" type="button" aria-label="Close">&times;</button>' +
+            '</div>';
+          if (!entries.length) {
+            inner += '<div class="flight-log-empty">No entries yet. Start exploring.</div>';
+          } else {
+            inner += '<ul class="flight-log-entries">';
+            entries.forEach(function (e, i) {
+              var isNew = i === entries.length - 1;
+              inner += '<li class="flight-entry' + (isNew ? ' flight-entry-new' : '') + '">' +
+                '<span class="flight-sol">Sol ' + e.sol + '</span>' +
+                '<span class="flight-sep">·</span>' +
+                '<span class="flight-ts">' + e.ts + '</span>' +
+                '<span class="flight-sep">—</span>' +
+                '<span class="flight-msg">' + e.msg + '</span></li>';
+            });
+            inner += '</ul>';
+          }
+          inner += '<div class="flight-log-footer">' + entries.length + ' entries logged</div>';
+          return '<div class="flight-log-box">' + inner + '</div>';
+        }
+
+        function openLog() {
+          if (logEl) { logEl.remove(); logEl = null; return; }
+          logEl = document.createElement('div');
+          logEl.className = 'flight-log';
+          logEl.innerHTML = renderLog();
+          document.body.appendChild(logEl);
+          logEl.querySelector('.flight-log-close').addEventListener('click', function () { logEl.remove(); logEl = null; });
+          setTimeout(function () {
+            document.addEventListener('click', function outside(e) {
+              if (logEl && !logEl.contains(e.target) && !(bar && bar.contains(e.target))) {
+                logEl.remove(); logEl = null;
+                document.removeEventListener('click', outside);
+              }
+            });
+          }, 10);
+          document.addEventListener('keydown', function esc(e) {
+            if (e.key === 'Escape' && logEl) { logEl.remove(); logEl = null; document.removeEventListener('keydown', esc); }
+          });
+        }
+
+        if (bar) {
+          bar.addEventListener('click', openLog);
+          bar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLog(); } });
+        }
+
+        updateBar();
+
+        // Public API — call from any inline script on the page.
+        window.flightLog = {
+          record: function (id) {
+            var arr = read();
+            // Idempotent: only record if this event ID doesn't already exist
+            if (arr.some(function (e) { return e.id === id; })) return;
+            var st = solTs();
+            arr.push({ id: id, sol: st.sol, ts: st.time, msg: EVENTS[id] || id });
+            write(arr);
+            updateBar();
+            if (logEl) logEl.innerHTML = renderLog();
+          },
+          has: function (id) { return read().some(function (e) { return e.id === id; }); },
+        };
+
+        window.missionLog = { discover: window.flightLog.record, has: window.flightLog.has };
+
+        // Auto-detect page visits — runs once on load for each page.
+        var p = window.location.pathname;
+        if (p === '/manifesto' || p === '/es/manifesto') window.flightLog.record('manifesto');
+        if (p === '/archive' || p === '/es/archive') window.flightLog.record('archive');
+        if (p === '/contributors' || p === '/es/contributors') window.flightLog.record('contributors');
+
+        // Per-experiment page visits
+        var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
+        expIds.forEach(function (id) {
+          if (p === '/' + id || p === '/es/' + id) window.flightLog.record('exp-' + id);
+        });
+
+        // Day/night visit detection
+        var hour = new Date().getHours();
+        if (hour >= 6 && hour < 18) window.flightLog.record('visit-day');
+        else window.flightLog.record('visit-night');
+      })();
+    </script>
   </body>
 </html>
