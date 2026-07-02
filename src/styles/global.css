@@ -17,8 +17,8 @@
   /* Experiment essences */
   --canopy: #5dd39e;
   --texforge: #e0a458;
-  --gitkit: #d977a8;
-  --ghscaff: #7ee081;
+  --gitkit: #e8a4c8;
+  --ghscaff: #b87333;
   --cadspec: #6ec6e6;
   --astro-denoise: #a78bfa;
   --demostage: #ef8354;
@@ -54,26 +54,27 @@ html[data-surface='tui'] {
   --line: #20242a;
 }
 
-/* gitkit — version control: a neutral graphite code-editor / diff viewer.
-   Truly hueless grey (not the cold slate of tui, not phosphor green). */
-html[data-surface='vcs'] {
-  --bg: #131316;
-  --bg-raise: #1a1a1e;
-  --ink: #d7d7db;
-  --ink-dim: #8d8d94;
-  --ink-faint: #5a5a61;
-  --line: #26262c;
+/* gitkit — pastel cherry on top: soft lavender background with pink accents,
+   like a dessert counter. The cherry of the cake — sweet and playful. */
+html[data-surface='pastel'] {
+  --bg: #f5eef5;
+  --bg-raise: #faf5fa;
+  --ink: #4a3a4a;
+  --ink-dim: #7a6a7a;
+  --ink-faint: #a898a8;
+  --line: #e8d8e8;
 }
 
-/* ghscaff — construction drawing: a dark technical sheet with green ruling. (The
-   blueprint look moved here; scaffolding reads as construction drawings.) */
-html[data-surface='scaffold'] {
-  --bg: #0c100e;
-  --bg-raise: #121712;
-  --ink: #d6e0d8;
-  --ink-dim: #8c988f;
-  --ink-faint: #586259;
-  --line: #1f261f;
+/* ghscaff — industrial foundry: dark iron with copper accents, the heat of a
+   working forge. Distinct from Quorum's warm lamp — this is raw metal and
+   rivets, not a card table. */
+html[data-surface='industrial'] {
+  --bg: #0e0c0a;
+  --bg-raise: #161210;
+  --ink: #e0d5c8;
+  --ink-dim: #9a8b7a;
+  --ink-faint: #5e5248;
+  --line: #2a2320;
 }
 
 /* cadspec — architect's plan: clean, light and geometric, near-black ink on a
