@@ -713,6 +713,147 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
+  /* Bubbles — soft pastel circles floating upward, like champagne bubbles
+     or soap bubbles. GitKit's cherry-on-top aesthetic. */
+  bubbles(ctx) {
+    const { c } = ctx;
+    const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
+    const N = Math.min(35, Math.floor((ctx.w * ctx.h) / 35000));
+    type Bubble = { x: number; y: number; r: number; vy: number; vx: number; ph: number; opacity: number };
+    const bubbles: Bubble[] = Array.from({ length: N }, () => ({
+      x: rand(0, ctx.w),
+      y: rand(0, ctx.h),
+      r: rand(12, 35),
+      vy: rand(0.25, 0.7),
+      vx: rand(-0.3, 0.3),
+      ph: rand(0, Math.PI * 2),
+      opacity: rand(0.25, 0.55),
+    }));
+    let prevT = 0;
+    return (t) => {
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      for (const b of bubbles) {
+        b.y -= b.vy;
+        b.x += Math.sin(t * 0.0008 + b.ph) * 0.5 + b.vx;
+        if (b.y < -b.r * 2) {
+          b.y = ctx.h + b.r * 2;
+          b.x = rand(0, ctx.w);
+        }
+        // Draw bubble with soft gradient
+        const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        grad.addColorStop(0, A + '60');
+        grad.addColorStop(0.5, A + '35');
+        grad.addColorStop(1, A + '00');
+        c.globalAlpha = b.opacity;
+        c.fillStyle = grad;
+        c.beginPath();
+        c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        c.fill();
+        // Highlight
+        c.globalAlpha = b.opacity * 0.8;
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
+  /* Industrial — slow-turning gears and copper sparks rising from below.
+     Ghscaff's foundry floor. */
+  industrial(ctx) {
+    const { c } = ctx;
+    const A = ctx.color.length === 7 ? ctx.color : '#b87333';
+    // Gears: fixed positions, each rotates at its own speed.
+    type Gear = { x: number; y: number; r: number; teeth: number; speed: number; angle: number };
+    const gears: Gear[] = [];
+    const N = Math.min(6, Math.floor((ctx.w * ctx.h) / 80000) + 2);
+    for (let i = 0; i < N; i++) {
+      gears.push({
+        x: rand(ctx.w * 0.1, ctx.w * 0.9),
+        y: rand(ctx.h * 0.15, ctx.h * 0.85),
+        r: rand(40, 100),
+        teeth: Math.floor(rand(8, 16)),
+        speed: rand(0.00003, 0.00012) * (Math.random() < 0.5 ? 1 : -1),
+        angle: rand(0, Math.PI * 2),
+      });
+    }
+    // Sparks: copper embers rising, like forge heat.
+    const sparks = Array.from({ length: Math.min(40, Math.floor((ctx.w * ctx.h) / 30000)) }, () => ({
+      x: rand(0, ctx.w),
+      y: rand(0, ctx.h),
+      vy: rand(0.15, 0.45),
+      s: rand(0.5, 1.8),
+      ph: rand(0, Math.PI * 2),
+    }));
+    let prevT = 0;
+    return (t) => {
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
+      c.clearRect(0, 0, ctx.w, ctx.h);
+      // Gears — faint mechanical structure
+      c.strokeStyle = A;
+      c.lineWidth = 1;
+      c.globalAlpha = 0.08;
+      for (const g of gears) {
+        g.angle += g.speed * dt;
+        c.save();
+        c.translate(g.x, g.y);
+        c.rotate(g.angle);
+        // Outer ring with teeth
+        c.beginPath();
+        const step = (Math.PI * 2) / g.teeth;
+        for (let i = 0; i < g.teeth; i++) {
+          const a0 = i * step;
+          const a1 = a0 + step * 0.3;
+          const a2 = a0 + step * 0.7;
+          const a3 = a0 + step;
+          const rInner = g.r * 0.85;
+          const rOuter = g.r;
+          c.lineTo(Math.cos(a0) * rInner, Math.sin(a0) * rInner);
+          c.lineTo(Math.cos(a1) * rOuter, Math.sin(a1) * rOuter);
+          c.lineTo(Math.cos(a2) * rOuter, Math.sin(a2) * rOuter);
+          c.lineTo(Math.cos(a3) * rInner, Math.sin(a3) * rInner);
+        }
+        c.closePath();
+        c.stroke();
+        // Inner circle
+        c.beginPath();
+        c.arc(0, 0, g.r * 0.35, 0, Math.PI * 2);
+        c.stroke();
+        // Spokes
+        for (let i = 0; i < 4; i++) {
+          const a = (i / 4) * Math.PI * 2;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * g.r * 0.35, Math.sin(a) * g.r * 0.35);
+          c.lineTo(Math.cos(a) * g.r * 0.8, Math.sin(a) * g.r * 0.8);
+          c.stroke();
+        }
+        c.restore();
+      }
+      // Sparks — copper embers rising
+      c.fillStyle = A;
+      for (const s of sparks) {
+        s.y -= s.vy;
+        s.x += Math.sin(t * 0.001 + s.ph) * 0.3;
+        if (s.y < -10) {
+          s.y = ctx.h + rand(0, 20);
+          s.x = rand(0, ctx.w);
+        }
+        const flick = 0.5 + 0.4 * Math.sin(t * 0.003 + s.ph * 4);
+        const heat = Math.max(0, s.y / ctx.h);
+        c.globalAlpha = flick * (0.25 + 0.4 * heat);
+        c.beginPath();
+        c.arc(s.x, s.y, s.s, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  },
+
   /* Scaffold — an orthogonal frame, braced diagonally and bolted at the
      joints. Ghscaff. */
   scaffold(ctx) {
