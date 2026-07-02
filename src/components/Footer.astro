@@ -13,6 +13,9 @@ const footNav = [
 ];
 ---
 <footer>
+  <div class="flight-bar" role="button" tabindex="0" aria-label="Flight log">
+    <div class="flight-fill"></div>
+  </div>
   <div class="wrap inner">
     <div class="left">
       <!-- Quiet click target: the mark links to this site's own repository. No
@@ -76,7 +79,6 @@ Date:   now
     background: var(--f-bg);
     color: var(--f-ink);
     margin-top: 2rem;
-    border-top: 1px solid var(--f-line);
   }
   footer :global(svg) { color: var(--f-ink-faint); }
   footer :focus-visible { outline-color: var(--f-ink); }
@@ -152,6 +154,120 @@ Date:   now
     .inner { flex-direction: column; gap: 1.6rem; }
     .foot-nav { height: auto; gap: 1.2rem; }
   }
+
+  /* Flight bar — replaces the border-top as the body/footer separator.
+     2px line that fills left→right as the session progresses. */
+  .flight-bar {
+    position: relative;
+    height: 2px;
+    background: var(--f-line);
+    cursor: pointer;
+  }
+  .flight-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--essence, var(--accent, #c9a227));
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+</style>
+
+<style is:global>
+  /* Flight log — terminal-style dialog matching the command palette.
+     Must be global because the dialog is appended to <body>. */
+  .flight-log {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 18vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    animation: flog-in 0.18s ease;
+  }
+  @keyframes flog-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .flight-log-box {
+    width: 28rem;
+    max-width: 92vw;
+    background: rgba(18, 18, 22, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    font-family: 'IBM Plex Mono', monospace;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .flight-log-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex: none;
+  }
+  .flight-log-title {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .flight-log-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    line-height: 1;
+  }
+  .flight-log-close:hover { color: #e0e0e0; }
+  .flight-log-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem 0;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .flight-log-entries::-webkit-scrollbar { width: 3px; }
+  .flight-log-entries::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+  .flight-entry {
+    padding: 0.4rem 1rem;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  .flight-entry-new {
+    color: #e0e0e0;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .flight-sol { color: var(--accent, #c9a227); }
+  .flight-ts { color: rgba(255, 255, 255, 0.2); }
+  .flight-entry-new .flight-ts { color: rgba(255, 255, 255, 0.4); }
+  .flight-sep { color: rgba(255, 255, 255, 0.1); margin: 0 0.3rem; }
+  .flight-msg { color: rgba(255, 255, 255, 0.5); }
+  .flight-entry-new .flight-msg { color: #e0e0e0; }
+  .flight-log-empty {
+    padding: 1.5rem 1rem;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+  .flight-log-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.58rem;
+    color: rgba(255, 255, 255, 0.15);
+    letter-spacing: 0.06em;
+    flex: none;
+  }
 </style>
 
 <script>
@@ -167,12 +283,21 @@ Date:   now
     branch.addEventListener('click', (e) => {
       e.stopPropagation();
       setOpen(branch.getAttribute('aria-expanded') !== 'true');
+      if ((window as any).missionLog) (window as any).missionLog.discover('footer-commit');
     });
     document.addEventListener('click', (e) => {
       if (!panel.hidden && !panel.contains(e.target as Node) && e.target !== branch) setOpen(false);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setOpen(false);
+    });
+  }
+
+  // Footer logo — hidden click target to the site repo.
+  const markLink = document.querySelector<HTMLAnchorElement>('.mark-link');
+  if (markLink) {
+    markLink.addEventListener('click', () => {
+      if ((window as any).missionLog) (window as any).missionLog.discover('footer-logo');
     });
   }
 </script>
