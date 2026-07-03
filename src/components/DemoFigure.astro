@@ -19,7 +19,7 @@ interface Props {
 const { src, poster, essence, label, caption } = Astro.props;
 const isGif = src.endsWith('.gif');
 ---
-<figure class="demo-fig" style={`--essence: ${essence}`}>
+<figure class="demo-fig" style={`--essence: ${essence}`} data-demo-src={src} data-demo-caption={caption}>
   <div class="demo-frame">
     {isGif ? (
       <img class="demo-video" src={src} alt={caption} loading="lazy" />
@@ -156,18 +156,68 @@ const isGif = src.endsWith('.gif');
     }, { passive: true });
 
     bar.addEventListener('touchmove', function (e) {
-      if (dragging) seekFromEvent(e.touches[0]);
+      seekFromEvent(e.touches[0]);
     }, { passive: true });
 
     bar.addEventListener('touchend', function () {
       dragging = false;
     });
   });
+
+  /* ---- Click-to-expand: opens the demo in a full-screen dialog ---- */
+  function openDemoDialog(src, caption) {
+    var existing = document.getElementById('demo-dialog');
+    if (existing) existing.remove();
+
+    var isGif = /\.gif$/i.test(src);
+    var media;
+    if (isGif) {
+      media = '<img src="' + src + '" alt="' + caption + '" style="width:100%;height:auto;display:block;" />';
+    } else {
+      media = '<video autoplay muted loop playsinline controls style="width:100%;height:auto;display:block;border-radius:8px;">' +
+        '<source src="' + src + '" type="video/mp4" /></video>';
+    }
+
+    var dialog = document.createElement('dialog');
+    dialog.id = 'demo-dialog';
+    dialog.innerHTML =
+      '<div class="demo-dialog-inner">' +
+        '<button class="demo-dialog-close" aria-label="Close">&times;</button>' +
+        media +
+        '<p class="demo-dialog-caption">' + caption + '</p>' +
+      '</div>';
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    dialog.querySelector('.demo-dialog-close').addEventListener('click', function () { dialog.close(); dialog.remove(); });
+    dialog.addEventListener('click', function (e) { if (e.target === dialog) { dialog.close(); dialog.remove(); } });
+    dialog.addEventListener('keydown', function (e) { if (e.key === 'Escape') { dialog.close(); dialog.remove(); } });
+  }
+
+  document.querySelectorAll('.demo-fig').forEach(function (fig) {
+    fig.addEventListener('click', function (e) {
+      if (e.target.closest('.demo-bar') || e.target.closest('.demo-play-btn')) return;
+      var src = fig.getAttribute('data-demo-src');
+      var cap = fig.getAttribute('data-demo-caption') || '';
+      if (src) openDemoDialog(src, cap);
+    });
+  });
+
+  // Expose for /demo command
+  window.__openDemoDialog = function () {
+    var fig = document.querySelector('.demo-fig');
+    if (!fig) return false;
+    var src = fig.getAttribute('data-demo-src');
+    var cap = fig.getAttribute('data-demo-caption') || '';
+    if (src) { openDemoDialog(src, cap); return true; }
+    return false;
+  };
 })();
 </script>
 
 <style>
-  .demo-fig { margin: 0; padding-block: 0.4rem 0.6rem; }
+  .demo-fig { margin: 0; padding-block: 0.4rem 0.6rem; cursor: zoom-in; }
   .demo-frame {
     border: 1px solid var(--line);
     border-radius: 12px;

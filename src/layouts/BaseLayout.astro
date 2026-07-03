@@ -595,6 +595,7 @@ https://github.com/UniverLab
         var allCmds = staticCmds.concat(experimentCmds);
         if (currentExp) {
           allCmds.unshift({ cmd: '/docs', label: 'Docs (' + currentExp + ')', href: '/' + currentExp + '/docs' });
+          allCmds.unshift({ cmd: '/demo', label: 'Demo (' + currentExp + ')', action: function () { if (window.__openDemoDialog) window.__openDemoDialog(); } });
         }
 
         var overlay = null;
@@ -759,60 +760,6 @@ https://github.com/UniverLab
 
           // Don't handle navigation shortcuts when palette is open.
           if (isOpen()) return;
-
-          // Single-key navigation (when not in an input).
-          var lang2 = document.documentElement.lang === 'es' ? 'es' : 'en';
-          var base2 = lang2 === 'es' ? '/es' : '';
-          var navMap = {
-            h: function () { return base2 + '/'; },
-            e: function () { return base2 + '/experiments'; },
-            m: function () { return base2 + '/manifesto'; },
-            c: function () { return base2 + '/contributors'; },
-            g: function () { return githubUrl(); },
-          };
-          var navEntry = navMap[e.key];
-          if (navEntry) {
-            e.preventDefault();
-            if (window.missionLog) window.missionLog.discover('keyboard');
-            var dst = navEntry();
-            if (dst.startsWith('http')) window.open(dst, '_blank', 'noopener');
-            else window.location.href = dst;
-            return;
-          }
-
-          // i → scroll to top and open celestial fact popup
-          if (e.key === 'i') {
-            e.preventDefault();
-            if (window.missionLog) window.missionLog.discover('celestial');
-            if (window.scrollY < 10) {
-              var btn = document.querySelector('.celestial-btn');
-              if (btn) btn.click();
-            } else {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              // Wait for scroll to fully stop before opening (the popup's own
-              // scroll-listener closes it if it fires during a scroll).
-              var scrollTimer = null;
-              var onScroll = function () {
-                clearTimeout(scrollTimer);
-                scrollTimer = setTimeout(function () {
-                  window.removeEventListener('scroll', onScroll);
-                  if (window.scrollY < 10) {
-                    var btn2 = document.querySelector('.celestial-btn');
-                    if (btn2) btn2.click();
-                  }
-                }, 150);
-              };
-              window.addEventListener('scroll', onScroll, { passive: true });
-            }
-            return;
-          }
-
-          // f → open find overlay
-          if (e.key === 'f') {
-            e.preventDefault();
-            openFind();
-            return;
-          }
 
           // Shift+Left → go back, Shift+Right → go forward (browser history)
           if (e.shiftKey && e.key === 'ArrowLeft') {
@@ -1027,6 +974,65 @@ https://github.com/UniverLab
     </style>
     <style is:global>
       /* Flight log popover — global scope, appended to body. */
+      /* Demo dialog — full-screen overlay for expanded demo view. */
+      #demo-dialog {
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
+        border: 0;
+        padding: 2rem;
+        max-width: 100vw;
+        max-height: 100vh;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #demo-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
+      }
+      .demo-dialog-inner {
+        position: relative;
+        max-width: 90vw;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .demo-dialog-inner video,
+      .demo-dialog-inner img {
+        max-width: 90vw;
+        max-height: 80vh;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+      .demo-dialog-close {
+        position: absolute;
+        top: -2.5rem;
+        right: 0;
+        background: none;
+        border: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.8rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0.2rem 0.5rem;
+        transition: color 0.15s;
+      }
+      .demo-dialog-close:hover { color: #fff; }
+      .demo-dialog-caption {
+        color: rgba(255, 255, 255, 0.5);
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: 0.85rem;
+        margin-top: 0.8rem;
+        text-align: center;
+      }
     </style>
     <script is:inline>
       // Flight log — terminal-style session record like spacecraft telemetry.
