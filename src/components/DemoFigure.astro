@@ -49,12 +49,15 @@ const isGif = src.endsWith('.gif');
       </div>
     )}
   </div>
+  <div class="demo-lens" aria-hidden="true"><div class="demo-lens-inner"></div></div>
   <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
 </figure>
 
 <script is:inline>
 (function () {
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var LENS_SIZE = 140;
+  var ZOOM = 2.2;
 
   document.querySelectorAll('.demo-player').forEach(function (box) {
     var video = box.querySelector('video');
@@ -164,6 +167,75 @@ const isGif = src.endsWith('.gif');
     });
   });
 
+  /* ---- Magnifying glass lens on hover ---- */
+  document.querySelectorAll('.demo-fig').forEach(function (fig) {
+    var lens = fig.querySelector('.demo-lens');
+    var lensInner = fig.querySelector('.demo-lens-inner');
+    var frame = fig.querySelector('.demo-frame');
+    var media = fig.querySelector('.demo-video');
+    if (!lens || !frame || !media) return;
+
+    var isImg = media.tagName === 'IMG';
+    var lensVideo = null;
+
+    // For video: create a cloned video inside the lens
+    if (!isImg) {
+      lensVideo = document.createElement('video');
+      lensVideo.muted = true;
+      lensVideo.loop = true;
+      lensVideo.playsInline = true;
+      lensVideo.preload = 'auto';
+      lensVideo.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;';
+      var srcEl = media.querySelector('source');
+      if (srcEl) {
+        var s = document.createElement('source');
+        s.src = srcEl.src;
+        s.type = srcEl.type;
+        lensVideo.appendChild(s);
+      }
+      lensInner.appendChild(lensVideo);
+      // Keep lens video in sync
+      media.addEventListener('play', function () { lensVideo.play().catch(function(){}); });
+      media.addEventListener('pause', function () { lensVideo.pause(); });
+      media.addEventListener('timeupdate', function () {
+        if (lensVideo.duration && Math.abs(lensVideo.currentTime - media.currentTime) > 0.3) {
+          lensVideo.currentTime = media.currentTime;
+        }
+      });
+    }
+
+    frame.addEventListener('mousemove', function (e) {
+      var rect = frame.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+
+      lens.style.opacity = '1';
+      lens.style.left = (e.clientX - LENS_SIZE / 2) + 'px';
+      lens.style.top = (e.clientY - LENS_SIZE / 2) + 'px';
+
+      var px = x / rect.width * 100;
+      var py = y / rect.height * 100;
+
+      if (isImg) {
+        lensInner.style.backgroundImage = 'url(' + media.src + ')';
+        lensInner.style.backgroundSize = (rect.width * ZOOM) + 'px ' + (rect.height * ZOOM) + 'px';
+        lensInner.style.backgroundPosition = (px * ZOOM - 50) + '% ' + (py * ZOOM - 50) + '%';
+      } else {
+        // Position the cloned video so the cursor area is centered and zoomed
+        var vw = rect.width * ZOOM;
+        var vh = rect.height * ZOOM;
+        lensVideo.style.width = vw + 'px';
+        lensVideo.style.height = vh + 'px';
+        lensVideo.style.left = -(x * ZOOM - LENS_SIZE / 2) + 'px';
+        lensVideo.style.top = -(y * ZOOM - LENS_SIZE / 2) + 'px';
+      }
+    });
+
+    frame.addEventListener('mouseleave', function () {
+      lens.style.opacity = '0';
+    });
+  });
+
   /* ---- Click-to-expand: opens the demo in a full-screen dialog ---- */
   function openDemoDialog(src, caption) {
     var existing = document.getElementById('demo-dialog');
@@ -220,7 +292,8 @@ const isGif = src.endsWith('.gif');
   .demo-fig {
     margin: 0;
     padding-block: 0.4rem 0.6rem;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14 14, zoom-in;
+    position: relative;
+    cursor: none;
   }
   .demo-frame {
     border: 1px solid var(--line);
@@ -233,8 +306,30 @@ const isGif = src.endsWith('.gif');
   }
   .demo-video { display: block; width: 100%; height: auto; }
 
+  /* Magnifying glass lens */
+  .demo-lens {
+    position: fixed;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+    transition: opacity 0.15s ease;
+  }
+  .demo-lens-inner {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+  }
+
   /* Custom player wrapper */
-  .demo-player { position: relative; cursor: pointer; }
+  .demo-player { position: relative; }
   .demo-player video { display: block; width: 100%; height: auto; }
 
   /* Play/pause overlay */
