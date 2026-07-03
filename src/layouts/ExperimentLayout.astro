@@ -81,22 +81,24 @@ const softwareApp = exp.install
 
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
-    <section class="wrap genesis">
-      <span class="label">{e.genesis.kicker}</span>
-      <h2>{e.genesis.title}</h2>
-      <p class="prose" set:html={e.genesis.body} />
-    </section>
+    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
+      <section class="wrap genesis">
+        <span class="label">{e.genesis.kicker}</span>
+        <h2>{e.genesis.title}</h2>
+        <p class="prose" set:html={e.genesis.body} />
+      </section>
 
-    {exp.demo && (
-      <aside class="demo-section wrap" id="demo" aria-label="Demo">
-        <DemoFigure
-          src={exp.demo}
-          essence={exp.essenceHex}
-          label="Fig. 1"
-          caption={`${exp.name} — ${t.common.demoBy}`}
-        />
-      </aside>
-    )}
+      {exp.demo && (
+        <aside class="demo-col" id="demo" aria-label="Demo">
+          <DemoFigure
+            src={exp.demo}
+            essence={exp.essenceHex}
+            label="Fig. 1"
+            caption={`${exp.name} — ${t.common.demoBy}`}
+          />
+        </aside>
+      )}
+    </div>
 
     <slot />
 
@@ -126,11 +128,25 @@ const softwareApp = exp.install
   .hero { padding-block: 3.5rem 2rem; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
 
-  .genesis { padding-block: 2.5rem 3rem; max-width: 60ch; margin-inline: auto; }
+  .genesis-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: var(--max-w, 70rem);
+    margin-inline: auto;
+    padding-block: 2.5rem 2rem;
+    padding-inline: var(--page-gutter);
+  }
+  .genesis-row:not(.has-demo) { grid-template-columns: 1fr; max-width: 60ch; }
+  @media (max-width: 52rem) {
+    .genesis-row.has-demo { grid-template-columns: 1fr; }
+    .demo-col { order: -1; }
+  }
+  .genesis { display: flex; flex-direction: column; justify-content: center; }
   .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
   .genesis .prose { color: var(--ink-dim); }
 
-  .demo-section { max-width: 480px; margin-inline: auto; padding-block: 0 2rem; }
+  .demo-col { display: flex; align-items: center; justify-content: center; }
 
   .num { color: var(--essence); }
   .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
