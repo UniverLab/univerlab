@@ -81,24 +81,22 @@ const softwareApp = exp.install
 
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
-    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
-      <section class="wrap genesis">
-        <span class="label">{e.genesis.kicker}</span>
-        <h2>{e.genesis.title}</h2>
-        <p class="prose" set:html={e.genesis.body} />
-      </section>
+    <section class="wrap genesis">
+      <span class="label">{e.genesis.kicker}</span>
+      <h2>{e.genesis.title}</h2>
+      <p class="prose" set:html={e.genesis.body} />
+    </section>
 
-      {exp.demo && (
-        <aside class="demo-col" id="demo" aria-label="Demo">
-          <DemoFigure
-            src={exp.demo}
-            essence={exp.essenceHex}
-            label="Fig. 1"
-            caption={`${exp.name} — ${t.common.demoBy}`}
-          />
-        </aside>
-      )}
-    </div>
+    {exp.demo && (
+      <aside class="demo-section wrap" id="demo" aria-label="Demo">
+        <DemoFigure
+          src={exp.demo}
+          essence={exp.essenceHex}
+          label="Fig. 1"
+          caption={`${exp.name} — ${t.common.demoBy}`}
+        />
+      </aside>
+    )}
 
     <slot />
 
@@ -128,20 +126,11 @@ const softwareApp = exp.install
   .hero { padding-block: 3.5rem 2rem; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
 
-  /* Genesis row: two-column grid when a demo exists, single column otherwise. */
-  .genesis-row { max-width: 72rem; margin-inline: auto; padding-inline: var(--space); margin-top: 2rem; }
-  .genesis-row.has-demo {
-    display: grid;
-    grid-template-columns: 1fr clamp(240px, 38%, 480px);
-    gap: 2rem 2rem;
-    align-items: center;
-  }
-  .demo-col { padding-top: 0; }
+  .genesis { padding-block: 2.5rem 3rem; max-width: 60ch; margin-inline: auto; }
+  .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
+  .genesis .prose { color: var(--ink-dim); }
 
-  @media (max-width: 62rem) {
-    .genesis-row.has-demo { grid-template-columns: 1fr; }
-    .demo-col { order: 1; padding-top: 0; max-width: 80%; margin-inline: auto; }
-  }
+  .demo-section { max-width: 480px; margin-inline: auto; padding-block: 0 2rem; }
 
   .num { color: var(--essence); }
   .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
@@ -197,9 +186,6 @@ const softwareApp = exp.install
   .copy.done .copy-idle { display: none; }
   .copy.done .copy-done { display: inline; }
 
-  .genesis { padding-block: 2.5rem 3rem; max-width: 60ch; }
-  .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
-  .genesis .prose { color: var(--ink-dim); }
   :global(.exp .genesis .prose strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
   :global(.exp .genesis .prose em) { color: var(--essence); font-style: italic; }
