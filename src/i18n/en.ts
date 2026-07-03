@@ -266,10 +266,10 @@ export const en = {
         kicker: 'Genesis',
         title: "The master's thesis.",
         body:
-          "My master's thesis. Right now it's a proposal — scientific context, problem statement, the DC2 datasets, and a literature review made reproducible with active learning. No results yet. But the lab was built to hold work exactly like this, and when the experiments run, they'll run in the open — right here.",
+          "My master's thesis — and it left the proposal stage. The platform now runs end to end on real DC2 data: four open modules (metrics engine, BM3D and U-Net baselines, and an orchestrator with a terminal dashboard), a curated multi-band block of sky regions built for distribution on Hugging Face, a one-command scaffold so any researcher can plug in a new method, and the first controlled BM3D-vs-U-Net comparisons with a proper train/eval split. The experiments are running — in the open, right here.",
       },
       followLab: 'Follow the lab ↗',
-      papersSoon: 'proposal & datasets in preparation',
+      papersSoon: 'proposal out · curated dataset & first results landing',
       proposalCta: 'Read the proposal (PDF) ↗',
       questions: {
         kicker: 'Questions under study',

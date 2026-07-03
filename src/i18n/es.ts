@@ -268,10 +268,10 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'La tesis de maestría.',
         body:
-          'Mi tesis de maestría. Ahora mismo es una propuesta — contexto científico, planteamiento del problema, los datasets DC2 y una revisión bibliográfica hecha reproducible con aprendizaje activo. Aún sin resultados. Pero el laboratorio se construyó para sostener trabajo exactamente así, y cuando los experimentos corran, correrán en abierto — aquí mismo.',
+          'Mi tesis de maestría — y ya dejó de ser solo una propuesta. La plataforma corre de punta a punta sobre datos DC2 reales: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo hecho para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y las primeras comparaciones controladas BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo.',
       },
       followLab: 'Sigue el laboratorio ↗',
-      papersSoon: 'propuesta y datasets en preparación',
+      papersSoon: 'propuesta publicada · dataset curado y primeros resultados en camino',
       proposalCta: 'Leer la propuesta (PDF) ↗',
       questions: {
         kicker: 'Preguntas en estudio',
