@@ -105,12 +105,12 @@ export const en = {
   },
   experiments: {
     canopy: {
-      need: 'Your AI agents forget everything between sessions — and they can’t see what the others are doing.',
+      need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
       tagline:
-        'An agent operations center: orchestration, memory, and coordination for AI sessions.',
+        'The runtime layer for AI agents that need memory, scheduling, and each other.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
-        'A self-contained MCP server and terminal UI that turns one machine into an agent <strong>operations</strong> center: sessions in real terminals, background <strong>agents</strong> on schedules and file events, a <strong>knowledge</strong> graph that persists what agents learn, and a <strong>sync</strong> layer so they stop stepping on each other.',
+        'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
       genesis: {
         kicker: 'Genesis',
         title: 'The one that started it all.',
@@ -118,22 +118,22 @@ export const en = {
           'It started as a folder of <strong>skills</strong> for work. Then I noticed what nobody was talking about: agent harnesses shipped a <strong>headless</strong> mode, just sitting there unused. I wired cron jobs to fire tasks through it — too much for a skill, and the models of the day choked on the instructions. So it became an <strong>MCP</strong>: <em>task-trigger</em>. It worked, but it ran blind in the background; only the agent ever saw what happened. Not enough. I killed it and built a <strong>TUI</strong> — then scheduling, memory, sync, identities, and a new name. <strong>Canopy</strong>. By then the twist was complete: Canopy was building Canopy, and everything else in this lab.',
       },
       layer: {
-        kicker: 'The living layer',
+        kicker: 'What it does',
         cols: [
-          ['It remembers', 'A project-scoped knowledge graph stores facts, patterns and session summaries. Every session starts where the last one ended — agents stop rediscovering the same codebase.'],
-          ['It coordinates', 'Agents declare missions, report workspace stability and broadcast messages. The canopy knows the workspace “vibe” before anyone touches a file.'],
-          ['It grows identities', 'Seeds are persistent, evolvable agent identities — directives and traits in plain TOML. An agent can refine its own identity over time, like a tree adding rings.'],
+          ['Memory that persists', 'Every session writes facts and patterns to a project-scoped knowledge graph. The next session reads them. Agents stop re-explaining the same codebase to themselves.'],
+          ['Background scheduling', 'Agents run on cron schedules or file-change triggers — not just on demand. A daemon watches the workspace so you don\'t have to babysit.'],
+          ['Multi-agent sync', 'Agents declare their mission, report stability, and broadcast messages. The workspace "vibe" is visible before anyone touches a file. No more silent collisions.'],
         ] as [string, string][],
       },
       tools: {
         kicker: '46 MCP tools',
         items: [
-          ['Agent management', 12],
-          ['Workflow engine', 15],
+          ['Agent lifecycle', 12],
+          ['Loop engine', 15],
           ['Intelligence graph', 6],
           ['Seed identities', 5],
-          ['Multi-agent sync', 4],
-          ['Projects · RAG · Protocol', 4],
+          ['Sync protocol', 4],
+          ['Projects · RAG', 4],
         ] as [string, number][],
       },
     },

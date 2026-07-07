@@ -109,10 +109,10 @@ export const es: Dict = {
     canopy: {
       need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
       tagline:
-        'Un centro de operaciones de agentes: orquestación, memoria y coordinación para sesiones de IA.',
+        'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
-        'Un servidor MCP y una interfaz de terminal autocontenidos que convierten una máquina en un centro de <strong>operaciones</strong> de agentes: sesiones en terminales reales, <strong>agentes</strong> en segundo plano por cron y eventos de archivo, un grafo de <strong>conocimiento</strong> que persiste lo que los agentes aprenden, y una capa de <strong>sincronización</strong> para que dejen de pisarse.',
+        'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da <strong>memoria persistente</strong> entre sesiones, <strong>programación en segundo plano</strong> por cron y eventos de archivo, un <strong>grafo de conocimiento</strong> que aprende de cada ejecución, y un <strong>protocolo de sincronización</strong> para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
       genesis: {
         kicker: 'Génesis',
         title: 'El que empezó todo.',
@@ -120,22 +120,22 @@ export const es: Dict = {
           'Empezó como una carpeta de <strong>skills</strong> para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un modo <strong>headless</strong>, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un <strong>MCP</strong>: <em>task-trigger</em>. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una <strong>TUI</strong> — luego scheduling, memoria, sync, identidades, y un nombre nuevo. <strong>Canopy</strong>. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
       },
       layer: {
-        kicker: 'La capa viva',
+        kicker: 'Qué hace',
         cols: [
-          ['Recuerda', 'Un grafo de conocimiento por proyecto guarda hechos, patrones y resúmenes de sesión. Cada sesión empieza donde terminó la anterior — los agentes dejan de redescubrir el mismo código.'],
-          ['Coordina', 'Los agentes declaran misiones, reportan la estabilidad del espacio y emiten mensajes. El dosel conoce el “ánimo” del workspace antes de que alguien toque un archivo.'],
-          ['Cultiva identidades', 'Las semillas son identidades de agente persistentes y evolucionables — directivas y rasgos en TOML plano. Un agente puede refinar su propia identidad con el tiempo, como un árbol sumando anillos.'],
+          ['Memoria que persiste', 'Cada sesión escribe hechos y patrones en un grafo de conocimiento por proyecto. La siguiente sesión los lee. Los agentes dejan de volver a explicar el mismo código.'],
+          ['Programación en segundo plano', 'Los agentes corren por cron o por eventos de cambio de archivo — no solo bajo demanda. Un daemon vigila el espacio de trabajo para que no tengas que hacerlo tú.'],
+          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Se acabaron las colisiones silenciosas.'],
         ],
       },
       tools: {
         kicker: '46 herramientas MCP',
         items: [
-          ['Gestión de agentes', 12],
-          ['Motor de workflows', 15],
+          ['Ciclo de vida de agentes', 12],
+          ['Motor de loops', 15],
           ['Grafo de inteligencia', 6],
           ['Identidades semilla', 5],
-          ['Sync multi-agente', 4],
-          ['Proyectos · RAG · Protocolo', 4],
+          ['Protocolo de sync', 4],
+          ['Proyectos · RAG', 4],
         ],
       },
     },
