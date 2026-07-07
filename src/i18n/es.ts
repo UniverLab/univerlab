@@ -260,24 +260,24 @@ export const es: Dict = {
     'astro-denoise': {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
-        'Una plataforma de benchmarking reproducible para denoising astronómico — juzgada por la ciencia que recupera, no por lo limpia que se vea.',
+        'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
       koan: 'Casi todo el universo llega como ruido.',
       lede:
-        'astro-denoise es un <strong>benchmark</strong> modular y reproducible para métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). Cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias — la plataforma está hecha para sostener lo que venga después.',
+        'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
       genesis: {
         kicker: 'Génesis',
-        title: 'La tesis de maestría.',
+        title: 'Una tesis de maestría en curso.',
         body:
-          'Mi tesis de maestría — y ya dejó de ser solo una propuesta. La plataforma corre de punta a punta sobre datos DC2 reales: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo hecho para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y las primeras comparaciones controladas BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo.',
+          'Esto empezó como tesis de maestría y aún está tomando forma. La primera versión funcional está en su lugar: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo preparado para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y comparaciones iniciales BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo — pero queda trabajo por delante antes de que esto sea un benchmark terminado.',
       },
       followLab: 'Sigue el laboratorio ↗',
-      papersSoon: 'propuesta publicada · dataset curado y primeros resultados en camino',
+      papersSoon: 'propuesta publicada · dataset curado y primeros resultados en curso',
       proposalCta: 'Leer la propuesta (PDF) ↗',
       questions: {
-        kicker: 'Preguntas en estudio',
+        kicker: 'Preguntas abiertas',
         items: [
           '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
-          '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — realmente ayuda a la profundidad de LSST DC2, y cuánto?',
+          '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — tiene más probabilidad de ayudar a la profundidad de LSST DC2, y cuánto?',
           '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
         ],
       },

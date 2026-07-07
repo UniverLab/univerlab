@@ -258,24 +258,24 @@ export const en = {
     'astro-denoise': {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
-        'A reproducible benchmarking platform for astronomical denoising — judged on the science it recovers, not how clean it looks.',
+        'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
       koan: 'Most of the universe arrives as noise.',
       lede:
-        'astro-denoise is a modular, reproducible <strong>benchmark</strong> for denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — a classical filter, a trained network — plugs into the same protocol and runs on the same patches, then is scored not by a cleaner picture but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalogue, matched against DC2’s truth. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references — the platform is built to hold whatever comes next.',
+        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. The idea is straightforward: any method — a classical filter, a trained network — plugs into the same protocol and runs on the same patches, then is scored not by a cleaner picture but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalogue, matched against DC2’s truth. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
       genesis: {
         kicker: 'Genesis',
-        title: "The master's thesis.",
+        title: "A master's thesis in progress.",
         body:
-          "My master's thesis — and it left the proposal stage. The platform now runs end to end on real DC2 data: four open modules (metrics engine, BM3D and U-Net baselines, and an orchestrator with a terminal dashboard), a curated multi-band block of sky regions built for distribution on Hugging Face, a one-command scaffold so any researcher can plug in a new method, and the first controlled BM3D-vs-U-Net comparisons with a proper train/eval split. The experiments are running — in the open, right here.",
+          "This started as a master's thesis and is still taking shape. The first working version is in place: four open modules (metrics engine, BM3D and U-Net baselines, and an orchestrator with a terminal dashboard), a curated multi-band block of sky regions prepared for distribution on Hugging Face, a one-command scaffold so any researcher can plug in a new method, and initial BM3D-vs-U-Net comparisons with a proper train/eval split. The experiments are running — in the open, right here — but there is more work ahead before this becomes a finished benchmark.",
       },
       followLab: 'Follow the lab ↗',
-      papersSoon: 'proposal out · curated dataset & first results landing',
+      papersSoon: 'proposal out · curated dataset & first results in progress',
       proposalCta: 'Read the proposal (PDF) ↗',
       questions: {
-        kicker: 'Questions under study',
+        kicker: 'Open questions',
         items: [
           'Can a denoiser raise completeness without hurting purity — or does it invent sources that were never there?',
-          'Which family of methods — classical filters or learned models — actually helps at LSST DC2 depth, and by how much?',
+          'Which family of methods — classical filters or learned models — is more likely to help at LSST DC2 depth, and by how much?',
           'Can the whole benchmark run reproducibly end to end — versioned data, methods, metrics and bibliography?',
         ],
       },
