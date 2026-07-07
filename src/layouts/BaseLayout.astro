@@ -1157,8 +1157,9 @@ https://github.com/UniverLab
             inner += '<div class="flight-log-empty">No entries yet. Start exploring.</div>';
           } else {
             inner += '<ul class="flight-log-entries">';
-            entries.forEach(function (e, i) {
-              var isNew = i === entries.length - 1;
+            var reversed = entries.slice().reverse();
+            reversed.forEach(function (e, i) {
+              var isNew = i === 0;
               inner += '<li class="flight-entry' + (isNew ? ' flight-entry-new' : '') + '">' +
                 '<span class="flight-sol">Sol ' + e.sol + '</span>' +
                 '<span class="flight-sep">·</span>' +
