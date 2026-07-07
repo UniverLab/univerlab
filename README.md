@@ -108,7 +108,7 @@ Example: a tool with id `widgetforge`, repo `UniverLab/widgetforge`.
    and/or a new background runner in `src/scripts/backgrounds.ts` (add its name
    to the `BgTheme` union in `experiments.ts`).
 
-9. **Verify** — `npm run build`. It builds every page and enforces EN/ES parity.
+10. **Verify** — `npm run build`. It builds every page and enforces EN/ES parity.
 
 ---
 
@@ -155,7 +155,10 @@ To add a new experiment command: add its ID to the `experimentIds` array in
 
 ## Deploy
 
-- **Site** → Cloudflare Pages, connected to this repo (build `npm run build`,
-  output `dist`). Auto-deploys on push to `main`.
+- **Site** → Cloudflare Pages (`univerlab` project), connected to this repo
+  (build `npm run build`, output `dist`). Auto-deploys on push to `main`.
+- **Demos** → MP4s in `public/demos/` are committed to the repo and served as
+  static assets by Astro. Record with `demo record` + `demo export --format mp4`,
+  drop in `public/demos/<id>.mp4`, set `demo` in `experiments.ts`.
 - **`get.univerlab.org`** → the Worker in `workers/get/`, deployed by the
   **Deploy get worker** Action when `workers/get/**` changes. See its README.

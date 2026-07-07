@@ -33,10 +33,6 @@ npm-debug.log*
 .env.*.local
 *:Zone.Identifier
 
-# Demo media — large binary files, managed outside git
-public/demos/*.mp4
-public/demos/*.gif
-
 # og generator intermediates (source + font + og.png are committed)
 scripts/og/og.svg
 scripts/og/render.html
