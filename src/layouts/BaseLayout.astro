@@ -219,8 +219,24 @@ https://github.com/UniverLab
             var nl = 24 - (sunset - sunrise);
             pos = (ss / nl) * 100;
           }
-          document.documentElement.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
-          document.documentElement.dataset.celestial = isDay ? 'sun' : 'moon';
+          var root = document.documentElement;
+          root.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
+          root.dataset.celestial = isDay ? 'sun' : 'moon';
+          // Moon phase must be set every time the moon is shown — on plain
+          // (non-circadian) pages this is the only script, and on circadian
+          // pages this runs on nav + the 60s tick too. Without it the crescent
+          // shadow defaults to offset 0 (new moon) and the disc reads as black.
+          if (!isDay) {
+            var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
+            var SYNODIC = 29.530588853;
+            var dn = (d.getTime() - MOON_EPOCH) / 86400000;
+            var phase = (dn % SYNODIC) / SYNODIC;
+            if (phase < 0) phase += 1;
+            var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+            var moonOff = 8 * illum;
+            root.style.setProperty('--moon-offset', (phase < 0.5 ? -moonOff : moonOff).toFixed(2) + 'px');
+            root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
+          }
         }
         calc();
         setInterval(calc, 60000);
@@ -256,6 +272,25 @@ https://github.com/UniverLab
             function applyPalette(pal) {
               var root = document.documentElement;
               for (var key in pal) { root.style.setProperty(key, pal[key]); }
+            }
+
+            // Moon phase → offset (waxing/waning) + glow (illumination). Must
+            // run on every page load, not just when calc() runs the full
+            // circadian pass — otherwise a saved day/night theme skips this
+            // entirely on navigation and the moon renders with unset vars.
+            function updateMoon() {
+              var d = new Date();
+              var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
+              var SYNODIC = 29.530588853;
+              var dn = (d.getTime() - MOON_EPOCH) / 86400000;
+              var phase = (dn % SYNODIC) / SYNODIC;
+              if (phase < 0) phase += 1;
+              var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+              var waxing = phase < 0.5;
+              var moonOff = 8 * illum;
+              var root = document.documentElement;
+              root.style.setProperty('--moon-offset', (waxing ? -moonOff : moonOff).toFixed(2) + 'px');
+              root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
             }
 
             function calc() {
@@ -308,16 +343,7 @@ https://github.com/UniverLab
               root.dataset.celestial = isDay ? 'sun' : 'moon';
               root.dataset.circadian = 'true';
 
-              var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
-              var SYNODIC = 29.530588853;
-              var dn = (d.getTime() - MOON_EPOCH) / 86400000;
-              var phase = (dn % SYNODIC) / SYNODIC;
-              if (phase < 0) phase += 1;
-              var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
-              var waxing = phase < 0.5;
-              var moonOff = 8 * illum;
-              root.style.setProperty('--moon-offset', (waxing ? -moonOff : moonOff).toFixed(2) + 'px');
-              root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
+              updateMoon();
             }
 
             // Expose applyTheme globally so the command palette can override.
@@ -336,18 +362,8 @@ https://github.com/UniverLab
               // Recalculate celestial color, moon phase, and sun position so
               // the dot reflects the forced mode (manual override always runs).
               if (mode !== 'circadian') {
-                var d = new Date();
-                var MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
-                var SYNODIC = 29.530588853;
-                var dn = (d.getTime() - MOON_EPOCH) / 86400000;
-                var phase = (dn % SYNODIC) / SYNODIC;
-                if (phase < 0) phase += 1;
-                var illum = (1 - Math.cos(2 * Math.PI * phase)) / 2;
-                var waxing = phase < 0.5;
-                var moonOff = 8 * illum;
+                updateMoon();
                 var root = document.documentElement;
-                root.style.setProperty('--moon-offset', (waxing ? -moonOff : moonOff).toFixed(2) + 'px');
-                root.style.setProperty('--moon-glow', Math.round(illum * 70) + '%');
                 if (mode === 'night') {
                   root.style.setProperty('--celestial-color', '#a8adb5');
                 } else {
@@ -356,14 +372,21 @@ https://github.com/UniverLab
               }
             };
 
+            // Restore a forced theme through the same path the /theme command
+            // uses. Going through applyTheme (not just applyPalette) is what
+            // sets --celestial-color; without it the circadian moon disc has no
+            // fill and renders black on every navigation, even though the moon
+            // offset/glow are correct.
             var saved = localStorage.getItem('univerlab-theme');
-            if (saved === 'day') { applyPalette(DAY_COOL); document.documentElement.dataset.celestial = 'sun'; document.documentElement.dataset.circadian = 'true'; }
-            else if (saved === 'night') { applyPalette(NIGHT_COOL); document.documentElement.dataset.celestial = 'moon'; document.documentElement.dataset.circadian = 'true'; }
+            if (saved === 'day' || saved === 'night') { applyTheme(saved); }
             else { calc(); }
 
-            var timer = setInterval(calc, 60000);
+            // The 60s tick and visibility refresh only re-run the automatic
+            // circadian calc when NO theme is forced — a saved day/night must
+            // stay put, not drift back to the time-of-day palette.
+            var timer = setInterval(function () { if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000);
             document.addEventListener('visibilitychange', function () {
-              if (!document.hidden && !localStorage.getItem('univerlab-theme')) { calc(); clearInterval(timer); timer = setInterval(calc, 60000); }
+              if (!document.hidden && !localStorage.getItem('univerlab-theme')) { calc(); clearInterval(timer); timer = setInterval(function () { if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000); }
             });
           } catch (e) {}
         })();
