@@ -140,7 +140,7 @@ const softwareApp = exp.install
   .genesis-row:not(.has-demo) { grid-template-columns: 1fr; max-width: 60ch; }
   @media (max-width: 52rem) {
     .genesis-row.has-demo { grid-template-columns: 1fr; }
-    .demo-col { order: -1; }
+    .demo-col { max-width: 85%; margin-inline: auto; }
   }
   .genesis { display: flex; flex-direction: column; justify-content: center; }
   .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }

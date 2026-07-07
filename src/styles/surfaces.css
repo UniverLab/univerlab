@@ -357,6 +357,20 @@ html[data-surface='studio'] .koan {
    actions · install) are reflowed/framed differently per surface.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* The framed heroes (bordered plates) are .wrap elements, so on narrow screens
+   their border would bleed to the very edge of the viewport. Keep the frame
+   within the page's content gutter — the width caps at .wrap's max-width and
+   the auto margins still centre it on wide screens, so this only bites once the
+   viewport is narrow enough that the frame would otherwise touch the edges. */
+html[data-surface='tui'] .hero,
+html[data-surface='blueprint'] .hero,
+html[data-surface='pastel'] .hero,
+html[data-surface='industrial'] .hero,
+html[data-surface='studio'] .hero {
+  width: calc(100% - 2 * var(--space));
+  margin-inline: auto;
+}
+
 /* canopy · tui — the hero is a terminal window. */
 html[data-surface='tui'] .hero {
   position: relative;

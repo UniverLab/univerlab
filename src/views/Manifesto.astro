@@ -462,8 +462,14 @@ const rings = c.address.flatMap((_, i) => {
     --zo-fade: clamp((var(--p) - 0.47) / 0.03, 0, 1);
     /* Spatial zoom mirrors deep time, easing OUT — quick through the small
        scales (Earth, Solar System) and slowing as the horizons grow toward the
-       observable universe. Same law as time: big = slow, small = fast. */
+       observable universe. Same law as time: big = slow, small = fast. The
+       zoom caps with the last horizon at --g 0.5 — a full circle that STAYS
+       (the observable universe is the destination, it doesn't collapse). */
     --zoom: calc((var(--levels) - 0.5) * var(--zm) * (1.6 - 0.6 * var(--zm)));
+    /* Real-time timer (0 → 1) that starts once the scroll cruise settles at
+       the end. Used only to retire the final "93 Gly" cota after it has held
+       long enough to read — the ring itself stays. See .zo-gauge. */
+    --settle: 0;
     --wonder: clamp(0, (var(--p) - 0.95) / 0.04, 1);
   }
   /* Default height for touch (scroll-position mapping). JS overrides to a
@@ -717,11 +723,20 @@ const rings = c.address.flatMap((_, i) => {
     --fall: clamp(0, calc((var(--gc) - 0.5) * 2), 1);
     --ir: calc(1 - var(--rise));
     --rs: calc(1 + 11 * var(--ir) * var(--ir) - 0.97 * var(--fall) * var(--fall));
-    /* Lasts from just before full circle through the whole collapse. */
-    --vis: clamp(0, min(calc((var(--g) - 0.4) / 0.12), calc((0.97 - var(--g)) / 0.14)), 1);
+    /* Appears just before its ring reaches full circle and holds while the
+       ring is near-full. Earlier horizons then fade as their ring collapses
+       past (g > 0.5). The final horizon's ring never collapses, so its cota
+       would linger forever — --retire (driven by the real-time --settle timer
+       once scroll ends) fades it out after it has held long enough to read. */
+    --vis: clamp(0, min(calc((var(--g) - 0.35) / 0.15), calc((1.05 - var(--g)) / 0.25)), 1);
     position: absolute; top: 50%; left: 50%;
     width: calc(88% * var(--rs)); transform: translate(-50%, -50%);
-    opacity: calc(var(--vis) * var(--zo-fade) * (1 - var(--wonder)));
+    /* Base visibility is clamped to [0,1] FIRST — --zo-fade overshoots well
+       past 1 in the collapse range, so multiplying the retire factor into the
+       raw product would keep opacity pinned at 1 until retire ≈ 1 (a hard pop).
+       The (1 - clamp(...)) retire factor then holds the cota (settle 0 → 0.4)
+       and fades it out (0.4 → 1), driven by the real-time --settle timer. */
+    opacity: calc(clamp(0, var(--vis) * var(--zo-fade), 1) * (1 - clamp(0, (var(--settle) - 0.4) / 0.6, 1)));
   }
   .zo-gauge-bar {
     display: block; height: 1px; position: relative;
@@ -878,13 +893,39 @@ const rings = c.address.flatMap((_, i) => {
   if (cosmos && sticky && !reduce) {
     cosmos.classList.add('scrolly');
 
+    // The scroll-driven zoom (see --zoom) caps out with the final horizon
+    // right as it reaches full size — there's no more scroll left to carry
+    // it into the collapse-and-fade every earlier ring gets. Once progress
+    // settles at 1, run that same collapse on a real-time clock instead, so
+    // the last ring and its cota still hold briefly, then shrink and fade.
+    const SETTLE_MS = 4000;
+    let settleStart: number | null = null;
+    const setSettling = (active: boolean) => {
+      if (active) {
+        if (settleStart === null) settleStart = performance.now();
+      } else if (settleStart !== null) {
+        settleStart = null;
+        sticky.style.setProperty('--settle', '0');
+      }
+    };
+    const tickSettle = (time: number) => {
+      if (settleStart !== null) {
+        const t = Math.min((time - settleStart) / SETTLE_MS, 1);
+        sticky.style.setProperty('--settle', t.toFixed(4));
+      }
+      requestAnimationFrame(tickSettle);
+    };
+    requestAnimationFrame(tickSettle);
+
     if (isTouch) {
       // Touch: map scroll position directly to progress.
       let ticking = false;
       const update = () => {
         const total = cosmos.offsetHeight - window.innerHeight;
         const scrolled = Math.min(Math.max(-cosmos.getBoundingClientRect().top, 0), Math.max(total, 1));
-        sticky.style.setProperty('--progress', (total > 0 ? scrolled / total : 0).toFixed(4));
+        const p = total > 0 ? scrolled / total : 0;
+        sticky.style.setProperty('--progress', p.toFixed(4));
+        setSettling(p >= 0.999);
         ticking = false;
       };
       const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
@@ -982,6 +1023,7 @@ const rings = c.address.flatMap((_, i) => {
           sticky.style.setProperty('--progress', progress.toFixed(4));
         }
 
+        setSettling(progress >= 1);
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
