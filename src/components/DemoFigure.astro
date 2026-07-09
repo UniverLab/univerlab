@@ -37,12 +37,6 @@ const isGif = src.endsWith('.gif');
         >
           <source src={src} type="video/mp4" />
         </video>
-        <div class="demo-overlay">
-          <button class="demo-play-btn" type="button" aria-label="Play/Pause">
-            <span class="demo-icon-play">▶</span>
-            <span class="demo-icon-pause" style="display:none">❚❚</span>
-          </button>
-        </div>
         <div class="demo-bar">
           <div class="demo-progress"><div class="demo-fill"></div></div>
         </div>
@@ -56,65 +50,42 @@ const isGif = src.endsWith('.gif');
 <script is:inline>
 (function () {
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var LENS_SIZE = 140;
+  var LENS_SIZE = 220;
   var ZOOM = 2.2;
 
   document.querySelectorAll('.demo-player').forEach(function (box) {
     var video = box.querySelector('video');
-    var overlay = box.querySelector('.demo-overlay');
-    var playIcon = box.querySelector('.demo-icon-play');
-    var pauseIcon = box.querySelector('.demo-icon-pause');
     var fill = box.querySelector('.demo-fill');
-    if (!video || !overlay || !fill) return;
+    if (!video || !fill) return;
+    var fig = box.closest('.demo-fig');
 
     if (reduced) {
       video.removeAttribute('autoplay');
       video.pause();
       video.controls = true;
-      overlay.style.display = 'none';
-      box.querySelector('.demo-bar').style.display = 'none';
+      var b = box.querySelector('.demo-bar');
+      if (b) b.style.display = 'none';
       return;
     }
 
-    var hideTimer = null;
+    // Hold-to-pause: press and hold over the demo (with the lens) to freeze the
+    // clip; release to continue. A short click still opens the full-screen view,
+    // so we flag a long press and skip the dialog open below.
+    var pressStart = 0;
 
-    function showControls() {
-      overlay.style.opacity = '1';
-      clearTimeout(hideTimer);
-      hideTimer = setTimeout(function () {
-        if (!video.paused) {
-          overlay.style.opacity = '0';
-        }
-      }, 2000);
-    }
-
-    function togglePlay() {
-      if (video.paused) {
-        video.play();
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = '';
-      } else {
-        video.pause();
-        playIcon.style.display = '';
-        pauseIcon.style.display = 'none';
-        overlay.style.opacity = '1';
-      }
-    }
-
-    overlay.addEventListener('click', togglePlay);
-    video.addEventListener('click', togglePlay);
-    box.addEventListener('mousemove', showControls);
-    box.addEventListener('mouseenter', showControls);
-
-    video.addEventListener('play', function () {
-      playIcon.style.display = 'none';
-      pauseIcon.style.display = '';
-      showControls();
+    box.addEventListener('mousedown', function (e) {
+      if (e.target.closest('.demo-bar')) return;
+      pressStart = Date.now();
+      video.pause();
     });
-    video.addEventListener('pause', function () {
-      playIcon.style.display = '';
-      pauseIcon.style.display = 'none';
-      overlay.style.opacity = '1';
+    box.addEventListener('mouseup', function (e) {
+      if (e.target.closest('.demo-bar')) return;
+      video.play();
+      if (fig && Date.now() - pressStart > 180) fig._held = true;
+    });
+    box.addEventListener('mouseleave', function () {
+      if (!video.paused) return;
+      video.play();
     });
 
     video.addEventListener('timeupdate', function () {
@@ -269,7 +240,9 @@ const isGif = src.endsWith('.gif');
 
   document.querySelectorAll('.demo-fig').forEach(function (fig) {
     fig.addEventListener('click', function (e) {
-      if (e.target.closest('.demo-bar') || e.target.closest('.demo-play-btn')) return;
+      if (e.target.closest('.demo-bar')) return;
+      // A long press (hold-to-pause) should not also open the full-screen view.
+      if (fig._held) { fig._held = false; return; }
       var src = fig.getAttribute('data-demo-src');
       var cap = fig.getAttribute('data-demo-caption') || '';
       if (src) openDemoDialog(src, cap);
@@ -309,8 +282,8 @@ const isGif = src.endsWith('.gif');
   /* Magnifying glass lens */
   .demo-lens {
     position: fixed;
-    width: 140px;
-    height: 140px;
+    width: 220px;
+    height: 220px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
@@ -331,35 +304,6 @@ const isGif = src.endsWith('.gif');
   /* Custom player wrapper */
   .demo-player { position: relative; }
   .demo-player video { display: block; width: 100%; height: auto; }
-
-  /* Play/pause overlay */
-  .demo-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.15);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .demo-play-btn {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    background: rgba(0, 0, 0, 0.4);
-    color: #fff;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-    transition: background 0.2s;
-  }
-  .demo-play-btn:hover { background: rgba(0, 0, 0, 0.6); }
 
   /* Progress bar — always visible, thin visual but tall hit area */
   .demo-bar {
