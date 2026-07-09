@@ -55,7 +55,7 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', install: unix('canopy'), hasDocs: true },
+  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4' },
   { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4' },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e8a4c8', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', surface: 'pastel', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4' },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#b87333', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'industrial', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
