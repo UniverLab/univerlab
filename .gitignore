@@ -36,3 +36,5 @@ npm-debug.log*
 # og generator intermediates (source + font + og.png are committed)
 scripts/og/og.svg
 scripts/og/render.html
+
+.mimocode/
