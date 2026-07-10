@@ -40,7 +40,7 @@ const softwareApp = exp.install
     }
   : undefined;
 ---
-<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp}>
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
