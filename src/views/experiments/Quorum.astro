@@ -131,4 +131,13 @@ const mid = (deck.length - 1) / 2;
   /* Launch CTA */
   :global(.launch) { color: var(--essence) !important; border-color: color-mix(in srgb, var(--essence) 50%, transparent) !important; }
   :global(.launch:hover) { background: color-mix(in srgb, var(--essence) 12%, transparent) !important; }
+
+  /* Circadian day mode — lighter card shadows for the sand background. */
+  :global(html[data-circadian][data-celestial='sun'] .pc) {
+    box-shadow: 0 8px 22px color-mix(in srgb, #000 14%, transparent);
+  }
+  :global(html[data-circadian][data-celestial='sun'] .pc.sel) {
+    background: color-mix(in srgb, var(--essence) 14%, var(--bg-raise));
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--essence) 18%, transparent);
+  }
 </style>
