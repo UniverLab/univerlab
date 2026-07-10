@@ -42,6 +42,16 @@ export interface Experiment {
   /** External app URL for experiments that ship as a hosted web app instead of
    *  (or in addition to) a CLI. Shown as a "Launch app" CTA on the hero. */
   url?: string;
+  /** Opt into the circadian palette — the page shifts between day/night
+   *  automatically via the /theme command's circadian engine. */
+  circadian?: boolean;
+  /** Surface-specific circadian palette endpoints. When set, overrides the
+   *  default circadian palettes so the surface keeps its own colour identity
+   *  across day/night. `day` and `night` each hold the full CSS-var map. */
+  circadianPalette?: {
+    day: Record<string, string>;
+    night: Record<string, string>;
+  };
 }
 
 // Install commands go through the `get.univerlab.org` redirector worker (see
@@ -62,7 +72,12 @@ export const experiments: Experiment[] = [
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory' },
   { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4' },
-  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', surface: 'quorum', url: 'https://quorum.univerlab.org' },
+  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', surface: 'quorum', url: 'https://quorum.univerlab.org', circadian: true,
+    circadianPalette: {
+      day:   { '--bg': '#f0e8da', '--bg-raise': '#f7f2e8', '--ink': '#3a2a1a', '--ink-dim': '#7a6a52', '--ink-faint': '#a89878', '--line': '#ddd2c0', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#c4b8a0' },
+      night: { '--bg': '#241a12', '--bg-raise': '#2f2318', '--ink': '#f2e7d3', '--ink-dim': '#b8a583', '--ink-faint': '#8a7a5e', '--line': '#40331f', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#5a4a32' },
+    },
+  },
 ];
 
 /** Look up an experiment by id, failing fast if the id is unknown. */
