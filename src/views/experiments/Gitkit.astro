@@ -1,0 +1,110 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments.gitkit;
+---
+<ExperimentLayout id="gitkit">
+  <section class="wrap section">
+    <div class="term" id="gitkit-term">
+      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit · commit</div>
+      <pre class="mono term-body"><code>$ git commit -m "feat: parse manifests"
+  ✓ conventional-commits  (commit-msg)
+  ✓ no-secrets            (pre-commit)
+[main 7f3a9c1] feat: parse manifests
+$ git push
+  → origin/main  ·  push.autoSetupRemote</code></pre>
+    </div>
+    <div class="features">
+      <span class="label">{e.features.kicker}</span>
+      <ul>
+        {e.features.items.map((f) => <li><span class="chk" aria-hidden="true">✓</span><span set:html={f} /></li>)}
+      </ul>
+    </div>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
+  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
+  .term { border: 1px solid color-mix(in srgb, var(--gitkit) 30%, var(--line)); background: var(--bg-raise); }
+  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
+  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
+  /* min-height reserves the full session so the typewriter doesn't shift layout. */
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); min-height: 9rem; }
+  .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .features li { display: flex; gap: 0.7rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .chk { color: var(--gitkit); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
+  .features :global(code) { color: var(--gitkit); font-size: 0.88em; }
+</style>
+
+<script>
+  // Like DemoStage's player: the terminal types its session out and loops, so a
+  // commit visibly runs the hooks. Honours reduced-motion (leaves the full text)
+  // and only animates while on screen.
+  (function () {
+    const term = document.getElementById('gitkit-term');
+    if (!term) return;
+    const code = term.querySelector('.term-body code');
+    if (!code) return;
+    const full = code.textContent || '';
+    const lines = full.split('\n');
+    const isCmd = (ln) => ln.trimStart().startsWith('$');
+
+    // Command lines ($) are what the user types, so they appear letter by letter;
+    // every other line is console output and shows at once, right after.
+    const PER_CHAR = 40; // ms per typed character
+    const CMD_PAUSE = 350; // dwell after a command, before its output lands
+    const OUT_PAUSE = 600; // dwell after an output block, before the next command
+    const HOLD = 2200; // rest on the full session before replaying
+
+    const segs = [];
+    let cursor = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (isCmd(lines[i])) {
+        const dur = Math.max(1, lines[i].length) * PER_CHAR;
+        segs.push({ i, start: cursor, end: cursor + dur, type: 'type' });
+        cursor += dur + CMD_PAUSE;
+      } else {
+        segs.push({ i, start: cursor, end: cursor, type: 'instant' });
+        const nextIsCmd = i + 1 >= lines.length || isCmd(lines[i + 1]);
+        if (nextIsCmd) cursor += OUT_PAUSE;
+      }
+    }
+    const PLAY = cursor;
+
+    function render(e) {
+      const shown = [];
+      for (const s of segs) {
+        if (e >= s.end) { shown.push(lines[s.i]); continue; }
+        if (s.type === 'type' && e >= s.start) {
+          const frac = (e - s.start) / (s.end - s.start);
+          shown.push(lines[s.i].slice(0, Math.round(lines[s.i].length * frac)) + '▋');
+        }
+        break;
+      }
+      code.textContent = shown.join('\n');
+    }
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let start = null;
+    let raf = null;
+    function frame(ts) {
+      if (start === null) start = ts;
+      const e = ts - start;
+      if (e <= PLAY) render(e);
+      else if (e <= PLAY + HOLD) render(PLAY);
+      else { start = ts; render(0); }
+      raf = requestAnimationFrame(frame);
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        if (en.isIntersecting && raf === null) { start = null; raf = requestAnimationFrame(frame); }
+        else if (!en.isIntersecting && raf !== null) { cancelAnimationFrame(raf); raf = null; }
+      }
+    });
+    io.observe(term);
+  })();
+</script>

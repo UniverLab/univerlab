@@ -1,0 +1,303 @@
+---
+import Mark from './Mark.astro';
+import { getLang, useTranslations, localizePath } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+
+const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
+const footNav = [
+  { href: localizePath('/experiments', lang), label: t.nav.experiments },
+  { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
+  { href: localizePath('/contributors', lang), label: t.nav.people },
+  { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+];
+---
+<footer>
+  <div class="flight-bar" role="button" tabindex="0" aria-label="Flight log">
+    <div class="flight-fill"></div>
+  </div>
+  <div class="wrap inner">
+    <div class="left">
+      <!-- Quiet click target: the mark links to this site's own repository. No
+           hover affordance — you only find it if you try it. -->
+      <a
+        class="mark-link"
+        href="https://github.com/UniverLab/univerlab"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="UniverLab website repository"
+      ><Mark size={32} /></a>
+      {!isManifesto && <p class="quote">{t.footer.quote}</p>}
+    </div>
+    <nav class="foot-nav" aria-label={t.nav.experiments}>
+      {footNav.map((item) => (
+        <a
+          href={item.href}
+          target={item.ext ? '_blank' : undefined}
+          rel={item.ext ? 'noopener noreferrer' : undefined}
+        >{item.label}</a>
+      ))}
+    </nav>
+  </div>
+  <div class="wrap base">
+    <span class="word" translate="no">UNIVERLAB</span>
+    <span class="meta">
+      <button
+        type="button"
+        class="branch mono"
+        translate="no"
+        title={t.cosmos.branchTooltip}
+        aria-expanded="false"
+        aria-controls="cosmic-commit"
+      >{t.cosmos.branch}</button>
+      <span class="tag">SCI · CLI · BIO</span>
+    </span>
+    <!-- Easter egg: the universe's latest commit. Terminal output stays English
+         in every locale (git always is), toggled by the branch button. -->
+    <div id="cosmic-commit" class="commit-panel" hidden translate="no">
+      <pre>commit HEAD (you)
+Author: the universe
+Date:   now
+
+    observing itself</pre>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* The footer is the lab's signature — always dark, regardless of the page's
+     circadian phase or experiment surface. It anchors the brand at the bottom
+     of every page: a dark footer on a light page gives contrast and identity;
+     on a dark page it stays coherent. */
+  footer {
+    --f-bg: #000000;
+    --f-bg-raise: #0a0a0a;
+    --f-ink: #e8e6e1;
+    --f-ink-dim: #9a9890;
+    --f-ink-faint: #4a4843;
+    --f-line: #1a1a1a;
+    background: var(--f-bg);
+    color: var(--f-ink);
+    margin-top: 2rem;
+  }
+  footer :global(svg) { color: var(--f-ink-faint); }
+  footer :focus-visible { outline-color: var(--f-ink); }
+
+  .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    padding-block: 2.6rem 2rem;
+  }
+  .left { display: flex; gap: 1rem; align-items: flex-start; max-width: 34rem; }
+  /* No hover, no underline — a quiet, discoverable click target. */
+  .mark-link { display: inline-flex; line-height: 0; flex: none; }
+  .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: 0.95rem; line-height: 1.55; }
+  .foot-nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; height: 1.5rem; }
+  .foot-nav a {
+    text-decoration: none; color: var(--f-ink-dim);
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    transition: color 0.15s ease;
+  }
+  .foot-nav a:hover { color: var(--f-ink); }
+
+  .base {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-block: 1.2rem 1.6rem;
+    border-top: 1px solid var(--f-line);
+  }
+  .word { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.32em; color: var(--f-ink-dim); }
+  .meta { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+  .tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; color: var(--f-ink-dim); }
+  /* A quiet easter egg: the lab's one software-as-cosmos metaphor. Dimmer than
+     everything around it; hover reveals its meaning, click reveals the commit. */
+  .branch {
+    font-family: var(--font-mono);
+    font-size: 0.7rem; letter-spacing: 0.08em; color: var(--f-ink-faint);
+    background: none; border: 0; padding: 0; cursor: pointer;
+    transition: color 0.15s ease;
+  }
+  .branch:hover, .branch[aria-expanded='true'] { color: var(--f-ink-dim); }
+
+  /* The universe's latest commit — a small terminal card above the branch. */
+  .commit-panel {
+    position: absolute;
+    right: 0; bottom: calc(100% + 0.6rem);
+    z-index: 20;
+    background: var(--f-bg-raise);
+    border: 1px solid var(--f-line);
+    border-left: 2px solid var(--accent, #c9a227);
+    padding: 0.9rem 1.1rem;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    animation: commit-in 0.16s ease;
+  }
+  .commit-panel[hidden] { display: none; }
+  .commit-panel pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem; line-height: 1.7; color: var(--f-ink-dim);
+    white-space: pre;
+  }
+  @keyframes commit-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 40rem) {
+    .inner { flex-direction: column; gap: 1.6rem; }
+    .foot-nav { height: auto; gap: 1.2rem; }
+  }
+
+  /* Flight bar — replaces the border-top as the body/footer separator.
+     2px line that fills left→right as the session progresses. */
+  .flight-bar {
+    position: relative;
+    height: 2px;
+    background: var(--f-line);
+    cursor: pointer;
+  }
+  .flight-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--essence, var(--accent, #c9a227));
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+</style>
+
+<style is:global>
+  /* Flight log — terminal-style dialog matching the command palette.
+     Must be global because the dialog is appended to <body>. */
+  .flight-log {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 18vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    animation: flog-in 0.18s ease;
+  }
+  @keyframes flog-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .flight-log-box {
+    width: 28rem;
+    max-width: 92vw;
+    background: rgba(18, 18, 22, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    font-family: 'IBM Plex Mono', monospace;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .flight-log-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex: none;
+  }
+  .flight-log-title {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .flight-log-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    line-height: 1;
+  }
+  .flight-log-close:hover { color: #e0e0e0; }
+  .flight-log-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem 0;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .flight-log-entries::-webkit-scrollbar { width: 3px; }
+  .flight-log-entries::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+  .flight-entry {
+    padding: 0.4rem 1rem;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  .flight-entry-new {
+    color: #e0e0e0;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .flight-sol { color: var(--accent, #c9a227); }
+  .flight-ts { color: rgba(255, 255, 255, 0.2); }
+  .flight-entry-new .flight-ts { color: rgba(255, 255, 255, 0.4); }
+  .flight-sep { color: rgba(255, 255, 255, 0.1); margin: 0 0.3rem; }
+  .flight-msg { color: rgba(255, 255, 255, 0.5); }
+  .flight-entry-new .flight-msg { color: #e0e0e0; }
+  .flight-log-empty {
+    padding: 1.5rem 1rem;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+  .flight-log-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.58rem;
+    color: rgba(255, 255, 255, 0.15);
+    letter-spacing: 0.06em;
+    flex: none;
+  }
+</style>
+
+<script>
+  // Branch easter egg — toggle the universe's latest commit; close on outside
+  // click or Escape.
+  const branch = document.querySelector<HTMLButtonElement>('.branch');
+  const panel = document.getElementById('cosmic-commit');
+  if (branch && panel) {
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open;
+      branch.setAttribute('aria-expanded', String(open));
+    };
+    branch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(branch.getAttribute('aria-expanded') !== 'true');
+      if ((window as any).missionLog) (window as any).missionLog.discover('footer-commit');
+    });
+    document.addEventListener('click', (e) => {
+      if (!panel.hidden && !panel.contains(e.target as Node) && e.target !== branch) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  }
+
+  // Footer logo — hidden click target to the site repo.
+  const markLink = document.querySelector<HTMLAnchorElement>('.mark-link');
+  if (markLink) {
+    markLink.addEventListener('click', () => {
+      if ((window as any).missionLog) (window as any).missionLog.discover('footer-logo');
+    });
+  }
+</script>

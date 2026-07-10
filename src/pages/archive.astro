@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { useTranslations } from '../i18n';
+const t = useTranslations('en');
+const s = t.secret;
+---
+<BaseLayout
+  title="The Archive — UniverLab"
+  description="A record of abandoned ideas — what they were, and why they were set aside."
+  noindex
+  bg="cosmic"
+  circadian
+>
+  <section class="wrap opening">
+    <span class="label">{s.kicker}</span>
+    <h1>{s.title}</h1>
+    <p class="intro">{s.intro}</p>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap ideas">
+    {s.ideas.map((idea, i) => (
+      <article class="tombstone">
+        <div class="t-num mono">{String(i + 1).padStart(2, '0')}</div>
+        <div class="t-body">
+          <h2 class="t-name">{idea.name}</h2>
+          <dl class="t-dl">
+            <dt class="t-dt label">{s.what}</dt>
+            <dd class="t-dd">{idea.what}</dd>
+            <dt class="t-dt label">{s.why}</dt>
+            <dd class="t-dd t-why">{idea.why}</dd>
+          </dl>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <hr class="rule" />
+
+  <section class="wrap epitaph-section">
+    <p class="epitaph">{s.epitaph}</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .opening { padding-block: 4rem 2.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); }
+  .intro { max-width: 46rem; color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0; }
+
+  .ideas { padding-block: 2.5rem; display: flex; flex-direction: column; }
+  .tombstone {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 1.2rem;
+    padding-block: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .tombstone:first-child { border-top: 1px solid var(--line); }
+
+  .t-num { color: var(--ink-faint); font-size: 0.78rem; padding-top: 0.22rem; }
+  .t-name { font-family: var(--font-serif); font-style: italic; font-size: 1.18rem; font-weight: 500; margin: 0 0 1rem; color: var(--ink); }
+
+  .t-dl { margin: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .t-dt { display: block; color: var(--ink-faint); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.2rem; }
+  .t-dd { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; max-width: 46rem; }
+  .t-why { color: var(--ink-faint); }
+
+  .epitaph-section { padding-block: 2.5rem 5rem; }
+  .epitaph {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 1.05rem; color: var(--ink-faint);
+    max-width: 38rem; line-height: 1.65;
+    border-left: 1px solid var(--ink-faint);
+    padding-left: 1.3rem;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .tombstone {
+        animation: step-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 26%;
+      }
+    }
+  }
+  @keyframes step-rise {
+    from { opacity: 0.1; transform: translateY(28px); }
+    to   { opacity: 1; transform: none; }
+  }
+</style>

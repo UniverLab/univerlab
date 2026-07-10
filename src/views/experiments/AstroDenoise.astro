@@ -1,0 +1,150 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments['astro-denoise'];
+
+// Affiliation / data-source logos — brand-manual versions, made for dark bg.
+const logos = [
+  { src: '/logos/unisalle.png', alt: 'Universidad de La Salle' },
+  { src: '/logos/lsst.png', alt: 'LSST' },
+  { src: '/logos/verarubin.png', alt: 'Vera C. Rubin Observatory' },
+  { src: '/logos/globus.png', alt: 'Globus' },
+];
+
+// The proposal PDF is served from R2 (not the repo) under a stable key, so the
+// link never changes — overwrite that object to publish a new version.
+const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
+---
+<ExperimentLayout id="astro-denoise">
+  <a slot="cta" class="proposal" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
+
+  <section class="wrap section">
+    <span class="label">{e.questions.kicker}</span>
+    <ul class="qs">
+      {e.questions.items.map((q, i) => <li><span class="qno">Q{i + 1}</span>{q}</li>)}
+    </ul>
+  </section>
+
+  <section class="wrap section affil">
+    <div class="marquee">
+      <ul class="track">
+        {logos.map((l) => <li><img src={l.src} alt={l.alt} loading="lazy" /></li>)}
+        {[0, 1, 2].map(() => logos.map((l) => <li aria-hidden="true"><img src={l.src} alt="" loading="lazy" /></li>))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="wrap section research">
+    <span class="label">{t.research.kicker}</span>
+    <h2>{t.research.title}</h2>
+    <p class="prose rintro" set:html={t.research.intro} />
+    <ul class="rlist">
+      {t.research.items.map(([name, desc]) => (
+        <li>
+          <span class="badge label">{t.common.inPreparation}</span>
+          <h3>{name}</h3>
+          <p>{desc}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+</ExperimentLayout>
+
+<style>
+  :global(html[data-surface='observatory'] .hero) {
+    align-items: flex-start;
+    text-align: left;
+  }
+  :global(html[data-surface='observatory'] .lede) {
+    margin-inline: 0;
+  }
+  :global(.koan) {
+    font-family: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif !important;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    line-height: 1.15;
+    color: #e8e6e1 !important;
+    max-width: 20ch;
+    text-wrap: balance;
+    text-align: left !important;
+    border-left: 4px solid var(--astro-denoise);
+    padding-left: 1.2rem;
+    margin-left: 0;
+    font-style: normal !important; opacity: 1 !important;
+  }
+  .papers { color: var(--ink-faint); font-size: 0.8rem; }
+  .proposal {
+    display: inline-block; text-decoration: none;
+    border: 1px solid var(--astro-denoise); color: var(--astro-denoise);
+    padding: 0.55rem 1.1rem; font-family: var(--font-mono); font-size: 0.85rem;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .proposal:hover { background: var(--astro-denoise); color: var(--bg); }
+  .section { padding-block: 1.5rem 2rem; }
+  .qs { list-style: none; padding: 0; margin: 1.2rem 0 0; max-width: 40rem; }
+  .qs li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--astro-denoise) 20%, var(--line)); color: var(--ink-dim); }
+  .qno { font-family: var(--font-mono); font-size: 0.78rem; color: var(--astro-denoise); flex: none; }
+
+  /* Affiliation / data-source logos — a slow band, shown as they ship (the
+     brand-manual versions are already made for a dark background). */
+  .affil { padding-block: 1.5rem 0.5rem; }
+  .marquee {
+    margin-top: 1.2rem;
+    overflow: hidden;
+    border-block: 1px solid var(--line);
+    padding-block: 1.6rem;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .track {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; align-items: center; gap: 4.5rem;
+    width: max-content;
+    /* 4 identical copies, shift exactly half → the loop point is invisible */
+    animation: logo-slide 64s linear infinite;
+  }
+  .track li { flex: none; }
+  .track img { height: 2.6rem; width: auto; display: block; opacity: 0.92; }
+  @keyframes logo-slide { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .track { animation: none; flex-wrap: wrap; width: auto; gap: 2.5rem 4rem; }
+    .marquee { -webkit-mask-image: none; mask-image: none; }
+  }
+
+  .research { padding-block: 2.5rem 4.5rem; }
+  .research h2 { font-size: 1.5rem; margin-block: 0.5rem 1rem; }
+  .rintro { color: var(--ink-dim); max-width: 48rem; margin-bottom: 1.6rem; }
+
+  .rlist {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1rem;
+  }
+  .rlist li {
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border: 1px solid var(--line);
+    border-left: 2px solid transparent; /* accent bar, lit on hover */
+    padding: 1.6rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    transition: background 0.15s ease, border-left-color 0.15s ease;
+    backdrop-filter: blur(2px);
+  }
+  .rlist li:hover {
+    background: var(--bg-raise);
+    border-left-color: var(--astro-denoise);
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    background: color-mix(in srgb, var(--astro-denoise) 12%, transparent);
+    color: var(--astro-denoise);
+    border: 1px solid color-mix(in srgb, var(--astro-denoise) 25%, transparent);
+    border-radius: 2px;
+    font-size: 0.65rem;
+    margin-bottom: 0.3rem;
+    align-self: flex-start;
+  }
+  .rlist h3 { font-size: 1rem; font-weight: 500; margin: 0; color: var(--ink); }
+  .rlist p { color: var(--ink-dim); font-size: 0.9rem; margin: 0; line-height: 1.55; }
+</style>

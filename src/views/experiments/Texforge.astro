@@ -1,0 +1,122 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments.texforge;
+// Rendered via an expression: literal `{…}` in template text is read as JSX.
+const tfInitial =
+  '\\begin{mermaid}\nflowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log\n\\end{mermaid}';
+---
+<ExperimentLayout id="texforge">
+  <section class="wrap section">
+    <div class="galley">
+      <figure class="plate-fig" id="tf-figure" data-figures={JSON.stringify(e.figures)}>
+        <pre class="mono plate"><code>{tfInitial}</code></pre>
+        <figcaption class="fig-cap"><span class="fig-label">Fig. 1 · {e.figures[0]} · mermaid</span></figcaption>
+      </figure>
+      <div class="colophon">
+        <span class="label">{e.press.kicker}</span>
+        <ul>
+          {e.press.items.map(([term, def], i) => (
+            <li><span class="press-no">{String(i + 1).padStart(2, '0')}</span><strong>{term}</strong> — {def}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <div class="sub">
+      <span class="label">{e.subproject.kicker}</span>
+      <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
+      <p set:html={e.subproject.body} />
+    </div>
+  </section>
+</ExperimentLayout>
+
+<script>
+  // The figure cycles through the custom diagram environments texforge
+  // intercepts — \begin{mermaid|graphviz|d2}…\end — each captioned as a figure,
+  // the same crossfade idea as the home wordmark. Reduced-motion rests on the
+  // first; pauses when scrolled off screen.
+  (function () {
+    const fig = document.getElementById('tf-figure');
+    if (!fig) return;
+    const code = fig.querySelector('.plate code');
+    const label = fig.querySelector('.fig-label');
+    if (!code || !label) return;
+    let figures = [];
+    try { figures = JSON.parse(fig.dataset.figures || '[]'); } catch (err) {}
+
+    const envs = [
+      { name: 'mermaid', src: 'flowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log' },
+      { name: 'graphviz', src: 'digraph {\n  spec -> figures -> pdf\n  spec -> refs -> pdf\n}' },
+      { name: 'd2', src: 'spec -> typeset: lint\ntypeset -> pdf: tectonic\ndiagrams -> typeset\ndiagrams: mermaid | d2' },
+    ];
+    const block = (x) => '\\begin{' + x.name + '}\n' + x.src + '\n\\end{' + x.name + '}';
+    const caption = (n) => 'Fig. ' + (n + 1) + ' · ' + (figures[n] || '') + ' · ' + envs[n].name;
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const HOLD = 3400; // time to read each environment
+    const FADE = 260; // crossfade duration (matches the CSS transition)
+    let i = 0;
+    function swap() {
+      i = (i + 1) % envs.length;
+      code.classList.add('fade');
+      label.classList.add('fade');
+      setTimeout(() => {
+        code.textContent = block(envs[i]);
+        label.textContent = caption(i);
+        code.classList.remove('fade');
+        label.classList.remove('fade');
+      }, FADE);
+    }
+
+    let timer = 0;
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        clearInterval(timer);
+        if (en.isIntersecting) timer = window.setInterval(swap, HOLD);
+      }
+    });
+    io.observe(fig);
+  })();
+</script>
+
+<style>
+  .section { padding-block: 1.5rem; }
+  .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
+  @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
+  /* A typeset figure plate, not a card: a hairline frame and the soft shadow of
+     a sheet on the desk — no hard offset. It cycles through the diagram
+     environments texforge intercepts, captioned "Fig. N · <env>". */
+  .plate-fig { margin: 0; }
+  .plate {
+    margin: 0; padding: 1.9rem 2.1rem;
+    border: 1px solid var(--line);
+    background: var(--bg-raise); color: var(--texforge);
+    font-size: 0.9rem; line-height: 1.9;
+    box-shadow: 0 12px 30px -16px rgba(60, 45, 30, 0.28);
+    min-height: 10.6rem; /* fits the tallest environment, so cycling never jumps */
+  }
+  .plate code { display: block; transition: opacity 0.26s ease; }
+  .plate code.fade { opacity: 0; }
+  .fig-cap {
+    margin-top: 0.7rem; font-family: var(--font-mono);
+    font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .fig-label { transition: opacity 0.26s ease; }
+  .fig-label.fade { opacity: 0; }
+  .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .colophon li { display: flex; align-items: baseline; gap: 0.8rem; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
+  .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--proof); min-width: 1.5rem; }
+  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; }
+  .sub { max-width: 46rem; }
+  .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+  .sub h3 a { color: var(--texforge); text-decoration: none; }
+  .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
+  .sub :global(code) { color: var(--texforge); font-size: 0.9em; }
+</style>

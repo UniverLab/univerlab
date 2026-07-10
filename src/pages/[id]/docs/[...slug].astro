@@ -1,0 +1,38 @@
+---
+import { getCollection, render } from 'astro:content';
+import DocsLayout from '../../../layouts/DocsLayout.astro';
+import { experiments } from '../../../lib/experiments';
+
+export async function getStaticPaths() {
+  const ids = experiments.filter((e) => e.hasDocs).map((e) => e.id);
+  const paths = [];
+  for (const id of ids) {
+    const entries = await getCollection(`docs-${id}` as any);
+    const sorted = entries.sort((a: any, b: any) => a.data.order - b.data.order);
+    const links = sorted.map((e: any) => ({
+      slug: e.id === 'index' ? '' : e.id,
+      title: e.data.title,
+    }));
+    for (const entry of sorted as any[]) {
+      const slug = entry.id === 'index' ? undefined : entry.id;
+      paths.push({
+        params: { id, slug },
+        props: { id, entry, links, current: entry.id === 'index' ? '' : entry.id },
+      });
+    }
+  }
+  return paths;
+}
+
+const { id, entry, links, current } = Astro.props as any;
+const { Content } = await render(entry);
+---
+<DocsLayout
+  id={id}
+  title={entry.data.title}
+  description={entry.data.description}
+  links={links}
+  current={current}
+>
+  <Content />
+</DocsLayout>
