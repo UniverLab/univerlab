@@ -19,12 +19,12 @@ const idx = experiments.findIndex((x) => x.id === id);
 const prevExp = experiments[(idx - 1 + experiments.length) % experiments.length];
 const nextExp = experiments[(idx + 1) % experiments.length];
 
-// Rich result for the tools that ship a binary: a free, cross-platform
-// developer application published by UniverLab. (Research experiments without an
-// installer get none — Organization + page meta still apply.)
+// Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
+// apps. Research experiments without an installer or URL get none —
+// Organization + page meta still apply.
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
-const softwareApp = exp.install
+const structuredData = exp.install
   ? {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -38,9 +38,21 @@ const softwareApp = exp.install
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
     }
-  : undefined;
+  : exp.url
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: exp.name,
+        description: e.tagline,
+        applicationCategory: 'DeveloperApplication',
+        url: exp.url,
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+      }
+    : undefined;
 ---
-<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
