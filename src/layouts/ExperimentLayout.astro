@@ -114,6 +114,21 @@ const structuredData = exp.install
 
     <slot />
 
+    {e.faq && e.faq.length > 0 && (
+      <section class="wrap faq-section" id="faq">
+        <span class="label">{t.common.faq}</span>
+        <h2>{t.common.faq}</h2>
+        <dl class="faq-list">
+          {e.faq.map(([question, answer]) => (
+            <div class="faq-item">
+              <dt class="faq-q">{question}</dt>
+              <dd class="faq-a">{answer}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+
     <nav class="wrap exp-nav" aria-label="Experiments">
       <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={prevExp.name}>
         <span class="arrow" aria-hidden="true">←</span>
@@ -245,6 +260,18 @@ const structuredData = exp.install
   .exp-nav-link:hover .arrow { color: var(--essence); }
   .exp-nav .prev:hover .arrow { transform: translateX(-3px); }
   .exp-nav .next:hover .arrow { transform: translateX(3px); }
+
+  /* FAQ section */
+  .faq-section { padding-block: 3rem; max-width: 52rem; }
+  .faq-section h2 { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .faq-list { margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .faq-item { padding-block: 1.2rem; border-bottom: 1px solid var(--line); }
+  .faq-item:first-child { border-top: 1px solid var(--line); }
+  .faq-q {
+    font-family: var(--font-mono); font-size: 0.88rem; font-weight: 500;
+    color: var(--ink); margin: 0 0 0.5rem; letter-spacing: 0.01em;
+  }
+  .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
 </style>
 
 <script>

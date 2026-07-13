@@ -31,6 +31,7 @@ export const en = {
     demo: 'Watch demo',
     demoBy: 'recorded with DemoStage',
     launch: 'Launch app ↗',
+    faq: 'FAQ',
   },
   status: {
     active: 'active',
@@ -136,6 +137,7 @@ export const en = {
           ['Projects · RAG', 4],
         ] as [string, number][],
       },
+      faq: [] as [string, string][],
     },
     texforge: {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
@@ -168,6 +170,7 @@ export const en = {
           'An open registry of LaTeX templates with placeholders — APA, IEEE, reports, letters and more. The <code>general</code> template ships embedded in the binary so creating a document works even offline.',
         link: 'https://github.com/UniverLab/texforge-templates',
       },
+      faq: [] as [string, string][],
     },
     gitkit: {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
@@ -191,6 +194,7 @@ export const en = {
           'Builds: save a setup once, apply it to every future project.',
         ],
       },
+      faq: [] as [string, string][],
     },
     ghscaff: {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
@@ -233,6 +237,7 @@ export const en = {
           'The language boilerplates ghscaff lays down — manifests, entry points, CI/release workflows. Rust today; Python and more on the way.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
+      faq: [] as [string, string][],
     },
     cadspec: {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
@@ -254,6 +259,7 @@ export const en = {
           'Deterministic DXF out, legacy DXF in — existing drawings migrate into the declarative workflow.',
         ],
       },
+      faq: [] as [string, string][],
     },
     'astro-denoise': {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
@@ -279,6 +285,7 @@ export const en = {
           'Can the whole benchmark run reproducibly end to end — versioned data, methods, metrics and bibliography?',
         ],
       },
+      faq: [] as [string, string][],
     },
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
@@ -302,6 +309,7 @@ export const en = {
           'Disconnect and reconnect — state syncs back from any peer still in the room.',
         ],
       },
+      faq: [] as [string, string][],
     },
     'demostage': {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
@@ -326,6 +334,7 @@ export const en = {
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
+      faq: [] as [string, string][],
     },
   },
   manifesto: {

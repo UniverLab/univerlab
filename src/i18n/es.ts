@@ -32,6 +32,7 @@ export const es: Dict = {
     demo: 'Ver demo',
     demoBy: 'grabado con DemoStage',
     launch: 'Abrir app ↗',
+    faq: 'Preguntas frecuentes',
   },
   status: {
     active: 'activo',
@@ -138,6 +139,7 @@ export const es: Dict = {
           ['Proyectos · RAG', 4],
         ],
       },
+      faq: [] as [string, string][],
     },
     texforge: {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
@@ -170,6 +172,7 @@ export const es: Dict = {
           'Un registro abierto de plantillas LaTeX con placeholders — APA, IEEE, informes, cartas y más. La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
         link: 'https://github.com/UniverLab/texforge-templates',
       },
+      faq: [] as [string, string][],
     },
     gitkit: {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
@@ -193,6 +196,7 @@ export const es: Dict = {
           'Builds: guarda una configuración una vez, aplícala a todo proyecto futuro.',
         ],
       },
+      faq: [] as [string, string][],
     },
     ghscaff: {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
@@ -235,6 +239,7 @@ export const es: Dict = {
           'Los boilerplates por lenguaje que ghscaff deposita — manifiestos, puntos de entrada, workflows de CI/release. Rust hoy; Python y más en camino.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
+      faq: [] as [string, string][],
     },
     cadspec: {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
@@ -256,6 +261,7 @@ export const es: Dict = {
           'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
         ],
       },
+      faq: [] as [string, string][],
     },
     'astro-denoise': {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
@@ -281,6 +287,7 @@ export const es: Dict = {
           '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
         ],
       },
+      faq: [] as [string, string][],
     },
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
@@ -304,6 +311,7 @@ export const es: Dict = {
           'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
+      faq: [] as [string, string][],
     },
     'demostage': {
       need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
@@ -328,6 +336,7 @@ export const es: Dict = {
           '<code>edit</code> — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
         ],
       },
+      faq: [] as [string, string][],
     },
   },
   manifesto: {

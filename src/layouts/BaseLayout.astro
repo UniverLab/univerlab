@@ -599,6 +599,10 @@ https://github.com/UniverLab
           }},
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
           { cmd: '/find', label: 'Find on page', action: function () { if (window.missionLog) window.missionLog.discover('find'); openFind(); } },
+          { cmd: '/faq', label: 'FAQ', action: function () {
+            var el = document.getElementById('faq');
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+          }},
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive' },
         ];
