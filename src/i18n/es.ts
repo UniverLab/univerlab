@@ -158,6 +158,23 @@ export const es: Dict = {
           ['Humano en el loop', 'Cuando la automatización se traba, el agente de resiliencia reporta un blocker y pausa. Tú decides; el loop reanuda cuando estés listo.'],
         ],
       },
+      builder: {
+        kicker: 'Motor de loops',
+        title: 'Mira un loop ensamblarse solo',
+        outro: 'Cada nodo corre en el harness que elijas. Mezcla proveedores libremente — el grafo es tuyo para editarlo.',
+        steps: [
+          ['Un spec encuentra a un agente',
+            'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en el harness que elijas.'],
+          ['Puertas deterministas',
+            'Un nodo de chequeo ejecuta tus comandos reales — build, lint, tests. El rojo regresa al implementador; solo el verde avanza.'],
+          ['Revisión con un segundo cerebro',
+            'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
+          ['El fallo se enruta, no se pierde',
+            'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
+          ['Modo fusión',
+            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y deja que un árbitro destile el consenso antes de implementar una sola línea.'],
+        ] as [string, string][],
+      },
       faq: [
         ['¿Qué hace Canopy exactamente?',
           'Canopy orquesta trabajo entre diferentes harnesses de IA — Claude, Codex, o cualquier agente que corra en una terminal. Te permite aprovechar todos tus free tiers sin aprender los comandos, la configuración o el parsing MCP de cada plataforma. Un daemon, todos los agentes.'],

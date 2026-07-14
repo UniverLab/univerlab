@@ -156,6 +156,23 @@ export const en = {
           ['Human-in-the-loop', 'When automation hits a wall, the resilience agent reports a blocker and pauses. You decide; the loop resumes when you\'re ready.'],
         ] as [string, string][],
       },
+      builder: {
+        kicker: 'Loop engine',
+        title: 'Watch a loop assemble itself',
+        outro: 'Every node runs on the harness you pick. Mix vendors freely — the graph is yours to edit.',
+        steps: [
+          ['A spec meets an agent',
+            'Work enters as a spec — role, what, how. An implementer node picks it up on whichever harness you choose.'],
+          ['Deterministic gates',
+            'A check node runs your real commands — build, lint, tests. Red routes back to the implementer; only green moves forward.'],
+          ['Review on a second brain',
+            'A different harness reviews the diff against the spec and commits. Same-vendor blind spots stay out of your branch.'],
+          ['Failure is routed, not lost',
+            'If the implementer dies mid-run, a resilience node triages it: glitches retry now; a quota death schedules the loop to wake itself at the exact reset time.'],
+          ['Fusion mode',
+            'Fan the spec out to several models in parallel, wait for every proposal, and let an arbiter distill the consensus before a single line is implemented.'],
+        ] as [string, string][],
+      },
       faq: [
         ['What does Canopy actually do?',
           'Canopy orchestrates work across different AI coding harnesses — Claude, Codex, or any agent that runs in a terminal. It lets you use all your free tiers without learning each platform\'s commands, config, or MCP parsing. One daemon, all agents.'],
