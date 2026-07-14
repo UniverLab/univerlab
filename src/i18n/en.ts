@@ -388,6 +388,14 @@ export const en = {
       faq: [
         ['Is Quorum free?',
           'Completely free. No accounts, no user limits, no premium tier. It\'s a P2P experiment in the browser — WebRTC connections, no server. Open the URL and start estimating.'],
+        ['How does planning poker work without a server?',
+          'Quorum uses peer-to-peer WebRTC connections. Your browser connects directly to your teammates\' browsers — no cloud, no database. A BitTorrent tracker handles the initial handshake; after that, data flows straight between peers.'],
+        ['Can I use Quorum for remote sprint planning?',
+          'Yes. Share the room URL with your team. Everyone picks a Fibonacci card (0, 1, 2, 3, 5, 8, 13, 21, ?). Cards auto-reveal simultaneously once everyone votes — a 3-second countdown prevents premature reveals.'],
+        ['Does Quorum support story lists?',
+          'Yes. Paste a story list or load a CSV. Step through stories in order, estimating each one. The session stays alive if someone disconnects — reconnect and state syncs from any peer still in the room.'],
+        ['What makes Quorum different from planningpoker.com?',
+          'No accounts, no user limits, no data stored on a server. Quorum is open-source and runs entirely in the browser via WebRTC. Your estimation data never leaves your team\'s devices.'],
       ] as [string, string][],
     },
     'demostage': {
