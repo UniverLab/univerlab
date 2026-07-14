@@ -200,16 +200,14 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
   .platforms { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .platforms li {
     font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
-    color: color-mix(in srgb, var(--pcolor) 90%, var(--bg)); padding: 0.3rem 0.65rem;
-    background: color-mix(in srgb, var(--pcolor) 15%, var(--bg));
-    border: 1px solid color-mix(in srgb, var(--pcolor) 40%, var(--line));
+    color: var(--pcolor); padding: 0.3rem 0.65rem;
+    background: #0a0a0c;
+    border: 1px solid var(--pcolor);
     border-radius: 2px;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .platforms li:hover {
-    background: color-mix(in srgb, var(--pcolor) 25%, var(--bg));
-    border-color: var(--pcolor);
-    color: var(--pcolor);
+    background: color-mix(in srgb, var(--pcolor) 15%, #0a0a0c);
   }
 
   /* ── Loop builder scene ──────────────────────────────────────────────
