@@ -117,7 +117,7 @@ const structuredData = faqSchema
          after the hero, before the feature sections, not buried at the end. -->
     <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
       <section class="wrap genesis">
-        <span class="label">{e.genesis.kicker}</span>
+        <span class="label">{e.genesis.kicker}{exp.year ? ` · ${exp.year}` : ''}</span>
         <h2>{e.genesis.title}</h2>
         <p class="prose" set:html={e.genesis.body} />
       </section>
