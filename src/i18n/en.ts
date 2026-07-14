@@ -355,6 +355,12 @@ export const en = {
       faq: [
         ['What is astro-denoise?',
           'A research project benchmarking denoising methods on simulated Vera Rubin Observatory (LSST DC2) images. The goal is to recover faint galaxies without inventing ones that were never there — scored by science recovery (completeness + purity), not visual quality.'],
+        ['What is denoising in astronomy?',
+          'Astronomical images contain unavoidable noise from the detector and sky. Denoising aims to reduce this noise while preserving real sources. The risk: a denoiser can smooth out real faint galaxies or invent fake ones that were never there.'],
+        ['What is LSST?',
+          'The Legacy Survey of Space and Time — a 10-year astronomical survey conducted by the Vera Rubin Observatory in Chile. It will image the entire visible sky repeatedly, producing the deepest wide-field catalog of galaxies, stars, and transient events ever made.'],
+        ['What is DC2?',
+          'Data Challenge 2 — a simulated dataset that mimics what LSST will produce, created by the Dark Energy Science Collaboration (DESC). It includes realistic noise, PSF, and atmospheric effects, with a truth catalog telling you exactly which sources are real.'],
       ] as [string, string][],
     },
     'quorum': {

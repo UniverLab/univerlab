@@ -357,6 +357,12 @@ export const es: Dict = {
       faq: [
         ['¿Qué es astro-denoise?',
           'Un proyecto de investigación que evalúa métodos de denoising en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
+        ['¿Qué es el denoising en astronomía?',
+          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. El denoising busca reducir ese ruido preservando las fuentes reales. El riesgo: un denoiser puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
+        ['¿Qué es LSST?',
+          'El Legacy Survey of Space and Time — un relevamiento astronómico de 10 años que realizará el Observatorio Vera Rubin en Chile. Fotografiará todo el cielo visible repetidamente, produciendo el catálogo profundo de campo amplio más grande jamás hecho.'],
+        ['¿Qué es DC2?',
+          'Data Challenge 2 — un conjunto de datos simulados que imita lo que LSST producirá, creado por la Dark Energy Science Collaboration (DESC). Incluye ruido realista, PSF y efectos atmosféricos, con un catálogo de verdad que dice exactamente qué fuentes son reales.'],
       ] as [string, string][],
     },
     'quorum': {
