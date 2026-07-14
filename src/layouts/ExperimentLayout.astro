@@ -19,12 +19,14 @@ const idx = experiments.findIndex((x) => x.id === id);
 const prevExp = experiments[(idx - 1 + experiments.length) % experiments.length];
 const nextExp = experiments[(idx + 1) % experiments.length];
 
-// Format startDate as "TERRA YYYY · Mon DD" for the genesis section.
+// Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
 const genesisDate = exp.startDate
   ? (() => {
       const d = new Date(exp.startDate + 'T00:00:00');
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return `TERRA ${d.getFullYear()} · ${months[d.getMonth()]} ${d.getDate()}`;
+      const start = new Date(d.getFullYear(), 0, 0);
+      const diff = d.getTime() - start.getTime();
+      const sol = Math.floor(diff / 86400000);
+      return `TERRA ${d.getFullYear()} · Sol ${sol}`;
     })()
   : undefined;
 
