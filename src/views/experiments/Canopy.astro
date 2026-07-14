@@ -206,71 +206,10 @@ const dagEdges = [
 </style>
 
 <script>
+  // Enable scrolly layout only when scroll-driven animations are supported.
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dag = document.querySelector<HTMLElement>('[data-dag]');
-  const sticky = dag?.querySelector<HTMLElement>('.dag-sticky');
-
-  if (dag && sticky && !reduce) {
+  if (dag && !reduce && CSS.supports('animation-timeline', 'view()')) {
     dag.classList.add('scrolly');
-
-    let progress = 0;
-    let velocity = 0;
-    const BASE = 1 / 2000;
-    const MAX_FWD = BASE * 4;
-    const REV_BASE = BASE * 4;
-    const KICK = 0.00005;
-    const KICK_REV = 0.00015;
-    const SETTLE = 0.00006;
-
-    const isActive = () => {
-      const r = dag.getBoundingClientRect();
-      return r.top <= 0 && r.bottom >= window.innerHeight;
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      if (!isActive()) {
-        const r = dag.getBoundingClientRect();
-        if (r.bottom <= 0 && progress < 1) { progress = 1; updateProgress(); }
-        if (r.top >= window.innerHeight && progress > 0) { progress = 0; updateProgress(); }
-        return;
-      }
-      if (progress >= 0.999 && e.deltaY > 0) return;
-      if (progress <= 0.001 && e.deltaY < 0) return;
-
-      e.preventDefault();
-      if (e.deltaY > 0) {
-        if (velocity < BASE) velocity = BASE;
-        else velocity = Math.min(velocity + e.deltaY * KICK, MAX_FWD);
-      } else {
-        if (velocity > -REV_BASE) velocity = -REV_BASE;
-        else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK_REV, -MAX_REV);
-      }
-    };
-
-    const MAX_REV = BASE * 12;
-    window.addEventListener('wheel', onWheel, { passive: false });
-
-    let lastTime = 0;
-    const updateProgress = () => {
-      dag.style.setProperty('--dag-progress', progress.toFixed(3));
-    };
-
-    const tick = (time: number) => {
-      requestAnimationFrame(tick);
-      if (!lastTime) lastTime = time;
-      const dt = Math.min((time - lastTime) / 16.67, 3);
-      lastTime = time;
-
-      if (velocity > BASE) velocity = Math.max(velocity - SETTLE * dt, BASE);
-      else if (velocity < -BASE) velocity = Math.min(velocity + SETTLE * dt, -BASE);
-
-      if (velocity !== 0) {
-        progress += velocity * dt;
-        if (progress <= 0) { progress = 0; velocity = 0; }
-        if (progress >= 1) { progress = 1; velocity = 0; }
-        updateProgress();
-      }
-    };
-    requestAnimationFrame(tick);
   }
 </script>
