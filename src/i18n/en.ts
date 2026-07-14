@@ -137,7 +137,16 @@ export const en = {
           ['Projects · RAG', 4],
         ] as [string, number][],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['What does Canopy actually do?',
+          'Canopy orchestrates work across different AI coding harnesses — Claude, Codex, or any agent that runs in a terminal. It lets you use all your free tiers without learning each platform\'s commands, config, or MCP parsing. One daemon, all agents.'],
+        ['How do I share work between Claude and Codex?',
+          'Canopy gives each agent a shared knowledge graph and sync protocol. When Claude finishes a task, the facts and patterns it discovered are available to Codex in the next session. No manual context copying.'],
+        ['Can I run AI agents on a schedule?',
+          'Yes. Canopy fires agents on cron schedules or file-change triggers via a background daemon. Set the schedule once; the daemon watches the workspace and runs tasks automatically.'],
+        ['How is Canopy different from just using Claude Code or Codex directly?',
+          'Those are individual harnesses. Canopy is the layer that connects them — shared memory, background scheduling, and multi-agent coordination. You keep your agents; Canopy adds the infrastructure.'],
+      ] as [string, string][],
     },
     texforge: {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
@@ -170,7 +179,14 @@ export const en = {
           'An open registry of LaTeX templates with placeholders — APA, IEEE, reports, letters and more. The <code>general</code> template ships embedded in the binary so creating a document works even offline.',
         link: 'https://github.com/UniverLab/texforge-templates',
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['What problem does TexForge solve?',
+          'Compiling LaTeX normally requires installing TeX Live (4+ GB), then separate tools for Mermaid, Graphviz, and D2 diagrams — each with its own setup. TexForge is a single ~15 MB binary that handles everything: scaffolding, linting, formatting, diagrams, and compilation.'],
+        ['Can AI agents use TexForge to work with LaTeX?',
+          'Yes. An agent can run `texforge build` without installing anything — the LaTeX engine downloads on first use. Errors are concise (not 1000-line logs), and diagrams render inside `.tex` files without Node.js or external tools.'],
+        ['Does TexForge support Mermaid and D2 diagrams in LaTeX?',
+          'Yes. Write a Mermaid, Graphviz, or D2 block directly in your `.tex` file. TexForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
+      ] as [string, string][],
     },
     gitkit: {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
@@ -194,7 +210,12 @@ export const en = {
           'Builds: save a setup once, apply it to every future project.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['How do I prevent AI agents from making bad commits?',
+          'GitKit sets up git hooks in one flow — conventional commits, secret detection, branch naming. Hooks run offline, embedded in the repo. Agents can\'t push code that doesn\'t compile or contains secrets.'],
+        ['What are GitKit "builds"?',
+          'A build saves your git configuration (hooks, ignore, attributes, config) as a reusable template. Apply it to any future project with one command — no need to reconfigure hooks for every repo.'],
+      ] as [string, string][],
     },
     ghscaff: {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
@@ -237,7 +258,12 @@ export const en = {
           'The language boilerplates ghscaff lays down — manifests, entry points, CI/release workflows. Rust today; Python and more on the way.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['How does ghScaff set up a GitHub repository?',
+          'Run `ghscaff` — an interactive wizard that creates the repo, commits boilerplate (CI, README, license), sets branch protection, and enforces standard labels. One atomic commit, no manual steps.'],
+        ['Why does ghScaff use an encrypted vault for tokens?',
+          'Environment variables with tokens are easily exploitable — any process on your machine can read them. ghScaff encrypts tokens with XSalsa20-Poly1305, bound to your OS user and hostname. The vault prevents ghScaff from becoming an attack vector.'],
+      ] as [string, string][],
     },
     cadspec: {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
@@ -259,7 +285,12 @@ export const en = {
           'Deterministic DXF out, legacy DXF in — existing drawings migrate into the declarative workflow.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['What is cadSpec for?',
+          'cadSpec is CAD as code for architects who need AI to help them draw. Declare geometry in TOML files, preview live in the browser, compile to bit-identical DXF. `git diff` works on drawings because the source is text.'],
+        ['Can AI agents read and generate CAD drawings with cadSpec?',
+          'Yes. cadSpec\'s TOML format is plain text that any LLM can read. Run `cadspec schema` to teach the language; previews include bounding boxes so agents can see the drawing.'],
+      ] as [string, string][],
     },
     'astro-denoise': {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
@@ -285,7 +316,10 @@ export const en = {
           'Can the whole benchmark run reproducibly end to end — versioned data, methods, metrics and bibliography?',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['What is astro-denoise?',
+          'A research project benchmarking denoising methods on simulated Vera Rubin Observatory (LSST DC2) images. The goal is to recover faint galaxies without inventing ones that were never there — scored by science recovery (completeness + purity), not visual quality.'],
+      ] as [string, string][],
     },
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
@@ -309,7 +343,10 @@ export const en = {
           'Disconnect and reconnect — state syncs back from any peer still in the room.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['Is Quorum free?',
+          'Completely free. No accounts, no user limits, no premium tier. It\'s a P2P experiment in the browser — WebRTC connections, no server. Open the URL and start estimating.'],
+      ] as [string, string][],
     },
     'demostage': {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
@@ -334,7 +371,14 @@ export const en = {
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['What is DemoStage?',
+          'A tool for planning and recording multi-source demos — terminal, browser, and files in one scene. Not just screen recording: you configure typography, aspect ratio, fps, and terminal style. Output is optimized for web.'],
+        ['Can I re-record a demo if something changes?',
+          'Yes. `demostage capture` records events, not video. If the UX changes, re-capture and the demo updates deterministically — no need to manually re-record the whole thing.'],
+        ['How is DemoStage different from asciinema?',
+          'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif/mp4. The source is a versionable TOML file.'],
+      ] as [string, string][],
     },
   },
   manifesto: {

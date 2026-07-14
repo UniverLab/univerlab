@@ -139,7 +139,16 @@ export const es: Dict = {
           ['Proyectos · RAG', 4],
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Qué hace Canopy exactamente?',
+          'Canopy orquesta trabajo entre diferentes harnesses de IA — Claude, Codex, o cualquier agente que corra en una terminal. Te permite aprovechar todos tus free tiers sin aprender los comandos, la configuración o el parsing MCP de cada plataforma. Un daemon, todos los agentes.'],
+        ['¿Cómo comparto trabajo entre Claude y Codex?',
+          'Canopy le da a cada agente un grafo de conocimiento compartido y un protocolo de sincronización. Cuando Claude termina una tarea, los hechos y patrones que descubrió están disponibles para Codex en la siguiente sesión. Sin copia manual de contexto.'],
+        ['¿Puedo ejecutar agentes de IA en un horario?',
+          'Sí. Canopy dispara agentes por cron o por eventos de cambio de archivo a través de un daemon en segundo plano. Configuras el horario una vez; el daemon vigila el workspace y ejecuta tareas automáticamente.'],
+        ['¿En qué se diferencia Canopy de usar Claude Code o Codex directamente?',
+          'Esos son harnesses individuales. Canopy es la capa que los conecta — memoria compartida, programación en segundo plano y coordinación multi-agente. Tú conservas tus agentes; Canopy añade la infraestructura.'],
+      ] as [string, string][],
     },
     texforge: {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
@@ -172,7 +181,14 @@ export const es: Dict = {
           'Un registro abierto de plantillas LaTeX con placeholders — APA, IEEE, informes, cartas y más. La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
         link: 'https://github.com/UniverLab/texforge-templates',
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Qué problema resuelve TexForge?',
+          'Compilar LaTeX normalmente requiere instalar TeX Live (4+ GB), luego herramientas separadas para Mermaid, Graphviz y D2 — cada una con su propia configuración. TexForge es un solo binario de ~15 MB que hace todo: scaffolding, linting, formateo, diagramas y compilación.'],
+        ['¿Pueden los agentes de IA usar TexForge para trabajar con LaTeX?',
+          'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
+        ['¿TexForge soporta diagramas Mermaid y D2 en LaTeX?',
+          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TexForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+      ] as [string, string][],
     },
     gitkit: {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
@@ -196,7 +212,12 @@ export const es: Dict = {
           'Builds: guarda una configuración una vez, aplícala a todo proyecto futuro.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Cómo evito que los agentes de IA hagan commits feos?',
+          'GitKit configura git hooks en un solo flujo — conventional commits, detección de secretos, nomenclatura de ramas. Los hooks corren offline, embebidos en el repo. Los agentes no pueden pushear código que no compila o contiene secretos.'],
+        ['¿Qué son los "builds" de GitKit?',
+          'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
+      ] as [string, string][],
     },
     ghscaff: {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
@@ -239,7 +260,12 @@ export const es: Dict = {
           'Los boilerplates por lenguaje que ghscaff deposita — manifiestos, puntos de entrada, workflows de CI/release. Rust hoy; Python y más en camino.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Cómo configura ghScaff un repositorio de GitHub?',
+          'Ejecuta `ghscaff` — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
+        ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
+          'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
+      ] as [string, string][],
     },
     cadspec: {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
@@ -261,7 +287,12 @@ export const es: Dict = {
           'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Para qué sirve cadSpec?',
+          'cadSpec es CAD como código para arquitectos que necesitan IA que les ayude a dibujar. Declara geometría en archivos TOML, previsualiza en vivo en el navegador, compila a DXF idéntico cada vez. `git diff` funciona en dibujos porque el fuente es texto.'],
+        ['¿Pueden los agentes de IA leer y generar dibujos CAD con cadSpec?',
+          'Sí. El formato TOML de cadSpec es texto plano que cualquier LLM puede leer. Ejecuta `cadspec schema` para enseñar el lenguaje; las vistas previas incluyen cajas delimitadoras para que los agentes puedan ver el dibujo.'],
+      ] as [string, string][],
     },
     'astro-denoise': {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
@@ -287,7 +318,10 @@ export const es: Dict = {
           '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Qué es astro-denoise?',
+          'Un proyecto de investigación que evalúa métodos de denoising en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
+      ] as [string, string][],
     },
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
@@ -311,7 +345,10 @@ export const es: Dict = {
           'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Es Quorum gratis?',
+          'Completamente gratis. Sin cuentas, sin límites de usuarios, sin tier premium. Es un experimento P2P en el navegador — conexiones WebRTC, sin servidor. Abre la URL y empieza a estimar.'],
+      ] as [string, string][],
     },
     'demostage': {
       need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
@@ -336,7 +373,14 @@ export const es: Dict = {
           '<code>edit</code> — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
         ],
       },
-      faq: [] as [string, string][],
+      faq: [
+        ['¿Qué es DemoStage?',
+          'Una herramienta para planear y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
+        ['¿Puedo re-grabar una demo si algo cambia?',
+          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, re-capturas y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
+        ['¿En qué se diferencia DemoStage de asciinema?',
+          'asciinema graba salida de terminal cruda. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+      ] as [string, string][],
     },
   },
   manifesto: {
