@@ -1,9 +1,18 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.canopy;
+
+// Read supported platforms from canopy-registry at build time.
+const registryPath = resolve(process.cwd(), '../canopy-registry/index.toml');
+const registryToml = readFileSync(registryPath, 'utf-8');
+const platforms = [...registryToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^"]+)"/g)]
+  .map((m) => m[1]);
 ---
 <ExperimentLayout id="canopy">
   <section class="wrap section">
@@ -16,12 +25,21 @@ const e = t.experiments.canopy;
   </section>
 
   <section class="wrap section">
-    <span class="label">{e.tools.kicker}</span>
-    <ul class="tools">
-      {e.tools.items.map(([name, count]) => (
-        <li><span class="count">{count}</span><span class="tname">{name}</span></li>
+    <span class="label">{e.platforms.kicker}</span>
+    <ul class="platforms">
+      {platforms.map((name) => (
+        <li>{name}</li>
       ))}
     </ul>
+  </section>
+
+  <section class="wrap section">
+    <span class="label">{e.loops.kicker}</span>
+    <div class="cols">
+      {e.loops.cols.map(([h, b]) => (
+        <div class="col"><h3>{h}</h3><p>{b}</p></div>
+      ))}
+    </div>
   </section>
 </ExperimentLayout>
 
@@ -31,11 +49,13 @@ const e = t.experiments.canopy;
   .col { border-top: 2px solid color-mix(in srgb, var(--canopy) 45%, transparent); padding-top: 1rem; }
   .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
-  .tools { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 42rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.2rem 2rem; }
-  .tools li {
-    display: flex; align-items: baseline; gap: 0.9rem; padding-block: 0.7rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--canopy) 18%, var(--line));
+  .platforms { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 42rem; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .platforms li {
+    font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.04em;
+    color: var(--ink-dim); padding: 0.35rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--canopy) 25%, var(--line));
+    border-radius: 2px;
+    transition: border-color 0.15s ease, color 0.15s ease;
   }
-  .count { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; color: var(--canopy); line-height: 1; min-width: 2.2rem; }
-  .tname { color: var(--ink-dim); font-size: 0.92rem; }
+  .platforms li:hover { border-color: var(--canopy); color: var(--canopy); }
 </style>

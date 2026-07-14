@@ -24,7 +24,7 @@ const nextExp = experiments[(idx + 1) % experiments.length];
 // Organization + page meta still apply.
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
-const structuredData = exp.install
+const baseSchema = exp.install
   ? {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -51,6 +51,26 @@ const structuredData = exp.install
         author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
       }
     : undefined;
+
+// FAQPage schema for rich snippets when experiments have FAQs.
+const faqSchema = e.faq && e.faq.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: e.faq.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: answer,
+        },
+      })),
+    }
+  : undefined;
+
+const structuredData = faqSchema
+  ? (baseSchema ? [baseSchema, faqSchema] : faqSchema)
+  : baseSchema;
 ---
 <BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
