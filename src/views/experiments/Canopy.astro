@@ -200,14 +200,16 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
   .platforms { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .platforms li {
     font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
-    color: var(--pcolor); padding: 0.3rem 0.65rem;
-    border: 1px solid color-mix(in srgb, var(--pcolor) 30%, var(--line));
+    color: color-mix(in srgb, var(--pcolor) 90%, var(--bg)); padding: 0.3rem 0.65rem;
+    background: color-mix(in srgb, var(--pcolor) 15%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--pcolor) 40%, var(--line));
     border-radius: 2px;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .platforms li:hover {
-    background: color-mix(in srgb, var(--pcolor) 10%, transparent);
+    background: color-mix(in srgb, var(--pcolor) 25%, var(--bg));
     border-color: var(--pcolor);
+    color: var(--pcolor);
   }
 
   /* ── Loop builder scene ──────────────────────────────────────────────
@@ -361,7 +363,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
 
       let progress = 0;
       let velocity = 0;
-      const BASE = 1 / 1100;      // ~18s forward cruise at 60fps
+      const BASE = 1 / 2200;      // ~36s forward cruise at 60fps
       const MAX_FWD = BASE * 5;
       const REV_BASE = BASE * 5;
       const MAX_REV = BASE * 14;
