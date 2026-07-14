@@ -150,6 +150,8 @@ export const es: Dict = {
       },
       loops: {
         kicker: 'Motor de loops',
+        title: 'Flujos de trabajo que se ejecutan solos',
+        body: 'Define un DAG — los specs fluyen a través de nodos de agente, chequeo y gate. El loop corre autónomamente: implementar, verificar, revisar, commitear. Cuando se traba, pausa y te consulta.',
         cols: [
           ['Automatización basada en DAG', 'Define flujos de trabajo como grafos acíclicos dirigidos: los specs fluyen a través de nodos de agente, chequeo y gate con enrutamiento pass/fail. Automatiza corrección de bugs, revisión de código y tareas de múltiples pasos.'],
           ['Ejecución en segundo plano', 'Los loops corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],

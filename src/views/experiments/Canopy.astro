@@ -1,20 +1,72 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.canopy;
 
-// Read supported platforms from canopy-registry at build time.
-const registryPath = resolve(process.cwd(), '../canopy-registry/index.toml');
-const registryToml = readFileSync(registryPath, 'utf-8');
-const platforms = [...registryToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^"]+)"/g)]
+// Read supported platforms with accent colors from canopy-registry at build time.
+const registryDir = resolve(process.cwd(), '../canopy-registry');
+const indexPath = resolve(registryDir, 'index.toml');
+const indexToml = readFileSync(indexPath, 'utf-8');
+const platformNames = [...indexToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^"]+)"/g)]
   .map((m) => m[1]);
+
+const platformEntries: { name: string; color: string }[] = [];
+for (const name of platformNames) {
+  const platPath = resolve(registryDir, 'platforms', `${name}.toml`);
+  let color = 'var(--canopy)';
+  if (existsSync(platPath)) {
+    const platToml = readFileSync(platPath, 'utf-8');
+    const cliSection = platToml.split('[cli]')[1] || '';
+    const colorMatch = cliSection.match(/accent_color\s*=\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
+    if (colorMatch) {
+      color = `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})`;
+    }
+  }
+  platformEntries.push({ name, color });
+}
+
+// DAG nodes for the scroll-driven animation.
+const dagNodes = [
+  { id: 'spec', x: 20, y: 15, label: 'Spec' },
+  { id: 'trigger', x: 50, y: 15, label: 'Trigger' },
+  { id: 'config', x: 80, y: 15, label: 'Config' },
+  { id: 'implement', x: 15, y: 50, label: 'Implement' },
+  { id: 'check', x: 42, y: 50, label: 'Check' },
+  { id: 'review', x: 68, y: 50, label: 'Review' },
+  { id: 'resilience', x: 92, y: 50, label: 'Resilience' },
+  { id: 'commit', x: 35, y: 85, label: 'Commit' },
+  { id: 'blocker', x: 65, y: 85, label: 'Blocker' },
+];
+const dagEdges = [
+  { from: 'spec', to: 'implement' },
+  { from: 'trigger', to: 'implement' },
+  { from: 'config', to: 'check' },
+  { from: 'implement', to: 'check' },
+  { from: 'check', to: 'review', condition: 'pass' },
+  { from: 'check', to: 'resilience', condition: 'fail' },
+  { from: 'review', to: 'commit', condition: 'pass' },
+  { from: 'review', to: 'implement', condition: 'fail' },
+  { from: 'resilience', to: 'implement', condition: 'pass' },
+  { from: 'resilience', to: 'blocker', condition: 'fail' },
+];
 ---
 <ExperimentLayout id="canopy">
+  <Fragment slot="before-genesis">
+    <section class="wrap section platforms-section">
+      <span class="label">{e.platforms.kicker}</span>
+      <ul class="platforms">
+        {platformEntries.map(({ name, color }) => (
+          <li style={`--pcolor: ${color}`}>{name}</li>
+        ))}
+      </ul>
+    </section>
+  </Fragment>
+
   <section class="wrap section">
     <span class="label">{e.layer.kicker}</span>
     <div class="cols">
@@ -24,13 +76,47 @@ const platforms = [...registryToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^
     </div>
   </section>
 
-  <section class="wrap section">
-    <span class="label">{e.platforms.kicker}</span>
-    <ul class="platforms">
-      {platforms.map((name) => (
-        <li>{name}</li>
-      ))}
-    </ul>
+  <!-- DAG scroll-driven scene -->
+  <section class="dag-scrolly" data-dag>
+    <div class="dag-sticky">
+      <svg class="dag-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <!-- Edges -->
+        {dagEdges.map((edge) => {
+          const from = dagNodes.find((n) => n.id === edge.from)!;
+          const to = dagNodes.find((n) => n.id === edge.to)!;
+          const isFail = edge.condition === 'fail';
+          return (
+            <line
+              class={`dag-edge ${isFail ? 'dag-edge-fail' : ''}`}
+              x1={from.x} y1={from.y}
+              x2={to.x} y2={to.y}
+              data-from={edge.from}
+              data-to={edge.to}
+            />
+          );
+        })}
+        <!-- Nodes -->
+        {dagNodes.map((node) => (
+          <g class="dag-node" data-id={node.id} transform={`translate(${node.x}, ${node.y})`}>
+            <circle class="dag-dot" r="2.5" />
+            <text class="dag-label" dy="5.5" text-anchor="middle">{node.label}</text>
+          </g>
+        ))}
+        <!-- Animated pulse that travels along edges -->
+        {dagEdges.filter((e) => e.condition !== 'fail').map((edge) => {
+          const from = dagNodes.find((n) => n.id === edge.from)!;
+          const to = dagNodes.find((n) => n.id === edge.to)!;
+          return (
+            <circle class="dag-pulse" r="1" data-from-x={from.x} data-from-y={from.y} data-to-x={to.x} data-to-y={to.y} />
+          );
+        })}
+      </svg>
+      <div class="dag-caption">
+        <span class="label">{e.loops.kicker}</span>
+        <h2>{e.loops.title}</h2>
+        <p>{e.loops.body}</p>
+      </div>
+    </div>
   </section>
 
   <section class="wrap section">
@@ -49,13 +135,142 @@ const platforms = [...registryToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^
   .col { border-top: 2px solid color-mix(in srgb, var(--canopy) 45%, transparent); padding-top: 1rem; }
   .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
-  .platforms { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 42rem; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+  /* Platforms — colored badges from registry */
+  .platforms-section { padding-block: 0.5rem 1rem; }
+  .platforms { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .platforms li {
-    font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.04em;
-    color: var(--ink-dim); padding: 0.35rem 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--canopy) 25%, var(--line));
+    font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
+    color: var(--pcolor); padding: 0.3rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--pcolor) 30%, var(--line));
     border-radius: 2px;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .platforms li:hover { border-color: var(--canopy); color: var(--canopy); }
+  .platforms li:hover {
+    background: color-mix(in srgb, var(--pcolor) 10%, transparent);
+    border-color: var(--pcolor);
+  }
+
+  /* DAG scroll-driven scene */
+  .dag-scrolly { position: relative; }
+  .dag-scrolly.scrolly { height: 300vh; }
+  .dag-scrolly.scrolly .dag-sticky {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center; justify-content: center; gap: 4rem;
+    padding: 0 var(--page-gutter);
+    overflow: hidden;
+  }
+  .dag-svg { width: min(32rem, 50vw); height: auto; }
+  .dag-caption { max-width: 24rem; }
+  .dag-caption h2 { font-size: 1.8rem; margin-block: 0.6rem 1rem; }
+  .dag-caption p { color: var(--ink-dim); font-size: 1.02rem; line-height: 1.65; margin: 0; }
+
+  /* DAG elements — default to visible (no-JS/reduced-motion fallback) */
+  .dag-edge { stroke: var(--line); stroke-width: 0.3; }
+  .dag-edge-fail { stroke-dasharray: 1.5 1; opacity: 0.5; }
+  .dag-dot { fill: var(--ink-faint); }
+  .dag-label { font-family: var(--font-mono); font-size: 2.8px; fill: var(--ink-dim); }
+  .dag-pulse { fill: var(--canopy); opacity: 0; }
+
+  /* Scroll-driven animation — nodes light up as progress advances */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .dag-scrolly { animation: dag-reveal linear both; animation-timeline: view(); animation-range: entry 0% cover 60%; }
+      .dag-node { opacity: 0; animation: dag-node-in ease-out both; animation-timeline: view(); animation-range: entry 10% cover 50%; }
+      .dag-node[data-id="implement"] { animation-range: entry 15% cover 45%; }
+      .dag-node[data-id="check"] { animation-range: entry 20% cover 50%; }
+      .dag-node[data-id="review"] { animation-range: entry 25% cover 55%; }
+      .dag-node[data-id="commit"] { animation-range: entry 30% cover 60%; }
+      .dag-node[data-id="resilience"] { animation-range: entry 22% cover 48%; }
+      .dag-node[data-id="blocker"] { animation-range: entry 28% cover 58%; }
+      .dag-edge { stroke-dasharray: 100; stroke-dashoffset: 100; animation: dag-draw ease-out both; animation-timeline: view(); animation-range: entry 12% cover 52%; }
+      .dag-pulse { animation: dag-pulse-anim ease-in-out infinite; animation-timeline: view(); animation-range: entry 20% cover 70%; }
+    }
+  }
+  @keyframes dag-reveal { from { opacity: 0.2; } to { opacity: 1; } }
+  @keyframes dag-node-in { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+  @keyframes dag-draw { to { stroke-dashoffset: 0; } }
+  @keyframes dag-pulse-anim {
+    0% { opacity: 0; }
+    20% { opacity: 0.8; }
+    80% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+
+  /* Static fallback */
+  .dag-scrolly:not(.scrolly) .dag-sticky { height: auto; position: static; flex-direction: column; padding: 3rem var(--page-gutter); }
+  .dag-scrolly:not(.scrolly) .dag-svg { width: min(28rem, 80vw); }
+  .dag-scrolly:not(.scrolly) .dag-caption { text-align: center; margin-top: 2rem; }
+  .dag-scrolly:not(.scrolly) .dag-node { opacity: 1; }
+  .dag-scrolly:not(.scrolly) .dag-edge { stroke-dashoffset: 0; }
 </style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dag = document.querySelector<HTMLElement>('[data-dag]');
+  const sticky = dag?.querySelector<HTMLElement>('.dag-sticky');
+
+  if (dag && sticky && !reduce) {
+    dag.classList.add('scrolly');
+
+    let progress = 0;
+    let velocity = 0;
+    const BASE = 1 / 2000;
+    const MAX_FWD = BASE * 4;
+    const REV_BASE = BASE * 4;
+    const KICK = 0.00005;
+    const KICK_REV = 0.00015;
+    const SETTLE = 0.00006;
+
+    const isActive = () => {
+      const r = dag.getBoundingClientRect();
+      return r.top <= 0 && r.bottom >= window.innerHeight;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (!isActive()) {
+        const r = dag.getBoundingClientRect();
+        if (r.bottom <= 0 && progress < 1) { progress = 1; updateProgress(); }
+        if (r.top >= window.innerHeight && progress > 0) { progress = 0; updateProgress(); }
+        return;
+      }
+      if (progress >= 0.999 && e.deltaY > 0) return;
+      if (progress <= 0.001 && e.deltaY < 0) return;
+
+      e.preventDefault();
+      if (e.deltaY > 0) {
+        if (velocity < BASE) velocity = BASE;
+        else velocity = Math.min(velocity + e.deltaY * KICK, MAX_FWD);
+      } else {
+        if (velocity > -REV_BASE) velocity = -REV_BASE;
+        else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK_REV, -MAX_REV);
+      }
+    };
+
+    const MAX_REV = BASE * 12;
+    window.addEventListener('wheel', onWheel, { passive: false });
+
+    let lastTime = 0;
+    const updateProgress = () => {
+      dag.style.setProperty('--dag-progress', progress.toFixed(3));
+    };
+
+    const tick = (time: number) => {
+      requestAnimationFrame(tick);
+      if (!lastTime) lastTime = time;
+      const dt = Math.min((time - lastTime) / 16.67, 3);
+      lastTime = time;
+
+      if (velocity > BASE) velocity = Math.max(velocity - SETTLE * dt, BASE);
+      else if (velocity < -BASE) velocity = Math.min(velocity + SETTLE * dt, -BASE);
+
+      if (velocity !== 0) {
+        progress += velocity * dt;
+        if (progress <= 0) { progress = 0; velocity = 0; }
+        if (progress >= 1) { progress = 1; velocity = 0; }
+        updateProgress();
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+</script>

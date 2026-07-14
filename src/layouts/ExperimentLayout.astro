@@ -111,6 +111,8 @@ const structuredData = faqSchema
       )}
     </section>
 
+    <slot name="before-genesis" />
+
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
     <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>

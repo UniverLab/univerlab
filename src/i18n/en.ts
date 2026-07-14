@@ -148,6 +148,8 @@ export const en = {
       },
       loops: {
         kicker: 'Loop engine',
+        title: 'Workflows that run themselves',
+        body: 'Define a DAG — specs flow through agent, check, and gate nodes. The loop runs autonomously: implement, verify, review, commit. When it hits a wall, it pauses and asks you.',
         cols: [
           ['DAG-based automation', 'Define workflows as directed acyclic graphs: specs flow through agent, check, and gate nodes with pass/fail routing. Automate bug fixing, code review, and multi-step tasks.'],
           ['Background execution', 'Loops run autonomously in the background — implement, verify, review, commit. Each node has timeouts, retries, and a resilience agent that diagnoses failures.'],
