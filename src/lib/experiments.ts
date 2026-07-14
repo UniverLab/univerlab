@@ -27,8 +27,8 @@ export interface Experiment {
   essenceHex: string;
   github: string;
   bg: BgTheme;
-  /** Year the experiment started (first commit). Shown in genesis section. */
-  year?: number;
+  /** First commit date (YYYY-MM-DD). Shown in genesis section as "TERRA YYYY · Mon DD". */
+  startDate?: string;
   /** Fixed visual surface (data-surface on <html>) for the page + its docs.
    *  Omitted → the default dark lab theme. */
   surface?: string;
@@ -67,14 +67,14 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', year: 2026, install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4' },
-  { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', year: 2026, install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4' },
-  { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e8a4c8', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', surface: 'pastel', year: 2026, install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4' },
-  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#b87333', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'industrial', year: 2026, install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
-  { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', year: 2026, install: both('cadspec'), hasDocs: true },
-  { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory', year: 2026 },
-  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', year: 2026, install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4' },
-  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', surface: 'quorum', year: 2026, url: 'https://quorum.univerlab.org', circadian: true,
+  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4' },
+  { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4' },
+  { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e8a4c8', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4' },
+  { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#b87333', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
+  { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', startDate: '2026-04-10', install: both('cadspec'), hasDocs: true },
+  { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory', startDate: '2026-04-10' },
+  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4' },
+  { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', surface: 'quorum', startDate: '2026-06-30', url: 'https://quorum.univerlab.org', circadian: true,
     circadianPalette: {
       day:   { '--bg': '#f0e8da', '--bg-raise': '#f7f2e8', '--ink': '#3a2a1a', '--ink-dim': '#7a6a52', '--ink-faint': '#a89878', '--line': '#ddd2c0', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#c4b8a0' },
       night: { '--bg': '#241a12', '--bg-raise': '#2f2318', '--ink': '#f2e7d3', '--ink-dim': '#b8a583', '--ink-faint': '#8a7a5e', '--line': '#40331f', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#5a4a32' },
