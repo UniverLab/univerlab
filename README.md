@@ -123,13 +123,7 @@ The landing is navigable via keyboard, inspired by Canopy's TUI navigation.
 | `Shift+↓` | Next experiment or doc |
 | `Shift+←` | Go back (browser history) |
 | `Shift+→` | Go forward (browser history) |
-| `h` | Home |
-| `e` | Experiments |
-| `m` | Manifesto |
-| `c` | Contributors |
-| `g` | GitHub (experiment-specific when on an experiment page) |
-| `i` | Today in science (celestial fact popup) |
-| `f` | Find on page |
+| `Enter` | Follow the focused card link |
 | `Esc` | Close active overlay |
 | `/` | Open command palette |
 | `?` | Open help / command list |
@@ -144,7 +138,7 @@ Commands are auto-generated from experiment IDs in `experiments.ts`.
 - **Enter** — execute the selected command
 - **Esc** — close the palette
 
-Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/theme`.
+Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`.
 Theme submenu: `/theme` → Light, Dark, Auto (circadian).
 Each experiment also gets a `/<id>` command (e.g. `/canopy`, `/texforge`).
 

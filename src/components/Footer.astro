@@ -62,6 +62,7 @@ Date:   now
     observing itself</pre>
     </div>
   </div>
+  <p class="wrap privacy">No external tracking. Flight log and theme preferences stay in your browser's local storage.</p>
 </footer>
 
 <style>
@@ -72,9 +73,9 @@ Date:   now
   footer {
     --f-bg: #000000;
     --f-bg-raise: #0a0a0a;
-    --f-ink: #e8e6e1;
-    --f-ink-dim: #9a9890;
-    --f-ink-faint: #4a4843;
+    --f-ink: #e3e6e8;
+    --f-ink-dim: #8a8d93;
+    --f-ink-faint: #4a4d53;
     --f-line: #1a1a1a;
     background: var(--f-bg);
     color: var(--f-ink);
@@ -153,6 +154,12 @@ Date:   now
   @media (max-width: 40rem) {
     .inner { flex-direction: column; gap: 1.6rem; }
     .foot-nav { height: auto; gap: 1.2rem; }
+  }
+  .privacy {
+    margin: 0; padding-block: 1rem 1.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--f-ink-faint); text-align: center;
   }
 
   /* Flight bar — replaces the border-top as the body/footer separator.

@@ -1,11 +1,99 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.canopy;
+
+// Read supported platforms with accent colors from canopy-registry at build time.
+const registryDir = resolve(process.cwd(), '../canopy-registry');
+const indexPath = resolve(registryDir, 'index.toml');
+const indexToml = readFileSync(indexPath, 'utf-8');
+const platformNames = [...indexToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^"]+)"/g)]
+  .map((m) => m[1]);
+
+const platformEntries: { name: string; color: string }[] = [];
+for (const name of platformNames) {
+  const platPath = resolve(registryDir, 'platforms', `${name}.toml`);
+  let color = 'var(--canopy)';
+  if (existsSync(platPath)) {
+    const platToml = readFileSync(platPath, 'utf-8');
+    const cliSection = platToml.split('[cli]')[1] || '';
+    const colorMatch = cliSection.match(/accent_color\s*=\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
+    if (colorMatch) {
+      color = `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})`;
+    }
+  }
+  platformEntries.push({ name, color });
+}
+
+// Loop-builder scene: the graph assembles progressively as --p (0→1) advances,
+// each element born at its --t. Harness accents come from the registry above.
+const hue = (name: string, fallback: string) =>
+  platformEntries.find((p) => p.name === name)?.color ?? fallback;
+
+const NEUTRAL = 'var(--ink-dim)';
+const lbNodes = [
+  // beat 1 — a spec meets an agent
+  { id: 'spec', kind: 'chip', x: 7, y: 32, label: 'spec', harness: '', color: NEUTRAL, t: 0.02 },
+  { id: 'implement', kind: 'agent', x: 46, y: 32, label: 'implement', harness: 'claude', color: hue('claude', '#d97757'), t: 0.05 },
+  // beat 2 — deterministic gates
+  { id: 'gates', kind: 'check', x: 64, y: 13, label: 'gates', harness: 'sh', color: NEUTRAL, t: 0.20 },
+  // beat 3 — review on a second brain
+  { id: 'review', kind: 'agent', x: 84, y: 32, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5'), t: 0.38 },
+  // beat 4 — failure is routed, not lost
+  { id: 'resilience', kind: 'agent', x: 64, y: 53, label: 'resilience', harness: 'mimo', color: hue('mimo', '#fb8147'), t: 0.56 },
+  // beat 5 — ensemble mode
+  { id: 'p1', kind: 'agent', x: 21, y: 11, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3'), t: 0.74 },
+  { id: 'p2', kind: 'agent', x: 24, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4'), t: 0.76 },
+  { id: 'p3', kind: 'agent', x: 21, y: 53, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa'), t: 0.78 },
+  { id: 'join', kind: 'gate', x: 34, y: 32, label: 'join', harness: '', color: NEUTRAL, t: 0.82 },
+];
+const lbEdges = [
+  { from: 'spec', to: 'implement', cond: 'pass', t: 0.08, ensembleFade: true },
+  { from: 'implement', to: 'gates', cond: 'pass', t: 0.23 },
+  { from: 'gates', to: 'implement', cond: 'fail', t: 0.27 },
+  { from: 'gates', to: 'review', cond: 'pass', t: 0.41 },
+  { from: 'review', to: 'implement', cond: 'fail', t: 0.45 },
+  { from: 'implement', to: 'resilience', cond: 'fail', t: 0.59 },
+  { from: 'resilience', to: 'implement', cond: 'pass', t: 0.63 },
+  { from: 'spec', to: 'p1', cond: 'pass', t: 0.80 },
+  { from: 'spec', to: 'p2', cond: 'pass', t: 0.80 },
+  { from: 'spec', to: 'p3', cond: 'pass', t: 0.80 },
+  { from: 'p1', to: 'join', cond: 'pass', t: 0.84 },
+  { from: 'p2', to: 'join', cond: 'pass', t: 0.84 },
+  { from: 'p3', to: 'join', cond: 'pass', t: 0.84 },
+  { from: 'join', to: 'implement', cond: 'pass', t: 0.88 },
+];
+const lbNode = (id: string) => lbNodes.find((n) => n.id === id)!;
+// Happy-path pulses: one token flowing spec → implement → gates → review,
+// then (after ensemble) spec → p2 → join → implement. Delays chain the legs.
+const lbPulses = [
+  { from: 'spec', to: 'implement', t: 0.08, d: 0, ensembleFade: true },
+  { from: 'implement', to: 'gates', t: 0.23, d: 1 },
+  { from: 'gates', to: 'review', t: 0.41, d: 2 },
+  { from: 'spec', to: 'p2', t: 0.88, d: 0 },
+  { from: 'p2', to: 'join', t: 0.88, d: 1 },
+  { from: 'join', to: 'implement', t: 0.88, d: 2 },
+];
+// Caption beats: [start, end] windows over --p; the last one holds to the end.
+const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
 ---
 <ExperimentLayout id="canopy">
+  <Fragment slot="before-genesis">
+    <section class="wrap section platforms-section">
+      <span class="label">{e.platforms.kicker}</span>
+      <ul class="platforms">
+        {platformEntries.map(({ name, color }) => (
+          <li style={`--pcolor: ${color}`}>{name}</li>
+        ))}
+      </ul>
+    </section>
+  </Fragment>
+
   <section class="wrap section">
     <span class="label">{e.layer.kicker}</span>
     <div class="cols">
@@ -15,13 +103,88 @@ const e = t.experiments.canopy;
     </div>
   </section>
 
+  <!-- Loop builder — a scroll-driven scene where the loop graph assembles
+       itself beat by beat (implement → gates → review → resilience → ensemble),
+       each agent node on a different harness color from the registry. -->
+  <section class="lb-scrolly" data-loops>
+    <div class="lb-sticky">
+      <div class="lb-stage">
+        <svg class="lb-svg" viewBox="0 0 100 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <!-- Edges -->
+          {lbEdges.map((edge) => {
+            const a = lbNode(edge.from);
+            const b = lbNode(edge.to);
+            const fail = edge.cond === 'fail';
+            return fail ? (
+              <line
+                class="lb-edge lb-edge-fail"
+                style={`--t:${edge.t}`}
+                x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+              />
+            ) : (
+              <line
+                class={`lb-edge lb-edge-pass${edge.ensembleFade ? ' lb-ensemble-fade' : ''}`}
+                style={`--t:${edge.t}`}
+                x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                pathLength="1"
+              />
+            );
+          })}
+          <!-- Pulses: the spec token travelling the happy path -->
+          {lbPulses.map((p) => {
+            const a = lbNode(p.from);
+            const b = lbNode(p.to);
+            return (
+              <g class={`lb-pulse-g${p.ensembleFade ? ' lb-ensemble-fade' : ''}`} style={`--t:${p.t}`}>
+                <circle
+                  class="lb-pulse"
+                  r="0.9"
+                  style={`--x1:${a.x}px; --y1:${a.y}px; --x2:${b.x}px; --y2:${b.y}px; --d:${p.d}s`}
+                />
+              </g>
+            );
+          })}
+          <!-- Nodes -->
+          {lbNodes.map((n) => (
+            <g
+              class={`lb-node lb-${n.kind}`}
+              style={`--t:${n.t}; --nc:${n.color}`}
+              transform={`translate(${n.x}, ${n.y})`}
+            >
+              {n.kind === 'chip' && <rect x="-4.5" y="-2.6" width="9" height="5.2" rx="1" class="lb-shape" />}
+              {n.kind === 'agent' && <circle r="3" class="lb-shape" />}
+              {n.kind === 'check' && <rect x="-2.7" y="-2.7" width="5.4" height="5.4" rx="0.6" class="lb-shape" />}
+              {n.kind === 'gate' && <rect x="-2.5" y="-2.5" width="5" height="5" rx="0.5" class="lb-shape lb-diamond" />}
+              <text class="lb-label" dy={n.kind === 'chip' ? 1 : 5.8} text-anchor="middle">{n.label}</text>
+              {n.harness && <text class="lb-harness" dy="8.4" text-anchor="middle">{n.harness}</text>}
+            </g>
+          ))}
+        </svg>
+        <div class="lb-caption">
+          <span class="label">{e.builder.kicker}</span>
+          <h2>{e.builder.title}</h2>
+          <ol class="lb-steps">
+            {e.builder.steps.map(([h, b], i) => (
+              <li class="lb-step" style={`--a:${lbBeats[i]}; --z:${lbBeats[i + 1]}`}>
+                <span class="lb-step-num mono">{String(i + 1).padStart(2, '0')}</span>
+                <h3>{h}</h3>
+                <p>{b}</p>
+              </li>
+            ))}
+          </ol>
+          <p class="lb-outro">{e.builder.outro}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="wrap section">
-    <span class="label">{e.tools.kicker}</span>
-    <ul class="tools">
-      {e.tools.items.map(([name, count]) => (
-        <li><span class="count">{count}</span><span class="tname">{name}</span></li>
+    <span class="label">{e.loops.kicker}</span>
+    <div class="cols">
+      {e.loops.cols.map(([h, b]) => (
+        <div class="col"><h3>{h}</h3><p>{b}</p></div>
       ))}
-    </ul>
+    </div>
   </section>
 </ExperimentLayout>
 
@@ -31,11 +194,233 @@ const e = t.experiments.canopy;
   .col { border-top: 2px solid color-mix(in srgb, var(--canopy) 45%, transparent); padding-top: 1rem; }
   .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
-  .tools { list-style: none; padding: 0; margin: 1.4rem 0 0; max-width: 42rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.2rem 2rem; }
-  .tools li {
-    display: flex; align-items: baseline; gap: 0.9rem; padding-block: 0.7rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--canopy) 18%, var(--line));
+
+  /* Platforms — colored badges from registry */
+  .platforms-section { padding-block: 0.5rem 1rem; }
+  .platforms { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .platforms li {
+    font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
+    color: var(--pcolor); padding: 0.3rem 0.65rem;
+    background: #0a0a0c;
+    border: 1px solid var(--pcolor);
+    border-radius: 2px;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .count { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; color: var(--canopy); line-height: 1; min-width: 2.2rem; }
-  .tname { color: var(--ink-dim); font-size: 0.92rem; }
+  .platforms li:hover {
+    background: color-mix(in srgb, var(--pcolor) 15%, #0a0a0c);
+  }
+
+  /* ── Loop builder scene ──────────────────────────────────────────────
+     One --p (0→1) drives everything. Each element carries a birth time --t;
+     its reveal fraction is --b = clamp((p - t) / 0.05). Nodes scale+fade in,
+     pass edges draw (pathLength-normalized dashoffset), fail edges fade in
+     dashed, pulses travel the happy path once their edge exists. The ensemble
+     beat (--u5) re-routes the spec: the direct spec→implement edge fades as
+     the proposer fan-out takes over. */
+  .lb-scrolly { position: relative; }
+  .lb-sticky {
+    --p: 0;
+    --u5: clamp(0, (var(--p) - 0.74) / 0.06, 1);
+  }
+  .lb-scrolly.scrolly { height: 500vh; }
+  .lb-scrolly.scrolly .lb-sticky {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .lb-stage {
+    display: flex; align-items: center; justify-content: center; gap: 4rem;
+    padding: 0 var(--page-gutter);
+    width: 100%;
+  }
+  .lb-svg { width: min(36rem, 52vw); height: auto; flex-shrink: 0; }
+  .lb-caption { max-width: 24rem; position: relative; }
+  .lb-caption h2 { font-size: 1.7rem; margin-block: 0.6rem 1.2rem; }
+
+  /* Caption beats — in the animated layout they stack on one spot and
+     crossfade by --p window [--a, --z). */
+  .lb-steps { list-style: none; margin: 0; padding: 0; position: relative; min-height: 13rem; }
+  .lb-scrolly.scrolly .lb-step {
+    --in: clamp(0, (var(--p) - var(--a)) / 0.03, 1);
+    --out: clamp(0, (var(--p) - var(--z)) / 0.03, 1);
+    position: absolute; inset: 0 auto auto 0; width: 100%;
+    opacity: calc(var(--in) * (1 - var(--out)));
+    transform: translateY(calc((1 - var(--in)) * 14px));
+    pointer-events: none;
+  }
+  .lb-step-num { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+  .lb-step h3 { color: var(--canopy); font-size: 1.08rem; margin: 0 0 0.55rem; }
+  .lb-step p { margin: 0; color: var(--ink-dim); font-size: 0.98rem; line-height: 1.65; }
+  .lb-outro {
+    margin: 1.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; line-height: 1.6;
+  }
+  .lb-scrolly.scrolly .lb-outro {
+    opacity: clamp(0, (var(--p) - 0.92) / 0.06, 1);
+    transform: translateY(calc((1 - clamp(0, (var(--p) - 0.92) / 0.06, 1)) * 8px));
+  }
+
+  /* Nodes */
+  .lb-node {
+    --b: clamp(0, (var(--p) - var(--t)) / 0.05, 1);
+    opacity: var(--b);
+  }
+  .lb-shape {
+    fill: color-mix(in srgb, var(--nc) 12%, var(--bg));
+    stroke: var(--nc); stroke-width: 0.4;
+    transform: scale(calc(0.4 + 0.6 * var(--b)));
+    transform-origin: center; transform-box: fill-box;
+  }
+  .lb-diamond { rotate: 45deg; }
+  .lb-label { font-family: var(--font-mono); font-size: 2.7px; fill: var(--ink); }
+  .lb-chip .lb-label { fill: var(--ink-dim); }
+  .lb-harness { font-family: var(--font-mono); font-size: 2.2px; fill: var(--nc); letter-spacing: 0.02em; }
+
+  /* Edges */
+  .lb-edge {
+    --b: clamp(0, (var(--p) - var(--t)) / 0.05, 1);
+    stroke-width: 0.35;
+  }
+  .lb-edge-pass {
+    stroke: color-mix(in srgb, var(--canopy) 65%, var(--line));
+    stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--b));
+  }
+  .lb-edge-fail {
+    stroke: color-mix(in srgb, #e0605a 55%, var(--line));
+    stroke-dasharray: 1.3 1; opacity: calc(var(--b) * 0.65);
+  }
+  /* The direct spec→implement route fades out when ensemble re-wires it. */
+  .lb-ensemble-fade { opacity: calc(var(--b, 1) * (1 - var(--u5))); }
+
+  /* Pulses — the spec token. Each leg translates from → to on a shared 3.6s
+     clock, staggered by --d so the token appears to hop node to node. */
+  .lb-pulse-g {
+    --b: clamp(0, (var(--p) - var(--t)) / 0.05, 1);
+    opacity: var(--b);
+  }
+  .lb-pulse-g.lb-ensemble-fade { opacity: calc(var(--b) * (1 - var(--u5))); }
+  .lb-pulse { fill: var(--canopy); opacity: 0; }
+  .lb-scrolly.scrolly .lb-pulse {
+    animation: lb-travel 3.6s linear infinite;
+    animation-delay: var(--d);
+  }
+  @keyframes lb-travel {
+    0%   { transform: translate(var(--x1), var(--y1)); opacity: 0; }
+    4%   { opacity: 0.9; }
+    24%  { opacity: 0.9; }
+    27.7% { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+    100% { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+  }
+
+  /* Static fallback (no JS / reduced motion / no scroll-timeline): the full
+     graph, fully assembled, with the beats as a readable list. */
+  .lb-scrolly:not(.scrolly) .lb-sticky { --p: 1; }
+  .lb-scrolly:not(.scrolly) .lb-stage {
+    flex-direction: column; gap: 2.5rem; padding: 3rem var(--page-gutter);
+  }
+  .lb-scrolly:not(.scrolly) .lb-svg { width: min(34rem, 86vw); }
+  .lb-scrolly:not(.scrolly) .lb-steps { min-height: 0; display: grid; gap: 1.4rem; }
+  .lb-scrolly:not(.scrolly) .lb-step { position: static; }
+  .lb-scrolly:not(.scrolly) .lb-ensemble-fade { opacity: 0.25; }
+
+  @media (max-width: 52rem) {
+    .lb-scrolly.scrolly .lb-stage { flex-direction: column; gap: 1.6rem; }
+    .lb-scrolly.scrolly .lb-svg { width: min(30rem, 92vw); }
+    .lb-scrolly.scrolly .lb-caption { max-width: 30rem; text-align: center; }
+    .lb-scrolly.scrolly .lb-steps { min-height: 9.5rem; }
+  }
 </style>
+
+<script>
+  // Loop-builder progress driver, borrowed from the Manifesto cosmos scene:
+  // touch maps scroll position to --p directly; desktop captures the wheel
+  // with cruise-control (one scroll starts the build, more accelerates,
+  // scrolling up rewinds fast). No JS / reduced motion → static fallback.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = 'ontouchstart' in window && navigator.maxTouchPoints > 0;
+
+  const scene = document.querySelector<HTMLElement>('[data-loops]');
+  const sticky = scene?.querySelector<HTMLElement>('.lb-sticky');
+
+  if (scene && sticky && !reduce) {
+    scene.classList.add('scrolly');
+
+    if (isTouch) {
+      let ticking = false;
+      const update = () => {
+        const total = scene.offsetHeight - window.innerHeight;
+        const scrolled = Math.min(Math.max(-scene.getBoundingClientRect().top, 0), Math.max(total, 1));
+        sticky.style.setProperty('--p', (total > 0 ? scrolled / total : 0).toFixed(4));
+        ticking = false;
+      };
+      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      update();
+    } else {
+      scene.style.height = '200vh';
+
+      let progress = 0;
+      let velocity = 0;
+      const BASE = 1 / 1500;      // ~25s forward cruise at 60fps
+      const MAX_FWD = BASE * 5;
+      const REV_BASE = BASE * 5;
+      const MAX_REV = BASE * 14;
+      const KICK = 0.00004;
+      const KICK_REV = 0.00012;
+      const SETTLE = 0.00005;
+
+      const isActive = () => {
+        const r = scene.getBoundingClientRect();
+        return r.top <= 0 && r.bottom >= window.innerHeight;
+      };
+
+      let autoStarted = false;
+      const autoStart = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !autoStarted && velocity === 0) {
+            autoStarted = true;
+            velocity = BASE;
+          }
+        }
+      }, { threshold: 0.1 });
+      autoStart.observe(scene);
+
+      const onWheel = (e: WheelEvent) => {
+        if (!isActive()) {
+          const r = scene.getBoundingClientRect();
+          if (r.bottom <= 0 && progress < 1) { progress = 1; sticky.style.setProperty('--p', '1'); }
+          if (r.top >= window.innerHeight && progress > 0) { progress = 0; sticky.style.setProperty('--p', '0'); }
+          return;
+        }
+        if (progress >= 0.999 && e.deltaY > 0) return;
+        if (progress <= 0.001 && e.deltaY < 0) return;
+        e.preventDefault();
+        if (e.deltaY > 0) {
+          if (velocity < BASE) velocity = BASE;
+          else velocity = Math.min(velocity + e.deltaY * KICK, MAX_FWD);
+        } else {
+          if (velocity > -REV_BASE) velocity = -REV_BASE;
+          else velocity = Math.max(velocity - Math.abs(e.deltaY) * KICK_REV, -MAX_REV);
+        }
+      };
+      window.addEventListener('wheel', onWheel, { passive: false });
+
+      let lastTime = 0;
+      const tick = (time: number) => {
+        if (!lastTime) lastTime = time;
+        const dt = Math.min((time - lastTime) / 16.67, 3);
+        lastTime = time;
+        if (velocity > BASE) velocity = Math.max(velocity - SETTLE * dt, BASE);
+        else if (velocity < -BASE) velocity = Math.min(velocity + SETTLE * dt, -BASE);
+        if (velocity !== 0) {
+          progress += velocity * dt;
+          if (progress <= 0) { progress = 0; velocity = 0; }
+          if (progress >= 1) { progress = 1; velocity = 0; }
+          sticky.style.setProperty('--p', progress.toFixed(4));
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+</script>

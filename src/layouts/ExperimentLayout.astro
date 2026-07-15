@@ -19,12 +19,23 @@ const idx = experiments.findIndex((x) => x.id === id);
 const prevExp = experiments[(idx - 1 + experiments.length) % experiments.length];
 const nextExp = experiments[(idx + 1) % experiments.length];
 
-// Rich result for the tools that ship a binary: a free, cross-platform
-// developer application published by UniverLab. (Research experiments without an
-// installer get none — Organization + page meta still apply.)
+// Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
+const genesisDate = exp.startDate
+  ? (() => {
+      const d = new Date(exp.startDate + 'T00:00:00');
+      const start = new Date(d.getFullYear(), 0, 0);
+      const diff = d.getTime() - start.getTime();
+      const sol = Math.floor(diff / 86400000);
+      return `TERRA ${d.getFullYear()} · Sol ${sol}`;
+    })()
+  : undefined;
+
+// Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
+// apps. Research experiments without an installer or URL get none —
+// Organization + page meta still apply.
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
-const softwareApp = exp.install
+const baseSchema = exp.install
   ? {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -38,9 +49,41 @@ const softwareApp = exp.install
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
     }
+  : exp.url
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: exp.name,
+        description: e.tagline,
+        applicationCategory: 'DeveloperApplication',
+        url: exp.url,
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+      }
+    : undefined;
+
+// FAQPage schema for rich snippets when experiments have FAQs.
+const faqSchema = e.faq && e.faq.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: e.faq.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: answer,
+        },
+      })),
+    }
   : undefined;
+
+const structuredData = faqSchema
+  ? (baseSchema ? [baseSchema, faqSchema] : faqSchema)
+  : baseSchema;
 ---
-<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={softwareApp}>
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
@@ -79,11 +122,13 @@ const softwareApp = exp.install
       )}
     </section>
 
+    <slot name="before-genesis" />
+
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
     <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
       <section class="wrap genesis">
-        <span class="label">{e.genesis.kicker}</span>
+        <span class="label">{e.genesis.kicker}{genesisDate ? ` · ${genesisDate}` : ''}</span>
         <h2>{e.genesis.title}</h2>
         <p class="prose" set:html={e.genesis.body} />
       </section>
@@ -101,6 +146,21 @@ const softwareApp = exp.install
     </div>
 
     <slot />
+
+    {e.faq && e.faq.length > 0 && (
+      <section class="wrap faq-section" id="faq">
+        <span class="label">{t.common.faq}</span>
+        <h2>{t.common.faq}</h2>
+        <dl class="faq-list">
+          {e.faq.map(([question, answer]) => (
+            <div class="faq-item">
+              <dt class="faq-q">{question}</dt>
+              <dd class="faq-a">{answer}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
 
     <nav class="wrap exp-nav" aria-label="Experiments">
       <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={prevExp.name}>
@@ -233,6 +293,18 @@ const softwareApp = exp.install
   .exp-nav-link:hover .arrow { color: var(--essence); }
   .exp-nav .prev:hover .arrow { transform: translateX(-3px); }
   .exp-nav .next:hover .arrow { transform: translateX(3px); }
+
+  /* FAQ section */
+  .faq-section { padding-block: 3rem; max-width: 52rem; }
+  .faq-section h2 { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .faq-list { margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .faq-item { padding-block: 1.2rem; border-bottom: 1px solid var(--line); }
+  .faq-item:first-child { border-top: 1px solid var(--line); }
+  .faq-q {
+    font-family: var(--font-mono); font-size: 0.88rem; font-weight: 500;
+    color: var(--ink); margin: 0 0 0.5rem; letter-spacing: 0.01em;
+  }
+  .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
 </style>
 
 <script>

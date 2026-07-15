@@ -18,7 +18,7 @@ export default defineConfig({
         locales: { en: 'en', es: 'es' },
       },
       // Exclude pages marked noindex from the sitemap.
-      filter: (page) => !page.includes('/secret'),
+      filter: (page) => !page.includes('/archive'),
     }),
   ],
 });

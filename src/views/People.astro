@@ -6,8 +6,23 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const p = t.people;
 const contributors = await getContributors();
+
+const site = Astro.site ?? new URL('https://univerlab.org');
+const founderJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: p.founder.name,
+  jobTitle: p.founder.role,
+  url: new URL('/contributors', site).href,
+  sameAs: ['https://github.com/JheisonMB'],
+  worksFor: {
+    '@type': 'Organization',
+    name: 'UniverLab',
+    url: site.href,
+  },
+};
 ---
-<BaseLayout title={`${p.title} — UniverLab`} bg="cosmic" circadian>
+<BaseLayout title={`${p.title} — UniverLab`} bg="cosmic" circadian structuredData={founderJsonLd}>
   <section class="wrap head">
     <span class="label">{p.kicker}</span>
     <h1>{p.title}</h1>
