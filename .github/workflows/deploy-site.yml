@@ -54,5 +54,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # The project name must match the Pages project you create in the dashboard.
+          wranglerVersion: '4.111.0'
           command: pages deploy univerlab/dist --project-name=univerlab
