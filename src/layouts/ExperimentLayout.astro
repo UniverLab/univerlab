@@ -1,0 +1,365 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Banner from '../components/Banner.astro';
+import DemoFigure from '../components/DemoFigure.astro';
+import { byId, experiments, type ExperimentId } from '../lib/experiments';
+import { getLang, useTranslations, localizePath } from '../i18n';
+
+interface Props { id: ExperimentId; }
+const { id } = Astro.props;
+const exp = byId(id);
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments[id];
+const statusLabel = t.status[exp.status];
+const surface = exp.surface;
+
+// Cyclical prev/next so you can browse experiments without going back home.
+const idx = experiments.findIndex((x) => x.id === id);
+const prevExp = experiments[(idx - 1 + experiments.length) % experiments.length];
+const nextExp = experiments[(idx + 1) % experiments.length];
+
+// Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
+const genesisDate = exp.startDate
+  ? (() => {
+      const d = new Date(exp.startDate + 'T00:00:00');
+      const start = new Date(d.getFullYear(), 0, 0);
+      const diff = d.getTime() - start.getTime();
+      const sol = Math.floor(diff / 86400000);
+      return `TERRA ${d.getFullYear()} · Sol ${sol}`;
+    })()
+  : undefined;
+
+// Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
+// apps. Research experiments without an installer or URL get none —
+// Organization + page meta still apply.
+const site = Astro.site ?? new URL('https://univerlab.org');
+const pageUrl = new URL(Astro.url.pathname, site).href;
+const baseSchema = exp.install
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: exp.name,
+      description: e.tagline,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: exp.install.windows ? 'macOS, Linux, Windows' : 'macOS, Linux',
+      url: pageUrl,
+      downloadUrl: exp.github,
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+    }
+  : exp.url
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: exp.name,
+        description: e.tagline,
+        applicationCategory: 'DeveloperApplication',
+        url: exp.url,
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+      }
+    : undefined;
+
+// FAQPage schema for rich snippets when experiments have FAQs.
+const faqSchema = e.faq && e.faq.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: e.faq.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: answer,
+        },
+      })),
+    }
+  : undefined;
+
+const structuredData = faqSchema
+  ? (baseSchema ? [baseSchema, faqSchema] : faqSchema)
+  : baseSchema;
+---
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
+  <div class="exp" style={`--essence: ${exp.essenceHex}`}>
+    <section class="wrap hero">
+      <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
+      <Banner id={id} color={exp.essenceHex} />
+      <h1 class="exp-name" translate="no">{exp.name}</h1>
+      <p class="koan">{e.koan}</p>
+      <p class="lede prose" set:html={e.lede} />
+      <div class="actions">
+        <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
+          {exp.hasDocs && (
+            <a class="btn ghost" href={`/${id}/docs`} data-docs-link>{t.common.docs}</a>
+          )}
+          <slot name="cta" />
+      </div>
+      {exp.install && (
+        <div class="install" data-install>
+          <div class="install-head">
+            <span class="label">{t.common.install}</span>
+            {exp.install.windows && (
+              <div class="os-tabs" role="tablist" aria-label="Platform">
+                <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
+                <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
+              </div>
+            )}
+          </div>
+          <div class="cmd" translate="no">
+            <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
+            {exp.install.windows && (
+              <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
+            )}
+            <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
+              <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+
+    <slot name="before-genesis" />
+
+    <!-- The origin story is the strongest copy on the page — it comes right
+         after the hero, before the feature sections, not buried at the end. -->
+    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
+      <section class="wrap genesis">
+        <span class="label">{e.genesis.kicker}{genesisDate ? ` · ${genesisDate}` : ''}</span>
+        <h2>{e.genesis.title}</h2>
+        <p class="prose" set:html={e.genesis.body} />
+      </section>
+
+      {exp.demo && (
+        <aside class="demo-col" id="demo" aria-label="Demo">
+          <DemoFigure
+            src={exp.demo}
+            essence={exp.essenceHex}
+            label="Fig. 1"
+            caption={`${exp.name} — ${t.common.demoBy}`}
+          />
+        </aside>
+      )}
+    </div>
+
+    <slot />
+
+    {e.faq && e.faq.length > 0 && (
+      <section class="wrap faq-section" id="faq">
+        <span class="label">{t.common.faq}</span>
+        <h2>{t.common.faq}</h2>
+        <dl class="faq-list">
+          {e.faq.map(([question, answer]) => (
+            <div class="faq-item">
+              <dt class="faq-q">{question}</dt>
+              <dd class="faq-a">{answer}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    <nav class="wrap exp-nav" aria-label="Experiments">
+      <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={prevExp.name}>
+        <span class="arrow" aria-hidden="true">←</span>
+        <span class="meta">
+          <span class="label n">{prevExp.number}</span>
+          <span class="nm">{prevExp.name}</span>
+        </span>
+      </a>
+      <a class="exp-nav-link next" href={localizePath(`/${nextExp.id}`, lang)} style={`--essence: ${nextExp.essenceHex}`} aria-label={nextExp.name}>
+        <span class="meta">
+          <span class="label n">{nextExp.number}</span>
+          <span class="nm">{nextExp.name}</span>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </nav>
+  </div>
+</BaseLayout>
+
+<style>
+  .exp { --essence: var(--accent); }
+
+  /* Hero */
+  .hero { padding-block: 3.5rem 2rem; }
+  .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+
+  .genesis-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: var(--max-w, 70rem);
+    margin-inline: auto;
+    padding-block: 2.5rem 2rem;
+    padding-inline: var(--page-gutter);
+  }
+  .genesis-row:not(.has-demo) { grid-template-columns: 1fr; max-width: 60ch; }
+  @media (max-width: 52rem) {
+    .genesis-row.has-demo { grid-template-columns: 1fr; }
+    .demo-col { max-width: 85%; margin-inline: auto; }
+  }
+  .genesis { display: flex; flex-direction: column; justify-content: center; }
+  .genesis h2 { font-size: 1.6rem; margin-block: 0.6rem 1rem; }
+  .genesis .prose { color: var(--ink-dim); }
+
+  .demo-col { display: flex; align-items: center; justify-content: center; }
+
+  .num { color: var(--essence); }
+  .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
+  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
+  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
+  .koan { font-family: var(--font-serif); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
+  .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
+  :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
+  :global(.exp .lede code) { color: var(--essence); font-size: 0.9em; }
+
+  .actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--essence);
+    color: var(--essence);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .btn:hover { background: var(--essence); color: var(--bg); }
+  .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
+  .btn.ghost:hover { border-color: var(--essence); color: var(--essence); background: transparent; }
+
+  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; }
+  .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .os-tabs { display: inline-flex; gap: 0.9rem; }
+  .os-tab {
+    border: 0; background: none; cursor: pointer; padding: 0;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-faint); transition: color 0.15s ease;
+  }
+  .os-tab:hover { color: var(--ink-dim); }
+  .os-tab[aria-selected='true'] { color: var(--essence); }
+  .cmd {
+    display: flex; align-items: stretch; gap: 0;
+    border: 1px solid var(--line); background: var(--bg-raise);
+  }
+  .cmd-line {
+    flex: 1; padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink-dim);
+    overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  }
+  .cmd-line[hidden] { display: none; }
+  .cmd-line::-webkit-scrollbar { display: none; }
+  .cmd-line[data-os='unix']::before { content: '$ '; color: var(--essence); }
+  .cmd-line[data-os='windows']::before { content: '> '; color: var(--essence); }
+  .copy {
+    border: 0; border-left: 1px solid var(--line); background: transparent;
+    color: var(--ink-dim); cursor: pointer; padding: 0 0.9rem; font-size: 0.95rem;
+    font-family: var(--font-mono); transition: color 0.15s ease;
+  }
+  .copy:hover { color: var(--essence); }
+  .copy .copy-done { display: none; color: var(--essence); }
+  .copy.done .copy-idle { display: none; }
+  .copy.done .copy-done { display: inline; }
+
+  :global(.exp .genesis .prose strong) { color: var(--ink); font-weight: 500; }
+  :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
+  :global(.exp .genesis .prose em) { color: var(--essence); font-style: italic; }
+
+  /* Prev / next experiment — browse the lab without going home. Each link is
+     tinted (on hover) with the destination experiment's own essence. */
+  /* No top rule here — the footer already opens with one; a second hairline
+     read as an odd double footer. */
+  .exp-nav {
+    display: flex; justify-content: space-between; gap: 1rem;
+    padding-block: 0.5rem 3.5rem;
+  }
+  .exp-nav-link {
+    display: inline-flex; align-items: center; gap: 0.85rem;
+    text-decoration: none; color: var(--ink-dim); max-width: 48%;
+    transition: color 0.15s ease;
+  }
+  .exp-nav-link:hover { color: var(--essence); }
+  .exp-nav-link.next { text-align: right; }
+  .exp-nav .meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .exp-nav .next .meta { align-items: flex-end; }
+  .exp-nav .n { color: var(--ink-faint); transition: color 0.15s ease; }
+  .exp-nav-link:hover .n { color: var(--essence); }
+  .exp-nav .nm { font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-nav .arrow {
+    color: var(--ink-faint); font-size: 1.15rem; flex: none;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+  .exp-nav-link:hover .arrow { color: var(--essence); }
+  .exp-nav .prev:hover .arrow { transform: translateX(-3px); }
+  .exp-nav .next:hover .arrow { transform: translateX(3px); }
+
+  /* FAQ section */
+  .faq-section { padding-block: 3rem; max-width: 52rem; }
+  .faq-section h2 { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .faq-list { margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .faq-item { padding-block: 1.2rem; border-bottom: 1px solid var(--line); }
+  .faq-item:first-child { border-top: 1px solid var(--line); }
+  .faq-q {
+    font-family: var(--font-mono); font-size: 0.88rem; font-weight: 500;
+    color: var(--ink); margin: 0 0 0.5rem; letter-spacing: 0.01em;
+  }
+  .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
+</style>
+
+<script>
+  // Install block: pick the platform tab (defaulting to the detected OS) and
+  // copy whichever command is currently shown.
+  document.querySelectorAll<HTMLElement>('[data-install]').forEach((box) => {
+    const lines = Array.from(box.querySelectorAll<HTMLElement>('.cmd-line'));
+    const tabs = Array.from(box.querySelectorAll<HTMLButtonElement>('.os-tab'));
+    const copy = box.querySelector<HTMLButtonElement>('.copy');
+
+    const select = (os: string) => {
+      lines.forEach((l) => (l.hidden = l.dataset.os !== os));
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.os === os)));
+    };
+
+    if (tabs.length) {
+      select(/Windows/i.test(navigator.userAgent) ? 'windows' : 'unix');
+      tabs.forEach((t) => t.addEventListener('click', () => select(t.dataset.os || 'unix')));
+    }
+
+    copy?.addEventListener('click', async () => {
+      const active = lines.find((l) => !l.hidden);
+      if (!active) return;
+      try {
+        await navigator.clipboard.writeText(active.textContent || '');
+        copy.classList.add('done');
+        if ((window as any).flightLog) (window as any).flightLog.record(`copy-${id}`);
+        setTimeout(() => copy.classList.remove('done'), 1600);
+      } catch {
+        // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
+      }
+    });
+  });
+
+  // Docs button click tracking
+  const docsLink = document.querySelector<HTMLAnchorElement>('[data-docs-link]');
+  if (docsLink) {
+    docsLink.addEventListener('click', () => {
+      if ((window as any).flightLog) (window as any).flightLog.record(`docs-${id}`);
+    });
+  }
+
+  // Astro Denoise proposal PDF download tracking
+  const proposalLink = document.querySelector<HTMLAnchorElement>('.proposal');
+  if (proposalLink) {
+    proposalLink.addEventListener('click', () => {
+      if ((window as any).flightLog) (window as any).flightLog.record('astro-denoise-pdf');
+    });
+  }
+
+  // Quorum launch app button tracking
+  const launchLink = document.querySelector<HTMLAnchorElement>('.launch');
+  if (launchLink) {
+    launchLink.addEventListener('click', () => {
+      if ((window as any).flightLog) (window as any).flightLog.record('quorum-launch');
+    });
+  }
+</script>

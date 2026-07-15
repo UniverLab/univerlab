@@ -1,0 +1,40 @@
+{
+  "name": "univerlab-web",
+  "version": "1.0.0",
+  "description": "<h1 align=\"center\">UniverLab — landing</h1>",
+  "scripts": {
+    "dev": "astro dev",
+    "prebuild": "node scripts/check-i18n.ts",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check:i18n": "node scripts/check-i18n.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage && echo 'Coverage report generated successfully'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UniverLab/univerlab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/UniverLab/univerlab/issues"
+  },
+  "homepage": "https://github.com/UniverLab/univerlab#readme",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@types/jest": "^30.0.0",
+    "astro": "^6.4.6",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "ts-jest": "^29.4.11",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3"
+  },
+  "main": "index.js"
+}

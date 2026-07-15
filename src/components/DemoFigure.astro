@@ -1,0 +1,346 @@
+---
+// A short screen-recording demo, shown as "Fig. 1" right after the hero — the
+// tool actually working, which is the most characteristic thing an experiment
+// page can show. Autoplays muted and loops like an animated figure; reduced-
+// motion visitors get it paused with controls instead. Rendered only when the
+// experiment has a `demo` clip, so it stays invisible until one is recorded.
+interface Props {
+  /** Path to the mp4 clip, e.g. '/demos/gitkit.mp4'. */
+  src: string;
+  /** Optional poster frame (jpg/png) shown before play / under reduced motion. */
+  poster?: string;
+  /** Experiment essence color for the frame glow. */
+  essence: string;
+  /** Figure label, e.g. "Fig. 1". */
+  label: string;
+  /** Figure caption, e.g. "GitKit — recorded with DemoStage". */
+  caption: string;
+}
+const { src, poster, essence, label, caption } = Astro.props;
+const isGif = src.endsWith('.gif');
+---
+<figure class="demo-fig" style={`--essence: ${essence}`} data-demo-src={src} data-demo-caption={caption}>
+  <div class="demo-frame">
+    {isGif ? (
+      <img class="demo-video" src={src} alt={caption} loading="lazy" />
+    ) : (
+      <div class="demo-player">
+        <video
+          class="demo-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster={poster}
+          aria-label={caption}
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+        <div class="demo-bar">
+          <div class="demo-progress"><div class="demo-fill"></div></div>
+        </div>
+      </div>
+    )}
+  </div>
+  <div class="demo-lens" aria-hidden="true"><div class="demo-lens-inner"></div></div>
+  <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
+</figure>
+
+<script is:inline>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var LENS_SIZE = 220;
+  var ZOOM = 2.2;
+
+  document.querySelectorAll('.demo-player').forEach(function (box) {
+    var video = box.querySelector('video');
+    var fill = box.querySelector('.demo-fill');
+    if (!video || !fill) return;
+    var fig = box.closest('.demo-fig');
+
+    if (reduced) {
+      video.removeAttribute('autoplay');
+      video.pause();
+      video.controls = true;
+      var b = box.querySelector('.demo-bar');
+      if (b) b.style.display = 'none';
+      return;
+    }
+
+    // Hold-to-pause: press and hold over the demo (with the lens) to freeze the
+    // clip; release to continue. A short click still opens the full-screen view,
+    // so we flag a long press and skip the dialog open below.
+    var pressStart = 0;
+
+    box.addEventListener('mousedown', function (e) {
+      if (e.target.closest('.demo-bar')) return;
+      pressStart = Date.now();
+      video.pause();
+    });
+    box.addEventListener('mouseup', function (e) {
+      if (e.target.closest('.demo-bar')) return;
+      video.play();
+      if (fig && Date.now() - pressStart > 180) fig._held = true;
+    });
+    box.addEventListener('mouseleave', function () {
+      if (!video.paused) return;
+      video.play();
+    });
+
+    video.addEventListener('timeupdate', function () {
+      if (video.duration) {
+        fill.style.width = (video.currentTime / video.duration * 100).toFixed(2) + '%';
+      }
+    });
+
+    // Seek: click or drag on the progress bar.
+    var bar = box.querySelector('.demo-bar');
+    if (!bar) return;
+
+    function seekFromEvent(e) {
+      var rect = bar.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      if (video.duration) {
+        video.currentTime = pct * video.duration;
+        fill.style.width = (pct * 100).toFixed(2) + '%';
+      }
+    }
+
+    var dragging = false;
+
+    bar.addEventListener('mousedown', function (e) {
+      dragging = true;
+      seekFromEvent(e);
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (dragging) seekFromEvent(e);
+    });
+
+    document.addEventListener('mouseup', function () {
+      dragging = false;
+    });
+
+    // Touch support
+    bar.addEventListener('touchstart', function (e) {
+      dragging = true;
+      seekFromEvent(e.touches[0]);
+    }, { passive: true });
+
+    bar.addEventListener('touchmove', function (e) {
+      seekFromEvent(e.touches[0]);
+    }, { passive: true });
+
+    bar.addEventListener('touchend', function () {
+      dragging = false;
+    });
+  });
+
+  /* ---- Magnifying glass lens on hover ---- */
+  document.querySelectorAll('.demo-fig').forEach(function (fig) {
+    var lens = fig.querySelector('.demo-lens');
+    var lensInner = fig.querySelector('.demo-lens-inner');
+    var frame = fig.querySelector('.demo-frame');
+    var media = fig.querySelector('.demo-video');
+    if (!lens || !frame || !media) return;
+
+    var isImg = media.tagName === 'IMG';
+    var lensVideo = null;
+
+    // For video: create a cloned video inside the lens
+    if (!isImg) {
+      lensVideo = document.createElement('video');
+      lensVideo.muted = true;
+      lensVideo.loop = true;
+      lensVideo.playsInline = true;
+      lensVideo.preload = 'auto';
+      lensVideo.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;';
+      var srcEl = media.querySelector('source');
+      if (srcEl) {
+        var s = document.createElement('source');
+        s.src = srcEl.src;
+        s.type = srcEl.type;
+        lensVideo.appendChild(s);
+      }
+      lensInner.appendChild(lensVideo);
+      // Keep lens video in sync
+      media.addEventListener('play', function () { lensVideo.play().catch(function(){}); });
+      media.addEventListener('pause', function () { lensVideo.pause(); });
+      media.addEventListener('timeupdate', function () {
+        if (lensVideo.duration && Math.abs(lensVideo.currentTime - media.currentTime) > 0.3) {
+          lensVideo.currentTime = media.currentTime;
+        }
+      });
+    }
+
+    frame.addEventListener('mousemove', function (e) {
+      var rect = frame.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+
+      lens.style.opacity = '1';
+      lens.style.left = (e.clientX - LENS_SIZE / 2) + 'px';
+      lens.style.top = (e.clientY - LENS_SIZE / 2) + 'px';
+
+      var px = x / rect.width * 100;
+      var py = y / rect.height * 100;
+
+      if (isImg) {
+        lensInner.style.backgroundImage = 'url(' + media.src + ')';
+        lensInner.style.backgroundSize = (rect.width * ZOOM) + 'px ' + (rect.height * ZOOM) + 'px';
+        lensInner.style.backgroundPosition = (px * ZOOM - 50) + '% ' + (py * ZOOM - 50) + '%';
+      } else {
+        // Position the cloned video so the cursor area is centered and zoomed
+        var vw = rect.width * ZOOM;
+        var vh = rect.height * ZOOM;
+        lensVideo.style.width = vw + 'px';
+        lensVideo.style.height = vh + 'px';
+        lensVideo.style.left = -(x * ZOOM - LENS_SIZE / 2) + 'px';
+        lensVideo.style.top = -(y * ZOOM - LENS_SIZE / 2) + 'px';
+      }
+    });
+
+    frame.addEventListener('mouseleave', function () {
+      lens.style.opacity = '0';
+    });
+  });
+
+  /* ---- Click-to-expand: opens the demo in a full-screen dialog ---- */
+  function openDemoDialog(src, caption) {
+    var existing = document.getElementById('demo-dialog');
+    if (existing) existing.remove();
+
+    var isGif = /\.gif$/i.test(src);
+    var media;
+    if (isGif) {
+      media = '<img src="' + src + '" alt="' + caption + '" style="width:100%;height:auto;display:block;" />';
+    } else {
+      media = '<video autoplay muted loop playsinline controls style="width:100%;height:auto;display:block;border-radius:8px;">' +
+        '<source src="' + src + '" type="video/mp4" /></video>';
+    }
+
+    var dialog = document.createElement('dialog');
+    dialog.id = 'demo-dialog';
+    dialog.innerHTML =
+      '<div class="demo-dialog-inner">' +
+        '<button class="demo-dialog-close" aria-label="Close">&times;</button>' +
+        media +
+        '<p class="demo-dialog-caption">' + caption + '</p>' +
+      '</div>';
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    dialog.querySelector('.demo-dialog-close').addEventListener('click', function () { dialog.close(); dialog.remove(); });
+    dialog.addEventListener('click', function (e) { if (e.target === dialog) { dialog.close(); dialog.remove(); } });
+    dialog.addEventListener('keydown', function (e) { if (e.key === 'Escape') { dialog.close(); dialog.remove(); } });
+  }
+
+  document.querySelectorAll('.demo-fig').forEach(function (fig) {
+    fig.addEventListener('click', function (e) {
+      if (e.target.closest('.demo-bar')) return;
+      // A long press (hold-to-pause) should not also open the full-screen view.
+      if (fig._held) { fig._held = false; return; }
+      var src = fig.getAttribute('data-demo-src');
+      var cap = fig.getAttribute('data-demo-caption') || '';
+      if (src) openDemoDialog(src, cap);
+    });
+  });
+
+  // Expose for /demo command
+  window.__openDemoDialog = function () {
+    var fig = document.querySelector('.demo-fig');
+    if (!fig) return false;
+    var src = fig.getAttribute('data-demo-src');
+    var cap = fig.getAttribute('data-demo-caption') || '';
+    if (src) { openDemoDialog(src, cap); return true; }
+    return false;
+  };
+})();
+</script>
+
+<style>
+  .demo-fig {
+    margin: 0;
+    padding-block: 0.4rem 0.6rem;
+    position: relative;
+    cursor: none;
+  }
+  .demo-frame {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-raise);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--essence) 18%, transparent),
+      0 22px 60px rgba(0, 0, 0, 0.3);
+  }
+  .demo-video { display: block; width: 100%; height: auto; }
+
+  /* Magnifying glass lens */
+  .demo-lens {
+    position: fixed;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+    transition: opacity 0.15s ease;
+  }
+  .demo-lens-inner {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Custom player wrapper */
+  .demo-player { position: relative; }
+  .demo-player video { display: block; width: 100%; height: auto; }
+
+  /* Progress bar — always visible, thin visual but tall hit area */
+  .demo-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 14px;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .demo-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .demo-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--essence);
+    border-radius: 0 2px 2px 0;
+    transition: none;
+  }
+
+  .demo-cap {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    font-family: var(--font-serif);
+    font-style: italic;
+  }
+  .demo-cap .label {
+    font-style: normal;
+    color: var(--essence);
+    margin-right: 0.6rem;
+  }
+</style>

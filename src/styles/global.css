@@ -1,0 +1,220 @@
+/* UniverLab — design tokens and base styles.
+   Aesthetic: an open computational laboratory. Minimal, technical, calm,
+   timeless. No SaaS gradients, no marketing chrome. */
+
+:root {
+  /* Ink & paper (dark lab) */
+  --bg: #0a0b0e;
+  --bg-raise: #101218;
+  --ink: #e8e6e1;
+  --ink-dim: #9a9890;
+  --ink-faint: #55534e;
+  --line: #23252c;
+
+  /* UniverLab accent — the lab's own colour (yellow), reserved for the main site */
+  --accent: #e6c84a;
+
+  /* Experiment essences */
+  --canopy: #5dd39e;
+  --texforge: #e0a458;
+  --gitkit: #e8a4c8;
+  --ghscaff: #b87333;
+  --cadspec: #6ec6e6;
+  --astro-denoise: #a78bfa;
+  --demostage: #ef8354;
+
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+
+  --measure: 64ch;
+  --space: clamp(1rem, 2.5vw, 1.75rem);
+  --page-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+/* Fixed per-experiment surfaces (set as data-surface on <html>). They override
+   only the substrate tokens; each experiment keeps its own --essence accent. */
+
+/* texforge — editorial / classic print: warm paper, near-black ink. */
+html[data-surface='paper'] {
+  --bg: #f5f5f3;
+  --bg-raise: #ffffff;
+  --ink: #1b1b1a;
+  --ink-dim: #54514c;
+  --ink-faint: #8a857d;
+  --line: #e3ded4;
+}
+
+/* canopy — modern TUI / DevOS: cold slate dark, blue-grey ink. */
+html[data-surface='tui'] {
+  --bg: #0d0e10;
+  --bg-raise: #131519;
+  --ink: #cdd6df;
+  --ink-dim: #8b97a3;
+  --ink-faint: #58616b;
+  --line: #20242a;
+}
+
+/* gitkit — pastel cherry on top: soft lavender background with pink accents,
+   like a dessert counter. The cherry of the cake — sweet and playful. */
+html[data-surface='pastel'] {
+  --bg: #f5eef5;
+  --bg-raise: #faf5fa;
+  --ink: #4a3a4a;
+  --ink-dim: #7a6a7a;
+  --ink-faint: #a898a8;
+  --line: #e8d8e8;
+}
+
+/* ghscaff — industrial foundry: dark iron with copper accents, the heat of a
+   working forge. Distinct from Quorum's warm lamp — this is raw metal and
+   rivets, not a card table. */
+html[data-surface='industrial'] {
+  --bg: #0e0c0a;
+  --bg-raise: #161210;
+  --ink: #e0d5c8;
+  --ink-dim: #9a8b7a;
+  --ink-faint: #5e5248;
+  --line: #2a2320;
+}
+
+/* cadspec — architect's plan: clean, light and geometric, near-black ink on a
+   cool white sheet. */
+html[data-surface='blueprint'] {
+  --bg: #f6f8fa;
+  --bg-raise: #ffffff;
+  --ink: #15202a;
+  --ink-dim: #4d5a64;
+  --ink-faint: #8a97a0;
+  --line: #dde5ea;
+}
+
+/* astro-denoise — observatory: deep space, a violet-black night sky. */
+html[data-surface='observatory'] {
+  --bg: #0a0911;
+  --bg-raise: #110f1b;
+  --ink: #ddd9e8;
+  --ink-dim: #8f8aa3;
+  --ink-faint: #5b566e;
+  --line: #1e1b2c;
+}
+
+/* quorum — the card table under a lamp: a warm espresso ground, cream ink and
+   amber cards. Tones of wood and leather. */
+html[data-surface='quorum'] {
+  --bg: #241a12;
+  --bg-raise: #2f2318;
+  --ink: #f2e7d3;
+  --ink-dim: #b8a583;
+  --ink-faint: #8a7a5e;
+  --line: #40331f;
+}
+
+/* demostage — recording studio: a bright warm-white set; the black terminal
+   monitor and the coral REC carry the contrast. */
+html[data-surface='studio'] {
+  --bg: #f6f3ee;
+  --bg-raise: #ffffff;
+  --ink: #221d18;
+  --ink-dim: #5b5249;
+  --ink-faint: #9a9082;
+  --line: #e6ded2;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.65;
+  scroll-behavior: smooth;
+}
+
+body { margin: 0; min-height: 100vh; }
+
+::selection { background: var(--ink); color: var(--bg); }
+
+h1, h2, h3 {
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h1, h2 {
+  font-family: var(--font-serif);
+  letter-spacing: 0;
+}
+
+h3 {
+  letter-spacing: -0.01em;
+}
+
+a { color: inherit; text-decoration-color: var(--ink-faint); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+
+code, .mono { font-family: var(--font-mono); }
+
+/* Headings avoid widows/orphans (no awkward last-line single word). */
+h1, h2, h3 { text-wrap: balance; }
+
+/* Tabular figures so counts/labels line up. */
+code, .mono, .label { font-variant-numeric: tabular-nums; }
+
+/* Visible keyboard focus everywhere — never rely on a removed outline. Uses the
+   ink colour so it contrasts on every surface (light or dark). */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* No 300ms double-tap delay on controls. */
+button, a, summary, [role='button'] { touch-action: manipulation; }
+
+/* Skip link — hidden until focused, then drops into view (keyboard a11y). */
+.skip-link {
+  position: fixed;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  background: var(--bg-raise);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* Structural primitives */
+.wrap {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space);
+}
+
+.rule { border: 0; border-top: 1px solid var(--line); margin: 0; }
+
+/* Lab label — small caps monospace metadata, the site's signature */
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.prose { max-width: var(--measure); }
+.prose p { margin: 0 0 1.1em; }
+/* Emphasis: a few important words carry the page's colour — the UniverLab
+   yellow on the core pages, the experiment's own essence on its page. */
+strong { color: var(--essence, var(--accent)); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

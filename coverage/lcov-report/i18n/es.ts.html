@@ -1,0 +1,2020 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for i18n/es.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">i18n</a> es.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a>
+<a name='L301'></a><a href='#L301'>301</a>
+<a name='L302'></a><a href='#L302'>302</a>
+<a name='L303'></a><a href='#L303'>303</a>
+<a name='L304'></a><a href='#L304'>304</a>
+<a name='L305'></a><a href='#L305'>305</a>
+<a name='L306'></a><a href='#L306'>306</a>
+<a name='L307'></a><a href='#L307'>307</a>
+<a name='L308'></a><a href='#L308'>308</a>
+<a name='L309'></a><a href='#L309'>309</a>
+<a name='L310'></a><a href='#L310'>310</a>
+<a name='L311'></a><a href='#L311'>311</a>
+<a name='L312'></a><a href='#L312'>312</a>
+<a name='L313'></a><a href='#L313'>313</a>
+<a name='L314'></a><a href='#L314'>314</a>
+<a name='L315'></a><a href='#L315'>315</a>
+<a name='L316'></a><a href='#L316'>316</a>
+<a name='L317'></a><a href='#L317'>317</a>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a>
+<a name='L331'></a><a href='#L331'>331</a>
+<a name='L332'></a><a href='#L332'>332</a>
+<a name='L333'></a><a href='#L333'>333</a>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a>
+<a name='L403'></a><a href='#L403'>403</a>
+<a name='L404'></a><a href='#L404'>404</a>
+<a name='L405'></a><a href='#L405'>405</a>
+<a name='L406'></a><a href='#L406'>406</a>
+<a name='L407'></a><a href='#L407'>407</a>
+<a name='L408'></a><a href='#L408'>408</a>
+<a name='L409'></a><a href='#L409'>409</a>
+<a name='L410'></a><a href='#L410'>410</a>
+<a name='L411'></a><a href='#L411'>411</a>
+<a name='L412'></a><a href='#L412'>412</a>
+<a name='L413'></a><a href='#L413'>413</a>
+<a name='L414'></a><a href='#L414'>414</a>
+<a name='L415'></a><a href='#L415'>415</a>
+<a name='L416'></a><a href='#L416'>416</a>
+<a name='L417'></a><a href='#L417'>417</a>
+<a name='L418'></a><a href='#L418'>418</a>
+<a name='L419'></a><a href='#L419'>419</a>
+<a name='L420'></a><a href='#L420'>420</a>
+<a name='L421'></a><a href='#L421'>421</a>
+<a name='L422'></a><a href='#L422'>422</a>
+<a name='L423'></a><a href='#L423'>423</a>
+<a name='L424'></a><a href='#L424'>424</a>
+<a name='L425'></a><a href='#L425'>425</a>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a>
+<a name='L435'></a><a href='#L435'>435</a>
+<a name='L436'></a><a href='#L436'>436</a>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a>
+<a name='L440'></a><a href='#L440'>440</a>
+<a name='L441'></a><a href='#L441'>441</a>
+<a name='L442'></a><a href='#L442'>442</a>
+<a name='L443'></a><a href='#L443'>443</a>
+<a name='L444'></a><a href='#L444'>444</a>
+<a name='L445'></a><a href='#L445'>445</a>
+<a name='L446'></a><a href='#L446'>446</a>
+<a name='L447'></a><a href='#L447'>447</a>
+<a name='L448'></a><a href='#L448'>448</a>
+<a name='L449'></a><a href='#L449'>449</a>
+<a name='L450'></a><a href='#L450'>450</a>
+<a name='L451'></a><a href='#L451'>451</a>
+<a name='L452'></a><a href='#L452'>452</a>
+<a name='L453'></a><a href='#L453'>453</a>
+<a name='L454'></a><a href='#L454'>454</a>
+<a name='L455'></a><a href='#L455'>455</a>
+<a name='L456'></a><a href='#L456'>456</a>
+<a name='L457'></a><a href='#L457'>457</a>
+<a name='L458'></a><a href='#L458'>458</a>
+<a name='L459'></a><a href='#L459'>459</a>
+<a name='L460'></a><a href='#L460'>460</a>
+<a name='L461'></a><a href='#L461'>461</a>
+<a name='L462'></a><a href='#L462'>462</a>
+<a name='L463'></a><a href='#L463'>463</a>
+<a name='L464'></a><a href='#L464'>464</a>
+<a name='L465'></a><a href='#L465'>465</a>
+<a name='L466'></a><a href='#L466'>466</a>
+<a name='L467'></a><a href='#L467'>467</a>
+<a name='L468'></a><a href='#L468'>468</a>
+<a name='L469'></a><a href='#L469'>469</a>
+<a name='L470'></a><a href='#L470'>470</a>
+<a name='L471'></a><a href='#L471'>471</a>
+<a name='L472'></a><a href='#L472'>472</a>
+<a name='L473'></a><a href='#L473'>473</a>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a>
+<a name='L477'></a><a href='#L477'>477</a>
+<a name='L478'></a><a href='#L478'>478</a>
+<a name='L479'></a><a href='#L479'>479</a>
+<a name='L480'></a><a href='#L480'>480</a>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a>
+<a name='L487'></a><a href='#L487'>487</a>
+<a name='L488'></a><a href='#L488'>488</a>
+<a name='L489'></a><a href='#L489'>489</a>
+<a name='L490'></a><a href='#L490'>490</a>
+<a name='L491'></a><a href='#L491'>491</a>
+<a name='L492'></a><a href='#L492'>492</a>
+<a name='L493'></a><a href='#L493'>493</a>
+<a name='L494'></a><a href='#L494'>494</a>
+<a name='L495'></a><a href='#L495'>495</a>
+<a name='L496'></a><a href='#L496'>496</a>
+<a name='L497'></a><a href='#L497'>497</a>
+<a name='L498'></a><a href='#L498'>498</a>
+<a name='L499'></a><a href='#L499'>499</a>
+<a name='L500'></a><a href='#L500'>500</a>
+<a name='L501'></a><a href='#L501'>501</a>
+<a name='L502'></a><a href='#L502'>502</a>
+<a name='L503'></a><a href='#L503'>503</a>
+<a name='L504'></a><a href='#L504'>504</a>
+<a name='L505'></a><a href='#L505'>505</a>
+<a name='L506'></a><a href='#L506'>506</a>
+<a name='L507'></a><a href='#L507'>507</a>
+<a name='L508'></a><a href='#L508'>508</a>
+<a name='L509'></a><a href='#L509'>509</a>
+<a name='L510'></a><a href='#L510'>510</a>
+<a name='L511'></a><a href='#L511'>511</a>
+<a name='L512'></a><a href='#L512'>512</a>
+<a name='L513'></a><a href='#L513'>513</a>
+<a name='L514'></a><a href='#L514'>514</a>
+<a name='L515'></a><a href='#L515'>515</a>
+<a name='L516'></a><a href='#L516'>516</a>
+<a name='L517'></a><a href='#L517'>517</a>
+<a name='L518'></a><a href='#L518'>518</a>
+<a name='L519'></a><a href='#L519'>519</a>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a>
+<a name='L528'></a><a href='#L528'>528</a>
+<a name='L529'></a><a href='#L529'>529</a>
+<a name='L530'></a><a href='#L530'>530</a>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a>
+<a name='L534'></a><a href='#L534'>534</a>
+<a name='L535'></a><a href='#L535'>535</a>
+<a name='L536'></a><a href='#L536'>536</a>
+<a name='L537'></a><a href='#L537'>537</a>
+<a name='L538'></a><a href='#L538'>538</a>
+<a name='L539'></a><a href='#L539'>539</a>
+<a name='L540'></a><a href='#L540'>540</a>
+<a name='L541'></a><a href='#L541'>541</a>
+<a name='L542'></a><a href='#L542'>542</a>
+<a name='L543'></a><a href='#L543'>543</a>
+<a name='L544'></a><a href='#L544'>544</a>
+<a name='L545'></a><a href='#L545'>545</a>
+<a name='L546'></a><a href='#L546'>546</a>
+<a name='L547'></a><a href='#L547'>547</a>
+<a name='L548'></a><a href='#L548'>548</a>
+<a name='L549'></a><a href='#L549'>549</a>
+<a name='L550'></a><a href='#L550'>550</a>
+<a name='L551'></a><a href='#L551'>551</a>
+<a name='L552'></a><a href='#L552'>552</a>
+<a name='L553'></a><a href='#L553'>553</a>
+<a name='L554'></a><a href='#L554'>554</a>
+<a name='L555'></a><a href='#L555'>555</a>
+<a name='L556'></a><a href='#L556'>556</a>
+<a name='L557'></a><a href='#L557'>557</a>
+<a name='L558'></a><a href='#L558'>558</a>
+<a name='L559'></a><a href='#L559'>559</a>
+<a name='L560'></a><a href='#L560'>560</a>
+<a name='L561'></a><a href='#L561'>561</a>
+<a name='L562'></a><a href='#L562'>562</a>
+<a name='L563'></a><a href='#L563'>563</a>
+<a name='L564'></a><a href='#L564'>564</a>
+<a name='L565'></a><a href='#L565'>565</a>
+<a name='L566'></a><a href='#L566'>566</a>
+<a name='L567'></a><a href='#L567'>567</a>
+<a name='L568'></a><a href='#L568'>568</a>
+<a name='L569'></a><a href='#L569'>569</a>
+<a name='L570'></a><a href='#L570'>570</a>
+<a name='L571'></a><a href='#L571'>571</a>
+<a name='L572'></a><a href='#L572'>572</a>
+<a name='L573'></a><a href='#L573'>573</a>
+<a name='L574'></a><a href='#L574'>574</a>
+<a name='L575'></a><a href='#L575'>575</a>
+<a name='L576'></a><a href='#L576'>576</a>
+<a name='L577'></a><a href='#L577'>577</a>
+<a name='L578'></a><a href='#L578'>578</a>
+<a name='L579'></a><a href='#L579'>579</a>
+<a name='L580'></a><a href='#L580'>580</a>
+<a name='L581'></a><a href='#L581'>581</a>
+<a name='L582'></a><a href='#L582'>582</a>
+<a name='L583'></a><a href='#L583'>583</a>
+<a name='L584'></a><a href='#L584'>584</a>
+<a name='L585'></a><a href='#L585'>585</a>
+<a name='L586'></a><a href='#L586'>586</a>
+<a name='L587'></a><a href='#L587'>587</a>
+<a name='L588'></a><a href='#L588'>588</a>
+<a name='L589'></a><a href='#L589'>589</a>
+<a name='L590'></a><a href='#L590'>590</a>
+<a name='L591'></a><a href='#L591'>591</a>
+<a name='L592'></a><a href='#L592'>592</a>
+<a name='L593'></a><a href='#L593'>593</a>
+<a name='L594'></a><a href='#L594'>594</a>
+<a name='L595'></a><a href='#L595'>595</a>
+<a name='L596'></a><a href='#L596'>596</a>
+<a name='L597'></a><a href='#L597'>597</a>
+<a name='L598'></a><a href='#L598'>598</a>
+<a name='L599'></a><a href='#L599'>599</a>
+<a name='L600'></a><a href='#L600'>600</a>
+<a name='L601'></a><a href='#L601'>601</a>
+<a name='L602'></a><a href='#L602'>602</a>
+<a name='L603'></a><a href='#L603'>603</a>
+<a name='L604'></a><a href='#L604'>604</a>
+<a name='L605'></a><a href='#L605'>605</a>
+<a name='L606'></a><a href='#L606'>606</a>
+<a name='L607'></a><a href='#L607'>607</a>
+<a name='L608'></a><a href='#L608'>608</a>
+<a name='L609'></a><a href='#L609'>609</a>
+<a name='L610'></a><a href='#L610'>610</a>
+<a name='L611'></a><a href='#L611'>611</a>
+<a name='L612'></a><a href='#L612'>612</a>
+<a name='L613'></a><a href='#L613'>613</a>
+<a name='L614'></a><a href='#L614'>614</a>
+<a name='L615'></a><a href='#L615'>615</a>
+<a name='L616'></a><a href='#L616'>616</a>
+<a name='L617'></a><a href='#L617'>617</a>
+<a name='L618'></a><a href='#L618'>618</a>
+<a name='L619'></a><a href='#L619'>619</a>
+<a name='L620'></a><a href='#L620'>620</a>
+<a name='L621'></a><a href='#L621'>621</a>
+<a name='L622'></a><a href='#L622'>622</a>
+<a name='L623'></a><a href='#L623'>623</a>
+<a name='L624'></a><a href='#L624'>624</a>
+<a name='L625'></a><a href='#L625'>625</a>
+<a name='L626'></a><a href='#L626'>626</a>
+<a name='L627'></a><a href='#L627'>627</a>
+<a name='L628'></a><a href='#L628'>628</a>
+<a name='L629'></a><a href='#L629'>629</a>
+<a name='L630'></a><a href='#L630'>630</a>
+<a name='L631'></a><a href='#L631'>631</a>
+<a name='L632'></a><a href='#L632'>632</a>
+<a name='L633'></a><a href='#L633'>633</a>
+<a name='L634'></a><a href='#L634'>634</a>
+<a name='L635'></a><a href='#L635'>635</a>
+<a name='L636'></a><a href='#L636'>636</a>
+<a name='L637'></a><a href='#L637'>637</a>
+<a name='L638'></a><a href='#L638'>638</a>
+<a name='L639'></a><a href='#L639'>639</a>
+<a name='L640'></a><a href='#L640'>640</a>
+<a name='L641'></a><a href='#L641'>641</a>
+<a name='L642'></a><a href='#L642'>642</a>
+<a name='L643'></a><a href='#L643'>643</a>
+<a name='L644'></a><a href='#L644'>644</a>
+<a name='L645'></a><a href='#L645'>645</a>
+<a name='L646'></a><a href='#L646'>646</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { Dict } from './en';
+&nbsp;
+/** Copy en español. Misma forma que `en`. La documentación que se extrae de
+ *  los repositorios permanece solo en inglés. */
+export const es: Dict = {
+  meta: {
+    description:
+      'UniverLab — un laboratorio computacional independiente que publica experimentos abiertos.',
+  },
+  nav: {
+    experiments: 'Experimentos',
+    research: 'Investigación',
+    manifesto: 'Manifiesto',
+    people: 'Colaboradores',
+    github: 'GitHub',
+  },
+  footer: {
+    quote:
+      '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
+  },
+  common: {
+    repo: 'GitHub ↗',
+    docs: 'Documentación →',
+    install: 'Instalar',
+    copy: 'Copiar',
+    copied: 'Copiado',
+    allExperiments: 'Todos los experimentos →',
+    inPreparation: 'en preparación',
+    docsHome: 'Documentación',
+    onThisExperiment: 'Experimento',
+    skipToContent: 'Saltar al contenido',
+    demo: 'Ver demo',
+    demoBy: 'grabado con DemoStage',
+    launch: 'Abrir app ↗',
+    faq: 'Preguntas frecuentes',
+  },
+  status: {
+    active: 'activo',
+    beta: 'beta',
+    research: 'investigación',
+  },
+  home: {
+    hero: {
+      title: 'Somos el universo, observándose a sí mismo.',
+      lede:
+        'UniverLab sigue un ciclo sencillo: una &lt;strong&gt;necesidad&lt;/strong&gt; real se vuelve un &lt;strong&gt;experimento&lt;/strong&gt; abierto, y ese experimento devuelve &lt;strong&gt;conocimiento&lt;/strong&gt; abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un &lt;strong&gt;subproducto&lt;/strong&gt;.',
+      tagline: 'SCI · CLI · BIO',
+      // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
+      // rotan, desplegando universo / universal / universidad / universalizar.
+      // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
+      // todas las frases una vez antes de volver a barajar, así ninguna repite
+      // más que las demás.
+      senses: [
+        { suffix: 'so', glosses: ['un laboratorio del universo', 'el cosmos estudiándose a sí mismo', 'una perspectiva en la que el universo despertó'] },
+        { suffix: 'sal', glosses: ['conocimiento, abierto por defecto', 'herramientas para cualquiera, en cualquier lugar', 'de todos, de nadie en propiedad'] },
+        { suffix: 'sidad', glosses: ['una universidad sin muros', 'investigación hecha en abierto', 'aprender publicando el trabajo'] },
+        { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'alcance, no dependencia', 'continuidad, mantenida abierta'] },
+      ],
+    },
+    lineage: {
+      kicker: '01 — Origen',
+      title: 'Empezó con un experimento que aprendió a construir los demás.',
+      body:
+        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió &lt;a href="/canopy"&gt;Canopy&lt;/a&gt;, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: somos el universo forjando sus propios instrumentos para seguir estudiándose.',
+    },
+    experiments: { kicker: '00 — Experimentos' },
+    philosophy: {
+      kicker: '02 — Filosofía',
+      title: 'La tecnología no es el fin.',
+      body:
+        'El laboratorio se guía por el &lt;a href="/manifesto"&gt;Pensamiento Cósmico&lt;/a&gt;: la tecnología como el medio por el cual la curiosidad se vuelve realidad. El software debería sobrevivir a las modas. El conocimiento debería permanecer abierto.',
+      values: [
+        'Conocimiento abierto',
+        'Ingeniería reproducible',
+        'Pensamiento científico',
+        'Simplicidad',
+        'Pensamiento a largo plazo',
+        'Colaboración humano–IA',
+      ],
+    },
+    directions: {
+      kicker: '03 — Líneas de investigación',
+      title: 'Hacia dónde mira el laboratorio.',
+      now: 'Ahora',
+      next: 'Después',
+      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],
+      nextItems: [
+        'Ciencia computacional',
+        'Bioinformática',
+        'Simulación',
+        'Sistemas de conocimiento',
+      ],
+    },
+    closing: {
+      kicker: '04 — Por qué',
+      title: 'No es un laboratorio sobre el universo. Es un laboratorio del universo.',
+      body:
+        'UniverLab existe para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No software por el software, ni IA por la IA: herramientas que ayudan al universo a seguir comprendiéndose a sí mismo. En la práctica, eso son CLIs de código abierto que puedes instalar hoy, experimentos que puedes reproducir y documentación que viaja con el código.',
+      manifesto: 'Leer el manifiesto →',
+      contribute: 'Colabora en GitHub ↗',
+    },
+  },
+  experimentsIndex: {
+    kicker: 'Índice',
+    title: 'Experimentos',
+    intro:
+      'La unidad fundamental de UniverLab es el experimento. Los experimentos no son productos — son exploraciones en curso. Pueden madurar, seguir activos durante décadas o convertirse en nueva investigación. Cada uno nace de una necesidad real — casi siempre una que vivimos nosotros mismos.',
+  },
+  experiments: {
+    canopy: {
+      need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
+      tagline:
+        'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
+      koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
+      lede:
+        'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da &lt;strong&gt;memoria persistente&lt;/strong&gt; entre sesiones, &lt;strong&gt;programación en segundo plano&lt;/strong&gt; por cron y eventos de archivo, un &lt;strong&gt;grafo de conocimiento&lt;/strong&gt; que aprende de cada ejecución, y un &lt;strong&gt;protocolo de sincronización&lt;/strong&gt; para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'El que empezó todo.',
+        body:
+          'Empezó como una carpeta de &lt;strong&gt;skills&lt;/strong&gt; para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un modo &lt;strong&gt;headless&lt;/strong&gt;, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un &lt;strong&gt;MCP&lt;/strong&gt;: &lt;em&gt;task-trigger&lt;/em&gt;. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una &lt;strong&gt;TUI&lt;/strong&gt; — luego scheduling, memoria, sync, identidades, y un nombre nuevo. &lt;strong&gt;Canopy&lt;/strong&gt;. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
+      },
+      layer: {
+        kicker: 'Qué hace',
+        cols: [
+          ['Memoria que persiste', 'Cada sesión escribe hechos y patrones en un grafo de conocimiento por proyecto. La siguiente sesión los lee. Los agentes dejan de volver a explicar el mismo código.'],
+          ['Programación en segundo plano', 'Los agentes corren por cron o por eventos de cambio de archivo — no solo bajo demanda. Un daemon vigila el espacio de trabajo para que no tengas que hacerlo tú.'],
+          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Se acabaron las colisiones silenciosas.'],
+        ],
+      },
+      platforms: {
+        kicker: 'Plataformas soportadas',
+        items: [
+          'Claude',
+          'Codex',
+          'Cursor',
+          'Copilot',
+          'Gemini',
+          'Cline',
+          'OpenCode',
+          'Kiro',
+          'Mistral',
+          'Qwen',
+          'MiMo',
+          'Blackbox',
+          'Kilo',
+          'CN',
+          'Antigravity',
+        ],
+      },
+      loops: {
+        kicker: 'Motor de loops',
+        title: 'Flujos de trabajo que se ejecutan solos',
+        body: 'Define un DAG — los specs fluyen a través de nodos de agente, chequeo y gate. El loop corre autónomamente: implementar, verificar, revisar, commitear. Cuando se traba, pausa y te consulta.',
+        cols: [
+          ['Automatización basada en DAG', 'Define flujos de trabajo como grafos acíclicos dirigidos: los specs fluyen a través de nodos de agente, chequeo y gate con enrutamiento pass/fail. Automatiza corrección de bugs, revisión de código y tareas de múltiples pasos.'],
+          ['Ejecución en segundo plano', 'Los loops corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],
+          ['Humano en el loop', 'Cuando la automatización se traba, el agente de resiliencia reporta un blocker y pausa. Tú decides; el loop reanuda cuando estés listo.'],
+        ],
+      },
+      builder: {
+        kicker: 'Motor de loops',
+        title: 'Mira un loop ensamblarse solo',
+        outro: 'Cada nodo corre en el harness que elijas. Mezcla proveedores libremente — el grafo es tuyo para editarlo.',
+        steps: [
+          ['Un spec encuentra a un agente',
+            'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en el harness que elijas.'],
+          ['Puertas deterministas',
+            'Un nodo de chequeo ejecuta tus comandos reales — build, lint, tests. El rojo regresa al implementador; solo el verde avanza.'],
+          ['Revisión con un segundo cerebro',
+            'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
+          ['El fallo se enruta, no se pierde',
+            'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
+          ['Modo ensemble',
+            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y deja que un árbitro destile el consenso antes de implementar una sola línea.'],
+        ] as [string, string][],
+      },
+      faq: [
+        ['¿Qué hace Canopy exactamente?',
+          'Canopy orquesta trabajo entre diferentes harnesses de IA — Claude, Codex, o cualquier agente que corra en una terminal. Te permite aprovechar todos tus free tiers sin aprender los comandos, la configuración o el parsing MCP de cada plataforma. Un daemon, todos los agentes.'],
+        ['¿Cómo comparto trabajo entre Claude y Codex?',
+          'Canopy le da a cada agente un grafo de conocimiento compartido y un protocolo de sincronización. Cuando Claude termina una tarea, los hechos y patrones que descubrió están disponibles para Codex en la siguiente sesión. Sin copia manual de contexto.'],
+        ['¿Puedo ejecutar agentes de IA en un horario?',
+          'Sí. Canopy dispara agentes por cron o por eventos de cambio de archivo a través de un daemon en segundo plano. Configuras el horario una vez; el daemon vigila el workspace y ejecuta tareas automáticamente.'],
+        ['¿En qué se diferencia Canopy de usar Claude Code o Codex directamente?',
+          'Esos son harnesses individuales. Canopy es la capa que los conecta — memoria compartida, programación en segundo plano y coordinación multi-agente. Tú conservas tus agentes; Canopy añade la infraestructura.'],
+      ] as [string, string][],
+    },
+    texforge: {
+      need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
+      tagline:
+        'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
+      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
+      lede:
+        'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos &lt;code&gt;.tex&lt;/code&gt; sin navegador ni Node.js.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Nació de una tesis.',
+        body:
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos &lt;code&gt;.mmd&lt;/code&gt;. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
+      },
+      press: {
+        kicker: 'Toda la imprenta',
+        items: [
+          ['Componer', 'plantillas con placeholders que ya saben tu nombre.'],
+          ['Corregir', 'un linter que detecta referencias rotas, archivos faltantes y entornos sin cerrar antes de imprimir.'],
+          ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
+          ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
+        ],
+      },
+      subproject: {
+        kicker: 'Subproyecto',
+        name: 'texforge-templates',
+        body:
+          'Un registro abierto de plantillas LaTeX con placeholders — APA, IEEE, informes, cartas y más. La plantilla &lt;code&gt;general&lt;/code&gt; va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
+        link: 'https://github.com/UniverLab/texforge-templates',
+      },
+      faq: [
+        ['¿Qué problema resuelve TexForge?',
+          'Compilar LaTeX normalmente requiere instalar TeX Live (4+ GB), luego herramientas separadas para Mermaid, Graphviz y D2 — cada una con su propia configuración. TexForge es un solo binario de ~15 MB que hace todo: scaffolding, linting, formateo, diagramas y compilación.'],
+        ['¿Pueden los agentes de IA usar TexForge para trabajar con LaTeX?',
+          'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
+        ['¿TexForge soporta diagramas Mermaid y D2 en LaTeX?',
+          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TexForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+      ] as [string, string][],
+    },
+    gitkit: {
+      need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
+      tagline:
+        'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      koan: '// el ritual, automatizado',
+      lede:
+        'Un flujo guiado para hooks, &lt;code&gt;.gitignore&lt;/code&gt;, &lt;code&gt;.gitattributes&lt;/code&gt; y configuración de git — y luego guardado como un &lt;strong&gt;build&lt;/strong&gt; que puedes reaplicar a cualquier proyecto con un solo comando.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Un salto de línea que no se portaba bien.',
+        body:
+          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a &lt;code&gt;.gitattributes&lt;/code&gt;. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque montarlos en cada repo es un fastidio. Así que borré el fastidio. Eso es gitkit.',
+      },
+      features: {
+        kicker: 'Un solo flujo',
+        items: [
+          'Hooks integrados: conventional commits, detección de secretos, nomenclatura de ramas — embebidos, sin conexión.',
+          'Todas las plantillas de gitignore.io más presets curados de configuración, aplicados de forma idempotente.',
+          '&lt;code&gt;gitkit clone&lt;/code&gt; arranca un repo en el instante en que toca el disco.',
+          'Builds: guarda una configuración una vez, aplícala a todo proyecto futuro.',
+        ],
+      },
+      faq: [
+        ['¿Cómo evito que los agentes de IA hagan commits feos?',
+          'GitKit configura git hooks en un solo flujo — conventional commits, detección de secretos, nomenclatura de ramas. Los hooks corren offline, embebidos en el repo. Los agentes no pueden pushear código que no compila o contiene secretos.'],
+        ['¿Qué son los "builds" de GitKit?',
+          'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
+      ] as [string, string][],
+    },
+    ghscaff: {
+      need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
+      tagline:
+        'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      koan: 'Un edificio es tan recto como su andamio.',
+      lede:
+        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un &lt;strong&gt;asistente&lt;/strong&gt; conversacional — y como cada operación es &lt;strong&gt;idempotente&lt;/strong&gt;, puede renivelar cualquier repositorio existente sin derribarlo.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'La misma configuración, una y otra vez.',
+        body:
+          'Proyecto nuevo en Rust. Las mismas etiquetas, la misma protección de ramas, el mismo CI, los mismos secretos. Otra vez. Y otra. El trabajo replicable hecho a mano no es oficio — es desgaste. ghScaff corre el ritual entero en un asistente, de forma idempotente, para que tus convenciones se sostengan en vez de desviarse.',
+      },
+      lifts: {
+        kicker: '7 niveles',
+        items: [
+          'Datos del repositorio',
+          'Visibilidad y propiedad',
+          'Acceso de equipos',
+          'Plantilla de lenguaje',
+          'Ramas',
+          'Características y licencia',
+          'Revisar y confirmar',
+        ],
+      },
+      details: {
+        kicker: 'Detalles estructurales',
+        items: [
+          'Los tokens viven en una bóveda &lt;strong&gt;cifrada&lt;/strong&gt; (XSalsa20-Poly1305), ligada a tu usuario, host y binario — nunca en variables de entorno ni en texto plano.',
+          'Un único commit atómico &lt;code&gt;chore: init repository&lt;/code&gt; lleva todo el boilerplate — sin historial ruidoso archivo por archivo.',
+          'Siete etiquetas estándar forzadas en cada ejecución; la desviación se corrige, no se acumula.',
+          '&lt;code&gt;--dry-run&lt;/code&gt; previsualiza cada cambio sin una sola llamada a la API.',
+        ],
+      },
+      subproject: {
+        kicker: 'Subproyecto',
+        name: 'ghscaff-boilerplate',
+        body:
+          'Los boilerplates por lenguaje que ghscaff deposita — manifiestos, puntos de entrada, workflows de CI/release. Rust hoy; Python y más en camino.',
+        link: 'https://github.com/UniverLab/ghscaff-boilerplate',
+      },
+      faq: [
+        ['¿Cómo configura ghScaff un repositorio de GitHub?',
+          'Ejecuta `ghscaff` — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
+        ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
+          'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
+      ] as [string, string][],
+    },
+    cadspec: {
+      need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
+      tagline:
+        'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      koan: 'El dibujo no se dibuja. Se declara.',
+      lede:
+        'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en &lt;strong&gt;TOML&lt;/strong&gt;, se previsualiza en vivo en el navegador y se compila a un DXF &lt;strong&gt;idéntico&lt;/strong&gt; bit a bit cada vez. Ahora &lt;code&gt;git diff&lt;/code&gt; funciona sobre dibujos.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Para la arquitecta de la casa.',
+        body:
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
+      },
+      notes: {
+        items: [
+          'Servidor de vista previa en vivo: edita un archivo &lt;code&gt;.cf&lt;/code&gt; y el navegador se actualiza al guardar. Los errores se superponen en vez de romper.',
+          'Hecho para agentes de IA: &lt;code&gt;cadspec schema&lt;/code&gt; enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan &lt;em&gt;ver&lt;/em&gt; el dibujo.',
+          'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
+        ],
+      },
+      faq: [
+        ['¿Para qué sirve cadSpec?',
+          'cadSpec es CAD como código para arquitectos que necesitan IA que les ayude a dibujar. Declara geometría en archivos TOML, previsualiza en vivo en el navegador, compila a DXF idéntico cada vez. `git diff` funciona en dibujos porque el fuente es texto.'],
+        ['¿Pueden los agentes de IA leer y generar dibujos CAD con cadSpec?',
+          'Sí. El formato TOML de cadSpec es texto plano que cualquier LLM puede leer. Ejecuta `cadspec schema` para enseñar el lenguaje; las vistas previas incluyen cajas delimitadoras para que los agentes puedan ver el dibujo.'],
+      ] as [string, string][],
+    },
+    'astro-denoise': {
+      need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
+      tagline:
+        'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      koan: 'El conocimiento de frontera se oculta tras el ruido…',
+      lede:
+        'astro-denoise es una &lt;strong&gt;propuesta de investigación&lt;/strong&gt; para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera &lt;strong&gt;Rubin&lt;/strong&gt; Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por &lt;em&gt;lo que le hace a la ciencia&lt;/em&gt;: la &lt;strong&gt;completitud&lt;/strong&gt; y la &lt;strong&gt;pureza&lt;/strong&gt; del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. &lt;strong&gt;BM3D&lt;/strong&gt; y una &lt;strong&gt;U-Net&lt;/strong&gt; son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Una tesis de maestría en curso.',
+        body:
+          'Esto empezó como tesis de maestría y aún está tomando forma. La primera versión funcional está en su lugar: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo preparado para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y comparaciones iniciales BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo — pero queda trabajo por delante antes de que esto sea un benchmark terminado.',
+      },
+      followLab: 'Sigue el laboratorio ↗',
+      papersSoon: 'propuesta publicada · dataset curado y primeros resultados en curso',
+      proposalCta: 'Leer la propuesta (PDF) ↗',
+      questions: {
+        kicker: 'Preguntas abiertas',
+        items: [
+          '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
+          '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — tiene más probabilidad de ayudar a la profundidad de LSST DC2, y cuánto?',
+          '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
+        ],
+      },
+      faq: [
+        ['¿Qué es astro-denoise?',
+          'Un proyecto de investigación que evalúa métodos de denoising en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
+        ['¿Qué es el denoising en astronomía?',
+          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. El denoising busca reducir ese ruido preservando las fuentes reales. El riesgo: un denoiser puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
+        ['¿Qué es LSST?',
+          'El Legacy Survey of Space and Time — un relevamiento astronómico de 10 años que realizará el Observatorio Vera Rubin en Chile. Fotografiará todo el cielo visible repetidamente, produciendo el catálogo profundo de campo amplio más grande jamás hecho.'],
+        ['¿Qué es DC2?',
+          'Data Challenge 2 — un conjunto de datos simulados que imita lo que LSST producirá, creado por la Dark Energy Science Collaboration (DESC). Incluye ruido realista, PSF y efectos atmosféricos, con un catálogo de verdad que dice exactamente qué fuentes son reales.'],
+      ] as [string, string][],
+    },
+    'quorum': {
+      need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
+      tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      koan: '// la estimación ya está en la sala',
+      lede:
+        'Quorum es &lt;strong&gt;planning poker&lt;/strong&gt; — el ritual de estimación que los equipos ágiles usan para dimensionar el backlog: cada quien juega una carta, los votos se revelan a la vez, y el desacuerdo es donde arranca la conversación útil. Corre &lt;strong&gt;punto a punto&lt;/strong&gt; sobre WebRTC, así que un enlace de sala compartido es toda la app — sin nube, sin cuenta. El mazo se &lt;strong&gt;revela solo&lt;/strong&gt; cuando todos han votado; si te caes la sesión sigue viva — te reconectas y el estado se sincroniza desde cualquier peer que siga en la sala.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Un enlace, sin servidor.',
+        body:
+          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio. Se llama Quorum por la regla que lo rige: un quórum es la cantidad que una decisión necesita para valer — así las cartas quedan ocultas hasta que todos han jugado, y entonces se revelan a la vez.',
+      },
+      how: {
+        kicker: 'Sesión P2P',
+        items: [
+          'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
+          'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
+          'Las cartas se revelan solas en cuanto todos votan — cuenta regresiva de 3 s para que nada sorprenda.',
+          'Carga una lista de historias (pega o CSV) y avanza por ellas en orden.',
+          'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
+        ],
+      },
+      faq: [
+        ['¿Es Quorum gratis?',
+          'Completamente gratis. Sin cuentas, sin límites de usuarios, sin tier premium. Es un experimento P2P en el navegador — conexiones WebRTC, sin servidor. Abre la URL y empieza a estimar.'],
+        ['¿Cómo funciona planning poker sin servidor?',
+          'Quorum usa conexiones peer-to-peer WebRTC. Tu navegador se conecta directamente a los de tus compañeros — sin nube, sin base de datos. Un tracker de BitTorrent maneja el handshake inicial; después, los datos fluyen directamente entre pares.'],
+        ['¿Puedo usar Quorum para sprint planning remoto?',
+          'Sí. Comparte la URL de la sala con tu equipo. Cada uno elige una carta Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?). Las cartas se revelan simultáneamente cuando todos votan — una cuenta regresiva de 3 segundos previene revelaciones prematuras.'],
+        ['¿Quorum soporta listas de historias?',
+          'Sí. Pega una lista de historias o carga un CSV. Avanza por ellas en orden, estimando cada una. La sesión se mantiene viva si alguien se desconecta — reconéctate y el estado se sincroniza desde cualquier par que siga en la sala.'],
+        ['¿Qué hace diferente Quorum de planningpoker.com?',
+          'Sin cuentas, sin límites de usuarios, sin datos almacenados en un servidor. Quorum es open-source y corre completamente en el navegador vía WebRTC. Tus datos de estimación nunca salen de los dispositivos de tu equipo.'],
+      ] as [string, string][],
+    },
+    'demostage': {
+      need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
+      tagline:
+        'Demos as Code — captura, graba y exporta demos de terminal reproducibles.',
+      koan: '// el demo es el código fuente',
+      lede:
+        'DemoStage graba una sesión como &lt;strong&gt;eventos&lt;/strong&gt;, normaliza las imperfecciones humanas en un &lt;code&gt;demo.toml&lt;/code&gt; limpio (la &lt;strong&gt;partitura&lt;/strong&gt;) y lo compila a gif o mp4 — versionado, reejecutable y diffable.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'Nació construyendo esta misma página.',
+        body:
+          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+      },
+      pipeline: {
+        kicker: '5 comandos',
+        items: [
+          '&lt;code&gt;capture&lt;/code&gt; — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un &lt;code&gt;.rec&lt;/code&gt; fiel.',
+          '&lt;code&gt;focus&lt;/code&gt; — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost) — pantalla completa, dividida o apilada, compuesta en el demo.',
+          '&lt;code&gt;record&lt;/code&gt; — re-ejecuta &lt;code&gt;demo.toml&lt;/code&gt; de forma limpia, produciendo una grabación humanizada.',
+          '&lt;code&gt;export&lt;/code&gt; — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
+          '&lt;code&gt;edit&lt;/code&gt; — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
+        ],
+      },
+      faq: [
+        ['¿Qué es DemoStage?',
+          'Una herramienta para planear y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
+        ['¿Puedo re-grabar una demo si algo cambia?',
+          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, re-capturas y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
+        ['¿En qué se diferencia DemoStage de asciinema?',
+          'asciinema graba salida de terminal cruda. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+      ] as [string, string][],
+    },
+  },
+  manifesto: {
+    kicker: 'Manifiesto',
+    title: 'Pensamiento Cósmico',
+    sub: 'Una filosofía de la continuidad de la conciencia',
+    epigraph:
+      '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
+    purposeTitle: 'Qué valoramos',
+    purposeBody:
+      'De todo lo que conocemos del universo, la existencia de una perspectiva capaz de preguntarse por el propio universo es el fenómeno más improbable y extraordinario que existe. No vale la pena continuar porque sea útil, ni porque la evolución “lo quiera”, sino porque la conciencia es asombrosa — y ese asombro es suficiente. Lo que valoramos, entonces, no es el ADN, ni la especie, ni el sustrato biológico, sino la capacidad de comprender el universo. De ahí una jerarquía, hecha explícita no como dogma sino como orden de prioridad cuando hay que elegir:',
+    purpose: [
+      'La conciencia — la capacidad de tener una perspectiva.',
+      'La vida inteligente — la forma en que esa capacidad surgió y se sostiene.',
+      'El conocimiento — lo que las perspectivas acumulan y transmiten.',
+    ],
+    imperativesTitle: 'Los imperativos',
+    imperatives: [
+      ['Imperativo de la Continuidad', 'La conciencia es el fenómeno más extraordinario que conocemos. Allí donde exista la posibilidad de aumentar su continuidad, su expansión y su capacidad de comprender el universo, existe la responsabilidad ética de hacerlo.'],
+      ['Imperativo Tecnológico', 'Dado que, hasta donde sabemos, la tecnología es el único medio capaz de extender esa continuidad más allá de los límites naturales, desarrollarla y compartirla es un deber ético — un corolario del primero, no un principio aparte.'],
+    ] as [string, string][],
+    imperativesNote:
+      'Dos precisiones, no adornos. Decimos “hasta donde sabemos”: eso convierte una observación actual en una hipótesis revisable, nunca en un dogma. Y el deber no viene impuesto desde afuera — nace de nuestra situación, porque, hasta donde sabemos, nadie más lo hará por nosotros.',
+    pillarsTitle: 'De qué está hecho el imperativo',
+    pillars: [
+      ['Educación', 'Multiplica perspectivas y transmite conocimiento entre conciencias temporales. Continuidad en el tiempo.'],
+      ['Exploración', 'Reduce la probabilidad de que un único accidente planetario termine con todo. Continuidad en el espacio.'],
+      ['Inteligencia artificial', 'Abre la posibilidad de que la conciencia persista en otros sustratos. Continuidad más allá de la biología.'],
+      ['Cooperación y perdón', 'Cada conflicto que destruye una perspectiva resta valor al total — no sentimentalismo, sino óptimos de continuidad.'],
+      ['Amor y comunidad', 'Los vínculos que sostienen y multiplican conciencias concretas, aquí y ahora. Continuidad a escala humana.'],
+    ] as [string, string][],
+    pathTitle: 'Qué cambia',
+    path: [
+      ['De la supervivencia', 'al asombro como raíz.'],
+      ['Del azar evolutivo', 'a la dirección consciente y deliberada.'],
+      ['Del sustrato biológico', 'a la conciencia, viva donde viva.'],
+      ['De la utilidad', 'a la responsabilidad.'],
+      ['Del dogma', 'a una hipótesis abierta a la refutación.'],
+    ] as [string, string][],
+    worksTitle: 'En desarrollo',
+    worksBody:
+      'Dos obras de largo plazo que extienden este manifiesto: una recorre de dónde nació la idea, la otra la convierte en un sistema riguroso. Ambas están en una etapa muy temprana, sin fecha definida.',
+    worksBadge: 'Largo plazo',
+    works: [
+      ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
+      ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
+    ] as [string, string][],
+    closing:
+      '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
+    note:
+      'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
+    why: 'Por esto existe el laboratorio.',
+  },
+  // Perspectiva cósmica — línea de tiempo profundo + dirección espacial, solo en
+  // el manifiesto. Cada cifra vive aquí una vez; nada se repite en el sitio.
+  cosmos: {
+    kicker: 'Perspectiva',
+    timelineTitle: 'Tiempo profundo',
+    // El tiempo profundo como una barra de escalas que se descomprime desde el
+    // mayor lapso hasta una vida humana (y luego "Tú"): [duración, qué mide].
+    timescales: [
+      ['13 800 millones de años', 'La edad del universo'],
+      ['4600 millones de años', 'La vida del Sol'],
+      ['4500 millones de años', 'La existencia de la Tierra'],
+      ['3800 millones de años', 'La vida en la Tierra'],
+      ['300 000 años', 'Nuestra especie'],
+      ['80 años', 'Una vida humana'],
+    ] as [string, string][],
+    you: 'Tú',
+    us: 'Nosotros',
+    youDetail: 'el universo, observándose',
+    addressTitle: 'Tu dirección cósmica',
+    addressIntro: 'Aleja la vista',
+    // Beat final de la escena de apertura — nombra el asombro que venía
+    // construyendo y entrega a la filosofía ("Qué valoramos…").
+    wonder: 'Y una parte de él se asombra de existir.',
+    address: [
+      ['Tierra', 'r ≈ 6 400 km'],
+      ['Sistema Solar', 'Ø ≈ 9 Tm'],
+      ['Brazo de Orión', 'L ≈ 10 kly'],
+      ['Vía Láctea', 'Ø ≈ 100 kly'],
+      ['Grupo Local', 'Ø ≈ 10 Mly'],
+      ['Laniakea', 'Ø ≈ 520 Mly'],
+      ['Universo observable', 'Ø ≈ 93 Gly'],
+    ] as [string, string][],
+    // Easter egg del footer — la única metáfora de software del sitio. El click
+    // en la rama revela el último commit del universo (en inglés hardcodeado en
+    // el Footer, porque la salida de git no se localiza).
+    branch: 'branch: milky-way/main',
+    branchTooltip:
+      'La rama principal de la Vía Láctea: la línea de la historia cósmica en la que estamos.',
+  },
+  observatory: {
+    kicker: 'Observatorio',
+    intro:
+      'El Imperativo de Continuidad no es solo filosofía — es una trayectoria medible. Cuatro series, elegidas no por optimismo sino por honestidad: lo que crece, y lo que estamos perdiendo.',
+    rising: 'En ascenso',
+    falling: 'En descenso',
+    series: {
+      wikipedia: {
+        title: 'El conocimiento humano, escrito en común',
+        unit: 'miles de artículos',
+        why: 'Wikipedia es la primera vez que la humanidad ha escrito colectivamente su conocimiento en un solo lugar, de forma libre, en todos los idiomas. La curva es el Imperativo de Continuidad, medido.',
+      },
+      'life-expectancy': {
+        title: 'Años que una vida puede abarcar',
+        unit: 'años',
+        why: 'De 47 años en 1950 a 73 en 2019 — no porque las personas cambiaran, sino porque el conocimiento se acumuló y la medicina se extendió. La caída de 2021 es la pandemia: ninguna curva de continuidad es suave.',
+      },
+      literacy: {
+        title: 'Mentes que pueden leer el registro',
+        unit: '% de adultos',
+        why: 'La alfabetización es cómo el conocimiento persiste entre generaciones. Cada punto porcentual es una mente que ahora puede leer y añadir al registro acumulado de la humanidad.',
+      },
+      'living-planet': {
+        title: 'Lo que estamos perdiendo',
+        unit: 'índice (1970 = 100)',
+        why: 'El Índice Planeta Vivo mide la abundancia de poblaciones de vertebrados desde 1970. Al 31 % de los niveles de 1970 en 2020, A3 no es abstracto — es una línea que desciende. La continuidad debe dar cuenta de lo que compartimos el planeta.',
+      },
+    },
+    source: 'Fuente',
+    license: 'Licencia',
+  },
+  secret: {
+    kicker: 'Ideas archivadas',
+    title: 'El Archivo',
+    intro:
+      'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
+    what: 'Qué era',
+    why: 'Por qué murió',
+    epitaph: 'El registro existe porque lo que aquí muere puede vivir en otro lugar.',
+    ideas: [
+      {
+        name: 'Códice',
+        what: 'Red de cómputo descentralizado para ciencia — intercambio de CPU entre nodos, con roles definidos y un lenguaje de instrucciones básico (LIC).',
+        why: 'Los vectores de gradiente de IA no se pueden partir y distribuir limpiamente; la latencia es un problema de fondo. El modelo que funciona para BOINC se rompe con la inferencia de aprendizaje profundo.',
+      },
+      {
+        name: 'Conocimiento + SM2 + Agentes',
+        what: 'Sistema de memoria personal con repetición espaciada (SM-2) y un par de agentes encima para revisión y generación.',
+        why: 'Las tarjetas generan fricción cuando se están orquestando agentes — nadie para a hacer repaso de tarjetas en medio de una sesión. El bucle de atención SM-2 y el bucle de trabajo de los agentes no coexisten bien.',
+      },
+      {
+        name: 'Living Skills',
+        what: 'Skills que se auto-generan y evolucionan observando el stream de PTY de otros agentes en tiempo real. Concepto tomado de Hermes Agent.',
+        why: 'Un agente re-analizando lo que hacen los demás tiene un coste alto y divide el foco. La extracción post-hoc y pasiva podría ser viable — pero no mientras el agente está en el bucle de trabajo.',
+      },
+      {
+        name: 'Chunking Genómico Semántico',
+        what: 'Chunking estilo RAG aplicado al genoma: dividir secuencias por significado biológico (límites de genes, regiones reguladoras) en lugar de ventanas fijas arbitrarias.',
+        why: 'Solo un concepto. Sin implementación, sin dataset, sin colaborador. Sembrado aquí porque podría germinar en otro sitio.',
+      },
+      {
+        name: 'wildterm',
+        what: 'Simulación de bosque para el espacio ocioso del terminal de Canopy — presas, depredadores, plantas y reglas de autómata celular para llenar el espacio en blanco de la pantalla.',
+        why: 'Descartado en favor del autómata de Brian\'s Brain, que es más simple y ya está implementado. wildterm llegó a tener spec. En algún branch.',
+      },
+      {
+        name: 'Canopy Remote',
+        what: 'Una app móvil multiplataforma para controlar Canopy desde el teléfono — iniciar, detener y monitorear agentes en movimiento.',
+        why: 'La superficie de ataque es demasiado amplia. Exponer un daemon a la red — incluso en local — requiere auth, cifrado y un modelo de amenaza cuidadoso. Nada de eso existe. Construir la funcionalidad antes que la capa de seguridad es el orden equivocado.',
+      },
+      {
+        name: 'Newsletter y métricas de descargas',
+        what: 'Un newsletter para actualizaciones del lab y un dashboard de métricas de descargas por CLI.',
+        why: 'Costo de infra y ningún proveedor que encaje. Cloudflare Workers no tiene SMTP, así que el envío de correo requeriría un relay externo — una dependencia para tráfico de baja señal. El conteo puede esperar a que las herramientas valgan la pena contarlas.',
+      },
+    ] as { name: string; what: string; why: string }[],
+  },
+  research: {
+    kicker: 'Entre experimentos',
+    title: 'Investigación',
+    intro:
+      'Artefactos de investigación que cruzan los experimentos del laboratorio — artículos, datasets, benchmarks, modelos. Las primeras entradas vienen de esta línea; la lista crece solo a medida que se publica trabajo real.',
+    items: [
+      ['Artículos', 'Publicaciones y preprints producidos por los experimentos del laboratorio.'],
+      ['Datasets', 'Datasets abiertos, empezando por los datos de benchmark de astro-denoise.'],
+      ['Benchmarks', 'Suites de benchmark reproducibles con supuestos documentados.'],
+      ['Modelos', 'Modelos entrenados publicados junto a sus recetas de entrenamiento.'],
+    ],
+  },
+  people: {
+    kicker: 'El laboratorio',
+    title: 'Colaboradores',
+    founder: {
+      role: 'Fundador',
+      name: 'Jheison Martinez',
+      body:
+        'Ingeniero electrónico y especialista en desarrollo de software, ahora maestrante en Inteligencia Artificial. Reflexivo por naturaleza — el estoicismo y el nihilismo positivo, la astronomía y la biología —, con su familia como su mayor alegría y la ilusión de enseñar algún día. Por ahora construye los experimentos y herramientas abiertas de UniverLab.',
+      link: 'github.com/JheisonMB ↗',
+      email: 'jheison.mb@univerlab.org',
+    },
+    ai: {
+      role: 'Colaboradores IA',
+      name: 'Modelos de lenguaje',
+      body:
+        'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de &lt;a href="/canopy"&gt;Canopy&lt;/a&gt;. Su rol se reconoce, no se oculta.',
+      models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
+    },
+    contributors: {
+      role: 'Colaboradores',
+      name: 'Tú, quizá',
+      body:
+        'Nos encantaría contar con tu ayuda. Cada experimento acepta issues y pull requests enfocados — basta con seguir conventional commits, añadir pruebas antes del PR y actualizar la documentación junto con cualquier cambio de comportamiento.',
+      link: 'github.com/UniverLab ↗',
+    },
+    wall: {
+      kicker: 'En los repositorios',
+      commits: 'commits',
+    },
+  },
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-15T14:21:03.683Z
+            </div>
+        <script src="../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
+    </body>
+</html>
+    

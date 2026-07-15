@@ -1,0 +1,184 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { experiments } from '../lib/experiments';
+import { getLang, useTranslations, localizePath } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const site = Astro.site ?? new URL('https://univerlab.org');
+const webSite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'UniverLab',
+  url: site.href,
+  description: t.meta.description,
+  inLanguage: lang === 'es' ? 'es' : 'en',
+  publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
+};
+---
+<BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" circadian structuredData={webSite}>
+  <section class="wrap hero">
+    <h1>{t.home.hero.title}</h1>
+    <p class="lede prose" set:html={t.home.hero.lede} />
+    <div class="hero-cta">
+      <a class="btn" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
+      <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.nav.manifesto}</a>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Experiments -->
+  <section class="wrap section">
+    <div class="section-head">
+      <span class="label">{t.home.experiments.kicker}</span>
+      <a class="label more" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
+    </div>
+    <ul class="grid">
+      {experiments.map((exp) => {
+        const e = t.experiments[exp.id];
+        return (
+          <li style={`--essence: ${exp.essenceHex}`}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)}>
+              <div class="card-top">
+                <span class="num">{exp.number}</span>
+                <span class="status"><span class="dot" data-status={exp.status}></span>{t.status[exp.status]}</span>
+              </div>
+              <h3>{exp.name}</h3>
+              <p class="need">{e.need}</p>
+              <p class="tagline">{e.tagline}</p>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Lineage / origin: the genesis story, now after the experiments it produced -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
+    <div class="prose"><p set:html={t.home.lineage.body} /></div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Philosophy -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.philosophy.kicker}</span><h2>{t.home.philosophy.title}</h2></div>
+    <div class="prose">
+      <p set:html={t.home.philosophy.body} />
+      <ul class="values label">
+        {t.home.philosophy.values.map((v) => <li>{v}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Research directions -->
+  <section class="wrap section two-col">
+    <div><span class="label">{t.home.directions.kicker}</span><h2>{t.home.directions.title}</h2></div>
+    <div class="directions">
+      <div class="dir-now">
+        <span class="label">{t.home.directions.now}</span>
+        <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
+      </div>
+      <div class="dir-next">
+        <span class="label">{t.home.directions.next}</span>
+        <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- Closing -->
+  <section class="wrap section closing">
+    <span class="label">{t.home.closing.kicker}</span>
+    <h2>{t.home.closing.title}</h2>
+    <p class="prose" set:html={t.home.closing.body} />
+    <div class="closing-cta">
+      <a class="btn" href={localizePath('/manifesto', lang)}>{t.home.closing.manifesto}</a>
+      <a class="btn ghost" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{t.home.closing.contribute}</a>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+  .hero { padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 8vh, 5rem); display: flex; flex-direction: column; gap: 1.6rem; align-items: flex-start; }
+  /* Logo anchors the name gloss to its right (wordmark + a shared line that
+     holds the slogan at rest, the sense gloss while open). */
+  .hero h1 { font-size: clamp(2.4rem, 6.5vw, 4.2rem); max-width: 20ch; line-height: 1.1; text-wrap: balance; }
+  .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
+  :global(.lede strong) { color: var(--accent); font-weight: 500; }
+
+  .hero-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 0.8rem; }
+  .btn {
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn:hover { background: var(--accent); color: var(--bg); }
+  .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
+  .btn.ghost:hover { border-color: var(--ink); color: var(--ink); background: transparent; }
+
+  .section { padding-block: 3.2rem; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
+  .more { text-decoration: none; }
+  .more:hover { color: var(--ink); }
+
+  .grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    display: block; height: 100%;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border: 1px solid var(--line);
+    border-left: 2px solid color-mix(in srgb, var(--essence) 35%, transparent);
+    padding: 1.6rem;
+    text-decoration: none;
+    transition: background 0.15s ease, border-left-color 0.15s ease;
+    backdrop-filter: blur(2px);
+  }
+  .card:hover { background: var(--bg-raise); border-left-color: var(--essence); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
+  .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
+  .num { font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; color: var(--essence); }
+  .status { display: inline-flex; align-items: center; gap: 0.45rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); }
+  .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
+  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
+  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
+  .need { font-family: var(--font-serif); font-style: italic; color: var(--ink-dim); font-size: 0.92rem; margin: 0.5rem 0 0.7rem; }
+  .tagline { font-size: 0.92rem; margin: 0; color: var(--ink-dim); }
+
+  .two-col { display: grid; grid-template-columns: minmax(14rem, 1fr) 2fr; gap: 2.5rem; }
+  .two-col h2 { font-size: 1.7rem; margin-top: 0.7rem; max-width: 16ch; }
+  @media (max-width: 50rem) { .two-col { grid-template-columns: 1fr; } }
+  :global(.section .prose a) { color: var(--ink); }
+
+  .values { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem 1.5rem; }
+  .values li::before { content: '— '; color: var(--ink-faint); }
+
+  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .directions ul { list-style: none; padding: 0; margin: 0.8rem 0 0; }
+  .directions li { padding-block: 0.35rem; border-bottom: 1px solid var(--line); }
+  .dir-now .label { color: var(--ink); }
+  .dir-now li { color: var(--ink-dim); }
+  .dir-next .label { color: var(--ink-faint); }
+  .dir-next li { color: var(--ink-faint); border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
+  @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
+
+  .closing { padding-block: 3.6rem 5rem; }
+  .closing h2 { font-size: 1.8rem; margin-block: 0.7rem 1rem; max-width: 22ch; }
+  .closing .prose { color: var(--ink-dim); }
+  .closing-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1.4rem; }
+
+</style>

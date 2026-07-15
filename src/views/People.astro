@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLang, useTranslations } from '../i18n';
+import { getContributors } from '../lib/contributors';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const p = t.people;
+const contributors = await getContributors();
+
+const site = Astro.site ?? new URL('https://univerlab.org');
+const founderJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: p.founder.name,
+  jobTitle: p.founder.role,
+  url: new URL('/contributors', site).href,
+  sameAs: ['https://github.com/JheisonMB'],
+  worksFor: {
+    '@type': 'Organization',
+    name: 'UniverLab',
+    url: site.href,
+  },
+};
+---
+<BaseLayout title={`${p.title} — UniverLab`} bg="cosmic" circadian structuredData={founderJsonLd}>
+  <section class="wrap head">
+    <span class="label">{p.kicker}</span>
+    <h1>{p.title}</h1>
+  </section>
+
+  <div class="wrap">
+    <ul class="list">
+      <li>
+        <span class="label">{p.founder.role}</span>
+        <h3>{p.founder.name}</h3>
+        <p>{p.founder.body}</p>
+        <a class="label" href="https://github.com/JheisonMB" target="_blank" rel="noopener noreferrer">{p.founder.link}</a>
+        <a class="email" href={`mailto:${p.founder.email}`}>{p.founder.email}</a>
+      </li>
+      <li>
+        <span class="label">{p.ai.role}</span>
+        <h3>{p.ai.name}</h3>
+        <p set:html={p.ai.body} />
+        <ul class="models">
+          {p.ai.models.map((m) => <li>{m}</li>)}
+        </ul>
+      </li>
+      <li>
+        <span class="label">{p.contributors.role}</span>
+        <h3>{p.contributors.name}</h3>
+        <p>{p.contributors.body}</p>
+        <a class="label" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{p.contributors.link}</a>
+      </li>
+    </ul>
+
+    {contributors.length > 0 && (
+      <section class="wall">
+        <span class="label">{p.wall.kicker}</span>
+        <ul class="avatars">
+          {contributors.map((c) => (
+            <li>
+              <a href={c.url} title={`${c.contributions} ${p.wall.commits}`} target="_blank" rel="noopener noreferrer">
+                <img src={c.avatar} alt={c.login} width="48" height="48" loading="lazy" />
+                <span class="who">{c.login}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .head { padding-block: 4rem 2.5rem; }
+  .head h1 { font-size: clamp(2rem, 5vw, 3rem); margin-top: 0.6rem; }
+  .list { list-style: none; margin: 0 0 5rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; }
+  .list > li { background: color-mix(in srgb, var(--bg) 78%, transparent); border: 1px solid var(--line); padding: 1.8rem; display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; backdrop-filter: blur(2px); }
+  .list h3 { font-size: 1.15rem; }
+  .list p { color: var(--ink-dim); font-size: 0.95rem; margin: 0; }
+  :global(.list p a) { color: var(--ink); }
+
+  /* Named AI models, as chips */
+  .models { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; margin: 0.2rem 0 0; }
+  .models li {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.05em;
+    color: var(--ink-dim); padding: 0.18rem 0.5rem;
+    border: 1px solid var(--line); border-radius: 2px;
+  }
+
+  .wall { margin: 0 0 5rem; }
+  .avatars { list-style: none; margin: 1.2rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1.4rem 1.6rem; }
+  .avatars a { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--ink-dim); }
+  .avatars img { border-radius: 50%; border: 1px solid var(--line); background: var(--line); filter: grayscale(1); transition: filter 0.2s ease, transform 0.2s ease; }
+  .avatars a:hover img { filter: grayscale(0); transform: translateY(-2px); }
+  .avatars a:hover { color: var(--ink); }
+  .who { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; }
+  .email { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); text-decoration: none; }
+  .email:hover { color: var(--accent); }
+</style>

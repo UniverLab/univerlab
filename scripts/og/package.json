@@ -1,0 +1,13 @@
+{
+  "name": "univerlab-og",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generator for the landing's Open Graph image (public/og.png).",
+  "scripts": {
+    "build": "node build-og.mjs"
+  },
+  "dependencies": {
+    "opentype.js": "^1.3.4"
+  }
+}

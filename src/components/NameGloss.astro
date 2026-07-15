@@ -1,0 +1,158 @@
+---
+// The name, opening and closing. "UNIVER" and "LAB" stay put — at rest the
+// wordmark reads UNIVERLAB and the line below shows the slogan. Between beats,
+// LAB slides right to open a gap and the sense suffix is revealed in it
+// (universe / universal / university / universalize) while the line below
+// crossfades to a phrase picked at random from that word's catalog; then it
+// closes back to UNIVERLAB + slogan. One shared line, so nothing sits empty.
+// Reduced-motion / no-JS users get the resting state.
+interface Sense { suffix: string; glosses: string[]; }
+interface Props { senses: Sense[]; tagline: string; }
+const { senses, tagline } = Astro.props;
+const first = senses[0];
+---
+<div class="namegloss" data-senses={JSON.stringify(senses)} data-tagline={tagline}>
+  <span class="wordmark">univer<span class="suffix">{first.suffix}</span>lab</span>
+  <span class="subline slogan">{tagline}</span>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.namegloss').forEach((el) => {
+    const senses = JSON.parse(el.dataset.senses || '[]') as { suffix: string; glosses: string[] }[];
+    const tagline = el.dataset.tagline || '';
+    const suffix = el.querySelector<HTMLElement>('.suffix');
+    const subline = el.querySelector<HTMLElement>('.subline');
+    if (senses.length < 1 || !suffix || !subline) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const OPEN_MS = 3300; // word open on a sense — time to read the gloss
+    // Word closed as UNIVERLAB + slogan: the resting state most of the time, with
+    // a random margin so it's unpredictable when the next phrase opens.
+    const CLOSED_MIN = 4000;
+    const CLOSED_RAND = 3000; // → rests 4.0–7.0 s between phrases
+    const closedMs = () => CLOSED_MIN + Math.random() * CLOSED_RAND;
+    const GAP = 12; // px of breathing room before LAB so the word reads clear
+    let i = 0;
+    let open = false;
+
+    // Per-sense shuffle bag: show every gloss of a sense once (in random order)
+    // before any repeats, instead of an independent random pick that lets some
+    // glosses surface far more often than others.
+    const shuffle = (n: number): number[] => {
+      const a = Array.from({ length: n }, (_, k) => k);
+      for (let k = a.length - 1; k > 0; k--) {
+        const j = Math.floor(Math.random() * (k + 1));
+        [a[k], a[j]] = [a[j], a[k]];
+      }
+      return a;
+    };
+    const bags: number[][] = senses.map(() => []);
+    const last: number[] = senses.map(() => -1);
+    const nextGloss = (s: number): string => {
+      const glosses = senses[s].glosses;
+      if (bags[s].length === 0) {
+        bags[s] = shuffle(glosses.length);
+        // Avoid the same gloss landing twice in a row across a reshuffle.
+        if (glosses.length > 1 && bags[s][bags[s].length - 1] === last[s]) {
+          [bags[s][0], bags[s][bags[s].length - 1]] = [bags[s][bags[s].length - 1], bags[s][0]];
+        }
+      }
+      const idx = bags[s].pop() as number;
+      last[s] = idx;
+      return glosses[idx];
+    };
+
+    const swapSub = (text: string, slogan: boolean) => {
+      subline.classList.add('fade');
+      setTimeout(() => {
+        subline.textContent = text;
+        subline.classList.toggle('slogan', slogan);
+        subline.classList.remove('fade');
+      }, 220);
+    };
+
+    let timer = 0;
+    const tick = () => {
+      if (!open) {
+        open = true;
+        el.classList.add('open');
+        suffix.textContent = senses[i].suffix; // swap while collapsed
+        suffix.style.width = suffix.scrollWidth + GAP + 'px'; // LAB slides right
+        swapSub(nextGloss(i), false); // next phrase from this sense's shuffle bag
+        timer = window.setTimeout(tick, OPEN_MS);
+      } else {
+        open = false;
+        el.classList.remove('open');
+        suffix.style.width = '0px'; // LAB slides back, word closes
+        swapSub(tagline, true);
+        i = (i + 1) % senses.length;
+        timer = window.setTimeout(tick, closedMs());
+      }
+    };
+
+    // Only cycle while the wordmark is on-screen: pause and reset to rest when
+    // it scrolls out of view, so an off-screen header costs nothing.
+    let running = false;
+    const start = () => { if (running) return; running = true; timer = window.setTimeout(tick, closedMs()); };
+    const stop = () => {
+      running = false;
+      clearTimeout(timer);
+      open = false;
+      el.classList.remove('open');
+      suffix.style.width = '0px';
+      subline.textContent = tagline;
+      subline.classList.add('slogan');
+      subline.classList.remove('fade');
+    };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) start(); else stop();
+      }, { threshold: 0 }).observe(el);
+    } else {
+      start();
+    }
+  });
+</script>
+
+<style>
+  .namegloss { display: flex; flex-direction: column; gap: var(--ng-gap, 0.25rem); }
+  .wordmark {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: var(--ng-word, 1.05rem);
+    line-height: 1.1;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  /* The revealed morpheme: collapses to zero width when closed (no padding, so
+     UNIVER and LAB sit flush as one word — extra room is added in JS instead). */
+  .suffix {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    width: 0;
+    opacity: 0;
+    color: var(--ng-suffix, var(--accent));
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+  }
+  .open .suffix { opacity: 1; }
+
+  /* One shared line: the slogan at rest, the sense gloss while open. */
+  /* Fixed line box (absolute, not em) so swapping the mono slogan for the
+     serif gloss never changes the block height — otherwise the wordmark jumps. */
+  .subline {
+    min-height: var(--ng-line, 1.5rem);
+    line-height: var(--ng-line, 1.5rem);
+    color: var(--ink-dim);
+    transition: opacity 0.22s ease;
+  }
+  .subline.fade { opacity: 0; }
+  .subline:not(.slogan) { font-family: var(--font-serif); font-style: italic; font-size: var(--ng-gloss, 1rem); }
+  .subline.slogan {
+    font-family: var(--font-mono);
+    font-size: var(--ng-slogan, 0.82rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+</style>

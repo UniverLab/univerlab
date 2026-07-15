@@ -1,0 +1,40 @@
+
+# AI coding agents
+.kiro/
+.cursor/
+.windsurf/
+.claude/
+.continue/
+.copilot/
+.kilocode/
+.zencoder/
+.qwen/
+.agents/
+skills-lock.json
+# Created by https://www.toptal.com/developers/gitignore/api/astro
+# Edit at https://www.toptal.com/developers/gitignore?templates=astro
+
+### Astro ###
+# Gitignore template for Astro projects
+# Ignore content collection generated files
+.astro
+
+# End of https://www.toptal.com/developers/gitignore/api/astro
+
+# Node
+node_modules/
+dist/
+.astro/
+npm-debug.log*
+
+# Local env — never commit tokens
+.env
+.env.local
+.env.*.local
+*:Zone.Identifier
+
+# og generator intermediates (source + font + og.png are committed)
+scripts/og/og.svg
+scripts/og/render.html
+
+.mimocode/

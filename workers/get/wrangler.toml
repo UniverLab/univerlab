@@ -1,0 +1,10 @@
+name = "univerlab-get"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Bind to the subdomain once univerlab.org is on Cloudflare. Easiest path:
+# Workers & Pages → this Worker → Settings → Domains & Routes → add a
+# Custom Domain: get.univerlab.org  (Cloudflare provisions the TLS cert).
+#
+# Or, declaratively (requires the zone on this account):
+# routes = [{ pattern = "get.univerlab.org", custom_domain = true }]
