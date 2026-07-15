@@ -52,6 +52,12 @@ jobs:
           repository: UniverLab/demo-stage
           path: demo-stage
           sparse-checkout: docs
+      # Canopy registry — platforms/ directory for platform badges
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/canopy-registry
+          path: canopy-registry
+          sparse-checkout: platforms
 
       - uses: actions/setup-node@v4
         with:
