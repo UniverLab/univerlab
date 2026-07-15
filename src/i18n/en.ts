@@ -169,7 +169,7 @@ export const en = {
             'A different harness reviews the diff against the spec and commits. Same-vendor blind spots stay out of your branch.'],
           ['Failure is routed, not lost',
             'If the implementer dies mid-run, a resilience node triages it: glitches retry now; a quota death schedules the loop to wake itself at the exact reset time.'],
-          ['Fusion mode',
+          ['Ensemble mode',
             'Fan the spec out to several models in parallel, wait for every proposal, and let an arbiter distill the consensus before a single line is implemented.'],
         ] as [string, string][],
       },

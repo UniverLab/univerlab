@@ -171,7 +171,7 @@ export const es: Dict = {
             'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
           ['El fallo se enruta, no se pierde',
             'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
-          ['Modo fusión',
+          ['Modo ensemble',
             'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y deja que un árbitro destile el consenso antes de implementar una sola línea.'],
         ] as [string, string][],
       },

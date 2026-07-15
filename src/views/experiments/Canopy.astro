@@ -46,14 +46,14 @@ const lbNodes = [
   { id: 'review', kind: 'agent', x: 84, y: 32, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5'), t: 0.38 },
   // beat 4 — failure is routed, not lost
   { id: 'resilience', kind: 'agent', x: 64, y: 53, label: 'resilience', harness: 'mimo', color: hue('mimo', '#fb8147'), t: 0.56 },
-  // beat 5 — fusion mode
+  // beat 5 — ensemble mode
   { id: 'p1', kind: 'agent', x: 21, y: 11, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3'), t: 0.74 },
   { id: 'p2', kind: 'agent', x: 24, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4'), t: 0.76 },
   { id: 'p3', kind: 'agent', x: 21, y: 53, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa'), t: 0.78 },
   { id: 'join', kind: 'gate', x: 34, y: 32, label: 'join', harness: '', color: NEUTRAL, t: 0.82 },
 ];
 const lbEdges = [
-  { from: 'spec', to: 'implement', cond: 'pass', t: 0.08, fusionFade: true },
+  { from: 'spec', to: 'implement', cond: 'pass', t: 0.08, ensembleFade: true },
   { from: 'implement', to: 'gates', cond: 'pass', t: 0.23 },
   { from: 'gates', to: 'implement', cond: 'fail', t: 0.27 },
   { from: 'gates', to: 'review', cond: 'pass', t: 0.41 },
@@ -70,9 +70,9 @@ const lbEdges = [
 ];
 const lbNode = (id: string) => lbNodes.find((n) => n.id === id)!;
 // Happy-path pulses: one token flowing spec → implement → gates → review,
-// then (after fusion) spec → p2 → join → implement. Delays chain the legs.
+// then (after ensemble) spec → p2 → join → implement. Delays chain the legs.
 const lbPulses = [
-  { from: 'spec', to: 'implement', t: 0.08, d: 0, fusionFade: true },
+  { from: 'spec', to: 'implement', t: 0.08, d: 0, ensembleFade: true },
   { from: 'implement', to: 'gates', t: 0.23, d: 1 },
   { from: 'gates', to: 'review', t: 0.41, d: 2 },
   { from: 'spec', to: 'p2', t: 0.88, d: 0 },
@@ -104,7 +104,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
   </section>
 
   <!-- Loop builder — a scroll-driven scene where the loop graph assembles
-       itself beat by beat (implement → gates → review → resilience → fusion),
+       itself beat by beat (implement → gates → review → resilience → ensemble),
        each agent node on a different harness color from the registry. -->
   <section class="lb-scrolly" data-loops>
     <div class="lb-sticky">
@@ -123,7 +123,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
               />
             ) : (
               <line
-                class={`lb-edge lb-edge-pass${edge.fusionFade ? ' lb-fusion-fade' : ''}`}
+                class={`lb-edge lb-edge-pass${edge.ensembleFade ? ' lb-ensemble-fade' : ''}`}
                 style={`--t:${edge.t}`}
                 x1={a.x} y1={a.y} x2={b.x} y2={b.y}
                 pathLength="1"
@@ -135,7 +135,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
             const a = lbNode(p.from);
             const b = lbNode(p.to);
             return (
-              <g class={`lb-pulse-g${p.fusionFade ? ' lb-fusion-fade' : ''}`} style={`--t:${p.t}`}>
+              <g class={`lb-pulse-g${p.ensembleFade ? ' lb-ensemble-fade' : ''}`} style={`--t:${p.t}`}>
                 <circle
                   class="lb-pulse"
                   r="0.9"
@@ -214,7 +214,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
      One --p (0→1) drives everything. Each element carries a birth time --t;
      its reveal fraction is --b = clamp((p - t) / 0.05). Nodes scale+fade in,
      pass edges draw (pathLength-normalized dashoffset), fail edges fade in
-     dashed, pulses travel the happy path once their edge exists. The fusion
+     dashed, pulses travel the happy path once their edge exists. The ensemble
      beat (--u5) re-routes the spec: the direct spec→implement edge fades as
      the proposer fan-out takes over. */
   .lb-scrolly { position: relative; }
@@ -288,8 +288,8 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
     stroke: color-mix(in srgb, #e0605a 55%, var(--line));
     stroke-dasharray: 1.3 1; opacity: calc(var(--b) * 0.65);
   }
-  /* The direct spec→implement route fades out when fusion re-wires it. */
-  .lb-fusion-fade { opacity: calc(var(--b, 1) * (1 - var(--u5))); }
+  /* The direct spec→implement route fades out when ensemble re-wires it. */
+  .lb-ensemble-fade { opacity: calc(var(--b, 1) * (1 - var(--u5))); }
 
   /* Pulses — the spec token. Each leg translates from → to on a shared 3.6s
      clock, staggered by --d so the token appears to hop node to node. */
@@ -297,7 +297,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
     --b: clamp(0, (var(--p) - var(--t)) / 0.05, 1);
     opacity: var(--b);
   }
-  .lb-pulse-g.lb-fusion-fade { opacity: calc(var(--b) * (1 - var(--u5))); }
+  .lb-pulse-g.lb-ensemble-fade { opacity: calc(var(--b) * (1 - var(--u5))); }
   .lb-pulse { fill: var(--canopy); opacity: 0; }
   .lb-scrolly.scrolly .lb-pulse {
     animation: lb-travel 3.6s linear infinite;
@@ -320,7 +320,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
   .lb-scrolly:not(.scrolly) .lb-svg { width: min(34rem, 86vw); }
   .lb-scrolly:not(.scrolly) .lb-steps { min-height: 0; display: grid; gap: 1.4rem; }
   .lb-scrolly:not(.scrolly) .lb-step { position: static; }
-  .lb-scrolly:not(.scrolly) .lb-fusion-fade { opacity: 0.25; }
+  .lb-scrolly:not(.scrolly) .lb-ensemble-fade { opacity: 0.25; }
 
   @media (max-width: 52rem) {
     .lb-scrolly.scrolly .lb-stage { flex-direction: column; gap: 1.6rem; }
