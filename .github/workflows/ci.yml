@@ -23,17 +23,41 @@ jobs:
 
       # Sibling repos — ONLY their docs/ folder (sparse checkout, cone mode).
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/harness-canopy, path: harness-canopy, sparse-checkout: docs }
+        with:
+          repository: UniverLab/harness-canopy
+          path: harness-canopy
+          sparse-checkout: docs
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/texforge, path: texforge, sparse-checkout: docs }
+        with:
+          repository: UniverLab/texforge
+          path: texforge
+          sparse-checkout: docs
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/gitkit, path: gitkit, sparse-checkout: docs }
+        with:
+          repository: UniverLab/gitkit
+          path: gitkit
+          sparse-checkout: docs
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/ghscaff, path: ghscaff, sparse-checkout: docs }
+        with:
+          repository: UniverLab/ghscaff
+          path: ghscaff
+          sparse-checkout: docs
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/cadspec, path: cadspec, sparse-checkout: docs }
+        with:
+          repository: UniverLab/cadspec
+          path: cadspec
+          sparse-checkout: docs
       - uses: actions/checkout@v4
-        with: { repository: UniverLab/demo-stage, path: demo-stage, sparse-checkout: docs }
+        with:
+          repository: UniverLab/demo-stage
+          path: demo-stage
+          sparse-checkout: docs
+      # Canopy registry — platforms/ directory for platform badges
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/canopy-registry
+          path: canopy-registry
+          sparse-checkout: platforms
 
       - uses: actions/setup-node@v4
         with:
