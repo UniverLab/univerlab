@@ -1,7 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1782409456996" clover="3.2.0">
-  <project timestamp="1782409456996" name="All files">
-    <metrics statements="28" coveredstatements="27" conditionals="10" coveredconditionals="9" methods="10" coveredmethods="10" elements="48" coveredelements="46" complexity="0" loc="28" ncloc="28" packages="2" files="5" classes="5"/>
+<coverage generated="1784125263706" clover="3.2.0">
+  <project timestamp="1784125263706" name="All files">
+    <metrics statements="80" coveredstatements="79" conditionals="36" coveredconditionals="31" methods="20" coveredmethods="19" elements="136" coveredelements="129" complexity="0" loc="80" ncloc="80" packages="3" files="7" classes="7"/>
+    <package name="data">
+      <metrics statements="20" coveredstatements="20" conditionals="4" coveredconditionals="4" methods="5" coveredmethods="5"/>
+      <file name="observatory.ts" path="/home/jheisonmblivecom/Projects/UniverLab/univerlab/src/data/observatory.ts">
+        <metrics statements="20" coveredstatements="20" conditionals="4" coveredconditionals="4" methods="5" coveredmethods="5"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="120" count="1" type="stmt"/>
+        <line num="121" count="1" type="stmt"/>
+        <line num="122" count="1" type="stmt"/>
+        <line num="123" count="1" type="stmt"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="134" count="1" type="stmt"/>
+        <line num="135" count="6" type="stmt"/>
+        <line num="136" count="3" type="stmt"/>
+        <line num="137" count="3" type="stmt"/>
+        <line num="138" count="3" type="stmt"/>
+        <line num="139" count="3" type="stmt"/>
+        <line num="140" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="141" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="142" count="3" type="stmt"/>
+        <line num="143" count="3" type="stmt"/>
+        <line num="144" count="6" type="stmt"/>
+        <line num="153" count="1" type="stmt"/>
+        <line num="154" count="2" type="stmt"/>
+      </file>
+    </package>
     <package name="i18n">
       <metrics statements="18" coveredstatements="18" conditionals="8" coveredconditionals="7" methods="4" coveredmethods="4"/>
       <file name="en.ts" path="/home/jheisonmblivecom/Projects/UniverLab/univerlab/src/i18n/en.ts">
@@ -33,22 +59,57 @@
       </file>
     </package>
     <package name="lib">
-      <metrics statements="10" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="6" coveredmethods="6"/>
+      <metrics statements="42" coveredstatements="41" conditionals="24" coveredconditionals="20" methods="11" coveredmethods="10"/>
       <file name="banners.ts" path="/home/jheisonmblivecom/Projects/UniverLab/univerlab/src/lib/banners.ts">
-        <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="10" count="0" type="stmt"/>
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="10" count="1" type="stmt"/>
+      </file>
+      <file name="contributors.ts" path="/home/jheisonmblivecom/Projects/UniverLab/univerlab/src/lib/contributors.ts">
+        <metrics statements="32" coveredstatements="31" conditionals="22" coveredconditionals="18" methods="5" coveredmethods="4"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="20" count="8" type="stmt"/>
+        <line num="25" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="26" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="27" count="8" type="stmt"/>
+        <line num="28" count="8" type="stmt"/>
+        <line num="29" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="6" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="53" count="5" type="stmt"/>
+        <line num="55" count="5" type="stmt"/>
+        <line num="56" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="57" count="5" type="stmt"/>
+        <line num="58" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="59" count="5" type="stmt"/>
+        <line num="62" count="5" type="stmt"/>
+        <line num="66" count="5" type="stmt"/>
+        <line num="67" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="69" count="3" type="stmt"/>
+        <line num="70" count="3" type="stmt"/>
+        <line num="71" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="75" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="76" count="3" type="stmt"/>
+        <line num="77" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="82" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="83" count="0" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="94" count="3" type="stmt"/>
       </file>
       <file name="experiments.ts" path="/home/jheisonmblivecom/Projects/UniverLab/univerlab/src/lib/experiments.ts">
         <metrics statements="9" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="6" coveredmethods="6"/>
-        <line num="40" count="6" type="stmt"/>
-        <line num="41" count="5" type="stmt"/>
-        <line num="43" count="1" type="stmt"/>
-        <line num="45" count="5" type="stmt"/>
-        <line num="47" count="1" type="stmt"/>
-        <line num="58" count="1" type="stmt"/>
-        <line num="59" count="16" type="stmt"/>
-        <line num="60" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="61" count="2" type="stmt"/>
+        <line num="62" count="6" type="stmt"/>
+        <line num="63" count="5" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="67" count="5" type="stmt"/>
+        <line num="69" count="1" type="stmt"/>
+        <line num="86" count="1" type="stmt"/>
+        <line num="87" count="18" type="stmt"/>
+        <line num="88" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="89" count="2" type="stmt"/>
       </file>
     </package>
   </project>

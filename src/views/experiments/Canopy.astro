@@ -1,7 +1,7 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const lang = getLang(Astro.url);
@@ -9,25 +9,22 @@ const t = useTranslations(lang);
 const e = t.experiments.canopy;
 
 // Read supported platforms with accent colors from canopy-registry at build time.
+// Glob the platforms/ directory in one pass; silently skips when the registry
+// sibling repo isn't checked out (CI, forks).
 const registryDir = resolve(process.cwd(), '../canopy-registry');
-const indexPath = resolve(registryDir, 'index.toml');
-const indexToml = readFileSync(indexPath, 'utf-8');
-const platformNames = [...indexToml.matchAll(/\[\[platforms\]\]\s*name\s*=\s*"([^"]+)"/g)]
-  .map((m) => m[1]);
-
+const platformsDir = resolve(registryDir, 'platforms');
 const platformEntries: { name: string; color: string }[] = [];
-for (const name of platformNames) {
-  const platPath = resolve(registryDir, 'platforms', `${name}.toml`);
-  let color = 'var(--canopy)';
-  if (existsSync(platPath)) {
-    const platToml = readFileSync(platPath, 'utf-8');
-    const cliSection = platToml.split('[cli]')[1] || '';
+
+if (existsSync(platformsDir)) {
+  const files = readdirSync(platformsDir).filter((f) => f.endsWith('.toml'));
+  for (const file of files) {
+    const name = file.replace('.toml', '');
+    const content = readFileSync(resolve(platformsDir, file), 'utf-8');
+    const cliSection = content.split('[cli]')[1] || '';
     const colorMatch = cliSection.match(/accent_color\s*=\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
-    if (colorMatch) {
-      color = `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})`;
-    }
+    const color = colorMatch ? `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})` : 'var(--canopy)';
+    platformEntries.push({ name, color });
   }
-  platformEntries.push({ name, color });
 }
 
 // Loop-builder scene: the graph assembles progressively as --p (0→1) advances,
