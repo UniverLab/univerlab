@@ -339,7 +339,7 @@ export const en = {
         'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
-        'A research proposal for benchmarking denoising methods on simulated Vera <strong>Rubin</strong> Observatory images. Any method — classical filter, trained network — plugs into the same protocol and is scored not by how clean the image looks, but by <em>what it does to the science</em>.',
+        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
       genesis: {
         kicker: 'Genesis',
         title: "A master's thesis in progress.",
