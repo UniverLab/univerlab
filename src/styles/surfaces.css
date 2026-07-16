@@ -506,11 +506,8 @@ html[data-surface='industrial'] .hero::before {
   color: var(--ink-faint);
 }
 
-/* astro-denoise · observatory — a centred instrument readout on the starfield. */
-html[data-surface='observatory'] .hero {
-  align-items: center;
-  text-align: center;
-}
+/* astro-denoise · observatory — left-aligned hero, overridden per-experiment
+   when needed (see AstroDenoise.astro scoped styles). */
 html[data-surface='observatory'] .num {
   letter-spacing: 0.3em;
 }
