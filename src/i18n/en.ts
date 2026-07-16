@@ -4,7 +4,7 @@
 export const en = {
   meta: {
     description:
-      'UniverLab — an independent computational laboratory publishing open experiments.',
+      'Open-source computational lab. We build tools for AI agents, CLI, LaTeX, Git, and CAD-as-code — reproducible experiments, free knowledge.',
   },
   nav: {
     experiments: 'Experiments',
@@ -18,7 +18,7 @@ export const en = {
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
   },
   common: {
-    repo: 'GitHub ↗',
+    repo: 'Star on GitHub ↗',
     docs: 'Documentation →',
     install: 'Install',
     copy: 'Copy',
@@ -40,9 +40,12 @@ export const en = {
   },
   home: {
     hero: {
-      title: 'We are the universe, observing itself.',
+      title: 'Open source for the AI era — built for real problems',
+      subtitle: 'We are the universe, observing itself.',
       lede:
-        'UniverLab follows one simple loop: a real <strong>need</strong> becomes an open <strong>experiment</strong>, and that experiment gives back open <strong>knowledge</strong> — tools, libraries, datasets, papers. The experiment is the work; everything it ships is a <strong>byproduct</strong>.',
+        'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
+      ctaExperiments: 'Explore the experiments →',
+      ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
@@ -59,7 +62,7 @@ export const en = {
       kicker: '01 — Origin',
       title: 'It began with one experiment that learned to build the others.',
       body:
-        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale. We are the universe forging its own instruments to keep studying itself.',
+        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
     experiments: { kicker: '00 — Experiments' },
     philosophy: {
@@ -101,6 +104,8 @@ export const en = {
   experimentsIndex: {
     kicker: 'Index',
     title: 'Experiments',
+    description:
+      'Active experiments at UniverLab: Canopy (AI agents), TexForge (LaTeX), GitKit, ghScaff, DemoStage, and more open-source tools.',
     intro:
       'The fundamental unit of UniverLab is the experiment. Experiments are not products — they are ongoing explorations. They may mature, stay active for decades, or grow into new research. Each one starts with a real need — usually one we ran into ourselves.',
   },
@@ -259,7 +264,7 @@ export const en = {
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
-        'Creating a repository properly is a dozen forgettable steps. ghScaff raises the whole structure in one conversational <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
+        'ghScaff raises the whole structure in one conversational <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
       genesis: {
         kicker: 'Genesis',
         title: 'The same setup, again and again.',
@@ -334,7 +339,7 @@ export const en = {
         'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
-        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. The idea is straightforward: any method — a classical filter, a trained network — plugs into the same protocol and runs on the same patches, then is scored not by a cleaner picture but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalogue, matched against DC2’s truth. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
+        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
       genesis: {
         kicker: 'Genesis',
         title: "A master's thesis in progress.",
@@ -555,6 +560,8 @@ export const en = {
   secret: {
     kicker: 'Archived ideas',
     title: 'The Archive',
+    description:
+      'Ideas that lived and were abandoned — each recorded with what it was and why it died. Not a roadmap, a record.',
     intro:
       'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a record.',
     what: 'What it was',
@@ -613,6 +620,8 @@ export const en = {
   people: {
     kicker: 'The laboratory',
     title: 'Collaborators',
+    description:
+      'The people and AI models behind UniverLab — founder, contributors, and the language models that work alongside us.',
     founder: {
       role: 'Founder',
       name: 'Jheison Martinez',

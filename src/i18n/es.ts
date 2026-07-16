@@ -5,7 +5,7 @@ import type { Dict } from './en';
 export const es: Dict = {
   meta: {
     description:
-      'UniverLab — un laboratorio computacional independiente que publica experimentos abiertos.',
+      'Laboratorio computacional de código abierto. Construimos herramientas para agentes de IA, CLI, LaTeX, Git y CAD como código — experimentos reproducibles, conocimiento libre.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -19,7 +19,7 @@ export const es: Dict = {
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
   },
   common: {
-    repo: 'GitHub ↗',
+    repo: 'Star en GitHub ↗',
     docs: 'Documentación →',
     install: 'Instalar',
     copy: 'Copiar',
@@ -41,9 +41,12 @@ export const es: Dict = {
   },
   home: {
     hero: {
-      title: 'Somos el universo, observándose a sí mismo.',
+      title: 'Código abierto para la era de IA — construido para problemas reales',
+      subtitle: 'Somos el universo, observándose a sí mismo.',
       lede:
-        'UniverLab sigue un ciclo sencillo: una <strong>necesidad</strong> real se vuelve un <strong>experimento</strong> abierto, y ese experimento devuelve <strong>conocimiento</strong> abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un <strong>subproducto</strong>.',
+        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
+      ctaExperiments: 'Explora los experimentos →',
+      ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
@@ -61,7 +64,7 @@ export const es: Dict = {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: somos el universo forjando sus propios instrumentos para seguir estudiándose.',
+        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: { kicker: '00 — Experimentos' },
     philosophy: {
@@ -103,6 +106,8 @@ export const es: Dict = {
   experimentsIndex: {
     kicker: 'Índice',
     title: 'Experimentos',
+    description:
+      'Experimentos activos de UniverLab: Canopy (agentes de IA), TexForge (LaTeX), GitKit, ghScaff, DemoStage y más herramientas de código abierto.',
     intro:
       'La unidad fundamental de UniverLab es el experimento. Los experimentos no son productos — son exploraciones en curso. Pueden madurar, seguir activos durante décadas o convertirse en nueva investigación. Cada uno nace de una necesidad real — casi siempre una que vivimos nosotros mismos.',
   },
@@ -557,6 +562,8 @@ export const es: Dict = {
   secret: {
     kicker: 'Ideas archivadas',
     title: 'El Archivo',
+    description:
+      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y por qué murió. No es un roadmap, es un registro.',
     intro:
       'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
@@ -615,6 +622,8 @@ export const es: Dict = {
   people: {
     kicker: 'El laboratorio',
     title: 'Colaboradores',
+    description:
+      'Las personas y modelos de IA detrás de UniverLab — fundador, colaboradores y los modelos de lenguaje que trabajan con nosotros.',
     founder: {
       role: 'Fundador',
       name: 'Jheison Martinez',

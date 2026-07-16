@@ -11,21 +11,9 @@ const deck = ['0', '1', '2', '3', '5', '8', '13', '21', '?'];
 const mid = (deck.length - 1) / 2;
 ---
 <ExperimentLayout id="quorum">
-  <a slot="cta" class="btn ghost launch" href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.common.launch}</a>
+  <a slot="cta-first" class="btn launch" href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.common.launch}</a>
 
   <section class="wrap section">
-    <!-- The deck, fanned like a hand of cards — the estimate about to be played. -->
-    <figure class="deck-fig" aria-hidden="true">
-      <div class="deck">
-        {deck.map((v, i) => (
-          <div class:list={['pc', { sel: i === mid }]} style={`--a:${(i - mid) * 8}deg`}>
-            <span>{v}</span>
-          </div>
-        ))}
-      </div>
-      <p class="fig-label mono">the deck</p>
-    </figure>
-
     <div class="features">
       <span class="label">{e.how.kicker}</span>
       <ol>
@@ -37,6 +25,18 @@ const mid = (deck.length - 1) / 2;
         ))}
       </ol>
     </div>
+
+    <!-- The deck, fanned like a hand of cards — the estimate about to be played. -->
+    <figure class="deck-fig" aria-hidden="true">
+      <div class="deck">
+        {deck.map((v, i) => (
+          <div class:list={['pc', { sel: i === mid }]} style={`--a:${(i - mid) * 8}deg`}>
+            <span>{v}</span>
+          </div>
+        ))}
+      </div>
+      <p class="fig-label mono">the deck</p>
+    </figure>
   </section>
 </ExperimentLayout>
 

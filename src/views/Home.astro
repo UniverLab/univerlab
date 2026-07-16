@@ -15,13 +15,14 @@ const webSite = {
   publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
 };
 ---
-<BaseLayout title="UniverLab — an open computational laboratory" bg="cosmic" circadian structuredData={webSite}>
+<BaseLayout title="UniverLab — open-source computational laboratory" bg="cosmic" circadian structuredData={webSite}>
   <section class="wrap hero">
     <h1>{t.home.hero.title}</h1>
+    <p class="subtitle">{t.home.hero.subtitle}</p>
     <p class="lede prose" set:html={t.home.hero.lede} />
     <div class="hero-cta">
-      <a class="btn" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
-      <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.nav.manifesto}</a>
+      <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
+      <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
     </div>
   </section>
 
@@ -111,6 +112,7 @@ const webSite = {
   /* Logo anchors the name gloss to its right (wordmark + a shared line that
      holds the slogan at rest, the sense gloss while open). */
   .hero h1 { font-size: clamp(2.4rem, 6.5vw, 4.2rem); max-width: 20ch; line-height: 1.1; text-wrap: balance; }
+  .subtitle { font-family: var(--font-serif); font-style: italic; color: var(--ink-faint); font-size: 1rem; margin: 0; }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
 

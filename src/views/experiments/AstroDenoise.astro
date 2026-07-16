@@ -17,8 +17,8 @@ const logos = [
 // link never changes — overwrite that object to publish a new version.
 const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
 ---
-<ExperimentLayout id="astro-denoise">
-  <a slot="cta" class="proposal" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
+<ExperimentLayout id="astro-denoise" hideGithub>
+  <a slot="cta-first" class="proposal btn" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
 
   <section class="wrap section">
     <span class="label">{e.questions.kicker}</span>
