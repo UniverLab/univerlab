@@ -5,8 +5,8 @@ import DemoFigure from '../components/DemoFigure.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 
-interface Props { id: ExperimentId; }
-const { id } = Astro.props;
+interface Props { id: ExperimentId; hideGithub?: boolean; }
+const { id, hideGithub = false } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -92,7 +92,8 @@ const structuredData = faqSchema
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
       <div class="actions">
-        <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
+          <slot name="cta-first" />
+        {!hideGithub && <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>}
           {exp.hasDocs && (
             <a class="btn ghost" href={`/${id}/docs`} data-docs-link>{t.common.docs}</a>
           )}
