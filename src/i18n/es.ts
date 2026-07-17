@@ -13,6 +13,7 @@ export const es: Dict = {
     manifesto: 'Manifiesto',
     people: 'Colaboradores',
     github: 'GitHub',
+    log: 'Bitácora',
   },
   footer: {
     quote:

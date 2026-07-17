@@ -1,0 +1,248 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
+  <section class="wrap log">
+    <span class="label">MISSION LOG</span>
+    <h1>Status</h1>
+    <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
+    <div id="log-entries">
+      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
+      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
+      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
+    </div>
+  </section>
+
+  <style>
+    .log {
+      max-width: 42rem;
+      padding-block: 4rem 6rem;
+    }
+    .log .label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: block;
+      margin-bottom: 1.2rem;
+    }
+    .log h1 {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .log .intro {
+      color: var(--ink-dim);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 3rem;
+    }
+    #log-entries { display: flex; flex-direction: column; }
+    .entry {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+      gap: 1.2rem;
+      padding-block: 1.8rem;
+      border-bottom: 1px solid var(--line);
+      align-items: start;
+    }
+    .entry time {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--ink-faint);
+      padding-top: 0.15rem;
+      white-space: nowrap;
+    }
+    .entry h3 {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+    .entry p {
+      color: var(--ink-dim);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .entry .type-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Skeleton */
+    .skeleton .entry-body {
+      height: 3rem;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-pulse 1.8s ease-in-out infinite;
+    }
+    .skeleton time {
+      height: 0.8rem;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-pulse 1.8s ease-in-out infinite;
+      display: block;
+    }
+    @keyframes skeleton-pulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Empty state */
+    #log-entries:empty::after {
+      content: 'No entries yet. The log is waiting for its first transmission.';
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--ink-faint);
+      padding-block: 3rem;
+      text-align: center;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--bg-raise);
+      border: 1px solid var(--accent);
+      border-left: 2px solid var(--accent);
+      padding: 0.7rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--ink);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      animation: toast-in 0.2s ease;
+      z-index: 50;
+      max-width: 22rem;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast.fade-out {
+      animation: toast-out 0.3s ease forwards;
+    }
+    @keyframes toast-out {
+      from { opacity: 1; }
+      to { opacity: 0; transform: translateY(8px); }
+    }
+
+    /* Scroll-driven fade-in (progressive enhancement) */
+    @media (prefers-reduced-motion: no-preference) {
+      @supports (animation-timeline: view()) {
+        .entry {
+          opacity: 0;
+          animation: entry-rise 0.4s ease both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 30%;
+        }
+        @keyframes entry-rise {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      }
+    }
+
+    @media (max-width: 640px) {
+      .entry {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+      }
+    }
+  </style>
+
+  <script is:inline>
+    (function () {
+      var API = 'https://announcements.univerlab.org';
+      var container = document.getElementById('log-entries');
+      if (!container) return;
+
+      function formatDate(iso) {
+        var d = new Date(iso);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      }
+
+      function renderEntry(entry) {
+        var article = document.createElement('article');
+        article.className = 'entry';
+        article.innerHTML =
+          '<time datetime="' + entry.date + '">' + formatDate(entry.date) + '</time>' +
+          '<div class="entry-body">' +
+            (entry.type ? '<div class="type-badge">' + entry.type + '</div>' : '') +
+            '<h3>' + escapeHtml(entry.title) + '</h3>' +
+            '<p>' + escapeHtml(entry.body) + '</p>' +
+          '</div>';
+        return article;
+      }
+
+      function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function renderEntries(entries) {
+        container.innerHTML = '';
+        if (!entries.length) return;
+        var frag = document.createDocumentFragment();
+        entries.forEach(function (e) { frag.appendChild(renderEntry(e)); });
+        container.appendChild(frag);
+      }
+
+      function prependEntry(entry) {
+        var el = renderEntry(entry);
+        container.prepend(el);
+        showToast(entry.title);
+      }
+
+      function showToast(title) {
+        var toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = 'New entry: ' + title;
+        document.body.appendChild(toast);
+        setTimeout(function () {
+          toast.classList.add('fade-out');
+          setTimeout(function () { toast.remove(); }, 300);
+        }, 4000);
+      }
+
+      // Fetch initial entries
+      fetch(API)
+        .then(function (r) { return r.json(); })
+        .then(function (entries) { renderEntries(entries); })
+        .catch(function () {
+          container.innerHTML = '';
+          var msg = document.createElement('p');
+          msg.style.cssText = 'font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);padding-block:3rem;text-align:center;';
+          msg.textContent = 'Unable to reach the mission log. The announcements service may be starting up.';
+          container.appendChild(msg);
+        });
+
+      // SSE
+      var source = new EventSource(API + '/events');
+      source.addEventListener('entry', function (e) {
+        try {
+          var entry = JSON.parse(e.data);
+          prependEntry(entry);
+        } catch (err) {}
+      });
+      source.onerror = function () {};
+    })();
+  </script>
+</BaseLayout>
