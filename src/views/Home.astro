@@ -173,7 +173,7 @@ const webSite = {
     overflow: hidden;
   }
 
-  /* Background canvas — hidden by default, shown on hover */
+  /* Background canvas — hidden by default, shown on hover/focus */
   .card-bg-canvas {
     position: absolute;
     inset: 0;
@@ -184,7 +184,8 @@ const webSite = {
     pointer-events: none;
     z-index: 0;
   }
-  .card:hover .card-bg-canvas { opacity: 0.55; }
+  .card:hover .card-bg-canvas,
+  .card:focus-visible .card-bg-canvas { opacity: 0.55; }
 
   /* Content sits above the canvas */
   .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
@@ -210,7 +211,8 @@ const webSite = {
   /* ── Per-experiment portal: card adopts the experiment's surface on hover ── */
 
   /* Canopy — tui surface: cold slate dark, terminal chrome */
-  .card[data-exp='canopy']:hover {
+  .card[data-exp='canopy']:hover,
+  .card[data-exp='canopy']:focus-visible {
     --bg: #0d0e10;
     --bg-raise: #131519;
     --ink: #cdd6df;
@@ -223,10 +225,15 @@ const webSite = {
     box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .card[data-exp='canopy']:hover h3,
-  .card[data-exp='canopy']:hover .num { color: var(--canopy); }
+  .card[data-exp='canopy']:focus-visible h3,
+  .card[data-exp='canopy']:hover .num,
+  .card[data-exp='canopy']:focus-visible .num { color: var(--canopy); }
   .card[data-exp='canopy']:hover .need,
+  .card[data-exp='canopy']:focus-visible .need,
   .card[data-exp='canopy']:hover .tagline,
-  .card[data-exp='canopy']:hover .status { color: var(--ink-dim); }
+  .card[data-exp='canopy']:focus-visible .tagline,
+  .card[data-exp='canopy']:hover .status,
+  .card[data-exp='canopy']:focus-visible .status { color: var(--ink-dim); }
 
   /* Terminal dots bar */
   .card[data-exp='canopy']::before {
@@ -268,11 +275,12 @@ const webSite = {
 
   /* TexForge, GitKit, etc. — TODO: per-experiment surface adoption */
 
-  /* Focus state for accessibility */
+  /* Focus state for accessibility — same as hover */
   .card:focus-visible {
     outline: 2px solid var(--essence);
     outline-offset: 2px;
-    background: var(--bg-raise);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
   }
   .card:focus-visible .card-glow { opacity: 1; }
 
@@ -343,11 +351,13 @@ const webSite = {
     if (!s) return;
 
     let started = false;
-    card.addEventListener('mouseenter', () => {
+    const startAnim = () => {
       if (started) return;
       started = true;
       startBackground(canvas, s.bg, s.essence);
-    });
+    };
+    card.addEventListener('mouseenter', startAnim);
+    card.addEventListener('focus', startAnim);
   });
 
   // Crossfade: expand from card, navigate, fade-in on destination
