@@ -633,7 +633,7 @@ const THEMES: Record<Theme, Runner> = {
         if (p.y < -10) Object.assign(p, spawn(false));
         const flick = 0.6 + 0.35 * Math.sin(t * 0.004 + p.ph * 5);
         const heat = Math.max(0, p.y / ctx.h); // brighter near the bottom
-        c.globalAlpha = flick * (0.35 + 0.5 * heat);
+        c.globalAlpha = flick * (0.5 + 0.45 * heat);
         c.beginPath();
         c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
         c.fill();
@@ -727,7 +727,7 @@ const THEMES: Record<Theme, Runner> = {
       vy: rand(0.25, 0.7),
       vx: rand(-0.3, 0.3),
       ph: rand(0, Math.PI * 2),
-      opacity: rand(0.25, 0.55),
+      opacity: rand(0.4, 0.75),
     }));
     let prevT = 0;
     return (t) => {
@@ -743,8 +743,8 @@ const THEMES: Record<Theme, Runner> = {
         }
         // Draw bubble with soft gradient
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + '60');
-        grad.addColorStop(0.5, A + '35');
+        grad.addColorStop(0, A + '90');
+        grad.addColorStop(0.5, A + '55');
         grad.addColorStop(1, A + '00');
         c.globalAlpha = b.opacity;
         c.fillStyle = grad;
@@ -752,7 +752,7 @@ const THEMES: Record<Theme, Runner> = {
         c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         c.fill();
         // Highlight
-        c.globalAlpha = b.opacity * 0.8;
+        c.globalAlpha = b.opacity * 0.9;
         c.fillStyle = '#ffffff';
         c.beginPath();
         c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
@@ -948,7 +948,7 @@ const THEMES: Record<Theme, Runner> = {
       y: Math.random() * ctx.h,
       vx: rand(-0.18, 0.18),
       vy: rand(-0.18, 0.18),
-      s: rand(0.6, 1.5),
+      s: rand(0.8, 1.8),
     }));
     return () => {
       c.clearRect(0, 0, ctx.w, ctx.h);
@@ -956,7 +956,7 @@ const THEMES: Record<Theme, Runner> = {
       for (const p of ps) {
         p.x = (p.x + p.vx + ctx.w) % ctx.w;
         p.y = (p.y + p.vy + ctx.h) % ctx.h;
-        c.globalAlpha = 0.5;
+        c.globalAlpha = 0.7;
         c.beginPath();
         c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
         c.fill();
