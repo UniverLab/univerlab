@@ -408,7 +408,7 @@ export const es: Dict = {
       ] as [string, string][],
     },
     'demostage': {
-      need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
+      need: 'Grabar demos manualmente es tedioso — typos, ritmo desigual, tiempos muertos y un prompt que expone tu hostname.',
       tagline:
         'Demos as Code — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
@@ -418,7 +418,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
         body:
-          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada typo. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: '5 comandos',
