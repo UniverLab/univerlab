@@ -408,35 +408,35 @@ export const es: Dict = {
       ] as [string, string][],
     },
     'demostage': {
-      need: 'Grabar demos manualmente es tedioso — typos, ritmo desigual, tiempos muertos y un prompt que expone tu hostname.',
+      need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
-        'Demos as Code — captura, graba y exporta demos de terminal reproducibles.',
+        'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, normaliza las imperfecciones humanas en un <code>demo.toml</code> limpio (la <strong>partitura</strong>) y lo compila a gif o mp4 — versionado, reejecutable y diffable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y diffeable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
         body:
-          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada typo. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada error. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: '5 comandos',
         items: [
-          '<code>capture</code> — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un <code>.rec</code> fiel.',
-          '<code>focus</code> — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost) — pantalla completa, dividida o apilada, compuesta en el demo.',
+          '<code>capture</code> — captura en vivo: graba la sesión, la normaliza en una partitura limpia y un <code>.rec</code> fiel.',
+          '<code>focus</code> — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost): pantalla completa, dividida o apilada, compuesta en el demo.',
           '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
-          '<code>export</code> — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
-          '<code>edit</code> — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
+          '<code>export</code> — reproducción pura: renderiza a gif o mp4 sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
+          '<code>edit</code> — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
       },
       faq: [
         ['¿Qué es DemoStage?',
-          'Una herramienta para planear y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
+          'Una herramienta para planificar y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No es solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
         ['¿Puedo re-grabar una demo si algo cambia?',
-          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, re-capturas y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
+          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
         ['¿En qué se diferencia DemoStage de asciinema?',
-          'asciinema graba salida de terminal cruda. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
     },
   },
