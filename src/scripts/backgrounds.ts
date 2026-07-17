@@ -727,7 +727,7 @@ const THEMES: Record<Theme, Runner> = {
       vy: rand(0.25, 0.7),
       vx: rand(-0.3, 0.3),
       ph: rand(0, Math.PI * 2),
-      opacity: rand(0.4, 0.75),
+      opacity: rand(0.25, 0.55),
     }));
     let prevT = 0;
     return (t) => {
@@ -743,8 +743,8 @@ const THEMES: Record<Theme, Runner> = {
         }
         // Draw bubble with soft gradient
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + '90');
-        grad.addColorStop(0.5, A + '55');
+        grad.addColorStop(0, A + '70');
+        grad.addColorStop(0.5, A + '40');
         grad.addColorStop(1, A + '00');
         c.globalAlpha = b.opacity;
         c.fillStyle = grad;
