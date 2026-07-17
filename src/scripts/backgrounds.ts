@@ -749,16 +749,16 @@ const THEMES: Record<Theme, Runner> = {
           b.x = rand(0, ctx.w);
         }
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + (dark ? '40' : '60'));
-        grad.addColorStop(0.5, A + (dark ? '20' : '35'));
+        grad.addColorStop(0, A + (dark ? '30' : '80'));
+        grad.addColorStop(0.5, A + (dark ? '18' : '50'));
         grad.addColorStop(1, A + '00');
         c.globalAlpha = b.opacity;
         c.fillStyle = grad;
         c.beginPath();
         c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         c.fill();
-        c.globalAlpha = b.opacity * 0.8;
-        c.fillStyle = '#ffffff';
+        c.globalAlpha = b.opacity * (dark ? 0.5 : 0.8);
+        c.fillStyle = dark ? '#ffffff' : A;
         c.beginPath();
         c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
         c.fill();
