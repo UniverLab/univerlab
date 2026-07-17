@@ -554,7 +554,7 @@ const webSite = {
         background: ${color};
         display: flex; align-items: center; justify-content: center;
         font-family: var(--font-mono); font-size: 1.6rem; letter-spacing: 0.1em;
-        color: rgba(255,255,255,0.85);
+        color: ${s?.essence || '#e6c84a'};
         clip-path: inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px);
         transition: clip-path 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       `;

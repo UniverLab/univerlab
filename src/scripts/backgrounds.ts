@@ -734,7 +734,7 @@ const THEMES: Record<Theme, Runner> = {
       vy: rand(0.25, 0.7),
       vx: rand(-0.3, 0.3),
       ph: rand(0, Math.PI * 2),
-      opacity: rand(dark ? 0.1 : 0.25, dark ? 0.25 : 0.5),
+      opacity: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
     }));
     let prevT = 0;
     return (t) => {
@@ -749,15 +749,15 @@ const THEMES: Record<Theme, Runner> = {
           b.x = rand(0, ctx.w);
         }
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + (dark ? '30' : '80'));
-        grad.addColorStop(0.5, A + (dark ? '18' : '50'));
+        grad.addColorStop(0, A + (dark ? '20' : '80'));
+        grad.addColorStop(0.5, A + (dark ? '10' : '50'));
         grad.addColorStop(1, A + '00');
         c.globalAlpha = b.opacity;
         c.fillStyle = grad;
         c.beginPath();
         c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         c.fill();
-        c.globalAlpha = b.opacity * (dark ? 0.5 : 0.8);
+        c.globalAlpha = b.opacity * (dark ? 0.3 : 0.8);
         c.fillStyle = dark ? '#ffffff' : A;
         c.beginPath();
         c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
