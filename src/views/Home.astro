@@ -171,9 +171,13 @@ const webSite = {
     position: relative;
     overflow: hidden;
   }
-  .card:hover { background: var(--bg-raise); border-left-color: var(--essence); transform: translateY(-2px); box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent); }
+  .card:hover {
+    border-left-color: var(--essence);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
+  }
 
-  /* Portal glow — shared pattern, per-experiment color via --essence */
+  /* Portal glow — fades out when per-experiment surface takes over */
   .card-glow {
     position: absolute;
     inset: 0;
@@ -186,88 +190,66 @@ const webSite = {
   }
   .card:hover .card-glow { opacity: 1; }
 
-  /* Per-experiment portal motifs — subtle, CSS-only */
+  /* ── Per-experiment portal: card adopts the experiment's surface on hover ── */
+
+  /* Canopy — tui surface: cold slate dark, terminal chrome */
+  .card[data-exp='canopy']:hover {
+    --bg: #0d0e10;
+    --bg-raise: #131519;
+    --ink: #cdd6df;
+    --ink-dim: #8b97a3;
+    --ink-faint: #58616b;
+    --line: #20242a;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--canopy);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .card[data-exp='canopy']:hover h3,
+  .card[data-exp='canopy']:hover .num { color: var(--canopy); }
+  .card[data-exp='canopy']:hover .need,
+  .card[data-exp='canopy']:hover .tagline,
+  .card[data-exp='canopy']:hover .status { color: var(--ink-dim); }
+
+  /* Terminal dots bar */
+  .card[data-exp='canopy']::before {
+    content: '● ● ●     ~/canopy';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+  }
+  .card[data-exp='canopy']:hover::before { opacity: 1; }
+
+  /* Blinking cursor */
   .card[data-exp='canopy']::after {
     content: '▋';
     position: absolute;
-    bottom: 1rem;
-    right: 1rem;
+    bottom: 1rem; right: 1rem;
     font-family: var(--font-mono);
     font-size: 1.1rem;
-    color: var(--essence);
+    color: var(--canopy);
     opacity: 0;
     transition: opacity 0.3s ease;
   }
   .card[data-exp='canopy']:hover::after {
-    opacity: 0.7;
+    opacity: 0.8;
     animation: cursor-blink 1.06s step-end infinite;
   }
   @keyframes cursor-blink {
-    0%, 100% { opacity: 0.7; }
+    0%, 100% { opacity: 0.8; }
     50% { opacity: 0; }
   }
 
-  .card[data-exp='texforge'] {
-    border-left-width: 3px;
-    border-left-style: solid;
-  }
-  .card[data-exp='texforge']:hover {
-    background: color-mix(in srgb, var(--bg-raise) 92%, var(--essence) 8%);
-  }
-
-  .card[data-exp='gitkit']:hover {
-    border-radius: 12px;
-    box-shadow: 0 12px 32px color-mix(in srgb, var(--essence) 15%, transparent);
-  }
-
-  .card[data-exp='ghscaff']::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: repeating-linear-gradient(90deg, var(--essence) 0px, var(--essence) 2px, transparent 2px, transparent 8px);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .card[data-exp='ghscaff']:hover::before { opacity: 0.5; }
-
-  .card[data-exp='cadspec']::before {
-    content: '';
-    position: absolute;
-    top: 0.8rem;
-    left: 0.8rem;
-    width: 8px;
-    height: 8px;
-    border: 1px solid var(--essence);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .card[data-exp='cadspec']:hover::before { opacity: 0.6; }
-
-  .card[data-exp='astro-denoise']:hover {
-    box-shadow: 0 12px 36px color-mix(in srgb, var(--essence) 18%, transparent),
-                inset 0 1px 0 color-mix(in srgb, var(--essence) 20%, transparent);
-  }
-
-  .card[data-exp='demostage']::after {
-    content: '● REC';
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: var(--essence);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .card[data-exp='demostage']:hover::after { opacity: 0.8; }
-
-  .card[data-exp='quorum']:hover {
-    box-shadow: 0 8px 28px color-mix(in srgb, var(--essence) 14%, transparent);
-  }
+  /* TexForge, GitKit, etc. — TODO: per-experiment surface adoption */
 
   /* Focus state for accessibility */
   .card:focus-visible {
@@ -322,17 +304,29 @@ const webSite = {
 
 <script>
   // Expand transition: card zooms into full viewport before navigating
+  const surfaces: Record<string, { bg: string; ink: string; motif?: string }> = {
+    canopy:      { bg: '#0d0e10', ink: '#cdd6df', motif: '● ● ●     ~/canopy\n$ ' },
+    texforge:    { bg: '#f5f5f3', ink: '#1b1b1a', motif: '⁂' },
+    gitkit:      { bg: '#f5eef5', ink: '#4a3a4a', motif: '🍒' },
+    ghscaff:     { bg: '#0e0c0a', ink: '#e0d5c8', motif: '■ ─ ─ ─ ■' },
+    cadspec:     { bg: '#f6f8fa', ink: '#15202a', motif: '┬ ─ ─ ┤' },
+    'astro-denoise': { bg: '#0a0911', ink: '#ddd9e8', motif: '✦' },
+    demostage:   { bg: '#f6f3ee', ink: '#221d18', motif: '● REC  0:00' },
+    quorum:      { bg: '#241a12', ink: '#f2e7d3', motif: '8' },
+  };
+
   document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
     card.addEventListener('click', (e) => {
       const href = card.getAttribute('href');
-      if (!href) return;
-
-      // Skip if modifier key (open in new tab, etc.)
+      const expId = card.dataset.exp;
+      if (!href || !expId) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       e.preventDefault();
 
       const rect = card.getBoundingClientRect();
+      const s = surfaces[expId] || { bg: '#0a0b0e', ink: '#e8e6e1' };
+
       const overlay = document.createElement('div');
       overlay.className = 'card-expand-overlay';
       overlay.style.cssText = `
@@ -341,32 +335,35 @@ const webSite = {
         left: ${rect.left}px;
         width: ${rect.width}px;
         height: ${rect.height}px;
-        background: var(--bg-raise);
-        border-left: 3px solid var(--essence);
+        background: ${s.bg};
+        color: ${s.ink};
+        font-family: var(--font-mono);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        letter-spacing: 0.1em;
         z-index: 9999;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
-        pointer-events: none;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       `;
+      overlay.textContent = s.motif || '';
       document.body.appendChild(overlay);
 
-      // Trigger expand on next frame
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           overlay.style.top = '0';
           overlay.style.left = '0';
           overlay.style.width = '100vw';
           overlay.style.height = '100vh';
-          overlay.style.borderLeft = 'none';
+          overlay.style.fontSize = '2rem';
         });
       });
 
-      // Navigate after animation
       overlay.addEventListener('transitionend', () => {
         window.location.href = href;
       }, { once: true });
 
-      // Fallback navigation
       setTimeout(() => {
         window.location.href = href;
       }, 500);
