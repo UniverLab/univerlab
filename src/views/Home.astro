@@ -43,7 +43,8 @@ const webSite = {
         const e = t.experiments[exp.id];
         return (
           <li style={`--essence: ${exp.essenceHex}`}>
-            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg}>
+              <canvas class="card-bg-canvas" aria-hidden="true"></canvas>
               <div class="card-glow" aria-hidden="true"></div>
               <div class="card-top">
                 <span class="num">{exp.number}</span>
@@ -166,11 +167,27 @@ const webSite = {
     border-left: 2px solid color-mix(in srgb, var(--essence) 35%, transparent);
     padding: 1.6rem;
     text-decoration: none;
-    transition: background 0.25s ease, border-left-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    transition: border-left-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     backdrop-filter: blur(2px);
     position: relative;
     overflow: hidden;
   }
+
+  /* Background canvas — hidden by default, shown on hover */
+  .card-bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .card:hover .card-bg-canvas { opacity: 0.55; }
+
+  /* Content sits above the canvas */
+  .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
   .card:hover {
     border-left-color: var(--essence);
     transform: translateY(-2px);
@@ -303,18 +320,37 @@ const webSite = {
 </style>
 
 <script>
-  // Expand transition: card zooms into full viewport before navigating
-  const surfaces: Record<string, { bg: string; ink: string; motif?: string }> = {
-    canopy:      { bg: '#0d0e10', ink: '#cdd6df', motif: '● ● ●     ~/canopy\n$ ' },
-    texforge:    { bg: '#f5f5f3', ink: '#1b1b1a', motif: '⁂' },
-    gitkit:      { bg: '#f5eef5', ink: '#4a3a4a', motif: '🍒' },
-    ghscaff:     { bg: '#0e0c0a', ink: '#e0d5c8', motif: '■ ─ ─ ─ ■' },
-    cadspec:     { bg: '#f6f8fa', ink: '#15202a', motif: '┬ ─ ─ ┤' },
-    'astro-denoise': { bg: '#0a0911', ink: '#ddd9e8', motif: '✦' },
-    demostage:   { bg: '#f6f3ee', ink: '#221d18', motif: '● REC  0:00' },
-    quorum:      { bg: '#241a12', ink: '#f2e7d3', motif: '8' },
+  import { startBackground } from '../scripts/backgrounds';
+  import type { BgTheme } from '../lib/experiments';
+
+  const surfaces: Record<string, { bg: BgTheme; color: string; motif?: string }> = {
+    canopy:      { bg: 'brain',       color: '#5dd39e', motif: '● ● ●     ~/canopy\n$ ' },
+    texforge:    { bg: 'forge',       color: '#e0a458', motif: '⁂' },
+    gitkit:      { bg: 'bubbles',     color: '#e8a4c8', motif: '🍒' },
+    ghscaff:     { bg: 'scaffold',    color: '#b87333', motif: '■ ─ ─ ─ ■' },
+    cadspec:     { bg: 'primitives',  color: '#6ec6e6', motif: '┬ ─ ─ ┤' },
+    'astro-denoise': { bg: 'starfield', color: '#a78bfa', motif: '✦' },
+    demostage:   { bg: 'drift',       color: '#ef8354', motif: '● REC  0:00' },
+    quorum:      { bg: 'spiral',      color: '#e6b24a', motif: '8' },
   };
 
+  // Start background animation on hover
+  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+    const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
+    const expId = card.dataset.exp;
+    if (!canvas || !expId) return;
+    const s = surfaces[expId];
+    if (!s) return;
+
+    let started = false;
+    card.addEventListener('mouseenter', () => {
+      if (started) return;
+      started = true;
+      startBackground(canvas, s.bg, s.color);
+    });
+  });
+
+  // Crossfade: expand from card, navigate, fade-in on destination
   document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
     card.addEventListener('click', (e) => {
       const href = card.getAttribute('href');
@@ -325,48 +361,29 @@ const webSite = {
       e.preventDefault();
 
       const rect = card.getBoundingClientRect();
-      const s = surfaces[expId] || { bg: '#0a0b0e', ink: '#e8e6e1' };
+      const s = surfaces[expId];
+      const color = s?.color || '#0a0b0e';
 
+      // Expanding overlay
       const overlay = document.createElement('div');
-      overlay.className = 'card-expand-overlay';
       overlay.style.cssText = `
-        position: fixed;
-        top: ${rect.top}px;
-        left: ${rect.left}px;
-        width: ${rect.width}px;
-        height: ${rect.height}px;
-        background: ${s.bg};
-        color: ${s.ink};
-        font-family: var(--font-mono);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        letter-spacing: 0.1em;
-        z-index: 9999;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: fixed; inset: 0; z-index: 9999;
+        background: ${color};
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-mono); font-size: 1.6rem; letter-spacing: 0.1em;
+        color: rgba(255,255,255,0.85);
+        clip-path: inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px);
+        transition: clip-path 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       `;
-      overlay.textContent = s.motif || '';
+      overlay.textContent = s?.motif || '';
       document.body.appendChild(overlay);
 
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          overlay.style.top = '0';
-          overlay.style.left = '0';
-          overlay.style.width = '100vw';
-          overlay.style.height = '100vh';
-          overlay.style.fontSize = '2rem';
-        });
+        overlay.style.clipPath = 'inset(0px 0px 0px 0px)';
       });
 
-      overlay.addEventListener('transitionend', () => {
-        window.location.href = href;
-      }, { once: true });
-
-      setTimeout(() => {
-        window.location.href = href;
-      }, 500);
+      // Navigate after expand
+      setTimeout(() => { window.location.href = href; }, 480);
     });
   });
 </script>
