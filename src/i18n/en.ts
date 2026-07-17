@@ -44,6 +44,8 @@ export const en = {
       subtitle: 'We are the universe, observing itself.',
       lede:
         'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
+      pitch: 'Science · CLI · LaTeX · CAD · Git',
+      pitchSub: 'Local-first. AI-assisted. Yours forever.',
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',

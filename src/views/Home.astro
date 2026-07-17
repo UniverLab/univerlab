@@ -20,6 +20,10 @@ const webSite = {
     <h1>{t.home.hero.title}</h1>
     <p class="subtitle">{t.home.hero.subtitle}</p>
     <p class="lede prose" set:html={t.home.hero.lede} />
+    <div class="pitch">
+      <p class="pitch-domains">{t.home.hero.pitch}</p>
+      <p class="pitch-sub">{t.home.hero.pitchSub}</p>
+    </div>
     <div class="hero-cta">
       <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
       <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
@@ -115,6 +119,20 @@ const webSite = {
   .subtitle { font-family: var(--font-serif); font-style: italic; color: var(--ink-faint); font-size: 1rem; margin: 0; }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
+
+  .pitch { margin-top: 0.4rem; }
+  .pitch-domains {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .pitch-sub {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin: 0.3rem 0 0;
+  }
 
   .hero-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 0.8rem; }
   .btn {

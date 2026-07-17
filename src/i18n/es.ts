@@ -45,6 +45,8 @@ export const es: Dict = {
       subtitle: 'Somos el universo, observándose a sí mismo.',
       lede:
         'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
+      pitch: 'Ciencia · CLI · LaTeX · CAD · Git',
+      pitchSub: 'Local-first. Asistido por IA. Tuyo para siempre.',
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
