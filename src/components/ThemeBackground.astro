@@ -28,11 +28,13 @@ const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
     } else if (raw === 'auto-mute') {
       color = tok('--canvas-mute') || tok('--ink-faint') || '#b9b6ae';
     }
+    const bg = cs.getPropertyValue('--bg').trim() || '#0a0b0e';
     import('../scripts/backgrounds').then(({ startBackground }) => {
       (startBackground as typeof Start)(
         canvas,
         (canvas.dataset.theme as BgTheme) || 'drift',
-        color
+        color,
+        bg
       );
     });
   };
