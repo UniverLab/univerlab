@@ -103,14 +103,6 @@ export const en = {
       contribute: 'Contribute on GitHub ↗',
     },
   },
-  experimentsIndex: {
-    kicker: 'Index',
-    title: 'Experiments',
-    description:
-      'Active experiments at UniverLab: Canopy (AI agents), TexForge (LaTeX), GitKit, ghScaff, DemoStage, and more open-source tools.',
-    intro:
-      'The fundamental unit of UniverLab is the experiment. Experiments are not products — they are ongoing explorations. They may mature, stay active for decades, or grow into new research. Each one starts with a real need — usually one we ran into ourselves.',
-  },
   experiments: {
     canopy: {
       need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',

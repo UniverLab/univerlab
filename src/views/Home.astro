@@ -25,7 +25,7 @@ const webSite = {
       <p class="pitch-sub">{t.home.hero.pitchSub}</p>
     </div>
     <div class="hero-cta">
-      <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
+      <a class="btn" href="#experiments">{t.home.hero.ctaExperiments}</a>
       <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
     </div>
   </section>
@@ -34,9 +34,8 @@ const webSite = {
 
   <!-- Experiments -->
   <section class="wrap section">
-    <div class="section-head">
+    <div class="section-head" id="experiments">
       <span class="label">{t.home.experiments.kicker}</span>
-      <a class="label more" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
     </div>
     <ul class="grid">
       {experiments.map((exp) => {

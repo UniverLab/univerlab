@@ -6,7 +6,7 @@ const t = useTranslations(lang);
 
 const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
 const footNav = [
-  { href: localizePath('/experiments', lang), label: t.nav.experiments },
+  { href: '/#experiments', label: t.nav.experiments },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
