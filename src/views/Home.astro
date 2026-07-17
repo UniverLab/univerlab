@@ -527,7 +527,7 @@ const webSite = {
     const startAnim = () => {
       if (started) return;
       started = true;
-      startBackground(canvas, s.bg, s.essence);
+      startBackground(canvas, s.bg, s.essence, s.bgHex);
     };
     card.addEventListener('mouseenter', startAnim);
     card.addEventListener('focus', startAnim);
