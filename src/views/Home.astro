@@ -323,15 +323,15 @@ const webSite = {
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
 
-  const surfaces: Record<string, { bg: BgTheme; color: string; motif?: string }> = {
-    canopy:      { bg: 'brain',       color: '#5dd39e', motif: '● ● ●     ~/canopy\n$ ' },
-    texforge:    { bg: 'forge',       color: '#e0a458', motif: '⁂' },
-    gitkit:      { bg: 'bubbles',     color: '#e8a4c8', motif: '🍒' },
-    ghscaff:     { bg: 'scaffold',    color: '#b87333', motif: '■ ─ ─ ─ ■' },
-    cadspec:     { bg: 'primitives',  color: '#6ec6e6', motif: '┬ ─ ─ ┤' },
-    'astro-denoise': { bg: 'starfield', color: '#a78bfa', motif: '✦' },
-    demostage:   { bg: 'drift',       color: '#ef8354', motif: '● REC  0:00' },
-    quorum:      { bg: 'spiral',      color: '#e6b24a', motif: '8' },
+  const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; motif?: string }> = {
+    canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', motif: '● ● ●     ~/canopy\n$ ' },
+    texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', motif: '⁂' },
+    gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', motif: '🍒' },
+    ghscaff:     { bg: 'scaffold',    essence: '#b87333', bgHex: '#0e0c0a', motif: '■ ─ ─ ─ ■' },
+    cadspec:     { bg: 'primitives',  essence: '#6ec6e6', bgHex: '#f6f8fa', motif: '┬ ─ ─ ┤' },
+    'astro-denoise': { bg: 'starfield', essence: '#a78bfa', bgHex: '#0a0911', motif: '✦' },
+    demostage:   { bg: 'drift',       essence: '#ef8354', bgHex: '#f6f3ee', motif: '● REC  0:00' },
+    quorum:      { bg: 'spiral',      essence: '#e6b24a', bgHex: '#241a12', motif: '8' },
   };
 
   // Start background animation on hover
@@ -346,7 +346,7 @@ const webSite = {
     card.addEventListener('mouseenter', () => {
       if (started) return;
       started = true;
-      startBackground(canvas, s.bg, s.color);
+      startBackground(canvas, s.bg, s.essence);
     });
   });
 
@@ -362,7 +362,7 @@ const webSite = {
 
       const rect = card.getBoundingClientRect();
       const s = surfaces[expId];
-      const color = s?.color || '#0a0b0e';
+      const color = s?.bgHex || '#0a0b0e';
 
       // Expanding overlay
       const overlay = document.createElement('div');
