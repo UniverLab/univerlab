@@ -43,7 +43,8 @@ const webSite = {
         const e = t.experiments[exp.id];
         return (
           <li style={`--essence: ${exp.essenceHex}`}>
-            <a class="card" href={localizePath(`/${exp.id}`, lang)}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id}>
+              <div class="card-glow" aria-hidden="true"></div>
               <div class="card-top">
                 <span class="num">{exp.number}</span>
                 <span class="status"><span class="dot" data-status={exp.status}></span>{t.status[exp.status]}</span>
@@ -165,10 +166,126 @@ const webSite = {
     border-left: 2px solid color-mix(in srgb, var(--essence) 35%, transparent);
     padding: 1.6rem;
     text-decoration: none;
-    transition: background 0.15s ease, border-left-color 0.15s ease;
+    transition: background 0.25s ease, border-left-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     backdrop-filter: blur(2px);
+    position: relative;
+    overflow: hidden;
   }
-  .card:hover { background: var(--bg-raise); border-left-color: var(--essence); }
+  .card:hover { background: var(--bg-raise); border-left-color: var(--essence); transform: translateY(-2px); box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent); }
+
+  /* Portal glow — shared pattern, per-experiment color via --essence */
+  .card-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 80%, color-mix(in srgb, var(--essence) 14%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--essence) 8%, transparent) 0%, transparent 50%);
+  }
+  .card:hover .card-glow { opacity: 1; }
+
+  /* Per-experiment portal motifs — subtle, CSS-only */
+  .card[data-exp='canopy']::after {
+    content: '▋';
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--essence);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .card[data-exp='canopy']:hover::after {
+    opacity: 0.7;
+    animation: cursor-blink 1.06s step-end infinite;
+  }
+  @keyframes cursor-blink {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0; }
+  }
+
+  .card[data-exp='texforge'] {
+    border-left-width: 3px;
+    border-left-style: solid;
+  }
+  .card[data-exp='texforge']:hover {
+    background: color-mix(in srgb, var(--bg-raise) 92%, var(--essence) 8%);
+  }
+
+  .card[data-exp='gitkit']:hover {
+    border-radius: 12px;
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--essence) 15%, transparent);
+  }
+
+  .card[data-exp='ghscaff']::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(90deg, var(--essence) 0px, var(--essence) 2px, transparent 2px, transparent 8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .card[data-exp='ghscaff']:hover::before { opacity: 0.5; }
+
+  .card[data-exp='cadspec']::before {
+    content: '';
+    position: absolute;
+    top: 0.8rem;
+    left: 0.8rem;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--essence);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .card[data-exp='cadspec']:hover::before { opacity: 0.6; }
+
+  .card[data-exp='astro-denoise']:hover {
+    box-shadow: 0 12px 36px color-mix(in srgb, var(--essence) 18%, transparent),
+                inset 0 1px 0 color-mix(in srgb, var(--essence) 20%, transparent);
+  }
+
+  .card[data-exp='demostage']::after {
+    content: '● REC';
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--essence);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .card[data-exp='demostage']:hover::after { opacity: 0.8; }
+
+  .card[data-exp='quorum']:hover {
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--essence) 14%, transparent);
+  }
+
+  /* Focus state for accessibility */
+  .card:focus-visible {
+    outline: 2px solid var(--essence);
+    outline-offset: 2px;
+    background: var(--bg-raise);
+  }
+  .card:focus-visible .card-glow { opacity: 1; }
+
+  /* Mobile: tap triggers the same effect */
+  @media (hover: none) {
+    .card:active { transform: scale(0.98); }
+    .card:active .card-glow { opacity: 1; }
+    .card[data-exp='canopy']:active::after,
+    .card[data-exp='demostage']:active::after,
+    .card[data-exp='ghscaff']:active::before,
+    .card[data-exp='cadspec']:active::before { opacity: 0.7; }
+  }
   .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
   .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
   .num { font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; color: var(--essence); }
@@ -202,3 +319,57 @@ const webSite = {
   .closing-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1.4rem; }
 
 </style>
+
+<script>
+  // Expand transition: card zooms into full viewport before navigating
+  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      const href = card.getAttribute('href');
+      if (!href) return;
+
+      // Skip if modifier key (open in new tab, etc.)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      e.preventDefault();
+
+      const rect = card.getBoundingClientRect();
+      const overlay = document.createElement('div');
+      overlay.className = 'card-expand-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: ${rect.top}px;
+        left: ${rect.left}px;
+        width: ${rect.width}px;
+        height: ${rect.height}px;
+        background: var(--bg-raise);
+        border-left: 3px solid var(--essence);
+        z-index: 9999;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        pointer-events: none;
+      `;
+      document.body.appendChild(overlay);
+
+      // Trigger expand on next frame
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100vw';
+          overlay.style.height = '100vh';
+          overlay.style.borderLeft = 'none';
+        });
+      });
+
+      // Navigate after animation
+      overlay.addEventListener('transitionend', () => {
+        window.location.href = href;
+      }, { once: true });
+
+      // Fallback navigation
+      setTimeout(() => {
+        window.location.href = href;
+      }, 500);
+    });
+  });
+</script>
