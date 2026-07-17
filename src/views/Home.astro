@@ -273,10 +273,183 @@ const webSite = {
     50% { opacity: 0; }
   }
 
-  /* TexForge, GitKit, etc. — TODO: per-experiment surface adoption */
+  /* ── TexForge — paper surface: warm cream, forge amber ── */
+  .card[data-exp='texforge']:hover,
+  .card[data-exp='texforge']:focus-visible {
+    --bg: #f5f5f3;
+    --bg-raise: #ffffff;
+    --ink: #1b1b1a;
+    --ink-dim: #54514c;
+    --ink-faint: #8a857d;
+    --line: #e3ded4;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--texforge);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  .card[data-exp='texforge']:hover h3,
+  .card[data-exp='texforge']:focus-visible h3,
+  .card[data-exp='texforge']:hover .num,
+  .card[data-exp='texforge']:focus-visible .num { color: var(--texforge); }
+  .card[data-exp='texforge']:hover .need,
+  .card[data-exp='texforge']:focus-visible .need,
+  .card[data-exp='texforge']:hover .tagline,
+  .card[data-exp='texforge']:focus-visible .tagline,
+  .card[data-exp='texforge']:hover .status,
+  .card[data-exp='texforge']:focus-visible .status { color: var(--ink-dim); }
 
-  /* Focus state for accessibility — same as hover */
-  .card:focus-visible {
+  /* ── GitKit — pastel surface: soft pink, bubblegum ── */
+  .card[data-exp='gitkit']:hover,
+  .card[data-exp='gitkit']:focus-visible {
+    --bg: #f5eef5;
+    --bg-raise: #faf5fa;
+    --ink: #4a3a4a;
+    --ink-dim: #7a6a7a;
+    --ink-faint: #a898a8;
+    --line: #e8d8e8;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--gitkit);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .card[data-exp='gitkit']:hover h3,
+  .card[data-exp='gitkit']:focus-visible h3,
+  .card[data-exp='gitkit']:hover .num,
+  .card[data-exp='gitkit']:focus-visible .num { color: var(--gitkit); }
+  .card[data-exp='gitkit']:hover .need,
+  .card[data-exp='gitkit']:focus-visible .need,
+  .card[data-exp='gitkit']:hover .tagline,
+  .card[data-exp='gitkit']:focus-visible .tagline,
+  .card[data-exp='gitkit']:hover .status,
+  .card[data-exp='gitkit']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── ghScaff — industrial surface: deep brown, amber brass ── */
+  .card[data-exp='ghscaff']:hover,
+  .card[data-exp='ghscaff']:focus-visible {
+    --bg: #0e0c0a;
+    --bg-raise: #161210;
+    --ink: #e0d5c8;
+    --ink-dim: #9a8b7a;
+    --ink-faint: #5e5248;
+    --line: #2a2320;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--ghscaff);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card[data-exp='ghscaff']:hover h3,
+  .card[data-exp='ghscaff']:focus-visible h3,
+  .card[data-exp='ghscaff']:hover .num,
+  .card[data-exp='ghscaff']:focus-visible .num { color: var(--ghscaff); }
+  .card[data-exp='ghscaff']:hover .need,
+  .card[data-exp='ghscaff']:focus-visible .need,
+  .card[data-exp='ghscaff']:hover .tagline,
+  .card[data-exp='ghscaff']:focus-visible .tagline,
+  .card[data-exp='ghscaff']:hover .status,
+  .card[data-exp='ghscaff']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── cadSpec — blueprint surface: cool white, teal ── */
+  .card[data-exp='cadspec']:hover,
+  .card[data-exp='cadspec']:focus-visible {
+    --bg: #f6f8fa;
+    --bg-raise: #ffffff;
+    --ink: #15202a;
+    --ink-dim: #4d5a64;
+    --ink-faint: #8a97a0;
+    --line: #dde5ea;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--cadspec);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .card[data-exp='cadspec']:hover h3,
+  .card[data-exp='cadspec']:focus-visible h3,
+  .card[data-exp='cadspec']:hover .num,
+  .card[data-exp='cadspec']:focus-visible .num { color: var(--cadspec); }
+  .card[data-exp='cadspec']:hover .need,
+  .card[data-exp='cadspec']:focus-visible .need,
+  .card[data-exp='cadspec']:hover .tagline,
+  .card[data-exp='cadspec']:focus-visible .tagline,
+  .card[data-exp='cadspec']:hover .status,
+  .card[data-exp='cadspec']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── astro-denoise — observatory surface: deep space, violet ── */
+  .card[data-exp='astro-denoise']:hover,
+  .card[data-exp='astro-denoise']:focus-visible {
+    --bg: #0a0911;
+    --bg-raise: #110f1b;
+    --ink: #ddd9e8;
+    --ink-dim: #8f8aa3;
+    --ink-faint: #5b566e;
+    --line: #1e1b2c;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--astro-denoise);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(167,139,250,0.08);
+  }
+  .card[data-exp='astro-denoise']:hover h3,
+  .card[data-exp='astro-denoise']:focus-visible h3,
+  .card[data-exp='astro-denoise']:hover .num,
+  .card[data-exp='astro-denoise']:focus-visible .num { color: var(--astro-denoise); }
+  .card[data-exp='astro-denoise']:hover .need,
+  .card[data-exp='astro-denoise']:focus-visible .need,
+  .card[data-exp='astro-denoise']:hover .tagline,
+  .card[data-exp='astro-denoise']:focus-visible .tagline,
+  .card[data-exp='astro-denoise']:hover .status,
+  .card[data-exp='astro-denoise']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── DemoStage — studio surface: warm parchment, burnt orange ── */
+  .card[data-exp='demostage']:hover,
+  .card[data-exp='demostage']:focus-visible {
+    --bg: #f6f3ee;
+    --bg-raise: #ffffff;
+    --ink: #221d18;
+    --ink-dim: #5b5249;
+    --ink-faint: #9a9082;
+    --line: #e6ded2;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--demostage);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .card[data-exp='demostage']:hover h3,
+  .card[data-exp='demostage']:focus-visible h3,
+  .card[data-exp='demostage']:hover .num,
+  .card[data-exp='demostage']:focus-visible .num { color: var(--demostage); }
+  .card[data-exp='demostage']:hover .need,
+  .card[data-exp='demostage']:focus-visible .need,
+  .card[data-exp='demostage']:hover .tagline,
+  .card[data-exp='demostage']:focus-visible .tagline,
+  .card[data-exp='demostage']:hover .status,
+  .card[data-exp='demostage']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── Quorum — quorum surface: deep warm brown, gold ── */
+  .card[data-exp='quorum']:hover,
+  .card[data-exp='quorum']:focus-visible {
+    --bg: #241a12;
+    --bg-raise: #2f2318;
+    --ink: #f2e7d3;
+    --ink-dim: #b8a583;
+    --ink-faint: #8a7a5e;
+    --line: #40331f;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--quorum);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card[data-exp='quorum']:hover h3,
+  .card[data-exp='quorum']:focus-visible h3,
+  .card[data-exp='quorum']:hover .num,
+  .card[data-exp='quorum']:focus-visible .num { color: var(--quorum); }
+  .card[data-exp='quorum']:hover .need,
+  .card[data-exp='quorum']:focus-visible .need,
+  .card[data-exp='quorum']:hover .tagline,
+  .card[data-exp='quorum']:focus-visible .tagline,
+  .card[data-exp='quorum']:hover .status,
+  .card[data-exp='quorum']:focus-visible .status { color: var(--ink-dim); }
+
+  /* Focus state for accessibility — generic fallback (no data-exp) */
+  .card:not([data-exp]):focus-visible {
     outline: 2px solid var(--essence);
     outline-offset: 2px;
     transform: translateY(-2px);
