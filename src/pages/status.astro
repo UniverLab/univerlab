@@ -67,6 +67,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       color: var(--ink-dim);
       font-size: 0.9rem;
       line-height: 1.6;
+      /* Bodies are plain text set via textContent — honour their paragraph
+         breaks without letting them inject markup. */
+      white-space: pre-line;
     }
     .entry .type-badge {
       display: inline-block;
@@ -172,10 +175,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       var container = document.getElementById('log-entries');
       if (!container) return;
 
+      var PAGE = 20;
+      var offset = 0;
+      var loading = false;
+      var hasMore = true;
+
       function formatDate(iso) {
         var d = new Date(iso);
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        var y = d.getFullYear();
+        var start = new Date(y, 0, 0);
+        var dayOfYear = Math.floor((d - start) / 86400000);
+        return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear;
       }
 
       function renderEntry(entry) {
@@ -209,17 +219,32 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return article;
       }
 
-      function renderEntries(entries) {
-        container.innerHTML = '';
+      function appendEntries(entries) {
         if (!Array.isArray(entries) || !entries.length) return;
         var frag = document.createDocumentFragment();
         entries.forEach(function (e) { frag.appendChild(renderEntry(e)); });
         container.appendChild(frag);
       }
 
+      function loadMore() {
+        if (loading || !hasMore) return;
+        loading = true;
+        fetch(API + '?offset=' + offset + '&limit=' + PAGE)
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            appendEntries(data.entries);
+            offset += data.entries.length;
+            hasMore = data.hasMore;
+            loading = false;
+            if (!hasMore) observer.disconnect();
+          })
+          .catch(function () { loading = false; });
+      }
+
       function prependEntry(entry) {
         var el = renderEntry(entry);
         container.prepend(el);
+        offset++;
         showToast(entry.title);
       }
 
@@ -234,17 +259,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         }, 4000);
       }
 
-      // Fetch initial entries
-      fetch(API)
-        .then(function (r) { return r.json(); })
-        .then(function (entries) { renderEntries(entries); })
-        .catch(function () {
-          container.innerHTML = '';
-          var msg = document.createElement('p');
-          msg.style.cssText = 'font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-faint);padding-block:3rem;text-align:center;';
-          msg.textContent = 'Unable to reach the mission log. The announcements service may be starting up.';
-          container.appendChild(msg);
-        });
+      // Infinite scroll sentinel
+      var sentinel = document.createElement('div');
+      sentinel.className = 'scroll-sentinel';
+      container.parentElement.appendChild(sentinel);
+
+      var observer = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) loadMore();
+      }, { rootMargin: '200px' });
+      observer.observe(sentinel);
+
+      // Initial load
+      loadMore();
 
       // SSE
       var source = new EventSource(API + '/events');
