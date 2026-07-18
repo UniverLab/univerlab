@@ -173,6 +173,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       var container = document.getElementById('log-entries');
       if (!container) return;
 
+      var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      var MOCK = [
+        { date: '2026-07-17T22:00:00Z', type: 'note', title: 'Dress rehearsal', body: 'Before a vehicle flies, it runs a dress rehearsal: the full countdown on the pad, tanks loaded, every system exercised in sequence, stopping just short of ignition. Nothing leaves the ground. The point is to find out what breaks while breaking it is still cheap.' },
+        { date: '2026-07-17T18:00:00Z', type: 'launch', title: 'First light', body: 'Astronomers call it first light: the moment a new instrument opens its eye and returns an image. That first picture is never the best one the telescope will ever take. It is the proof that the optics align, the detector responds, the data path is open.' },
+        { date: '2026-07-17T12:00:00Z', type: 'deploy', title: 'Announcements worker online', body: 'The announcements Durable Object is live. Entries serialize through SQLite, fan out over SSE, and mirror to KV for fast reads. The first transmission reached the log without incident.' },
+        { date: '2026-07-17T09:00:00Z', type: 'note', title: 'Status page ships', body: 'The status page is now part of the public site. Real-time entries, infinite scroll, toast notifications for live updates, and a cosmic background that matches the mission log aesthetic.' },
+        { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
+      ];
+
       var PAGE = 20;
       var offset = 0;
       var loading = false;
@@ -227,6 +236,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       function loadMore() {
         if (loading || !hasMore) return;
         loading = true;
+
+        if (isDev) {
+          if (offset === 0) container.innerHTML = '';
+          var batch = MOCK.slice(offset, offset + PAGE);
+          appendEntries(batch);
+          offset += batch.length;
+          hasMore = offset < MOCK.length;
+          loading = false;
+          if (!hasMore) observer.disconnect();
+          return;
+        }
+
         fetch(API + '?offset=' + offset + '&limit=' + PAGE)
           .then(function (r) { return r.json(); })
           .then(function (data) {
@@ -272,14 +293,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       loadMore();
 
       // SSE
-      var source = new EventSource(API + '/events');
-      source.addEventListener('entry', function (e) {
-        try {
-          var entry = JSON.parse(e.data);
-          prependEntry(entry);
-        } catch (err) {}
-      });
-      source.onerror = function () {};
+      if (!isDev) {
+        var source = new EventSource(API + '/events');
+        source.addEventListener('entry', function (e) {
+          try {
+            var entry = JSON.parse(e.data);
+            prependEntry(entry);
+          } catch (err) {}
+        });
+        source.onerror = function () {};
+      }
     })();
   </script>
 </BaseLayout>
