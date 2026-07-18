@@ -147,8 +147,8 @@ const orgJsonLd = {
       (function () {
         try {
           var path = location.pathname;
-          // Documentation is English-only and has no /es mirror — never redirect it.
-          if (path.indexOf('/docs') !== -1) return;
+          // Documentation and status are English-only — never redirect them.
+          if (path.indexOf('/docs') !== -1 || path === '/status' || path.indexOf('/status/') === 0) return;
           var stored = localStorage.getItem('univerlab-lang');
           var onEs = path === '/es' || path.indexOf('/es/') === 0;
           if (!stored) {
