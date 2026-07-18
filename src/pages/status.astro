@@ -181,25 +181,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       function renderEntry(entry) {
         var article = document.createElement('article');
         article.className = 'entry';
-        article.innerHTML =
-          '<time datetime="' + entry.date + '">' + formatDate(entry.date) + '</time>' +
-          '<div class="entry-body">' +
-            (entry.type ? '<div class="type-badge">' + entry.type + '</div>' : '') +
-            '<h3>' + escapeHtml(entry.title) + '</h3>' +
-            '<p>' + escapeHtml(entry.body) + '</p>' +
-          '</div>';
-        return article;
-      }
 
-      function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        var time = document.createElement('time');
+        time.setAttribute('datetime', entry.date);
+        time.textContent = formatDate(entry.date);
+        article.appendChild(time);
+
+        var body = document.createElement('div');
+        body.className = 'entry-body';
+
+        if (entry.type) {
+          var badge = document.createElement('div');
+          badge.className = 'type-badge';
+          badge.textContent = entry.type;
+          body.appendChild(badge);
+        }
+
+        var h3 = document.createElement('h3');
+        h3.textContent = entry.title;
+        body.appendChild(h3);
+
+        var p = document.createElement('p');
+        p.textContent = entry.body;
+        body.appendChild(p);
+
+        article.appendChild(body);
+        return article;
       }
 
       function renderEntries(entries) {
         container.innerHTML = '';
-        if (!entries.length) return;
+        if (!Array.isArray(entries) || !entries.length) return;
         var frag = document.createDocumentFragment();
         entries.forEach(function (e) { frag.appendChild(renderEntry(e)); });
         container.appendChild(frag);

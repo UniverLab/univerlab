@@ -4,8 +4,20 @@ compatibility_date = "2025-01-01"
 
 [[kv_namespaces]]
 binding = "ANNOUNCEMENTS"
-id = "<namespace-id>"
+id = "6456e427df724870ba557449758fe47d"
 
-[routes]
+[[durable_objects.bindings]]
+name = "LOG_HUB"
+class_name = "LogHub"
+
+# SQLite-backed is required on the Workers Free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LogHub"]
+
+[[routes]]
 pattern = "announcements.univerlab.org"
 custom_domain = true
+
+[observability]
+enabled = true
