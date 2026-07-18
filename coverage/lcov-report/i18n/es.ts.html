@@ -708,11 +708,19 @@
 <a name='L643'></a><a href='#L643'>643</a>
 <a name='L644'></a><a href='#L644'>644</a>
 <a name='L645'></a><a href='#L645'>645</a>
-<a name='L646'></a><a href='#L646'>646</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L646'></a><a href='#L646'>646</a>
+<a name='L647'></a><a href='#L647'>647</a>
+<a name='L648'></a><a href='#L648'>648</a>
+<a name='L649'></a><a href='#L649'>649</a>
+<a name='L650'></a><a href='#L650'>650</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1360,7 +1368,7 @@
 export const es: Dict = {
   meta: {
     description:
-      'UniverLab — un laboratorio computacional independiente que publica experimentos abiertos.',
+      'Laboratorio computacional de código abierto. Construimos herramientas para agentes de IA, CLI, LaTeX, Git y CAD como código — experimentos reproducibles, conocimiento libre.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -1368,13 +1376,14 @@ export const es: Dict = {
     manifesto: 'Manifiesto',
     people: 'Colaboradores',
     github: 'GitHub',
+    log: 'Bitácora',
   },
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
   },
   common: {
-    repo: 'GitHub ↗',
+    repo: 'Star en GitHub ↗',
     docs: 'Documentación →',
     install: 'Instalar',
     copy: 'Copiar',
@@ -1396,9 +1405,14 @@ export const es: Dict = {
   },
   home: {
     hero: {
-      title: 'Somos el universo, observándose a sí mismo.',
+      title: 'Código abierto para la era de IA — construido para problemas reales',
+      subtitle: 'Somos el universo, observándose a sí mismo.',
       lede:
-        'UniverLab sigue un ciclo sencillo: una &lt;strong&gt;necesidad&lt;/strong&gt; real se vuelve un &lt;strong&gt;experimento&lt;/strong&gt; abierto, y ese experimento devuelve &lt;strong&gt;conocimiento&lt;/strong&gt; abierto — herramientas, librerías, datasets, artículos. El experimento es el trabajo; todo lo que publica es un &lt;strong&gt;subproducto&lt;/strong&gt;.',
+        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del &lt;a href="/es/manifesto"&gt;Pensamiento Cósmico&lt;/a&gt;, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
+      pitch: 'Ciencia · CLI · LaTeX · CAD · Git',
+      pitchSub: 'Local-first. Asistido por IA. Tuyo para siempre.',
+      ctaExperiments: 'Explora los experimentos →',
+      ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
@@ -1416,7 +1430,7 @@ export const es: Dict = {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió &lt;a href="/canopy"&gt;Canopy&lt;/a&gt;, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta: somos el universo forjando sus propios instrumentos para seguir estudiándose.',
+        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió &lt;a href="/canopy"&gt;Canopy&lt;/a&gt;, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: { kicker: '00 — Experimentos' },
     philosophy: {
@@ -1454,12 +1468,6 @@ export const es: Dict = {
       manifesto: 'Leer el manifiesto →',
       contribute: 'Colabora en GitHub ↗',
     },
-  },
-  experimentsIndex: {
-    kicker: 'Índice',
-    title: 'Experimentos',
-    intro:
-      'La unidad fundamental de UniverLab es el experimento. Los experimentos no son productos — son exploraciones en curso. Pueden madurar, seguir activos durante décadas o convertirse en nueva investigación. Cada uno nace de una necesidad real — casi siempre una que vivimos nosotros mismos.',
   },
   experiments: {
     canopy: {
@@ -1756,35 +1764,35 @@ export const es: Dict = {
       ] as [string, string][],
     },
     'demostage': {
-      need: 'Grabar demos a mano es tedioso — erratas, ritmo desigual, tiempos muertos y un prompt que expone tu host.',
+      need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
-        'Demos as Code — captura, graba y exporta demos de terminal reproducibles.',
+        'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como &lt;strong&gt;eventos&lt;/strong&gt;, normaliza las imperfecciones humanas en un &lt;code&gt;demo.toml&lt;/code&gt; limpio (la &lt;strong&gt;partitura&lt;/strong&gt;) y lo compila a gif o mp4 — versionado, reejecutable y diffable.',
+        'DemoStage graba una sesión como &lt;strong&gt;eventos&lt;/strong&gt;, corrige las imperfecciones humanas en un &lt;code&gt;demo.toml&lt;/code&gt; limpio — una &lt;strong&gt;partitura&lt;/strong&gt; — y lo compila a gif o mp4: versionado, re-ejecutable y diffeable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
         body:
-          'Construyendo esta landing, cada experimento necesitaba un demo — y toda herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada errata. Así que el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada error. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: '5 comandos',
         items: [
-          '&lt;code&gt;capture&lt;/code&gt; — captura en vivo: graba la sesión, auto-normaliza a una partitura limpia y un &lt;code&gt;.rec&lt;/code&gt; fiel.',
-          '&lt;code&gt;focus&lt;/code&gt; — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost) — pantalla completa, dividida o apilada, compuesta en el demo.',
+          '&lt;code&gt;capture&lt;/code&gt; — captura en vivo: graba la sesión, la normaliza en una partitura limpia y un &lt;code&gt;.rec&lt;/code&gt; fiel.',
+          '&lt;code&gt;focus&lt;/code&gt; — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost): pantalla completa, dividida o apilada, compuesta en el demo.',
           '&lt;code&gt;record&lt;/code&gt; — re-ejecuta &lt;code&gt;demo.toml&lt;/code&gt; de forma limpia, produciendo una grabación humanizada.',
-          '&lt;code&gt;export&lt;/code&gt; — reproducción pura: renderiza a gif o mp4 (sin re-ejecución, ffmpeg/chromium autoprovisionados).',
-          '&lt;code&gt;edit&lt;/code&gt; — edita la línea de tiempo interactivamente; marca varios pasos y aplica cambios en bloque.',
+          '&lt;code&gt;export&lt;/code&gt; — reproducción pura: renderiza a gif o mp4 sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
+          '&lt;code&gt;edit&lt;/code&gt; — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
       },
       faq: [
         ['¿Qué es DemoStage?',
-          'Una herramienta para planear y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
+          'Una herramienta para planificar y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No es solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
         ['¿Puedo re-grabar una demo si algo cambia?',
-          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, re-capturas y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
+          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
         ['¿En qué se diferencia DemoStage de asciinema?',
-          'asciinema graba salida de terminal cruda. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
     },
   },
@@ -1912,6 +1920,8 @@ export const es: Dict = {
   secret: {
     kicker: 'Ideas archivadas',
     title: 'El Archivo',
+    description:
+      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y por qué murió. No es un roadmap, es un registro.',
     intro:
       'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
@@ -1970,6 +1980,8 @@ export const es: Dict = {
   people: {
     kicker: 'El laboratorio',
     title: 'Colaboradores',
+    description:
+      'Las personas y modelos de IA detrás de UniverLab — fundador, colaboradores y los modelos de lenguaje que trabajan con nosotros.',
     founder: {
       role: 'Fundador',
       name: 'Jheison Martinez',
@@ -2005,7 +2017,7 @@ export const es: Dict = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-15T14:21:03.683Z
+                at 2026-07-18T06:04:20.710Z
             </div>
         <script src="../prettify.js"></script>
         <script>

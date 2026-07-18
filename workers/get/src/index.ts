@@ -32,7 +32,7 @@ export default {
 
     // Bare domain → send people to the experiments page.
     if (slug === '' || slug === 'index.html') {
-      return Response.redirect('https://univerlab.org/experiments', 302);
+      return Response.redirect('https://univerlab.org/#experiments', 302);
     }
 
     const win = slug.endsWith('.ps1');

@@ -20,8 +20,12 @@ const webSite = {
     <h1>{t.home.hero.title}</h1>
     <p class="subtitle">{t.home.hero.subtitle}</p>
     <p class="lede prose" set:html={t.home.hero.lede} />
+    <div class="pitch">
+      <p class="pitch-domains">{t.home.hero.pitch}</p>
+      <p class="pitch-sub">{t.home.hero.pitchSub}</p>
+    </div>
     <div class="hero-cta">
-      <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
+      <a class="btn" href="#experiments">{t.home.hero.ctaExperiments}</a>
       <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
     </div>
   </section>
@@ -30,16 +34,17 @@ const webSite = {
 
   <!-- Experiments -->
   <section class="wrap section">
-    <div class="section-head">
+    <div class="section-head" id="experiments">
       <span class="label">{t.home.experiments.kicker}</span>
-      <a class="label more" href={localizePath('/experiments', lang)}>{t.common.allExperiments}</a>
     </div>
     <ul class="grid">
       {experiments.map((exp) => {
         const e = t.experiments[exp.id];
         return (
           <li style={`--essence: ${exp.essenceHex}`}>
-            <a class="card" href={localizePath(`/${exp.id}`, lang)}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg}>
+              <canvas class="card-bg-canvas" aria-hidden="true"></canvas>
+              <div class="card-glow" aria-hidden="true"></div>
               <div class="card-top">
                 <span class="num">{exp.number}</span>
                 <span class="status"><span class="dot" data-status={exp.status}></span>{t.status[exp.status]}</span>
@@ -116,6 +121,20 @@ const webSite = {
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
 
+  .pitch { margin-top: 0.4rem; }
+  .pitch-domains {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .pitch-sub {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin: 0.3rem 0 0;
+  }
+
   .hero-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 0.8rem; }
   .btn {
     text-decoration: none;
@@ -147,10 +166,305 @@ const webSite = {
     border-left: 2px solid color-mix(in srgb, var(--essence) 35%, transparent);
     padding: 1.6rem;
     text-decoration: none;
-    transition: background 0.15s ease, border-left-color 0.15s ease;
+    transition: border-left-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     backdrop-filter: blur(2px);
+    position: relative;
+    overflow: hidden;
   }
-  .card:hover { background: var(--bg-raise); border-left-color: var(--essence); }
+
+  /* Background canvas — hidden by default, shown on hover/focus */
+  .card-bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .card:hover .card-bg-canvas,
+  .card:focus-visible .card-bg-canvas { opacity: 0.65; }
+
+  /* Content sits above the canvas */
+  .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
+  .card:hover {
+    border-left-color: var(--essence);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
+  }
+
+  /* Portal glow — fades out when per-experiment surface takes over */
+  .card-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 80%, color-mix(in srgb, var(--essence) 14%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--essence) 8%, transparent) 0%, transparent 50%);
+  }
+  .card:hover .card-glow { opacity: 1; }
+
+  /* ── Per-experiment portal: card adopts the experiment's surface on hover ── */
+
+  /* Canopy — tui surface: cold slate dark, terminal chrome */
+  .card[data-exp='canopy']:hover,
+  .card[data-exp='canopy']:focus-visible {
+    --bg: #0d0e10;
+    --bg-raise: #131519;
+    --ink: #cdd6df;
+    --ink-dim: #8b97a3;
+    --ink-faint: #58616b;
+    --line: #20242a;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--canopy);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .card[data-exp='canopy']:hover h3,
+  .card[data-exp='canopy']:focus-visible h3,
+  .card[data-exp='canopy']:hover .num,
+  .card[data-exp='canopy']:focus-visible .num { color: var(--canopy); }
+  .card[data-exp='canopy']:hover .need,
+  .card[data-exp='canopy']:focus-visible .need,
+  .card[data-exp='canopy']:hover .tagline,
+  .card[data-exp='canopy']:focus-visible .tagline,
+  .card[data-exp='canopy']:hover .status,
+  .card[data-exp='canopy']:focus-visible .status { color: var(--ink-dim); }
+
+  /* Terminal dots bar */
+  .card[data-exp='canopy']::before {
+    content: '● ● ●     ~/canopy';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+  }
+  .card[data-exp='canopy']:hover::before { opacity: 1; }
+
+  /* Blinking cursor */
+  .card[data-exp='canopy']::after {
+    content: '▋';
+    position: absolute;
+    bottom: 1rem; right: 1rem;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--canopy);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .card[data-exp='canopy']:hover::after {
+    opacity: 0.8;
+    animation: cursor-blink 1.06s step-end infinite;
+  }
+  @keyframes cursor-blink {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0; }
+  }
+
+  /* ── TexForge — paper surface: warm cream, forge amber ── */
+  .card[data-exp='texforge']:hover,
+  .card[data-exp='texforge']:focus-visible {
+    --bg: #f5f5f3;
+    --bg-raise: #ffffff;
+    --ink: #1b1b1a;
+    --ink-dim: #54514c;
+    --ink-faint: #8a857d;
+    --line: #e3ded4;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--texforge);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  .card[data-exp='texforge']:hover h3,
+  .card[data-exp='texforge']:focus-visible h3,
+  .card[data-exp='texforge']:hover .num,
+  .card[data-exp='texforge']:focus-visible .num { color: var(--texforge); }
+  .card[data-exp='texforge']:hover .need,
+  .card[data-exp='texforge']:focus-visible .need,
+  .card[data-exp='texforge']:hover .tagline,
+  .card[data-exp='texforge']:focus-visible .tagline,
+  .card[data-exp='texforge']:hover .status,
+  .card[data-exp='texforge']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── GitKit — pastel surface: soft pink, bubblegum ── */
+  .card[data-exp='gitkit']:hover,
+  .card[data-exp='gitkit']:focus-visible {
+    --bg: #f5eef5;
+    --bg-raise: #faf5fa;
+    --ink: #4a3a4a;
+    --ink-dim: #7a6a7a;
+    --ink-faint: #a898a8;
+    --line: #e8d8e8;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--gitkit);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .card[data-exp='gitkit']:hover h3,
+  .card[data-exp='gitkit']:focus-visible h3,
+  .card[data-exp='gitkit']:hover .num,
+  .card[data-exp='gitkit']:focus-visible .num { color: var(--gitkit); }
+  .card[data-exp='gitkit']:hover .need,
+  .card[data-exp='gitkit']:focus-visible .need,
+  .card[data-exp='gitkit']:hover .tagline,
+  .card[data-exp='gitkit']:focus-visible .tagline,
+  .card[data-exp='gitkit']:hover .status,
+  .card[data-exp='gitkit']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── ghScaff — industrial surface: deep brown, amber brass ── */
+  .card[data-exp='ghscaff']:hover,
+  .card[data-exp='ghscaff']:focus-visible {
+    --bg: #0e0c0a;
+    --bg-raise: #161210;
+    --ink: #e0d5c8;
+    --ink-dim: #9a8b7a;
+    --ink-faint: #5e5248;
+    --line: #2a2320;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--ghscaff);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card[data-exp='ghscaff']:hover h3,
+  .card[data-exp='ghscaff']:focus-visible h3,
+  .card[data-exp='ghscaff']:hover .num,
+  .card[data-exp='ghscaff']:focus-visible .num { color: var(--ghscaff); }
+  .card[data-exp='ghscaff']:hover .need,
+  .card[data-exp='ghscaff']:focus-visible .need,
+  .card[data-exp='ghscaff']:hover .tagline,
+  .card[data-exp='ghscaff']:focus-visible .tagline,
+  .card[data-exp='ghscaff']:hover .status,
+  .card[data-exp='ghscaff']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── cadSpec — blueprint surface: cool white, teal ── */
+  .card[data-exp='cadspec']:hover,
+  .card[data-exp='cadspec']:focus-visible {
+    --bg: #f6f8fa;
+    --bg-raise: #ffffff;
+    --ink: #15202a;
+    --ink-dim: #4d5a64;
+    --ink-faint: #8a97a0;
+    --line: #dde5ea;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--cadspec);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .card[data-exp='cadspec']:hover h3,
+  .card[data-exp='cadspec']:focus-visible h3,
+  .card[data-exp='cadspec']:hover .num,
+  .card[data-exp='cadspec']:focus-visible .num { color: var(--cadspec); }
+  .card[data-exp='cadspec']:hover .need,
+  .card[data-exp='cadspec']:focus-visible .need,
+  .card[data-exp='cadspec']:hover .tagline,
+  .card[data-exp='cadspec']:focus-visible .tagline,
+  .card[data-exp='cadspec']:hover .status,
+  .card[data-exp='cadspec']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── astro-denoise — observatory surface: deep space, violet ── */
+  .card[data-exp='astro-denoise']:hover,
+  .card[data-exp='astro-denoise']:focus-visible {
+    --bg: #0a0911;
+    --bg-raise: #110f1b;
+    --ink: #ddd9e8;
+    --ink-dim: #8f8aa3;
+    --ink-faint: #5b566e;
+    --line: #1e1b2c;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--astro-denoise);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(167,139,250,0.08);
+  }
+  .card[data-exp='astro-denoise']:hover h3,
+  .card[data-exp='astro-denoise']:focus-visible h3,
+  .card[data-exp='astro-denoise']:hover .num,
+  .card[data-exp='astro-denoise']:focus-visible .num { color: var(--astro-denoise); }
+  .card[data-exp='astro-denoise']:hover .need,
+  .card[data-exp='astro-denoise']:focus-visible .need,
+  .card[data-exp='astro-denoise']:hover .tagline,
+  .card[data-exp='astro-denoise']:focus-visible .tagline,
+  .card[data-exp='astro-denoise']:hover .status,
+  .card[data-exp='astro-denoise']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── DemoStage — studio surface: warm parchment, burnt orange ── */
+  .card[data-exp='demostage']:hover,
+  .card[data-exp='demostage']:focus-visible {
+    --bg: #f6f3ee;
+    --bg-raise: #ffffff;
+    --ink: #221d18;
+    --ink-dim: #5b5249;
+    --ink-faint: #9a9082;
+    --line: #e6ded2;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--demostage);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .card[data-exp='demostage']:hover h3,
+  .card[data-exp='demostage']:focus-visible h3,
+  .card[data-exp='demostage']:hover .num,
+  .card[data-exp='demostage']:focus-visible .num { color: var(--demostage); }
+  .card[data-exp='demostage']:hover .need,
+  .card[data-exp='demostage']:focus-visible .need,
+  .card[data-exp='demostage']:hover .tagline,
+  .card[data-exp='demostage']:focus-visible .tagline,
+  .card[data-exp='demostage']:hover .status,
+  .card[data-exp='demostage']:focus-visible .status { color: var(--ink-dim); }
+
+  /* ── Quorum — quorum surface: deep warm brown, gold ── */
+  .card[data-exp='quorum']:hover,
+  .card[data-exp='quorum']:focus-visible {
+    --bg: #241a12;
+    --bg-raise: #2f2318;
+    --ink: #f2e7d3;
+    --ink-dim: #b8a583;
+    --ink-faint: #8a7a5e;
+    --line: #40331f;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--quorum);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card[data-exp='quorum']:hover h3,
+  .card[data-exp='quorum']:focus-visible h3,
+  .card[data-exp='quorum']:hover .num,
+  .card[data-exp='quorum']:focus-visible .num { color: var(--quorum); }
+  .card[data-exp='quorum']:hover .need,
+  .card[data-exp='quorum']:focus-visible .need,
+  .card[data-exp='quorum']:hover .tagline,
+  .card[data-exp='quorum']:focus-visible .tagline,
+  .card[data-exp='quorum']:hover .status,
+  .card[data-exp='quorum']:focus-visible .status { color: var(--ink-dim); }
+
+  /* Focus state for accessibility — generic fallback (no data-exp) */
+  .card:not([data-exp]):focus-visible {
+    outline: 2px solid var(--essence);
+    outline-offset: 2px;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
+  }
+  .card:focus-visible .card-glow { opacity: 1; }
+
+  /* Mobile: tap triggers the same effect */
+  @media (hover: none) {
+    .card:active { transform: scale(0.98); }
+    .card:active .card-glow { opacity: 1; }
+    .card[data-exp='canopy']:active::after,
+    .card[data-exp='demostage']:active::after,
+    .card[data-exp='ghscaff']:active::before,
+    .card[data-exp='cadspec']:active::before { opacity: 0.7; }
+  }
   .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
   .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
   .num { font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; color: var(--essence); }
@@ -184,3 +498,74 @@ const webSite = {
   .closing-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1.4rem; }
 
 </style>
+
+<script>
+  import { startBackground } from '../scripts/backgrounds';
+  import type { BgTheme } from '../lib/experiments';
+
+  const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; motif?: string }> = {
+    canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', motif: '◉' },
+    texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', motif: '⁂' },
+    gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', motif: '🍒' },
+    ghscaff:     { bg: 'scaffold',    essence: '#b87333', bgHex: '#0e0c0a', motif: '⬡' },
+    cadspec:     { bg: 'primitives',  essence: '#6ec6e6', bgHex: '#f6f8fa', motif: '▣' },
+    'astro-denoise': { bg: 'starfield', essence: '#a78bfa', bgHex: '#0a0911', motif: '✦' },
+    demostage:   { bg: 'drift',       essence: '#ef8354', bgHex: '#f6f3ee', motif: '●' },
+    quorum:      { bg: 'spiral',      essence: '#e6b24a', bgHex: '#241a12', motif: '∞' },
+  };
+
+  // Start background animation on hover
+  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+    const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
+    const expId = card.dataset.exp;
+    if (!canvas || !expId) return;
+    const s = surfaces[expId];
+    if (!s) return;
+
+    let started = false;
+    const startAnim = () => {
+      if (started) return;
+      started = true;
+      startBackground(canvas, s.bg, s.essence, s.bgHex);
+    };
+    card.addEventListener('mouseenter', startAnim);
+    card.addEventListener('focus', startAnim);
+  });
+
+  // Crossfade: expand from card, navigate, fade-in on destination
+  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      const href = card.getAttribute('href');
+      const expId = card.dataset.exp;
+      if (!href || !expId) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      e.preventDefault();
+
+      const rect = card.getBoundingClientRect();
+      const s = surfaces[expId];
+      const color = s?.bgHex || '#0a0b0e';
+
+      // Expanding overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 9999;
+        background: ${color};
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-mono); font-size: 4rem;
+        color: ${s?.essence || '#e6c84a'};
+        clip-path: inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px);
+        transition: clip-path 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      `;
+      overlay.textContent = s?.motif || '';
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        overlay.style.clipPath = 'inset(0px 0px 0px 0px)';
+      });
+
+      // Navigate after expand
+      setTimeout(() => { window.location.href = href; }, 480);
+    });
+  });
+</script>

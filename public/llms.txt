@@ -8,7 +8,6 @@ UniverLab follows one loop: a real need becomes an open experiment, and that exp
 
 - [Home](https://univerlab.org/): What UniverLab is, the experiment loop, research directions, and the experiment index.
 - [Manifesto — Pensamiento Cósmico](https://univerlab.org/manifesto): The philosophy behind the lab — a philosophy of the continuity of consciousness, and the values that guide which experiments get built.
-- [Experiments](https://univerlab.org/experiments): The full index of open experiments.
 - [Contributors](https://univerlab.org/contributors): The people and language models behind the lab, and how to contribute.
 
 ## Experiments

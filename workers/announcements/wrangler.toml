@@ -1,0 +1,11 @@
+name = "univerlab-announcements"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "ANNOUNCEMENTS"
+id = "<namespace-id>"
+
+[routes]
+pattern = "announcements.univerlab.org"
+custom_domain = true

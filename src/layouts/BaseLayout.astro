@@ -147,8 +147,8 @@ const orgJsonLd = {
       (function () {
         try {
           var path = location.pathname;
-          // Documentation is English-only and has no /es mirror — never redirect it.
-          if (path.indexOf('/docs') !== -1) return;
+          // Documentation and status are English-only — never redirect them.
+          if (path.indexOf('/docs') !== -1 || path === '/status' || path.indexOf('/status/') === 0) return;
           var stored = localStorage.getItem('univerlab-lang');
           var onEs = path === '/es' || path.indexOf('/es/') === 0;
           if (!stored) {
@@ -533,13 +533,13 @@ https://github.com/UniverLab
         // Static commands — always available.
         var staticCmds = [
           { cmd: '/home', label: 'Home', href: base + '/' },
-          { cmd: '/experiments', label: 'Experiments', href: base + '/experiments' },
+          { cmd: '/experiments', label: 'Experiments', href: base + '/#experiments' },
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors' },
           { cmd: '/random', label: 'Surprise me', action: function () {
             if (window.missionLog) window.missionLog.discover('random');
             var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
-            var pages = ['/', '/experiments', '/manifesto', '/contributors', '/archive'];
+            var pages = ['/', '/manifesto', '/contributors', '/archive'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
             var history = [];
             try { history = JSON.parse(localStorage.getItem('univerlab-random') || '[]'); } catch (e) {}
@@ -605,6 +605,7 @@ https://github.com/UniverLab
           }},
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive' },
+          { cmd: '/status', label: 'Mission Log', href: base + '/status' },
         ];
 
         // Experiment IDs — auto-generated from the registry.
