@@ -27,8 +27,8 @@ const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
-  { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
+  { href: '/status', label: t.nav.log },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: githubHref, label: t.nav.github, ext: true },
 ];

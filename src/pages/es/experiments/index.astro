@@ -1,4 +1,4 @@
 ---
-import Experiments from '../../../views/Experiments.astro';
+// Redirect /es/experiments → /es/#experiments (single-page anchor)
+return Astro.redirect('/es/#experiments', 301);
 ---
-<Experiments />

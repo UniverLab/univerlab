@@ -9,17 +9,18 @@ interface Ctx {
   canvas: HTMLCanvasElement;
   c: CanvasRenderingContext2D;
   color: string;
+  bg: string;
   w: number;
   h: number;
   dpr: number;
 }
 
-export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: string) {
+export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: string, bg = '#0a0b0e') {
   const c = canvas.getContext('2d');
   if (!c) return;
 
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  const ctx: Ctx = { canvas, c, color, w: 0, h: 0, dpr };
+  const ctx: Ctx = { canvas, c, color, bg, w: 0, h: 0, dpr };
 
   function resize() {
     ctx.w = canvas.clientWidth;
@@ -633,7 +634,7 @@ const THEMES: Record<Theme, Runner> = {
         if (p.y < -10) Object.assign(p, spawn(false));
         const flick = 0.6 + 0.35 * Math.sin(t * 0.004 + p.ph * 5);
         const heat = Math.max(0, p.y / ctx.h); // brighter near the bottom
-        c.globalAlpha = flick * (0.35 + 0.5 * heat);
+        c.globalAlpha = flick * (0.5 + 0.45 * heat);
         c.beginPath();
         c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
         c.fill();
@@ -718,6 +719,12 @@ const THEMES: Record<Theme, Runner> = {
   bubbles(ctx) {
     const { c } = ctx;
     const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
+    const hex = ctx.bg.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    const dark = lum < 0.4;
     const N = Math.min(35, Math.floor((ctx.w * ctx.h) / 35000));
     type Bubble = { x: number; y: number; r: number; vy: number; vx: number; ph: number; opacity: number };
     const bubbles: Bubble[] = Array.from({ length: N }, () => ({
@@ -727,7 +734,7 @@ const THEMES: Record<Theme, Runner> = {
       vy: rand(0.25, 0.7),
       vx: rand(-0.3, 0.3),
       ph: rand(0, Math.PI * 2),
-      opacity: rand(0.25, 0.55),
+      opacity: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
     }));
     let prevT = 0;
     return (t) => {
@@ -741,19 +748,17 @@ const THEMES: Record<Theme, Runner> = {
           b.y = ctx.h + b.r * 2;
           b.x = rand(0, ctx.w);
         }
-        // Draw bubble with soft gradient
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + '60');
-        grad.addColorStop(0.5, A + '35');
+        grad.addColorStop(0, A + (dark ? '20' : '80'));
+        grad.addColorStop(0.5, A + (dark ? '10' : '50'));
         grad.addColorStop(1, A + '00');
         c.globalAlpha = b.opacity;
         c.fillStyle = grad;
         c.beginPath();
         c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         c.fill();
-        // Highlight
-        c.globalAlpha = b.opacity * 0.8;
-        c.fillStyle = '#ffffff';
+        c.globalAlpha = b.opacity * (dark ? 0.3 : 0.8);
+        c.fillStyle = dark ? '#ffffff' : A;
         c.beginPath();
         c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
         c.fill();
@@ -948,7 +953,7 @@ const THEMES: Record<Theme, Runner> = {
       y: Math.random() * ctx.h,
       vx: rand(-0.18, 0.18),
       vy: rand(-0.18, 0.18),
-      s: rand(0.6, 1.5),
+      s: rand(0.8, 1.8),
     }));
     return () => {
       c.clearRect(0, 0, ctx.w, ctx.h);
@@ -956,7 +961,7 @@ const THEMES: Record<Theme, Runner> = {
       for (const p of ps) {
         p.x = (p.x + p.vx + ctx.w) % ctx.w;
         p.y = (p.y + p.vy + ctx.h) % ctx.h;
-        c.globalAlpha = 0.5;
+        c.globalAlpha = 0.7;
         c.beginPath();
         c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
         c.fill();

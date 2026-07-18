@@ -12,6 +12,7 @@ export const en = {
     manifesto: 'Manifesto',
     people: 'Collaborators',
     github: 'GitHub',
+    log: 'Log',
   },
   footer: {
     quote:
@@ -44,6 +45,8 @@ export const en = {
       subtitle: 'We are the universe, observing itself.',
       lede:
         'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
+      pitch: 'Science · CLI · LaTeX · CAD · Git',
+      pitchSub: 'Local-first. AI-assisted. Yours forever.',
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
@@ -100,14 +103,6 @@ export const en = {
       manifesto: 'Read the manifesto →',
       contribute: 'Contribute on GitHub ↗',
     },
-  },
-  experimentsIndex: {
-    kicker: 'Index',
-    title: 'Experiments',
-    description:
-      'Active experiments at UniverLab: Canopy (AI agents), TexForge (LaTeX), GitKit, ghScaff, DemoStage, and more open-source tools.',
-    intro:
-      'The fundamental unit of UniverLab is the experiment. Experiments are not products — they are ongoing explorations. They may mature, stay active for decades, or grow into new research. Each one starts with a real need — usually one we ran into ourselves.',
   },
   experiments: {
     canopy: {
