@@ -13,7 +13,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </section>
 
-  <style>
+  <style is:global>
     .log {
       max-width: 42rem;
       padding-block: 4rem 6rem;
@@ -45,17 +45,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .entry {
       display: grid;
       grid-template-columns: 7rem 1fr auto;
-      gap: 0.8rem 1.2rem;
+      grid-template-rows: auto auto;
+      gap: 0.4rem 1.2rem;
       padding-block: 1.8rem;
       border-bottom: 1px solid var(--line);
       align-items: start;
     }
     .entry time {
+      grid-column: 1;
+      grid-row: 1;
       font-family: var(--font-mono);
       font-size: 0.78rem;
       color: var(--ink-faint);
-      padding-top: 0.15rem;
       white-space: nowrap;
+    }
+    .entry .type-badge {
+      grid-column: 3;
+      grid-row: 1;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      align-self: start;
+      opacity: 0.8;
+    }
+    .entry .entry-body {
+      grid-column: 1 / -1;
+      grid-row: 2;
     }
     .entry h3 {
       font-family: var(--font-mono);
@@ -68,19 +88,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       font-size: 0.88rem;
       line-height: 1.65;
       white-space: pre-line;
-    }
-    .entry .type-badge {
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.15rem 0.5rem;
-      border-radius: 3px;
-      margin-top: 0.15rem;
-      align-self: start;
-      opacity: 0.8;
     }
 
     /* Skeleton */
@@ -171,9 +178,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     @media (max-width: 640px) {
       .entry {
         grid-template-columns: 1fr auto;
-        gap: 0.3rem 0.8rem;
       }
       .entry time {
+        grid-column: 1 / -1;
+      }
+      .entry .entry-body {
         grid-column: 1 / -1;
       }
     }
