@@ -184,11 +184,13 @@ const webSite = {
     z-index: 0;
   }
   .card:hover .card-bg-canvas,
-  .card:focus-visible .card-bg-canvas { opacity: 0.65; }
+  .card:focus-visible .card-bg-canvas,
+  .card.is-tapped .card-bg-canvas { opacity: 0.65; }
 
   /* Content sits above the canvas */
   .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
-  .card:hover {
+  .card:hover,
+  .card.is-tapped {
     border-left-color: var(--essence);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
@@ -205,13 +207,15 @@ const webSite = {
       radial-gradient(ellipse at 20% 80%, color-mix(in srgb, var(--essence) 14%, transparent) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--essence) 8%, transparent) 0%, transparent 50%);
   }
-  .card:hover .card-glow { opacity: 1; }
+  .card:hover .card-glow,
+  .card.is-tapped .card-glow { opacity: 1; }
 
   /* ── Per-experiment portal: card adopts the experiment's surface on hover ── */
 
   /* Canopy — tui surface: cold slate dark, terminal chrome */
   .card[data-exp='canopy']:hover,
-  .card[data-exp='canopy']:focus-visible {
+  .card[data-exp='canopy']:focus-visible,
+  .card[data-exp='canopy'].is-tapped {
     --bg: #0d0e10;
     --bg-raise: #131519;
     --ink: #cdd6df;
@@ -225,14 +229,19 @@ const webSite = {
   }
   .card[data-exp='canopy']:hover h3,
   .card[data-exp='canopy']:focus-visible h3,
+  .card[data-exp='canopy'].is-tapped h3,
   .card[data-exp='canopy']:hover .num,
-  .card[data-exp='canopy']:focus-visible .num { color: var(--canopy); }
+  .card[data-exp='canopy']:focus-visible .num,
+  .card[data-exp='canopy'].is-tapped .num { color: var(--canopy); }
   .card[data-exp='canopy']:hover .need,
   .card[data-exp='canopy']:focus-visible .need,
+  .card[data-exp='canopy'].is-tapped .need,
   .card[data-exp='canopy']:hover .tagline,
   .card[data-exp='canopy']:focus-visible .tagline,
+  .card[data-exp='canopy'].is-tapped .tagline,
   .card[data-exp='canopy']:hover .status,
-  .card[data-exp='canopy']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='canopy']:focus-visible .status,
+  .card[data-exp='canopy'].is-tapped .status { color: var(--ink-dim); }
 
   /* Terminal dots bar */
   .card[data-exp='canopy']::before {
@@ -250,7 +259,8 @@ const webSite = {
     transition: opacity 0.3s ease;
     z-index: 1;
   }
-  .card[data-exp='canopy']:hover::before { opacity: 1; }
+  .card[data-exp='canopy']:hover::before,
+  .card[data-exp='canopy'].is-tapped::before { opacity: 1; }
 
   /* Blinking cursor */
   .card[data-exp='canopy']::after {
@@ -274,6 +284,7 @@ const webSite = {
 
   /* ── TexForge — paper surface: warm cream, forge amber ── */
   .card[data-exp='texforge']:hover,
+  .card[data-exp='texforge'].is-tapped,
   .card[data-exp='texforge']:focus-visible {
     --bg: #f5f5f3;
     --bg-raise: #ffffff;
@@ -288,18 +299,24 @@ const webSite = {
   }
   .card[data-exp='texforge']:hover h3,
   .card[data-exp='texforge']:focus-visible h3,
+  .card[data-exp='texforge'].is-tapped h3,
   .card[data-exp='texforge']:hover .num,
-  .card[data-exp='texforge']:focus-visible .num { color: var(--texforge); }
+  .card[data-exp='texforge']:focus-visible .num,
+  .card[data-exp='texforge'].is-tapped .num { color: var(--texforge); }
   .card[data-exp='texforge']:hover .need,
   .card[data-exp='texforge']:focus-visible .need,
+  .card[data-exp='texforge'].is-tapped .need,
   .card[data-exp='texforge']:hover .tagline,
   .card[data-exp='texforge']:focus-visible .tagline,
+  .card[data-exp='texforge'].is-tapped .tagline,
   .card[data-exp='texforge']:hover .status,
-  .card[data-exp='texforge']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='texforge']:focus-visible .status,
+  .card[data-exp='texforge'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── GitKit — pastel surface: soft pink, bubblegum ── */
   .card[data-exp='gitkit']:hover,
-  .card[data-exp='gitkit']:focus-visible {
+  .card[data-exp='gitkit']:focus-visible,
+  .card[data-exp='gitkit'].is-tapped {
     --bg: #f5eef5;
     --bg-raise: #faf5fa;
     --ink: #4a3a4a;
@@ -313,18 +330,24 @@ const webSite = {
   }
   .card[data-exp='gitkit']:hover h3,
   .card[data-exp='gitkit']:focus-visible h3,
+  .card[data-exp='gitkit'].is-tapped h3,
   .card[data-exp='gitkit']:hover .num,
-  .card[data-exp='gitkit']:focus-visible .num { color: var(--gitkit); }
+  .card[data-exp='gitkit']:focus-visible .num,
+  .card[data-exp='gitkit'].is-tapped .num { color: var(--gitkit); }
   .card[data-exp='gitkit']:hover .need,
   .card[data-exp='gitkit']:focus-visible .need,
+  .card[data-exp='gitkit'].is-tapped .need,
   .card[data-exp='gitkit']:hover .tagline,
   .card[data-exp='gitkit']:focus-visible .tagline,
+  .card[data-exp='gitkit'].is-tapped .tagline,
   .card[data-exp='gitkit']:hover .status,
-  .card[data-exp='gitkit']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='gitkit']:focus-visible .status,
+  .card[data-exp='gitkit'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── ghScaff — industrial surface: deep brown, amber brass ── */
   .card[data-exp='ghscaff']:hover,
-  .card[data-exp='ghscaff']:focus-visible {
+  .card[data-exp='ghscaff']:focus-visible,
+  .card[data-exp='ghscaff'].is-tapped {
     --bg: #0e0c0a;
     --bg-raise: #161210;
     --ink: #e0d5c8;
@@ -338,18 +361,24 @@ const webSite = {
   }
   .card[data-exp='ghscaff']:hover h3,
   .card[data-exp='ghscaff']:focus-visible h3,
+  .card[data-exp='ghscaff'].is-tapped h3,
   .card[data-exp='ghscaff']:hover .num,
-  .card[data-exp='ghscaff']:focus-visible .num { color: var(--ghscaff); }
+  .card[data-exp='ghscaff']:focus-visible .num,
+  .card[data-exp='ghscaff'].is-tapped .num { color: var(--ghscaff); }
   .card[data-exp='ghscaff']:hover .need,
   .card[data-exp='ghscaff']:focus-visible .need,
+  .card[data-exp='ghscaff'].is-tapped .need,
   .card[data-exp='ghscaff']:hover .tagline,
   .card[data-exp='ghscaff']:focus-visible .tagline,
+  .card[data-exp='ghscaff'].is-tapped .tagline,
   .card[data-exp='ghscaff']:hover .status,
-  .card[data-exp='ghscaff']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='ghscaff']:focus-visible .status,
+  .card[data-exp='ghscaff'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── cadSpec — blueprint surface: cool white, teal ── */
   .card[data-exp='cadspec']:hover,
-  .card[data-exp='cadspec']:focus-visible {
+  .card[data-exp='cadspec']:focus-visible,
+  .card[data-exp='cadspec'].is-tapped {
     --bg: #f6f8fa;
     --bg-raise: #ffffff;
     --ink: #15202a;
@@ -363,18 +392,24 @@ const webSite = {
   }
   .card[data-exp='cadspec']:hover h3,
   .card[data-exp='cadspec']:focus-visible h3,
+  .card[data-exp='cadspec'].is-tapped h3,
   .card[data-exp='cadspec']:hover .num,
-  .card[data-exp='cadspec']:focus-visible .num { color: var(--cadspec); }
+  .card[data-exp='cadspec']:focus-visible .num,
+  .card[data-exp='cadspec'].is-tapped .num { color: var(--cadspec); }
   .card[data-exp='cadspec']:hover .need,
   .card[data-exp='cadspec']:focus-visible .need,
+  .card[data-exp='cadspec'].is-tapped .need,
   .card[data-exp='cadspec']:hover .tagline,
   .card[data-exp='cadspec']:focus-visible .tagline,
+  .card[data-exp='cadspec'].is-tapped .tagline,
   .card[data-exp='cadspec']:hover .status,
-  .card[data-exp='cadspec']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='cadspec']:focus-visible .status,
+  .card[data-exp='cadspec'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── astro-denoise — observatory surface: deep space, violet ── */
   .card[data-exp='astro-denoise']:hover,
-  .card[data-exp='astro-denoise']:focus-visible {
+  .card[data-exp='astro-denoise']:focus-visible,
+  .card[data-exp='astro-denoise'].is-tapped {
     --bg: #0a0911;
     --bg-raise: #110f1b;
     --ink: #ddd9e8;
@@ -388,18 +423,24 @@ const webSite = {
   }
   .card[data-exp='astro-denoise']:hover h3,
   .card[data-exp='astro-denoise']:focus-visible h3,
+  .card[data-exp='astro-denoise'].is-tapped h3,
   .card[data-exp='astro-denoise']:hover .num,
-  .card[data-exp='astro-denoise']:focus-visible .num { color: var(--astro-denoise); }
+  .card[data-exp='astro-denoise']:focus-visible .num,
+  .card[data-exp='astro-denoise'].is-tapped .num { color: var(--astro-denoise); }
   .card[data-exp='astro-denoise']:hover .need,
   .card[data-exp='astro-denoise']:focus-visible .need,
+  .card[data-exp='astro-denoise'].is-tapped .need,
   .card[data-exp='astro-denoise']:hover .tagline,
   .card[data-exp='astro-denoise']:focus-visible .tagline,
+  .card[data-exp='astro-denoise'].is-tapped .tagline,
   .card[data-exp='astro-denoise']:hover .status,
-  .card[data-exp='astro-denoise']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='astro-denoise']:focus-visible .status,
+  .card[data-exp='astro-denoise'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── DemoStage — studio surface: warm parchment, burnt orange ── */
   .card[data-exp='demostage']:hover,
-  .card[data-exp='demostage']:focus-visible {
+  .card[data-exp='demostage']:focus-visible,
+  .card[data-exp='demostage'].is-tapped {
     --bg: #f6f3ee;
     --bg-raise: #ffffff;
     --ink: #221d18;
@@ -413,18 +454,24 @@ const webSite = {
   }
   .card[data-exp='demostage']:hover h3,
   .card[data-exp='demostage']:focus-visible h3,
+  .card[data-exp='demostage'].is-tapped h3,
   .card[data-exp='demostage']:hover .num,
-  .card[data-exp='demostage']:focus-visible .num { color: var(--demostage); }
+  .card[data-exp='demostage']:focus-visible .num,
+  .card[data-exp='demostage'].is-tapped .num { color: var(--demostage); }
   .card[data-exp='demostage']:hover .need,
   .card[data-exp='demostage']:focus-visible .need,
+  .card[data-exp='demostage'].is-tapped .need,
   .card[data-exp='demostage']:hover .tagline,
   .card[data-exp='demostage']:focus-visible .tagline,
+  .card[data-exp='demostage'].is-tapped .tagline,
   .card[data-exp='demostage']:hover .status,
-  .card[data-exp='demostage']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='demostage']:focus-visible .status,
+  .card[data-exp='demostage'].is-tapped .status { color: var(--ink-dim); }
 
   /* ── Quorum — quorum surface: deep warm brown, gold ── */
   .card[data-exp='quorum']:hover,
-  .card[data-exp='quorum']:focus-visible {
+  .card[data-exp='quorum']:focus-visible,
+  .card[data-exp='quorum'].is-tapped {
     --bg: #241a12;
     --bg-raise: #2f2318;
     --ink: #f2e7d3;
@@ -438,14 +485,19 @@ const webSite = {
   }
   .card[data-exp='quorum']:hover h3,
   .card[data-exp='quorum']:focus-visible h3,
+  .card[data-exp='quorum'].is-tapped h3,
   .card[data-exp='quorum']:hover .num,
-  .card[data-exp='quorum']:focus-visible .num { color: var(--quorum); }
+  .card[data-exp='quorum']:focus-visible .num,
+  .card[data-exp='quorum'].is-tapped .num { color: var(--quorum); }
   .card[data-exp='quorum']:hover .need,
   .card[data-exp='quorum']:focus-visible .need,
+  .card[data-exp='quorum'].is-tapped .need,
   .card[data-exp='quorum']:hover .tagline,
   .card[data-exp='quorum']:focus-visible .tagline,
+  .card[data-exp='quorum'].is-tapped .tagline,
   .card[data-exp='quorum']:hover .status,
-  .card[data-exp='quorum']:focus-visible .status { color: var(--ink-dim); }
+  .card[data-exp='quorum']:focus-visible .status,
+  .card[data-exp='quorum'].is-tapped .status { color: var(--ink-dim); }
 
   /* Focus state for accessibility — generic fallback (no data-exp) */
   .card:not([data-exp]):focus-visible {
@@ -567,5 +619,42 @@ const webSite = {
       // Navigate after expand
       setTimeout(() => { window.location.href = href; }, 480);
     });
+  });
+
+  // Mobile tap: apply hover effect for 500ms before navigating
+  if ('ontouchstart' in window) {
+    document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+      let tapTimeout: ReturnType<typeof setTimeout> | null = null;
+      let navigated = false;
+
+      card.addEventListener('touchstart', () => {
+        card.classList.add('is-tapped');
+        // Start canvas animation on tap too
+        const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
+        const expId = card.dataset.exp;
+        if (canvas && expId && !canvas.dataset.started) {
+          const s = surfaces[expId];
+          if (s) {
+            canvas.dataset.started = '1';
+            startBackground(canvas, s.bg, s.essence, s.bgHex);
+          }
+        }
+      }, { passive: true });
+
+      card.addEventListener('touchend', (e) => {
+        if (navigated) return;
+        e.preventDefault();
+        navigated = true;
+        // Keep hover effect visible for 500ms then let the normal click handler fire
+        tapTimeout = setTimeout(() => {
+          card.classList.remove('is-tapped');
+        }, 500);
+      });
+    });
+  }
+
+  // Clean up stale overlays on back-navigation (BFCache restore)
+  window.addEventListener('pageshow', () => {
+    document.querySelectorAll('[style*="z-index: 9999"]').forEach((el) => el.remove());
   });
 </script>
