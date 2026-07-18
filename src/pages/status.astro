@@ -232,6 +232,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         fetch(API + '?offset=' + offset + '&limit=' + PAGE)
           .then(function (r) { return r.json(); })
           .then(function (data) {
+            if (offset === 0) container.innerHTML = '';
             appendEntries(data.entries);
             offset += data.entries.length;
             hasMore = data.hasMore;
