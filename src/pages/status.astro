@@ -67,6 +67,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       color: var(--ink-dim);
       font-size: 0.9rem;
       line-height: 1.6;
+      /* Bodies are plain text set via textContent — honour their paragraph
+         breaks without letting them inject markup. */
+      white-space: pre-line;
     }
     .entry .type-badge {
       display: inline-block;
@@ -174,8 +177,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       function formatDate(iso) {
         var d = new Date(iso);
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        var y = d.getFullYear();
+        var start = new Date(y, 0, 0);
+        var dayOfYear = Math.floor((d - start) / 86400000);
+        return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear;
       }
 
       function renderEntry(entry) {
