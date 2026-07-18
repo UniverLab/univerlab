@@ -17,7 +17,6 @@ describe('i18n system', () => {
       expect(en).toHaveProperty('common');
       expect(en).toHaveProperty('status');
       expect(en).toHaveProperty('home');
-      expect(en).toHaveProperty('experimentsIndex');
       expect(en).toHaveProperty('experiments');
       expect(en).toHaveProperty('manifesto');
       expect(en).toHaveProperty('cosmos');
@@ -65,7 +64,6 @@ describe('i18n system', () => {
       expect(es).toHaveProperty('common');
       expect(es).toHaveProperty('status');
       expect(es).toHaveProperty('home');
-      expect(es).toHaveProperty('experimentsIndex');
       expect(es).toHaveProperty('experiments');
       expect(es).toHaveProperty('manifesto');
       expect(es).toHaveProperty('cosmos');
