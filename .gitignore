@@ -39,3 +39,7 @@ scripts/og/render.html
 
 .mimocode/
 specs/
+
+# Cloudflare Workers local state
+.wrangler/
+.dev.vars
