@@ -625,7 +625,6 @@ const webSite = {
   if ('ontouchstart' in window) {
     document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
       let tapTimeout: ReturnType<typeof setTimeout> | null = null;
-      let navigated = false;
 
       card.addEventListener('touchstart', () => {
         card.classList.add('is-tapped');
@@ -642,12 +641,13 @@ const webSite = {
       }, { passive: true });
 
       card.addEventListener('touchend', (e) => {
-        if (navigated) return;
+        if (card.dataset.navigated === 'true') return;
         e.preventDefault();
-        navigated = true;
-        // Keep hover effect visible for 500ms then let the normal click handler fire
+        card.dataset.navigated = 'true';
+        // Keep hover effect visible for 500ms then trigger the normal click handler (zoom-in transition)
         tapTimeout = setTimeout(() => {
           card.classList.remove('is-tapped');
+          card.click();
         }, 500);
       });
     });
@@ -656,5 +656,9 @@ const webSite = {
   // Clean up stale overlays on back-navigation (BFCache restore)
   window.addEventListener('pageshow', () => {
     document.querySelectorAll('[style*="z-index: 9999"]').forEach((el) => el.remove());
+    document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
+      card.dataset.navigated = 'false';
+      card.classList.remove('is-tapped');
+    });
   });
 </script>
