@@ -839,7 +839,14 @@ const rings = c.address.flatMap((_, i) => {
   }
 
   @media (max-width: 34rem) {
-    .cosmos-stage { max-width: min(100%, 68vh); }
+    .cosmos-stage { max-width: min(100%, 68vh); height: 65vh; min-height: 22rem; }
+    .tl-strata { width: 96%; }
+    .tl-span { white-space: normal; font-size: calc(0.72rem + var(--f) * 0.85rem); }
+    .tl-scale { font-size: calc(0.62rem + var(--f) * 0.2rem); }
+    .you-us-text { font-size: calc(0.9rem + var(--tx) * 2.5rem); white-space: normal; }
+    .zo-name { font-size: clamp(0.9rem, 4vw, 1.3rem); }
+    .zo-stack-name { white-space: normal; font-size: calc(var(--sz) * 0.85 * var(--appear) * var(--scale)); }
+    .zo-gauge-val { font-size: 0.58rem; }
   }
 
   /* Scrollytelling reveal — pure CSS scroll-driven. Every block and list item
@@ -918,6 +925,7 @@ const rings = c.address.flatMap((_, i) => {
     requestAnimationFrame(tickSettle);
 
     if (isTouch) {
+      cosmos.style.height = '300vh';
       // Touch: map scroll position directly to progress.
       let ticking = false;
       const update = () => {

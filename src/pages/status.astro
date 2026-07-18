@@ -7,13 +7,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <h1>Status</h1>
     <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
     <div id="log-entries">
-      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
-      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
-      <article class="entry skeleton"><time></time><div class="entry-body"></div></article>
+      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
     </div>
   </section>
 
-  <style>
+  <style is:global>
     .log {
       max-width: 42rem;
       padding-block: 4rem 6rem;
@@ -44,44 +44,50 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     #log-entries { display: flex; flex-direction: column; }
     .entry {
       display: grid;
-      grid-template-columns: 7rem 1fr;
-      gap: 1.2rem;
+      grid-template-columns: 7rem 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 0.4rem 1.2rem;
       padding-block: 1.8rem;
       border-bottom: 1px solid var(--line);
       align-items: start;
     }
     .entry time {
+      grid-column: 1;
+      grid-row: 1;
       font-family: var(--font-mono);
       font-size: 0.78rem;
       color: var(--ink-faint);
-      padding-top: 0.15rem;
       white-space: nowrap;
+    }
+    .entry .type-badge {
+      grid-column: 3;
+      grid-row: 1;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      align-self: start;
+      opacity: 0.8;
+    }
+    .entry .entry-body {
+      grid-column: 1 / -1;
+      grid-row: 2;
     }
     .entry h3 {
       font-family: var(--font-mono);
       font-size: 0.95rem;
-      color: var(--ink);
+      color: var(--accent);
       margin-bottom: 0.3rem;
     }
     .entry p {
       color: var(--ink-dim);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      /* Bodies are plain text set via textContent — honour their paragraph
-         breaks without letting them inject markup. */
+      font-size: 0.88rem;
+      line-height: 1.65;
       white-space: pre-line;
-    }
-    .entry .type-badge {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.15rem 0.45rem;
-      border-radius: 3px;
-      margin-bottom: 0.4rem;
     }
 
     /* Skeleton */
@@ -99,6 +105,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       background-size: 200% 100%;
       animation: skeleton-pulse 1.8s ease-in-out infinite;
       display: block;
+    }
+    .skeleton .type-badge {
+      height: 0.9rem;
+      width: 3rem;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-pulse 1.8s ease-in-out infinite;
     }
     @keyframes skeleton-pulse {
       0% { background-position: 200% 0; }
@@ -163,8 +177,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     @media (max-width: 640px) {
       .entry {
-        grid-template-columns: 1fr;
-        gap: 0.4rem;
+        grid-template-columns: 1fr auto;
+      }
+      .entry time {
+        grid-column: 1 / -1;
+      }
+      .entry .entry-body {
+        grid-column: 1 / -1;
       }
     }
   </style>
@@ -174,6 +193,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       var API = 'https://announcements.univerlab.org';
       var container = document.getElementById('log-entries');
       if (!container) return;
+
+      var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      var MOCK = [
+        { date: '2026-07-17T22:00:00Z', type: 'note', title: 'Dress rehearsal', body: 'Before a vehicle flies, it runs a dress rehearsal: the full countdown on the pad, tanks loaded, every system exercised in sequence, stopping just short of ignition. Nothing leaves the ground. The point is to find out what breaks while breaking it is still cheap.' },
+        { date: '2026-07-17T18:00:00Z', type: 'launch', title: 'First light', body: 'Astronomers call it first light: the moment a new instrument opens its eye and returns an image. That first picture is never the best one the telescope will ever take. It is the proof that the optics align, the detector responds, the data path is open.' },
+        { date: '2026-07-17T12:00:00Z', type: 'deploy', title: 'Announcements worker online', body: 'The announcements Durable Object is live. Entries serialize through SQLite, fan out over SSE, and mirror to KV for fast reads. The first transmission reached the log without incident.' },
+        { date: '2026-07-17T09:00:00Z', type: 'note', title: 'Status page ships', body: 'The status page is now part of the public site. Real-time entries, infinite scroll, toast notifications for live updates, and a cosmic background that matches the mission log aesthetic.' },
+        { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
+      ];
 
       var PAGE = 20;
       var offset = 0;
@@ -185,7 +213,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         var y = d.getFullYear();
         var start = new Date(y, 0, 0);
         var dayOfYear = Math.floor((d - start) / 86400000);
-        return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear;
+        var hh = String(d.getUTCHours()).padStart(2, '0');
+        var mm = String(d.getUTCMinutes()).padStart(2, '0');
+        return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear + ' \u00b7 ' + hh + ':' + mm + ' UTC';
       }
 
       function renderEntry(entry) {
@@ -204,7 +234,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           var badge = document.createElement('div');
           badge.className = 'type-badge';
           badge.textContent = entry.type;
-          body.appendChild(badge);
+          article.appendChild(badge);
         }
 
         var h3 = document.createElement('h3');
@@ -229,6 +259,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       function loadMore() {
         if (loading || !hasMore) return;
         loading = true;
+
+        if (isDev) {
+          if (offset === 0) container.innerHTML = '';
+          var batch = MOCK.slice(offset, offset + PAGE);
+          appendEntries(batch);
+          offset += batch.length;
+          hasMore = offset < MOCK.length;
+          loading = false;
+          if (!hasMore) observer.disconnect();
+          return;
+        }
+
         fetch(API + '?offset=' + offset + '&limit=' + PAGE)
           .then(function (r) { return r.json(); })
           .then(function (data) {
@@ -274,14 +316,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       loadMore();
 
       // SSE
-      var source = new EventSource(API + '/events');
-      source.addEventListener('entry', function (e) {
-        try {
-          var entry = JSON.parse(e.data);
-          prependEntry(entry);
-        } catch (err) {}
-      });
-      source.onerror = function () {};
+      if (!isDev) {
+        var source = new EventSource(API + '/events');
+        source.addEventListener('entry', function (e) {
+          try {
+            var entry = JSON.parse(e.data);
+            prependEntry(entry);
+          } catch (err) {}
+        });
+        source.onerror = function () {};
+      }
     })();
   </script>
 </BaseLayout>

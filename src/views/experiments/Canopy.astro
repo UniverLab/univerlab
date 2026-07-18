@@ -342,6 +342,7 @@ const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
     scene.classList.add('scrolly');
 
     if (isTouch) {
+      scene.style.height = '250vh';
       let ticking = false;
       const update = () => {
         const total = scene.offsetHeight - window.innerHeight;
