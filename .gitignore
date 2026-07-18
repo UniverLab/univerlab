@@ -43,3 +43,4 @@ specs/
 # Cloudflare Workers local state
 .wrangler/
 .dev.vars
+.auth-token.local
