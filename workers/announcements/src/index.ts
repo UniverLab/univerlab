@@ -189,7 +189,7 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
 
-    // GET / — mirror read, never touches the DO
+    // GET / — mirror read with pagination
     if (req.method === 'GET' && url.pathname === '/') {
       const raw = await env.ANNOUNCEMENTS.get('entries');
       let entries: Entry[];
@@ -198,7 +198,10 @@ export default {
       } catch {
         entries = [];
       }
-      return json(entries);
+      const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+      const sliced = entries.slice(offset, offset + limit);
+      return json({ entries: sliced, total: entries.length, hasMore: offset + limit < entries.length });
     }
 
     if (req.method === 'GET' && url.pathname === '/events') {
