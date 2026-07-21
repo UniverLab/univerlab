@@ -166,7 +166,7 @@ const orgJsonLd = {
         } catch (e) {}
       })();
     </script>
-    <script is:inline>
+    <script>
       // Console Easter egg — ASCII art + invitation to contribute.
       (function () {
         var art = `
@@ -417,7 +417,7 @@ https://github.com/UniverLab
       <slot />
     </main>
     <Footer />
-    <script is:inline>
+    <script>
       // Command palette — terminal-style / command with Tab autocomplete.
       // Commands are derived from experiment IDs + static routes.
       // To add a new experiment: add its ID to the experiments array in
@@ -1078,7 +1078,7 @@ https://github.com/UniverLab
         text-align: center;
       }
     </style>
-    <script is:inline>
+    <script>
       // Flight log — terminal-style session record like spacecraft telemetry.
       // Dispatch: window.flightLog.record('event-id')
       // The bar on the footer fills as entries accumulate; click to open log.
