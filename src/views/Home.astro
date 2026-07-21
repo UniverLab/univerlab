@@ -35,7 +35,7 @@ const webSite = {
   <!-- Experiments -->
   <section class="wrap section">
     <div class="section-head" id="experiments">
-      <span class="label">{t.home.experiments.kicker}</span>
+      <h2 class="label">{t.home.experiments.kicker}</h2>
     </div>
     <ul class="grid">
       {experiments.map((exp) => {
@@ -320,8 +320,8 @@ const webSite = {
     --bg: #f5eef5;
     --bg-raise: #faf5fa;
     --ink: #4a3a4a;
-    --ink-dim: #7a6a7a;
-    --ink-faint: #a898a8;
+    --ink-dim: #685b68; /* matches the corrected pastel surface — card text (.need/.tagline) needs AA */
+    --ink-faint: #746874;
     --line: #e8d8e8;
     background: var(--bg);
     color: var(--ink);

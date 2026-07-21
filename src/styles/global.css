@@ -8,7 +8,11 @@
   --bg-raise: #101218;
   --ink: #e8e6e1;
   --ink-dim: #9a9890;
-  --ink-faint: #55534e;
+  /* Tertiary ink. The old #55534e sat at 2.56:1 on --bg — below WCAG AA for
+     text, and it is used as text (.subtitle, .pitch-sub, dimmed list rows).
+     Same warm hue, lifted to the lowest value that clears 4.5:1, so it stays
+     the quietest ink on the page without being unreadable. */
+  --ink-faint: #7f7c76;
   --line: #23252c;
 
   /* UniverLab accent — the lab's own colour (yellow), reserved for the main site */
@@ -41,7 +45,7 @@ html[data-surface='paper'] {
   --bg-raise: #ffffff;
   --ink: #1b1b1a;
   --ink-dim: #54514c;
-  --ink-faint: #8a857d;
+  --ink-faint: #736e68; /* lifted from #8a857d (3.36:1) to clear AA at 4.6:1 */
   --line: #e3ded4;
 }
 
@@ -51,7 +55,7 @@ html[data-surface='tui'] {
   --bg-raise: #131519;
   --ink: #cdd6df;
   --ink-dim: #8b97a3;
-  --ink-faint: #58616b;
+  --ink-faint: #717d8a; /* lifted from #58616b (3.07:1) to clear AA at 4.6:1 */
   --line: #20242a;
 }
 
@@ -61,8 +65,8 @@ html[data-surface='pastel'] {
   --bg: #f5eef5;
   --bg-raise: #faf5fa;
   --ink: #4a3a4a;
-  --ink-dim: #7a6a7a;
-  --ink-faint: #a898a8;
+  --ink-dim: #685b68;   /* darkened from #7a6a7a (4.42:1) to 5.6:1 */
+  --ink-faint: #746874; /* darkened from #a898a8 (2.39:1); kept below dim so the dim>faint hierarchy holds */
   --line: #e8d8e8;
 }
 
@@ -74,7 +78,7 @@ html[data-surface='industrial'] {
   --bg-raise: #161210;
   --ink: #e0d5c8;
   --ink-dim: #9a8b7a;
-  --ink-faint: #5e5248;
+  --ink-faint: #897869; /* lifted from #5e5248 (2.58:1) to clear AA at 4.6:1 */
   --line: #2a2320;
 }
 
@@ -85,7 +89,7 @@ html[data-surface='blueprint'] {
   --bg-raise: #ffffff;
   --ink: #15202a;
   --ink-dim: #4d5a64;
-  --ink-faint: #8a97a0;
+  --ink-faint: #697279; /* darkened from #8a97a0 (2.81:1) to clear AA at 4.6:1 */
   --line: #dde5ea;
 }
 
@@ -95,7 +99,7 @@ html[data-surface='observatory'] {
   --bg-raise: #110f1b;
   --ink: #ddd9e8;
   --ink-dim: #8f8aa3;
-  --ink-faint: #5b566e;
+  --ink-faint: #7c7696; /* lifted from #5b566e (2.83:1) to clear AA at 4.6:1 */
   --line: #1e1b2c;
 }
 
@@ -106,7 +110,7 @@ html[data-surface='quorum'] {
   --bg-raise: #2f2318;
   --ink: #f2e7d3;
   --ink-dim: #b8a583;
-  --ink-faint: #8a7a5e;
+  --ink-faint: #948365; /* lifted from #8a7a5e (4.08:1) to clear AA at 4.6:1 */
   --line: #40331f;
 }
 
@@ -117,7 +121,7 @@ html[data-surface='studio'] {
   --bg-raise: #ffffff;
   --ink: #221d18;
   --ink-dim: #5b5249;
-  --ink-faint: #9a9082;
+  --ink-faint: #756d63; /* darkened from #9a9082 (2.84:1) to clear AA at 4.6:1 */
   --line: #e6ded2;
 }
 

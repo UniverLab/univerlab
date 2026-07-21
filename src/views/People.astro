@@ -32,14 +32,14 @@ const founderJsonLd = {
     <ul class="list">
       <li>
         <span class="label">{p.founder.role}</span>
-        <h3>{p.founder.name}</h3>
+        <h2>{p.founder.name}</h2>
         <p>{p.founder.body}</p>
         <a class="label" href="https://github.com/JheisonMB" target="_blank" rel="noopener noreferrer">{p.founder.link}</a>
         <a class="email" href={`mailto:${p.founder.email}`}>{p.founder.email}</a>
       </li>
       <li>
         <span class="label">{p.ai.role}</span>
-        <h3>{p.ai.name}</h3>
+        <h2>{p.ai.name}</h2>
         <p set:html={p.ai.body} />
         <ul class="models">
           {p.ai.models.map((m) => <li>{m}</li>)}
@@ -47,7 +47,7 @@ const founderJsonLd = {
       </li>
       <li>
         <span class="label">{p.contributors.role}</span>
-        <h3>{p.contributors.name}</h3>
+        <h2>{p.contributors.name}</h2>
         <p>{p.contributors.body}</p>
         <a class="label" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{p.contributors.link}</a>
       </li>
@@ -55,7 +55,7 @@ const founderJsonLd = {
 
     {contributors.length > 0 && (
       <section class="wall">
-        <span class="label">{p.wall.kicker}</span>
+        <h2 class="label">{p.wall.kicker}</h2>
         <ul class="avatars">
           {contributors.map((c) => (
             <li>
@@ -76,7 +76,7 @@ const founderJsonLd = {
   .head h1 { font-size: clamp(2rem, 5vw, 3rem); margin-top: 0.6rem; }
   .list { list-style: none; margin: 0 0 5rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; }
   .list > li { background: color-mix(in srgb, var(--bg) 78%, transparent); border: 1px solid var(--line); padding: 1.8rem; display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; backdrop-filter: blur(2px); }
-  .list h3 { font-size: 1.15rem; }
+  .list h2 { font-size: 1.15rem; }
   .list p { color: var(--ink-dim); font-size: 0.95rem; margin: 0; }
   :global(.list p a) { color: var(--ink); }
 
