@@ -31,7 +31,7 @@ const rings = c.address.flatMap((_, i) => {
   <hr class="rule" />
 
   <section class="wrap section purpose-section">
-    <span class="label">{m.purposeTitle}</span>
+    <h2 class="label">{m.purposeTitle}</h2>
     <p class="purpose-body">{m.purposeBody}</p>
     <ol class="purpose-list">
       {m.purpose.map((p) => <li>{p}</li>)}
@@ -44,7 +44,7 @@ const rings = c.address.flatMap((_, i) => {
        single observer who wonders it exists. It hands into the imperatives. -->
   <section class="cosmos-section">
     <div class="wrap cosmos-head">
-      <span class="label">{c.kicker}</span>
+      <h2 class="label">{c.kicker}</h2>
     </div>
     <div class="cosmos-scrolly" data-cosmos>
       <div class="cosmos-sticky" style={`--levels:${c.address.length}; --tsteps:${c.timescales.length}`}>
@@ -133,7 +133,7 @@ const rings = c.address.flatMap((_, i) => {
   <hr class="rule" />
 
   <section class="wrap section imperatives-section">
-    <span class="label">{m.imperativesTitle}</span>
+    <h2 class="label">{m.imperativesTitle}</h2>
     <ol class="imperatives">
       {m.imperatives.map(([name, body]) => (
         <li>
@@ -148,7 +148,7 @@ const rings = c.address.flatMap((_, i) => {
   <hr class="rule" />
 
   <section class="wrap section">
-    <span class="label">{m.pillarsTitle}</span>
+    <h2 class="label">{m.pillarsTitle}</h2>
     <ol class="pillars">
       {m.pillars.map(([name, body], i) => (
         <li>
@@ -162,7 +162,7 @@ const rings = c.address.flatMap((_, i) => {
   <hr class="rule" />
 
   <section class="wrap section">
-    <span class="label">{m.pathTitle}</span>
+    <h2 class="label">{m.pathTitle}</h2>
     <ul class="path">
       {m.path.map(([from, to]) => (
         <li><span class="from">{from}</span><span class="arrow">→</span><span class="to">{to}</span></li>
@@ -173,7 +173,7 @@ const rings = c.address.flatMap((_, i) => {
   <hr class="rule" />
 
   <section class="wrap section works-section">
-    <span class="label">{m.worksTitle}</span>
+    <h2 class="label">{m.worksTitle}</h2>
     <p class="works-body">{m.worksBody}</p>
     <ul class="works">
       {m.works.map(([name, desc]) => (
@@ -193,7 +193,7 @@ const rings = c.address.flatMap((_, i) => {
        SVG charts include Y-axis labels and a hover crosshair (wired in the
        script block below). -->
   <section class="wrap section obs-section">
-    <span class="label">{obs.kicker}</span>
+    <h2 class="label">{obs.kicker}</h2>
     <p class="obs-intro">{obs.intro}</p>
     <div class="obs-grid">
       {series.map((s) => {
