@@ -29,6 +29,7 @@ interface Entry {
   title: string;
   body: string;
   type: string;
+  link?: string;
 }
 
 /** Entries kept in the KV mirror. SQLite in the DO retains the full history. */
@@ -81,7 +82,8 @@ export class LogHub extends DurableObject<Env> {
           date  TEXT NOT NULL,
           title TEXT NOT NULL,
           body  TEXT NOT NULL,
-          type  TEXT NOT NULL
+          type  TEXT NOT NULL,
+          link  TEXT
         )
       `);
     });
@@ -92,27 +94,29 @@ export class LogHub extends DurableObject<Env> {
    * SQLite writes are synchronous and this DO is single-threaded, so the
    * read-modify-write that used to need a lock cannot interleave here.
    */
-  async addEntry(input: { title: string; body: string; type: string }): Promise<Entry> {
+  async addEntry(input: { title: string; body: string; type: string; link?: string }): Promise<Entry> {
     const entry: Entry = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       title: input.title,
       body: input.body,
       type: input.type,
+      ...(input.link ? { link: input.link } : {}),
     };
 
     this.ctx.storage.sql.exec(
-      'INSERT INTO entries (id, date, title, body, type) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO entries (id, date, title, body, type, link) VALUES (?, ?, ?, ?, ?, ?)',
       entry.id,
       entry.date,
       entry.title,
       entry.body,
-      entry.type
+      entry.type,
+      entry.link ?? null
     );
 
     const latest = this.ctx.storage.sql
       .exec<Omit<Entry, never>>(
-        'SELECT id, date, title, body, type FROM entries ORDER BY seq DESC LIMIT ?',
+        'SELECT id, date, title, body, type, link FROM entries ORDER BY seq DESC LIMIT ?',
         MIRROR_LIMIT
       )
       .toArray();
@@ -131,7 +135,7 @@ export class LogHub extends DurableObject<Env> {
 
     const latest = this.ctx.storage.sql
       .exec<Omit<Entry, never>>(
-        'SELECT id, date, title, body, type FROM entries ORDER BY seq DESC LIMIT ?',
+        'SELECT id, date, title, body, type, link FROM entries ORDER BY seq DESC LIMIT ?',
         MIRROR_LIMIT
       )
       .toArray();
@@ -230,7 +234,7 @@ export default {
         return json({ error: 'Unauthorized' }, 401);
       }
 
-      let body: { title?: unknown; body?: unknown; type?: unknown };
+      let body: { title?: unknown; body?: unknown; type?: unknown; link?: unknown };
       try {
         body = await req.json();
       } catch {
@@ -240,6 +244,7 @@ export default {
       const title = typeof body.title === 'string' ? body.title.trim() : '';
       const text = typeof body.body === 'string' ? body.body.trim() : '';
       const type = typeof body.type === 'string' && body.type ? body.type : 'update';
+      const link = typeof body.link === 'string' && body.link.trim() ? body.link.trim() : undefined;
 
       if (!title || !text) {
         return json({ error: 'title and body required' }, 400);
@@ -251,7 +256,7 @@ export default {
         return json({ error: `type must be one of: ${[...TYPES].join(', ')}` }, 400);
       }
 
-      const entry = await env.LOG_HUB.getByName('hub').addEntry({ title, body: text, type });
+      const entry = await env.LOG_HUB.getByName('hub').addEntry({ title, body: text, type, link });
       return json(entry, 201);
     }
 
