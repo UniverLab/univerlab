@@ -260,10 +260,11 @@ https://github.com/UniverLab
         // Both the landing and the docs are circadian.
         (function () {
           try {
-            var DAY_COOL = { '--bg': '#fbfbfa', '--bg-raise': '#f1f1ee', '--ink': '#1a1c1e', '--ink-dim': '#555a61', '--ink-faint': '#8b9099', '--line': '#e4e2dc', '--accent': '#9a7b16', '--canvas-color': '#b59a3a', '--canvas-mute': '#b3b4ae' };
-            var DAY_WARM = { '--bg': '#f7efe4', '--bg-raise': '#efe5d6', '--ink': '#241f18', '--ink-dim': '#5f574b', '--ink-faint': '#948975', '--line': '#e6dac6', '--accent': '#b5791f', '--canvas-color': '#cf9a3a', '--canvas-mute': '#bdb5a6' };
+            var DAY_GOLD = { '--bg': '#f8f4ea', '--bg-raise': '#f0eadb', '--ink': '#2c2218', '--ink-dim': '#6b5c4a', '--ink-faint': '#9a8b74', '--line': '#ddd0b8', '--accent': '#c88a1a', '--canvas-color': '#bb7e35', '--canvas-mute': '#bdb5a6' };
+            var DAY_WARM = { '--bg': '#f5e4d0', '--bg-raise': '#ebd8c1', '--ink': '#2a1e14', '--ink-dim': '#6a5640', '--ink-faint': '#9a8568', '--line': '#ddd0b8', '--accent': '#c47a18', '--canvas-color': '#d8922a', '--canvas-mute': '#b8ad9a' };
             var NIGHT_WARM = { '--bg': '#1a1822', '--bg-raise': '#221f2b', '--ink': '#ece3d6', '--ink-dim': '#b0a596', '--ink-faint': '#756b5f', '--line': '#2e2a36', '--accent': '#e8a24a', '--canvas-color': '#e0a24a', '--canvas-mute': '#565160' };
-            var NIGHT_COOL = { '--bg': '#0f1115', '--bg-raise': '#15181d', '--ink': '#e3e6e8', '--ink-dim': '#a8adb5', '--ink-faint': '#6b7178', '--line': '#23262c', '--accent': '#e6c84a', '--canvas-color': '#d3bf72', '--canvas-mute': '#474a54' };
+            var NIGHT_BLUE = { '--bg': '#1c2028', '--bg-raise': '#222830', '--ink': '#d5d8dc', '--ink-dim': '#9aa0aa', '--ink-faint': '#686e78', '--line': '#2a303c', '--accent': '#b0a488', '--canvas-color': '#a89878', '--canvas-mute': '#444a56' };
+            var NIGHT_SILVER = { '--bg': '#0f1115', '--bg-raise': '#15181d', '--ink': '#e3e6e8', '--ink-dim': '#a8adb5', '--ink-faint': '#6b7178', '--line': '#23262c', '--accent': '#e6c84a', '--canvas-color': '#d3bf72', '--canvas-mute': '#474a54' };
 
             // Surface-specific circadian palettes: when the page carries a
             // data-circadian-palette attribute, its day/night endpoints replace
@@ -272,8 +273,8 @@ https://github.com/UniverLab
               var palAttr = document.documentElement.getAttribute('data-circadian-palette');
               if (palAttr) {
                 var sp = JSON.parse(palAttr);
-                if (sp.day)   { DAY_COOL = sp.day;   DAY_WARM = sp.day; }
-                if (sp.night) { NIGHT_COOL = sp.night; NIGHT_WARM = sp.night; }
+                if (sp.day)   { DAY_GOLD = sp.day;   DAY_WARM = sp.day; }
+                if (sp.night) { NIGHT_SILVER = sp.night; NIGHT_WARM = sp.night; }
               }
             } catch (_) {}
 
@@ -328,13 +329,32 @@ https://github.com/UniverLab
               var isDay = hour >= sunrise && hour < sunset;
               var pal;
               if (isDay) {
-                var warm = hour < 10 ? 1 : 0;
-                pal = mix(DAY_COOL, DAY_WARM, warm);
+                var warm = 0;
+                var dawnEnd = sunrise + 1.5;
+                var duskStart = sunset - 1.5;
+                if (hour < dawnEnd) {
+                  warm = 1 - (hour - sunrise) / 1.5;
+                } else if (hour >= duskStart) {
+                  warm = (hour - duskStart) / 1.5;
+                }
+                pal = mix(DAY_GOLD, DAY_WARM, Math.max(0, Math.min(warm, 1)));
               } else {
                 var sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
                 var nightLen = 24 - (sunset - sunrise);
-                var g = nightLen > 0 ? sinceSunset / nightLen : 0;
-                pal = mix(NIGHT_WARM, NIGHT_COOL, Math.min(g * 2, 1));
+                var beforeSunrise = sunrise - hour;
+                if (beforeSunrise < 0) beforeSunrise += 24;
+                var isBlueHour = false;
+                if (sinceSunset < 1.5) {
+                  var f = sinceSunset / 1.5;
+                  pal = mix(NIGHT_WARM, NIGHT_BLUE, f);
+                  isBlueHour = true;
+                } else if (beforeSunrise < 1.5) {
+                  var f = beforeSunrise / 1.5;
+                  pal = mix(NIGHT_WARM, NIGHT_BLUE, f);
+                  isBlueHour = true;
+                } else {
+                  pal = NIGHT_SILVER;
+                }
               }
               applyPalette(pal);
 
@@ -350,9 +370,15 @@ https://github.com/UniverLab
               root.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
               var celestial;
               if (isDay) {
-                celestial = lerp(pal['--canvas-color'], '#c83c2a', warm * 0.6);
+                var warmF = Math.max(0, Math.min(warm, 1));
+                if (warmF > 0.01) {
+                  var sunWarm = lerp('#e8b830', '#d46020', warmF);
+                  celestial = lerp(pal['--canvas-color'], sunWarm, 0.5 + warmF * 0.3);
+                } else {
+                  celestial = pal['--canvas-color'];
+                }
               } else {
-                celestial = '#a8adb5';
+                celestial = isBlueHour ? '#b8a098' : '#a8adb5';
               }
               root.style.setProperty('--celestial-color', celestial);
               root.dataset.celestial = isDay ? 'sun' : 'moon';
@@ -364,12 +390,13 @@ https://github.com/UniverLab
             // Expose applyTheme globally so the command palette can override.
             window.applyTheme = function (mode) {
               if (mode === 'day') {
-                var h = new Date().getHours();
-                applyPalette(h < 10 ? DAY_WARM : DAY_COOL);
+                var dayPal = localStorage.getItem('univerlab-day-palette') === 'warm' ? DAY_WARM : DAY_GOLD;
+                applyPalette(dayPal);
                 document.documentElement.dataset.celestial = 'sun';
                 document.documentElement.dataset.circadian = 'true';
               } else if (mode === 'night') {
-                applyPalette(NIGHT_COOL);
+                var nightPal = localStorage.getItem('univerlab-night-palette') === 'blue' ? NIGHT_BLUE : NIGHT_SILVER;
+                applyPalette(nightPal);
                 document.documentElement.dataset.celestial = 'moon';
                 document.documentElement.dataset.circadian = 'true';
               } else {
@@ -381,11 +408,13 @@ https://github.com/UniverLab
                 updateMoon();
                 var root = document.documentElement;
                 if (mode === 'night') {
-                  root.style.setProperty('--celestial-color', '#a8adb5');
+                  var isBlue = localStorage.getItem('univerlab-night-palette') === 'blue';
+                  root.style.setProperty('--celestial-color', isBlue ? '#b8a098' : '#a8adb5');
                 } else {
-                  var ch = new Date().getHours();
-                  var dayPal = ch < 10 ? DAY_WARM : DAY_COOL;
-                  root.style.setProperty('--celestial-color', lerp(dayPal['--canvas-color'], '#c83c2a', 0.3));
+                var isWarm = localStorage.getItem('univerlab-day-palette') === 'warm';
+                var dayPal2 = isWarm ? DAY_WARM : DAY_GOLD;
+                var sunTarget = isWarm ? '#d46020' : dayPal2['--canvas-color'];
+                root.style.setProperty('--celestial-color', lerp(dayPal2['--canvas-color'], sunTarget, isWarm ? 0.5 : 0));
                 }
               }
             };
@@ -399,12 +428,15 @@ https://github.com/UniverLab
             if (saved === 'day' || saved === 'night') { applyTheme(saved); }
             else { calc(); }
 
-            // The 60s tick and visibility refresh only re-run the automatic
+            // The 60s tick: always update moon phase. Only re-run the full
             // circadian calc when NO theme is forced — a saved day/night must
             // stay put, not drift back to the time-of-day palette.
-            var timer = setInterval(function () { if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000);
+            var timer = setInterval(function () { updateMoon(); if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000);
             document.addEventListener('visibilitychange', function () {
-              if (!document.hidden && !localStorage.getItem('univerlab-theme')) { calc(); clearInterval(timer); timer = setInterval(function () { if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000); }
+              if (!document.hidden) {
+                updateMoon();
+                if (!localStorage.getItem('univerlab-theme')) { calc(); clearInterval(timer); timer = setInterval(function () { updateMoon(); if (!localStorage.getItem('univerlab-theme')) calc(); }, 60000); }
+              }
             });
           } catch (e) {}
         })();
@@ -520,16 +552,32 @@ https://github.com/UniverLab
         // /theme submenu — replaces the command list with theme options.
         function showThemeMenu() {
           inSubmenu = true;
-          var themeCmds = [
-            { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); if (window.missionLog) window.missionLog.discover('theme'); } },
-            { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); if (window.missionLog) window.missionLog.discover('theme'); } },
-            { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); if (window.missionLog) window.missionLog.discover('theme'); } },
-          ];
+          var themeCmds = getThemeCmds();
           filtered = themeCmds;
           selected = 0;
           input.value = '/theme ';
           open();
           render();
+        }
+
+        function getThemeCmds() {
+          var t = localStorage.getItem('univerlab-theme');
+          var dp = localStorage.getItem('univerlab-day-palette');
+          var np = localStorage.getItem('univerlab-night-palette');
+          var active;
+          if (!t) active = 'circadian';
+          else if (t === 'day' && dp === 'warm') active = 'dorada';
+          else if (t === 'night' && np === 'blue') active = 'azul';
+          else if (t === 'day') active = 'dia';
+          else active = 'noche';
+          var check = ' \u2713';
+          return [
+            { cmd: 'circadian', label: 'Circadian' + (active === 'circadian' ? check : ''), action: function () { localStorage.removeItem('univerlab-theme'); localStorage.removeItem('univerlab-day-palette'); localStorage.removeItem('univerlab-night-palette'); applyTheme('circadian'); } },
+            { cmd: 'golden-hour', label: 'Golden hour' + (active === 'dorada' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.setItem('univerlab-day-palette', 'warm'); applyTheme('day'); } },
+            { cmd: 'blue-hour', label: 'Blue hour' + (active === 'azul' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.setItem('univerlab-night-palette', 'blue'); applyTheme('night'); } },
+            { cmd: 'day', label: 'Day' + (active === 'dia' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.removeItem('univerlab-day-palette'); applyTheme('day'); } },
+            { cmd: 'night', label: 'Night' + (active === 'noche' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.removeItem('univerlab-night-palette'); applyTheme('night'); } },
+          ];
         }
 
         // Static commands — always available.
@@ -693,11 +741,7 @@ https://github.com/UniverLab
           q = q.toLowerCase().replace(/^\//, '');
           if (inSubmenu) {
             // In submenu: filter the theme options, not all commands.
-            var themeCmds = [
-              { cmd: 'day', label: 'Light', action: function () { localStorage.setItem('univerlab-theme', 'day'); applyTheme('day'); } },
-              { cmd: 'night', label: 'Dark', action: function () { localStorage.setItem('univerlab-theme', 'night'); applyTheme('night'); } },
-              { cmd: 'circadian', label: 'Auto (circadian)', action: function () { localStorage.removeItem('univerlab-theme'); applyTheme('circadian'); } },
-            ];
+            var themeCmds = getThemeCmds();
             filtered = q
               ? themeCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
               : themeCmds;
