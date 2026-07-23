@@ -1263,9 +1263,9 @@ https://github.com/UniverLab
 
         var style = document.createElement('style');
         style.textContent =
-          '@keyframes gl-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}' +
-          '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translateY(8px)}}' +
-          '.gl-toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg-raise,#1a1a2e);border:1px solid var(--accent,#5eead4);border-left:2px solid var(--accent,#5eead4);padding:.7rem 1rem;font-family:var(--font-mono,monospace);font-size:.82rem;color:var(--ink,#e2e8f0);box-shadow:0 8px 24px rgba(0,0,0,.35);animation:gl-toast-in .2s ease;z-index:50;max-width:22rem}.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
+          '@keyframes gl-toast-in{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}' +
+          '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translate(-50%,-50%) scale(.95)}}' +
+          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.92);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:.8rem 1.4rem;border-radius:8px;border:1px solid #ffe264;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 20px rgba(255,226,100,0.15);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw}.gl-toast span{color:#ffe264}.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
         document.head.appendChild(style);
 
         var source = new EventSource('https://announcements.univerlab.org/events');
@@ -1274,11 +1274,12 @@ https://github.com/UniverLab
             var entry = JSON.parse(e.data);
             var toast = document.createElement('div');
             toast.className = 'gl-toast';
-            toast.textContent = 'Announcement: ' + entry.title;
+            toast.innerHTML = '<span>' + entry.title + '</span>';
             document.body.appendChild(toast);
             setTimeout(function () {
-              toast.classList.add('gl-toast-out');
-              setTimeout(function () { toast.remove(); }, 300);
+              toast.style.transition = 'opacity 0.5s';
+              toast.style.opacity = '0';
+              setTimeout(function () { toast.remove(); }, 500);
             }, 4000);
           } catch (err) {}
         });
