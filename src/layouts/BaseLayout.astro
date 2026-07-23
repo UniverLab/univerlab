@@ -1256,5 +1256,34 @@ https://github.com/UniverLab
         else window.flightLog.record('visit-night');
       })();
     </script>
+
+    <script is:inline>
+      (function () {
+        if (document.documentElement.hasAttribute('data-dev')) return;
+
+        var style = document.createElement('style');
+        style.textContent =
+          '@keyframes gl-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}' +
+          '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translateY(8px)}}' +
+          '.gl-toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg-raise,#1a1a2e);border:1px solid var(--accent,#5eead4);border-left:2px solid var(--accent,#5eead4);padding:.7rem 1rem;font-family:var(--font-mono,monospace);font-size:.82rem;color:var(--ink,#e2e8f0);box-shadow:0 8px 24px rgba(0,0,0,.35);animation:gl-toast-in .2s ease;z-index:50;max-width:22rem}.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
+        document.head.appendChild(style);
+
+        var source = new EventSource('https://announcements.univerlab.org/events');
+        source.addEventListener('entry', function (e) {
+          try {
+            var entry = JSON.parse(e.data);
+            var toast = document.createElement('div');
+            toast.className = 'gl-toast';
+            toast.textContent = 'Announcement: ' + entry.title;
+            document.body.appendChild(toast);
+            setTimeout(function () {
+              toast.classList.add('gl-toast-out');
+              setTimeout(function () { toast.remove(); }, 300);
+            }, 4000);
+          } catch (err) {}
+        });
+        source.onerror = function () {};
+      })();
+    </script>
   </body>
 </html>
