@@ -328,8 +328,7 @@ https://github.com/UniverLab
               var isDay = hour >= sunrise && hour < sunset;
               var pal;
               if (isDay) {
-                var t = (hour - sunrise) / (sunset - sunrise);
-                var warm = Math.abs(t - 0.5) * 2;
+                var warm = hour < 10 ? 1 : 0;
                 pal = mix(DAY_COOL, DAY_WARM, warm);
               } else {
                 var sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
