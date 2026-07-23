@@ -365,7 +365,7 @@ https://github.com/UniverLab
             // Expose applyTheme globally so the command palette can override.
             window.applyTheme = function (mode) {
               if (mode === 'day') {
-                applyPalette(DAY_COOL);
+                applyPalette(DAY_WARM);
                 document.documentElement.dataset.celestial = 'sun';
                 document.documentElement.dataset.circadian = 'true';
               } else if (mode === 'night') {
@@ -383,7 +383,7 @@ https://github.com/UniverLab
                 if (mode === 'night') {
                   root.style.setProperty('--celestial-color', '#a8adb5');
                 } else {
-                  root.style.setProperty('--celestial-color', lerp(DAY_COOL['--canvas-color'], '#c83c2a', 0.3));
+                  root.style.setProperty('--celestial-color', lerp(DAY_WARM['--canvas-color'], '#c83c2a', 0.3));
                 }
               }
             };
@@ -1266,7 +1266,10 @@ https://github.com/UniverLab
           '@keyframes gl-toast-in{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}' +
           '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translate(-50%,-50%) scale(.95)}}' +
           '.gl-toast-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:319;animation:gl-toast-in .2s ease}' +
-          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:1rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw;cursor:pointer;position:fixed;top:50%;left:50%}.gl-toast span{color:#d4a843;font-weight:600}.gl-toast a{color:#d4a843;text-decoration:underline;text-underline-offset:2px}.gl-toast-close{position:absolute;top:.4rem;right:.6rem;background:none;border:none;color:#d4a843;font-size:1.1rem;cursor:pointer;line-height:1;opacity:.7}.gl-toast-close:hover{opacity:1}.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
+          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:.9rem 2.4rem .9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw;cursor:pointer}' +
+          '.gl-toast span{color:#d4a843;font-weight:600}.gl-toast a{color:#d4a843;text-decoration:underline;text-underline-offset:2px}' +
+          '.gl-toast-close{position:absolute;top:.3rem;right:.5rem;background:none;border:none;color:#d4a843;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 .2rem;opacity:.7}.gl-toast-close:hover{opacity:1}' +
+          '.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
         document.head.appendChild(style);
 
         var source = new EventSource('https://announcements.univerlab.org/events');
