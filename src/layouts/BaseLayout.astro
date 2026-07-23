@@ -364,7 +364,8 @@ https://github.com/UniverLab
             // Expose applyTheme globally so the command palette can override.
             window.applyTheme = function (mode) {
               if (mode === 'day') {
-                applyPalette(DAY_WARM);
+                var h = new Date().getHours();
+                applyPalette(h < 10 ? DAY_WARM : DAY_COOL);
                 document.documentElement.dataset.celestial = 'sun';
                 document.documentElement.dataset.circadian = 'true';
               } else if (mode === 'night') {
@@ -382,7 +383,9 @@ https://github.com/UniverLab
                 if (mode === 'night') {
                   root.style.setProperty('--celestial-color', '#a8adb5');
                 } else {
-                  root.style.setProperty('--celestial-color', lerp(DAY_WARM['--canvas-color'], '#c83c2a', 0.3));
+                  var ch = new Date().getHours();
+                  var dayPal = ch < 10 ? DAY_WARM : DAY_COOL;
+                  root.style.setProperty('--celestial-color', lerp(dayPal['--canvas-color'], '#c83c2a', 0.3));
                 }
               }
             };
