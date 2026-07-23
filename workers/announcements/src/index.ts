@@ -82,10 +82,14 @@ export class LogHub extends DurableObject<Env> {
           date  TEXT NOT NULL,
           title TEXT NOT NULL,
           body  TEXT NOT NULL,
-          type  TEXT NOT NULL,
-          link  TEXT
+          type  TEXT NOT NULL
         )
       `);
+      // Migration: add link column if missing
+      const cols = this.ctx.storage.sql.exec("PRAGMA table_info('entries')").toArray();
+      if (!cols.some((c: any) => c.name === 'link')) {
+        this.ctx.storage.sql.exec("ALTER TABLE entries ADD COLUMN link TEXT");
+      }
     });
   }
 

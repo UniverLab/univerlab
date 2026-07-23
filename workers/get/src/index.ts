@@ -20,7 +20,7 @@ const TOOLS: Record<string, { repo: string; win: boolean }> = {
   ghscaff: { repo: 'ghscaff', win: true },
   cadspec: { repo: 'cadspec', win: true },
 
-  'demo-stage': { repo: 'demo-stage', win: true },
+  demostage: { repo: 'demostage', win: true },
 };
 
 const raw = (repo: string, file: string) =>
