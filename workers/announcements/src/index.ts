@@ -4,6 +4,7 @@
  *   GET  /        → JSON array of entries (served from the KV mirror, edge-cheap)
  *   GET  /events  → SSE stream (pushes `event: entry`)
  *   PUT  /        → Add entry (Bearer token required)
+ *   DELETE /:id   → Remove entry by id (Bearer token required)
  *
  * Reads never touch the Durable Object: every write mirrors the latest entries
  * into KV key "entries", so GET / stays a plain edge read. Only /events and PUT
@@ -40,7 +41,7 @@ const TYPES = new Set(['update', 'launch', 'incident', 'note']);
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://univerlab.org',
-  'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
@@ -122,6 +123,21 @@ export class LogHub extends DurableObject<Env> {
     this.broadcast(entry);
 
     return entry;
+  }
+
+  async removeEntry(id: string): Promise<boolean> {
+    const result = this.ctx.storage.sql.exec('DELETE FROM entries WHERE id = ?', id);
+    if (result.rowsWritten === 0) return false;
+
+    const latest = this.ctx.storage.sql
+      .exec<Omit<Entry, never>>(
+        'SELECT id, date, title, body, type FROM entries ORDER BY seq DESC LIMIT ?',
+        MIRROR_LIMIT
+      )
+      .toArray();
+
+    await this.env.ANNOUNCEMENTS.put('entries', JSON.stringify(latest));
+    return true;
   }
 
   private broadcast(entry: Entry) {
@@ -237,6 +253,21 @@ export default {
 
       const entry = await env.LOG_HUB.getByName('hub').addEntry({ title, body: text, type });
       return json(entry, 201);
+    }
+
+    // DELETE /:id — remove entry from SQLite + KV mirror
+    if (req.method === 'DELETE') {
+      const auth = req.headers.get('Authorization') ?? '';
+      if (!env.AUTH_TOKEN || !(await tokenMatches(auth, `Bearer ${env.AUTH_TOKEN}`))) {
+        return json({ error: 'Unauthorized' }, 401);
+      }
+
+      const id = url.pathname.replace('/', '');
+      if (!id) return json({ error: 'id required' }, 400);
+
+      const deleted = await env.LOG_HUB.getByName('hub').removeEntry(id);
+      if (!deleted) return json({ error: 'Not found' }, 404);
+      return json({ ok: true });
     }
 
     return json({ error: 'Not found' }, 404);
