@@ -480,14 +480,75 @@ const signals = [
       });
     }
 
-    btn.addEventListener('click', function () {
+    // Drag-to-scrub: hold and drag the celestial icon to preview time.
+    // Only active in circadian mode. Short click still shows a fact.
+    var dragging = false;
+    var startX = 0;
+    var moved = false;
+    var DRAG_THRESHOLD = 6;
+
+    // Create scrub tooltip.
+    var scrubTip = document.createElement('div');
+    scrubTip.className = 'scrub-tip';
+    scrubTip.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#e0e0e0;padding:6px 14px;border-radius:6px;font:12px/1.4 monospace;pointer-events:none;z-index:999;display:none;white-space:pre;text-align:center;';
+    document.body.appendChild(scrubTip);
+
+    function showTip(info) {
+      if (!info) return;
+      var lines = [info.hour + 'h'];
+      info.palettes.forEach(function(p) { lines.push(p.name + ' ' + p.pct + '%'); });
+      scrubTip.textContent = lines.join('  ');
+      scrubTip.style.display = 'block';
+    }
+    function hideTip() { scrubTip.style.display = 'none'; }
+
+    function onPointerDown(e) {
+      if (localStorage.getItem('univerlab-theme')) return;
+      if (!window.scrubTime) return;
+      dragging = true;
+      moved = false;
+      startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      btn.classList.add('scrubbing');
+      e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+      if (!dragging) return;
+      var x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      var dx = x - startX;
+      if (Math.abs(dx) > DRAG_THRESHOLD) moved = true;
+      if (!moved) return;
+      var header = btn.closest('header');
+      var rect = header ? header.getBoundingClientRect() : btn.getBoundingClientRect();
+      var fraction = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+      var hour = fraction * 24;
+      window.scrubTime(hour);
+      showTip(window.__scrubInfo);
+    }
+
+    function onPointerUp() {
+      if (!dragging) return;
+      dragging = false;
+      btn.classList.remove('scrubbing');
+      if (moved) {
+        moved = false;
+        hideTip();
+        if (window.resetScrub) window.resetScrub();
+        return;
+      }
+      hideTip();
       var items = readCache();
       if (items) { showFromPool(items); return; }
-      // Nothing cached yet — show a hardcoded fact instantly so the click is
-      // never a dead end, and fetch in the background for next time.
       showHardcoded();
       fetchAndCache().catch(function () {});
-    });
+    }
+
+    btn.addEventListener('mousedown', onPointerDown);
+    btn.addEventListener('touchstart', onPointerDown, { passive: false });
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchend', onPointerUp);
   })();
 </script>
 
@@ -534,6 +595,10 @@ const signals = [
     transition: left 60s linear, opacity 0.4s ease;
     opacity: 1;
     pointer-events: auto;
+  }
+  .celestial-btn.scrubbing {
+    transition: none;
+    cursor: grabbing;
   }
   .celestial-btn:hover .celestial {
     transform: translate(-50%, -50%) scale(1.35);
