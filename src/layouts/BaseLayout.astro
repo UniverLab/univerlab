@@ -136,6 +136,7 @@ const orgJsonLd = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={title} />
+    <script is:inline>window.scrubTime = null; window.resetScrub = null; window.calc = null;</script>
     <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
     {structuredData &&
       (Array.isArray(structuredData) ? structuredData : [structuredData]).map((d) => (
@@ -261,9 +262,9 @@ https://github.com/UniverLab
         (function () {
           try {
             var DAY_GOLD = { '--bg': '#f8f4ea', '--bg-raise': '#f0eadb', '--ink': '#2c2218', '--ink-dim': '#6b5c4a', '--ink-faint': '#9a8b74', '--line': '#ddd0b8', '--accent': '#c88a1a', '--canvas-color': '#bb7e35', '--canvas-mute': '#bdb5a6' };
-            var DAY_WARM = { '--bg': '#f5e4d0', '--bg-raise': '#ebd8c1', '--ink': '#2a1e14', '--ink-dim': '#6a5640', '--ink-faint': '#9a8568', '--line': '#ddd0b8', '--accent': '#c47a18', '--canvas-color': '#d8922a', '--canvas-mute': '#b8ad9a' };
-            var NIGHT_WARM = { '--bg': '#1a1822', '--bg-raise': '#221f2b', '--ink': '#ece3d6', '--ink-dim': '#b0a596', '--ink-faint': '#756b5f', '--line': '#2e2a36', '--accent': '#e8a24a', '--canvas-color': '#e0a24a', '--canvas-mute': '#565160' };
-            var NIGHT_BLUE = { '--bg': '#1c2028', '--bg-raise': '#222830', '--ink': '#d5d8dc', '--ink-dim': '#9aa0aa', '--ink-faint': '#686e78', '--line': '#2a303c', '--accent': '#b0a488', '--canvas-color': '#a89878', '--canvas-mute': '#444a56' };
+            var DAY_WARM = { '--bg': '#f0d8c8', '--bg-raise': '#e6c8b0', '--ink': '#2e1e10', '--ink-dim': '#705838', '--ink-faint': '#a08860', '--line': '#d0b098', '--accent': '#d07820', '--canvas-color': '#e08828', '--canvas-mute': '#b8a080' };
+            var LINE_GRAY = { '--bg': '#d5d5d5', '--bg-raise': '#c8c8c8', '--ink': '#1a1a1a', '--ink-dim': '#555555', '--ink-faint': '#888888', '--line': '#b0b0b0', '--accent': '#b07878', '--canvas-color': '#a08080', '--canvas-mute': '#999999' };
+            var NIGHT_BLUE = { '--bg': '#0d1b2a', '--bg-raise': '#132236', '--ink': '#c8d4e0', '--ink-dim': '#7890a8', '--ink-faint': '#4a6070', '--line': '#1c2e44', '--accent': '#5b8db8', '--canvas-color': '#4a7ca8', '--canvas-mute': '#2a3c50' };
             var NIGHT_SILVER = { '--bg': '#0f1115', '--bg-raise': '#15181d', '--ink': '#e3e6e8', '--ink-dim': '#a8adb5', '--ink-faint': '#6b7178', '--line': '#23262c', '--accent': '#e6c84a', '--canvas-color': '#d3bf72', '--canvas-mute': '#474a54' };
 
             // Surface-specific circadian palettes: when the page carries a
@@ -274,7 +275,7 @@ https://github.com/UniverLab
               if (palAttr) {
                 var sp = JSON.parse(palAttr);
                 if (sp.day)   { DAY_GOLD = sp.day;   DAY_WARM = sp.day; }
-                if (sp.night) { NIGHT_SILVER = sp.night; NIGHT_WARM = sp.night; }
+                if (sp.night) { NIGHT_SILVER = sp.night; LINE_GRAY = sp.night; NIGHT_BLUE = sp.night; }
               }
             } catch (_) {}
 
@@ -341,22 +342,38 @@ https://github.com/UniverLab
               } else {
                 var sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
                 var nightLen = 24 - (sunset - sunrise);
-                var beforeSunrise = sunrise - hour;
-                if (beforeSunrise < 0) beforeSunrise += 24;
+                var nightPos = nightLen > 0 ? sinceSunset / nightLen : 0;
                 var isBlueHour = false;
-                if (sinceSunset < 1.5) {
-                  var f = sinceSunset / 1.5;
-                  pal = mix(NIGHT_WARM, NIGHT_BLUE, f);
+                var isGrayHour = false;
+                if (nightPos < 0.001) {
+                  pal = mix(DAY_WARM, LINE_GRAY, nightPos / 0.001);
+                  isGrayHour = true;
+                } else if (nightPos < 0.003) {
+                  pal = mix(LINE_GRAY, NIGHT_BLUE, (nightPos - 0.001) / 0.002);
                   isBlueHour = true;
-                } else if (beforeSunrise < 1.5) {
-                  var f = beforeSunrise / 1.5;
-                  pal = mix(NIGHT_WARM, NIGHT_BLUE, f);
+                } else if (nightPos < 0.15) {
+                  pal = mix(NIGHT_BLUE, NIGHT_SILVER, (nightPos - 0.003) / 0.147);
+                  isBlueHour = nightPos < 0.08;
+                } else if (nightPos < 0.85) {
+                  pal = NIGHT_SILVER;
+                } else if (nightPos < 0.997) {
+                  pal = mix(NIGHT_SILVER, NIGHT_BLUE, (nightPos - 0.85) / 0.147);
+                  isBlueHour = nightPos > 0.92;
+                } else if (nightPos < 0.999) {
+                  pal = mix(NIGHT_BLUE, LINE_GRAY, (nightPos - 0.997) / 0.002);
                   isBlueHour = true;
                 } else {
-                  pal = NIGHT_SILVER;
+                  pal = mix(LINE_GRAY, DAY_WARM, (nightPos - 0.999) / 0.001);
+                  isGrayHour = true;
                 }
               }
               applyPalette(pal);
+
+              // Update canvas particle color live when palette changes.
+              var bgCanvas = document.querySelector('canvas.bg');
+              if (bgCanvas && bgCanvas.__bgCtx) {
+                bgCanvas.__bgCtx.color = pal['--canvas-color'] || pal['--accent'] || '#b9b6ae';
+              }
 
               var pos;
               if (isDay) {
@@ -378,7 +395,7 @@ https://github.com/UniverLab
                   celestial = pal['--canvas-color'];
                 }
               } else {
-                celestial = isBlueHour ? '#b8a098' : '#a8adb5';
+                celestial = isGrayHour ? '#555555' : isBlueHour ? '#b8a8b0' : '#a8adb5';
               }
               root.style.setProperty('--celestial-color', celestial);
               root.dataset.celestial = isDay ? 'sun' : 'moon';
@@ -387,16 +404,139 @@ https://github.com/UniverLab
               updateMoon();
             }
 
+            // Scrub: temporarily override the circadian time for preview.
+            // hour = absolute time of day (0-24). Direct mapping, no offset.
+            window.scrubTime = function (hour) {
+              if (localStorage.getItem('univerlab-theme')) return;
+              hour = ((hour % 24) + 24) % 24;
+              var y = new Date().getFullYear();
+              var kJan = new Date(y, 0, 1).getTimezoneOffset();
+              var kJul = new Date(y, 6, 1).getTimezoneOffset();
+              var half = 6;
+              if (kJan !== kJul) {
+                var southern = kJan < kJul;
+                var now = new Date();
+                var doy = Math.floor((now - new Date(y, 0, 0)) / 86400000);
+                var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25);
+                if (southern) s = -s;
+                half = 6 + 2.5 * s;
+              }
+              var sunrise = 12 - half;
+              var sunset = 12 + half;
+              var isDay = hour >= sunrise && hour < sunset;
+              var pal;
+              var warm = 0;
+              var nightLen, nightPos, sinceSunset;
+              if (isDay) {
+                var dawnEnd = sunrise + 1.5;
+                var duskStart = sunset - 1.5;
+                if (hour < dawnEnd) {
+                  warm = 1 - (hour - sunrise) / 1.5;
+                } else if (hour >= duskStart) {
+                  warm = (hour - duskStart) / 1.5;
+                }
+                pal = mix(DAY_GOLD, DAY_WARM, Math.max(0, Math.min(warm, 1)));
+              } else {
+                sinceSunset = hour >= sunset ? hour - sunset : hour + (24 - sunset);
+                nightLen = 24 - (sunset - sunrise);
+                nightPos = nightLen > 0 ? sinceSunset / nightLen : 0;
+                if (nightPos < 0.001) {
+                  pal = mix(DAY_WARM, LINE_GRAY, nightPos / 0.001);
+                } else if (nightPos < 0.003) {
+                  pal = mix(LINE_GRAY, NIGHT_BLUE, (nightPos - 0.001) / 0.002);
+                } else if (nightPos < 0.15) {
+                  pal = mix(NIGHT_BLUE, NIGHT_SILVER, (nightPos - 0.003) / 0.147);
+                } else if (nightPos < 0.85) {
+                  pal = NIGHT_SILVER;
+                } else if (nightPos < 0.997) {
+                  pal = mix(NIGHT_SILVER, NIGHT_BLUE, (nightPos - 0.85) / 0.147);
+                } else if (nightPos < 0.999) {
+                  pal = mix(NIGHT_BLUE, LINE_GRAY, (nightPos - 0.997) / 0.002);
+                } else {
+                  pal = mix(LINE_GRAY, DAY_WARM, (nightPos - 0.999) / 0.001);
+                }
+              }
+              applyPalette(pal);
+              var bgCanvas2 = document.querySelector('canvas.bg');
+              if (bgCanvas2 && bgCanvas2.__bgCtx) {
+                bgCanvas2.__bgCtx.color = pal['--canvas-color'] || pal['--accent'] || '#b9b6ae';
+              }
+              var pos;
+              if (isDay) {
+                pos = ((hour - sunrise) / (sunset - sunrise)) * 100;
+              } else {
+                var ss = hour >= sunset ? hour - sunset : hour + (24 - sunset);
+                var nl = 24 - (sunset - sunrise);
+                pos = (ss / nl) * 100;
+              }
+              var root = document.documentElement;
+              root.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
+              var celestial;
+              if (isDay) {
+                var warmF = Math.max(0, Math.min(warm, 1));
+                if (warmF > 0.01) {
+                  var sunWarm = lerp('#e8b830', '#d46020', warmF);
+                  celestial = lerp(pal['--canvas-color'], sunWarm, 0.5 + warmF * 0.3);
+                } else {
+                  celestial = pal['--canvas-color'];
+                }
+              } else {
+                var isGray = nightPos < 0.003 || nightPos >= 0.997;
+                var isBlue = !isGray && (nightPos < 0.15 || nightPos > 0.85);
+                celestial = isGray ? '#555555' : isBlue ? '#b8a8b0' : '#a8adb5';
+              }
+              root.style.setProperty('--celestial-color', celestial);
+              root.dataset.celestial = isDay ? 'sun' : 'moon';
+              updateMoon();
+
+              // Expose mix info for the scrub tooltip.
+              var mixInfo = { hour: Math.round(hour * 10) / 10, nightPos: 0, palettes: [] };
+              if (!isDay) {
+                mixInfo.nightPos = Math.round(nightPos * 1000) / 10;
+                if (nightPos < 0.001) { var f = nightPos / 0.001; mixInfo.palettes = [{ name: 'Warm', pct: Math.round((1-f)*100) }, { name: 'Gray', pct: Math.round(f*100) }]; }
+                else if (nightPos < 0.003) { var f = (nightPos - 0.001) / 0.002; mixInfo.palettes = [{ name: 'Gray', pct: Math.round((1-f)*100) }, { name: 'Blue', pct: Math.round(f*100) }]; }
+                else if (nightPos < 0.15) { var f = (nightPos - 0.003) / 0.147; mixInfo.palettes = [{ name: 'Blue', pct: Math.round((1-f)*100) }, { name: 'Silver', pct: Math.round(f*100) }]; }
+                else if (nightPos < 0.85) mixInfo.palettes = [{ name: 'Silver', pct: 100 }];
+                else if (nightPos < 0.997) { var f = (nightPos - 0.85) / 0.147; mixInfo.palettes = [{ name: 'Silver', pct: Math.round((1-f)*100) }, { name: 'Blue', pct: Math.round(f*100) }]; }
+                else if (nightPos < 0.999) { var f = (nightPos - 0.997) / 0.002; mixInfo.palettes = [{ name: 'Blue', pct: Math.round((1-f)*100) }, { name: 'Gray', pct: Math.round(f*100) }]; }
+                else { var f = Math.min((nightPos - 0.999) / 0.001, 1); mixInfo.palettes = [{ name: 'Gray', pct: Math.round((1-f)*100) }, { name: 'Warm', pct: Math.round(f*100) }]; }
+              } else {
+                if (warm > 0.01) mixInfo.palettes = [{ name: 'Gold', pct: Math.round((1-warm)*100) }, { name: 'Warm', pct: Math.round(warm*100) }];
+                else mixInfo.palettes = [{ name: 'Gold', pct: 100 }];
+              }
+              window.__scrubInfo = mixInfo;
+              window.__scrubHour = hour;
+            };
+
+            // Animate the celestial icon back to real position over ~200ms.
+            window.resetScrub = function () {
+              calc();
+              // Briefly enable CSS transition on the icon for smooth snap-back.
+              var btn = document.querySelector('.celestial-btn');
+              if (btn) {
+                btn.style.transition = 'left 0.2s ease-out';
+                setTimeout(function () { btn.style.transition = ''; }, 250);
+              }
+            };
+
+            // Expose calc globally for scrub reset.
+            window.calc = calc;
+
             // Expose applyTheme globally so the command palette can override.
             window.applyTheme = function (mode) {
               if (mode === 'day') {
                 var dayPal = localStorage.getItem('univerlab-day-palette') === 'warm' ? DAY_WARM : DAY_GOLD;
                 applyPalette(dayPal);
+                var bc1 = document.querySelector('canvas.bg');
+                if (bc1 && bc1.__bgCtx) bc1.__bgCtx.color = dayPal['--canvas-color'] || dayPal['--accent'] || '#b9b6ae';
                 document.documentElement.dataset.celestial = 'sun';
                 document.documentElement.dataset.circadian = 'true';
               } else if (mode === 'night') {
-                var nightPal = localStorage.getItem('univerlab-night-palette') === 'blue' ? NIGHT_BLUE : NIGHT_SILVER;
+                var npVal = localStorage.getItem('univerlab-night-palette');
+                var nightPal = npVal === 'blue' ? NIGHT_BLUE : npVal === 'gray' ? LINE_GRAY : NIGHT_SILVER;
                 applyPalette(nightPal);
+                var bc2 = document.querySelector('canvas.bg');
+                if (bc2 && bc2.__bgCtx) bc2.__bgCtx.color = nightPal['--canvas-color'] || nightPal['--accent'] || '#b9b6ae';
                 document.documentElement.dataset.celestial = 'moon';
                 document.documentElement.dataset.circadian = 'true';
               } else {
@@ -408,8 +548,9 @@ https://github.com/UniverLab
                 updateMoon();
                 var root = document.documentElement;
                 if (mode === 'night') {
-                  var isBlue = localStorage.getItem('univerlab-night-palette') === 'blue';
-                  root.style.setProperty('--celestial-color', isBlue ? '#b8a098' : '#a8adb5');
+                  var npVal2 = localStorage.getItem('univerlab-night-palette');
+                  var celestColor = npVal2 === 'blue' ? '#b8a8b0' : npVal2 === 'gray' ? '#555555' : '#a8adb5';
+                  root.style.setProperty('--celestial-color', celestColor);
                 } else {
                 var isWarm = localStorage.getItem('univerlab-day-palette') === 'warm';
                 var dayPal2 = isWarm ? DAY_WARM : DAY_GOLD;
@@ -568,6 +709,7 @@ https://github.com/UniverLab
           if (!t) active = 'circadian';
           else if (t === 'day' && dp === 'warm') active = 'dorada';
           else if (t === 'night' && np === 'blue') active = 'azul';
+          else if (t === 'night' && np === 'gray') active = 'gray';
           else if (t === 'day') active = 'dia';
           else active = 'noche';
           var check = ' \u2713';
@@ -575,6 +717,7 @@ https://github.com/UniverLab
             { cmd: 'circadian', label: 'Circadian' + (active === 'circadian' ? check : ''), action: function () { localStorage.removeItem('univerlab-theme'); localStorage.removeItem('univerlab-day-palette'); localStorage.removeItem('univerlab-night-palette'); applyTheme('circadian'); } },
             { cmd: 'golden-hour', label: 'Golden hour' + (active === 'dorada' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.setItem('univerlab-day-palette', 'warm'); applyTheme('day'); } },
             { cmd: 'blue-hour', label: 'Blue hour' + (active === 'azul' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.setItem('univerlab-night-palette', 'blue'); applyTheme('night'); } },
+            { cmd: 'gray-line', label: 'Gray line' + (active === 'gray' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.setItem('univerlab-night-palette', 'gray'); applyTheme('night'); } },
             { cmd: 'day', label: 'Day' + (active === 'dia' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.removeItem('univerlab-day-palette'); applyTheme('day'); } },
             { cmd: 'night', label: 'Night' + (active === 'noche' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.removeItem('univerlab-night-palette'); applyTheme('night'); } },
           ];

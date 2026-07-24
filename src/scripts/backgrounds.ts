@@ -22,6 +22,9 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   const ctx: Ctx = { canvas, c, color, bg, w: 0, h: 0, dpr };
 
+  // Expose ctx on the canvas element so circadian can update color live.
+  (canvas as any).__bgCtx = ctx;
+
   function resize() {
     ctx.w = canvas.clientWidth;
     ctx.h = canvas.clientHeight;
