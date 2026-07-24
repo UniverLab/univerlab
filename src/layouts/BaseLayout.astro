@@ -97,11 +97,6 @@ const orgJsonLd = {
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
-    <script is:inline>
-      var s = document.createElement('style');
-      s.textContent = ':root{--bg:#0a0b0e;--bg-raise:#101218;--ink:#e8e6e1;--ink-dim:#9a9890;--ink-faint:#7f7c76;--line:#23252c;--accent:#e6c84a;--canopy:#5dd39e;--texforge:#e0a458;--gitkit:#e8a4c8;--ghscaff:#b87333;--cadspec:#6ec6e6;--astro-denoise:#a78bfa;--demostage:#ef8354;--font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Menlo,monospace;--font-body:-apple-system,"Inter","Segoe UI",system-ui,sans-serif;--font-serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;--measure:64ch;--space:clamp(1rem,2.5vw,1.75rem);--page-gutter:clamp(1rem,3vw,2rem)}*{box-sizing:border-box}html{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.65;scroll-behavior:smooth}body{margin:0;min-height:100vh}';
-      document.head.appendChild(s);
-    </script>
     <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
          labels); Inter is the default body. Per-surface display voices:
          Spectral (paper/texforge — typeset serif), Space Grotesk (scaffold,
@@ -113,17 +108,6 @@ const orgJsonLd = {
          `display=swap` shows fallback text immediately. -->
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
-    {/* Defer render-blocking _astro/ CSS: convert to print→all on DOMContentLoaded.
-        Critical tokens (variables, body basics) are injected by the createElement
-        script below so FCP is covered without waiting for the full stylesheet. */}
-    <script is:inline>
-      document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('link[rel="stylesheet"][href^="/_astro/"]').forEach(function (l) {
-          l.media = 'print';
-          l.onload = function () { l.media = 'all'; };
-        });
-      });
-    </script>
     {/* Experiment banners are block ASCII tuned to DejaVu Sans Mono (see Banner.astro). */}
     {surface && (
       <link rel="preload" href="/fonts/DejaVuSansMono.ttf" as="font" type="font/ttf" crossorigin />
