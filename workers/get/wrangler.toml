@@ -9,10 +9,11 @@ compatibility_date = "2025-01-01"
 # D1 would put a SQL write in the hot path of every install.
 #
 # REQUIRED FIRST: Analytics Engine must be enabled once on the account, at
-# dash.cloudflare.com → Workers & Pages → Analytics Engine. Until it is, every
+# dash.cloudflare.com → Storage & databases → Analytics Engine (NOT under
+# Compute/Workers, despite what the error message links to). Until it is, every
 # deploy that declares this binding fails with `code: 10089`, no matter what
 # permissions the API token has. The dataset itself needs no provisioning — it
-# is created on the first write.
+# is created on the first write; ignore the dashboard's "Create Dataset" button.
 #
 # The binding is optional in code — `wrangler dev` without it still serves.
 [[analytics_engine_datasets]]

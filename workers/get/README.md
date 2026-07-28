@@ -99,10 +99,17 @@ You need to enable Analytics Engine. Head to the Cloudflare Dashboard to enable
 
 Analytics Engine is an **account-level opt-in**, and it is not something a token
 permission can grant — the deploy is rejected server-side after wrangler has
-already authenticated and resolved the binding. Enable it once at
-dash.cloudflare.com → Workers & Pages → Analytics Engine, then re-run the
-workflow. A failed deploy is safe: the previously deployed version keeps
-serving.
+already authenticated and resolved the binding. Verified: a local
+`wrangler deploy` with full OAuth scopes fails identically. Do not go hunting
+for a missing token permission.
+
+Enable it once at dash.cloudflare.com → **Storage & databases → Analytics
+Engine**. It is not under Compute/Workers, which is where the error message's
+link points. If the page offers *Create Dataset* instead of *Enable*, it is
+already on — the dataset itself is created by the first write, so there is
+nothing to click. Then re-run the workflow.
+
+A failed deploy is safe: the previously deployed version keeps serving.
 
 ## One-time setup (all on Cloudflare)
 
