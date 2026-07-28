@@ -42,5 +42,9 @@ specs/
 
 # Cloudflare Workers local state
 .wrangler/
+
+# Local-only ops scripts for the get Worker (query helpers, etc). They need
+# credentials to run, so they are deliberately not part of this repo.
+workers/get/scripts/
 .dev.vars
 .auth-token.local
