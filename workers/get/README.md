@@ -91,6 +91,19 @@ on any push to `main` that touches `workers/get/**`. It needs two repo secrets:
 
 To deploy by hand: `cd workers/get && npx wrangler deploy`.
 
+### If the deploy fails with `code: 10089`
+
+```
+You need to enable Analytics Engine. Head to the Cloudflare Dashboard to enable
+```
+
+Analytics Engine is an **account-level opt-in**, and it is not something a token
+permission can grant — the deploy is rejected server-side after wrangler has
+already authenticated and resolved the binding. Enable it once at
+dash.cloudflare.com → Workers & Pages → Analytics Engine, then re-run the
+workflow. A failed deploy is safe: the previously deployed version keeps
+serving.
+
 ## One-time setup (all on Cloudflare)
 
 1. **Buy `univerlab.org`** on Cloudflare (registrar + DNS).
@@ -99,6 +112,8 @@ To deploy by hand: `cd workers/get && npx wrangler deploy`.
 3. **`get` subdomain** → after the first deploy, add the Custom Domain
    `get.univerlab.org` to this Worker (Workers & Pages → univerlab-get →
    Settings → Domains & Routes). Cloudflare provisions its TLS.
+4. **Enable Analytics Engine** → Workers & Pages → Analytics Engine. One click,
+   once per account. Required before any deploy of this Worker can succeed.
 
 ## Flip the site to the pretty URL (only once the above is live)
 
