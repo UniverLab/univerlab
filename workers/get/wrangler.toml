@@ -2,6 +2,17 @@ name = "univerlab-get"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
+# Aggregate install counting. Analytics Engine is the right store here: writes
+# are fire-and-forget (no latency added to the redirect), there is no database
+# to provision, and it is built for exactly this shape of high-volume, low-value
+# event. KV would need read-modify-write and rate-limits at 1 write/sec/key;
+# D1 would put a SQL write in the hot path of every install.
+#
+# The binding is optional in code — `wrangler dev` without it still serves.
+[[analytics_engine_datasets]]
+binding = "INSTALLS"
+dataset = "univerlab_installs"
+
 # Bind to the subdomain once univerlab.org is on Cloudflare. Easiest path:
 # Workers & Pages → this Worker → Settings → Domains & Routes → add a
 # Custom Domain: get.univerlab.org  (Cloudflare provisions the TLS cert).
