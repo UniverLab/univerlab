@@ -630,15 +630,25 @@ https://github.com/UniverLab
           if (keySeq.indexOf('42') !== -1) {
             keySeq = '';
             if (window.missionLog) window.missionLog.discover('easter-42');
+            var bd = document.createElement('div');
+            bd.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:319;animation:gl-toast-in .2s ease';
+            document.body.appendChild(bd);
             var msg = document.createElement('div');
-            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.92);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:0.9rem;padding:0.8rem 1.4rem;border-radius:8px;border:1px solid #fff;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 20px rgba(255,255,255,0.15);z-index:320;text-align:center;max-width:90vw;';
+            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:0.9rem;padding:0.9rem 2.4rem 0.9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);z-index:320;text-align:center;max-width:90vw;cursor:pointer;animation:gl-toast-in .2s ease';
             var lang = document.documentElement.lang || 'en';
             var html = lang === 'es'
-              ? '<span style="color:#ffe264">42</span> — La <span style="color:#ffe264">Respuesta</span> a la Pregunta Fundamental de la <span style="color:#ffe264">Vida</span>, el <span style="color:#ffe264">Universo</span> y Todo lo <span style="color:#ffe264">Demás</span>.'
-              : '<span style="color:#ffe264">42</span> — The <span style="color:#ffe264">Answer</span> to the Ultimate Question of Life, the <span style="color:#ffe264">Universe</span>, and <span style="color:#ffe264">Everything</span>.';
+              ? '<span style="color:#ffe264;font-weight:600">42</span> — La <span style="color:#ffe264;font-weight:600">Respuesta</span> a la Pregunta Fundamental de la <span style="color:#ffe264;font-weight:600">Vida</span>, el <span style="color:#ffe264;font-weight:600">Universo</span> y Todo lo <span style="color:#ffe264;font-weight:600">Demás</span>.'
+              : '<span style="color:#ffe264;font-weight:600">42</span> — The <span style="color:#ffe264;font-weight:600">Answer</span> to the Ultimate Question of Life, the <span style="color:#ffe264;font-weight:600">Universe</span>, and <span style="color:#ffe264;font-weight:600">Everything</span>.';
             msg.innerHTML = html;
             document.body.appendChild(msg);
-            setTimeout(function () { msg.style.transition = 'opacity 0.5s'; msg.style.opacity = '0'; setTimeout(function () { msg.remove(); }, 500); }, 5000);
+            var dismiss42 = function () {
+              bd.style.transition = 'opacity 0.3s'; bd.style.opacity = '0';
+              msg.style.transition = 'opacity 0.3s'; msg.style.opacity = '0';
+              setTimeout(function () { bd.remove(); msg.remove(); }, 300);
+            };
+            bd.addEventListener('click', dismiss42);
+            msg.addEventListener('click', dismiss42);
+            setTimeout(dismiss42, 5000);
             return;
           }
 
@@ -1133,6 +1143,16 @@ https://github.com/UniverLab
           '.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
         document.head.appendChild(style);
 
+        function escapeHtml(s) {
+          return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function linkify(text) {
+          var escaped = escapeHtml(text);
+          return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
+            return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+          });
+        }
+
         var source = new EventSource('https://announcements.univerlab.org/events');
         source.addEventListener('entry', function (e) {
           try {
@@ -1144,9 +1164,12 @@ https://github.com/UniverLab
 
             var toast = document.createElement('div');
             toast.className = 'gl-toast';
-            var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + entry.title + '</span>';
+            var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(entry.title) + '</span>';
+            if (entry.body) {
+              html += '<p style="margin:.5rem 0 0;color:#ccc;font-size:.82rem;line-height:1.5;text-align:left">' + linkify(entry.body) + '</p>';
+            }
             if (entry.link) {
-              html += '<br><a href="' + entry.link + '">View →</a>';
+              html += '<br><a href="' + escapeHtml(entry.link) + '" target="_blank" rel="noopener noreferrer">View &rarr;</a>';
             }
             toast.innerHTML = html;
 
@@ -1164,7 +1187,8 @@ https://github.com/UniverLab
             if (entry.link) {
               toast.style.cursor = 'pointer';
               toast.addEventListener('click', function (ev) {
-                if (ev.target.tagName !== 'BUTTON') window.location.href = entry.link;
+                if (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON') return;
+                window.open(entry.link, '_blank', 'noopener,noreferrer');
               });
             }
 
