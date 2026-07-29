@@ -89,6 +89,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       line-height: 1.65;
       white-space: pre-line;
     }
+    .entry p a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .entry p a:hover {
+      color: var(--ink);
+    }
+    .entry-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .entry-link:hover {
+      text-decoration: underline;
+      color: var(--ink);
+    }
 
     /* Skeleton */
     .skeleton .entry-body {
@@ -130,33 +151,76 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       text-align: center;
     }
 
-    /* Toast */
-    .toast {
+    /* Toast — same style as the announcement toast in BaseLayout */
+    .gl-toast-backdrop {
       position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      background: var(--bg-raise);
-      border: 1px solid var(--accent);
-      border-left: 2px solid var(--accent);
-      padding: 0.7rem 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: var(--ink);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-      animation: toast-in 0.2s ease;
-      z-index: 50;
-      max-width: 22rem;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 319;
+      animation: gl-backdrop-in 0.2s ease;
     }
-    @keyframes toast-in {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    .gl-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(18, 18, 22, 0.95);
+      color: #fff;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.88rem;
+      padding: 0.9rem 2.4rem 0.9rem 1.4rem;
+      border-radius: 8px;
+      border: 1px solid #d4a843;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 168, 67, 0.25), 0 0 60px rgba(212, 168, 67, 0.1);
+      animation: gl-toast-in 0.2s ease;
+      z-index: 320;
+      text-align: center;
+      max-width: 90vw;
+      cursor: pointer;
     }
-    .toast.fade-out {
-      animation: toast-out 0.3s ease forwards;
+    .gl-toast span {
+      color: #d4a843;
+      font-weight: 600;
     }
-    @keyframes toast-out {
+    .gl-toast-close {
+      position: absolute;
+      top: 0.3rem;
+      right: 0.5rem;
+      background: none;
+      border: none;
+      color: #d4a843;
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0.2rem;
+      opacity: 0.7;
+    }
+    .gl-toast-close:hover {
+      opacity: 1;
+    }
+    .gl-toast.gl-toast-out {
+      animation: gl-toast-out 0.3s ease forwards;
+    }
+    .gl-toast-backdrop.gl-toast-out {
+      animation: gl-backdrop-out 0.3s ease forwards;
+    }
+    @keyframes gl-toast-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes gl-toast-out {
       from { opacity: 1; }
-      to { opacity: 0; transform: translateY(8px); }
+      to { opacity: 0; transform: scale(0.95); }
+    }
+    @keyframes gl-backdrop-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes gl-backdrop-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     /* Scroll-driven fade-in (progressive enhancement) */
@@ -196,6 +260,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       var MOCK = [
+        { date: '2026-07-18T10:00:00Z', type: 'launch', title: 'New release', body: 'Check out the latest features and improvements in this release. Full changelog and documentation available.', link: 'https://github.com/UniverLab' },
         { date: '2026-07-17T22:00:00Z', type: 'note', title: 'Dress rehearsal', body: 'Before a vehicle flies, it runs a dress rehearsal: the full countdown on the pad, tanks loaded, every system exercised in sequence, stopping just short of ignition. Nothing leaves the ground. The point is to find out what breaks while breaking it is still cheap.' },
         { date: '2026-07-17T18:00:00Z', type: 'launch', title: 'First light', body: 'Astronomers call it first light: the moment a new instrument opens its eye and returns an image. That first picture is never the best one the telescope will ever take. It is the proof that the optics align, the detector responds, the data path is open.' },
         { date: '2026-07-17T12:00:00Z', type: 'deploy', title: 'Announcements worker online', body: 'The announcements Durable Object is live. Entries serialize through SQLite, fan out over SSE, and mirror to KV for fast reads. The first transmission reached the log without incident.' },
@@ -216,6 +281,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         var hh = String(d.getUTCHours()).padStart(2, '0');
         var mm = String(d.getUTCMinutes()).padStart(2, '0');
         return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear + ' \u00b7 ' + hh + ':' + mm + ' UTC';
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function linkify(text) {
+        var escaped = escapeHtml(text);
+        return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
+          return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+        });
       }
 
       function renderEntry(entry) {
@@ -242,8 +317,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         body.appendChild(h3);
 
         var p = document.createElement('p');
-        p.textContent = entry.body;
+        p.innerHTML = linkify(entry.body);
         body.appendChild(p);
+
+        if (entry.link) {
+          var a = document.createElement('a');
+          a.className = 'entry-link';
+          a.href = entry.link;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = 'View \u2192';
+          body.appendChild(a);
+        }
 
         article.appendChild(body);
         return article;
@@ -292,16 +377,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       }
 
       function showToast(title) {
-        var toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = 'New entry: ' + title;
-        document.body.appendChild(toast);
-        setTimeout(function () {
-          toast.classList.add('fade-out');
-          setTimeout(function () { toast.remove(); }, 300);
-        }, 4000);
-      }
+        var backdrop = document.createElement('div');
+        backdrop.className = 'gl-toast-backdrop';
+        document.body.appendChild(backdrop);
 
+        var toast = document.createElement('div');
+        toast.className = 'gl-toast';
+        toast.innerHTML = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>New entry: ' + title + '</span>';
+
+        var dismiss = function () {
+          backdrop.classList.add('gl-toast-out');
+          toast.classList.add('gl-toast-out');
+          setTimeout(function () { backdrop.remove(); toast.remove(); }, 300);
+        };
+
+        toast.querySelector('.gl-toast-close').addEventListener('click', dismiss);
+        backdrop.addEventListener('click', dismiss);
+
+        document.body.appendChild(toast);
+        setTimeout(dismiss, 4000);
+      }
       // Infinite scroll sentinel
       var sentinel = document.createElement('div');
       sentinel.className = 'scroll-sentinel';
@@ -314,6 +409,57 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       // Initial load
       loadMore();
+
+      // Force announcement toast in dev mode
+      if (isDev) {
+        setTimeout(function () {
+          var mockAnnouncement = MOCK[0];
+
+          function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          }
+          function linkify(text) {
+            var escaped = escapeHtml(text);
+            return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
+              return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#d4a843;text-decoration:underline;text-underline-offset:2px">' + url + '</a>';
+            });
+          }
+
+          var backdrop = document.createElement('div');
+          backdrop.className = 'gl-toast-backdrop';
+          document.body.appendChild(backdrop);
+
+          var toast = document.createElement('div');
+          toast.className = 'gl-toast';
+          var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(mockAnnouncement.title) + '</span>';
+          if (mockAnnouncement.body) {
+            html += '<p style="margin:.5rem 0 0;color:#ccc;font-size:.82rem;line-height:1.5;text-align:left">' + linkify(mockAnnouncement.body) + '</p>';
+          }
+          if (mockAnnouncement.link) {
+            html += '<br><a href="' + escapeHtml(mockAnnouncement.link) + '" target="_blank" rel="noopener noreferrer" style="color:#d4a843;text-decoration:underline;text-underline-offset:2px">View &rarr;</a>';
+          }
+          toast.innerHTML = html;
+
+          var dismiss = function () {
+            backdrop.classList.add('gl-toast-out');
+            toast.classList.add('gl-toast-out');
+            setTimeout(function () { backdrop.remove(); toast.remove(); }, 300);
+          };
+
+          toast.querySelector('.gl-toast-close').addEventListener('click', dismiss);
+          backdrop.addEventListener('click', dismiss);
+          if (mockAnnouncement.link) {
+            toast.style.cursor = 'pointer';
+            toast.addEventListener('click', function (ev) {
+              if (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON') return;
+              window.open(mockAnnouncement.link, '_blank', 'noopener,noreferrer');
+            });
+          }
+
+          document.body.appendChild(toast);
+          setTimeout(dismiss, 8000);
+        }, 1500);
+      }
 
       // SSE
       if (!isDev) {
