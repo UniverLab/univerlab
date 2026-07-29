@@ -344,6 +344,7 @@ const structuredData = faqSchema
     const select = (os: string) => {
       lines.forEach((l) => (l.hidden = l.dataset.os !== os));
       tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.os === os)));
+      copy?.classList.remove('done');
     };
 
     if (tabs.length) {
