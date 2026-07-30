@@ -56,6 +56,7 @@ jobs:
 
   deploy:
     needs: create-tag
+    if: needs.create-tag.outputs.created == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout landing
