@@ -11,7 +11,51 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  create-tag:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      created: ${{ steps.create.outputs.created }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        id: create
+        run: |
+          if [ "${{ steps.check_tag.outputs.exists }}" = "true" ]; then
+            echo "created=false" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.tag }} already exists — skipping"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+          echo "created=true" >> $GITHUB_OUTPUT
+
   deploy:
+    needs: create-tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout landing
