@@ -1137,10 +1137,14 @@ https://github.com/UniverLab
           '@keyframes gl-toast-in{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}' +
           '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translate(-50%,-50%) scale(.95)}}' +
           '.gl-toast-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:319;animation:gl-toast-in .2s ease}' +
-          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:.9rem 2.4rem .9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw;cursor:pointer}' +
+          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:.9rem 2.4rem .9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw;cursor:pointer;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}' +
           '.gl-toast span{color:#d4a843;font-weight:600}.gl-toast a{color:#d4a843;text-decoration:underline;text-underline-offset:2px}' +
           '.gl-toast-close{position:absolute;top:.3rem;right:.5rem;background:none;border:none;color:#d4a843;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 .2rem;opacity:.7}.gl-toast-close:hover{opacity:1}' +
-          '.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}';
+          '.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}' +
+          '.gl-toast-body{margin-top:.5rem;text-align:left;overflow:hidden;flex:1;display:flex;flex-direction:column}' +
+          '.gl-toast-body-inner{color:#ccc;font-size:.82rem;line-height:1.5;max-height:4.5em;overflow:hidden;transition:max-height .3s ease;white-space:pre-line}' +
+          '.gl-toast-body-inner.expanded{max-height:none;overflow-y:auto}' +
+          '.gl-toast-expand{background:none;border:0;color:#d4a843;font-family:"IBM Plex Mono",monospace;font-size:.72rem;cursor:pointer;padding:.3rem 0 0;text-align:left;opacity:.8}.gl-toast-expand:hover{opacity:1;text-decoration:underline}';
         document.head.appendChild(style);
 
         function escapeHtml(s) {
@@ -1166,12 +1170,29 @@ https://github.com/UniverLab
             toast.className = 'gl-toast';
             var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(entry.title) + '</span>';
             if (entry.body) {
-              html += '<p style="margin:.5rem 0 0;color:#ccc;font-size:.82rem;line-height:1.5;text-align:left">' + linkify(entry.body) + '</p>';
+              var bodyHtml = linkify(entry.body);
+              html += '<div class="gl-toast-body"><div class="gl-toast-body-inner">' + bodyHtml + '</div><button class="gl-toast-expand" type="button">ver más</button></div>';
             }
             if (entry.link) {
               html += '<br><a href="' + escapeHtml(entry.link) + '" target="_blank" rel="noopener noreferrer">View &rarr;</a>';
             }
             toast.innerHTML = html;
+
+            var expandBtn = toast.querySelector('.gl-toast-expand');
+            if (expandBtn) {
+              var inner = toast.querySelector('.gl-toast-body-inner');
+              requestAnimationFrame(function () {
+                if (inner.scrollHeight <= inner.clientHeight + 2) {
+                  expandBtn.style.display = 'none';
+                } else {
+                  expandBtn.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    inner.classList.toggle('expanded');
+                    expandBtn.textContent = inner.classList.contains('expanded') ? 'ver menos' : 'ver más';
+                  });
+                }
+              });
+            }
 
             var dismiss = function () {
               backdrop.style.transition = 'opacity 0.3s';

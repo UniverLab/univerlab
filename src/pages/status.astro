@@ -179,6 +179,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       text-align: center;
       max-width: 90vw;
       cursor: pointer;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .gl-toast span {
       color: #d4a843;
@@ -205,6 +209,42 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     .gl-toast-backdrop.gl-toast-out {
       animation: gl-backdrop-out 0.3s ease forwards;
+    }
+    .gl-toast-body {
+      margin-top: 0.5rem;
+      text-align: left;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .gl-toast-body-inner {
+      color: #ccc;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      max-height: 4.5em;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      white-space: pre-line;
+    }
+    .gl-toast-body-inner.expanded {
+      max-height: none;
+      overflow-y: auto;
+    }
+    .gl-toast-expand {
+      background: none;
+      border: 0;
+      color: #d4a843;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0.3rem 0 0;
+      text-align: left;
+      opacity: 0.8;
+    }
+    .gl-toast-expand:hover {
+      opacity: 1;
+      text-decoration: underline;
     }
     @keyframes gl-toast-in {
       from { opacity: 0; transform: scale(0.95); }
@@ -260,7 +300,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       var MOCK = [
-        { date: '2026-07-18T10:00:00Z', type: 'launch', title: 'New release', body: 'Check out the latest features and improvements in this release. Full changelog and documentation available.', link: 'https://github.com/UniverLab' },
+        { date: '2026-07-18T10:00:00Z', type: 'launch', title: 'New release', body: 'This release brings parallel agents with shared context and a new DAG designer in the canopy UI — drag nodes, wire outputs to inputs, and run the whole graph with one click. The designer supports conditional branches, fan-out patterns, and error recovery nodes that automatically retry failed steps with exponential backoff. You can also define subgraphs that act as reusable components, similar to functions in a programming language, which keeps complex workflows manageable as they grow.\n\nPerformance is up: cold starts dropped from 1.2s to 400ms after moving to a lighter isolate. Memory per agent went from 45MB to 28MB. The new scheduler supports priority queues, so critical agents can preempt lower-priority work when resources are tight. We benchmarked a 12-agent DAG running end-to-end in 3.4s, down from 8.1s.\n\nOn observability, every agent run now emits structured traces compatible with OpenTelemetry. Pipe them to Jaeger, Grafana Tempo, or any OTLP collector. The flight log shows trace spans inline. There is also a new /metrics endpoint with Prometheus-compatible counters for agent starts, completions, failures, and queue depth.\n\nBreaking changes: config format moved from YAML to TOML. Run `canopy migrate-config` to rewrite every file in place. Check the full changelog at https://github.com/UniverLab/harness-canopy/releases and the migration guide at https://univerlab.org/canopy/docs/migration. Open a thread at https://github.com/UniverLab/harness-canopy/discussions if you run into issues.', link: 'https://github.com/UniverLab/harness-canopy/releases/tag/v0.5.0' },
         { date: '2026-07-17T22:00:00Z', type: 'note', title: 'Dress rehearsal', body: 'Before a vehicle flies, it runs a dress rehearsal: the full countdown on the pad, tanks loaded, every system exercised in sequence, stopping just short of ignition. Nothing leaves the ground. The point is to find out what breaks while breaking it is still cheap.' },
         { date: '2026-07-17T18:00:00Z', type: 'launch', title: 'First light', body: 'Astronomers call it first light: the moment a new instrument opens its eye and returns an image. That first picture is never the best one the telescope will ever take. It is the proof that the optics align, the detector responds, the data path is open.' },
         { date: '2026-07-17T12:00:00Z', type: 'deploy', title: 'Announcements worker online', body: 'The announcements Durable Object is live. Entries serialize through SQLite, fan out over SSE, and mirror to KV for fast reads. The first transmission reached the log without incident.' },
@@ -433,12 +473,29 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           toast.className = 'gl-toast';
           var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(mockAnnouncement.title) + '</span>';
           if (mockAnnouncement.body) {
-            html += '<p style="margin:.5rem 0 0;color:#ccc;font-size:.82rem;line-height:1.5;text-align:left">' + linkify(mockAnnouncement.body) + '</p>';
+            var bodyHtml = linkify(mockAnnouncement.body);
+            html += '<div class="gl-toast-body"><div class="gl-toast-body-inner">' + bodyHtml + '</div><button class="gl-toast-expand" type="button">ver más</button></div>';
           }
           if (mockAnnouncement.link) {
             html += '<br><a href="' + escapeHtml(mockAnnouncement.link) + '" target="_blank" rel="noopener noreferrer" style="color:#d4a843;text-decoration:underline;text-underline-offset:2px">View &rarr;</a>';
           }
           toast.innerHTML = html;
+
+          var expandBtn = toast.querySelector('.gl-toast-expand');
+          if (expandBtn) {
+            var inner = toast.querySelector('.gl-toast-body-inner');
+            requestAnimationFrame(function () {
+              if (inner.scrollHeight <= inner.clientHeight + 2) {
+                expandBtn.style.display = 'none';
+              } else {
+                expandBtn.addEventListener('click', function (ev) {
+                  ev.stopPropagation();
+                  inner.classList.toggle('expanded');
+                  expandBtn.textContent = inner.classList.contains('expanded') ? 'ver menos' : 'ver más';
+                });
+              }
+            });
+          }
 
           var dismiss = function () {
             backdrop.classList.add('gl-toast-out');

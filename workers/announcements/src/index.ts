@@ -35,7 +35,8 @@ interface Entry {
 /** Entries kept in the KV mirror. SQLite in the DO retains the full history. */
 const MIRROR_LIMIT = 100;
 const MAX_TITLE = 200;
-const MAX_BODY = 4000;
+const MAX_BODY = 2000;
+const MAX_LINK = 500;
 /** Ceiling on concurrent SSE clients, so a stuck client set cannot grow unbounded. */
 const MAX_CLIENTS = 200;
 const TYPES = new Set(['update', 'launch', 'incident', 'note']);
@@ -255,6 +256,9 @@ export default {
       }
       if (title.length > MAX_TITLE || text.length > MAX_BODY) {
         return json({ error: `title max ${MAX_TITLE} chars, body max ${MAX_BODY}` }, 413);
+      }
+      if (link && link.length > MAX_LINK) {
+        return json({ error: `link max ${MAX_LINK} chars` }, 413);
       }
       if (!TYPES.has(type)) {
         return json({ error: `type must be one of: ${[...TYPES].join(', ')}` }, 400);
