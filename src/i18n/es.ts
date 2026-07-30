@@ -67,7 +67,7 @@ export const es: Dict = {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
+        'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: { kicker: '00 — Experimentos' },
     philosophy: {
@@ -125,7 +125,7 @@ export const es: Dict = {
         cols: [
           ['Memoria que persiste', 'Cada sesión escribe hechos y patrones en un grafo de conocimiento por proyecto. La siguiente sesión los lee. Los agentes dejan de volver a explicar el mismo código.'],
           ['Programación en segundo plano', 'Los agentes corren por cron o por eventos de cambio de archivo — no solo bajo demanda. Un daemon vigila el espacio de trabajo para que no tengas que hacerlo tú.'],
-          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Se acabaron las colisiones silenciosas.'],
+          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Los agentes saben qué hace cada uno y no interfieren entre sí.'],
         ],
       },
       platforms: {
@@ -167,12 +167,12 @@ export const es: Dict = {
             'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en el harness que elijas.'],
           ['Puertas deterministas',
             'Un nodo de chequeo ejecuta tus comandos reales — build, lint, tests. El rojo regresa al implementador; solo el verde avanza.'],
-          ['Revisión con un segundo cerebro',
+          ['Revisión adversarial',
             'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
-          ['El fallo se enruta, no se pierde',
+          ['Cada fallo recibe su tratamiento',
             'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
           ['Modo ensemble',
-            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y deja que un árbitro destile el consenso antes de implementar una sola línea.'],
+            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y un árbitro extrae los puntos en común para generar una versión consensuada antes de implementar.'],
         ] as [string, string][],
       },
       faq: [
@@ -198,7 +198,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
         body:
-          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf cobraba, TeXstudio pesaba demasiado, VSCode pedía una extensión por cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge condensa todo eso en un binario y un skill.',
       },
       press: {
         kicker: 'Toda la imprenta',
@@ -237,7 +237,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Un salto de línea que no se portaba bien.',
         body:
-          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a <code>.gitattributes</code>. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque montarlos en cada repo es un fastidio. Así que borré el fastidio. Eso es gitkit.',
+          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a <code>.gitattributes</code>. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque configurarlos en cada repo es trabajo manual que se repite una y otra vez. Así que lo resolví de raíz. Eso es gitkit.',
       },
       features: {
         kicker: 'Un solo flujo',
@@ -261,7 +261,7 @@ export const es: Dict = {
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
-        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>asistente</strong> conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
+        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>wizard interactivo</strong> — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
       genesis: {
         kicker: 'Génesis',
         title: 'La misma configuración, una y otra vez.',
@@ -314,7 +314,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
         body:
-          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. La generación de imágenes domina el panorama, pero un dibujo técnico no es una imagen — es ingeniería. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
       },
       notes: {
         items: [
@@ -411,7 +411,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
         body:
-          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada error. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) dejaba algo por fuera: el ritmo, el encuadre, la legibilidad. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: '5 comandos',

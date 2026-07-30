@@ -17,8 +17,8 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const base = `/${id}/docs`;
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} bgColor={exp.essenceHex} circadian mutedCanvas>
-  <div class="wrap docs" style={`--essence: ${exp.essenceHex}`}>
+<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} circadian mutedCanvas>
+  <div class="wrap docs">
     <aside>
       <a class="back label" href={`/${id}`}>← {exp.name}</a>
       <span class="label head">{t.common.docsHome}</span>
@@ -49,7 +49,7 @@ const base = `/${id}/docs`;
 
   aside { position: sticky; top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
   @media (max-width: 52rem) { aside { position: static; } }
-  .back { text-decoration: none; color: var(--essence); margin-bottom: 0.8rem; }
+  .back { text-decoration: none; color: var(--accent); margin-bottom: 0.8rem; }
   .head { color: var(--ink-faint); margin-bottom: 0.3rem; }
   nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
   .item {
@@ -58,7 +58,7 @@ const base = `/${id}/docs`;
     border-left: 1px solid transparent;
   }
   .item:hover { color: var(--ink); }
-  .item.active { color: var(--essence); border-left-color: var(--essence); }
+  .item.active { color: var(--accent); border-left-color: var(--accent); }
 
   .prose-doc { max-width: 46rem; min-width: 0; }
 </style>
@@ -69,26 +69,239 @@ const base = `/${id}/docs`;
   .prose-doc h2 { font-size: 1.35rem; margin: 2.4rem 0 0.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
   .prose-doc h3 { font-size: 1.08rem; margin: 1.8rem 0 0.6rem; }
   .prose-doc p, .prose-doc li { color: var(--ink-dim); line-height: 1.7; }
-  .prose-doc a { color: var(--essence); }
+  .prose-doc a { color: var(--accent); }
   .prose-doc strong { color: var(--ink); font-weight: 500; }
   .prose-doc ul, .prose-doc ol { padding-left: 1.2rem; }
   .prose-doc li { margin: 0.3rem 0; }
   .prose-doc code {
     font-family: var(--font-mono); font-size: 0.86em;
-    background: var(--bg-raise); padding: 0.12em 0.38em; border-radius: 3px; color: var(--essence);
+    background: var(--bg-raise); padding: 0.12em 0.38em; border-radius: 3px; color: var(--ink);
   }
   .prose-doc pre {
-    background: var(--bg-raise) !important; border: 1px solid var(--line);
+    /* Shiki (github-dark) supplies its own background/text colors inline. */
+    position: relative;
+    border: 1px solid var(--line);
     padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; border-radius: 4px;
   }
   .prose-doc pre code { background: none; padding: 0; color: inherit; }
+  .prose-doc .copy-btn {
+    position: absolute; top: 0.45rem; right: 0.45rem;
+    display: flex; align-items: center; justify-content: center;
+    width: 1.8rem; height: 1.8rem;
+    background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.15s ease;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .prose-doc pre:hover .copy-btn, .prose-doc .copy-btn:focus { opacity: 1; }
+  .prose-doc .copy-btn:hover { background: rgba(0, 0, 0, 0.55); color: #fff; }
+  .prose-doc .copy-btn svg { width: 1rem; height: 1rem; }
   .prose-doc table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.9rem; }
   .prose-doc th, .prose-doc td { text-align: left; padding: 0.55rem 0.8rem; border: 1px solid var(--line); }
   .prose-doc th { color: var(--ink); font-weight: 500; background: var(--bg-raise); }
   .prose-doc td { color: var(--ink-dim); }
   .prose-doc blockquote {
-    border-left: 2px solid var(--essence); margin: 1.2rem 0; padding: 0.2rem 0 0.2rem 1.1rem;
+    border-left: 2px solid var(--accent); margin: 1.2rem 0; padding: 0.2rem 0 0.2rem 1.1rem;
     color: var(--ink-dim); font-style: italic;
   }
   .prose-doc hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+  /* Mermaid diagrams */
+  .prose-doc .mermaid {
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+  }
+  .prose-doc .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
 </style>
+
+<script>
+  // Mermaid diagrams — render on client side using site CSS variables.
+  // Re-renders when the site theme changes via the univerlab:themechange event.
+  let mermaidReady = false;
+  let hasDiagrams = false;
+
+  function getThemeColors() {
+    const root = getComputedStyle(document.documentElement);
+    const get = (v, fb) => root.getPropertyValue(v).trim() || fb;
+    return {
+      primaryBg: get('--bg-raise', '#2a2a2e'),
+      bg:        get('--bg', '#1e1e22'),
+      textColor: get('--ink', '#e0e0e0'),
+      border:    get('--accent', '#d4a843'),
+      line:      get('--line', '#8a8d93'),
+    };
+  }
+
+  function configureMermaid() {
+    const colors = getThemeColors();
+    try {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        themeVariables: {
+          // Core tokens
+          primaryColor: colors.primaryBg, primaryTextColor: colors.textColor, primaryBorderColor: colors.border,
+          secondaryColor: colors.bg, secondaryTextColor: colors.textColor, secondaryBorderColor: colors.line,
+          tertiaryColor: colors.bg, tertiaryTextColor: colors.textColor, tertiaryBorderColor: colors.line,
+          background: colors.bg,
+
+          // Nodes
+          nodeBkg: colors.primaryBg, nodeBorder: colors.border, nodeTextColor: colors.textColor,
+          mainBkg: colors.primaryBg, secondBkg: colors.bg, tertiaryBkg: colors.bg,
+
+          // Lines / edges
+          lineColor: colors.line, defaultLinkColor: colors.line,
+          edgeLabelBackground: colors.bg, edgeLabelText: colors.textColor,
+
+          // Clusters / groups
+          clusterBkg: colors.bg, clusterBorder: colors.border, titleColor: colors.textColor,
+
+          // Class diagrams
+          classText: colors.textColor,
+
+          // Sequence diagrams
+          actorBkg: colors.primaryBg, actorBorder: colors.border, actorTextColor: colors.textColor, actorLineColor: colors.line,
+          signalColor: colors.textColor, signalTextColor: colors.textColor,
+          activationBkgColor: colors.primaryBg, activationBorderColor: colors.border,
+          noteBkgColor: colors.bg, noteBorderColor: colors.border, noteTextColor: colors.textColor,
+          loopTextColor: colors.textColor, labelBoxBkgColor: colors.bg, labelBoxBorderColor: colors.line, labelTextColor: colors.textColor,
+
+          // Gantt / pie / other
+          sectionBkgColor: colors.primaryBg, altSectionBkgColor: colors.bg, sectionTextColor: colors.textColor,
+          taskBkgColor: colors.primaryBg, taskTextColor: colors.textColor, taskTextLightColor: colors.textColor, taskTextOutsideColor: colors.textColor,
+          gridColor: colors.line,
+          pieOuterStrokeWidth: '1px', pieStrokeColor: colors.border, pieTitleTextSize: '16px', pieTitleTextColor: colors.textColor,
+
+          // Flowchart-specific labels
+          textColor: colors.textColor,
+          fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+        },
+        themeCSS: `
+          .node rect, .node circle, .node polygon, .node ellipse { fill: var(--bg-raise); stroke: var(--accent); }
+          .node .label, .nodeLabel, .label { color: var(--ink); fill: var(--ink); }
+          .edgeLabel .label { color: var(--ink); fill: var(--ink); background: var(--bg); }
+          .edge-thickness-normal, .edge-pattern-solid { stroke: var(--line); }
+          .arrowheadPath { fill: var(--line); }
+          .cluster rect { fill: var(--bg); stroke: var(--line); }
+          .titleText { fill: var(--ink); }
+        `,
+      });
+    } catch (e) {
+      console.warn('Mermaid configure failed:', e);
+    }
+  }
+
+  function renderMermaid() {
+    if (!mermaidReady || !hasDiagrams) return;
+    configureMermaid();
+    try {
+      mermaid.run().catch(e => console.warn('Mermaid render failed:', e));
+    } catch (e) {
+      console.warn('Mermaid run failed:', e);
+    }
+  }
+
+  function rerenderMermaid() {
+    if (!mermaidReady || !hasDiagrams) return;
+    // Reset each diagram container to its original source so Mermaid can re-render.
+    document.querySelectorAll('.mermaid').forEach(function (el) {
+      const src = el.getAttribute('data-src');
+      if (!src) return;
+      el.innerHTML = src;
+      el.removeAttribute('data-processed');
+    });
+    configureMermaid();
+    try {
+      mermaid.run().catch(e => console.warn('Mermaid re-render failed:', e));
+    } catch (e) {
+      console.warn('Mermaid run failed:', e);
+    }
+  }
+
+  function initMermaid() {
+    const blocks = document.querySelectorAll('pre[data-language="mermaid"]');
+    if (!blocks.length) return;
+    hasDiagrams = true;
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+    script.onerror = () => console.warn('Failed to load Mermaid from CDN');
+    script.onload = function () {
+      mermaidReady = true;
+
+      // Convert Astro code blocks to mermaid divs and preserve original source.
+      blocks.forEach(function (el) {
+        const div = document.createElement('div');
+        div.className = 'mermaid';
+        const src = el.textContent;
+        div.setAttribute('data-src', src);
+        div.textContent = src;
+        el.parentNode.replaceChild(div, el);
+      });
+
+      configureMermaid();
+      renderMermaid();
+    };
+    document.head.appendChild(script);
+  }
+
+  // Re-render when the site theme changes.
+  window.addEventListener('univerlab:themechange', function () {
+    clearTimeout(window._mermaidRerenderTimer);
+    window._mermaidRerenderTimer = setTimeout(rerenderMermaid, 50);
+  });
+
+  // Fallback: watch documentElement style mutations for any theme changes.
+  const observer = new MutationObserver(function (mutations) {
+    for (const mutation of mutations) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        clearTimeout(window._mermaidRerenderTimer);
+        window._mermaidRerenderTimer = setTimeout(rerenderMermaid, 150);
+        break;
+      }
+    }
+  });
+  observer.observe(document.documentElement, { attributes: true });
+
+  // Copy buttons for code blocks.
+  function initCopyButtons() {
+    document.querySelectorAll('.prose-doc pre').forEach(function (pre) {
+      if (pre.querySelector('.copy-btn')) return;
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.setAttribute('title', 'Copy');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      btn.addEventListener('click', function () {
+        const code = pre.querySelector('code');
+        const text = code ? code.textContent : pre.textContent;
+        navigator.clipboard.writeText(text).then(function () {
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+          btn.setAttribute('aria-label', 'Copied!');
+          setTimeout(function () {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+            btn.setAttribute('aria-label', 'Copy code');
+          }, 1500);
+        }).catch(function (err) {
+          console.warn('Copy failed:', err);
+        });
+      });
+      pre.appendChild(btn);
+    });
+  }
+
+  // Init after styles are applied.
+  function initDocsScripts() {
+    initMermaid();
+    initCopyButtons();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDocsScripts);
+  } else {
+    requestAnimationFrame(initDocsScripts);
+  }
+</script>

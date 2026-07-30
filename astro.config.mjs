@@ -4,6 +4,13 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://univerlab.org',
+  markdown: {
+    shikiConfig: {
+      // Fixed dark editor theme for code blocks: keeps high contrast on both
+      // light and dark circadian pages and provides colourful syntax highlighting.
+      theme: 'github-dark',
+    },
+  },
   i18n: {
     locales: ['en', 'es'],
     defaultLocale: 'en',

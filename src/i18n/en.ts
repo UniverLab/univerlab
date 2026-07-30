@@ -123,7 +123,7 @@ export const en = {
         cols: [
           ['Memory that persists', 'Every session writes facts and patterns to a project-scoped knowledge graph. The next session reads them. Agents stop re-explaining the same codebase to themselves.'],
           ['Background scheduling', 'Agents run on cron schedules or file-change triggers — not just on demand. A daemon watches the workspace so you don\'t have to babysit.'],
-          ['Multi-agent sync', 'Agents declare their mission, report stability, and broadcast messages. The workspace "vibe" is visible before anyone touches a file. No more silent collisions.'],
+          ['Multi-agent sync', 'Agents declare their mission, report stability, and broadcast messages. The workspace "vibe" is visible before anyone touches a file. Agents know what each other is doing and don\'t interfere.'],
         ] as [string, string][],
       },
       platforms: {
@@ -165,12 +165,12 @@ export const en = {
             'Work enters as a spec — role, what, how. An implementer node picks it up on whichever harness you choose.'],
           ['Deterministic gates',
             'A check node runs your real commands — build, lint, tests. Red routes back to the implementer; only green moves forward.'],
-          ['Review on a second brain',
+          ['Adversarial review',
             'A different harness reviews the diff against the spec and commits. Same-vendor blind spots stay out of your branch.'],
-          ['Failure is routed, not lost',
+          ['Every failure gets its treatment',
             'If the implementer dies mid-run, a resilience node triages it: glitches retry now; a quota death schedules the loop to wake itself at the exact reset time.'],
           ['Ensemble mode',
-            'Fan the spec out to several models in parallel, wait for every proposal, and let an arbiter distill the consensus before a single line is implemented.'],
+            'Fan the spec out to several models in parallel, wait for every proposal, and an arbiter extracts the common points to generate a consensus version before implementing.'],
         ] as [string, string][],
       },
       faq: [
@@ -196,7 +196,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
         body:
-          'A master’s thesis, written with AI in the loop. Overleaf wanted my money or my patience; TeXstudio dragged in MiKTeX; VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. TexForge is the tool I should have had from the start: one binary, one skill, zero ceremony.',
+          'A master’s thesis, written with AI in the loop. Overleaf charged, TeXstudio was too heavy, VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. TexForge condenses all of that into a binary and a skill.',
       },
       press: {
         kicker: 'The whole press',
@@ -259,7 +259,7 @@ export const en = {
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
-        'ghScaff raises the whole structure in one conversational <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
+        'ghScaff raises the whole structure in one interactive <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
       genesis: {
         kicker: 'Genesis',
         title: 'The same setup, again and again.',
