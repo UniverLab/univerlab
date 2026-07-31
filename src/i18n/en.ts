@@ -12,6 +12,7 @@ export const en = {
     manifesto: 'Manifesto',
     people: 'Collaborators',
     github: 'GitHub',
+    sponsors: 'sponsor',
     log: 'Status',
   },
   footer: {
