@@ -67,7 +67,7 @@ export const es: Dict = {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'Esto no es un montón de repositorios. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
+        'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: { kicker: '00 — Experimentos' },
     philosophy: {
@@ -125,7 +125,7 @@ export const es: Dict = {
         cols: [
           ['Memoria que persiste', 'Cada sesión escribe hechos y patrones en un grafo de conocimiento por proyecto. La siguiente sesión los lee. Los agentes dejan de volver a explicar el mismo código.'],
           ['Programación en segundo plano', 'Los agentes corren por cron o por eventos de cambio de archivo — no solo bajo demanda. Un daemon vigila el espacio de trabajo para que no tengas que hacerlo tú.'],
-          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Se acabaron las colisiones silenciosas.'],
+          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Los agentes saben qué hace cada uno y no interfieren entre sí.'],
         ],
       },
       platforms: {
@@ -167,12 +167,12 @@ export const es: Dict = {
             'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en el harness que elijas.'],
           ['Puertas deterministas',
             'Un nodo de chequeo ejecuta tus comandos reales — build, lint, tests. El rojo regresa al implementador; solo el verde avanza.'],
-          ['Revisión con un segundo cerebro',
+          ['Revisión adversarial',
             'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
-          ['El fallo se enruta, no se pierde',
+          ['Cada fallo recibe su tratamiento',
             'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
           ['Modo ensemble',
-            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y deja que un árbitro destile el consenso antes de implementar una sola línea.'],
+            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y un árbitro extrae los puntos en común para generar una versión consensuada antes de implementar.'],
         ] as [string, string][],
       },
       faq: [
@@ -198,7 +198,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
         body:
-          'Una tesis de maestría, escrita con IA en el flujo. Overleaf quería mi dinero o mi paciencia; TeXstudio arrastraba MiKTeX; VSCode quería una extensión para cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge es la herramienta que debí tener desde el principio: un binario, un skill, cero ceremonia.',
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf cobraba, TeXstudio pesaba demasiado, VSCode pedía una extensión por cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge condensa todo eso en un binario y un skill.',
       },
       press: {
         kicker: 'Toda la imprenta',
@@ -237,7 +237,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Un salto de línea que no se portaba bien.',
         body:
-          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a <code>.gitattributes</code>. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque montarlos en cada repo es un fastidio. Así que borré el fastidio. Eso es gitkit.',
+          'Empezó con un commit que no cambiaba nada — solo los saltos de línea, reescritos en silencio entre mi Mac del trabajo, mi Windows y los agentes en WSL. Perseguirlo me llevó a <code>.gitattributes</code>. Eso me llevó a los git hooks: integrados en git, de verdad potentes, e ignorados por casi todos — porque configurarlos en cada repo es trabajo manual que se repite una y otra vez. Así que lo resolví de raíz. Eso es gitkit.',
       },
       features: {
         kicker: 'Un solo flujo',
@@ -261,7 +261,7 @@ export const es: Dict = {
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
-        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>asistente</strong> conversacional — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
+        'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>wizard interactivo</strong> — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
       genesis: {
         kicker: 'Génesis',
         title: 'La misma configuración, una y otra vez.',
@@ -314,7 +314,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
         body:
-          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. Todo internet está borracho de generación de imágenes, pero las imágenes mienten, y el trabajo real vive en los dibujos. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
+          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. La generación de imágenes domina el panorama, pero un dibujo técnico no es una imagen — es ingeniería. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
       },
       notes: {
         items: [
@@ -370,20 +370,20 @@ export const es: Dict = {
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       koan: '// la estimación ya está en la sala',
       lede:
-        'Quorum es <strong>planning poker</strong> — el ritual de estimación que los equipos ágiles usan para dimensionar el backlog: cada quien juega una carta, los votos se revelan a la vez, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC, así que un enlace de sala compartido es toda la app — sin nube, sin cuenta. El mazo se <strong>revela solo</strong> cuando todos han votado; si te caes la sesión sigue viva — te reconectas y el estado se sincroniza desde cualquier peer que siga en la sala.',
+        'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
       genesis: {
         kicker: 'Génesis',
         title: 'Un enlace, sin servidor.',
         body:
-          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio. Se llama Quorum por la regla que lo rige: un quórum es la cantidad que una decisión necesita para valer — así las cartas quedan ocultas hasta que todos han jugado, y entonces se revelan a la vez.',
+          'Llevaba tiempo con la idea de construir cómputo colaborativo peer-to-peer en el navegador, sin servidores de intermediarios. Antes de escalar la arquitectura, necesitaba validar lo básico — ¿puede una conexión P2P en el browser ser fluida y robusta? Para comprobarlo, construí algo con propósito: planning poker. No porque no existieran herramientas — hay excelentes opciones — sino porque este ritual refleja la esencia del trabajo en equipo: cada participante aporta su estimación en privado, de forma descentralizada y segura. El resultado es Quorum: cero datos saliendo del navegador, sin servidores, sin fricción. Libre, abierto, seguro.',
       },
       how: {
         kicker: 'Sesión P2P',
         items: [
           'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
           'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
-          'Las cartas se revelan solas en cuanto todos votan — cuenta regresiva de 3 s para que nada sorprenda.',
-          'Carga una lista de historias (pega o CSV) y avanza por ellas en orden.',
+          'Las cartas se revelan con una animación multi-fase en cuanto todos votan — partículas, slide y flip sincronizados.',
+          'Carga historias desde un CSV o agrégalas una a una, y avanza por ellas en orden.',
           'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
@@ -394,9 +394,9 @@ export const es: Dict = {
           'Quorum usa conexiones peer-to-peer WebRTC. Tu navegador se conecta directamente a los de tus compañeros — sin nube, sin base de datos. Un tracker de BitTorrent maneja el handshake inicial; después, los datos fluyen directamente entre pares.'],
         ['¿Puedo usar Quorum para sprint planning remoto?',
           'Sí. Comparte la URL de la sala con tu equipo. Cada uno elige una carta Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?). Las cartas se revelan simultáneamente cuando todos votan — una cuenta regresiva de 3 segundos previene revelaciones prematuras.'],
-        ['¿Quorum soporta listas de historias?',
+        ['¿Quorum soporta historias de usuario?',
           'Sí. Pega una lista de historias o carga un CSV. Avanza por ellas en orden, estimando cada una. La sesión se mantiene viva si alguien se desconecta — reconéctate y el estado se sincroniza desde cualquier par que siga en la sala.'],
-        ['¿Qué hace diferente Quorum de planningpoker.com?',
+        ['¿Qué hace diferente Quorum de planningpokeronline.com?',
           'Sin cuentas, sin límites de usuarios, sin datos almacenados en un servidor. Quorum es open-source y corre completamente en el navegador vía WebRTC. Tus datos de estimación nunca salen de los dispositivos de tu equipo.'],
       ] as [string, string][],
     },
@@ -406,12 +406,12 @@ export const es: Dict = {
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y diffeable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
         body:
-          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) salía frágil o fea, con una regrabación por cada error. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
+          'Al construir esta landing, cada experimento necesitaba un demo — y cada herramienta (asciinema, vhs, OBS, grabar a mano) dejaba algo por fuera: el ritmo, el encuadre, la legibilidad. Entonces el demo dejó de ser un video y pasó a ser un archivo: eventos que puedes podar, ritmar y reproducir. DemoStage graba el resto del laboratorio — incluida la página que estás leyendo.',
       },
       pipeline: {
         kicker: '5 comandos',

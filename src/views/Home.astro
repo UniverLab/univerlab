@@ -210,7 +210,10 @@ const webSite = {
   .card:hover .card-glow,
   .card.is-tapped .card-glow { opacity: 1; }
 
-  /* ── Per-experiment portal: card adopts the experiment's surface on hover ── */
+  /* ─ Per-experiment portal: card adopts the experiment's surface on hover ──
+     Each card shows the experiment's own surface as a "window" into it.
+     Quorum is the exception — it uses the active circadian theme tokens
+     because it only has day/night, not a custom surface palette. */
 
   /* Canopy — tui surface: cold slate dark, terminal chrome */
   .card[data-exp='canopy']:hover,
@@ -320,7 +323,7 @@ const webSite = {
     --bg: #f5eef5;
     --bg-raise: #faf5fa;
     --ink: #4a3a4a;
-    --ink-dim: #685b68; /* matches the corrected pastel surface — card text (.need/.tagline) needs AA */
+    --ink-dim: #685b68;
     --ink-faint: #746874;
     --line: #e8d8e8;
     background: var(--bg);
@@ -437,7 +440,7 @@ const webSite = {
   .card[data-exp='astro-denoise']:focus-visible .status,
   .card[data-exp='astro-denoise'].is-tapped .status { color: var(--ink-dim); }
 
-  /* ── DemoStage — studio surface: warm parchment, burnt orange ── */
+  /* ── DemoStage — studio surface: warm parchment, burnt orange ─ */
   .card[data-exp='demostage']:hover,
   .card[data-exp='demostage']:focus-visible,
   .card[data-exp='demostage'].is-tapped {
@@ -468,10 +471,24 @@ const webSite = {
   .card[data-exp='demostage']:focus-visible .status,
   .card[data-exp='demostage'].is-tapped .status { color: var(--ink-dim); }
 
-  /* ── Quorum — quorum surface: deep warm brown, gold ── */
-  .card[data-exp='quorum']:hover,
-  .card[data-exp='quorum']:focus-visible,
-  .card[data-exp='quorum'].is-tapped {
+  /* ── Quorum — responds to circadian: arena (sun) / expreso (moon) ── */
+  html[data-celestial='sun'] .card[data-exp='quorum']:hover,
+  html[data-celestial='sun'] .card[data-exp='quorum']:focus-visible,
+  html[data-celestial='sun'] .card[data-exp='quorum'].is-tapped {
+    --bg: #f0e8da;
+    --bg-raise: #f7f2e8;
+    --ink: #3a2a1a;
+    --ink-dim: #7a6a52;
+    --ink-faint: #a89878;
+    --line: #ddd2c0;
+    background: var(--bg);
+    color: var(--ink);
+    border-left-color: var(--quorum);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  html[data-celestial='moon'] .card[data-exp='quorum']:hover,
+  html[data-celestial='moon'] .card[data-exp='quorum']:focus-visible,
+  html[data-celestial='moon'] .card[data-exp='quorum'].is-tapped {
     --bg: #241a12;
     --bg-raise: #2f2318;
     --ink: #f2e7d3;
