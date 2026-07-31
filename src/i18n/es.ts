@@ -370,20 +370,20 @@ export const es: Dict = {
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       koan: '// la estimación ya está en la sala',
       lede:
-        'Quorum es <strong>planning poker</strong> — el ritual de estimación que los equipos ágiles usan para dimensionar el backlog: cada quien juega una carta, los votos se revelan a la vez, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC, así que un enlace de sala compartido es toda la app — sin nube, sin cuenta. El mazo se <strong>revela solo</strong> cuando todos han votado; si te caes la sesión sigue viva — te reconectas y el estado se sincroniza desde cualquier peer que siga en la sala.',
+        'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
       genesis: {
         kicker: 'Génesis',
         title: 'Un enlace, sin servidor.',
         body:
-          'Cada ronda de estimación significaba pasar al equipo por un servidor en alguna parte: crear una sala, compartir una invitación, esperar que siguiera funcionando. La pregunta era simple — ¿cómo sería el planning poker si se elimina el servidor por completo? La respuesta fue una sola URL. Al abrirla, los navegadores se comunican directamente entre sí, enrutando la señal por el tracker de BitTorrent en lugar de un centro de datos. Sin host, sin nada en el medio. Se llama Quorum por la regla que lo rige: un quórum es la cantidad que una decisión necesita para valer — así las cartas quedan ocultas hasta que todos han jugado, y entonces se revelan a la vez.',
+          'Llevaba tiempo con la idea de construir cómputo colaborativo peer-to-peer en el navegador, sin servidores de intermediarios. Antes de escalar la arquitectura, necesitaba validar lo básico — ¿puede una conexión P2P en el browser ser fluida y robusta? Para comprobarlo, construí algo con propósito: planning poker. No porque no existieran herramientas — hay excelentes opciones — sino porque este ritual refleja la esencia del trabajo en equipo: cada participante aporta su estimación en privado, de forma descentralizada y segura. El resultado es Quorum: cero datos saliendo del navegador, sin servidores, sin fricción. Libre, abierto, seguro.',
       },
       how: {
         kicker: 'Sesión P2P',
         items: [
           'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
           'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
-          'Las cartas se revelan solas en cuanto todos votan — cuenta regresiva de 3 s para que nada sorprenda.',
-          'Carga una lista de historias (pega o CSV) y avanza por ellas en orden.',
+          'Las cartas se revelan con una animación multi-fase en cuanto todos votan — partículas, slide y flip sincronizados.',
+          'Carga historias desde un CSV o agrégalas una a una, y avanza por ellas en orden.',
           'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
@@ -394,9 +394,9 @@ export const es: Dict = {
           'Quorum usa conexiones peer-to-peer WebRTC. Tu navegador se conecta directamente a los de tus compañeros — sin nube, sin base de datos. Un tracker de BitTorrent maneja el handshake inicial; después, los datos fluyen directamente entre pares.'],
         ['¿Puedo usar Quorum para sprint planning remoto?',
           'Sí. Comparte la URL de la sala con tu equipo. Cada uno elige una carta Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?). Las cartas se revelan simultáneamente cuando todos votan — una cuenta regresiva de 3 segundos previene revelaciones prematuras.'],
-        ['¿Quorum soporta listas de historias?',
+        ['¿Quorum soporta historias de usuario?',
           'Sí. Pega una lista de historias o carga un CSV. Avanza por ellas en orden, estimando cada una. La sesión se mantiene viva si alguien se desconecta — reconéctate y el estado se sincroniza desde cualquier par que siga en la sala.'],
-        ['¿Qué hace diferente Quorum de planningpoker.com?',
+        ['¿Qué hace diferente Quorum de planningpokeronline.com?',
           'Sin cuentas, sin límites de usuarios, sin datos almacenados en un servidor. Quorum es open-source y corre completamente en el navegador vía WebRTC. Tus datos de estimación nunca salen de los dispositivos de tu equipo.'],
       ] as [string, string][],
     },
@@ -406,7 +406,7 @@ export const es: Dict = {
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y diffeable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
