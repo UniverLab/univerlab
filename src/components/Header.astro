@@ -31,6 +31,7 @@ const nav = [
   { href: '/status', label: t.nav.log },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: githubHref, label: t.nav.github, ext: true },
+  { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';
 const toggleHref = switchLangPath(Astro.url, other);
@@ -81,19 +82,9 @@ const signals = [
           href={item.href}
           target={item.ext ? '_blank' : undefined}
           rel={item.ext ? 'noopener noreferrer' : undefined}
-          class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)) }]}
-        >{item.label}</a>
+          class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)), sponsor: item.sponsor }]}
+        >{item.sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{item.label}</span></> : item.label}</a>
       ))}
-      {isDocs ? (
-        <span class="label lang-static" aria-hidden="true">EN</span>
-      ) : (
-        <a
-          class="label lang"
-          href={toggleHref}
-          data-set-lang={other}
-          hreflang={other}
-        >{languages[other]}</a>
-      )}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
           {signals.map((s) => (
@@ -109,6 +100,14 @@ const signals = [
   <button class="celestial-btn" type="button" aria-label="Today in science">
     <span class="celestial" aria-hidden="true"></span>
   </button>
+  <a
+    class="lang-corner"
+    href={toggleHref}
+    data-set-lang={other}
+    hreflang={other}
+    aria-label={`Switch to ${languages[other]}`}
+    id="lang-corner"
+  ><span class="lang-corner-text">{languages[other]}</span></a>
 </header>
 
 <script>
@@ -574,8 +573,53 @@ const signals = [
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: #8a8d93; }
   nav a:hover, nav a.active { color: var(--ink); }
+  nav a.sponsor { color: var(--accent, #c9a227); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor svg { display: block; }
+  nav a.sponsor .heart-text { display: none; }
+  nav a.sponsor:hover { color: #f0d060; animation-play-state: paused; }
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.15); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.1); }
+    56% { transform: scale(1); }
+  }
   .lang, .lang-static { color: var(--ink-faint); }
   .lang:hover { color: var(--ink); }
+
+  /* Language corner — a folded page triangle in the top-right with the
+     language code centered inside. Simple, discoverable, no clutter. */
+  .lang-corner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 38px 38px 0;
+    border-color: transparent var(--accent, #c9a227) transparent transparent;
+    cursor: pointer;
+    text-decoration: none;
+    pointer-events: auto;
+    transition: border-width 0.15s ease;
+  }
+  .lang-corner:hover {
+    border-width: 0 32px 32px 0;
+  }
+  .lang-corner-text {
+    position: absolute;
+    top: 0px;
+    right: -35px;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #000;
+    pointer-events: none;
+    white-space: nowrap;
+  }
 
   /* Sun by day, moon by night — a celestial body tracing the header rule like
      the horizon. The button is a 28px hit area; the 8px celestial inside is the
@@ -651,6 +695,7 @@ const signals = [
     width: 2.2rem;
     height: 2.2rem;
     padding: 0;
+    margin-right: 0.5rem;
     background: none;
     border: 0;
     cursor: pointer;
@@ -677,8 +722,10 @@ const signals = [
   .burger[aria-expanded='true'] .bars::before { top: 0; transform: translateX(-50%) rotate(45deg); }
   .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 900px) {
     .burger { display: inline-flex; }
+    nav a.sponsor .heart-icon { display: none; }
+    nav a.sponsor .heart-text { display: inline; }
     nav {
       display: none;
       position: absolute;
@@ -719,12 +766,13 @@ const signals = [
 
   /* Hidden on desktop, where the inline nav already fills the bar. Scoped to a
      min-width query so it can't override the max-width rule above by source order. */
-  @media (min-width: 1025px) {
+  @media (min-width: 1181px) {
     .nav-waves { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .nav-waves g { animation: none !important; }
+    nav a.sponsor { animation: none !important; }
   }
 </style>
 

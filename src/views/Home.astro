@@ -572,15 +572,15 @@ const webSite = {
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
 
-  const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; motif?: string }> = {
-    canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', motif: '◉' },
-    texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', motif: '⁂' },
-    gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', motif: '🍒' },
-    ghscaff:     { bg: 'scaffold',    essence: '#b87333', bgHex: '#0e0c0a', motif: '⬡' },
-    cadspec:     { bg: 'primitives',  essence: '#6ec6e6', bgHex: '#f6f8fa', motif: '▣' },
-    'astro-denoise': { bg: 'starfield', essence: '#a78bfa', bgHex: '#0a0911', motif: '✦' },
-    demostage:   { bg: 'drift',       essence: '#ef8354', bgHex: '#f6f3ee', motif: '●' },
-    quorum:      { bg: 'spiral',      essence: '#e6b24a', bgHex: '#241a12', motif: '∞' },
+   const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; bgHexLight: string; motif?: string }> = {
+    canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', bgHexLight: '#f5f5f3', motif: '◉' },
+    texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', bgHexLight: '#f5f5f3', motif: '⁂' },
+    gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', bgHexLight: '#f5eef5', motif: '🍒' },
+    ghscaff:     { bg: 'scaffold',    essence: '#b87333', bgHex: '#0e0c0a', bgHexLight: '#f5f5f3', motif: '⬡' },
+    cadspec:     { bg: 'primitives',  essence: '#6ec6e6', bgHex: '#f6f8fa', bgHexLight: '#f6f8fa', motif: '▣' },
+    'astro-denoise': { bg: 'starfield', essence: '#a78bfa', bgHex: '#0a0911', bgHexLight: '#f5f5f3', motif: '✦' },
+    demostage:   { bg: 'drift',       essence: '#ef8354', bgHex: '#f6f3ee', bgHexLight: '#f6f3ee', motif: '●' },
+    quorum:      { bg: 'spiral',      essence: '#e6b24a', bgHex: '#241a12', bgHexLight: '#f0e8da', motif: '∞' },
   };
 
   // Start background animation on hover
@@ -613,7 +613,8 @@ const webSite = {
 
       const rect = card.getBoundingClientRect();
       const s = surfaces[expId];
-      const color = s?.bgHex || '#0a0b0e';
+      const isMoon = document.documentElement.dataset.celestial === 'moon';
+      const color = isMoon ? (s?.bgHex || '#0a0b0e') : (s?.bgHexLight || '#f5f5f3');
 
       // Expanding overlay
       const overlay = document.createElement('div');

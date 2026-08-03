@@ -6,10 +6,11 @@ const t = useTranslations(lang);
 
 const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
 const footNav = [
-  { href: '/#experiments', label: t.nav.experiments },
+  { href: localizePath('/', lang) + '#experiments', label: t.nav.experiments },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+  { href: 'https://github.com/sponsors/JheisonMB', label: 'heart', ext: true, sponsor: true },
 ];
 ---
 <footer>
@@ -35,7 +36,8 @@ const footNav = [
           href={item.href}
           target={item.ext ? '_blank' : undefined}
           rel={item.ext ? 'noopener noreferrer' : undefined}
-        >{item.label}</a>
+          class:list={{ sponsor: item.sponsor }}
+        >{item.sponsor ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> : item.label}</a>
       ))}
     </nav>
   </div>
@@ -103,6 +105,21 @@ Date:   now
     transition: color 0.15s ease;
   }
   .foot-nav a:hover { color: var(--f-ink); }
+  .foot-nav a.sponsor {
+    color: var(--accent, #c9a227);
+    letter-spacing: 0; text-transform: none;
+    animation: heartbeat 2s ease-in-out infinite;
+    display: inline-flex; align-items: center;
+  }
+  .foot-nav a.sponsor svg { display: block; stroke: var(--accent, #c9a227); }
+  .foot-nav a.sponsor:hover { color: #f0d060; stroke: #f0d060; animation-play-state: paused; }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.15); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.1); }
+    56% { transform: scale(1); }
+  }
 
   .base {
     position: relative;
@@ -176,6 +193,9 @@ Date:   now
     width: 0%;
     background: var(--essence, var(--accent, #c9a227));
     transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .foot-nav a.sponsor { animation: none !important; }
   }
 </style>
 
