@@ -1,6 +1,6 @@
 {
   "name": "univerlab-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
-    "astro": "^6.4.6",
+    "astro": "^7.1.6",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "ts-jest": "^29.4.11",
