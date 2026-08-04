@@ -9,11 +9,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      force:
-        description: 'Force redeploy without version bump'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -64,7 +59,6 @@ jobs:
 
   deploy:
     needs: create-tag
-    if: needs.create-tag.outputs.created == 'true' || inputs.force == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout landing
