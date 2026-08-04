@@ -1,0 +1,131 @@
+---
+/**
+ * GhostHint — subtle hints that appear after the reader starts scrolling.
+ *
+ * Props:
+ *   hints: Array<{ id: string, msg: string, first?: boolean, prob?: number }>
+ *     - id:    unique key (stored in sessionStorage to avoid repeats)
+ *     - msg:   text to display (use <kbd> tags for keys)
+ *     - first: show deterministically on the first qualifying scroll
+ *     - prob:  chance of showing on each later scroll attempt (default 0.10)
+ *
+ *   scrollThreshold?: number — px scrolled before showing the first hint (default 120)
+ *   interval?: number       — minimum ms between hint attempts (default 8000)
+ *   duration?: number        — ms the hint stays visible (default 5000)
+ */
+interface Hint { id: string; msg: string; first?: boolean; prob?: number }
+const {
+  hints = [] as Hint[],
+  scrollThreshold = 120,
+  interval = 8000,
+  duration = 5000,
+} = Astro.props;
+---
+
+<div class="ghost-hint" id="ghost-hint" aria-hidden="true">
+  <span class="ghost-hint__text"></span>
+</div>
+
+<script is:inline define:vars={{ hints, scrollThreshold, interval, duration }}>
+(function () {
+  if (matchMedia('(pointer: coarse)').matches) return;
+  var KEY = 'univerlab-ghost-seen';
+  var shown;
+  try { shown = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch (_) { shown = []; }
+  var fresh = hints.filter(function (h) { return shown.indexOf(h.id) === -1; });
+  if (!fresh.length) return;
+
+  var el = document.getElementById('ghost-hint');
+  if (!el) return;
+  var txt = el.querySelector('.ghost-hint__text');
+  var lastAttemptScroll = window.scrollY;
+  var lastAttempt = 0;
+  var hideTimer = null;
+
+  function show(hint) {
+    txt.innerHTML = hint.msg;
+    el.classList.add('ghost-hint--visible');
+    shown.push(hint.id);
+    try { sessionStorage.setItem(KEY, JSON.stringify(shown)); } catch (_) {}
+    fresh = hints.filter(function (h) { return shown.indexOf(h.id) === -1; });
+    if (!fresh.length) window.removeEventListener('scroll', onScroll);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () {
+      el.classList.remove('ghost-hint--visible');
+    }, duration);
+  }
+
+  function pickProbabilistic() {
+    var candidates = fresh.filter(function (hint) {
+      var probability = typeof hint.prob === 'number' ? hint.prob : 0.10;
+      probability = Math.max(0, Math.min(1, probability));
+      return Math.random() < probability;
+    });
+    if (!candidates.length) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function onScroll() {
+    var delta = Math.abs(window.scrollY - lastAttemptScroll);
+    var now = Date.now();
+    if (delta < scrollThreshold) return;
+    if (now - lastAttempt < interval) return;
+    lastAttemptScroll = window.scrollY;
+    lastAttempt = now;
+    if (!fresh.length) return;
+
+    var first = fresh.filter(function (hint) { return hint.first; })[0];
+    if (first) {
+      show(first);
+      return;
+    }
+
+    var candidate = pickProbabilistic();
+    if (candidate) show(candidate);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
+
+<style>
+  .ghost-hint {
+    position: fixed;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .ghost-hint--visible {
+    opacity: 1;
+  }
+  .ghost-hint__text {
+    max-width: calc(100vw - 2rem);
+    font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim, #6b5c4a);
+    opacity: 0.8;
+    text-align: center;
+    white-space: normal;
+    user-select: none;
+  }
+  .ghost-hint__text :global(kbd) {
+    display: inline-block;
+    padding: 0.08em 0.45em;
+    margin: 0 0.15em;
+    font-family: inherit;
+    font-size: 0.92em;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    opacity: 0.7;
+    vertical-align: baseline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ghost-hint { transition: none; }
+  }
+</style>

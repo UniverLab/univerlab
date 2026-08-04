@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ThemeBackground from '../components/ThemeBackground.astro';
+import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
 import '../styles/global.css';
@@ -264,6 +265,12 @@ https://github.com/UniverLab
       <slot />
     </main>
     <Footer />
+    <GhostHint hints={[
+      { id: 'cmd-palette', msg: 'Press <kbd>/</kbd> for commands', first: true },
+      { id: 'today-science', msg: 'The celestial marker hides a fact from today in science', prob: 0.16 },
+      { id: 'flight-log', msg: 'The flight bar keeps a record of what you discover', prob: 0.13 },
+      { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
+    ]} />
     <script>
       // Command palette — terminal-style / command with Tab autocomplete.
       // Commands are derived from experiment IDs + static routes.
