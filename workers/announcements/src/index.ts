@@ -4,11 +4,12 @@
  *   GET  /        → JSON array of entries (served from the KV mirror, edge-cheap)
  *   GET  /events  → SSE stream (pushes `event: entry`)
  *   PUT  /        → Add entry (Bearer token required)
+ *   PATCH /:id    → Update an entry's topic (Bearer token required)
  *   DELETE /:id   → Remove entry by id (Bearer token required)
  *
  * Reads never touch the Durable Object: every write mirrors the latest entries
- * into KV key "entries", so GET / stays a plain edge read. Only /events and PUT
- * reach the LogHub DO, which owns the append and the SSE fan-out.
+ * into KV key "entries", so GET / stays a plain edge read. Only /events, PUT and
+ * PATCH reach the LogHub DO, which owns writes and the SSE fan-out.
  *
  * A single hub instance is deliberate — there is one mission log, so the log is
  * the coordination atom. That also makes writes serialized by construction,
@@ -29,6 +30,7 @@ interface Entry {
   title: string;
   body: string;
   type: string;
+  topic: string;
   link?: string;
 }
 
@@ -40,10 +42,22 @@ const MAX_LINK = 500;
 /** Ceiling on concurrent SSE clients, so a stuck client set cannot grow unbounded. */
 const MAX_CLIENTS = 200;
 const TYPES = new Set(['update', 'launch', 'incident', 'note']);
+const DEFAULT_TOPIC = 'general';
+const TOPICS = new Set([
+  DEFAULT_TOPIC,
+  'canopy',
+  'astro-denoise',
+  'texforge',
+  'gitkit',
+  'ghscaff',
+  'cadspec',
+  'demostage',
+  'quorum',
+]);
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://univerlab.org',
-  'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
@@ -53,6 +67,10 @@ function json(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json', ...CORS },
   });
+}
+
+function normalizeTopic(topic: unknown): string {
+  return typeof topic === 'string' && TOPICS.has(topic) ? topic : DEFAULT_TOPIC;
 }
 
 /**
@@ -82,14 +100,18 @@ export class LogHub extends DurableObject<Env> {
           id    TEXT NOT NULL UNIQUE,
           date  TEXT NOT NULL,
           title TEXT NOT NULL,
-          body  TEXT NOT NULL,
-          type  TEXT NOT NULL
+         body  TEXT NOT NULL,
+           type  TEXT NOT NULL,
+           topic TEXT NOT NULL DEFAULT 'general'
         )
       `);
       // Migration: add link column if missing
       const cols = this.ctx.storage.sql.exec("PRAGMA table_info('entries')").toArray();
       if (!cols.some((c: any) => c.name === 'link')) {
         this.ctx.storage.sql.exec("ALTER TABLE entries ADD COLUMN link TEXT");
+      }
+      if (!cols.some((c: any) => c.name === 'topic')) {
+        this.ctx.storage.sql.exec("ALTER TABLE entries ADD COLUMN topic TEXT NOT NULL DEFAULT 'general'");
       }
     });
   }
@@ -99,29 +121,31 @@ export class LogHub extends DurableObject<Env> {
    * SQLite writes are synchronous and this DO is single-threaded, so the
    * read-modify-write that used to need a lock cannot interleave here.
    */
-  async addEntry(input: { title: string; body: string; type: string; link?: string }): Promise<Entry> {
+  async addEntry(input: { title: string; body: string; type: string; topic: string; link?: string }): Promise<Entry> {
     const entry: Entry = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       title: input.title,
       body: input.body,
       type: input.type,
+      topic: input.topic,
       ...(input.link ? { link: input.link } : {}),
     };
 
     this.ctx.storage.sql.exec(
-      'INSERT INTO entries (id, date, title, body, type, link) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO entries (id, date, title, body, type, topic, link) VALUES (?, ?, ?, ?, ?, ?, ?)',
       entry.id,
       entry.date,
       entry.title,
       entry.body,
       entry.type,
+      entry.topic,
       entry.link ?? null
     );
 
     const latest = this.ctx.storage.sql
       .exec<Omit<Entry, never>>(
-        'SELECT id, date, title, body, type, link FROM entries ORDER BY seq DESC LIMIT ?',
+        'SELECT id, date, title, body, type, topic, link FROM entries ORDER BY seq DESC LIMIT ?',
         MIRROR_LIMIT
       )
       .toArray();
@@ -129,9 +153,27 @@ export class LogHub extends DurableObject<Env> {
     // Persist first, broadcast second — a client must never see an entry that
     // did not make it into the mirror.
     await this.env.ANNOUNCEMENTS.put('entries', JSON.stringify(latest));
-    this.broadcast(entry);
+    this.broadcast('entry', entry);
 
     return entry;
+  }
+
+  async updateTopic(id: string, topic: string): Promise<Entry | null> {
+    const result = this.ctx.storage.sql.exec('UPDATE entries SET topic = ? WHERE id = ?', topic, id);
+    if (result.rowsWritten === 0) return null;
+
+    const updated = this.ctx.storage.sql
+      .exec<Omit<Entry, never>>('SELECT id, date, title, body, type, topic, link FROM entries WHERE id = ?', id)
+      .toArray()[0];
+    if (!updated) return null;
+
+    const latest = this.ctx.storage.sql
+      .exec<Omit<Entry, never>>('SELECT id, date, title, body, type, topic, link FROM entries ORDER BY seq DESC LIMIT ?', MIRROR_LIMIT)
+      .toArray();
+
+    await this.env.ANNOUNCEMENTS.put('entries', JSON.stringify(latest));
+    this.broadcast('update', updated);
+    return updated;
   }
 
   async removeEntry(id: string): Promise<boolean> {
@@ -140,7 +182,7 @@ export class LogHub extends DurableObject<Env> {
 
     const latest = this.ctx.storage.sql
       .exec<Omit<Entry, never>>(
-        'SELECT id, date, title, body, type, link FROM entries ORDER BY seq DESC LIMIT ?',
+        'SELECT id, date, title, body, type, topic, link FROM entries ORDER BY seq DESC LIMIT ?',
         MIRROR_LIMIT
       )
       .toArray();
@@ -149,8 +191,8 @@ export class LogHub extends DurableObject<Env> {
     return true;
   }
 
-  private broadcast(entry: Entry) {
-    const payload = this.encoder.encode(`event: entry\ndata: ${JSON.stringify(entry)}\n\n`);
+  private broadcast(event: 'entry' | 'update', entry: Entry) {
+    const payload = this.encoder.encode(`event: ${event}\ndata: ${JSON.stringify(entry)}\n\n`);
     for (const controller of this.clients) {
       try {
         controller.enqueue(payload);
@@ -219,7 +261,10 @@ export default {
       const raw = await env.ANNOUNCEMENTS.get('entries');
       let entries: Entry[];
       try {
-        entries = raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        entries = Array.isArray(parsed)
+          ? parsed.map((entry) => ({ ...entry, topic: normalizeTopic(entry.topic) }))
+          : [];
       } catch {
         entries = [];
       }
@@ -239,7 +284,7 @@ export default {
         return json({ error: 'Unauthorized' }, 401);
       }
 
-      let body: { title?: unknown; body?: unknown; type?: unknown; link?: unknown };
+      let body: { title?: unknown; body?: unknown; type?: unknown; topic?: unknown; link?: unknown };
       try {
         body = await req.json();
       } catch {
@@ -249,6 +294,9 @@ export default {
       const title = typeof body.title === 'string' ? body.title.trim() : '';
       const text = typeof body.body === 'string' ? body.body.trim() : '';
       const type = typeof body.type === 'string' && body.type ? body.type : 'update';
+      const topic = body.topic == null || (typeof body.topic === 'string' && !body.topic.trim())
+        ? DEFAULT_TOPIC
+        : typeof body.topic === 'string' ? body.topic.trim() : '';
       const link = typeof body.link === 'string' && body.link.trim() ? body.link.trim() : undefined;
 
       if (!title || !text) {
@@ -263,9 +311,40 @@ export default {
       if (!TYPES.has(type)) {
         return json({ error: `type must be one of: ${[...TYPES].join(', ')}` }, 400);
       }
+      if (!TOPICS.has(topic)) {
+        return json({ error: `topic must be one of: ${[...TOPICS].join(', ')}` }, 400);
+      }
 
-      const entry = await env.LOG_HUB.getByName('hub').addEntry({ title, body: text, type, link });
+      const entry = await env.LOG_HUB.getByName('hub').addEntry({ title, body: text, type, topic, link });
       return json(entry, 201);
+    }
+
+    if (req.method === 'PATCH' && url.pathname !== '/') {
+      const auth = req.headers.get('Authorization') ?? '';
+      if (!env.AUTH_TOKEN || !(await tokenMatches(auth, `Bearer ${env.AUTH_TOKEN}`))) {
+        return json({ error: 'Unauthorized' }, 401);
+      }
+
+      let body: { topic?: unknown };
+      try {
+        body = await req.json();
+      } catch {
+        return json({ error: 'Invalid JSON' }, 400);
+      }
+
+      const topic = body.topic == null || (typeof body.topic === 'string' && !body.topic.trim())
+        ? DEFAULT_TOPIC
+        : typeof body.topic === 'string' ? body.topic.trim() : '';
+      if (!TOPICS.has(topic)) {
+        return json({ error: `topic must be one of: ${[...TOPICS].join(', ')}` }, 400);
+      }
+
+      const id = url.pathname.slice(1);
+      if (!id) return json({ error: 'id required' }, 400);
+
+      const entry = await env.LOG_HUB.getByName('hub').updateTopic(id, topic);
+      if (!entry) return json({ error: 'Not found' }, 404);
+      return json(entry);
     }
 
     // DELETE /:id — remove entry from SQLite + KV mirror
