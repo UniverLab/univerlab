@@ -6,6 +6,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <span class="label">MISSION LOG</span>
     <h1>Status</h1>
     <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
+    <nav class="topic-index" aria-label="Mission log topics">
+      <span class="topic-index-label">TOPICS</span>
+      <div id="topic-filters" class="topic-filters">
+        <button class="topic-filter is-active" type="button" data-topic="all" aria-pressed="true">All</button>
+      </div>
+    </nav>
     <div id="log-entries">
       <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
       <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
@@ -40,6 +46,65 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       font-size: 0.95rem;
       line-height: 1.6;
       margin-bottom: 3rem;
+    }
+    .topic-index {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      padding-block: 0.85rem;
+      margin-bottom: 0.8rem;
+      border-block: 1px solid var(--line);
+    }
+    .topic-index-label {
+      flex: 0 0 auto;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      color: var(--ink-faint);
+    }
+    .topic-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .topic-filter {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      padding: 0.28rem 0.55rem;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: transparent;
+      color: var(--ink-dim);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .topic-filter:hover,
+    .topic-filter:focus-visible,
+    .topic-filter.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .topic-filter.is-active {
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+    .topic-filter-count {
+      color: var(--ink-faint);
+      font-size: 0.58rem;
+    }
+    .topic-filter.is-active .topic-filter-count,
+    .topic-filter:hover .topic-filter-count {
+      color: currentColor;
+    }
+    .filter-empty {
+      padding-block: 3rem;
+      color: var(--ink-faint);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      text-align: center;
     }
     #log-entries { display: flex; flex-direction: column; }
     .entry {
@@ -279,6 +344,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
 
     @media (max-width: 640px) {
+      .topic-index {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .topic-filters {
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
+      }
       .entry {
         grid-template-columns: 1fr auto;
       }
@@ -306,7 +382,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         { date: '2026-07-17T09:00:00Z', type: 'note', title: 'Status page ships', body: 'The status page is now part of the public site. Real-time entries, infinite scroll, toast notifications for live updates, and a cosmic background that matches the mission log aesthetic.' },
         { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
       ];
+      MOCK[0].topic = 'canopy';
+      MOCK[1].topic = 'canopy';
+      MOCK[2].topic = 'general';
+      MOCK[3].topic = 'general';
+      MOCK[4].topic = 'general';
+      MOCK[5].topic = null;
 
+      var TOPIC_DEFS = [
+        { id: 'general', label: 'General' },
+        { id: 'canopy', label: 'Canopy' },
+        { id: 'astro-denoise', label: 'Astro-denoise' },
+        { id: 'texforge', label: 'Texforge' },
+        { id: 'gitkit', label: 'Gitkit' },
+        { id: 'ghscaff', label: 'Ghscaff' },
+        { id: 'cadspec', label: 'Cadspec' },
+        { id: 'demostage', label: 'DemoStage' },
+        { id: 'quorum', label: 'Quorum' }
+      ];
+      var topicFilters = document.getElementById('topic-filters');
+      var allEntries = [];
+      var activeTopic = new URLSearchParams(location.search).get('topic') || 'all';
       var PAGE = 20;
       var offset = 0;
       var loading = false;
@@ -330,6 +426,65 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
           return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
         });
+      }
+
+      function normalizeEntry(entry) {
+        var knownTopic = TOPIC_DEFS.some(function (topic) { return topic.id === entry.topic; });
+        return Object.assign({}, entry, { topic: knownTopic ? entry.topic : 'general' });
+      }
+
+      function topicLabel(id) {
+        var topic = TOPIC_DEFS.filter(function (item) { return item.id === id; })[0];
+        return topic ? topic.label : 'General';
+      }
+
+      function updateTopicFilters() {
+        if (!topicFilters) return;
+        var counts = {};
+        TOPIC_DEFS.forEach(function (topic) { counts[topic.id] = 0; });
+        allEntries.forEach(function (entry) { counts[normalizeEntry(entry).topic]++; });
+
+        var available = TOPIC_DEFS.filter(function (topic) {
+          return topic.id === 'general' || counts[topic.id] > 0;
+        });
+        var validTopics = available.map(function (topic) { return topic.id; });
+        if (activeTopic !== 'all' && validTopics.indexOf(activeTopic) === -1) activeTopic = 'all';
+
+        topicFilters.innerHTML = '';
+        [{ id: 'all', label: 'All', count: allEntries.length }].concat(available.map(function (topic) {
+          return { id: topic.id, label: topic.label, count: counts[topic.id] };
+        })).forEach(function (topic) {
+          var button = document.createElement('button');
+          button.className = 'topic-filter' + (activeTopic === topic.id ? ' is-active' : '');
+          button.type = 'button';
+          button.dataset.topic = topic.id;
+          button.setAttribute('aria-pressed', activeTopic === topic.id ? 'true' : 'false');
+          button.appendChild(document.createTextNode(topic.label));
+
+          var count = document.createElement('span');
+          count.className = 'topic-filter-count';
+          count.textContent = String(topic.count);
+          button.appendChild(count);
+          topicFilters.appendChild(button);
+        });
+      }
+
+      function renderEntries() {
+        container.innerHTML = '';
+        var visible = activeTopic === 'all'
+          ? allEntries
+          : allEntries.filter(function (entry) { return normalizeEntry(entry).topic === activeTopic; });
+
+        if (!visible.length) {
+          var empty = document.createElement('p');
+          empty.className = 'filter-empty';
+          empty.textContent = activeTopic === 'all'
+            ? 'No entries yet. The log is waiting for its first transmission.'
+            : 'No entries under ' + topicLabel(activeTopic) + ' yet.';
+          container.appendChild(empty);
+          return;
+        }
+        appendEntries(visible);
       }
 
       function renderEntry(entry) {
@@ -385,12 +540,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         loading = true;
 
         if (isDev) {
-          if (offset === 0) container.innerHTML = '';
           var batch = MOCK.slice(offset, offset + PAGE);
-          appendEntries(batch);
+          allEntries = allEntries.concat(batch.map(normalizeEntry));
           offset += batch.length;
           hasMore = offset < MOCK.length;
           loading = false;
+          updateTopicFilters();
+          renderEntries();
           if (!hasMore) observer.disconnect();
           return;
         }
@@ -398,21 +554,33 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         fetch(API + '?offset=' + offset + '&limit=' + PAGE)
           .then(function (r) { return r.json(); })
           .then(function (data) {
-            if (offset === 0) container.innerHTML = '';
-            appendEntries(data.entries);
-            offset += data.entries.length;
+            var entries = Array.isArray(data.entries) ? data.entries.map(normalizeEntry) : [];
+            allEntries = allEntries.concat(entries);
+            offset += entries.length;
             hasMore = data.hasMore;
             loading = false;
+            updateTopicFilters();
+            renderEntries();
             if (!hasMore) observer.disconnect();
           })
           .catch(function () { loading = false; });
       }
 
       function prependEntry(entry) {
-        var el = renderEntry(entry);
-        container.prepend(el);
+        allEntries.unshift(normalizeEntry(entry));
         offset++;
+        updateTopicFilters();
+        renderEntries();
         showToast(entry.title);
+      }
+
+      function updateEntry(entry) {
+        var updated = normalizeEntry(entry);
+        var index = allEntries.findIndex(function (item) { return item.id === updated.id; });
+        if (index === -1) return;
+        allEntries[index] = updated;
+        updateTopicFilters();
+        renderEntries();
       }
 
       function showToast(title) {
@@ -436,6 +604,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         document.body.appendChild(toast);
         setTimeout(dismiss, 4000);
       }
+
+      if (topicFilters) {
+        topicFilters.addEventListener('click', function (event) {
+          var button = event.target.closest('button[data-topic]');
+          if (!button) return;
+          activeTopic = button.dataset.topic || 'all';
+          var nextUrl = activeTopic === 'all'
+            ? location.pathname
+            : location.pathname + '?topic=' + encodeURIComponent(activeTopic);
+          history.replaceState(null, '', nextUrl);
+          updateTopicFilters();
+          renderEntries();
+        });
+      }
+
       // Infinite scroll sentinel
       var sentinel = document.createElement('div');
       sentinel.className = 'scroll-sentinel';
@@ -524,6 +707,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           try {
             var entry = JSON.parse(e.data);
             prependEntry(entry);
+          } catch (err) {}
+        });
+        source.addEventListener('update', function (e) {
+          try {
+            updateEntry(JSON.parse(e.data));
           } catch (err) {}
         });
         source.onerror = function () {};
