@@ -423,9 +423,14 @@ https://github.com/UniverLab
           }},
           { cmd: '/today', label: 'Today in science', action: function () {
             if (window.missionLog) window.missionLog.discover('today');
-            if (window.scrollY < 10) {
+            function triggerCelestial() {
               var btn = document.querySelector('.celestial-btn');
-              if (btn) btn.click();
+              if (!btn) return;
+              btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+              btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            }
+            if (window.scrollY < 10) {
+              triggerCelestial();
             } else {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               var scrollTimer = null;
