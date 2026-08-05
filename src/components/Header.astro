@@ -318,11 +318,15 @@ const signals = [
             document.removeEventListener('click', outside);
           }
         });
+        var scrollTimeout;
         window.addEventListener('scroll', function onScroll() {
-          close();
-          window.removeEventListener('scroll', onScroll);
+          clearTimeout(scrollTimeout);
+          scrollTimeout = setTimeout(function () {
+            close();
+            window.removeEventListener('scroll', onScroll);
+          }, 200);
         }, { passive: true });
-      }, 10);
+      }, 300);
 
       document.addEventListener('keydown', function esc(e) {
         if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
