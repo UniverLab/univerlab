@@ -531,16 +531,17 @@ const signals = [
     }
 
     function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-      btn.classList.remove('scrubbing');
-      if (moved) {
-        moved = false;
+      if (dragging) {
+        dragging = false;
+        btn.classList.remove('scrubbing');
+        if (moved) {
+          moved = false;
+          hideTip();
+          if (window.resetScrub) window.resetScrub();
+          return;
+        }
         hideTip();
-        if (window.resetScrub) window.resetScrub();
-        return;
       }
-      hideTip();
       var items = readCache();
       if (items) { showFromPool(items); return; }
       showHardcoded();
@@ -689,7 +690,7 @@ const signals = [
     inset: 0;
     border-radius: 50%;
     background: var(--bg);
-    transform: translateX(var(--moon-offset, 0));
+    transform: translateX(var(--moon-geometry-offset, 0));
   }
 
   /* Hamburger button — hidden until the nav no longer fits comfortably. */
