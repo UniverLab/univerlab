@@ -507,10 +507,9 @@ const signals = [
     function hideTip() { scrubTip.style.display = 'none'; }
 
     function onPointerDown(e) {
-      if (localStorage.getItem('univerlab-theme')) return;
-      if (!window.scrubTime) return;
       dragging = true;
       moved = false;
+      if (localStorage.getItem('univerlab-theme') || !window.scrubTime) return;
       startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
       btn.classList.add('scrubbing');
       e.preventDefault();
@@ -531,17 +530,16 @@ const signals = [
     }
 
     function onPointerUp() {
-      if (dragging) {
-        dragging = false;
-        btn.classList.remove('scrubbing');
-        if (moved) {
-          moved = false;
-          hideTip();
-          if (window.resetScrub) window.resetScrub();
-          return;
-        }
+      if (!dragging) return;
+      dragging = false;
+      btn.classList.remove('scrubbing');
+      if (moved) {
+        moved = false;
         hideTip();
+        if (window.resetScrub) window.resetScrub();
+        return;
       }
+      hideTip();
       var items = readCache();
       if (items) { showFromPool(items); return; }
       showHardcoded();
