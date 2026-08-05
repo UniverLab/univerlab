@@ -433,18 +433,16 @@ https://github.com/UniverLab
               triggerCelestial();
             } else {
               window.scrollTo({ top: 0, behavior: 'smooth' });
-              var scrollTimer = null;
-              var onScroll = function () {
-                clearTimeout(scrollTimer);
-                scrollTimer = setTimeout(function () {
-                  window.removeEventListener('scroll', onScroll);
+              var checkScroll = function() {
+                setTimeout(function() {
                   if (window.scrollY < 10) {
-                    var btn2 = document.querySelector('.celestial-btn');
-                    if (btn2) btn2.click();
+                    triggerCelestial();
+                  } else {
+                    checkScroll();
                   }
-                }, 150);
+                }, 50);
               };
-              window.addEventListener('scroll', onScroll, { passive: true });
+              checkScroll();
             }
           }},
           { cmd: '/up', label: 'Scroll to top', action: function () {
