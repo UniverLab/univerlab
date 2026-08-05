@@ -48,3 +48,6 @@ specs/
 workers/get/scripts/
 .dev.vars
 .auth-token.local
+
+# Test coverage reports
+coverage/

@@ -423,23 +423,26 @@ https://github.com/UniverLab
           }},
           { cmd: '/today', label: 'Today in science', action: function () {
             if (window.missionLog) window.missionLog.discover('today');
-            if (window.scrollY < 10) {
+            function triggerCelestial() {
               var btn = document.querySelector('.celestial-btn');
-              if (btn) btn.click();
+              if (!btn) return;
+              btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+              btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            }
+            if (window.scrollY < 10) {
+              triggerCelestial();
             } else {
               window.scrollTo({ top: 0, behavior: 'smooth' });
-              var scrollTimer = null;
-              var onScroll = function () {
-                clearTimeout(scrollTimer);
-                scrollTimer = setTimeout(function () {
-                  window.removeEventListener('scroll', onScroll);
+              var checkScroll = function() {
+                setTimeout(function() {
                   if (window.scrollY < 10) {
-                    var btn2 = document.querySelector('.celestial-btn');
-                    if (btn2) btn2.click();
+                    triggerCelestial();
+                  } else {
+                    checkScroll();
                   }
-                }, 150);
+                }, 50);
               };
-              window.addEventListener('scroll', onScroll, { passive: true });
+              checkScroll();
             }
           }},
           { cmd: '/up', label: 'Scroll to top', action: function () {
@@ -469,10 +472,6 @@ https://github.com/UniverLab
           }},
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
           { cmd: '/find', label: 'Find on page', action: function () { if (window.missionLog) window.missionLog.discover('find'); openFind(); } },
-          { cmd: '/faq', label: 'FAQ', action: function () {
-            var el = document.getElementById('faq');
-            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-          }},
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive' },
           { cmd: '/status', label: 'Mission Log', href: base + '/status' },
@@ -510,6 +509,12 @@ https://github.com/UniverLab
         if (currentExp) {
           allCmds.unshift({ cmd: '/docs', label: 'Docs (' + currentExp + ')', href: '/' + currentExp + '/docs' });
           allCmds.unshift({ cmd: '/demo', label: 'Demo (' + currentExp + ')', action: function () { if (window.__openDemoDialog) window.__openDemoDialog(); } });
+        }
+        if (document.getElementById('faq')) {
+          allCmds.push({ cmd: '/faq', label: 'FAQ', action: function () {
+            var el = document.getElementById('faq');
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+          }});
         }
 
         var overlay = null;
