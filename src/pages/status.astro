@@ -12,6 +12,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <button class="topic-filter is-active" type="button" data-topic="all" aria-pressed="true">All</button>
       </div>
     </nav>
+    <nav class="topic-index" aria-label="Mission log types">
+      <span class="topic-index-label">TYPES</span>
+      <div id="type-filters" class="topic-filters">
+        <button class="topic-filter is-active" type="button" data-type="all" aria-pressed="true">All</button>
+      </div>
+    </nav>
     <div id="log-entries">
       <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
       <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
@@ -404,8 +410,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         { id: 'quorum', label: 'Quorum' }
       ];
       var topicFilters = document.getElementById('topic-filters');
+      var typeFilters = document.getElementById('type-filters');
       var allEntries = [];
       var activeTopic = new URLSearchParams(location.search).get('topic') || 'all';
+      var activeType = 'all';
+      var TYPE_DEFS = [
+        { id: 'launch', label: 'Launch' },
+        { id: 'deploy', label: 'Deploy' },
+        { id: 'bugfix', label: 'Bugfix' },
+        { id: 'note', label: 'Note' },
+        { id: 'incident', label: 'Incident' }
+      ];
       var PAGE = 20;
       var offset = 0;
       var loading = false;
@@ -472,18 +487,53 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
       }
 
+      function updateTypeFilters() {
+        if (!typeFilters) return;
+        var counts = {};
+        TYPE_DEFS.forEach(function (t) { counts[t.id] = 0; });
+        allEntries.forEach(function (entry) { if (entry.type && counts[entry.type] !== undefined) counts[entry.type]++; });
+        var noType = allEntries.filter(function (e) { return !e.type || !TYPE_DEFS.some(function (t) { return t.id === e.type; }); }).length;
+
+        typeFilters.innerHTML = '';
+        [{ id: 'all', label: 'All', count: allEntries.length }].concat(TYPE_DEFS.map(function (t) {
+          return { id: t.id, label: t.label, count: counts[t.id] };
+        })).filter(function (t) { return t.id === 'all' || t.count > 0; }).forEach(function (t) {
+          var button = document.createElement('button');
+          button.className = 'topic-filter' + (activeType === t.id ? ' is-active' : '');
+          button.type = 'button';
+          button.dataset.type = t.id;
+          button.setAttribute('aria-pressed', activeType === t.id ? 'true' : 'false');
+          button.appendChild(document.createTextNode(t.label));
+
+          var count = document.createElement('span');
+          count.className = 'topic-filter-count';
+          count.textContent = String(t.count);
+          button.appendChild(count);
+          typeFilters.appendChild(button);
+        });
+      }
+
       function renderEntries() {
         container.innerHTML = '';
-        var visible = activeTopic === 'all'
-          ? allEntries
-          : allEntries.filter(function (entry) { return normalizeEntry(entry).topic === activeTopic; });
+        var visible = allEntries.filter(function (entry) {
+          var ne = normalizeEntry(entry);
+          if (activeTopic !== 'all' && ne.topic !== activeTopic) return false;
+          if (activeType !== 'all' && ne.type !== activeType) return false;
+          return true;
+        });
 
         if (!visible.length) {
           var empty = document.createElement('p');
           empty.className = 'filter-empty';
-          empty.textContent = activeTopic === 'all'
-            ? 'No entries yet. The log is waiting for its first transmission.'
-            : 'No entries under ' + topicLabel(activeTopic) + ' yet.';
+          if (activeTopic !== 'all' && activeType !== 'all') {
+            empty.textContent = 'No ' + activeType + ' entries under ' + topicLabel(activeTopic) + ' yet.';
+          } else if (activeTopic !== 'all') {
+            empty.textContent = 'No entries under ' + topicLabel(activeTopic) + ' yet.';
+          } else if (activeType !== 'all') {
+            empty.textContent = 'No ' + activeType + ' entries yet.';
+          } else {
+            empty.textContent = 'No entries yet. The log is waiting for its first transmission.';
+          }
           container.appendChild(empty);
           return;
         }
@@ -549,6 +599,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           hasMore = offset < MOCK.length;
           loading = false;
           updateTopicFilters();
+          updateTypeFilters();
           renderEntries();
           if (!hasMore) observer.disconnect();
           return;
@@ -563,6 +614,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             hasMore = data.hasMore;
             loading = false;
             updateTopicFilters();
+            updateTypeFilters();
             renderEntries();
             if (!hasMore) observer.disconnect();
           })
@@ -573,6 +625,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         allEntries.unshift(normalizeEntry(entry));
         offset++;
         updateTopicFilters();
+        updateTypeFilters();
         renderEntries();
         showToast(entry.title);
       }
@@ -583,6 +636,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         if (index === -1) return;
         allEntries[index] = updated;
         updateTopicFilters();
+        updateTypeFilters();
         renderEntries();
       }
 
@@ -618,6 +672,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             : location.pathname + '?topic=' + encodeURIComponent(activeTopic);
           history.replaceState(null, '', nextUrl);
           updateTopicFilters();
+          renderEntries();
+        });
+      }
+
+      if (typeFilters) {
+        typeFilters.addEventListener('click', function (event) {
+          var button = event.target.closest('button[data-type]');
+          if (!button) return;
+          activeType = button.dataset.type || 'all';
+          updateTypeFilters();
           renderEntries();
         });
       }
