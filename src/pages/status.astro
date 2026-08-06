@@ -463,16 +463,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         if (!topicFilters) return;
         var counts = {};
         TOPIC_DEFS.forEach(function (topic) { counts[topic.id] = 0; });
-        allEntries.forEach(function (entry) { counts[normalizeEntry(entry).topic]++; });
-
-        var available = TOPIC_DEFS.filter(function (topic) {
-          return topic.id === 'general' || counts[topic.id] > 0;
+        allEntries.forEach(function (entry) {
+          var ne = normalizeEntry(entry);
+          if (activeType !== 'all' && ne.type !== activeType) return;
+          counts[ne.topic]++;
         });
-        var validTopics = available.map(function (topic) { return topic.id; });
-        if (activeTopic !== 'all' && validTopics.indexOf(activeTopic) === -1) activeTopic = 'all';
+        var total = activeType === 'all'
+          ? allEntries.length
+          : allEntries.filter(function (e) { return normalizeEntry(e).type === activeType; }).length;
 
         topicFilters.innerHTML = '';
-        [{ id: 'all', label: 'All', count: allEntries.length }].concat(available.map(function (topic) {
+        [{ id: 'all', label: 'All', count: total }].concat(TOPIC_DEFS.map(function (topic) {
           return { id: topic.id, label: topic.label, count: counts[topic.id] };
         })).forEach(function (topic) {
           var button = document.createElement('button');
@@ -494,13 +495,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         if (!typeFilters) return;
         var counts = {};
         TYPE_DEFS.forEach(function (t) { counts[t.id] = 0; });
-        allEntries.forEach(function (entry) { if (entry.type && counts[entry.type] !== undefined) counts[entry.type]++; });
-        var noType = allEntries.filter(function (e) { return !e.type || !TYPE_DEFS.some(function (t) { return t.id === e.type; }); }).length;
+        allEntries.forEach(function (entry) {
+          var ne = normalizeEntry(entry);
+          if (activeTopic !== 'all' && ne.topic !== activeTopic) return;
+          if (entry.type && counts[entry.type] !== undefined) counts[entry.type]++;
+        });
+        var total = activeTopic === 'all'
+          ? allEntries.length
+          : allEntries.filter(function (e) { return normalizeEntry(e).topic === activeTopic; }).length;
 
         typeFilters.innerHTML = '';
-        [{ id: 'all', label: 'All', count: allEntries.length }].concat(TYPE_DEFS.map(function (t) {
+        [{ id: 'all', label: 'All', count: total }].concat(TYPE_DEFS.map(function (t) {
           return { id: t.id, label: t.label, count: counts[t.id] };
-        })).filter(function (t) { return t.id === 'all' || t.count > 0; }).forEach(function (t) {
+        })).forEach(function (t) {
           var button = document.createElement('button');
           button.className = 'topic-filter' + (activeType === t.id ? ' is-active' : '');
           button.type = 'button';
@@ -674,6 +681,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             ? location.pathname
             : location.pathname + '?topic=' + encodeURIComponent(activeTopic);
           history.replaceState(null, '', nextUrl);
+          updateTypeFilters();
           updateTopicFilters();
           renderEntries();
         });
@@ -684,6 +692,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           var button = event.target.closest('button[data-type]');
           if (!button) return;
           activeType = button.dataset.type || 'all';
+          updateTopicFilters();
           updateTypeFilters();
           renderEntries();
         });
