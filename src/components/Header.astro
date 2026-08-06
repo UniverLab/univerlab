@@ -285,7 +285,14 @@ const signals = [
       popup.className = 'otd-popup';
 
       var html = '<button class="otd-close" type="button" aria-label="Close">\u00d7</button>';
-      html += '<div class="otd-kicker">' + data.kicker + '</div>';
+      var todayPath = lang === 'es' ? '/es/today' : '/today';
+      var kickerHtml = data.kicker;
+      if (lang === 'es') {
+        kickerHtml = kickerHtml.replace('hoy', '<a class="otd-kicker-link" href="' + todayPath + '">hoy</a>');
+      } else {
+        kickerHtml = kickerHtml.replace('today', '<a class="otd-kicker-link" href="' + todayPath + '">today</a>');
+      }
+      html += '<div class="otd-kicker">' + kickerHtml + '</div>';
       if (data.year) html += '<div class="otd-year">' + data.year + '</div>';
       html += '<div class="otd-text">' + data.text + '</div>';
       if (data.link) html += '<a class="otd-link" href="' + data.link + '" target="_blank" rel="noopener noreferrer">' + data.linkLabel + '</a>';
@@ -854,4 +861,11 @@ const signals = [
     line-height: 1;
   }
   .otd-popup .otd-close:hover { color: var(--ink); }
+  .otd-popup .otd-kicker-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  .otd-popup .otd-kicker-link:hover { border-bottom-color: var(--accent); }
 </style>
