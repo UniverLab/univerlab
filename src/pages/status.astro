@@ -475,7 +475,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         topicFilters.innerHTML = '';
         [{ id: 'all', label: 'All', count: total }].concat(TOPIC_DEFS.map(function (topic) {
           return { id: topic.id, label: topic.label, count: counts[topic.id] };
-        })).forEach(function (topic) {
+        })).filter(function (t) { return t.id === 'all' || t.count > 0; }).forEach(function (topic) {
           var button = document.createElement('button');
           button.className = 'topic-filter' + (activeTopic === topic.id ? ' is-active' : '');
           button.type = 'button';
@@ -507,7 +507,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         typeFilters.innerHTML = '';
         [{ id: 'all', label: 'All', count: total }].concat(TYPE_DEFS.map(function (t) {
           return { id: t.id, label: t.label, count: counts[t.id] };
-        })).forEach(function (t) {
+        })).filter(function (t) { return t.id === 'all' || t.count > 0; }).forEach(function (t) {
           var button = document.createElement('button');
           button.className = 'topic-filter' + (activeType === t.id ? ' is-active' : '');
           button.type = 'button';
