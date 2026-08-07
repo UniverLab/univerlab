@@ -47,7 +47,7 @@ const lbNodes = [
   { id: 'p1', kind: 'agent', x: 21, y: 11, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3'), t: 0.74 },
   { id: 'p2', kind: 'agent', x: 24, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4'), t: 0.76 },
   { id: 'p3', kind: 'agent', x: 21, y: 53, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa'), t: 0.78 },
-  { id: 'join', kind: 'gate', x: 34, y: 32, label: 'join', harness: '', color: NEUTRAL, t: 0.82 },
+  { id: 'quorum', kind: 'gate', x: 34, y: 32, label: 'quorum', harness: '', color: NEUTRAL, t: 0.82 },
 ];
 const lbEdges = [
   { from: 'spec', to: 'implement', cond: 'pass', t: 0.08, ensembleFade: true },
