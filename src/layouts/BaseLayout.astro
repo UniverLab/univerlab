@@ -461,7 +461,7 @@ https://github.com/UniverLab
             try { localStorage.setItem('univerlab-random', JSON.stringify(history)); } catch (e) {}
             window.location.href = pick;
           }},
-          { cmd: '/today', label: 'Today in science', action: function () {
+          { cmd: '/fact', label: 'Today in science', action: function () {
             if (window.missionLog) window.missionLog.discover('today');
             function triggerCelestial() {
               var btn = document.querySelector('.celestial-btn');
@@ -484,6 +484,49 @@ https://github.com/UniverLab
               };
               checkScroll();
             }
+          }},
+          { cmd: '/today', label: 'Today in science (full page)', href: base + '/today' },
+          { cmd: '/tip', label: 'Tip', action: function () {
+            if (window.missionLog) window.missionLog.discover('tip');
+            var tips = {
+              en: [
+                'Drag the sun/moon to scrub through time.',
+                'Type <kbd>/random</kbd> to visit a random page.',
+                'Press <kbd>Esc</kbd> to close any popup.',
+                'The celestial body traces the horizon — it\'s your clock.',
+                'Type <kbd>/lang</kbd> to switch between English and Spanish.',
+                'Type <kbd>/theme</kbd> to change the visual theme.',
+                'The Mission Log tracks every experiment in real time.',
+                'Click the sun or moon for a science fact.',
+                'Type <kbd>/find</kbd> to search within the current page.',
+                'Every page has a keyboard shortcut — type <kbd>/</kbd> to discover them.',
+                'The Archive holds experiments that didn\'t make it to production.',
+                'Contributors are the people who make UniverLab possible.',
+              ],
+              es: [
+                'Arrastra el sol/luna para recorrer el tiempo.',
+                'Escribe <kbd>/random</kbd> para visitar una página al azar.',
+                'Presiona <kbd>Esc</kbd> para cerrar cualquier popup.',
+                'El cuerpo celeste recorre el horizonte — es tu reloj.',
+                'Escribe <kbd>/lang</kbd> para cambiar entre inglés y español.',
+                'Escribe <kbd>/theme</kbd> para cambiar el tema visual.',
+                'El Mission Log registra cada experimento en tiempo real.',
+                'Haz clic en el sol o la luna para un dato científico.',
+                'Escribe <kbd>/find</kbd> para buscar en la página actual.',
+                'Cada página tiene un atajo de teclado — escribe <kbd>/</kbd> para descubrirlos.',
+                'El Archivo contiene experimentos que no llegaron a producción.',
+                'Los colaboradores son quienes hacen posible UniverLab.',
+              ],
+            };
+            var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+            var pool = tips[lang] || tips.en;
+            var msg = pool[Math.floor(Math.random() * pool.length)];
+            var el = document.createElement('div');
+            el.className = 'ghost-hint ghost-hint--visible';
+            el.setAttribute('aria-hidden', 'true');
+            el.innerHTML = '<span class="ghost-hint__text">' + msg + '</span>';
+            document.body.appendChild(el);
+            setTimeout(function () { el.remove(); }, 5000);
           }},
           { cmd: '/up', label: 'Scroll to top', action: function () {
             if (window.missionLog) window.missionLog.discover('up');

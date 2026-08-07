@@ -1,0 +1,290 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Hoy en la Ciencia — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." bg="cosmic" circadian>
+  <section class="wrap today-page">
+    <span class="label">HOY EN LA CIENCIA</span>
+    <h1>Hoy</h1>
+    <p class="intro">Eventos científicos que ocurrieron este día en la historia.</p>
+    <div class="observer-line" id="observer-line"></div>
+    <div id="today-loading" class="today-loading">
+      <div class="skeleton-line" style="width:60%"></div>
+      <div class="skeleton-line" style="width:80%"></div>
+      <div class="skeleton-line" style="width:45%"></div>
+    </div>
+    <div id="today-events" class="today-events"></div>
+    <div id="today-error" class="today-error" style="display:none"></div>
+  </section>
+
+  <style is:global>
+    .today-page { max-width: 42rem; padding-block: 4rem 5rem; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 0.3rem; }
+    .intro { color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0 0 0.5rem; }
+    .observer-line {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.01em;
+      color: var(--ink-faint);
+      margin-bottom: 2.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
+    .skeleton-line {
+      height: 1rem;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .today-events { display: flex; flex-direction: column; }
+    .today-event {
+      display: grid;
+      grid-template-columns: 3.5rem 1fr;
+      gap: 1rem;
+      padding-block: 1.2rem;
+      border-bottom: 1px solid var(--line);
+      animation: fade-in 0.3s ease both;
+    }
+    .today-event:first-child { border-top: 1px solid var(--line); }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .event-year {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent);
+      padding-top: 0.15rem;
+      text-align: right;
+    }
+    .event-body { display: flex; flex-direction: column; gap: 0.3rem; }
+    .event-kind {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .event-text {
+      font-family: var(--font-serif);
+      font-size: 0.92rem;
+      color: var(--ink-dim);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .event-link {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+    .event-link:hover { opacity: 1; text-decoration: underline; }
+    .today-count {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      margin-bottom: 1.5rem;
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.8rem;
+      opacity: 0.7;
+    }
+    .today-error {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+      padding-block: 2rem;
+      text-align: center;
+    }
+    @media (max-width: 480px) {
+      .today-event { grid-template-columns: 1fr; gap: 0.3rem; }
+      .event-year { text-align: left; }
+    }
+  </style>
+
+  <script is:inline>
+  (function () {
+    var lang = 'es';
+
+    var I18N = {
+      es: { anniv: 'Un día como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sol: 'Sol', orbit: 'Órbita', total: 'eventos' },
+    };
+
+    var SCIENCE_ES = [
+      'ciencia', 'científic', 'físic', 'químic', 'biolog',
+      'astronom', 'telescopio', 'observatorio', 'planeta', 'cometa', 'asteroide',
+      'nave espacial', 'satélite', 'cohete', 'órbita', 'sonda',
+      'astronauta', 'cosmonauta', 'galaxia', 'supernova', 'eclipse',
+      'estación espacial', 'matemátic', 'teorema', 'invent', 'patente',
+      'descubr', 'experimento', 'laboratorio', 'vacuna', 'antibiótic',
+      'medicina', 'cirugía', 'genoma', 'adn', 'átomo', 'reactor nuclear',
+      'electrón', 'cuántic', 'relatividad', 'evolución', 'fósil',
+      'dinosaurio', 'geolog', 'microscopio', 'electricidad', 'transistor',
+      'computador', 'ordenador', 'internet', 'ingenier', 'partícula',
+      'rayos x', 'tabla periódica', 'naturalista', 'premio nobel de física',
+      'premio nobel de química', 'premio nobel de medicina',
+    ];
+    var POLITICS_ES = [
+      'guerra', 'batalla', 'tratado', 'elección', 'presidente', 'rey', 'reina',
+      'emperador', 'monarca', 'parlamento', 'congreso', 'ejército', 'militar',
+      'tropas', 'invasión', 'golpe', 'revolución', 'independencia', 'imperio',
+      'dinastía', 'asedio', 'rebelión', 'disturbio', 'masacre', 'genocidio',
+      'dictador', 'asesinat', 'arma', 'bombardeo', 'papa', 'obispo',
+      'santo', 'iglesia', 'político', 'política', 'senador', 'gobernador', 'ministro',
+      'campeonato', 'torneo', 'olímpic', 'deportiv', 'fútbol', 'futbol',
+      'baloncesto', 'béisbol', 'tenis', 'críquet', 'boxeo', 'maratón',
+      'fifa', 'mundial', 'copa del mundo', 'estadio', 'goleador',
+      'futbolista', 'delantero', 'festival de cine', 'taquilla',
+    ];
+
+    var keywords = SCIENCE_ES;
+    var politics = POLITICS_ES;
+    var MAX_LEN = 200;
+
+    function passes(e) {
+      var text = e.text || '';
+      if (!text || text.length > MAX_LEN) return false;
+      var low = text.toLowerCase();
+      var hasScience = keywords.some(function (k) { return low.indexOf(k) !== -1; });
+      var hasPolitics = politics.some(function (k) { return low.indexOf(k) !== -1; });
+      return hasScience && !hasPolitics;
+    }
+
+    function collect(list, kind) {
+      return (list || []).filter(passes).map(function (e) {
+        var link = '';
+        try { link = e.pages[0].content_urls.desktop.page; } catch (x) {}
+        return { year: String(e.year || '?'), text: e.text || '', link: link, kind: kind };
+      });
+    }
+
+    function buildPool(data) {
+      return collect(data.events, 'event')
+        .concat(collect(data.births, 'born'))
+        .concat(collect(data.deaths, 'died'));
+    }
+
+    function todayKey() {
+      var n = new Date();
+      return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+    }
+
+    var CACHE_KEY = 'univerlab-otd';
+    function readCache() {
+      try {
+        var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (!c || c.date !== todayKey() || c.lang !== lang || !c.items || !c.items.length) return null;
+        return c.items;
+      } catch (e) { return null; }
+    }
+
+    function fetchPool() {
+      var now = new Date();
+      var mm = String(now.getMonth() + 1).padStart(2, '0');
+      var dd = String(now.getDate()).padStart(2, '0');
+      var url = 'https://' + lang + '.wikipedia.org/api/rest_v1/feed/onthisday/all/' + mm + '/' + dd;
+      return fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (res) { if (!res.ok) throw new Error('API ' + res.status); return res.json(); })
+        .then(function (data) {
+          var items = buildPool(data);
+          if (items.length) {
+            try { localStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayKey(), lang: lang, items: items })); } catch (e) {}
+          }
+          return items;
+        });
+    }
+
+    function observerLine() {
+      var i = I18N[lang] || I18N.es;
+      var now = new Date();
+      var y = now.getFullYear();
+      var start = new Date(y, 0, 0);
+      var dayOfYear = Math.floor((now - start) / 86400000);
+      var total = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
+      var pct = (dayOfYear / total * 100).toFixed(1);
+      return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
+    }
+
+    function render(items) {
+      var i = I18N[lang] || I18N.es;
+      document.getElementById('observer-line').textContent = observerLine();
+
+      var events = items.filter(function (x) { return x.kind === 'event'; });
+      events.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
+      var people = items.filter(function (x) { return x.kind === 'born' || x.kind === 'died'; });
+      people.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
+
+      var container = document.getElementById('today-events');
+
+      if (events.length) {
+        var secLabel = document.createElement('div');
+        secLabel.className = 'section-label';
+        secLabel.textContent = 'EVENTOS CIENTÍFICOS';
+        container.appendChild(secLabel);
+        events.forEach(function (item, idx) {
+          var el = document.createElement('article');
+          el.className = 'today-event';
+          el.style.animationDelay = (idx * 0.03) + 's';
+          var body = '<span class="event-kind">' + i.anniv + '</span>';
+          body += '<p class="event-text">' + item.text + '</p>';
+          if (item.link) body += '<a class="event-link" href="' + item.link + '" target="_blank" rel="noopener noreferrer">Wikipedia →</a>';
+          el.innerHTML = '<div class="event-year">' + (i.inYear + ' ' + item.year) + '</div><div class="event-body">' + body + '</div>';
+          container.appendChild(el);
+        });
+      }
+
+      if (people.length) {
+        var secLabel2 = document.createElement('div');
+        secLabel2.className = 'section-label';
+        secLabel2.style.marginTop = '2rem';
+        secLabel2.textContent = 'NACIMIENTOS Y FALLECIMIENTOS';
+        container.appendChild(secLabel2);
+        people.forEach(function (item, idx) {
+          var el = document.createElement('article');
+          el.className = 'today-event';
+          el.style.animationDelay = (idx * 0.03) + 's';
+          var prefix = item.kind === 'born' ? i.born : i.died;
+          var body = '<span class="event-kind">' + (item.kind === 'born' ? i.born.trim() : i.died.trim()) + '</span>';
+          body += '<p class="event-text">' + prefix + item.text + '</p>';
+          if (item.link) body += '<a class="event-link" href="' + item.link + '" target="_blank" rel="noopener noreferrer">Wikipedia →</a>';
+          el.innerHTML = '<div class="event-year">' + (i.inYear + ' ' + item.year) + '</div><div class="event-body">' + body + '</div>';
+          container.appendChild(el);
+        });
+      }
+    }
+
+    document.getElementById('observer-line').textContent = observerLine();
+
+    var cached = readCache();
+    if (cached) {
+      document.getElementById('today-loading').style.display = 'none';
+      render(cached);
+    } else {
+      fetchPool()
+        .then(function (items) {
+          document.getElementById('today-loading').style.display = 'none';
+          if (!items || !items.length) {
+            document.getElementById('today-error').style.display = 'block';
+            document.getElementById('today-error').textContent = 'No hay eventos científicos para hoy.';
+            return;
+          }
+          render(items);
+        })
+        .catch(function () {
+          document.getElementById('today-loading').style.display = 'none';
+          document.getElementById('today-error').style.display = 'block';
+          document.getElementById('today-error').textContent = 'Error al cargar eventos.';
+        });
+    }
+  })();
+  </script>
+</BaseLayout>
