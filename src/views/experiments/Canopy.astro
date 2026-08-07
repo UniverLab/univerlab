@@ -60,21 +60,21 @@ const lbEdges = [
   { from: 'spec', to: 'p1', cond: 'pass', t: 0.80 },
   { from: 'spec', to: 'p2', cond: 'pass', t: 0.80 },
   { from: 'spec', to: 'p3', cond: 'pass', t: 0.80 },
-  { from: 'p1', to: 'join', cond: 'pass', t: 0.84 },
-  { from: 'p2', to: 'join', cond: 'pass', t: 0.84 },
-  { from: 'p3', to: 'join', cond: 'pass', t: 0.84 },
-  { from: 'join', to: 'implement', cond: 'pass', t: 0.88 },
+  { from: 'p1', to: 'quorum', cond: 'pass', t: 0.84 },
+  { from: 'p2', to: 'quorum', cond: 'pass', t: 0.84 },
+  { from: 'p3', to: 'quorum', cond: 'pass', t: 0.84 },
+  { from: 'quorum', to: 'implement', cond: 'pass', t: 0.88 },
 ];
 const lbNode = (id: string) => lbNodes.find((n) => n.id === id)!;
 // Happy-path pulses: one token flowing spec → implement → gates → review,
-// then (after ensemble) spec → p2 → join → implement. Delays chain the legs.
+// then (after ensemble) spec → p2 → quorum → implement. Delays chain the legs.
 const lbPulses = [
   { from: 'spec', to: 'implement', t: 0.08, d: 0, ensembleFade: true },
   { from: 'implement', to: 'gates', t: 0.23, d: 1 },
   { from: 'gates', to: 'review', t: 0.41, d: 2 },
   { from: 'spec', to: 'p2', t: 0.88, d: 0 },
-  { from: 'p2', to: 'join', t: 0.88, d: 1 },
-  { from: 'join', to: 'implement', t: 0.88, d: 2 },
+  { from: 'p2', to: 'quorum', t: 0.88, d: 1 },
+  { from: 'quorum', to: 'implement', t: 0.88, d: 2 },
 ];
 // Caption beats: [start, end] windows over --p; the last one holds to the end.
 const lbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
