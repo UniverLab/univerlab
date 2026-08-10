@@ -403,6 +403,7 @@ html[data-surface='blueprint'] .hero {
   position: relative;
   margin-top: 1rem;
   padding: 1.9rem;
+  padding-bottom: 3.4rem;
   border: 1px solid var(--line);
   background-color: var(--bg-raise);
 }
