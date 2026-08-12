@@ -285,6 +285,7 @@ export const es: Dict = {
           'Plantilla de lenguaje',
           'Ramas',
           'Características y licencia',
+          'Sponsor button',
           'Revisar y confirmar',
         ],
       },
@@ -295,6 +296,7 @@ export const es: Dict = {
           'Un único commit atómico <code>chore: init repository</code> lleva todo el boilerplate — sin historial ruidoso archivo por archivo.',
           'Siete etiquetas estándar forzadas en cada ejecución; la desviación se corrige, no se acumula.',
           '<code>--dry-run</code> previsualiza cada cambio sin una sola llamada a la API.',
+          'La protección de ramas lee los archivos de workflow que ghscaff acaba de commitear y deriva los required status checks a partir de ellos — un nombre de check mal escrito produce una regla que no protege nada en silencio, y esto elimina esa clase de mala configuración. Ejecuta <code>ghscaff doctor</code> para verificar la configuración.',
         ],
       },
       subproject: {
@@ -309,6 +311,8 @@ export const es: Dict = {
           'Ejecuta `ghscaff` — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
         ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
           'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
+        ['¿Cómo sabe ghScaff qué checks son requeridos para la protección de ramas?',
+          'ghScaff lee los archivos de workflow que acaba de commitear y deriva los required status checks a partir de los nombres de los jobs. Un nombre de check mal escrito crea una regla de protección que no protege nada — ghScaff elimina esa clase de mala configuración silenciosa.'],
       ] as [string, string][],
     },
     cadspec: {

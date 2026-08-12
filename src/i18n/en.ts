@@ -283,6 +283,7 @@ export const en = {
           'Language template',
           'Branches',
           'Features & license',
+          'Sponsor button',
           'Review & confirm',
         ],
       },
@@ -293,6 +294,7 @@ export const en = {
           'One atomic <code>chore: init repository</code> commit carries all boilerplate — no noisy file-by-file history.',
           'Seven standard labels enforced on every run; drift is corrected, not accumulated.',
           '<code>--dry-run</code> previews every change without a single API call.',
+          'Branch protection reads the workflow files ghscaff just committed and derives the required status checks from them — a mistyped check name silently guards nothing, and this removes that class of misconfiguration. Run <code>ghscaff doctor</code> to verify the setup.',
         ],
       },
       subproject: {
@@ -307,6 +309,8 @@ export const en = {
           'Run `ghscaff` — an interactive wizard that creates the repo, commits boilerplate (CI, README, license), sets branch protection, and enforces standard labels. One atomic commit, no manual steps.'],
         ['Why does ghScaff use an encrypted vault for tokens?',
           'Environment variables with tokens are easily exploitable — any process on your machine can read them. ghScaff encrypts tokens with XSalsa20-Poly1305, bound to your OS user and hostname. The vault prevents ghScaff from becoming an attack vector.'],
+        ['How does ghScaff know which checks are required for branch protection?',
+          'ghScaff reads the workflow files it just committed and derives the required status checks from the job names. A mistyped check name creates a protection rule that guards nothing — ghScaff removes that class of silent misconfiguration.'],
       ] as [string, string][],
     },
     cadspec: {
