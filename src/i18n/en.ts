@@ -192,7 +192,7 @@ export const en = {
       koan: 'Movable type once took a workshop. Now it takes one binary.',
       figures: ['build pipeline', 'document graph', 'build map'],
       lede:
-        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles documents, then inspects the result — text, fonts, metadata and page diffs, no viewer needed — the LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
+        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles your document, then lets you inspect what came out — the text a reader sees, the fonts, the metadata, and which section opens each page. The LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born from a thesis.',

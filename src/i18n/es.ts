@@ -194,7 +194,7 @@ export const es: Dict = {
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
-        'Un único binario en Rust que arma, revisa, formatea, corrige y compila documentos, luego inspecciona el resultado — texto, fuentes, metadatos y diffs de página, sin necesidad de un visor — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -260,7 +260,7 @@ export const es: Dict = {
         ['¿Qué son los "builds" de GitKit?',
           'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
         ['¿Cómo pauso la escritura en un repositorio?',
-          'Ejecuta <code>gitkit lock</code> para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio queda legible pero inescriturable hasta que ejecutes <code>gitkit unlock</code>. Útil cuando un agente autónomo necesita dejar de escribir mientras haces rebase, reinstalación o inspección del árbol.'],
+          'Ejecuta <code>gitkit lock</code> para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio se puede leer, pero no escribir, hasta que ejecutes <code>gitkit unlock</code>. Útil cuando un agente autónomo tiene que dejar de escribir mientras haces un rebase, reinstalas o inspeccionas el árbol.'],
       ] as [string, string][],
     },
     ghscaff: {
@@ -296,7 +296,7 @@ export const es: Dict = {
           'Un único commit atómico <code>chore: init repository</code> lleva todo el boilerplate — sin historial ruidoso archivo por archivo.',
           'Siete etiquetas estándar forzadas en cada ejecución; la desviación se corrige, no se acumula.',
           '<code>--dry-run</code> previsualiza cada cambio sin una sola llamada a la API.',
-          'La protección de ramas lee los archivos de workflow que ghscaff acaba de commitear y deriva los required status checks a partir de ellos — un nombre de check mal escrito produce una regla que no protege nada en silencio, y esto elimina esa clase de mala configuración. Ejecuta <code>ghscaff doctor</code> para verificar la configuración.',
+          'La protección de ramas lee los workflows que ghscaff acaba de commitear y deriva de ellos los checks requeridos — un nombre mal escrito produce una regla que no protege nada, y no avisa; esto elimina esa clase de error de configuración. <code>ghscaff doctor</code> verifica cómo quedó.',
         ],
       },
       subproject: {
@@ -312,7 +312,7 @@ export const es: Dict = {
         ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
           'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
         ['¿Cómo sabe ghScaff qué checks son requeridos para la protección de ramas?',
-          'ghScaff lee los archivos de workflow que acaba de commitear y deriva los required status checks a partir de los nombres de los jobs. Un nombre de check mal escrito crea una regla de protección que no protege nada — ghScaff elimina esa clase de mala configuración silenciosa.'],
+          'ghScaff lee los workflows que acaba de commitear y deriva los checks requeridos de los nombres de los jobs. Un nombre mal escrito crea una regla de protección que no protege nada y no lo dice — ghScaff elimina esa clase de error silencioso.'],
       ] as [string, string][],
     },
     cadspec: {
