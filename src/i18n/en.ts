@@ -249,6 +249,7 @@ export const en = {
           'Every gitignore.io template plus curated git config presets, applied idempotently.',
           '<code>gitkit clone</code> bootstraps a repo the moment it lands on disk.',
           'Builds: save a setup once, apply it to every future project.',
+          'Lock: block commits and pushes via the hooks already installed — <code>--json</code> for machine-readable status.',
         ],
       },
       faq: [
@@ -256,6 +257,8 @@ export const en = {
           'GitKit sets up git hooks in one flow — conventional commits, secret detection, branch naming. Hooks run offline, embedded in the repo. Agents can\'t push code that doesn\'t compile or contains secrets.'],
         ['What are GitKit "builds"?',
           'A build saves your git configuration (hooks, ignore, attributes, config) as a reusable template. Apply it to any future project with one command — no need to reconfigure hooks for every repo.'],
+        ['How do I pause writes to a repository?',
+          'Run <code>gitkit lock</code> to block commits and pushes through the hooks gitkit already installs. The repository stays readable but unwritable until you run <code>gitkit unlock</code>. Useful when an autonomous agent needs to stop writing while you rebase, reinstall, or inspect the tree.'],
       ] as [string, string][],
     },
     ghscaff: {

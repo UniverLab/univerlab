@@ -251,6 +251,7 @@ export const es: Dict = {
           'Todas las plantillas de gitignore.io más presets curados de configuración, aplicados de forma idempotente.',
           '<code>gitkit clone</code> arranca un repo en el instante en que toca el disco.',
           'Builds: guarda una configuración una vez, aplícala a todo proyecto futuro.',
+          'Lock: bloquea commits y pushes a través de los hooks ya instalados — <code>--json</code> para estado legible por máquinas.',
         ],
       },
       faq: [
@@ -258,6 +259,8 @@ export const es: Dict = {
           'GitKit configura git hooks en un solo flujo — conventional commits, detección de secretos, nomenclatura de ramas. Los hooks corren offline, embebidos en el repo. Los agentes no pueden pushear código que no compila o contiene secretos.'],
         ['¿Qué son los "builds" de GitKit?',
           'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
+        ['¿Cómo pauso la escritura en un repositorio?',
+          'Ejecuta <code>gitkit lock</code> para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio queda legible pero inescriturable hasta que ejecutes <code>gitkit unlock</code>. Útil cuando un agente autónomo necesita dejar de escribir mientras haces rebase, reinstalación o inspección del árbol.'],
       ] as [string, string][],
     },
     ghscaff: {
