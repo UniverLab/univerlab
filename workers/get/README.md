@@ -7,6 +7,19 @@ curl -fsSL https://get.univerlab.org/canopy | sh      # macOS / Linux
 irm https://get.univerlab.org/texforge.ps1 | iex      # Windows
 ```
 
+`install.univerlab.org` is the same Worker under a second Custom Domain —
+not a redirect to `get`, the same `fetch`. Use whichever reads better where
+you are writing: `get` is shorter and matches what people already expect
+from `get.docker.com` and `get.helm.sh`; `install` says out loud what the
+pipe is about to do, which is worth the four characters in prose.
+
+```sh
+curl -fsSL https://install.univerlab.org/canopy | sh
+```
+
+Adding a third costs nothing and changes no code: the Worker never learns
+which hostname it was reached through.
+
 It **only 302-redirects** to each repo's real script on GitHub
 (`raw.githubusercontent.com/UniverLab/<repo>/main/scripts/install.{sh,ps1}`).
 No proxying, no database — GitHub stays the download origin and the trust

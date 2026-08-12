@@ -20,9 +20,23 @@ compatibility_date = "2025-01-01"
 binding = "INSTALLS"
 dataset = "univerlab_installs"
 
-# Bind to the subdomain once univerlab.org is on Cloudflare. Easiest path:
-# Workers & Pages → this Worker → Settings → Domains & Routes → add a
-# Custom Domain: get.univerlab.org  (Cloudflare provisions the TLS cert).
+# Two hostnames, one Worker. `get` is the short one that matches the
+# convention users already know (get.docker.com, get.helm.sh); `install` is
+# the explicit one, for documentation where saying what the command does
+# out loud is worth four extra characters. Neither is a redirect to the
+# other — both enter the same `fetch`, so the code never learns which was
+# used and nothing needs to change when a new one is added.
 #
-# Or, declaratively (requires the zone on this account):
-# routes = [{ pattern = "get.univerlab.org", custom_domain = true }]
+# Bound as Custom Domains: Workers & Pages → this Worker → Settings →
+# Domains & Routes → Custom Domain (Cloudflare provisions the TLS cert).
+#
+# The declarative form below is deliberately left commented. Enabling it
+# makes `wrangler deploy` the authority on which hostnames are attached,
+# and get.univerlab.org is the install URL for every tool in the workspace
+# — not something to hand to a reconciliation step in exchange for
+# convenience. If you ever do enable it, list BOTH patterns:
+#
+# routes = [
+#   { pattern = "get.univerlab.org",     custom_domain = true },
+#   { pattern = "install.univerlab.org", custom_domain = true },
+# ]
