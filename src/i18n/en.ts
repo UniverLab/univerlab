@@ -192,7 +192,7 @@ export const en = {
       koan: 'Movable type once took a workshop. Now it takes one binary.',
       figures: ['build pipeline', 'document graph', 'build map'],
       lede:
-        'A single Rust binary that scaffolds, lints, formats and compiles documents — the LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
+        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles documents, then inspects the result — text, fonts, metadata and page diffs, no viewer needed — the LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
@@ -204,8 +204,10 @@ export const en = {
         items: [
           ['Compose', 'templates with placeholders that already know your name.'],
           ['Proof', 'a linter that catches broken refs, missing files and unclosed environments before the press runs.'],
+          ['Proofread', 'spell-checking that reads the language from the document — Babel, polyglossia, or your configured default — and checks prose against the right dictionary.'],
           ['Set', 'one canonical format, like rustfmt for .tex. Clean diffs forever.'],
           ['Illustrate', 'Mermaid, Graphviz and D2 blocks become figures at build time, rendered in pure Rust.'],
+          ['Inspect', 'the compiled PDF — text, fonts, metadata, page diffs and whether every source word survived.'],
           ['Print', 'Tectonic compiles deterministically; watch mode reprints as you write.'],
         ] as [string, string][],
       },
@@ -223,6 +225,8 @@ export const en = {
           'Yes. An agent can run `texforge build` without installing anything — the LaTeX engine downloads on first use. Errors are concise (not 1000-line logs), and diagrams render inside `.tex` files without Node.js or external tools.'],
         ['Does TexForge support Mermaid and D2 diagrams in LaTeX?',
           'Yes. Write a Mermaid, Graphviz, or D2 block directly in your `.tex` file. TexForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
+        ['How does spell-checking work in languages other than English?',
+          'The language comes from the document itself — `\\usepackage[spanish]{babel}` or `polyglossia` — and falls back to your configured default when nothing is declared. Spanish is checked against a Hunspell dictionary with affix rules, so `soluciones` is recognised from the stem `solución` without being stored as its own entry. Dictionaries download on first use into `~/.texforge/dicts/`.'],
       ] as [string, string][],
     },
     gitkit: {

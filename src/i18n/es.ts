@@ -194,7 +194,7 @@ export const es: Dict = {
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
-        'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea, corrige y compila documentos, luego inspecciona el resultado — texto, fuentes, metadatos y diffs de página, sin necesidad de un visor — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -206,8 +206,10 @@ export const es: Dict = {
         items: [
           ['Componer', 'plantillas con placeholders que ya saben tu nombre.'],
           ['Corregir', 'un linter que detecta referencias rotas, archivos faltantes y entornos sin cerrar antes de imprimir.'],
+          ['Revisar', 'ortografía y estilo que leen el idioma del documento — Babel, polyglossia o tu configuración por defecto — y revisan el texto contra el diccionario correcto.'],
           ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
           ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Inspeccionar', 'el PDF compilado — texto, fuentes, metadatos, diffs de página y si cada palabra del fuente sobrevivió.'],
           ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
         ],
       },
@@ -225,6 +227,8 @@ export const es: Dict = {
           'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
         ['¿TexForge soporta diagramas Mermaid y D2 en LaTeX?',
           'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TexForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+        ['¿Cómo funciona la corrección ortográfica en idiomas distintos del inglés?',
+          'El idioma sale del propio documento — `\\usepackage[spanish]{babel}` o `polyglossia` — y recurre a tu configuración por defecto cuando no se declara ninguno. El español se revisa con un diccionario Hunspell y reglas de afijos, de modo que `soluciones` se reconoce a partir de la raíz `solución` sin necesidad de almacenarlo como entrada propia. Los diccionarios se descargan en el primer uso en `~/.texforge/dicts/`.'],
       ] as [string, string][],
     },
     gitkit: {
