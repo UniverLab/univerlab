@@ -194,7 +194,7 @@ export const es: Dict = {
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
-        'Un único binario en Rust que arma, revisa, formatea y compila documentos — el motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -206,8 +206,10 @@ export const es: Dict = {
         items: [
           ['Componer', 'plantillas con placeholders que ya saben tu nombre.'],
           ['Corregir', 'un linter que detecta referencias rotas, archivos faltantes y entornos sin cerrar antes de imprimir.'],
+          ['Revisar', 'ortografía y estilo que leen el idioma del documento — Babel, polyglossia o tu configuración por defecto — y revisan el texto contra el diccionario correcto.'],
           ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
           ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Inspeccionar', 'el PDF compilado — texto, fuentes, metadatos, diffs de página y si cada palabra del fuente sobrevivió.'],
           ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
         ],
       },
@@ -225,6 +227,8 @@ export const es: Dict = {
           'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
         ['¿TexForge soporta diagramas Mermaid y D2 en LaTeX?',
           'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TexForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+        ['¿Cómo funciona la corrección ortográfica en idiomas distintos del inglés?',
+          'El idioma sale del propio documento — `\\usepackage[spanish]{babel}` o `polyglossia` — y recurre a tu configuración por defecto cuando no se declara ninguno. El español se revisa con un diccionario Hunspell y reglas de afijos, de modo que `soluciones` se reconoce a partir de la raíz `solución` sin necesidad de almacenarlo como entrada propia. Los diccionarios se descargan en el primer uso en `~/.texforge/dicts/`.'],
       ] as [string, string][],
     },
     gitkit: {
@@ -247,6 +251,7 @@ export const es: Dict = {
           'Todas las plantillas de gitignore.io más presets curados de configuración, aplicados de forma idempotente.',
           '<code>gitkit clone</code> arranca un repo en el instante en que toca el disco.',
           'Builds: guarda una configuración una vez, aplícala a todo proyecto futuro.',
+          'Lock: bloquea commits y pushes a través de los hooks ya instalados — <code>--json</code> para estado legible por máquinas.',
         ],
       },
       faq: [
@@ -254,6 +259,8 @@ export const es: Dict = {
           'GitKit configura git hooks en un solo flujo — conventional commits, detección de secretos, nomenclatura de ramas. Los hooks corren offline, embebidos en el repo. Los agentes no pueden pushear código que no compila o contiene secretos.'],
         ['¿Qué son los "builds" de GitKit?',
           'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
+        ['¿Cómo pauso la escritura en un repositorio?',
+          'Ejecuta <code>gitkit lock</code> para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio se puede leer, pero no escribir, hasta que ejecutes <code>gitkit unlock</code>. Útil cuando un agente autónomo tiene que dejar de escribir mientras haces un rebase, reinstalas o inspeccionas el árbol.'],
       ] as [string, string][],
     },
     ghscaff: {
@@ -278,6 +285,7 @@ export const es: Dict = {
           'Plantilla de lenguaje',
           'Ramas',
           'Características y licencia',
+          'Sponsor button',
           'Revisar y confirmar',
         ],
       },
@@ -288,6 +296,7 @@ export const es: Dict = {
           'Un único commit atómico <code>chore: init repository</code> lleva todo el boilerplate — sin historial ruidoso archivo por archivo.',
           'Siete etiquetas estándar forzadas en cada ejecución; la desviación se corrige, no se acumula.',
           '<code>--dry-run</code> previsualiza cada cambio sin una sola llamada a la API.',
+          'La protección de ramas lee los workflows que ghscaff acaba de commitear y deriva de ellos los checks requeridos — un nombre mal escrito produce una regla que no protege nada, y no avisa; esto elimina esa clase de error de configuración. <code>ghscaff doctor</code> verifica cómo quedó.',
         ],
       },
       subproject: {
@@ -302,6 +311,8 @@ export const es: Dict = {
           'Ejecuta `ghscaff` — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
         ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
           'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
+        ['¿Cómo sabe ghScaff qué checks son requeridos para la protección de ramas?',
+          'ghScaff lee los workflows que acaba de commitear y deriva los checks requeridos de los nombres de los jobs. Un nombre mal escrito crea una regla de protección que no protege nada y no lo dice — ghScaff elimina esa clase de error silencioso.'],
       ] as [string, string][],
     },
     cadspec: {

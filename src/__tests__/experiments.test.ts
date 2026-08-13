@@ -119,11 +119,11 @@ describe('experiments.ts', () => {
       experimentsWithInstall.forEach(exp => {
         // Then: Install should be defined and have unix command
         expect(exp.install).toBeDefined();
-        expect(exp.install!.unix).toContain('get.univerlab.org');
-        
+        expect(exp.install!.unix).toContain('install.univerlab.org');
+
         // And: Windows command should also be valid if present
         if (exp.install!.windows) {
-          expect(exp.install!.windows).toContain('get.univerlab.org');
+          expect(exp.install!.windows).toContain('install.univerlab.org');
         }
       });
     });

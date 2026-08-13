@@ -56,11 +56,17 @@ export interface Experiment {
   };
 }
 
-// Install commands go through the `get.univerlab.org` redirector worker (see
-// workers/get) — a clean, memorable URL that 302s to each repo's real script.
-// `slug` is the experiment id (the worker maps it to the repo).
-const sh = (slug: string) => `curl -fsSL https://get.univerlab.org/${slug} | sh`;
-const ps = (slug: string) => `irm https://get.univerlab.org/${slug}.ps1 | iex`;
+// Install commands go through the redirector worker (see workers/get) — a
+// clean, memorable URL that 302s to each repo's real script. `slug` is the
+// experiment id (the worker maps it to the repo).
+//
+// The worker answers on two hostnames. `install` is the one shown here
+// because a command that pipes a script into a shell should say out loud
+// what it is about to do. `get.univerlab.org` is the same Worker, not a
+// redirect to this one, and it keeps working — it is in published skills,
+// READMEs and people's shell history, so it never goes away.
+const sh = (slug: string) => `curl -fsSL https://install.univerlab.org/${slug} | sh`;
+const ps = (slug: string) => `irm https://install.univerlab.org/${slug}.ps1 | iex`;
 /** Unix-only installer (no PowerShell script published). */
 const unix = (slug: string) => ({ unix: sh(slug) });
 /** Cross-platform installer (both shell and PowerShell scripts published). */
