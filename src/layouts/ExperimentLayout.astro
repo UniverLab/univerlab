@@ -82,8 +82,11 @@ const faqSchema = e.faq && e.faq.length > 0
 const structuredData = faqSchema
   ? (baseSchema ? [baseSchema, faqSchema] : faqSchema)
   : baseSchema;
+
+// Per-experiment Open Graph card — generated at build time into public/og/.
+const ogImage = `/og/${id}.png`;
 ---
-<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
+<BaseLayout title={`${exp.name} — UniverLab`} description={e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
