@@ -11,11 +11,12 @@
  */
 import { experiments } from '../../src/lib/experiments.ts';
 import { en } from '../../src/i18n/en.ts';
+import { getTagline } from '../../src/lib/github-sync.ts';
 
 export const BANNERS = experiments.map((exp) => ({
   id: exp.id,
   name: exp.name,
   number: exp.number,
   accent: exp.essenceHex,
-  tagline: en.experiments[exp.id].tagline,
+  tagline: getTagline(en, exp.id),
 }));
