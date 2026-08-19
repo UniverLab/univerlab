@@ -81,6 +81,19 @@ jobs:
         working-directory: univerlab
         run: npm run check:i18n
 
+      # Reports drift between each experiment's English tagline and its GitHub
+      # repository description. Informational on purpose: it compares against an
+      # EXTERNAL, MUTABLE resource — anyone editing a description on github.com
+      # would otherwise break an unrelated build. It lived in `prebuild` until
+      # 2026-08-19, where it failed the production deploy for exactly that reason.
+      # `npm run apply:github` pushes the local taglines when the drift is wanted.
+      - name: Check GitHub descriptions (informational)
+        working-directory: univerlab
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run check:github
+
   main-pr-version-bump:
     name: Main PR Version Bump
     if: github.event_name == 'pull_request' && github.base_ref == 'main'

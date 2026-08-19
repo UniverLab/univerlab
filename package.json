@@ -4,7 +4,7 @@
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/check-i18n.ts && node scripts/check-github.ts",
+    "prebuild": "node scripts/check-i18n.ts",
     "build": "astro build",
     "preview": "astro preview",
     "check:i18n": "node scripts/check-i18n.ts",
