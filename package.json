@@ -1,13 +1,15 @@
 {
   "name": "univerlab-web",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/check-i18n.ts",
+    "prebuild": "node scripts/check-i18n.ts && node scripts/check-github.ts",
     "build": "astro build",
     "preview": "astro preview",
     "check:i18n": "node scripts/check-i18n.ts",
+    "check:github": "node scripts/check-github.ts",
+    "apply:github": "node scripts/apply-github-descriptions.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage && echo 'Coverage report generated successfully'"

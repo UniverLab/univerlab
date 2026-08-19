@@ -4,8 +4,9 @@ import type { Dict } from './en';
  *  los repositorios permanece solo en inglés. */
 export const es: Dict = {
   meta: {
+    title: 'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — UniverLab',
     description:
-      'Laboratorio computacional de código abierto. Construimos herramientas para agentes de IA, CLI, LaTeX, Git y CAD como código — experimentos reproducibles, conocimiento libre.',
+      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, sin dependencias de runtime.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -112,6 +113,10 @@ export const es: Dict = {
       need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
       tagline:
         'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
+      title:
+        'Context engineering para agentes de IA, como grafos — Canopy',
+      description:
+        'Un centro de operaciones sobre MCP, agnóstico del harness: contexto persistente entre sesiones, prompt builder, loops como grafos, scheduling y coordinación multi-agente. Un binario en Rust.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
         'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da <strong>memoria persistente</strong> entre sesiones, <strong>programación en segundo plano</strong> por cron y eventos de archivo, un <strong>grafo de conocimiento</strong> que aprende de cada ejecución, y un <strong>protocolo de sincronización</strong> para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
@@ -191,6 +196,10 @@ export const es: Dict = {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      title:
+        'Compila LaTeX con diagramas desde la terminal — TexForge',
+      description:
+        'Un solo binario, sin instalar una distribución de LaTeX. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para que los lea un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
@@ -235,6 +244,10 @@ export const es: Dict = {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      title:
+        'Los git hooks están desaprovechados. GitKit los pone a trabajar.',
+      description:
+        'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
       koan: '// el ritual, automatizado',
       lede:
         'Un flujo guiado para hooks, <code>.gitignore</code>, <code>.gitattributes</code> y configuración de git — y luego guardado como un <strong>build</strong> que puedes reaplicar a cualquier proyecto con un solo comando.',
@@ -267,6 +280,10 @@ export const es: Dict = {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      title:
+        'Crea repos de GitHub con las convenciones ya aplicadas — ghScaff',
+      description:
+        'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
         'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>wizard interactivo</strong> — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
@@ -319,6 +336,10 @@ export const es: Dict = {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      title:
+        'CAD as code: de la declaración al modelo — cadSpec',
+      description:
+        'Geometría declarativa en TOML que puedes revisar en un diff, con preview en el navegador. Compilación determinista: el mismo fuente siempre da el mismo modelo.',
       koan: 'El dibujo no se dibuja. Se declara.',
       lede:
         'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
@@ -346,6 +367,10 @@ export const es: Dict = {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
         'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      title:
+        'Benchmarking de denoising astronómico — Astro Denoise',
+      description:
+        'Una propuesta de investigación evaluada por la ciencia que recupera, no por lo limpia que se ve la imagen.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
       lede:
         'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
@@ -380,6 +405,10 @@ export const es: Dict = {
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      title:
+        'Planning poker donde tus votos nunca llegan a un servidor — Quorum',
+      description:
+        'Los peers hablan directamente entre sí por WebRTC. No se guarda nada, no se recoge nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
       lede:
         'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
@@ -416,6 +445,10 @@ export const es: Dict = {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
+      title:
+        'Demos de terminal reproducibles, como código — DemoStage',
+      description:
+        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo después de cada cambio; exporta gif o mp4.',
       koan: '// el demo es el código fuente',
       lede:
         'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',

@@ -13,6 +13,10 @@ interface Props {
   description?: string;
   bg?: BgTheme;
   bgColor?: string;
+  /** Per-page Open Graph image URL (e.g. '/og/texforge.png').  Falls back to
+   *  '/og.png' when omitted — the site-wide default for home, docs, and
+   *  experiment pages that don't supply their own card. */
+  ogImage?: string;
   /** Core pages: shift the palette progressively with the time of day. */
   circadian?: boolean;
   /** Docs: render the background animation in a neutral grey, not the accent. */
@@ -35,6 +39,7 @@ const {
   description = t.meta.description,
   bg = 'cosmic',
   bgColor,
+  ogImage: ogImageProp,
   circadian = false,
   mutedCanvas = false,
   surface,
@@ -68,7 +73,7 @@ const fontHref =
 const site = Astro.site ?? new URL('https://univerlab.org');
 const path = Astro.url.pathname;
 const canonical = new URL(path, site).href;
-const ogImage = new URL('/og.png', site).href;
+const ogImage = ogImageProp ? new URL(ogImageProp, site).href : new URL('/og.png', site).href;
 // hreflang alternates — only for localized pages (docs are English-only).
 const isDocs = path.includes('/docs');
 const stripped = path.replace(/^\/es(?=\/|$)/, '') || '/';
