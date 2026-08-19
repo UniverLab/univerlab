@@ -105,3 +105,28 @@ jobs:
             exit 1
           fi
           echo "Version bumped: $BASE_VERSION -> $CURRENT_VERSION"
+
+      # `npm ci` already fails when the lockfile disagrees with package.json
+      # about DEPENDENCIES, but it ignores the lockfile's own root version.
+      # That blind spot let the lock sit at 1.1.0 across four releases with CI
+      # green the whole time. Fix is one command: `npm install --package-lock-only`.
+      - name: Check lockfile version is in sync
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          LOCK_VERSION=$(node -p "require('./package-lock.json').version")
+          LOCK_PKG_VERSION=$(node -p "require('./package-lock.json').packages[''].version")
+
+          FAILED=0
+          if [ "$LOCK_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::package-lock.json version is $LOCK_VERSION, expected $PKG_VERSION"
+            FAILED=1
+          fi
+          if [ "$LOCK_PKG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::package-lock.json packages[\"\"].version is $LOCK_PKG_VERSION, expected $PKG_VERSION"
+            FAILED=1
+          fi
+          if [ "$FAILED" = "1" ]; then
+            echo "Run: npm install --package-lock-only"
+            exit 1
+          fi
+          echo "Lockfile in sync at $PKG_VERSION"
