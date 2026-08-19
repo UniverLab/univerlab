@@ -3,6 +3,11 @@
  *  part of this dictionary. */
 export const en = {
   meta: {
+    // The home is the brand hub — it is the one page that can only win the
+    // query "univerlab". Its title still names what the lab makes, so a reader
+    // arriving from anywhere learns it in the tab, and so title and description
+    // agree instead of describing two different things.
+    title: 'Open-source CLI tools for LaTeX, git, CAD and AI agents — UniverLab',
     description:
       'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, no runtime dependencies.',
   },

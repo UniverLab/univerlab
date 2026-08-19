@@ -4,6 +4,7 @@ import type { Dict } from './en';
  *  los repositorios permanece solo en inglés. */
 export const es: Dict = {
   meta: {
+    title: 'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — UniverLab',
     description:
       'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, sin dependencias de runtime.',
   },
