@@ -3,8 +3,13 @@
  *  part of this dictionary. */
 export const en = {
   meta: {
+    // The home is the brand hub — it is the one page that can only win the
+    // query "univerlab". Its title still names what the lab makes, so a reader
+    // arriving from anywhere learns it in the tab, and so title and description
+    // agree instead of describing two different things.
+    title: 'Open-source CLI tools for LaTeX, git, CAD and AI agents — UniverLab',
     description:
-      'Open-source computational lab. We build tools for AI agents, CLI, LaTeX, Git, and CAD-as-code — reproducible experiments, free knowledge.',
+      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, no runtime dependencies.',
   },
   nav: {
     experiments: 'Experiments',
@@ -110,6 +115,10 @@ export const en = {
       need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
       tagline:
         'The runtime layer for AI agents that need memory, scheduling, and each other.',
+      title:
+        'Context engineering for AI agents, built as graphs — Canopy',
+      description:
+        'A harness-agnostic operations center over MCP: persistent context across sessions, a prompt builder, graph-based loops, scheduling and multi-agent coordination. One Rust binary.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
         'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
@@ -189,6 +198,10 @@ export const en = {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
+      title:
+        'Compile LaTeX with diagrams from your terminal — TexForge',
+      description:
+        'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
       figures: ['build pipeline', 'document graph', 'build map'],
       lede:
@@ -233,6 +246,10 @@ export const en = {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
+      title:
+        'Git hooks are underused. GitKit puts them to work.',
+      description:
+        'Hooks, .gitignore, .gitattributes and config in one guided, idempotent flow. Composable hooks that survive being reapplied. One binary, no Node, no Python.',
       koan: '// the ritual, automated',
       lede:
         'One guided flow for hooks, <code>.gitignore</code>, <code>.gitattributes</code> and git config — then saved as a <strong>build</strong> you can re-apply to any project with a single command.',
@@ -265,6 +282,10 @@ export const en = {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
+      title:
+        'Create GitHub repos with conventions enforced — ghScaff',
+      description:
+        'An interactive wizard that scaffolds a repository and applies labels, branch protection and status checks from the start.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
         'ghScaff raises the whole structure in one interactive <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
@@ -317,6 +338,10 @@ export const en = {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
+      title:
+        'CAD as code: from declaration to model — cadSpec',
+      description:
+        'Declarative geometry in TOML you can diff and review, with live browser preview. Compiled deterministically — the same source always yields the same model.',
       koan: 'The drawing is not drawn. It is declared.',
       lede:
         'cadSpec treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
@@ -344,6 +369,10 @@ export const en = {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
         'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
+      title:
+        'Benchmarking astronomical denoising — Astro Denoise',
+      description:
+        'A research proposal evaluated on the science it recovers, not on how clean the image looks.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
         'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
@@ -378,6 +407,10 @@ export const en = {
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
+      title:
+        'Planning poker where your votes never reach a server — Quorum',
+      description:
+        'Peers talk directly to each other over WebRTC. Nothing is stored, nothing is collected, no account exists to create. Share a room link and estimate together.',
       koan: '// the estimate is already in the room',
       lede:
         'Quorum is <strong>serverless planning poker</strong>: each person plays a card, votes reveal with an animation once everyone has voted, and the disagreement is where the useful conversation starts. It runs <strong>peer-to-peer</strong> over WebRTC — a shared room link is the whole app, no cloud, no account.',
@@ -414,6 +447,10 @@ export const en = {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
+      title:
+        'Reproducible terminal demos as code — DemoStage',
+      description:
+        'An asciinema alternative where the demo is a file, not a take. Re-record it after every change; export gif or mp4.',
       koan: '// the demo is the source',
       lede:
         'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',

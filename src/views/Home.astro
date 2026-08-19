@@ -15,7 +15,7 @@ const webSite = {
   publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
 };
 ---
-<BaseLayout title="UniverLab — open-source computational laboratory" bg="cosmic" circadian structuredData={webSite}>
+<BaseLayout title={t.meta.title} bg="cosmic" circadian structuredData={webSite}>
   <section class="wrap hero">
     <h1>{t.home.hero.title}</h1>
     <p class="subtitle">{t.home.hero.subtitle}</p>

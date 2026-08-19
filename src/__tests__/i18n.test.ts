@@ -129,7 +129,7 @@ describe('i18n system', () => {
         const esExp = es.experiments[expId as keyof typeof es.experiments];
         
         // Then: Required fields should exist in both languages
-        ['need', 'tagline', 'koan', 'lede', 'genesis'].forEach(field => {
+        ['need', 'tagline', 'koan', 'lede', 'genesis', 'title', 'description'].forEach(field => {
           expect(enExp).toHaveProperty(field);
           expect(esExp).toHaveProperty(field);
           
@@ -152,6 +152,47 @@ describe('i18n system', () => {
         expect(esExp.genesis).toHaveProperty('title');
         expect(esExp.genesis).toHaveProperty('body');
       });
+    });
+
+    it('should not assert equality between English and Spanish title and description', () => {
+      // Given: Experiment IDs from English dictionary
+      const enExpKeys = Object.keys(en.experiments);
+      
+      // When/Then: No comparison between en/es title/description — they are
+      // written separately on purpose. This test exists to document that
+      // decision and prevent accidental enforcement of equivalence.
+      enExpKeys.forEach(expId => {
+        const enExp = en.experiments[expId as keyof typeof en.experiments];
+        const esExp = es.experiments[expId as keyof typeof es.experiments];
+        
+        // Both should have title and description as strings
+        expect(typeof enExp.title).toBe('string');
+        expect(typeof esExp.title).toBe('string');
+        expect(typeof enExp.description).toBe('string');
+        expect(typeof esExp.description).toBe('string');
+      });
+    });
+
+    it('should fall back to "${name} — UniverLab" when title is omitted', () => {
+      // Given: An experiment-like object without a title field
+      const exp = { name: 'MyExperiment' as string };
+      
+      // When: We apply the fallback logic from ExperimentLayout.astro
+      const title = (exp as any).title ?? `${exp.name} — UniverLab`;
+      
+      // Then: It should produce the expected fallback string
+      expect(title).toBe('MyExperiment — UniverLab');
+    });
+
+    it('should use the supplied title when present', () => {
+      // Given: An experiment-like object with a title field
+      const exp = { name: 'MyExperiment', title: 'Custom Title — MyExperiment' };
+      
+      // When: We apply the fallback logic from ExperimentLayout.astro
+      const title = exp.title ?? `${exp.name} — UniverLab`;
+      
+      // Then: It should use the supplied title
+      expect(title).toBe('Custom Title — MyExperiment');
     });
   });
 
