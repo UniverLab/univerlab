@@ -114,9 +114,9 @@ export const es: Dict = {
       tagline:
         'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
       title:
-        'Context engineering para agentes de IA, como grafos — Canopy',
+        'Memoria persistente: Claude Code, Codex, OpenCode — Canopy',
       description:
-        'Un centro de operaciones sobre MCP, agnóstico del harness: contexto persistente entre sesiones, prompt builder, loops como grafos, scheduling y coordinación multi-agente. Un binario en Rust.',
+        'Tus agentes olvidan entre sesiones. Canopy recuerda — contexto compartido entre Claude Code, Codex, Cursor y OpenCode, más scheduling y loops como grafos.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
         'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da <strong>memoria persistente</strong> entre sesiones, <strong>programación en segundo plano</strong> por cron y eventos de archivo, un <strong>grafo de conocimiento</strong> que aprende de cada ejecución, y un <strong>protocolo de sincronización</strong> para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
@@ -197,7 +197,7 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       title:
-        'Compila LaTeX con diagramas desde la terminal — TexForge',
+        'LaTeX con diagramas Mermaid — TexForge',
       description:
         'Un solo binario, sin instalar una distribución de LaTeX. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para que los lea un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
