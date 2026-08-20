@@ -116,9 +116,9 @@ export const en = {
       tagline:
         'The runtime layer for AI agents that need memory, scheduling, and each other.',
       title:
-        'Context engineering for AI agents, built as graphs — Canopy',
+        'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
       description:
-        'A harness-agnostic operations center over MCP: persistent context across sessions, a prompt builder, graph-based loops, scheduling and multi-agent coordination. One Rust binary.',
+        'Your agents forget between sessions. Canopy remembers — shared context across Claude Code, Codex, Cursor and OpenCode, plus scheduling and graph-based loops.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
         'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
@@ -199,7 +199,7 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       title:
-        'Compile LaTeX with diagrams from your terminal — TexForge',
+        'LaTeX with Mermaid diagrams — TexForge',
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
