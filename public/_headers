@@ -13,6 +13,19 @@
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
+# Machine-readable signposts for agents (RFC 8288 Link relations). An agent
+# that fetches the homepage learns where the catalog, the agent card and the
+# plain-text site summary live without probing well-known paths.
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog"
+  Link: </.well-known/agent-card.json>; rel="service-desc"; type="application/json"
+  Link: </llms.txt>; rel="describedby"; type="text/plain"
+
+/es/
+  Link: </.well-known/api-catalog>; rel="api-catalog"
+  Link: </.well-known/agent-card.json>; rel="service-desc"; type="application/json"
+  Link: </llms.txt>; rel="describedby"; type="text/plain"
+
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
