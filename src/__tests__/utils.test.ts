@@ -60,8 +60,8 @@ describe('i18n utilities', () => {
       // When: We call localizePath
       const result = localizePath(path, lang);
       
-      // Then: It should return the path unchanged
-      expect(result).toBe('/experiments');
+      // Then: It should return the path with trailing slash
+      expect(result).toBe('/experiments/');
     });
 
     it('should prefix path with /es when lang is es', () => {
@@ -72,8 +72,8 @@ describe('i18n utilities', () => {
       // When: We call localizePath
       const result = localizePath(path, lang);
       
-      // Then: It should prefix with /es
-      expect(result).toBe('/es/experiments');
+      // Then: It should prefix with /es and add trailing slash
+      expect(result).toBe('/es/experiments/');
     });
 
     it('should handle root path', () => {
@@ -88,8 +88,8 @@ describe('i18n utilities', () => {
       // When: We call localizePath for Spanish
       const esResult = localizePath('/', 'es');
       
-      // Then: It should return '/es'
-      expect(esResult).toBe('/es');
+      // Then: It should return '/es/'
+      expect(esResult).toBe('/es/');
     });
 
     it('should handle paths with query parameters', () => {
@@ -101,7 +101,7 @@ describe('i18n utilities', () => {
       const result = localizePath(path, lang);
       
       // Then: It should preserve query parameters
-      expect(result).toBe('/es/experiments?filter=active');
+      expect(result).toBe('/es/experiments/?filter=active');
     });
   });
 
@@ -113,8 +113,8 @@ describe('i18n utilities', () => {
       // When: We switch to Spanish
       const esUrl = switchLangPath(enUrl, 'es');
       
-      // Then: It should return the Spanish path
-      expect(esUrl).toBe('/es/experiments');
+      // Then: It should return the Spanish path with trailing slash
+      expect(esUrl).toBe('/es/experiments/');
     });
 
     it('should switch from Spanish to English', () => {
@@ -124,8 +124,8 @@ describe('i18n utilities', () => {
       // When: We switch to English
       const enUrl = switchLangPath(esUrl, 'en');
       
-      // Then: It should return the English path
-      expect(enUrl).toBe('/experiments');
+      // Then: It should return the English path with trailing slash
+      expect(enUrl).toBe('/experiments/');
     });
 
     it('should handle root path', () => {
@@ -136,7 +136,7 @@ describe('i18n utilities', () => {
       const esUrl = switchLangPath(enUrl, 'es');
       
       // Then: It should return the Spanish root
-      expect(esUrl).toBe('/es');
+      expect(esUrl).toBe('/es/');
     });
 
     it('should preserve query parameters', () => {
@@ -146,8 +146,8 @@ describe('i18n utilities', () => {
       // When: We switch to English
       const switched = switchLangPath(url, 'en');
       
-      // Then: It should return the path without query parameters (current behavior)
-      expect(switched).toBe('/experiments');
+      // Then: It should return the path with trailing slash (query params dropped by current behavior)
+      expect(switched).toBe('/experiments/');
     });
   });
 

@@ -155,9 +155,9 @@ const orgJsonLd = {
         try {
           var path = location.pathname;
           // Documentation and status are English-only — never redirect them.
-          if (path.indexOf('/docs') !== -1 || path === '/status' || path.indexOf('/status/') === 0) return;
+          if (path.indexOf('/docs') !== -1 || path === '/status/' || path.indexOf('/status/') === 0) return;
           var stored = localStorage.getItem('univerlab-lang');
-          var onEs = path === '/es' || path.indexOf('/es/') === 0;
+          var onEs = /^\/es(\/|$)/.test(path);
           if (!stored) {
             var sys = (navigator.language || 'en').toLowerCase().slice(0, 2);
             if (sys === 'es' && !onEs) {
@@ -449,12 +449,12 @@ https://github.com/UniverLab
         var staticCmds = [
           { cmd: '/home', label: 'Home', href: base + '/' },
           { cmd: '/experiments', label: 'Experiments', href: base + '/#experiments' },
-          { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto' },
-          { cmd: '/contributors', label: 'Contributors', href: base + '/contributors' },
+          { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto/' },
+          { cmd: '/contributors', label: 'Contributors', href: base + '/contributors/' },
           { cmd: '/random', label: 'Surprise me', action: function () {
             if (window.missionLog) window.missionLog.discover('random');
             var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
-            var pages = ['/', '/manifesto', '/contributors', '/archive'];
+            var pages = ['/', '/manifesto/', '/contributors/', '/archive/'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
             var history = [];
             try { history = JSON.parse(localStorage.getItem('univerlab-random') || '[]'); } catch (e) {}
@@ -490,7 +490,7 @@ https://github.com/UniverLab
               checkScroll();
             }
           }},
-          { cmd: '/today', label: 'Today in science (full page)', href: base + '/today' },
+          { cmd: '/today', label: 'Today in science (full page)', href: base + '/today/' },
           { cmd: '/tip', label: 'Tip', action: function () {
             if (window.missionLog) window.missionLog.discover('tip');
             var tips = {
@@ -561,8 +561,8 @@ https://github.com/UniverLab
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
           { cmd: '/find', label: 'Find on page', action: function () { if (window.missionLog) window.missionLog.discover('find'); openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
-          { cmd: '/archive', label: 'The Archive', href: base + '/archive' },
-          { cmd: '/status', label: 'Mission Log', href: base + '/status' },
+          { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
+          { cmd: '/status', label: 'Mission Log', href: base + '/status/' },
         ];
 
         // Experiment IDs — auto-generated from the registry.
@@ -1209,14 +1209,14 @@ https://github.com/UniverLab
 
         // Auto-detect page visits — runs once on load for each page.
         var p = window.location.pathname;
-        if (p === '/manifesto' || p === '/es/manifesto') window.flightLog.record('manifesto');
-        if (p === '/archive' || p === '/es/archive') window.flightLog.record('archive');
-        if (p === '/contributors' || p === '/es/contributors') window.flightLog.record('contributors');
+        if (p === '/manifesto/' || p === '/es/manifesto/') window.flightLog.record('manifesto');
+        if (p === '/archive/' || p === '/es/archive/') window.flightLog.record('archive');
+        if (p === '/contributors/' || p === '/es/contributors/') window.flightLog.record('contributors');
 
         // Per-experiment page visits
         var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
         expIds.forEach(function (id) {
-          if (p === '/' + id || p === '/es/' + id) window.flightLog.record('exp-' + id);
+          if (p === '/' + id + '/' || p === '/es/' + id + '/') window.flightLog.record('exp-' + id);
         });
 
         // Day/night visit detection

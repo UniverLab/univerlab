@@ -50,7 +50,7 @@ export const en = {
       title: 'Open source for the AI era — built for real problems',
       subtitle: 'We are the universe, observing itself.',
       lede:
-        'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
+        'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto/">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
       pitch: 'Science · CLI · LaTeX · CAD · Git',
       pitchSub: 'Local-first. AI-assisted. Yours forever.',
       ctaExperiments: 'Explore the experiments →',
@@ -71,14 +71,14 @@ export const en = {
       kicker: '01 — Origin',
       title: 'It began with one experiment that learned to build the others.',
       body:
-        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
+        'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy/">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
     experiments: { kicker: '00 — Experiments' },
     philosophy: {
       kicker: '02 — Philosophy',
       title: 'Technology is not the goal.',
       body:
-        'The laboratory is guided by <a href="/manifesto">Pensamiento Cósmico</a>: technology as the medium through which curiosity becomes reality. Software should outlive trends. Knowledge should remain open.',
+        'The laboratory is guided by <a href="/manifesto/">Pensamiento Cósmico</a>: technology as the medium through which curiosity becomes reality. Software should outlive trends. Knowledge should remain open.',
       values: [
         'Open knowledge',
         'Reproducible engineering',
@@ -678,7 +678,7 @@ export const en = {
       role: 'AI collaborators',
       name: 'Language models',
       body:
-        'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy">Canopy</a>. Their role is acknowledged, not hidden.',
+        'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy/">Canopy</a>. Their role is acknowledged, not hidden.',
       models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
     },
     contributors: {

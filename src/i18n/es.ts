@@ -47,7 +47,7 @@ export const es: Dict = {
       title: 'Código abierto para la era de IA — construido para problemas reales',
       subtitle: 'Somos el universo, observándose a sí mismo.',
       lede:
-        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
+        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto/">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
       pitch: 'Ciencia · CLI · LaTeX · CAD · Git',
       pitchSub: 'Local-first. Asistido por IA. Tuyo para siempre.',
       ctaExperiments: 'Explora los experimentos →',
@@ -69,14 +69,14 @@ export const es: Dict = {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
-        'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
+        'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: { kicker: '00 — Experimentos' },
     philosophy: {
       kicker: '02 — Filosofía',
       title: 'La tecnología no es el fin.',
       body:
-        'El laboratorio se guía por el <a href="/manifesto">Pensamiento Cósmico</a>: la tecnología como el medio por el cual la curiosidad se vuelve realidad. El software debería sobrevivir a las modas. El conocimiento debería permanecer abierto.',
+        'El laboratorio se guía por el <a href="/manifesto/">Pensamiento Cósmico</a>: la tecnología como el medio por el cual la curiosidad se vuelve realidad. El software debería sobrevivir a las modas. El conocimiento debería permanecer abierto.',
       values: [
         'Conocimiento abierto',
         'Ingeniería reproducible',
@@ -676,7 +676,7 @@ export const es: Dict = {
       role: 'Colaboradores IA',
       name: 'Modelos de lenguaje',
       body:
-        'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy">Canopy</a>. Su rol se reconoce, no se oculta.',
+        'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy/">Canopy</a>. Su rol se reconoce, no se oculta.',
       models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
     },
     contributors: {

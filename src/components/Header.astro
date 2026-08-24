@@ -28,7 +28,7 @@ const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
-  { href: '/status', label: t.nav.log },
+  { href: localizePath('/status', lang), label: t.nav.log },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: githubHref, label: t.nav.github, ext: true },
   { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
@@ -37,8 +37,8 @@ const other = lang === 'en' ? 'es' : 'en';
 const toggleHref = switchLangPath(Astro.url, other);
 
 function isActive(href: string, current: string): boolean {
-  if (href === '/' || href === '/es') return current === href;
-  return current === href || current.startsWith(href + '/');
+  if (href === '/' || href === '/es/') return current === href || current === href.replace(/\/$/, '');
+  return current === href || current.startsWith(href);
 }
 
 // Wave strip along the bottom of the collapsed menu — several short signals
@@ -285,7 +285,7 @@ const signals = [
       popup.className = 'otd-popup';
 
       var html = '<button class="otd-close" type="button" aria-label="Close">\u00d7</button>';
-      var todayPath = lang === 'es' ? '/es/today' : '/today';
+      var todayPath = lang === 'es' ? '/es/today/' : '/today/';
       var kickerHtml = data.kicker;
       if (lang === 'es') {
         kickerHtml = kickerHtml.replace('hoy', '<a class="otd-kicker-link" href="' + todayPath + '">hoy</a>');

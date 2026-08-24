@@ -21,10 +21,26 @@ export function useTranslations(lang: Lang): Dict {
 }
 
 /** Prefix an app-absolute path ("/experiments") for the given language.
- *  English is unprefixed; Spanish gets a /es prefix. */
+ *  English is unprefixed; Spanish gets a /es prefix.
+ *  Every returned path ends with "/" (root stays "/").
+ *  Idempotent: passing a Spanish-prefixed path with lang='es' won't double-prefix. */
 export function localizePath(path: string, lang: Lang): string {
-  if (lang !== 'es') return path;
-  return path === '/' ? '/es' : `/es${path}`;
+  // Separate the pathname from query/hash so the slash goes before them.
+  const qIdx = path.indexOf('?');
+  const hIdx = path.indexOf('#');
+  const sep = qIdx !== -1 ? qIdx : hIdx !== -1 ? hIdx : path.length;
+  const pathname = path.slice(0, sep);
+  const suffix = path.slice(sep);
+
+  const ensureSlash = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+
+  if (lang === 'es') {
+    const stripped = pathname.replace(/^\/es(?=\/|$)/, '') || '/';
+    const slashed = ensureSlash(stripped);
+    const prefix = slashed === '/' ? '/es/' : `/es${slashed}`;
+    return prefix + suffix;
+  }
+  return ensureSlash(pathname) + suffix;
 }
 
 /** Given the current URL and a target language, return the equivalent path. */
