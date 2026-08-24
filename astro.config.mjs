@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
+  trailingSlash: 'always',
   site: 'https://univerlab.org',
   markdown: {
     shikiConfig: {
@@ -24,8 +25,6 @@ export default defineConfig({
         defaultLocale: 'en',
         locales: { en: 'en', es: 'es' },
       },
-      // Exclude pages marked noindex from the sitemap.
-      filter: (page) => !page.includes('/archive'),
     }),
   ],
 });
