@@ -157,7 +157,7 @@ const orgJsonLd = {
           // Documentation and status are English-only — never redirect them.
           if (path.indexOf('/docs') !== -1 || path === '/status/' || path.indexOf('/status/') === 0) return;
           var stored = localStorage.getItem('univerlab-lang');
-          var onEs = path === '/es/' || path.indexOf('/es/') === 0;
+          var onEs = /^\/es(\/|$)/.test(path);
           if (!stored) {
             var sys = (navigator.language || 'en').toLowerCase().slice(0, 2);
             if (sys === 'es' && !onEs) {

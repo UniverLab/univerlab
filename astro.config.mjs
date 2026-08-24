@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  trailingSlash: 'always',
+  trailingSlash: 'ignore',
   site: 'https://univerlab.org',
   markdown: {
     shikiConfig: {

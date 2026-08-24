@@ -58,12 +58,12 @@ describe('canonical URLs — trailing slash', () => {
   });
 
   describe('astro.config.mjs', () => {
-    it('contains trailingSlash: "always"', () => {
+    it('contains trailingSlash: "ignore"', () => {
       const config = readFileSync(
         resolve(__dirname, '../../astro.config.mjs'),
         'utf8',
       );
-      expect(config).toContain("trailingSlash: 'always'");
+      expect(config).toContain("trailingSlash: 'ignore'");
     });
   });
 
