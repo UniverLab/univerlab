@@ -14,17 +14,18 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Vary: Accept
 
-# Machine-readable signposts for agents (RFC 8288 Link relations). An agent
-# that fetches the homepage learns where the catalog, the agent card and the
-# plain-text site summary live without probing well-known paths.
+# Machine-readable signpost for agents (RFC 8288 Link relations). An agent that
+# fetches the homepage learns where the plain-text site summary lives without
+# probing well-known paths.
+#
+# Only resources that actually exist are advertised. An api-catalog and an A2A
+# agent card were considered and dropped: UniverLab is a static site plus local
+# CLIs, not an invocable service, and a Link header pointing at a 404 is worse
+# than no header at all.
 /
-  Link: </.well-known/api-catalog>; rel="api-catalog"
-  Link: </.well-known/agent-card.json>; rel="service-desc"; type="application/json"
   Link: </llms.txt>; rel="describedby"; type="text/plain"
 
 /es/
-  Link: </.well-known/api-catalog>; rel="api-catalog"
-  Link: </.well-known/agent-card.json>; rel="service-desc"; type="application/json"
   Link: </llms.txt>; rel="describedby"; type="text/plain"
 
 /_astro/*
