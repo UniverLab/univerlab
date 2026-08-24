@@ -56,4 +56,12 @@ describe('markdownTwinPath', () => {
   it('does not rewrite paths ending in .txt', () => {
     expect(markdownTwinPath('/llms.txt')).toBeNull();
   });
+
+  // Astro's hashed build output has extensions we cannot enumerate, so the
+  // prefix is the guard rather than the file suffix.
+  it('never rewrites anything under /_astro/', () => {
+    expect(markdownTwinPath('/_astro/index.CxK1a9.js')).toBeNull();
+    expect(markdownTwinPath('/_astro/page.a1b2c3.css')).toBeNull();
+    expect(markdownTwinPath('/_astro/font.9f8e7d.woff2')).toBeNull();
+  });
 });

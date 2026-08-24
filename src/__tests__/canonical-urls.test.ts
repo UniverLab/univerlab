@@ -85,3 +85,34 @@ describe('canonical URLs — trailing slash', () => {
     });
   });
 });
+
+/**
+ * A source-level sweep is not enough on its own: the six `/x/docs` links that
+ * slipped through the first canonicalisation pass were built from a template
+ * literal (`` href={`/${id}/docs`} ``), which no grep for `href="/…"` string
+ * literals can see. This scans the layouts for interpolated hrefs instead, so
+ * the template-literal form is covered too.
+ */
+describe('interpolated internal links', () => {
+  const layouts = ['ExperimentLayout.astro', 'DocsLayout.astro'];
+
+  for (const layout of layouts) {
+    it(`${layout} ends every interpolated page href with a slash`, () => {
+      const file = resolve(__dirname, '..', 'layouts', layout);
+      const src = readFileSync(file, 'utf8');
+
+      // href={`…`} — capture the template literal's contents.
+      const hrefs = [...src.matchAll(/href=\{`([^`]+)`\}/g)].map((m) => m[1]);
+      expect(hrefs.length).toBeGreaterThan(0);
+
+      for (const href of hrefs) {
+        // Only app-absolute page paths are canonicalised; assets and external
+        // URLs are not, and neither is a path whose last segment has a suffix.
+        if (!href.startsWith('/')) continue;
+        const lastSegment = href.split('/').pop() ?? '';
+        if (lastSegment.includes('.')) continue;
+        expect(href.endsWith('/')).toBe(true);
+      }
+    });
+  }
+});

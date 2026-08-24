@@ -98,7 +98,7 @@ const ogImage = `/og/${id}.png`;
           <slot name="cta-first" />
         {!hideGithub && <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>}
           {exp.hasDocs && (
-            <a class="btn ghost" href={`/${id}/docs`} data-docs-link>{t.common.docs}</a>
+            <a class="btn ghost" href={`/${id}/docs/`} data-docs-link>{t.common.docs}</a>
           )}
           <slot name="cta" />
       </div>

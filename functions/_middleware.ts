@@ -1,5 +1,10 @@
 const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4']);
 
+// Path prefixes that only ever serve build output, never a page. Astro emits
+// hashed assets under /_astro/, and a hashed filename carries no extension we
+// can enumerate, so the prefix is the reliable guard.
+const ASSET_PREFIXES = ['/_astro/'];
+
 export function wantsMarkdown(accept: string | null | undefined): boolean {
   if (!accept) return false;
   const parts = accept.split(',');
@@ -11,6 +16,8 @@ export function wantsMarkdown(accept: string | null | undefined): boolean {
 }
 
 export function markdownTwinPath(pathname: string): string | null {
+  if (ASSET_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null;
+
   const lastSegment = pathname.split('/').pop() || '';
   if (lastSegment.includes('.')) {
     const ext = lastSegment.split('.').pop()!.toLowerCase();
