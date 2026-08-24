@@ -12,6 +12,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Vary: Accept
 
 # Machine-readable signposts for agents (RFC 8288 Link relations). An agent
 # that fetches the homepage learns where the catalog, the agent card and the
