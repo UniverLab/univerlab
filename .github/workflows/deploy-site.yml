@@ -120,10 +120,39 @@ jobs:
           npm ci
           npm run build
 
+      # `workingDirectory` is load-bearing, not tidiness. Wrangler discovers
+      # Pages Functions in `./functions` relative to its own working directory,
+      # and this job checks the landing out into `univerlab/` so the sibling
+      # repos can sit next to it. Deploying `univerlab/dist` from the workspace
+      # root meant wrangler looked for `functions/` at the root, found nothing,
+      # and shipped the site without its middleware — silently, because a
+      # missing Function is not an error. That is how markdown negotiation was
+      # unit-tested, merged, released and still absent in production.
       - name: Publish to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.111.0'
-          command: pages deploy univerlab/dist --project-name=univerlab
+          workingDirectory: univerlab
+          command: pages deploy dist --project-name=univerlab
+
+      # The contract the middleware exists to keep, checked against the live
+      # origin rather than against the source. A unit test proves the routing
+      # logic; only this proves the routing logic was deployed.
+      - name: Verify markdown negotiation is live
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            ct=$(curl -sS -o /dev/null -w '%{content_type}' \
+                   -H 'Accept: text/markdown' https://univerlab.org/ || true)
+            case "$ct" in
+              text/markdown*)
+                echo "Accept: text/markdown -> $ct"
+                exit 0
+                ;;
+            esac
+            echo "attempt $attempt: got '$ct', waiting for the deployment to go live"
+            sleep 20
+          done
+          echo "::error::univerlab.org served '$ct' for Accept: text/markdown; the Functions bundle is missing"
+          exit 1
