@@ -33,12 +33,20 @@
 # has to be able to read the index from another origin, which is the entire
 # point of publishing it. JSON is pinned because Pages would otherwise guess
 # from the extension, and SKILL.md files are plain markdown, not downloads.
+#
+# The two rules must not overlap. Pages applies *every* matching rule and
+# concatenates their values rather than letting the more specific one win, so a
+# bare `/.well-known/agent-skills/*` also matched the index and produced
+# `Content-Type: application/json; charset=utf-8, text/markdown; charset=utf-8`
+# — unparseable, and fatal next to `X-Content-Type-Options: nosniff`. Requiring
+# a second path segment keeps the skills rule off the index: every skill file
+# lives under its own directory, and the index does not.
 /.well-known/agent-skills/index.json
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
 
-/.well-known/agent-skills/*
+/.well-known/agent-skills/*/*
   Content-Type: text/markdown; charset=utf-8
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
