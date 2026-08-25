@@ -98,7 +98,7 @@ const ogImage = `/og/${id}.png`;
           <slot name="cta-first" />
         {!hideGithub && <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>}
           {exp.hasDocs && (
-            <a class="btn ghost" href={`/${id}/docs`} data-docs-link>{t.common.docs}</a>
+            <a class="btn ghost" href={`/${id}/docs/`} data-docs-link>{t.common.docs}</a>
           )}
           <slot name="cta" />
       </div>
@@ -193,7 +193,7 @@ const ogImage = `/og/${id}.png`;
   }
 
   /* Hero */
-  .hero { padding-block: 3.5rem 2rem; }
+  .hero { padding-block: 2.5rem 1.5rem; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
 
   .genesis-row {
@@ -223,7 +223,7 @@ const ogImage = `/og/${id}.png`;
   .koan { font-family: var(--font-serif); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
   :global(html[data-surface='observatory'] .koan) {
     font-family: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif !important;
-    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-size: clamp(1.5rem, 3.6vw, 2.4rem);
     line-height: 1.15;
     color: #e8e6e1 !important;
     max-width: 20ch;
