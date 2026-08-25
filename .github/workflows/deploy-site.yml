@@ -140,7 +140,7 @@ jobs:
       # The contract the middleware exists to keep, checked against the live
       # origin rather than against the source. A unit test proves the routing
       # logic; only this proves the routing logic was deployed.
-      - name: Verify markdown negotiation is live
+      - name: Verify the agent-facing surface is live
         run: |
           for attempt in 1 2 3 4 5 6; do
             ct=$(curl -sS -o /dev/null -w '%{content_type}' \
@@ -148,11 +148,32 @@ jobs:
             case "$ct" in
               text/markdown*)
                 echo "Accept: text/markdown -> $ct"
-                exit 0
+                break
                 ;;
             esac
+            if [ "$attempt" = 6 ]; then
+              echo "::error::univerlab.org served '$ct' for Accept: text/markdown; the Functions bundle is missing"
+              exit 1
+            fi
             echo "attempt $attempt: got '$ct', waiting for the deployment to go live"
             sleep 20
           done
-          echo "::error::univerlab.org served '$ct' for Accept: text/markdown; the Functions bundle is missing"
-          exit 1
+
+          # Pages concatenates the values of every matching _headers rule, so an
+          # overlapping rule shows up here as a comma-joined Content-Type that no
+          # client can parse. Assert the exact value, not a prefix.
+          index=https://univerlab.org/.well-known/agent-skills/index.json
+          ct=$(curl -sS -o /dev/null -w '%{content_type}' "$index" || true)
+          if [ "$ct" != "application/json; charset=utf-8" ]; then
+            echo "::error::$index served Content-Type '$ct'; expected exactly 'application/json; charset=utf-8'"
+            exit 1
+          fi
+          echo "index.json -> $ct"
+
+          skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//')
+          ct=$(curl -sS -o /dev/null -w '%{content_type}' "$skill" || true)
+          if [ "$ct" != "text/markdown; charset=utf-8" ]; then
+            echo "::error::$skill served Content-Type '$ct'; expected exactly 'text/markdown; charset=utf-8'"
+            exit 1
+          fi
+          echo "$skill -> $ct"

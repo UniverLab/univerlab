@@ -111,21 +111,62 @@ describeVendored('index built from the vendored skills', () => {
 describe('_headers for the discovery paths', () => {
   const src = readFileSync(HEADERS, 'utf8');
 
+  /** Rules as Pages reads them: a path pattern, then its indented headers. */
+  function parseRules(text: string): { pattern: string; headers: [string, string][] }[] {
+    const rules: { pattern: string; headers: [string, string][] }[] = [];
+    for (const raw of text.split('\n')) {
+      const line = raw.replace(/\s+$/, '');
+      if (line === '' || line.trimStart().startsWith('#')) continue;
+      if (!/^\s/.test(line)) {
+        rules.push({ pattern: line.trim(), headers: [] });
+        continue;
+      }
+      const [name, ...rest] = line.trim().split(':');
+      if (rules.length > 0) rules[rules.length - 1].headers.push([name.toLowerCase(), rest.join(':').trim()]);
+    }
+    return rules;
+  }
+
+  /** Pages wildcards match across path separators. */
+  function matches(pattern: string, path: string): boolean {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    return new RegExp(`^${escaped}$`).test(path);
+  }
+
+  const rules = parseRules(src);
+  const headerFor = (path: string, name: string): string[] =>
+    rules
+      .filter((rule) => matches(rule.pattern, path))
+      .flatMap((rule) => rule.headers.filter(([key]) => key === name).map(([, value]) => value));
+
+  const INDEX = '/.well-known/agent-skills/index.json';
+  const SKILL = '/.well-known/agent-skills/architect-mindset/SKILL.md';
+  const REFERENCE = '/.well-known/agent-skills/architect-mindset/references/notes.md';
+
   it('serves the index as JSON, cross-origin', () => {
-    expect(src).toMatch(
-      /^\/\.well-known\/agent-skills\/index\.json\n(?:.*\n)*?\s+Content-Type: application\/json/m
-    );
-    expect(src).toMatch(
-      /^\/\.well-known\/agent-skills\/index\.json\n(?:.*\n)*?\s+Access-Control-Allow-Origin: \*/m
-    );
+    expect(headerFor(INDEX, 'content-type')).toEqual(['application/json; charset=utf-8']);
+    expect(headerFor(INDEX, 'access-control-allow-origin')).toEqual(['*']);
   });
 
   it('serves the skills themselves as markdown, cross-origin', () => {
-    expect(src).toMatch(
-      /^\/\.well-known\/agent-skills\/\*\n(?:.*\n)*?\s+Content-Type: text\/markdown/m
-    );
-    expect(src).toMatch(
-      /^\/\.well-known\/agent-skills\/\*\n(?:.*\n)*?\s+Access-Control-Allow-Origin: \*/m
-    );
+    expect(headerFor(SKILL, 'content-type')).toEqual(['text/markdown; charset=utf-8']);
+    expect(headerFor(SKILL, 'access-control-allow-origin')).toEqual(['*']);
+  });
+
+  it('covers a skill reference file too, since references are relative links', () => {
+    expect(headerFor(REFERENCE, 'content-type')).toEqual(['text/markdown; charset=utf-8']);
+  });
+
+  /**
+   * The regression this block exists for. Pages applies every matching rule and
+   * joins their values with a comma instead of letting the most specific win,
+   * so two rules claiming one path emit
+   * `application/json; charset=utf-8, text/markdown; charset=utf-8` — a value no
+   * client can parse, and `nosniff` leaves it no way to recover.
+   */
+  it('never lets two rules claim the Content-Type of one path', () => {
+    for (const path of [INDEX, SKILL, REFERENCE, '/', '/es/', '/index.md', '/og.png']) {
+      expect(headerFor(path, 'content-type').length).toBeLessThanOrEqual(1);
+    }
   });
 });
