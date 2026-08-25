@@ -142,38 +142,47 @@ jobs:
       # logic; only this proves the routing logic was deployed.
       - name: Verify the agent-facing surface is live
         run: |
-          for attempt in 1 2 3 4 5 6; do
-            ct=$(curl -sS -o /dev/null -w '%{content_type}' \
-                   -H 'Accept: text/markdown' https://univerlab.org/ || true)
-            case "$ct" in
-              text/markdown*)
-                echo "Accept: text/markdown -> $ct"
-                break
-                ;;
-            esac
-            if [ "$attempt" = 6 ]; then
-              echo "::error::univerlab.org served '$ct' for Accept: text/markdown; the Functions bundle is missing"
-              exit 1
-            fi
-            echo "attempt $attempt: got '$ct', waiting for the deployment to go live"
-            sleep 20
-          done
+          # `wrangler pages deploy` returns before Pages promotes the new
+          # deployment onto the production domain, so every assertion here has
+          # to be able to wait. Without that, a green check means "the previous
+          # deploy was fine" and a red one may mean nothing at all — the first
+          # version of this step asserted the two Content-Types once and failed
+          # on a deploy whose result was correct seconds later.
+          expect_content_type() {
+            url=$1
+            expected=$2
+            header=${3:-}
+            for attempt in 1 2 3 4 5 6; do
+              if [ -n "$header" ]; then
+                ct=$(curl -sS -o /dev/null -w '%{content_type}' -H "$header" "$url" || true)
+              else
+                ct=$(curl -sS -o /dev/null -w '%{content_type}' "$url" || true)
+              fi
+              if [ "$ct" = "$expected" ]; then
+                echo "ok: $url -> $ct"
+                return 0
+              fi
+              echo "attempt $attempt: $url served '$ct', waiting for the deployment to go live"
+              sleep 20
+            done
+            echo "::error::$url served Content-Type '$ct'; expected exactly '$expected'"
+            return 1
+          }
 
-          # Pages concatenates the values of every matching _headers rule, so an
-          # overlapping rule shows up here as a comma-joined Content-Type that no
-          # client can parse. Assert the exact value, not a prefix.
+          # Content negotiation: the middleware has to be bundled and running.
+          # A missing Functions bundle is not a deploy error, which is how this
+          # shipped broken and stayed green for a week.
+          expect_content_type https://univerlab.org/ \
+            'text/markdown; charset=utf-8' 'Accept: text/markdown'
+
+          # Exact match, never a prefix: Pages applies every matching _headers
+          # rule and joins their values, so an overlapping rule produces
+          # 'application/json; charset=utf-8, text/markdown; charset=utf-8' —
+          # right prefix, unparseable value.
           index=https://univerlab.org/.well-known/agent-skills/index.json
-          ct=$(curl -sS -o /dev/null -w '%{content_type}' "$index" || true)
-          if [ "$ct" != "application/json; charset=utf-8" ]; then
-            echo "::error::$index served Content-Type '$ct'; expected exactly 'application/json; charset=utf-8'"
-            exit 1
-          fi
-          echo "index.json -> $ct"
+          expect_content_type "$index" 'application/json; charset=utf-8'
 
+          # And a skill taken from the index itself, so the assertion follows
+          # whatever the index actually advertises.
           skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//')
-          ct=$(curl -sS -o /dev/null -w '%{content_type}' "$skill" || true)
-          if [ "$ct" != "text/markdown; charset=utf-8" ]; then
-            echo "::error::$skill served Content-Type '$ct'; expected exactly 'text/markdown; charset=utf-8'"
-            exit 1
-          fi
-          echo "$skill -> $ct"
+          expect_content_type "$skill" 'text/markdown; charset=utf-8'
