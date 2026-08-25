@@ -6,14 +6,15 @@
     "dev": "astro dev",
     "prebuild": "node scripts/check-i18n.ts",
     "build": "astro build",
-    "postbuild": "node scripts/build-md.ts",
+    "postbuild": "node scripts/build-md.ts && node scripts/build-skills-index.ts",
     "preview": "astro preview",
     "check:i18n": "node scripts/check-i18n.ts",
     "check:github": "node scripts/check-github.ts",
     "apply:github": "node scripts/apply-github-descriptions.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage && echo 'Coverage report generated successfully'"
+    "test:coverage": "jest --coverage && echo 'Coverage report generated successfully'",
+    "sync:skills": "node scripts/sync-skills.ts"
   },
   "repository": {
     "type": "git",

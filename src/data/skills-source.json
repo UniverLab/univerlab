@@ -1,0 +1,17 @@
+{
+  "repo": "https://github.com/UniverLab/skills",
+  "commit": "16632617cf3c89cd546a0bac0423de6c3591bcd9",
+  "dirty": false,
+  "skills": [
+    "execution-mindset",
+    "architect-mindset",
+    "code-engineering",
+    "canopy-capabilities",
+    "canopy-intelligence",
+    "canopy-sync",
+    "canopy-loop-design",
+    "texforge",
+    "cadspec",
+    "demostage"
+  ]
+}
