@@ -1,4 +1,4 @@
-import { buildFeedXml, etagForFeed, etagForEntries } from '../lib/feed';
+import { buildFeedXml, etagForFeed, etagForEntries } from '../../workers/announcements/src/feed';
 
 const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 

@@ -65,7 +65,12 @@ export function buildFeedXml(entries: FeedEntry[]): string {
   );
 }
 
+/**
+ * Strong ETag derived deterministically from the rendered XML.
+ * Synchronous and pure so tests and the Worker share the same value.
+ */
 export function etagForFeed(xml: string): string {
+  // FNV-1a 32-bit + length for a strong validator without async crypto
   let hash = 2166136261;
   for (let i = 0; i < xml.length; i++) {
     hash ^= xml.charCodeAt(i);
