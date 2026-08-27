@@ -27,6 +27,7 @@ const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
+  { label: t.nav.experiments, exp: true } as { label: string; exp: boolean; href?: string },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: localizePath('/status', lang), label: t.nav.log },
   { href: localizePath('/contributors', lang), label: t.nav.people },
@@ -78,12 +79,29 @@ const signals = [
     </button>
     <nav id="site-nav">
       {nav.map((item) => (
+        (item as any).exp && !(item as any).href ? (
+          <div class="exp-wrap" id="exp-wrap">
+            <button
+              type="button"
+              class:list={['label', 'exp-trigger', { active: onExperiment }]}
+              aria-expanded="false"
+              aria-haspopup="true"
+              aria-controls="exp-panel"
+            >{item.label}</button>
+            <div id="exp-panel" class="exp-panel" role="group" aria-label={t.nav.experiments}>
+              {experiments.map((e) => (
+                <a href={localizePath('/' + e.id, lang)} class="exp-link label">{e.name}</a>
+              ))}
+            </div>
+          </div>
+        ) : (
         <a
-          href={item.href}
-          target={item.ext ? '_blank' : undefined}
-          rel={item.ext ? 'noopener noreferrer' : undefined}
-          class:list={['label', { active: !item.ext && (isActive(item.href, path) || (item.exp && onExperiment)), sponsor: item.sponsor }]}
-        >{item.sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{item.label}</span></> : item.label}</a>
+          href={(item as any).href}
+          target={(item as any).ext ? '_blank' : undefined}
+          rel={(item as any).ext ? 'noopener noreferrer' : undefined}
+          class:list={['label', { active: !(item as any).ext && (isActive((item as any).href, path) || ((item as any).exp && onExperiment)), sponsor: (item as any).sponsor }]}
+        >{(item as any).sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
+        )
       ))}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
@@ -120,7 +138,8 @@ const signals = [
     });
   });
 
-  // Mobile nav: the burger toggles the collapsed menu open/closed.
+  // Mobile nav: the burger toggles the collapsed menu open/closed, plus the
+  // Experiments dropdown (hover, click/focus, outside click, Escape, link).
   const burger = document.querySelector<HTMLButtonElement>('.burger');
   const siteNav = document.getElementById('site-nav');
   if (burger && siteNav) {
@@ -131,12 +150,43 @@ const signals = [
     burger.addEventListener('click', () =>
       setOpen(burger.getAttribute('aria-expanded') !== 'true'),
     );
-    // Close after following a link or pressing Escape.
+    // Close burger after following any link (includes experiment panel links).
     siteNav.querySelectorAll('a').forEach((a) =>
       a.addEventListener('click', () => setOpen(false)),
     );
+
+    // Experiments dropdown
+    const expWrap = document.getElementById('exp-wrap');
+    const expTrigger = expWrap?.querySelector<HTMLButtonElement>('.exp-trigger');
+    const expPanel = document.getElementById('exp-panel');
+    const setExpOpen = (open: boolean) => {
+      if (!expWrap || !expTrigger) return;
+      expWrap.classList.toggle('open', open);
+      expTrigger.setAttribute('aria-expanded', String(open));
+    };
+    if (expTrigger && expWrap && expPanel) {
+      expTrigger.addEventListener('click', () =>
+        setExpOpen(expTrigger.getAttribute('aria-expanded') !== 'true'),
+      );
+      expTrigger.addEventListener('focus', () => setExpOpen(true));
+      expWrap.addEventListener('mouseenter', () => setExpOpen(true));
+      expWrap.addEventListener('mouseleave', () => setExpOpen(false));
+      expPanel.querySelectorAll('a').forEach((a) =>
+        a.addEventListener('click', () => setExpOpen(false)),
+      );
+      document.addEventListener('click', (e) => {
+        if (!expWrap.contains(e.target as Node)) setExpOpen(false);
+      });
+    }
+
+    // Single Escape handler for burger and experiments (reuses the burger listener).
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        const wasExpOpen = expTrigger?.getAttribute('aria-expanded') === 'true';
+        setOpen(false);
+        setExpOpen(false);
+        if (wasExpOpen) expTrigger?.focus();
+      }
     });
   }
 </script>
@@ -588,6 +638,31 @@ const signals = [
   nav a.sponsor .heart-text { display: none; }
   nav a.sponsor:hover { color: #f0d060; animation-play-state: paused; }
 
+  /* Experiments dropdown — desktop: overlay, mobile: indented in-flow */
+  .exp-wrap { position: relative; display: inline-flex; align-items: center; }
+  .exp-trigger { background: none; border: 0; padding: 0; cursor: pointer; color: #8a8d93; font: inherit; }
+  .exp-trigger:hover, .exp-trigger:focus-visible, .exp-trigger.active, .exp-trigger[aria-expanded='true'] { color: var(--ink); }
+  .exp-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.7rem);
+    left: 0;
+    min-width: 13rem;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem 0.95rem;
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    z-index: 30;
+  }
+  .exp-panel a { text-decoration: none; color: #8a8d93; font-size: 0.92rem; }
+  .exp-panel a:hover, .exp-panel a:focus-visible { color: var(--ink); }
+  .exp-wrap:hover .exp-panel,
+  .exp-wrap:focus-within .exp-panel,
+  .exp-wrap.open .exp-panel { display: flex; }
+
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
     14% { transform: scale(1.15); }
@@ -755,6 +830,19 @@ const signals = [
       overflow: hidden;              /* clip the wave strip to the rounded card */
     }
     nav.open { display: flex; }
+    .exp-wrap { width: 100%; flex-direction: column; align-items: flex-end; }
+    .exp-trigger { text-align: right; }
+    .exp-panel {
+      position: static;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0.2rem 0 0 1rem;
+      min-width: 0;
+      gap: 0.7rem;
+      align-items: flex-end;
+      border-radius: 0;
+    }
 
     /* Several short signals drift along the bottom of the open menu, each at its
        own speed — a faint P2P chatter. */

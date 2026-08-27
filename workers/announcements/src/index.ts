@@ -17,6 +17,7 @@
  */
 
 import { DurableObject } from 'cloudflare:workers';
+import { buildFeedXml, etagForFeed } from './feed';
 
 export interface Env {
   ANNOUNCEMENTS: KVNamespace;
@@ -272,6 +273,37 @@ export default {
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
       const sliced = entries.slice(offset, offset + limit);
       return json({ entries: sliced, total: entries.length, hasMore: offset + limit < entries.length });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/feed.atom') {
+      const raw = await env.ANNOUNCEMENTS.get('entries');
+      let entries: Entry[];
+      try {
+        const parsed = raw ? JSON.parse(raw) : [];
+        entries = Array.isArray(parsed)
+          ? parsed.map((entry) => ({ ...entry, topic: normalizeTopic(entry.topic) }))
+          : [];
+      } catch {
+        entries = [];
+      }
+      const xml = buildFeedXml(entries);
+      const etag = etagForFeed(xml);
+      const inm = req.headers.get('If-None-Match');
+      if (inm && inm === etag) {
+        return new Response(null, {
+          status: 304,
+          headers: { ETag: etag, 'Cache-Control': 'public, max-age=300', ...CORS },
+        });
+      }
+      return new Response(xml, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/atom+xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          ETag: etag,
+          ...CORS,
+        },
+      });
     }
 
     if (req.method === 'GET' && url.pathname === '/events') {
