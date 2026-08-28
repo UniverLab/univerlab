@@ -109,10 +109,12 @@ describe('Header experiments dropdown', () => {
     // Burger close handler must still bind siteNav.querySelectorAll('a') (includes panel links)
     expect(src).toMatch(/siteNav\.querySelectorAll\('a'\)\.forEach/);
     // CSS for mobile: panel is position static, indented, in-flow
-    expect(src).toMatch(/@media \(max-width: 900px\)/);
-    const mobileBlock = src.split('@media (max-width: 900px)')[1]?.split('@media')[0] ?? '';
+    expect(src).toMatch(/@media \(max-width: 1024px\)/);
+    expect(src).not.toMatch(/@media \(max-width: 900px\)/);
+    const mobileBlock = src.split('@media (max-width: 1024px)')[1]?.split('@media')[0] ?? '';
     expect(mobileBlock).toMatch(/\.exp-panel[\s\S]*?position:\s*static/);
     expect(mobileBlock).toMatch(/padding:.*1rem/);
+    expect(mobileBlock).toMatch(/border-left:\s*1px solid var\(--line\)/);
   });
 
   it('degrades without JS: CSS hover/focus shows panel and does not shift layout', () => {
@@ -144,5 +146,64 @@ describe('Header experiments dropdown', () => {
     // No filtered status: ensure every experiment appears, not a subset
     // Count entries in experiments.ts is the expected link count
     expect(experiments.length).toBe(8);
+  });
+
+  it('trigger and every panel link carry the label class', () => {
+    // Trigger must include label class alongside exp-trigger
+    expect(src).toMatch(/class:list=\{\['label',\s*'exp-trigger'/);
+    // Panel links must carry label class (exp-link label)
+    expect(src).toMatch(/class="exp-link label"/);
+    // Also ensure no panel link is rendered without label
+    const panelLinkMatches = [...src.matchAll(/<a[^>]*class="[^"]*exp-link[^"]*"[^>]*>/g)];
+    expect(panelLinkMatches.length).toBeGreaterThan(0);
+    for (const m of panelLinkMatches) {
+      expect(m[0]).toMatch(/label/);
+    }
+  });
+
+  it('regression: .exp-trigger does not declare font shorthand and .exp-panel a does not declare font-size', () => {
+    // Extract the .exp-trigger rule block and assert no font shorthand
+    const triggerBlock = src.match(/\.exp-trigger\s*\{([^}]*)\}/);
+    expect(triggerBlock).not.toBeNull();
+    const triggerBody = triggerBlock![1];
+    // font: inherit (shorthand) must not be present — would reset label typography
+    expect(triggerBody).not.toMatch(/\bfont\s*:/);
+    // Also ensure it does not declare font-family/size/weight that would fight .label
+    // But the spec specifically forbids the font shorthand
+    expect(triggerBody).not.toMatch(/font-size/);
+
+    // Extract the desktop .exp-panel a rule (before any media query)
+    const beforeMedia = src.split('@media')[0];
+    const panelLinkBlock = beforeMedia.match(/\.exp-panel a\s*\{([^}]*)\}/);
+    expect(panelLinkBlock).not.toBeNull();
+    const panelBody = panelLinkBlock![1];
+    expect(panelBody).not.toMatch(/font-size/);
+    // Also ensure no font shorthand there
+    expect(panelBody).not.toMatch(/\bfont\s*:/);
+  });
+
+  it('panel has no dead zone: anchored at top 100% with transparent padding-top', () => {
+    const beforeMedia = src.split('@media')[0];
+    const panelBlock = beforeMedia.match(/\.exp-panel\s*\{([^}]*)\}/s);
+    expect(panelBlock).not.toBeNull();
+    const body = panelBlock![1];
+    expect(body).toMatch(/top:\s*100%/);
+    expect(body).not.toMatch(/calc\(100%/);
+    expect(body).toMatch(/padding-top:\s*0\.7rem/);
+  });
+
+  it('stylesheet collapses at 1024px', () => {
+    expect(src).toMatch(/@media\s*\(max-width:\s*1024px\)/);
+    expect(src).not.toMatch(/@media\s*\(max-width:\s*900px\)/);
+  });
+
+  it('collapsed submenu is a real submenu with left rule and not larger type', () => {
+    const mobileBlock = src.split('@media (max-width: 1024px)')[1]?.split('@media')[0] ?? '';
+    expect(mobileBlock).toMatch(/border-left:\s*1px solid var\(--line\)/);
+    // No font-size override in collapsed panel either — must not be larger than label
+    const collapsedPanel = mobileBlock.match(/\.exp-panel\s*\{([^}]*)\}/s);
+    expect(collapsedPanel).not.toBeNull();
+    expect(collapsedPanel![1]).not.toMatch(/font-size:\s*0\.92rem/);
+    expect(collapsedPanel![1]).not.toMatch(/font-size/);
   });
 });

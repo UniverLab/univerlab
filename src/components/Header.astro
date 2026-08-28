@@ -640,24 +640,25 @@ const signals = [
 
   /* Experiments dropdown — desktop: overlay, mobile: indented in-flow */
   .exp-wrap { position: relative; display: inline-flex; align-items: center; }
-  .exp-trigger { background: none; border: 0; padding: 0; cursor: pointer; color: #8a8d93; font: inherit; }
+  .exp-trigger { background: none; border: 0; padding: 0; cursor: pointer; color: #8a8d93; }
   .exp-trigger:hover, .exp-trigger:focus-visible, .exp-trigger.active, .exp-trigger[aria-expanded='true'] { color: var(--ink); }
   .exp-panel {
     display: none;
     position: absolute;
-    top: calc(100% + 0.7rem);
+    top: 100%;
     left: 0;
     min-width: 13rem;
     flex-direction: column;
     gap: 0.45rem;
     padding: 0.75rem 0.95rem;
+    padding-top: 0.7rem;
     background: var(--bg-raise);
     border: 1px solid var(--line);
     border-radius: 10px;
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
     z-index: 30;
   }
-  .exp-panel a { text-decoration: none; color: #8a8d93; font-size: 0.92rem; }
+  .exp-panel a { text-decoration: none; color: #8a8d93; }
   .exp-panel a:hover, .exp-panel a:focus-visible { color: var(--ink); }
   .exp-wrap:hover .exp-panel,
   .exp-wrap:focus-within .exp-panel,
@@ -807,7 +808,7 @@ const signals = [
   .burger[aria-expanded='true'] .bars::before { top: 0; transform: translateX(-50%) rotate(45deg); }
   .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1024px) {
     .burger { display: inline-flex; }
     nav a.sponsor .heart-icon { display: none; }
     nav a.sponsor .heart-text { display: inline; }
@@ -836,6 +837,7 @@ const signals = [
       position: static;
       background: transparent;
       border: 0;
+      border-left: 1px solid var(--line);
       box-shadow: none;
       padding: 0.2rem 0 0 1rem;
       min-width: 0;
