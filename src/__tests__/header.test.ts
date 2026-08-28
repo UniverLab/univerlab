@@ -36,8 +36,13 @@ describe('Header experiments dropdown', () => {
     expect(src).toMatch(/aria-controls="exp-panel"/);
     expect(src).toMatch(/id="exp-wrap"/);
     expect(src).toMatch(/id="exp-panel"/);
-    // Trigger label comes from item.label (the experiments nav entry)
-    expect(src).toMatch(/\{item\.label\}<\/button>/);
+    // Trigger label comes from item.label (the experiments nav entry) and carries a disclosure caret
+    expect(src).toMatch(/\{item\.label\}<span[^>]*exp-caret[^>]*aria-hidden="true"[^>]*><\/span><\/button>/);
+    // Caret is aria-hidden and reflects state via CSS (closed ▸ vs open ▾)
+    expect(src).toMatch(/exp-caret[^>]*aria-hidden="true"/);
+    expect(src).toMatch(/\.exp-caret::after/);
+    expect(src).toMatch(/▸/);
+    expect(src).toMatch(/▾/);
   });
 
   it('panel lists every experiment in order, using localizePath and e.name, without filtering by status', () => {
@@ -87,8 +92,10 @@ describe('Header experiments dropdown', () => {
     expect(src).toMatch(/mouseleave/);
     // Click toggle
     expect(src).toMatch(/expTrigger\.addEventListener\('click'/);
-    // Focus opens (keyboard operable)
+    // Focus opens only on desktop — collapsed is tap-only (no hover on touch)
     expect(src).toMatch(/expTrigger\.addEventListener\('focus'/);
+    expect(src).toMatch(/isDesktop/);
+    expect(src).toMatch(/matchMedia.*1025px|min-width: 1025px/);
     // Outside click closes
     expect(src).toMatch(/document\.addEventListener\('click'/);
     expect(src).toMatch(/!expWrap\.contains/);
@@ -96,8 +103,6 @@ describe('Header experiments dropdown', () => {
     expect(src).toMatch(/expPanel\.querySelectorAll\('a'\).*setExpOpen\(false\)/s);
     // Single Escape handler reused (not two separate listeners)
     const escapeListeners = [...src.matchAll(/addEventListener\('keydown',/g)];
-    // Should be exactly 2 keydown listeners total: one for popup close (celestial) and one combined for burger+exp
-    // But header's burger+exp should be a single Escape handler handling both
     expect(src).toMatch(/if \(e\.key === 'Escape'\)/);
     expect(src).toMatch(/setOpen\(false\)/);
     expect(src).toMatch(/setExpOpen\(false\)/);
@@ -105,22 +110,42 @@ describe('Header experiments dropdown', () => {
     expect(src).toMatch(/wasExpOpen.*focus\(\)/s);
   });
 
-  it('collapsed menu renders same items as indented sub-options in flow, not overlay, and keeps burger close behavior', () => {
+  it('collapsed menu is a flyout to the left of the card, not mixed in flow, and keeps burger close behavior', () => {
     // Burger close handler must still bind siteNav.querySelectorAll('a') (includes panel links)
     expect(src).toMatch(/siteNav\.querySelectorAll\('a'\)\.forEach/);
-    // CSS for mobile: panel is position static, indented, in-flow
-    expect(src).toMatch(/@media \(max-width: 900px\)/);
-    const mobileBlock = src.split('@media (max-width: 900px)')[1]?.split('@media')[0] ?? '';
-    expect(mobileBlock).toMatch(/\.exp-panel[\s\S]*?position:\s*static/);
-    expect(mobileBlock).toMatch(/padding:.*1rem/);
+    expect(src).toMatch(/@media \(max-width: 1024px\)/);
+    expect(src).not.toMatch(/@media \(max-width: 900px\)/);
+    const mobileBlock = src.split('@media (max-width: 1024px)')[1]?.split('@media')[0] ?? '';
+    // Flyout: anchored left of the card with its own surface (same bg/border/radius/shadow as card)
+    expect(mobileBlock).toMatch(/\.exp-panel[\s\S]*?position:\s*absolute/);
+    expect(mobileBlock).toMatch(/right:\s*calc\(100% \+ 0\.6rem\)/);
+    expect(mobileBlock).toMatch(/left:\s*auto/);
+    expect(mobileBlock).toMatch(/top:\s*0/);
+    expect(mobileBlock).toMatch(/background:\s*var\(--bg-raise\)/);
+    expect(mobileBlock).toMatch(/border:\s*1px solid var\(--line\)/);
+    expect(mobileBlock).toMatch(/border-radius:\s*12px/);
+    expect(mobileBlock).toMatch(/box-shadow:\s*0 14px 36px/);
+    // Panel markup stays sibling of trigger inside .exp-wrap for fallback
+    expect(src).toMatch(/<div class="exp-wrap"[^>]*>[\s\S]*?<button[^>]*exp-trigger[\s\S]*?<div id="exp-panel"/);
+    // Viewport fallback: not enough room → indented in-flow list (comment must state width and why)
+    expect(src).toMatch(/@media \(max-width: 1024px\)[\s\S]*@media \(max-width: 520px\)/);
+    expect(src).toMatch(/not enough room|not reliably enough room/i);
+    expect(src).toMatch(/11rem.*13rem|13rem.*11rem|426px|card.*panel/i);
+    // Narrow fallback reverts to static indented list
+    const narrowBlock = src.split('@media (max-width: 520px)')[1]?.split('@media')[0] ?? '';
+    expect(narrowBlock).toMatch(/position:\s*static/);
+    expect(narrowBlock).toMatch(/border-left:\s*1px solid var\(--line\)/);
   });
 
   it('degrades without JS: CSS hover/focus shows panel and does not shift layout', () => {
-    // No-JS fallback: hover and focus-within show panel
+    // No-JS fallback: hover and focus-within show panel (desktop) and in-flow fallback (collapsed)
     expect(src).toMatch(/\.exp-wrap:hover \.exp-panel/);
     expect(src).toMatch(/\.exp-wrap:focus-within \.exp-panel/);
     // Desktop overlay: position absolute so no layout shift
     expect(src).toMatch(/\.exp-panel[\s\S]*?position:\s*absolute/);
+    // With JS, collapsed flyout suppresses hover/focus — only tap opens
+    expect(src).toMatch(/html\.js \.exp-wrap:hover \.exp-panel/);
+    expect(src).toMatch(/document\.documentElement\.classList\.add\('js'\)/);
     // Existing .nav-waves must still render (not removed)
     expect(src).toMatch(/nav-waves/);
     expect(src).toMatch(/sineWave/);
@@ -144,5 +169,64 @@ describe('Header experiments dropdown', () => {
     // No filtered status: ensure every experiment appears, not a subset
     // Count entries in experiments.ts is the expected link count
     expect(experiments.length).toBe(8);
+  });
+
+  it('trigger and every panel link carry the label class', () => {
+    // Trigger must include label class alongside exp-trigger
+    expect(src).toMatch(/class:list=\{\['label',\s*'exp-trigger'/);
+    // Panel links must carry label class (exp-link label)
+    expect(src).toMatch(/class="exp-link label"/);
+    // Also ensure no panel link is rendered without label
+    const panelLinkMatches = [...src.matchAll(/<a[^>]*class="[^"]*exp-link[^"]*"[^>]*>/g)];
+    expect(panelLinkMatches.length).toBeGreaterThan(0);
+    for (const m of panelLinkMatches) {
+      expect(m[0]).toMatch(/label/);
+    }
+  });
+
+  it('regression: .exp-trigger does not declare font shorthand and .exp-panel a does not declare font-size', () => {
+    // Extract the .exp-trigger rule block and assert no font shorthand
+    const triggerBlock = src.match(/\.exp-trigger\s*\{([^}]*)\}/);
+    expect(triggerBlock).not.toBeNull();
+    const triggerBody = triggerBlock![1];
+    // font: inherit (shorthand) must not be present — would reset label typography
+    expect(triggerBody).not.toMatch(/\bfont\s*:/);
+    // Also ensure it does not declare font-family/size/weight that would fight .label
+    // But the spec specifically forbids the font shorthand
+    expect(triggerBody).not.toMatch(/font-size/);
+
+    // Extract the desktop .exp-panel a rule (before any media query)
+    const beforeMedia = src.split('@media')[0];
+    const panelLinkBlock = beforeMedia.match(/\.exp-panel a\s*\{([^}]*)\}/);
+    expect(panelLinkBlock).not.toBeNull();
+    const panelBody = panelLinkBlock![1];
+    expect(panelBody).not.toMatch(/font-size/);
+    // Also ensure no font shorthand there
+    expect(panelBody).not.toMatch(/\bfont\s*:/);
+  });
+
+  it('panel has no dead zone: anchored at top 100% with transparent padding-top', () => {
+    const beforeMedia = src.split('@media')[0];
+    const panelBlock = beforeMedia.match(/\.exp-panel\s*\{([^}]*)\}/s);
+    expect(panelBlock).not.toBeNull();
+    const body = panelBlock![1];
+    expect(body).toMatch(/top:\s*100%/);
+    expect(body).not.toMatch(/calc\(100%/);
+    expect(body).toMatch(/padding-top:\s*0\.7rem/);
+  });
+
+  it('stylesheet collapses at 1024px', () => {
+    expect(src).toMatch(/@media\s*\(max-width:\s*1024px\)/);
+    expect(src).not.toMatch(/@media\s*\(max-width:\s*900px\)/);
+  });
+
+  it('collapsed submenu is a real submenu with left rule and not larger type', () => {
+    const mobileBlock = src.split('@media (max-width: 1024px)')[1]?.split('@media')[0] ?? '';
+    expect(mobileBlock).toMatch(/border-left:\s*1px solid var\(--line\)/);
+    // No font-size override in collapsed panel either — must not be larger than label
+    const collapsedPanel = mobileBlock.match(/\.exp-panel\s*\{([^}]*)\}/s);
+    expect(collapsedPanel).not.toBeNull();
+    expect(collapsedPanel![1]).not.toMatch(/font-size:\s*0\.92rem/);
+    expect(collapsedPanel![1]).not.toMatch(/font-size/);
   });
 });

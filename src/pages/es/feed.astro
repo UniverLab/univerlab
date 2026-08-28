@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../i18n';
+const t = useTranslations('es');
+const f = t.feed;
+const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
+---
+<BaseLayout title={f.title} description={f.description} bg="cosmic" circadian>
+  <section class="wrap feed">
+    <span class="label">{f.kicker}</span>
+    <h1>{f.heading}</h1>
+    <p class="intro">{f.intro}</p>
+    <div class="feed-row">
+      <code class="feed-url" id="feed-url">{FEED_URL}</code>
+      <button type="button" class="feed-copy" aria-label={f.copy} data-feed-copy data-copied={f.copied}>{f.copy}</button>
+    </div>
+    <p class="hint">{f.hint}</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .feed {
+    max-width: 42rem;
+    padding-block: 4rem 6rem;
+  }
+  .feed .label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 1.2rem;
+  }
+  .feed h1 {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  .feed .intro,
+  .feed .hint {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .feed .hint {
+    margin-top: 1rem;
+  }
+  .feed-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .feed-url {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink);
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    padding: 0.55rem 0.75rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+    user-select: all;
+    word-break: break-all;
+  }
+  .feed-copy {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-dim);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .feed-copy:hover,
+  .feed-copy:focus-visible {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .feed-copy.done {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var btn = document.querySelector('[data-feed-copy]');
+    var urlEl = document.getElementById('feed-url');
+    if (!btn || !urlEl) return;
+    var orig = btn.textContent;
+    var copied = btn.getAttribute('data-copied') || 'Copied';
+    btn.addEventListener('click', function () {
+      var text = urlEl.textContent || '';
+      function onCopied() {
+        btn.textContent = copied;
+        btn.classList.add('done');
+        setTimeout(function () {
+          btn.textContent = orig;
+          btn.classList.remove('done');
+        }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onCopied).catch(function () {
+        });
+      } else {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          var ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (ok) onCopied();
+        } catch (e) {
+        }
+      }
+    });
+  })();
+</script>
