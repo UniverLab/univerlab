@@ -693,6 +693,17 @@ export const en = {
       commits: 'commits',
     },
   },
+  feed: {
+    kicker: 'Feed',
+    title: 'RSS — UniverLab',
+    description: 'Follow the UniverLab Mission Log via RSS.',
+    heading: 'RSS',
+    intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
+    url: 'https://announcements.univerlab.org/feed.atom',
+    copy: 'Copy',
+    copied: 'Copied',
+    hint: 'Any RSS reader works — no specific app needed, just paste the URL.',
+  },
 };
 
 export type Dict = typeof en;

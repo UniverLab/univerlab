@@ -691,4 +691,15 @@ export const es: Dict = {
       commits: 'commits',
     },
   },
+  feed: {
+    kicker: 'Feed',
+    title: 'RSS — UniverLab',
+    description: 'Sigue el Mission Log de UniverLab por RSS.',
+    heading: 'RSS',
+    intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
+    url: 'https://announcements.univerlab.org/feed.atom',
+    copy: 'Copiar',
+    copied: 'Copiado',
+    hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',
+  },
 };
