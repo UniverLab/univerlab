@@ -197,7 +197,7 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       title:
-        'LaTeX con diagramas Mermaid — TexForge',
+        'LaTeX con diagramas Mermaid — TeXForge',
       description:
         'Un solo binario, sin instalar una distribución de LaTeX. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para que los lea un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
@@ -208,7 +208,7 @@ export const es: Dict = {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
         body:
-          'Una tesis de maestría, escrita con IA en el flujo. Overleaf cobraba, TeXstudio pesaba demasiado, VSCode pedía una extensión por cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TexForge condensa todo eso en un binario y un skill.',
+          'Una tesis de maestría, escrita con IA en el flujo. Overleaf cobraba, TeXstudio pesaba demasiado, VSCode pedía una extensión por cada cosa. Solo quería diagramas Mermaid en mi LaTeX — lo que por supuesto significaba Node y una pila de archivos <code>.mmd</code>. Pegué con cinta un latexmake para renderizar los que faltaban. Aguantaba como aguanta la cinta. Y cada error mandaba al modelo a recorrer un log de compilación de mil líneas para hallar una sola línea mala. TeXForge condensa todo eso en un binario y un skill.',
       },
       press: {
         kicker: 'Toda la imprenta',
@@ -230,12 +230,12 @@ export const es: Dict = {
         link: 'https://github.com/UniverLab/texforge-templates',
       },
       faq: [
-        ['¿Qué problema resuelve TexForge?',
-          'Compilar LaTeX normalmente requiere instalar TeX Live (4+ GB), luego herramientas separadas para Mermaid, Graphviz y D2 — cada una con su propia configuración. TexForge es un solo binario de ~15 MB que hace todo: scaffolding, linting, formateo, diagramas y compilación.'],
-        ['¿Pueden los agentes de IA usar TexForge para trabajar con LaTeX?',
+        ['¿Qué problema resuelve TeXForge?',
+          'Compilar LaTeX normalmente requiere instalar TeX Live (4+ GB), luego herramientas separadas para Mermaid, Graphviz y D2 — cada una con su propia configuración. TeXForge es un solo binario de ~15 MB que hace todo: scaffolding, linting, formateo, diagramas y compilación.'],
+        ['¿Pueden los agentes de IA usar TeXForge para trabajar con LaTeX?',
           'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
-        ['¿TexForge soporta diagramas Mermaid y D2 en LaTeX?',
-          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TexForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+        ['¿TeXForge soporta diagramas Mermaid y D2 en LaTeX?',
+          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TeXForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
         ['¿Cómo funciona la corrección ortográfica en idiomas distintos del inglés?',
           'El idioma sale del propio documento — `\\usepackage[spanish]{babel}` o `polyglossia` — y recurre a tu configuración por defecto cuando no se declara ninguno. El español se revisa con un diccionario Hunspell y reglas de afijos, de modo que `soluciones` se reconoce a partir de la raíz `solución` sin necesidad de almacenarlo como entrada propia. Los diccionarios se descargan en el primer uso en `~/.texforge/dicts/`.'],
       ] as [string, string][],

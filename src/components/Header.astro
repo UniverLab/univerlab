@@ -658,7 +658,7 @@ const signals = [
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
     z-index: 30;
   }
-  .exp-panel a { text-decoration: none; color: #8a8d93; }
+  .exp-panel a { text-decoration: none; color: #8a8d93; text-transform: none; }
   .exp-panel a:hover, .exp-panel a:focus-visible { color: var(--ink); }
   .exp-wrap:hover .exp-panel,
   .exp-wrap:focus-within .exp-panel,
@@ -845,6 +845,7 @@ const signals = [
       align-items: flex-end;
       border-radius: 0;
     }
+    .exp-panel a { text-transform: none; }
 
     /* Several short signals drift along the bottom of the open menu, each at its
        own speed — a faint P2P chatter. */
