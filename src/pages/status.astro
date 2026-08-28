@@ -3,7 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
   <section class="wrap log">
-    <span class="label">MISSION LOG</span>
+    <div class="log-head">
+      <span class="label">MISSION LOG</span>
+      <a href="/feed/" class="feed-link">RSS</a>
+    </div>
     <h1>Status</h1>
     <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
     <nav class="topic-index" aria-label="Mission log topics">
@@ -38,6 +41,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       color: var(--ink-faint);
       display: block;
       margin-bottom: 1.2rem;
+    }
+    .log-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+    .log-head .label { margin-bottom: 0; }
+    .feed-link {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .feed-link:hover,
+    .feed-link:focus-visible {
+      color: var(--ink);
+      border-color: var(--accent);
     }
     .log h1 {
       font-family: var(--font-mono);

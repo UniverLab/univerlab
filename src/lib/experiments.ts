@@ -73,8 +73,8 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Harness Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4' },
-  { id: 'texforge', name: 'TexForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4' },
+  { id: 'canopy', name: 'Canopy', number: 'EXP-001', status: 'active', essenceHex: '#5dd39e', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4' },
+  { id: 'texforge', name: 'TeXForge', number: 'EXP-002', status: 'active', essenceHex: '#e0a458', github: 'https://github.com/UniverLab/texforge', bg: 'forge', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4' },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e8a4c8', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4' },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#b87333', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', startDate: '2026-04-10', install: both('cadspec'), hasDocs: true },

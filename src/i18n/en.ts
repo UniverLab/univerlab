@@ -199,7 +199,7 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       title:
-        'LaTeX with Mermaid diagrams — TexForge',
+        'LaTeX with Mermaid diagrams — TeXForge',
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
@@ -210,7 +210,7 @@ export const en = {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
         body:
-          'A master’s thesis, written with AI in the loop. Overleaf charged, TeXstudio was too heavy, VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. TexForge condenses all of that into a binary and a skill.',
+          'A master’s thesis, written with AI in the loop. Overleaf charged, TeXstudio was too heavy, VSCode wanted an extension for everything. All I wanted was Mermaid diagrams in my LaTeX — which of course meant Node and a pile of <code>.mmd</code> files. I duct-taped a latexmake to render the missing ones. It held the way duct tape holds. And every error sent the model scrolling a thousand-line build log to find one bad line. TeXForge condenses all of that into a binary and a skill.',
       },
       press: {
         kicker: 'The whole press',
@@ -232,12 +232,12 @@ export const en = {
         link: 'https://github.com/UniverLab/texforge-templates',
       },
       faq: [
-        ['What problem does TexForge solve?',
-          'Compiling LaTeX normally requires installing TeX Live (4+ GB), then separate tools for Mermaid, Graphviz, and D2 diagrams — each with its own setup. TexForge is a single ~15 MB binary that handles everything: scaffolding, linting, formatting, diagrams, and compilation.'],
-        ['Can AI agents use TexForge to work with LaTeX?',
+        ['What problem does TeXForge solve?',
+          'Compiling LaTeX normally requires installing TeX Live (4+ GB), then separate tools for Mermaid, Graphviz, and D2 diagrams — each with its own setup. TeXForge is a single ~15 MB binary that handles everything: scaffolding, linting, formatting, diagrams, and compilation.'],
+        ['Can AI agents use TeXForge to work with LaTeX?',
           'Yes. An agent can run `texforge build` without installing anything — the LaTeX engine downloads on first use. Errors are concise (not 1000-line logs), and diagrams render inside `.tex` files without Node.js or external tools.'],
-        ['Does TexForge support Mermaid and D2 diagrams in LaTeX?',
-          'Yes. Write a Mermaid, Graphviz, or D2 block directly in your `.tex` file. TexForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
+        ['Does TeXForge support Mermaid and D2 diagrams in LaTeX?',
+          'Yes. Write a Mermaid, Graphviz, or D2 block directly in your `.tex` file. TeXForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
         ['How does spell-checking work in languages other than English?',
           'The language comes from the document itself — `\\usepackage[spanish]{babel}` or `polyglossia` — and falls back to your configured default when nothing is declared. Spanish is checked against a Hunspell dictionary with affix rules, so `soluciones` is recognised from the stem `solución` without being stored as its own entry. Dictionaries download on first use into `~/.texforge/dicts/`.'],
       ] as [string, string][],
@@ -692,6 +692,17 @@ export const en = {
       kicker: 'Across the repositories',
       commits: 'commits',
     },
+  },
+  feed: {
+    kicker: 'Feed',
+    title: 'RSS — UniverLab',
+    description: 'Follow the UniverLab Mission Log via RSS.',
+    heading: 'RSS',
+    intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
+    url: 'https://announcements.univerlab.org/feed.atom',
+    copy: 'Copy',
+    copied: 'Copied',
+    hint: 'Any RSS reader works — no specific app needed, just paste the URL.',
   },
 };
 
