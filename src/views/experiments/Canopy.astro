@@ -13,24 +13,27 @@ const e = t.experiments.canopy;
 // sibling repo isn't checked out (CI, forks).
 const registryDir = resolve(process.cwd(), '../canopy-registry');
 const platformsDir = resolve(registryDir, 'platforms');
-const platformEntries: { name: string; color: string }[] = [];
+const platformEntries: { name: string; stem: string; color: string }[] = [];
 
 if (existsSync(platformsDir)) {
   const files = readdirSync(platformsDir).filter((f) => f.endsWith('.toml'));
   for (const file of files) {
-    const name = file.replace('.toml', '');
+    const stem = file.replace('.toml', '');
     const content = readFileSync(resolve(platformsDir, file), 'utf-8');
+    const rootSection = content.split(/^\[/m)[0] || '';
+    const toolNameMatch = rootSection.match(/tool_name\s*=\s*["']([^"']+)["']/);
+    const name = toolNameMatch ? toolNameMatch[1] : stem;
     const cliSection = content.split('[cli]')[1] || '';
     const colorMatch = cliSection.match(/accent_color\s*=\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
     const color = colorMatch ? `rgb(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]})` : 'var(--canopy)';
-    platformEntries.push({ name, color });
+    platformEntries.push({ name, stem, color });
   }
 }
 
 // Graph-builder scene: the graph assembles progressively as --p (0→1) advances,
 // each element born at its --t. Harness accents come from the registry above.
-const hue = (name: string, fallback: string) =>
-  platformEntries.find((p) => p.name === name)?.color ?? fallback;
+const hue = (id: string, fallback: string) =>
+  platformEntries.find((p) => p.name === id || p.stem === id)?.color ?? fallback;
 
 const NEUTRAL = 'var(--ink-dim)';
 const gbNodes = [
@@ -201,6 +204,7 @@ const gbBeats = [0.0, 0.2, 0.38, 0.56, 0.74, 1.2];
     background: #0a0a0c;
     border: 1px solid var(--pcolor);
     border-radius: 2px;
+    white-space: nowrap;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .platforms li:hover {
