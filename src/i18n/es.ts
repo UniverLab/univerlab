@@ -116,7 +116,7 @@ export const es: Dict = {
       title:
         'Memoria persistente: Claude Code, Codex, OpenCode — Canopy',
       description:
-        'Tus agentes olvidan entre sesiones. Canopy recuerda — contexto compartido entre Claude Code, Codex, Cursor y OpenCode, más scheduling y loops como grafos.',
+        'Tus agentes olvidan entre sesiones. Canopy recuerda — contexto compartido entre Claude Code, Codex, Cursor y OpenCode, más scheduling y motor de grafos.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
         'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da <strong>memoria persistente</strong> entre sesiones, <strong>programación en segundo plano</strong> por cron y eventos de archivo, un <strong>grafo de conocimiento</strong> que aprende de cada ejecución, y un <strong>protocolo de sincronización</strong> para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
@@ -154,19 +154,19 @@ export const es: Dict = {
           'Antigravity',
         ],
       },
-      loops: {
-        kicker: 'Motor de loops',
+      graphs: {
+        kicker: 'Motor de grafos',
         title: 'Flujos de trabajo que se ejecutan solos',
-        body: 'Define un DAG — los specs fluyen a través de nodos de agente, chequeo y gate. El loop corre autónomamente: implementar, verificar, revisar, commitear. Cuando se traba, pausa y te consulta.',
+        body: 'Define un DAG — los specs fluyen a través de nodos de agente, chequeo y gate. El grafo corre autónomamente: implementar, verificar, revisar, commitear. Cuando se traba, pausa y te consulta.',
         cols: [
           ['Automatización basada en DAG', 'Define flujos de trabajo como grafos acíclicos dirigidos: los specs fluyen a través de nodos de agente, chequeo y gate con enrutamiento pass/fail. Automatiza corrección de bugs, revisión de código y tareas de múltiples pasos.'],
-          ['Ejecución en segundo plano', 'Los loops corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],
-          ['Humano en el loop', 'Cuando la automatización se traba, el agente de resiliencia reporta un blocker y pausa. Tú decides; el loop reanuda cuando estés listo.'],
+          ['Ejecución en segundo plano', 'Los grafos corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],
+          ['Humano en el loop', 'Cuando la automatización se traba, el agente de resiliencia reporta un blocker y pausa. Tú decides; el grafo reanuda cuando estés listo.'],
         ],
       },
       builder: {
-        kicker: 'Motor de loops',
-        title: 'Mira un loop ensamblarse solo',
+        kicker: 'Motor de grafos',
+        title: 'Mira un grafo ensamblarse solo',
         outro: 'Cada nodo corre en el harness que elijas. Mezcla proveedores libremente — el grafo es tuyo para editarlo.',
         steps: [
           ['Un spec encuentra a un agente',
@@ -176,7 +176,7 @@ export const es: Dict = {
           ['Revisión adversarial',
             'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
           ['Cada fallo recibe su tratamiento',
-            'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el loop para despertarse a la hora exacta del reset.'],
+            'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el grafo para despertarse a la hora exacta del reset.'],
           ['Modo ensemble',
             'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y un árbitro extrae los puntos en común para generar una versión consensuada antes de implementar.'],
         ] as [string, string][],

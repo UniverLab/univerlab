@@ -1,7 +1,7 @@
 {
   "name": "univerlab-web",
-  "version": "1.6.0",
-  "description": "<h1 align=\"center\">UniverLab — landing</h1>",
+  "version": "1.7.0",
+  "description": "<h1 align=\"center\">UniverLab \u2014 landing</h1>",
   "scripts": {
     "dev": "astro dev",
     "prebuild": "node scripts/check-i18n.ts",
