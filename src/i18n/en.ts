@@ -118,7 +118,7 @@ export const en = {
       title:
         'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
       description:
-        'Your agents forget between sessions. Canopy remembers — shared context across Claude Code, Codex, Cursor and OpenCode, plus scheduling and graph-based loops.',
+        'Your agents forget between sessions. Canopy remembers — shared context across Claude Code, Codex, Cursor and OpenCode, plus scheduling and a graph engine.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
         'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
@@ -156,19 +156,19 @@ export const en = {
           'Antigravity',
         ],
       },
-      loops: {
-        kicker: 'Loop engine',
+      graphs: {
+        kicker: 'Graph engine',
         title: 'Workflows that run themselves',
-        body: 'Define a DAG — specs flow through agent, check, and gate nodes. The loop runs autonomously: implement, verify, review, commit. When it hits a wall, it pauses and asks you.',
+        body: 'Define a DAG — specs flow through agent, check, and gate nodes. The graph runs autonomously: implement, verify, review, commit. When it hits a wall, it pauses and asks you.',
         cols: [
           ['DAG-based automation', 'Define workflows as directed acyclic graphs: specs flow through agent, check, and gate nodes with pass/fail routing. Automate bug fixing, code review, and multi-step tasks.'],
-          ['Background execution', 'Loops run autonomously in the background — implement, verify, review, commit. Each node has timeouts, retries, and a resilience agent that diagnoses failures.'],
-          ['Human-in-the-loop', 'When automation hits a wall, the resilience agent reports a blocker and pauses. You decide; the loop resumes when you\'re ready.'],
+          ['Background execution', 'Graphs run autonomously in the background — implement, verify, review, commit. Each node has timeouts, retries, and a resilience agent that diagnoses failures.'],
+          ['Human-in-the-loop', 'When automation hits a wall, the resilience agent reports a blocker and pauses. You decide; the graph resumes when you\'re ready.'],
         ] as [string, string][],
       },
       builder: {
-        kicker: 'Loop engine',
-        title: 'Watch a loop assemble itself',
+        kicker: 'Graph engine',
+        title: 'Watch a graph assemble itself',
         outro: 'Every node runs on the harness you pick. Mix vendors freely — the graph is yours to edit.',
         steps: [
           ['A spec meets an agent',
@@ -178,7 +178,7 @@ export const en = {
           ['Adversarial review',
             'A different harness reviews the diff against the spec and commits. Same-vendor blind spots stay out of your branch.'],
           ['Every failure gets its treatment',
-            'If the implementer dies mid-run, a resilience node triages it: glitches retry now; a quota death schedules the loop to wake itself at the exact reset time.'],
+            'If the implementer dies mid-run, a resilience node triages it: glitches retry now; a quota death schedules the graph to wake itself at the exact reset time.'],
           ['Ensemble mode',
             'Fan the spec out to several models in parallel, wait for every proposal, and an arbiter extracts the common points to generate a consensus version before implementing.'],
         ] as [string, string][],
