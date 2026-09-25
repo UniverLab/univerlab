@@ -261,9 +261,14 @@ const THEMES: Record<Theme, Runner> = {
      way the terminal draws it: in Braille glyphs (U+2800–U+28FF). The automaton
      runs on a fine sub-grid and every 2×4 block of cells is packed into one
      Braille character, so the field reads as varied glyphs instead of uniform
-     dots. Firing cells are drawn bright, dying cells faint. Starts sparse and
-     reseeds in small clusters when activity fades, so it revives instead of
-     flickering into static. */
+     dots. Firing cells are drawn bright, dying cells faint.
+
+     The field is a machine at rest, not a screensaver: it starts nearly empty
+     and the cursor is the real input, seeding small propagating clusters along
+     its path. Two much quieter sources keep the last embers alive — a
+     rate-limited revival, and, once the cursor has been still long enough, a
+     single cluster every few seconds. Reduced motion never reaches here at all:
+     ThemeBackground returns before importing this module. */
   brain(ctx) {
     const { c } = ctx;
     // On-screen size of one Braille character; each packs 2×4 automaton cells.
@@ -290,8 +295,10 @@ const THEMES: Record<Theme, Runner> = {
       gw = cols * 2;
       gh = rows * 4;
       grid = new Uint8Array(gw * gh);
-      // start with very little noise — the field should read as sparse and quiet
-      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.012 ? 1 : 0;
+      // Start almost empty — the field is meant to read as an idle machine that
+      // the cursor wakes up, not as noise. 0.3% of cells, and they're isolated
+      // (no second firing neighbour), so they blink once and are gone.
+      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.003 ? 1 : 0;
     }
     init();
 
@@ -299,18 +306,94 @@ const THEMES: Record<Theme, Runner> = {
 
     // A cluster of adjacent firing cells: neighbours then see exactly 2 firing
     // cells and ignite, so reseeding actually propagates instead of dying out.
+    // The optional extras come from the same neighbourhood, giving 3–5 cells —
+    // never a lone dot, which would die on the very next step.
+    function seedAt(sx: number, sy: number) {
+      grid[idx(sx, sy)] = 1;
+      grid[idx(sx + 1, sy)] = 1;
+      grid[idx(sx, sy + 1)] = 1;
+      if (Math.random() < 0.5) grid[idx(sx + 1, sy + 1)] = 1;
+      if (Math.random() < 0.5) grid[idx(sx, sy - 1)] = 1;
+    }
     function seedCluster() {
-      const x = Math.floor(Math.random() * gw);
-      const y = Math.floor(Math.random() * gh);
-      grid[idx(x, y)] = 1;
-      grid[idx(x + 1, y)] = 1;
-      grid[idx(x, y + 1)] = 1;
+      seedAt(Math.floor(Math.random() * gw), Math.floor(Math.random() * gh));
+    }
+    // Same cluster, planted under one character cell (which packs a 2×4 block
+    // of sub-cells) and centred on it.
+    const seedChar = (cx: number, cy: number) => seedAt(cx * 2, cy * 4);
+
+    /* The cursor is the field's input. Seeding is rate-limited (an uncapped
+       sweep would cost hundreds of clusters a second) and walks the path from
+       the last point to this one, so the trail is a continuous line of cells
+       rather than a dotted one. */
+    const SEED_EVERY = 200;   // ms between pointer seeds
+    const MAX_TRAIL = 14;     // character cells seeded per event, at most
+    const IDLE_AFTER = 8000;  // ms of stillness before the field goes ultra-sparse
+    const IDLE_EVERY = 3000;  // ms between the lone idle clusters
+    const REVIVE_EVERY = 900; // ms between revival batches — a safety net, not a source
+    // Touch has no cursor to seed with, so it stays quiet: revival only, and no
+    // pointer listener attached at all.
+    const isTouch = 'ontouchstart' in window && navigator.maxTouchPoints > 0;
+
+    let nowT = 0;
+    let lastSeedT = -1e9;
+    let lastMoveT = -1;   // −1 until the first frame lands
+    let lastCellX = -1;
+    let lastCellY = -1;
+    let nextIdleSeedT = -1;
+    let lastReviveT = -1;
+
+    // pointermove is bound to the document, not the canvas: the canvas is fixed
+    // and full-bleed, but coordinates are mapped through its rect anyway so the
+    // two can never drift apart. The signal scopes the listener to this
+    // canvas's lifetime, so an Astro view transition can't leave a ghost seeder
+    // behind seeding the next page.
+    const ac = new AbortController();
+    const onPointerMove = (e: PointerEvent) => {
+      if (nowT - lastSeedT < SEED_EVERY) return;
+      lastSeedT = nowT;
+      lastMoveT = nowT;
+      nextIdleSeedT = -1;
+      // clientX/Y are CSS pixels and the context is already scaled to CSS
+      // pixels, so the mapping is a straight divide by the character size.
+      const rect = ctx.canvas.getBoundingClientRect();
+      const cx = Math.min(Math.max(Math.floor((e.clientX - rect.left) / charW), 0), cols - 1);
+      const cy = Math.min(Math.max(Math.floor((e.clientY - rect.top) / charH), 0), rows - 1);
+      if (lastCellX < 0) {
+        seedChar(cx, cy);
+      } else {
+        const dx = cx - lastCellX;
+        const dy = cy - lastCellY;
+        const steps = Math.min(Math.max(Math.ceil(Math.hypot(dx, dy)), 1), MAX_TRAIL);
+        for (let i = 1; i <= steps; i++) {
+          const s = i / steps;
+          seedChar(Math.round(lastCellX + dx * s), Math.round(lastCellY + dy * s));
+        }
+      }
+      lastCellX = cx;
+      lastCellY = cy;
+    };
+    if (!isTouch) {
+      document.addEventListener('pointermove', onPointerMove, { passive: true, signal: ac.signal });
     }
 
     let acc = 0;
     let prev = 0;
     return (t) => {
-      if (cols !== Math.ceil(ctx.w / charW) + 1) init();
+      // The canvas is gone — we were navigated away. Stop drawing and drop the
+      // listener rather than seeding into a detached grid forever.
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
+      nowT = t;
+      if (lastMoveT < 0) lastMoveT = t;
+      if (cols !== Math.ceil(ctx.w / charW) + 1) {
+        init();
+        // The grid was reallocated, so the recorded trail no longer lines up.
+        lastCellX = -1;
+        lastCellY = -1;
+      }
       acc += prev ? t - prev : 0;
       prev = t;
       if (acc > 130) {
@@ -333,12 +416,29 @@ const THEMES: Record<Theme, Runner> = {
           }
         }
         grid = next;
-        // Gentle revival: only step in once activity is low, with a few
-        // propagating clusters so the field stays sparse rather than busy.
-        const threshold = Math.max(5, Math.floor(grid.length * 0.0035));
-        if (firing < threshold) {
-          const clusters = Math.max(2, Math.floor(grid.length * 0.0007));
-          for (let i = 0; i < clusters; i++) seedCluster();
+        // The cursor seeded the field above; these two only keep the machine
+        // from going completely dark, and both are deliberately near-subliminal.
+        if (!isTouch && t - lastMoveT > IDLE_AFTER) {
+          // Ultra-sparse: stillness past the idle window costs the revival
+          // net and leaves a single cluster every few seconds. Almost off on
+          // purpose — the point is that the field is still there, not that it
+          // performs. Touch never reaches this branch (it has no idle cursor).
+          if (nextIdleSeedT < 0) nextIdleSeedT = t + IDLE_EVERY;
+          else if (t >= nextIdleSeedT) {
+            seedCluster();
+            nextIdleSeedT = t + IDLE_EVERY;
+          }
+        } else {
+          nextIdleSeedT = -1;
+          // Revival: only once activity has collapsed, and only rarely. A dense
+          // reseed on every step would just recreate the noise this field exists
+          // to avoid, so the whole batch is rate-limited.
+          const threshold = Math.max(5, Math.floor(grid.length * 0.0035));
+          if (firing < threshold && t - lastReviveT > REVIVE_EVERY) {
+            lastReviveT = t;
+            const clusters = Math.max(1, Math.floor(grid.length * 0.0004));
+            for (let i = 0; i < clusters; i++) seedCluster();
+          }
         }
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
