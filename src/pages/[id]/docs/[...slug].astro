@@ -11,7 +11,7 @@ export async function getStaticPaths() {
     const sorted = entries.sort((a: any, b: any) => a.data.order - b.data.order);
     const links = sorted.map((e: any) => ({
       slug: e.id === 'index' ? '' : e.id,
-      title: e.data.title,
+      title: e.data.title ?? e.id,
     }));
     for (const entry of sorted as any[]) {
       const slug = entry.id === 'index' ? undefined : entry.id;
@@ -29,7 +29,7 @@ const { Content } = await render(entry);
 ---
 <DocsLayout
   id={id}
-  title={entry.data.title}
+  title={entry.data.title ?? entry.id}
   description={entry.data.description}
   links={links}
   current={current}
