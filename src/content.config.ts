@@ -5,7 +5,11 @@ import { glob } from 'astro/loaders';
 // Locally we glob the sibling repositories' docs/ folders; in production this
 // base would point at the checked-out repos in the build. Docs are English-only.
 const docSchema = z.object({
-  title: z.string(),
+  // title is optional on purpose: sibling docs/ checkouts track other repos'
+  // default branches, and a frontmatter-less file (canopy adr/0001-recipes on
+  // main, 2026-09-25) must not fail the landing build. Pages fall back to the
+  // entry id. See [...slug].astro.
+  title: z.string().optional(),
   description: z.string().optional(),
   order: z.number().default(99),
 });
