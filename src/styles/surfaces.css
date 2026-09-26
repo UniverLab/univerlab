@@ -132,9 +132,13 @@ html[data-surface='paper'] .genesis .prose {
    is 400 like every other heading here (see the h2 rule above). */
 
 /* The demo figure sits inside the cream page: its frame joins the wide dash
-   (T1) and its "Fig. 1" marker is bistre-faint, not the amber essence. */
+   (T1) and its "Fig. 1" marker is bistre-faint, not the amber essence. The
+   component's box-shadow goes too — its first layer is a solid 1px essence
+   ring (a solid rule inside content) and its second a dark-surface card
+   shadow that reads as chrome, not a sheet on the desk. */
 html[data-surface='paper'] .demo-frame {
   border: 1px dashed var(--rule-t1);
+  box-shadow: none;
 }
 html[data-surface='paper'] .exp .demo-cap .label {
   color: var(--ink-faint);

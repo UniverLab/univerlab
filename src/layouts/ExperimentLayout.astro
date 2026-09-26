@@ -400,6 +400,16 @@ const ogImage = `/og/${id}.png`;
   :global(html[data-surface='paper'] .faq-item:first-child) {
     border-top: 1px dashed var(--rule-t2);
   }
+
+  /* Prev/next nav: structure stays (still no top rule — the footer opens with
+     one), but the hover accent follows the rest of this surface. Each link
+     carries the destination's inline --essence; amber or pink at ~2:1 on the
+     cream is illegible — bistre in place of the essence, per the rule above. */
+  :global(html[data-surface='paper'] .exp-nav-link:hover),
+  :global(html[data-surface='paper'] .exp-nav-link:hover .n),
+  :global(html[data-surface='paper'] .exp-nav-link:hover .arrow) {
+    color: var(--ink);
+  }
 </style>
 
 <script>

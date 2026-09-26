@@ -1094,7 +1094,7 @@ const THEMES: Record<Theme, Runner> = {
    importing it. */
 const PAPER: Runner = (ctx) => {
   const { c } = ctx;
-  const N = Math.min(34, Math.max(16, Math.floor((ctx.w * ctx.h) / 34000)));
+  const N = Math.min(30, Math.max(16, Math.floor((ctx.w * ctx.h) / 34000)));
   type Fibre = { x: number; y: number; a: number; len: number; al: number; vx: number; vy: number; va: number };
   const fibres: Fibre[] = Array.from({ length: N }, () => ({
     x: rand(0, ctx.w),
