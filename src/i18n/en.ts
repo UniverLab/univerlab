@@ -365,6 +365,17 @@ export const en = {
       koan: 'The drawing is not drawn. It is declared.',
       lede:
         'cadSpec treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
+      hero: {
+        motif: '├─ 8.50 ─┤ · plan 1:1 · sheet 01 · declared, not drawn',
+        artifacts: {
+          coords: {
+            label: 'Coordinates',
+            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
+          },
+          dim: { label: 'Dimension' },
+          compile: { label: 'Compile', status: '✓ bit-identical DXF' },
+        },
+      },
       genesis: {
         kicker: 'Genesis',
         title: 'For the architect in the house.',

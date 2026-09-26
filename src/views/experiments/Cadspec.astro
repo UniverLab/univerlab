@@ -6,6 +6,39 @@ const t = useTranslations(lang);
 const e = t.experiments.cadspec;
 ---
 <ExperimentLayout id="cadspec">
+  <!-- The three product artifacts and the ASCII motif ride the layout's cta
+       slot. Absolutely positioned they resolve against `.hero` (position:
+       relative, already set by surfaces.css) — never against `.actions`,
+       which must stay static. On narrow screens they go static and fall into
+       the flexing `.actions` row after the docs button. -->
+  <Fragment slot="cta">
+    <div class="art art-coords">
+      <p class="label">{e.hero.artifacts.coords.label}</p>
+      <pre class="mono art-code"><code>{e.hero.artifacts.coords.code}</code></pre>
+    </div>
+    <div class="art art-dim">
+      <p class="label">{e.hero.artifacts.dim.label}</p>
+      <svg viewBox="0 0 160 34" aria-hidden="true">
+        <!-- the same dimension the plan draws: extension lines, the measure
+             line with its 45° ticks, and the value it reports -->
+        <g stroke="var(--essence)" stroke-width="1" fill="none">
+          <line x1="14" y1="6" x2="14" y2="28" />
+          <line x1="146" y1="6" x2="146" y2="28" />
+          <line x1="14" y1="24" x2="146" y2="24" />
+          <line x1="9" y1="29" x2="19" y2="19" />
+          <line x1="141" y1="29" x2="151" y2="19" />
+        </g>
+        <text class="art-val" x="80" y="17" text-anchor="middle">8.50</text>
+      </svg>
+    </div>
+    <div class="art art-chip"><!-- the ONE blush-peach card on the page -->
+      <span class="chip-dot" aria-hidden="true"></span>
+      <span class="chip-label">{e.hero.artifacts.compile.label}</span>
+      <span class="chip-status">{e.hero.artifacts.compile.status}</span>
+    </div>
+    <p class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
+  </Fragment>
+
   <section class="wrap section">
     <div class="sheet">
       <div class="drawing">
@@ -122,25 +155,382 @@ offset = 0.5</code></pre>
     });
     io.observe(svg);
   })();
+
+  // The drafting grid is quiet and cursor-stirred: a faint teal bloom follows
+  // the pointer and the grid drifts a few pixels behind it (lerped, so it
+  // reads as paper being nudged, not as a cursor effect). blueprint is a
+  // stillSurface — no canvas runs here — so the grid is pure CSS and these
+  // are its only variables. Reduced motion never registers the listener or
+  // the loop: the grid renders static. Touch never moves it either (the
+  // pointer is the finger, which would shake the page while scrolling).
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const root = document.documentElement;
+    let tx = 0, ty = 0, gx = 0, gy = 0, seen = false;
+    addEventListener('pointermove', (ev) => {
+      if (ev.pointerType === 'touch') return;
+      if (!seen) { gx = tx; gy = ty; seen = true; } // no jump from off-screen origin
+      tx = (ev.clientX / innerWidth - 0.5) * -14;   // ±7px grid parallax
+      ty = (ev.clientY / innerHeight - 0.5) * -14;
+      root.style.setProperty('--stir-x', ev.clientX + 'px');
+      root.style.setProperty('--stir-y', ev.clientY + 'px');
+    }, { passive: true });
+    (function ease() {                              // one loop; rAF pauses with the tab
+      gx += (tx - gx) * 0.06; gy += (ty - gy) * 0.06;
+      root.style.setProperty('--stir-gx', gx.toFixed(2) + 'px');
+      root.style.setProperty('--stir-gy', gy.toFixed(2) + 'px');
+      requestAnimationFrame(ease);
+    })();
+  }
 </script>
 
 <style>
+  /* ── The Steep direction: serif analytics on warm paper, floating product
+     artifacts. This block is the whole skin for `data-surface='blueprint'`.
+
+     Every rule that re-dresses markup owned by surfaces.css / global.css /
+     ExperimentLayout is written `:global(:root[data-surface='blueprint'] X)`:
+     the `:root` prefix (a pseudo-class) out-specifies their
+     `html[data-surface='blueprint'] X` and the layout's cid-scoped rules, so
+     nothing here needs `!important` or a source-order bet. Rules without
+     :global() are view-local (the cards, the sheet, the notes) and stay
+     scoped. ────────────────────────────────────────────────────────────── */
+
+  /* (a) Tokens — warm paper, mist cards, one blush reserved for the chip. */
+  :global(:root[data-surface='blueprint']) {
+    --bg: #faf8f3;        /* warm paper */
+    --bg-raise: #eef1f4;  /* mist — cards, install bar, code plate */
+    --ink: #16202a;
+    --ink-dim: #47535e;   /* 7.3:1 on paper, 6.8:1 on mist */
+    --ink-faint: #5e676e; /* 5.4:1 on paper, 5.1:1 on mist */
+    --line: #e3e1db;      /* warm hairline */
+    --blush: #f8ded0;     /* used exactly once — .art-chip */
+    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* (b) Type — serif display at 400 only. global.css forces 500 on
+     h1/h2/h3 and strong; surfaces.css forces 600 on the blueprint genesis
+     h2 (handled by its own rule below). Sans body stays sans. */
+  :global(:root[data-surface='blueprint'] h1),
+  :global(:root[data-surface='blueprint'] h2),
+  :global(:root[data-surface='blueprint'] h3) {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  :global(:root[data-surface='blueprint'] strong) { font-weight: 400; }
+  /* The layout pins its own 500 on lede/genesis emphasis (cid-scoped, so it
+     outranks a bare `strong` rule) — beat it with the descendants. */
+  :global(:root[data-surface='blueprint'] .exp .lede strong),
+  :global(:root[data-surface='blueprint'] .exp .genesis .prose strong) {
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  /* (c) Hero — open paper, centered, an oversized serif masthead.
+     .hero keeps position: relative (it anchors the artifact cards) and
+     keeps surfaces.css's width/margin; the mist plate, frame and titleblock
+     retire — the ASCII motif carries the titleblock's information now. */
+  :global(:root[data-surface='blueprint'] .hero) {
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    background: none;
+    border: 0;
+    padding: 2rem 1rem 4.6rem; /* bottom room for the motif */
+  }
+  :global(:root[data-surface='blueprint'] .hero::after) { content: none; }
+  :global(:root[data-surface='blueprint'] .hero::before) {
+    /* registration tick stays; its fill goes (there is no plate anymore) */
+    border-color: var(--essence);
+    background: transparent;
+  }
+  /* The masthead: surfaces.css hides .exp-name behind clip:rect — unhide
+     every part of the clip, then set the display voice. */
+  :global(:root[data-surface='blueprint'] .exp-name) {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    overflow: visible;
+    white-space: normal;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.8rem, 6.5vw, 4.6rem);
+    line-height: 1.02;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  :global(:root[data-surface='blueprint'] .koan) {
+    /* serif epigraph under the masthead (surfaces.css wants it mono) */
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    letter-spacing: 0;
+    color: var(--essence);
+    opacity: 1;
+  }
+  :global(:root[data-surface='blueprint'] .lede) {
+    margin-inline: auto;
+    max-width: 54ch;
+    text-align: center;
+  }
+  :global(:root[data-surface='blueprint'] .num) { color: var(--ink-faint); }
+  :global(:root[data-surface='blueprint'] .actions) { justify-content: center; }
+  :global(:root[data-surface='blueprint'] .banner) {
+    /* the hero centers its type; the block art is left-set or it goes ragged */
+    text-align: left;
+  }
+
+  /* (d) Pill button pair — filled (repo) + ghost (docs). The layout already
+     renders exactly this pair; only the dress changes. */
+  :global(:root[data-surface='blueprint'] .actions .btn),
+  :global(:root[data-surface='blueprint'] .actions .btn.ghost) {
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.6rem 1.35rem;
+  }
+  :global(:root[data-surface='blueprint'] .actions .btn) {
+    background: var(--essence);
+    border-color: var(--essence);
+    color: #fff; /* 6.0:1 on the teal */
+  }
+  :global(:root[data-surface='blueprint'] .actions .btn:hover) { filter: brightness(1.1); }
+  :global(:root[data-surface='blueprint'] .actions .btn.ghost) {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink-dim);
+  }
+  :global(:root[data-surface='blueprint'] .actions .btn.ghost:hover) {
+    border-color: var(--essence);
+    color: var(--essence);
+    background: transparent;
+  }
+
+  /* (e) Install bar — already in the hero; centered, mist plate, no frame. */
+  :global(:root[data-surface='blueprint'] .install) { margin-inline: auto; }
+  :global(:root[data-surface='blueprint'] .install-head) {
+    justify-content: center;
+    gap: 1.2rem;
+  }
+  :global(:root[data-surface='blueprint'] .install-head .label) {
+    color: var(--ink-faint);
+  }
+  :global(:root[data-surface='blueprint'] .cmd) {
+    background: var(--bg-raise);
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05);
+  }
+  :global(:root[data-surface='blueprint'] .copy) { border-left: 1px solid var(--line); }
+  :global(:root[data-surface='blueprint'] .os-tab[aria-selected='true']) {
+    color: var(--essence);
+  }
+
+  /* (f) The floating product artifacts — view-local, so they stay scoped.
+     24px radius (the spec), barely-there shadows, a 7s drift that reads as
+     paper stirring, disabled under reduced motion and on narrow screens.
+     `translate` (not `transform`) animates alongside each card's rotation. */
+  .art {
+    position: absolute;      /* anchored to .hero, never to .actions */
+    background: var(--bg-raise);
+    border: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
+    border-radius: 24px;
+    padding: 0.9rem 1.05rem;
+    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 12px 30px rgba(22, 32, 42, 0.06);
+    text-align: left;
+    overflow: hidden;        /* nothing spills past the hero — no h-scroll */
+    z-index: 1;
+    animation: art-float 7s ease-in-out infinite;
+  }
+  .art .label { margin: 0 0 0.45rem; }
+  .art-coords { left: 0.5rem; top: 5.5rem; width: 14.5rem; transform: rotate(-1deg); }
+  .art-dim    { right: 0.5rem; top: 4.5rem; width: 13rem; transform: rotate(1.2deg); }
+  .art-dim svg { display: block; width: 100%; height: auto; }
+  .art-val {
+    fill: var(--essence);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .art-code {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--essence);
+    white-space: pre;
+  }
+  /* The one blush-peach card on the page (the compile status chip). */
+  .art-chip {
+    right: 3%;
+    bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    background: var(--blush);
+    border-color: color-mix(in srgb, var(--blush) 70%, var(--ink));
+    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 10px 24px rgba(22, 32, 42, 0.07);
+  }
+  .chip-dot {
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--essence);
+  }
+  .chip-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .chip-status { font-size: 0.78rem; color: var(--ink); }
+  .ascii-motif {
+    position: absolute;
+    left: 50%;
+    bottom: 0.9rem;
+    transform: translateX(-50%);
+    margin: 0;
+    max-width: calc(100% - 40rem); /* keeps it clear of the chip's lane */
+    text-align: center;
+    white-space: normal;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  @keyframes art-float {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .art { animation: none; }
+  }
+
+  /* Responsive guard — mandatory: below 60rem the absolute cards would sit
+     on the centered headline and can force a horizontal scrollbar. They go
+     static and flow into the flexing, wrapping `.actions` row (after the
+     docs button, because they come from the cta slot). */
+  @media (max-width: 60rem) {
+    .art-coords,
+    .art-dim,
+    .art-chip {
+      position: static;
+      width: min(100%, 24rem);
+      transform: none;
+      animation: none;
+      margin-top: 1rem;
+    }
+    .ascii-motif {
+      position: static;
+      transform: none;
+      width: 100%;
+      max-width: none;
+      margin-top: 1.2rem;
+      text-align: center;
+      white-space: normal;
+    }
+  }
+
+  /* (g) Below the hero — the plan sheet and its notes. The old cyan hairline
+     plate goes; the drawing and the code become two mist cards. Every
+     var(--cadspec) (#6ec6e6, ~1.9:1 on paper) in this file is replaced by
+     var(--essence) (#156c80, 5.3:1 on mist). */
   .section { padding-block: 1.5rem 2rem; }
   .sheet {
-    display: grid; grid-template-columns: 1.3fr 1fr; gap: 1px;
-    background: color-mix(in srgb, var(--cadspec) 35%, var(--line));
-    border: 1px solid color-mix(in srgb, var(--cadspec) 35%, var(--line));
-    max-width: 46rem; margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 1rem;
+    background: none;
+    border: 0;
+    max-width: 46rem;
+    margin-inline: auto;
   }
   @media (max-width: 44rem) { .sheet { grid-template-columns: 1fr; } }
   /* centre the plan in its cell, beside the (taller) code block */
-  .drawing { background: var(--bg-raise); padding: 1rem; display: flex; align-items: center; justify-content: center; }
+  .drawing {
+    background: var(--bg-raise);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 12px 30px rgba(22, 32, 42, 0.05);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .drawing svg { display: block; width: 100%; }
   .dim-t { fill: var(--essence); }
-  .code { margin: 0; background: var(--bg-raise); padding: 1.2rem; font-size: 0.8rem; line-height: 1.65; color: var(--cadspec); }
+  .code {
+    margin: 0;
+    background: var(--bg-raise);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 12px 30px rgba(22, 32, 42, 0.05);
+    padding: 1.2rem;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: var(--essence);
+  }
   .notes { list-style: none; padding: 0; margin: 2rem auto 0; max-width: 46rem; }
-  .notes li { display: flex; gap: 1rem; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .note-num { color: var(--cadspec); font-size: 0.8rem; padding-top: 0.15rem; }
-  .notes :global(code) { color: var(--cadspec); font-size: 0.88em; }
-  .notes :global(em) { color: var(--cadspec); font-style: italic; }
+  .notes li {
+    display: flex;
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 0.97rem;
+  }
+  .note-num { color: var(--essence); font-size: 0.8rem; padding-top: 0.15rem; }
+  .notes :global(code) { color: var(--essence); font-size: 0.88em; }
+  .notes :global(em) { color: var(--essence); font-style: italic; }
+
+  /* (h) Layout-owned sections, re-dressed for this surface. */
+  :global(:root[data-surface='blueprint'] .genesis h2),
+  :global(:root[data-surface='blueprint'] .faq-section h2) {
+    font-family: var(--font-serif);
+    font-weight: 400;
+  }
+  :global(:root[data-surface='blueprint'] .genesis .prose) { color: var(--ink-dim); }
+  :global(:root[data-surface='blueprint'] .genesis-row .genesis) {
+    background: var(--bg-raise);
+    border-radius: 24px;
+    padding: 1.8rem 2rem;
+  }
+  :global(:root[data-surface='blueprint'] .faq-item),
+  :global(:root[data-surface='blueprint'] .faq-item:first-child) {
+    border-color: var(--line);
+  }
+  :global(:root[data-surface='blueprint'] .exp-nav-link:hover),
+  :global(:root[data-surface='blueprint'] .exp-nav-link:hover .n),
+  :global(:root[data-surface='blueprint'] .exp-nav-link:hover .arrow) {
+    color: var(--essence);
+  }
+
+  /* (i) Background — a quiet drafting grid, cursor-stirred. blueprint is a
+     stillSurface (no canvas ever runs), so this replaces surfaces.css's two
+     centre-line axes from the view: two grid pitches (140px / 28px) in warm
+     ink, a teal bloom under the cursor, and a few pixels of parallax the
+     script feeds through --stir-*. Under reduced motion the variables stay
+     unset and the grid renders static. body::before's position/inset/
+     z-index come from surfaces.css. */
+  :global(:root[data-surface='blueprint'] body::before) {
+    background-image:
+      radial-gradient(420px circle at var(--stir-x, 50%) var(--stir-y, 40%),
+        color-mix(in srgb, var(--essence, #156c80) 7%, transparent), transparent 72%),
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
+    background-size: auto, 140px 140px, 140px 140px, 28px 28px, 28px 28px;
+    background-position: 0 0,
+      var(--stir-gx, 0px) var(--stir-gy, 0px), var(--stir-gx, 0px) var(--stir-gy, 0px),
+      var(--stir-gx, 0px) var(--stir-gy, 0px), var(--stir-gx, 0px) var(--stir-gy, 0px);
+    background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+  }
 </style>

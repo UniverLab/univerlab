@@ -363,6 +363,17 @@ export const es: Dict = {
       koan: 'El dibujo no se dibuja. Se declara.',
       lede:
         'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
+      hero: {
+        motif: '├─ 8.50 ─┤ · plano 1:1 · hoja 01 · declarado, no dibujado',
+        artifacts: {
+          coords: {
+            label: 'Coordenadas',
+            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
+          },
+          dim: { label: 'Cota' },
+          compile: { label: 'Compilación', status: '✓ DXF idéntico bit a bit' },
+        },
+      },
       genesis: {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',

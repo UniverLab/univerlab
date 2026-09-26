@@ -274,6 +274,7 @@ const webSite = {
     z-index: 1;
   }
   .card[data-exp='canopy']:hover::before,
+  .card[data-exp='canopy']:focus-visible::before,
   .card[data-exp='canopy'].is-tapped::before { opacity: 1; }
 
   /* Blinking cursor */
@@ -288,7 +289,9 @@ const webSite = {
     transition: opacity 0.3s ease;
     z-index: 1; /* sits above the now-full-opacity canvas */
   }
-  .card[data-exp='canopy']:hover::after {
+  .card[data-exp='canopy']:hover::after,
+  .card[data-exp='canopy']:focus-visible::after,
+  .card[data-exp='canopy'].is-tapped::after {
     opacity: 0.8;
     animation: cursor-blink 1.06s step-end infinite;
   }
@@ -541,10 +544,9 @@ const webSite = {
   @media (hover: none) {
     .card:active { transform: scale(0.98); }
     .card:active .card-glow { opacity: 0; }  /* matches the flip: glow retires */
-    .card[data-exp='canopy']:active::after,
-    .card[data-exp='demostage']:active::after,
-    .card[data-exp='ghscaff']:active::before,
-    .card[data-exp='cadspec']:active::before { opacity: 0.7; }
+    /* Only canopy still carries pseudo-element chrome; the other motifs were
+       removed with their base rules in the card rebuilds. */
+    .card[data-exp='canopy']:active::after { opacity: 0.7; }
   }
   .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
   .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
