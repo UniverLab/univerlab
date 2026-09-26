@@ -93,22 +93,24 @@ $ demo export gif,mp4
     margin: 0;
     max-width: 56rem;
     border: 1px solid var(--line);
-    border-radius: var(--radius-ctl);
+    /* Dark Cocoa panel + hairline coral edge = a card by altius.md, so the
+       card radius (8px), not the control radius (4px). */
+    border-radius: var(--radius-card);
     overflow: hidden;
     background: var(--bg-raise); /* Dark Cocoa — flat, no drop shadow */
   }
   .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
   .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
-  .bar .d.r { background: var(--flare); } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
-  .bar .name { margin-left: 0.5rem; color: #8a8175; }
+  .bar .d.r { background: var(--flare); } .bar .d.y { background: #fcac9c; } .bar .d.g { background: #baadab; }
+  .bar .name { margin-left: 0.5rem; color: var(--ink-mute); }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
   .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: color-mix(in srgb, #f7f6ff 85%, transparent); min-height: 8rem; }
   .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid var(--line); font-size: 0.72rem; }
   .scrubber .play { color: var(--flare); font-size: 0.7rem; }
-  .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #322b22; }
+  .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: var(--bg); }
   .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--flare); border-radius: 2px; }
   .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--flare); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--flare) 70%, transparent); }
-  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: #4a4339; transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
+  .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: var(--molten); transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
   .scrubber .tick.on { background: var(--flare); box-shadow: 0 0 6px color-mix(in srgb, var(--flare) 70%, transparent); }
   .scrubber .tc { color: var(--ink-mute); }
 
@@ -130,7 +132,7 @@ $ demo export gif,mp4
     height: var(--bar-height);
     opacity: var(--bar-opacity);
     background: var(--flare);
-    border-radius: 2px;
+    /* Bare rectangles per altius.md — 2px sits outside the 4/8 vocabulary. */
   }
   .ascii-motif { color: #fcac9c; font-size: .72rem; letter-spacing: .16em; }
 
@@ -199,23 +201,63 @@ $ demo export gif,mp4
 
   /* Band labels and list rows are the last things the pre-Altius surface block
      in surfaces.css still reaches: it dresses them in cool greys (#a39c8e,
-     #2a241d) that belong to no Altius value. Component CSS is bundled *before*
-     the surface stylesheet, so these rules name the surface key to earn the
-     weight they need to win — the bands then speak Flare on obsidian, Signal
-     Red on peach, and the row rules keep the hairline warm. */
+     #2a241d, and #ece7dd for inline code) that belong to no Altius value.
+     Component CSS is bundled *before* the surface stylesheet, so these rules
+     name the surface key and the `.exp` wrapper to out-rank that block
+     (extra compound ⇒ higher specificity, and no cid-scoping, since the
+     wrapper belongs to ExperimentLayout). The bands then speak Flare on
+     obsidian, Signal Red on peach, and the row rules keep the hairline warm.
+     `.features code` must stay fully :global: the <code> arrives through
+     set:html, so it never carries this component's cid. */
   :global(html[data-surface='studio']) .band-dark .label { color: var(--flare); }
   :global(html[data-surface='studio']) .band-light .label { color: #951c04; }
-  :global(html[data-surface='studio']) .features li { color: var(--ink-dim); border-bottom-color: var(--line); }
-  :global(html[data-surface='studio']) .features :global(code) { color: #f7f6ff; }
+  :global(html[data-surface='studio'] .exp .band-dark .features li) { color: var(--ink-dim); border-bottom-color: var(--line); }
+  :global(html[data-surface='studio'] .exp .band-dark .features code) { color: #f7f6ff; }
 
-  /* The origin story is layout-owned, but it is painted the same vapor-peach as
-     the slots below it (surfaces.css washes .genesis-row), so it has to invert
-     with them. Left alone it inherits Linen from the obsidian canvas: a white
-     heading and 1.9:1 body copy on peach. The light half of the thermal rhythm
-     is Obsidian body, Signal Red labels. */
-  :global(html[data-surface='studio'] .exp .genesis-row) { color: #190501; background: var(--peach); }
-  :global(html[data-surface='studio'] .genesis-row .genesis .label) { color: #951c04; }
-  :global(html[data-surface='studio'] .genesis-row .genesis .prose) { color: #190501; }
+  /* The origin story is layout-owned and sits between the dark hero and the
+     peach slots band. surfaces.css (preserved block) washes it peach, which
+     collapses altius.md's section rhythm — dark hero → dark band → light peach
+     → dark solutions — into dark → peach → peach, and leaves the page with no
+     dark/dark/peach beat anywhere. Put the row back on the obsidian canvas:
+     two dark bands now precede the first Vapor Peach break, and its inks
+     invert back with the background (Flare eyebrow, Linen body — the row's
+     previous obsidian-on-peach values would sit at 1:1 on this canvas). */
+  :global(html[data-surface='studio'] .exp .genesis-row) { color: var(--ink); background: var(--bg); }
+  :global(html[data-surface='studio'] .genesis-row .genesis .label) { color: var(--flare); }
+  :global(html[data-surface='studio'] .genesis-row .genesis .prose) { color: var(--ink-dim); }
+
+  /* Vapor Peach break before the dark tail. Without it the page runs commands
+     → FAQ → prev/next → footer all dark (altius.md: never more than 2-3 dark
+     blocks in a row). The FAQ is layout-owned → whole selector :global;
+     `max-width: none` makes it full-bleed like .band-light/.band-dark while
+     the inner cap keeps the 52rem measure. Local token inversion re-dresses
+     the whole section: Obsidian body, Warm Ash hairlines, Signal Red emphasis
+     (7.41:1 on peach). Resulting rhythm:
+     hero(D) · origin(D) · slots(P) · commands(D) · faq(P) · prev/next+footer(D) */
+  :global(html[data-surface='studio'] .exp .faq-section) {
+    max-width: none;
+    background: var(--peach);
+    color: #190501;
+    padding-block: 3.5rem;
+    padding-inline: max(var(--space), calc(50% - 26rem));
+    --ink: #190501;
+    --ink-dim: #190501;
+    --ink-faint: #190501;
+    --line: #baadab;
+    --essence: #951c04;
+  }
+  :global(html[data-surface='studio'] .exp .faq-section > *) { max-width: 52rem; margin-inline: auto; }
+  :global(html[data-surface='studio'] .exp .faq-section .label) { color: #951c04; }
+
+  /* The install bar is a control: the 4px radius from the substrate (the
+     shared .cmd is square and the POC block only re-points its fill and
+     coral border). Mirrors the 6px control fix on the canopy surface. */
+  :global(html[data-surface='studio'] .exp .cmd) { border-radius: var(--radius-ctl); }
+
+  /* altius.md Eyebrow Tag Label: Flare Orange on dark. The bands are done
+     above; the hero install label is the remaining dark eyebrow (layout-owned
+     → full :global). The origin label is already Flare two rules up. */
+  :global(html[data-surface='studio'] .exp .install-head .label) { color: var(--flare); }
 </style>
 
 <script>

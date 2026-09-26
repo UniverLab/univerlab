@@ -211,6 +211,51 @@ const ORBIT_DOTS = [
   .col h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
 
+  /* The recorded-demo frame in the genesis row is a card here too, but
+     DemoFigure ships it at 12px with a 22/60px drop shadow — 12px is outside
+     auros.md's complete shape vocabulary (cards 16, small 6) and elevation
+     comes from the teal stack, never from box-shadow. Re-state both from this
+     view: the hairline border the component already draws stays. (Same move
+     surfaces.css makes for the paper surface.) */
+  :global(html[data-surface='tui'] .exp .demo-frame) {
+    border-radius: var(--radius-card);
+    box-shadow: none;
+  }
+
+  /* ── Primary CTA ────────────────────────────────────────────────────────
+     global.css declares this surface's Aurora gradient (--cta-gradient: cyan →
+     white → pink) as the install/primary CTA's fill, but the preserved POC
+     block in surfaces.css paints the hero button from `:root` (0,4,0) with the
+     older teal→aqua sweep — a bare `.btn` rule here can't outrank it. Name the
+     surface and the wrapper: this beats (0,4,0) on specificity and matches
+     auros.md's Gradient Pill Button (aurora fill, 6px, dark label). The Docs
+     button keeps its outline — `.btn.ghost` in surfaces.css is more specific
+     still and still sets background: transparent. The hover sets only `filter`
+     (no competing rule sets one), because ExperimentLayout's `.btn:hover`
+     background loses to this rule and would otherwise leave the CTA with no
+     hover feedback. */
+  :global(html[data-surface='tui'] .exp .actions .btn:not(.ghost)) {
+    background: var(--cta-gradient);
+    color: #222222;
+    border: 0;
+    border-radius: var(--radius-ctl);
+  }
+  :global(html[data-surface='tui'] .exp .actions .btn:not(.ghost):hover) {
+    filter: brightness(1.05);
+  }
+
+  /* The install bar is a control, so it takes the 6px control radius —
+     neither layout nor surfaces.css gives the tui install bar any radius
+     (square corners by default). The POC block also paints its border with
+     the drifted pre-Auros teal hairline as a literal (rgba(203,255,252,.16)),
+     bypassing the --line token this surface re-states to the Auros white
+     hairline — so re-point the color through the token too.
+     0-3-1 beats surfaces.css's 0-3-0. */
+  :global(html[data-surface='tui'] .exp .cmd) {
+    border-radius: var(--radius-ctl);
+    border-color: var(--line);
+  }
+
   /* ── Hero extras ──────────────────────────────────────────────────────
      A fragment of the field the TUI actually draws, and a mono kicker row.
      The machine's own vocabulary, on hairlines. (The empty 16:9 placeholder
@@ -294,16 +339,15 @@ const ORBIT_DOTS = [
   .ag-caption { max-width: 24rem; }
   .ag-caption h2 { font-size: 1.7rem; margin: 0 0 1.4rem; }
 
-  /* The quietest *text* on this page carries the AA lift, not the token: the
-     surface block pins --ink-faint to Slate Deep #707777 (3.52:1 on the Abyss
-     canvas — a decorative tint, fine for fills), so the step numerals and the
-     outro below use the same Silver-Mist-family grey global.css declares for
-     the tui substrate (6.54:1). Numbers that no one can read are not quiet. */
+  /* The quietest *text* on this page is the AA-lifted helper grey the tui
+     substrate declares in global.css (6.54:1 on the Abyss canvas). Slate Deep
+     #707777 stays a decorative fill (`--slate-deep`) — as text it is 3.52:1,
+     which is why global.css re-states --ink-faint above surfaces.css's pin. */
   .ag-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.4rem; }
-  .ag-step-num { display: block; color: #9aa8a7; font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+  .ag-step-num { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
   .ag-step h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin: 0 0 0.5rem; }
   .ag-step p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
-  .ag-outro { margin: 1.4rem 0 0; color: #9aa8a7; font-size: 0.88rem; line-height: 1.6; }
+  .ag-outro { margin: 1.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; line-height: 1.6; }
 
   /* Nodes */
   .ag-shape {

@@ -6,49 +6,57 @@ const topicColors: Record<string, string> = Object.fromEntries(
 );
 ---
 <BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
-  <section class="wrap roadmap" id="roadmap-section" hidden>
-    <div class="roadmap-head">
-      <span class="label">ROADMAP</span>
-      <button id="roadmap-edit-toggle" class="rm-edit-btn" type="button">Edit</button>
-    </div>
-    <p id="roadmap-notice" class="rm-notice" role="status" hidden></p>
-    <div id="roadmap">
-      <div class="rm-skeleton"></div>
-      <div class="rm-skeleton"></div>
-      <div class="rm-skeleton"></div>
-    </div>
-  </section>
-  <section class="wrap log">
-    <div class="log-head">
-      <span class="label">MISSION LOG</span>
-      <a href="/feed/" class="feed-link">RSS</a>
-    </div>
-    <h1>Status</h1>
-    <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
-    <nav class="topic-index" aria-label="Mission log topics">
-      <span class="topic-index-label">TOPICS</span>
-      <div id="topic-filters" class="topic-filters">
-        <button class="topic-filter is-active" type="button" data-topic="all" aria-pressed="true">All</button>
+  <section class="wrap board" id="status-board">
+    <header class="board-head">
+      <div class="board-titles">
+        <span class="label">STATUS</span>
+        <h1>Status</h1>
+        <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
       </div>
-    </nav>
-    <nav class="topic-index" aria-label="Mission log types">
-      <span class="topic-index-label">TYPES</span>
-      <div id="type-filters" class="topic-filters">
-        <button class="topic-filter is-active" type="button" data-type="all" aria-pressed="true">All</button>
+      <div class="board-actions">
+        <a href="/feed/" class="feed-link">RSS</a>
+        <button id="roadmap-edit-toggle" class="rm-edit-btn" type="button">Edit</button>
       </div>
-    </nav>
-    <div id="log-entries">
-      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
-      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
-      <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+    </header>
+    <div class="board-filters">
+      <nav class="topic-index" aria-label="Board topics">
+        <span class="topic-index-label">TOPICS</span>
+        <div id="topic-filters" class="topic-filters"><!-- built by JS --></div>
+      </nav>
+      <nav class="topic-index" aria-label="Board types">
+        <span class="topic-index-label">TYPES</span>
+        <div id="type-filters" class="topic-filters"><!-- built by JS --></div>
+      </nav>
+    </div>
+    <div class="board-cols">
+      <section class="board-col board-roadmap" id="roadmap-section" aria-label="Roadmap" hidden>
+        <div class="col-label" aria-hidden="true"><span class="label">ROADMAP</span></div>
+        <p id="roadmap-notice" class="rm-notice" role="status" hidden></p>
+        <div id="roadmap"><!-- lanes render here --></div>
+      </section>
+      <section class="board-col board-log" aria-label="Mission log">
+        <div class="col-label" aria-hidden="true"><span class="label">MISSION LOG</span></div>
+        <div id="log-scroller" class="log-scroller" tabindex="0" aria-label="Mission log entries">
+          <div id="log-entries"><!-- entries render here --></div>
+        </div>
+      </section>
     </div>
   </section>
 
   <style is:global>
-    .log { max-width: 42rem; padding-block: 4rem 6rem; }
-    .log .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 1.2rem; }
-    .log-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 1.2rem; }
-    .log-head .label { margin-bottom: 0; }
+    /* Board shell — one header, one filter bar, two columns. Narrow keeps the
+       stacked order (roadmap, then log) via plain document flow. */
+    .board { max-width: 88rem; padding-block: 4rem 6rem; }
+    .board .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; }
+    .board-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 1rem 2.5rem; margin-bottom: 2rem; }
+    .board-titles { min-width: 0; }
+    .board-titles .label { margin-bottom: 1.2rem; }
+    .board-actions { display: flex; align-items: center; gap: 0.6rem; }
+    .col-label { margin-bottom: 1.2rem; }
+    .board-filters { display: flex; flex-direction: column; margin-bottom: 2.5rem; }
+    .board-cols { display: flex; flex-direction: column; gap: 3rem; }
+    .board-col { min-width: 0; width: 100%; max-width: 42rem; margin-inline: auto; }
+    .log-scroller { min-width: 0; }
     .feed-link {
       font-family: var(--font-mono);
       font-size: 0.65rem;
@@ -66,8 +74,8 @@ const topicColors: Record<string, string> = Object.fromEntries(
       color: var(--ink);
       border-color: var(--accent);
     }
-    .log h1 { font-family: var(--font-mono); font-size: 1.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin-bottom: 0.6rem; }
-    .log .intro { color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; margin-bottom: 3rem; }
+    .board h1 { font-family: var(--font-mono); font-size: 1.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin-bottom: 0.6rem; }
+    .board .intro { color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; margin-bottom: 0; max-width: 42rem; }
     .topic-index { display: flex; align-items: baseline; gap: 1rem; padding-block: 0.5rem; }
     .topic-index + .topic-index { padding-top: 0; margin-top: -0.15rem; }
     .topic-index-label { flex: 0 0 auto; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--ink-faint); }
@@ -188,10 +196,6 @@ const topicColors: Record<string, string> = Object.fromEntries(
       .entry time { grid-column: 1 / -1; }
       .entry .entry-body { grid-column: 1 / -1; }
     }
-    .roadmap { max-width: 42rem; padding-block: 4rem 0; }
-    .roadmap .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; }
-    .roadmap-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 1.2rem; }
-    .roadmap-head .label { margin-bottom: 0; }
     .rm-edit-btn {
       font-family: var(--font-mono);
       font-size: 0.65rem;
@@ -245,6 +249,22 @@ const topicColors: Record<string, string> = Object.fromEntries(
     .rm-more:hover { opacity: 1; text-decoration: underline; }
     .rm-skeleton { height: 0.9rem; border-radius: 3px; margin-block: 0.6rem; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
     @media (max-width: 640px) { .rm-row { grid-template-columns: 2.6rem 1fr; } .rm-side { grid-column: 1 / -1; } }
+
+    /* Topic filter dims log rows instead of removing them — the roadmap lanes
+       hard-filter instead, so the two columns read as one board. */
+    .entry.is-dimmed > time,
+    .entry.is-dimmed > .entry-body,
+    .entry.is-dimmed > .type-badge { opacity: 0.35; }
+
+    /* Wide split: roadmap and mission log side by side, each its own scroll
+       context. Below the breakpoint this whole block is inert — narrow keeps
+       the stacked order and page scroll. */
+    @media (min-width: 90rem) {
+      .board-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; align-items: start; }
+      .board-col { max-width: none; margin-inline: 0; }
+      .board-roadmap #roadmap,
+      .board-log .log-scroller { max-height: calc(100dvh - 26rem); min-height: 24rem; overflow-y: auto; overscroll-behavior: contain; }
+    }
   </style>
 
   <script is:inline define:vars={{ topicColors }}>
@@ -253,6 +273,17 @@ const topicColors: Record<string, string> = Object.fromEntries(
       var TOPIC_COLORS = topicColors;
       var container = document.getElementById('log-entries');
       if (!container) return;
+      var logScroller = document.getElementById('log-scroller') || container.parentElement;
+      var sentinel = null;
+
+      // The sentinel must stay the last child of the log scroll container or
+      // infinite scroll stops firing once rows are re-rendered above it.
+      function placeSentinel() {
+        if (!sentinel || !logScroller) return;
+        if (sentinel.parentNode !== logScroller || logScroller.lastElementChild !== sentinel) {
+          logScroller.appendChild(sentinel);
+        }
+      }
 
       var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       var MOCK = [
@@ -404,11 +435,19 @@ const topicColors: Record<string, string> = Object.fromEntries(
         });
       }
 
+      // Topic selection dims non-matching log rows instead of removing them, so
+      // the log keeps its scroll position and reads as the same board as the
+      // (hard-filtered) roadmap lanes. Type still hard-filters.
+      function entryIsDimmed(entry) {
+        if (activeTopic === 'all') return false;
+        return normalizeEntry(entry).topic !== activeTopic;
+      }
+
       function renderEntries() {
         container.innerHTML = '';
+        placeSentinel();
         var visible = allEntries.filter(function (entry) {
           var ne = normalizeEntry(entry);
-          if (activeTopic !== 'all' && ne.topic !== activeTopic) return false;
           if (activeType !== 'all' && ne.type !== activeType) return false;
           return true;
         });
@@ -416,15 +455,9 @@ const topicColors: Record<string, string> = Object.fromEntries(
         if (!visible.length) {
           var empty = document.createElement('p');
           empty.className = 'filter-empty';
-          if (activeTopic !== 'all' && activeType !== 'all') {
-            empty.textContent = 'No ' + activeType + ' entries under ' + topicLabel(activeTopic) + ' yet.';
-          } else if (activeTopic !== 'all') {
-            empty.textContent = 'No entries under ' + topicLabel(activeTopic) + ' yet.';
-          } else if (activeType !== 'all') {
-            empty.textContent = 'No ' + activeType + ' entries yet.';
-          } else {
-            empty.textContent = 'No entries yet. The log is waiting for its first transmission.';
-          }
+          empty.textContent = activeType === 'all'
+            ? 'No entries yet. The log is waiting for its first transmission.'
+            : 'No ' + activeType + ' entries yet.';
           container.appendChild(empty);
           return;
         }
@@ -475,7 +508,11 @@ const topicColors: Record<string, string> = Object.fromEntries(
       function appendEntries(entries) {
         if (!Array.isArray(entries) || !entries.length) return;
         var frag = document.createDocumentFragment();
-        entries.forEach(function (e) { frag.appendChild(renderEntry(e)); });
+        entries.forEach(function (e) {
+          var article = renderEntry(e);
+          if (entryIsDimmed(e)) article.classList.add('is-dimmed');
+          frag.appendChild(article);
+        });
         container.appendChild(frag);
       }
 
@@ -817,7 +854,8 @@ const topicColors: Record<string, string> = Object.fromEntries(
       function rmRender(force) {
         if (!rmContainer || !rmSection) return;
         if (rmEditorOpenId && !force) { rmDirty = true; return; }
-        if (!rmItems.length && !rmEditing) { rmSection.hidden = true; return; }
+        // The roadmap column never collapses the board: an empty roadmap renders
+        // its own empty state so the log keeps its column and its position.
         rmSection.hidden = false;
         var openMap = {};
         rmContainer.querySelectorAll('.rm-lane-fold').forEach(function (d) {
@@ -909,7 +947,11 @@ const topicColors: Record<string, string> = Object.fromEntries(
               rmRender();
               if (cb) cb();
             })
-            .catch(function () { if (!rmItems.length) rmSection.hidden = true; });
+            .catch(function () {
+              if (rmItems.length) return;
+              rmNotice('Roadmap unavailable.', true);
+              rmRender();
+            });
         }
         step();
       }
@@ -1049,14 +1091,17 @@ const topicColors: Record<string, string> = Object.fromEntries(
           }
         });
       }
-      // Infinite scroll sentinel
-      var sentinel = document.createElement('div');
+      // Infinite scroll sentinel — lives inside the log scroll container so the
+      // observer root follows the column, not the document viewport. Below the
+      // split breakpoint the scroller is not a scroll box, so the same root
+      // degrades to document-viewport behavior with no extra wiring.
+      sentinel = document.createElement('div');
       sentinel.className = 'scroll-sentinel';
-      container.parentElement.appendChild(sentinel);
+      placeSentinel();
 
       var observer = new IntersectionObserver(function (entries) {
         if (entries[0].isIntersecting) loadMore();
-      }, { rootMargin: '200px' });
+      }, { root: logScroller, rootMargin: '200px' });
       observer.observe(sentinel);
 
       // Initial load

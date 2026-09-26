@@ -87,15 +87,17 @@ describe('feed page', () => {
 describe('status page links to feed', () => {
   const status = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
 
-  it('contains a link to /feed next to the Mission Log heading', () => {
+  it('contains a link to /feed in the shared board header', () => {
     expect(status).toMatch(/href="\/feed\/?"/);
     // link text is RSS (same word as feed page heading)
     expect(status).toMatch(/>RSS<\/a>/);
-    // near the MISSION LOG label
-    const logIdx = status.indexOf('MISSION LOG');
+    // Spec 4 split: the feed link lives in the shared .board-head (header row
+    // spanning both columns), which now precedes the MISSION LOG col-label
+    // rather than sitting beside it in the old .log-head.
+    const headEnd = status.indexOf('</header>');
     const feedIdx = status.indexOf('href="/feed');
     expect(feedIdx).toBeGreaterThan(-1);
-    expect(Math.abs(feedIdx - logIdx)).toBeLessThan(500);
+    expect(feedIdx).toBeLessThan(headEnd);
   });
 
   it('status feed link uses the same label as feed heading', () => {

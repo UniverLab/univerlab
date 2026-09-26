@@ -82,6 +82,23 @@ html[data-surface='tui'] {
   --radius-ctl: 6px;
 }
 
+/* Re-statement of the three values above that would otherwise never reach the
+   page. surfaces.css carries a *preserved POC* block for the same surface
+   written as `:root[data-surface='tui']` (specificity 0,2,0) — it outranks the
+   `html[data-surface='tui']` block (0,1,1) regardless of bundle order, and it
+   still carries the older ink/hairline: --ink #ffffff, --line rgba(203,255,252,.16)
+   and --ink-faint pinned to Slate Deep #707777. Slate Deep is a *surface tint*
+   per auros.md, and as text it measures 3.52:1 on the Abyss canvas — it is what
+   dresses .exp-nav's EXP labels and arrows on this page (WCAG AA fail at
+   12px/19px). Same selector plus :root matches the identical element at a
+   higher specificity, so the Auros stack this file declares is the one that
+   renders. `--slate-deep` above stays the decorative-only value. */
+html[data-surface='tui']:root {
+  --ink: #edfffe;                  /* Liquid Mist — emphatic body; display H1 keeps Platinum via surfaces.css */
+  --ink-faint: #9aa8a7;            /* AA helper grey — 6.55:1 on #012624, 5.35:1 on #003734 */
+  --line: rgba(255,255,255,.10);   /* hairline */
+}
+
 /* gitkit — pastel sunlit canvas (key kept for stability): white canvas with
    fog bands and a single voltage violet. */
 html[data-surface='pastel'] {
@@ -143,11 +160,23 @@ html[data-surface='quorum'] {
    KEY STAYS `studio` per specs/altius-demostage.md + experiments.ts + BaseLayout.
    `obsidian` in task prose = the .band-dark section color, not the html surface. */
 html[data-surface='studio'] {
+  /* BaseLayout's colorScheme list still calls `studio` a light surface (it was
+     a white "recording stage" pre-Altius) and prints
+     <meta name="color-scheme" content="light">. BaseLayout is out of this
+     surface's edit scope; the CSS property on the root outranks the meta
+     suggestion, so UA scrollbars/controls follow the obsidian canvas here. */
+  color-scheme: dark;
   --bg: #190501;        /* Obsidian Ember — canvas/hero/dark bands */
   --bg-raise: #340a01;  /* Dark Cocoa — cards, install bar, player */
   --molten: #631303;    /* Molten Core — inset glow source only */
   --ink: #f7f6ff;       /* Linen — primary on dark */
-  --ink-dim: #feeae6;   /* Vapor Peach — light bands + body substitute */
+  --ink-dim: #baadab;   /* Warm Ash — secondary text, 9.07:1 on the canvas.
+                           Kept equal to the value the preserved POC block pins
+                           on `:root[data-surface='studio']` (higher
+                           specificity than this block), so what this file
+                           declares is what renders. Vapor Peach (#feeae6) is
+                           the light-BAND surface (--peach below), not a dark
+                           ink: altius.md — "Don't apply color to body text". */
   --ink-mute: #baadab;  /* Warm Ash — tertiary/dividers on dark */
   --ink-faint: #baadab; /* same — darkest warm gray clearing AA here */
   --peach: #feeae6;     /* Vapor Peach — light section bg */
