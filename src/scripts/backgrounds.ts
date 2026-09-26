@@ -4,6 +4,7 @@
  *  counts, capped DPR, and animation paused while the tab is hidden. */
 
 import type { BgTheme as Theme } from '../lib/experiments';
+import { createSpotlight } from './spotlight';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -43,6 +44,8 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   // before importing it.
   const isPaper = document.documentElement.dataset.surface === 'paper';
   if (isPaper) ctx.color = '#6a563e'; // bistre fibres, never amber embers
+  const isPastel = document.documentElement.dataset.surface === 'pastel';
+  if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
   const runner = isPaper ? PAPER : (THEMES[theme] ?? THEMES.drift);
   const tick = runner(ctx);
 
@@ -825,8 +828,10 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Bubbles — soft pastel circles floating upward, like champagne bubbles
-     or soap bubbles. GitKit's cherry-on-top aesthetic. */
+  /* Bubbles — GitKit's drifting commit graph: soft orbs rise like bubbles,
+     each drawn as a commit node (filled core + ring), linked by gitgraph
+     lane segments that re-link from live positions so the graph breathes.
+     The cursor stirs nearby orbs; they ease back to their rise. */
   bubbles(ctx) {
     const { c } = ctx;
     const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
@@ -847,18 +852,83 @@ const THEMES: Record<Theme, Runner> = {
       ph: rand(0, Math.PI * 2),
       opacity: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
     }));
+    // Cursor stir (same shape as the scaffold spotlight, inlined — no import):
+    // a lerped pointer; orbs within REACH pick up a sideways impulse and ease
+    // back. Touch input never drags; leaving the window parks at 50%/30%.
+    // Reduced motion never reaches here (ThemeBackground returns early).
+    const REACH = 160;
+    let tx = ctx.w * 0.5;
+    let ty = ctx.h * 0.3;
+    let sx = tx;
+    let sy = ty;
+    let hasPointer = false;
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        tx = e.clientX;
+        ty = e.clientY;
+        hasPointer = true;
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false;
+      },
+      { passive: true, signal: ac.signal }
+    );
     let prevT = 0;
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
+      if (!hasPointer) {
+        tx = ctx.w * 0.5;
+        ty = ctx.h * 0.3;
+      }
+      sx += (tx - sx) * 0.08;
+      sy += (ty - sy) * 0.08;
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       c.clearRect(0, 0, ctx.w, ctx.h);
       for (const b of bubbles) {
         b.y -= b.vy;
         b.x += Math.sin(t * 0.0008 + b.ph) * 0.5 + b.vx;
+        const dx = b.x - sx;
+        const dy = b.y - sy;
+        if (Math.hypot(dx, dy) < REACH) {
+          b.vx += dx * 0.00012 * dt;
+          if (b.vx > 0.6) b.vx = 0.6;
+          else if (b.vx < -0.6) b.vx = -0.6;
+        }
+        b.vx *= 0.985;
         if (b.y < -b.r * 2) {
           b.y = ctx.h + b.r * 2;
           b.x = rand(0, ctx.w);
         }
+      }
+      // Lanes first: sort by y, link each node to its next-nearest in y
+      // within 260px — the gitgraph bezier, capped at N-1 links.
+      const sorted = [...bubbles].sort((p, q) => p.y - q.y);
+      c.strokeStyle = ctx.color;
+      c.lineWidth = 1;
+      c.globalAlpha = 0.14;
+      for (let i = 0; i + 1 < sorted.length; i++) {
+        const p = sorted[i];
+        const q = sorted[i + 1];
+        if (q.y - p.y > 260) continue;
+        const my = (p.y + q.y) / 2;
+        c.beginPath();
+        c.moveTo(p.x, p.y);
+        c.bezierCurveTo(p.x, my, q.x, my, q.x, q.y);
+        c.stroke();
+      }
+      // Nodes over the lanes: the halo wash, then the commit core + ring.
+      for (const b of bubbles) {
         const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
         grad.addColorStop(0, A + (dark ? '20' : '80'));
         grad.addColorStop(0.5, A + (dark ? '10' : '50'));
@@ -871,8 +941,14 @@ const THEMES: Record<Theme, Runner> = {
         c.globalAlpha = b.opacity * (dark ? 0.3 : 0.8);
         c.fillStyle = dark ? '#ffffff' : A;
         c.beginPath();
-        c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
+        c.arc(b.x, b.y, b.r * 0.32, 0, Math.PI * 2);
         c.fill();
+        c.globalAlpha = b.opacity;
+        c.strokeStyle = dark ? '#ffffff' : A;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.arc(b.x, b.y, b.r * 0.52, 0, Math.PI * 2);
+        c.stroke();
       }
       c.globalAlpha = 1;
     };
@@ -1005,32 +1081,10 @@ const THEMES: Record<Theme, Runner> = {
     // Cursor-anchored spotlight: one radial violet-white wash following the
     // pointer, lerped to avoid jitter. Touch parks at 50%/30%; reduced-motion
     // never reaches here (ThemeBackground returns early).
-    const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window && navigator.maxTouchPoints > 0;
-    let tx = ctx.w * 0.5;
-    let ty = ctx.h * 0.3;
-    let sx = tx;
-    let sy = ty;
-    let hasPointer = false;
-    const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    if (!isTouch && typeof document !== 'undefined') {
-      document.addEventListener(
-        'pointermove',
-        (e: PointerEvent) => {
-          tx = e.clientX;
-          ty = e.clientY;
-          hasPointer = true;
-        },
-        { passive: true, signal: ac?.signal }
-      );
-      document.addEventListener('pointerleave', () => {
-        hasPointer = false;
-      }, { signal: ac?.signal });
-    }
+    const spot = createSpotlight(ctx);
     return (t) => {
-      if (!ctx.canvas.isConnected) {
-        ac?.abort();
-        return;
-      }
+      const sp = spot.step();
+      if (!sp) return;
       if (cols !== Math.ceil(ctx.w / g) + 1) dims();
       const dt = prevT ? t - prevT : 16;
       prevT = t;
@@ -1039,12 +1093,6 @@ const THEMES: Record<Theme, Runner> = {
         spawnAcc = 0;
         add();
       }
-      if (!hasPointer) {
-        tx = ctx.w * 0.5;
-        ty = ctx.h * 0.3;
-      }
-      sx += (tx - sx) * 0.08;
-      sy += (ty - sy) * 0.08;
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
       c.lineWidth = 1;
@@ -1094,15 +1142,7 @@ const THEMES: Record<Theme, Runner> = {
       }
       // ONE cursor-anchored spotlight: violet-white wash over the grid, under
       // content. Single radial gradient, composited additively on the dark.
-      c.globalCompositeOperation = 'lighter';
-      c.globalAlpha = 1;
-      const R = 420;
-      const spot = c.createRadialGradient(sx, sy, 0, sx, sy, R);
-      spot.addColorStop(0, 'rgba(167,139,250,0.10)');
-      spot.addColorStop(1, 'rgba(167,139,250,0)');
-      c.fillStyle = spot;
-      c.fillRect(sx - R, sy - R, R * 2, R * 2);
-      c.globalCompositeOperation = 'source-over';
+      spot.paint(c, sp.x, sp.y);
       c.globalAlpha = 1;
     };
   },

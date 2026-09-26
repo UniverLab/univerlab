@@ -251,6 +251,27 @@ export const en = {
       description:
         'Hooks, .gitignore, .gitattributes and config in one guided, idempotent flow. Composable hooks that survive being reapplied. One binary, no Node, no Python.',
       koan: '// the ritual, automated',
+      hero: {
+        badges: ['one binary', 'offline hooks', 'idempotent'],
+        wizard: {
+          kicker: 'gitkit init',
+          steps: [
+            'Repository profile',
+            'Hooks',
+            'Ignore & attributes',
+            'Config presets',
+            'Save as build',
+          ],
+        },
+        hooks: {
+          kicker: 'hook stack',
+          items: [
+            ['conventional-commits', 'commit-msg'],
+            ['no-secrets', 'pre-commit'],
+            ['branch-naming', 'pre-push'],
+          ] as [string, string][],
+        },
+      },
       lede:
         'One guided flow for hooks, <code>.gitignore</code>, <code>.gitattributes</code> and git config — then saved as a <strong>build</strong> you can re-apply to any project with a single command.',
       genesis: {
@@ -304,7 +325,6 @@ export const en = {
           'Language template',
           'Branches',
           'Features & license',
-          'Sponsor button',
           'Review & confirm',
         ],
       },

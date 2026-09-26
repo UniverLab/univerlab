@@ -72,15 +72,17 @@ html[data-surface='tui'] {
   --line: #20242a;
 }
 
-/* gitkit — pastel cherry on top: soft lavender background with pink accents,
-   like a dessert counter. The cherry of the cake — sweet and playful. */
+/* gitkit — pastel sunlit canvas (key kept for stability): white canvas with
+   fog bands and a single voltage violet. */
 html[data-surface='pastel'] {
-  --bg: #f5eef5;
-  --bg-raise: #faf5fa;
-  --ink: #4a3a4a;
-  --ink-dim: #685b68;   /* darkened from #7a6a7a (4.42:1) to 5.6:1 */
-  --ink-faint: #746874; /* darkened from #a898a8 (2.39:1); kept below dim so the dim>faint hierarchy holds */
-  --line: #e8d8e8;
+  --voltage: #6d28d9;   /* violet-700 — 7.1:1 on white, AA at 12px */
+  --voltage-lt: #c4b5fd;/* violet-400 — only on DARK plates */
+  --bg: #ffffff;
+  --bg-raise: #faf9fd;  /* cards, install bar */
+  --ink: #17141f;
+  --ink-dim: #524d5e;   /* ≥7:1 on white */
+  --ink-faint: #6e687a; /* ≥4.6:1 on white */
+  --line: #eceaf2;
 }
 
 /* ghscaff — industrial foundry: dark iron with copper accents, the heat of a

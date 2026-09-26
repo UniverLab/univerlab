@@ -249,6 +249,27 @@ export const es: Dict = {
       description:
         'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
       koan: '// el ritual, automatizado',
+      hero: {
+        badges: ['un binario', 'hooks sin conexión', 'idempotente'],
+        wizard: {
+          kicker: 'gitkit init',
+          steps: [
+            'Perfil del repositorio',
+            'Hooks',
+            'Ignore & attributes',
+            'Presets de config',
+            'Guardar como build',
+          ],
+        },
+        hooks: {
+          kicker: 'pila de hooks',
+          items: [
+            ['conventional-commits', 'commit-msg'],
+            ['no-secrets', 'pre-commit'],
+            ['branch-naming', 'pre-push'],
+          ] as [string, string][],
+        },
+      },
       lede:
         'Un flujo guiado para hooks, <code>.gitignore</code>, <code>.gitattributes</code> y configuración de git — y luego guardado como un <strong>build</strong> que puedes reaplicar a cualquier proyecto con un solo comando.',
       genesis: {
@@ -302,7 +323,6 @@ export const es: Dict = {
           'Plantilla de lenguaje',
           'Ramas',
           'Características y licencia',
-          'Sponsor button',
           'Revisar y confirmar',
         ],
       },

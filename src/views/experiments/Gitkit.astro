@@ -1,11 +1,41 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
+import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.gitkit;
+const exp = byId('gitkit');
 ---
-<ExperimentLayout id="gitkit">
+<ExperimentLayout id="gitkit" hideGithub>
+  <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
+  <Fragment slot="before-genesis">
+    <div class="wrap section hero-stage">
+      <p class="badges">{e.hero.badges.map((b) => <span class="tag">{b}</span>)}</p>
+      <p class="ascii-motif" aria-hidden="true">o──o──◆ origin/main · 3 hooks · idempotent</p>
+      <div class="mocks" aria-hidden="true">
+        <div class="mock mock-a">
+          <div class="card wizard">
+            <p class="label">{e.hero.wizard.kicker}</p>
+            <ol class="git-rail">
+              {e.hero.wizard.steps.map((s, i) => (
+                <li class:list={[{ done: i < 3, active: i === 3 }]}><span class="node" /><span>{s}</span><span class="tag">step {i + 1}</span></li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        <div class="mock mock-b">
+          <div class="card hooks">
+            <p class="label">{e.hero.hooks.kicker}</p>
+            {e.hero.hooks.items.map(([h, hook]) => (
+              <p class="row"><span class="ok">✓</span><code>{h}</code><span class="tag">{hook}</span></p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </Fragment>
+
   <section class="wrap section">
     <div class="term" id="gitkit-term">
       <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit · commit</div>
@@ -26,17 +56,82 @@ $ git push
 </ExperimentLayout>
 
 <style>
-  .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
+  .section { padding-block: 0.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
-  .term { border: 1px solid color-mix(in srgb, var(--gitkit) 30%, var(--line)); background: var(--bg-raise); }
-  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-faint); font-size: 0.75rem; }
+  .hero-stage { display: block; }
+  .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1.6rem 0 0.6rem; }
+  .ascii-motif {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--voltage, #6d28d9);
+    opacity: 0.65;
+    margin: 0 0 1.6rem;
+    text-align: center;
+  }
+  .mocks {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 1.5rem;
+    max-width: 46rem;
+    margin-inline: auto;
+    text-align: left;
+  }
+  .mock-a .card { transform: rotate(-1deg); }
+  .mock-b .card { transform: rotate(1.2deg) translateY(1.4rem); }
+  @media (max-width: 52rem) {
+    .mocks { grid-template-columns: 1fr; }
+    .mock-a .card, .mock-b .card { transform: none; }
+  }
+  .card {
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(23,20,31,.06);
+    padding: 1.2rem 1.3rem;
+  }
+  .card .label { margin: 0 0 0.9rem; }
+  .git-rail { list-style: none; margin: 0; padding: 0; }
+  .git-rail li { position: relative; display: flex; gap: 0.6rem; align-items: baseline; padding: 0.45rem 0 0.45rem 1.4rem; font-size: 0.9rem; color: var(--ink-dim); }
+  .git-rail li::before {
+    content: '';
+    position: absolute;
+    left: 0.25rem;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--voltage, #6d28d9);
+    opacity: 0.35;
+  }
+  .git-rail li:first-child::before { top: 50%; }
+  .git-rail li:last-child::before { bottom: 50%; }
+  .git-rail .node {
+    position: absolute;
+    left: 0.25rem;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid var(--voltage, #6d28d9);
+    background: #fff;
+    transform: translate(-50%, -50%);
+  }
+  .git-rail .done .node { background: var(--voltage, #6d28d9); border-color: var(--voltage, #6d28d9); }
+  .git-rail .active .node { box-shadow: 0 0 0 3px rgba(109,40,217,.18); }
+  .git-rail .tag { margin-left: auto; }
+  .hooks .row { display: flex; gap: 0.6rem; align-items: baseline; margin: 0; padding-block: 0.5rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+  .hooks .row:last-child { border-bottom: 0; }
+  .hooks .ok { color: var(--voltage, #6d28d9); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
+  .hooks code { color: var(--voltage, #6d28d9); font-size: 0.85rem; }
+  .hooks .tag { margin-left: auto; }
+  .term { background: #17141f; border: 1px solid #2c2740; border-radius: 12px; overflow: hidden; }
+  .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid #2c2740; color: #8f8aa3; font-size: 0.75rem; }
   .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
-  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--gitkit); min-height: 9rem; }
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--voltage-lt, #c4b5fd); min-height: 9rem; }
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { display: flex; gap: 0.7rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .chk { color: var(--gitkit); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
-  .features :global(code) { color: var(--gitkit); font-size: 0.88em; }
+  .chk { color: var(--voltage, #6d28d9); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
+  .features :global(code) { color: var(--voltage, #6d28d9); font-size: 0.88em; }
 </style>
 
 <script>
