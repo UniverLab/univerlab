@@ -156,7 +156,7 @@ const webSite = {
   .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
   .btn.ghost:hover { border-color: var(--ink); color: var(--ink); background: transparent; }
 
-  .section { padding-block: 3.2rem; }
+  .section { padding-block: clamp(2.75rem, 6vw, 4rem); }
   .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
   .more { text-decoration: none; }
   .more:hover { color: var(--ink); }
@@ -164,7 +164,7 @@ const webSite = {
   .grid {
     list-style: none; margin: 0; padding: 0;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
-    gap: 1rem;
+    gap: clamp(0.75rem, 1.5vw, 1.25rem);  /* cards breathe with the viewport */
   }
   .card {
     display: block; height: 100%;
@@ -179,28 +179,31 @@ const webSite = {
     overflow: hidden;
   }
 
-  /* Background canvas — hidden by default, shown on hover/focus */
+  /* Background canvas — hidden by default, shown on hover/focus. The canvas
+     paints at full opacity on flip; the per-experiment block below carries
+     the surface tokens and inset highlight, so the glow retires. */
   .card-bg-canvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.5s ease;
     pointer-events: none;
     z-index: 0;
   }
   .card:hover .card-bg-canvas,
   .card:focus-visible .card-bg-canvas,
-  .card.is-tapped .card-bg-canvas { opacity: 0.65; }
+  .card.is-tapped .card-bg-canvas { opacity: 1; }
 
   /* Content sits above the canvas */
   .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
   .card:hover,
+  .card:focus-visible,
   .card.is-tapped {
+    /* transform + box-shadow removed: the per-experiment blocks below carry the
+       flip (surface bg + own inset highlight); no translate on a window. */
     border-left-color: var(--essence);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
   }
 
   /* Portal glow — fades out when per-experiment surface takes over */
@@ -215,7 +218,8 @@ const webSite = {
       radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--essence) 8%, transparent) 0%, transparent 50%);
   }
   .card:hover .card-glow,
-  .card.is-tapped .card-glow { opacity: 1; }
+  .card:focus-visible .card-glow,
+  .card.is-tapped .card-glow { opacity: 0; }
 
   /* ─ Per-experiment portal: card adopts the experiment's surface on hover ──
      Each card shows the experiment's own surface as a "window" into it.
@@ -235,7 +239,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--canopy);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .card[data-exp='canopy']:hover h3,
   .card[data-exp='canopy']:focus-visible h3,
@@ -282,6 +286,7 @@ const webSite = {
     color: var(--canopy);
     opacity: 0;
     transition: opacity 0.3s ease;
+    z-index: 1; /* sits above the now-full-opacity canvas */
   }
   .card[data-exp='canopy']:hover::after {
     opacity: 0.8;
@@ -305,7 +310,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--texforge);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
   }
   .card[data-exp='texforge']:hover h3,
   .card[data-exp='texforge']:focus-visible h3,
@@ -336,7 +341,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--gitkit);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
   }
   .card[data-exp='gitkit']:hover h3,
   .card[data-exp='gitkit']:focus-visible h3,
@@ -367,7 +372,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--ghscaff);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
   }
   .card[data-exp='ghscaff']:hover h3,
   .card[data-exp='ghscaff']:focus-visible h3,
@@ -398,7 +403,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--cadspec);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
   }
   .card[data-exp='cadspec']:hover h3,
   .card[data-exp='cadspec']:focus-visible h3,
@@ -429,7 +434,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--astro-denoise);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(167,139,250,0.08);
+    box-shadow: inset 0 1px 0 rgba(167,139,250,0.08);
   }
   .card[data-exp='astro-denoise']:hover h3,
   .card[data-exp='astro-denoise']:focus-visible h3,
@@ -460,7 +465,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--demostage);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
   }
   .card[data-exp='demostage']:hover h3,
   .card[data-exp='demostage']:focus-visible h3,
@@ -491,7 +496,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--quorum);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
   }
   html[data-celestial='moon'] .card[data-exp='quorum']:hover,
   html[data-celestial='moon'] .card[data-exp='quorum']:focus-visible,
@@ -505,7 +510,7 @@ const webSite = {
     background: var(--bg);
     color: var(--ink);
     border-left-color: var(--quorum);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
   }
   .card[data-exp='quorum']:hover h3,
   .card[data-exp='quorum']:focus-visible h3,
@@ -530,12 +535,12 @@ const webSite = {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
   }
-  .card:focus-visible .card-glow { opacity: 1; }
+  .card:not([data-exp]):focus-visible .card-glow { opacity: 1; }
 
   /* Mobile: tap triggers the same effect */
   @media (hover: none) {
     .card:active { transform: scale(0.98); }
-    .card:active .card-glow { opacity: 1; }
+    .card:active .card-glow { opacity: 0; }  /* matches the flip: glow retires */
     .card[data-exp='canopy']:active::after,
     .card[data-exp='demostage']:active::after,
     .card[data-exp='ghscaff']:active::before,
@@ -556,10 +561,17 @@ const webSite = {
   @media (max-width: 50rem) { .two-col { grid-template-columns: 1fr; } }
   :global(.section .prose a) { color: var(--ink); }
 
+  /* Eyebrow consistency — same quiet color and air across variants, all CSS.
+     `.values` is excluded: it shares the .label signature but is the 6-value
+     grid, which must keep its own display/margin. */
+  .two-col .label:not(.values) { display: block; margin-bottom: 0.35rem; }
+  .section-head .label { color: var(--ink-dim); }
+  .closing .label { display: block; }
+
   .values { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem 1.5rem; }
   .values li::before { content: '— '; color: var(--ink-faint); }
 
-  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 3vw, 2.5rem); }
   .directions ul { list-style: none; padding: 0; margin: 0.8rem 0 0; }
   .directions li { padding-block: 0.35rem; border-bottom: 1px solid var(--line); }
   .dir-now .label { color: var(--ink); }
@@ -568,7 +580,7 @@ const webSite = {
   .dir-next li { color: var(--ink-faint); border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
   @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
 
-  .closing { padding-block: 3.6rem 5rem; }
+  .closing { padding-block: clamp(2.75rem, 6vw, 4rem) 5rem; }
   .closing h2 { font-size: 1.8rem; margin-block: 0.7rem 1rem; max-width: 22ch; }
   .closing .prose { color: var(--ink-dim); }
   .closing-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1.4rem; }
@@ -578,6 +590,11 @@ const webSite = {
 <script>
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
+
+  // Gate the cursor-seeded FIELD runner (see backgrounds.ts) on this page only
+  // — set on the documentElement before ThemeBackground's load-time import has
+  // a chance to resolve, so `cosmic` sees the flag and delegates.
+  document.documentElement.dataset.page = 'home';
 
    const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; bgHexLight: string; motif?: string }> = {
     canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', bgHexLight: '#f5f5f3', motif: '◉' },
@@ -622,8 +639,13 @@ const webSite = {
       const s = surfaces[expId];
       const isMoon = document.documentElement.dataset.celestial === 'moon';
       const color = isMoon ? (s?.bgHex || '#0a0b0e') : (s?.bgHexLight || '#f5f5f3');
+      // motif is a glyph constant from the surfaces map (user data safe to inline)
+      const motif = s?.motif || '';
 
-      // Expanding overlay
+      // Expanding overlay — the motif lives inside a span so it scales with the
+      // expand instead of sitting static. Both the clip-path and the span
+      // transition are filtered to clip-path on transitionend so navigation
+      // doesn't race on the span's own event.
       const overlay = document.createElement('div');
       overlay.style.cssText = `
         position: fixed; inset: 0; z-index: 9999;
@@ -632,17 +654,34 @@ const webSite = {
         font-family: var(--font-mono); font-size: 4rem;
         color: ${s?.essence || '#e6c84a'};
         clip-path: inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px);
-        transition: clip-path 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: clip-path 0.75s cubic-bezier(0.16, 0.84, 0.44, 1);
       `;
-      overlay.textContent = s?.motif || '';
+      overlay.innerHTML = `<span style="display:inline-block;transform:scale(0.55);opacity:0.4;transition:transform 0.75s cubic-bezier(0.16,0.84,0.44,1),opacity 0.75s ease">${motif}</span>`;
       document.body.appendChild(overlay);
 
       requestAnimationFrame(() => {
         overlay.style.clipPath = 'inset(0px 0px 0px 0px)';
+        const motif = overlay.firstElementChild as HTMLElement | null;
+        if (motif) {
+          motif.style.transform = 'scale(1)';
+          motif.style.opacity = '1';
+        }
       });
 
-      // Navigate after expand
-      setTimeout(() => { window.location.href = href; }, 480);
+      // Navigate when the expand finishes. The transitionend listener filters
+      // to clip-path (the span also fires its own); the timeout is a guard
+      // for browsers that don't fire transitionend reliably.
+      let nav = false;
+      const go = () => {
+        if (!nav) {
+          nav = true;
+          window.location.href = href;
+        }
+      };
+      overlay.addEventListener('transitionend', (ev) => {
+        if ((ev as TransitionEvent).propertyName === 'clip-path') go();
+      });
+      setTimeout(go, 820);
     });
   });
 
@@ -702,11 +741,12 @@ const webSite = {
         e.preventDefault();
         card.dataset.navigated = 'true';
         // Hold the surface preview briefly so the tap reads, then run the
-        // normal click handler (expanding portal transition).
+        // normal click handler (expanding portal transition). Total ~1.15s
+        // worst case (350 + 820 timeout) so the user perceives motion, not lag.
         setTimeout(() => {
           card.classList.remove('is-tapped');
           card.click();
-        }, 500);
+        }, 350);
       });
     });
   }
