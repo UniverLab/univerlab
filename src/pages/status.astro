@@ -32,12 +32,20 @@ const topicColors: Record<string, string> = Object.fromEntries(
       <section class="board-col board-roadmap" id="roadmap-section" aria-label="Roadmap" hidden>
         <div class="col-label" aria-hidden="true"><span class="label">ROADMAP</span></div>
         <p id="roadmap-notice" class="rm-notice" role="status" hidden></p>
-        <div id="roadmap"><!-- lanes render here --></div>
+        <div id="roadmap">
+          <div class="rm-skeleton"></div>
+          <div class="rm-skeleton"></div>
+          <div class="rm-skeleton"></div>
+        </div>
       </section>
       <section class="board-col board-log" aria-label="Mission log">
         <div class="col-label" aria-hidden="true"><span class="label">MISSION LOG</span></div>
         <div id="log-scroller" class="log-scroller" tabindex="0" aria-label="Mission log entries">
-          <div id="log-entries"><!-- entries render here --></div>
+          <div id="log-entries">
+            <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+            <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+            <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
+          </div>
         </div>
       </section>
     </div>
@@ -46,7 +54,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
   <style is:global>
     /* Board shell — one header, one filter bar, two columns. Narrow keeps the
        stacked order (roadmap, then log) via plain document flow. */
-    .board { max-width: 88rem; padding-block: 4rem 6rem; }
+    .wrap.board { max-width: 88rem; padding-block: 4rem 6rem; }
     .board .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; }
     .board-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 1rem 2.5rem; margin-bottom: 2rem; }
     .board-titles { min-width: 0; }
@@ -57,73 +65,25 @@ const topicColors: Record<string, string> = Object.fromEntries(
     .board-cols { display: flex; flex-direction: column; gap: 3rem; }
     .board-col { min-width: 0; width: 100%; max-width: 42rem; margin-inline: auto; }
     .log-scroller { min-width: 0; }
-    .feed-link {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-decoration: none;
-      border: 1px solid var(--line);
-      padding: 0.15rem 0.45rem;
-      border-radius: 3px;
-      transition: color 0.15s ease, border-color 0.15s ease;
-    }
-    .feed-link:hover,
-    .feed-link:focus-visible {
-      color: var(--ink);
-      border-color: var(--accent);
-    }
+    .scroll-sentinel { display: block; min-height: 1px; }
+    .feed-link { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none; border: 1px solid var(--line); padding: 0.15rem 0.45rem; border-radius: 3px; transition: color 0.15s ease, border-color 0.15s ease; }
+    .feed-link:hover, .feed-link:focus-visible { color: var(--ink); border-color: var(--accent); }
     .board h1 { font-family: var(--font-mono); font-size: 1.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin-bottom: 0.6rem; }
     .board .intro { color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; margin-bottom: 0; max-width: 42rem; }
     .topic-index { display: flex; align-items: baseline; gap: 1rem; padding-block: 0.5rem; }
     .topic-index + .topic-index { padding-top: 0; margin-top: -0.15rem; }
     .topic-index-label { flex: 0 0 auto; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--ink-faint); }
     .topic-filters { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .topic-filter {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 0.35rem;
-      padding: 0.3rem 0.65rem;
-      border: none;
-      border-radius: 100px;
-      background: color-mix(in srgb, var(--ink) 6%, transparent);
-      color: var(--ink-dim);
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: color 0.2s ease, background 0.2s ease;
-    }
-    .topic-filter:hover,
-    .topic-filter:focus-visible {
-      background: color-mix(in srgb, var(--ink) 12%, transparent);
-      color: var(--ink);
-    }
+    .topic-filter { display: inline-flex; align-items: baseline; gap: 0.35rem; padding: 0.3rem 0.65rem; border: none; border-radius: 100px; background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; transition: color 0.2s ease, background 0.2s ease; }
+    .topic-filter:hover, .topic-filter:focus-visible { background: color-mix(in srgb, var(--ink) 12%, transparent); color: var(--ink); }
     .topic-filter.is-active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
     .topic-filter-count { color: var(--ink-faint); font-size: 0.58rem; }
-    .topic-filter.is-active .topic-filter-count,
-    .topic-filter:hover .topic-filter-count {
-      color: currentColor;
-    }
+    .topic-filter.is-active .topic-filter-count, .topic-filter:hover .topic-filter-count { color: currentColor; }
     .filter-empty { padding-block: 3rem; color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.82rem; text-align: center; }
     #log-entries { display: flex; flex-direction: column; }
     .entry { display: grid; grid-template-columns: 7rem 1fr auto; grid-template-rows: auto auto; gap: 0.4rem 1.2rem; padding-block: 1.8rem; border-bottom: 1px solid var(--line); align-items: start; }
     .entry time { grid-column: 1; grid-row: 1; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-faint); white-space: nowrap; }
-    .entry .type-badge {
-      grid-column: 3;
-      grid-row: 1;
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.15rem 0.5rem;
-      border-radius: 3px;
-      align-self: start;
-      opacity: 0.8;
-    }
+    .entry .type-badge { grid-column: 3; grid-row: 1; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 0.15rem 0.5rem; border-radius: 3px; align-self: start; opacity: 0.8; }
     .entry .entry-body { grid-column: 1 / -1; grid-row: 2; }
     .entry h3 { font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent); margin-bottom: 0.3rem; }
     .entry p { color: var(--ink-dim); font-size: 0.88rem; line-height: 1.65; white-space: pre-line; }
@@ -196,25 +156,8 @@ const topicColors: Record<string, string> = Object.fromEntries(
       .entry time { grid-column: 1 / -1; }
       .entry .entry-body { grid-column: 1 / -1; }
     }
-    .rm-edit-btn {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-decoration: none;
-      border: 1px solid var(--line);
-      background: none;
-      padding: 0.15rem 0.45rem;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: color 0.15s ease, border-color 0.15s ease;
-    }
-    .rm-edit-btn:hover,
-    .rm-edit-btn:focus-visible {
-      color: var(--ink);
-      border-color: var(--accent);
-    }
+    .rm-edit-btn { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none; border: 1px solid var(--line); background: none; padding: 0.15rem 0.45rem; border-radius: 3px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease; }
+    .rm-edit-btn:hover, .rm-edit-btn:focus-visible { color: var(--ink); border-color: var(--accent); }
     .rm-notice { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); padding: 0.4rem 0.6rem; border-radius: 3px; margin-bottom: 1rem; }
     .rm-lane { border-bottom: 1px solid var(--line); padding-block: 1.2rem; }
     .rm-lane:last-child { border-bottom: none; }
@@ -227,19 +170,12 @@ const topicColors: Record<string, string> = Object.fromEntries(
     .rm-row { display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 0.4rem 0.9rem; padding-block: 0.7rem; align-items: start; }
     .rm-pos { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
     .rm-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); }
-    .rm-chip {
-      border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent);
-      background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent);
-      color: var(--chip, var(--accent));
-      padding: 0.12rem 0.5rem;
-      font-size: 0.58rem;
-      margin-left: 0.5rem;
-    }
+    .rm-chip { border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent); color: var(--chip, var(--accent)); padding: 0.12rem 0.5rem; font-size: 0.58rem; margin-left: 0.5rem; }
     .rm-blocked { grid-column: 2; color: var(--ink-dim); font-size: 0.78rem; font-family: var(--font-mono); }
     .rm-date { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.68rem; display: block; margin-top: 0.2rem; }
     .rm-side { display: none; gap: 0.3rem; }
-    .roadmap.rm-editing .rm-side { display: flex; }
-    .roadmap.rm-editing .rm-row { align-items: center; }
+    #roadmap-section.rm-editing .rm-side { display: flex; }
+    #roadmap-section.rm-editing .rm-row { align-items: center; }
     .rm-busy .rm-side { pointer-events: none; opacity: 0.5; }
     .rm-arrow, .rm-item-edit, .rm-item-archive, .rm-form-save, .rm-form-cancel { background: none; border: 1px solid var(--line); border-radius: 3px; color: var(--ink-dim); cursor: pointer; font-family: var(--font-mono); font-size: 0.62rem; padding: 0.1rem 0.35rem; }
     .rm-arrow:hover, .rm-item-edit:hover, .rm-item-archive:hover, .rm-form-save:hover, .rm-form-cancel:hover { color: var(--accent); border-color: var(--accent); }
@@ -1091,18 +1027,30 @@ const topicColors: Record<string, string> = Object.fromEntries(
           }
         });
       }
-      // Infinite scroll sentinel — lives inside the log scroll container so the
-      // observer root follows the column, not the document viewport. Below the
-      // split breakpoint the scroller is not a scroll box, so the same root
-      // degrades to document-viewport behavior with no extra wiring.
+      // Infinite scroll sentinel — last child of the log scroll container, kept
+      // there by placeSentinel(). The observer root follows the layout: the
+      // scroller while the split is active, the document viewport below the
+      // breakpoint. An element root that is not a scroll box contains its last
+      // child at all times, so a fixed root: logScroller would report the
+      // sentinel as always-intersecting and strand pagination on narrow.
       sentinel = document.createElement('div');
       sentinel.className = 'scroll-sentinel';
       placeSentinel();
 
-      var observer = new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) loadMore();
-      }, { root: logScroller, rootMargin: '200px' });
-      observer.observe(sentinel);
+      var splitMq = window.matchMedia('(min-width: 90rem)');
+      var observer = null;
+      function bindSentinelObserver() {
+        if (observer) observer.disconnect();
+        var wide = splitMq.matches;
+        // The scroller is only keyboard-scrollable when it actually scrolls.
+        logScroller.tabIndex = wide ? 0 : -1;
+        observer = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) loadMore();
+        }, { root: wide ? logScroller : null, rootMargin: '200px' });
+        if (hasMore) observer.observe(sentinel);
+      }
+      bindSentinelObserver();
+      if (splitMq.addEventListener) splitMq.addEventListener('change', bindSentinelObserver);
 
       // Initial load
       loadMore();

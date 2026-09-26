@@ -36,158 +36,200 @@
   --page-gutter: clamp(1rem, 3vw, 2rem);
 }
 
-/* Fixed per-experiment surfaces (set as data-surface on <html>). They override
-   only the substrate tokens; each experiment keeps its own --essence accent. */
+/* Fixed per-experiment surfaces. Each palette lives in ONE token group, keyed by the
+   data-surface name from src/lib/experiments.ts. The groups are consumed twice:
+   at the page level (`data-surface` on <html>, set by BaseLayout) and by the Home
+   card window-flip (`data-flip-surface` on .card). Hovering a landing card must
+   resolve the same substrate tokens as the experiment's own page — never a copy.
+   Ground truth: docs/landing-poc/styles/*.md via lfix-surfaces-ground-truth (f176b24).
+   Each experiment keeps its own --essence accent (set inline on the card). */
 
-/* texforge — the Antimetal editorial register: cream stock, bistre ink.
-   Display is a *system* serif at 400 only (no webfont is pushed for this
-   surface), body is sans, markers stay mono. Ruling comes from the dash
-   vocabulary below, never from a solid rule inside content. */
+/* ── Reusable surface token groups ───────────────────────────────────────────
+   Group values equal what each page renders TODAY: surfaces.css keeps preserved
+   POC token blocks at `:root[data-surface='X']` (0,2,0) that out-rank plain
+   `html[data-surface='X']` (0,1,1). For paper/pastel/industrial/blueprint the
+   POC substrates (the docs' ground-truth palettes) are the live values, so the
+   groups carry THOSE; the consumption rule below matches the group at 0,2,1 and
+   keeps the pages pixel-identical. (A follow-up surfaces spec may delete the
+   now-redundant POC substrate lines in surfaces.css — one edit then moves a
+   whole surface everywhere: page + card window. Do not do that edit here:
+   surfaces.css is out of this spec's scope.) */
+
+/* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
+   Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,
+   Quill hairline. Dash vocabulary (--rule-t1…t3) and fonts stay html-only below. */
+[data-surface='paper'],
+[data-flip-surface='paper'] {
+  --surface-bg: #d7d7d0;
+  --surface-bg-raise: #f7f6f3;
+  --surface-ink: #1a1614;
+  --surface-ink-dim: #66635f;
+  --surface-ink-faint: #a8a7a1;
+  --surface-line: #e3e3de;
+}
+
+/* canopy — Auros abyssal terminal (docs/landing-poc/styles/auros.md).
+   Liquid Abyss canvas, Liquid Kelp raised, Liquid Mist body, Silver Mist
+   secondary; lavender-phosphor/platinum/bg-deep/CTA gradient/radii are
+   page-only extras below. No shadows on this surface — the card's flip
+   edge highlight (Home) uses an ink-mix so it stays whisper-light here. */
+[data-surface='tui'],
+[data-flip-surface='tui'] {
+  --surface-bg: #012624;
+  --surface-bg-raise: #003734;
+  --surface-ink: #edfffe;
+  --surface-ink-dim: #bbc7c6;
+  --surface-ink-faint: #9aa8a7;
+  --surface-line: rgba(255,255,255,.10);
+}
+
+/* gitkit — Supahub sunlit canvas (docs/landing-poc/styles/supahub.md).
+   Voltage violet + fonts are page-only extras below. */
+[data-surface='pastel'],
+[data-flip-surface='pastel'] {
+  --surface-bg: #ffffff;
+  --surface-bg-raise: #f1f5f9;
+  --surface-ink: #111827;
+  --surface-ink-dim: #3f4654;
+  --surface-ink-faint: #6b7589;
+  --surface-line: #d8e0ea;
+}
+
+/* ghscaff — AuthKit frosted midnight glass (docs/landing-poc/styles/authkit.md).
+   Midnight canvas with steel-blue fog inks; the old "warm iron foundry" literals
+   in this file were never rendered (the POC block out-ranked them). */
+[data-surface='industrial'],
+[data-flip-surface='industrial'] {
+  --surface-bg: #05060f;
+  --surface-bg-raise: rgba(186,214,247,.05);
+  --surface-ink: #ffffff;
+  --surface-ink-dim: #c7d3ea;
+  --surface-ink-faint: #9da7ba;
+  --surface-line: rgba(186,215,247,.12);
+}
+
+/* cadspec — Steep plan (docs/landing-poc/styles/steep.md): pure white sheet,
+   near-black ink, terracotta essence is page-pinned by surfaces.css (a page
+   token, not substrate — the landing card keeps the registry essence). */
+[data-surface='blueprint'],
+[data-flip-surface='blueprint'] {
+  --surface-bg: #ffffff;
+  --surface-bg-raise: #f2f2f3;
+  --surface-ink: #17191c;
+  --surface-ink-dim: #777b86;
+  --surface-ink-faint: #979799;
+  --surface-line: #ececec;
+}
+
+/* astro-denoise — observatory: deep space, violet-black night sky. */
+[data-surface='observatory'],
+[data-flip-surface='observatory'] {
+  --surface-bg: #0a0911;
+  --surface-bg-raise: #110f1b;
+  --surface-ink: #ddd9e8;
+  --surface-ink-dim: #8f8aa3;
+  --surface-ink-faint: #7c7696;
+  --surface-line: #1e1b2c;
+}
+
+/* quorum — card table under a lamp (warm espresso). The /quorum page overrides
+   these inline via its circadian palette; the group is the no-JS substrate and
+   the reference the landing's circadian flip cards are tuned against. */
+[data-surface='quorum'],
+[data-flip-surface='quorum'] {
+  --surface-bg: #241a12;
+  --surface-bg-raise: #2f2318;
+  --surface-ink: #f2e7d3;
+  --surface-ink-dim: #b8a583;
+  --surface-ink-faint: #948365;
+  --surface-line: #40331f;
+}
+
+/* demostage — Altius thermal command room (docs/landing-poc/styles/altius.md).
+   KEY STAYS `studio` per specs/altius-demostage.md + experiments.ts + BaseLayout.
+   Obsidian Ember canvas, Dark Cocoa raise, Linen ink, Warm Ash inks, Signal Red
+   hairline. The Altius furniture (--molten/--peach/--blush/--flare/--ember-glow,
+   radii, color-scheme) are page-only extras below. */
+[data-surface='studio'],
+[data-flip-surface='studio'] {
+  --surface-bg: #190501;
+  --surface-bg-raise: #340a01;
+  --surface-ink: #f7f6ff;
+  --surface-ink-dim: #baadab;
+  --surface-ink-faint: #baadab;
+  --surface-line: #951c04;
+}
+
+/* The page-level surface consumes the group. The :root qualifier lifts this to
+   0,2,1 so it outranks the preserved POC blocks in surfaces.css (0,2,0) for the
+   six substrate tokens — the same mechanism the old tui-only guard used, now
+   unified. Values are seeded equal to the POC's where the POC was winning, so
+   every experiment page renders identical tokens to before this refactor.
+   (A surface key with no group degrades gracefully: unset --surface-* makes the
+   mapped property inherit-as-unset → the dark lab :root defaults, same as today.) */
+html[data-surface]:root {
+  --bg: var(--surface-bg);
+  --bg-raise: var(--surface-bg-raise);
+  --ink: var(--surface-ink);
+  --ink-dim: var(--surface-ink-dim);
+  --ink-faint: var(--surface-ink-faint);
+  --line: var(--surface-line);
+}
+
+/* ── Page-only surface extras (substrates now live in the groups above) ───── */
+
+/* texforge display/body voices + dash vocabulary. NOTE: surfaces.css's preserved
+   POC block re-pins --font-serif/--font-body at 0,2,0 and still wins on the page
+   (pre-existing; typography is not a substrate token — leave that war to a
+   future spec). Kept here verbatim from the old block. */
 html[data-surface='paper'] {
-  --bg: #faf6ec;        /* cream paper */
-  --bg-raise: #f3ecdc;  /* parchment — raised sheets (install bar, figure plate) */
-  --ink: #3a2e22;       /* bistre — 12.2:1 on the cream */
-  --ink-dim: #6b5844;   /* 6.3:1 on the cream */
-  --ink-faint: #7d6a50; /* darkest warm tone that still clears AA at 4.8:1 on the cream */
-  --line: #d8cdb4;      /* bistre hairline */
-
   --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
   --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-
-  /* Dash vocabulary (max 3 treatments per viewport): T1 wide section dividers,
-     T2 dense list separators, T3 dotted figure-meta rows. Hierarchy lives in
-     the line's alpha — content never fades with it. */
   --rule-t1: color-mix(in srgb, var(--line) 85%, transparent);
   --rule-t2: color-mix(in srgb, var(--line) 70%, transparent);
   --rule-t3: color-mix(in srgb, var(--line) 60%, transparent);
 }
 
-/* canopy — Auros abyssal terminal (ground truth: docs/landing-poc/styles/auros.md).
-   Liquid Abyss canvas, Liquid Deep recessed, Liquid Kelp raised. No shadows anywhere
-   on this surface; depth comes from the teal stack only. */
+/* canopy — Auros extras: recessed well + footer (Liquid Deep), Platinum display
+   ink, decorative Slate Deep (NEVER text), Lavender Phosphor (large stats only),
+   the Aurora CTA gradient, and the card/control radii. */
 html[data-surface='tui'] {
-  --bg: #012624;        /* Liquid Abyss — canvas */
-  --bg-raise: #003734;  /* Liquid Kelp — raised cards, install bar */
-  --bg-deep: #011d1c;   /* Liquid Deep — recessed wells, footer */
-  --ink: #edfffe;       /* Liquid Mist — emphasized body */
-  --ink-hi: #ffffff;    /* Platinum — headings/nav only, never body */
-  --ink-dim: #bbc7c6;   /* Silver Mist — secondary */
-  --ink-faint: #9aa8a7; /* lifted breeze-gray: lowest value clearing 4.5:1 on #012624.
-                           #707777 (Slate Deep) stays as decorative-only var below */
-  --slate-deep: #707777;/* decorative/inactive fills only — NOT text */
-  --phosphor: #fde9ff;  /* Lavender Phosphor — large statistics only, never body/UI */
-  --line: rgba(255,255,255,.10); /* hairline */
-  --cta-gradient: linear-gradient(90deg, rgb(203,255,252) 0%, rgb(237,255,254) 26.25%, rgb(255,253,250) 47.57%, rgb(250,209,255) 88.96%); /* Aurora — primary/install CTA only */
+  --bg-deep: #011d1c;
+  --ink-hi: #ffffff;
+  --slate-deep: #707777; /* decorative/inactive fills only — NOT text */
+  --phosphor: #fde9ff;
+  --cta-gradient: linear-gradient(90deg, rgb(203,255,252) 0%, rgb(237,255,254) 26.25%, rgb(255,253,250) 47.57%, rgb(250,209,255) 88.96%);
   --radius-card: 16px;
   --radius-ctl: 6px;
 }
 
-/* Re-statement of the three values above that would otherwise never reach the
-   page. surfaces.css carries a *preserved POC* block for the same surface
-   written as `:root[data-surface='tui']` (specificity 0,2,0) — it outranks the
-   `html[data-surface='tui']` block (0,1,1) regardless of bundle order, and it
-   still carries the older ink/hairline: --ink #ffffff, --line rgba(203,255,252,.16)
-   and --ink-faint pinned to Slate Deep #707777. Slate Deep is a *surface tint*
-   per auros.md, and as text it measures 3.52:1 on the Abyss canvas — it is what
-   dresses .exp-nav's EXP labels and arrows on this page (WCAG AA fail at
-   12px/19px). Same selector plus :root matches the identical element at a
-   higher specificity, so the Auros stack this file declares is the one that
-   renders. `--slate-deep` above stays the decorative-only value. */
-html[data-surface='tui']:root {
-  --ink: #edfffe;                  /* Liquid Mist — emphatic body; display H1 keeps Platinum via surfaces.css */
-  --ink-faint: #9aa8a7;            /* AA helper grey — 6.55:1 on #012624, 5.35:1 on #003734 */
-  --line: rgba(255,255,255,.10);   /* hairline */
-}
-
-/* gitkit — pastel sunlit canvas (key kept for stability): white canvas with
-   fog bands and a single voltage violet. */
+/* gitkit — voltage pair. (The POC re-pins --voltage #862fe7 at 0,2,0 and wins on
+   the page — pre-existing, not substrate, untouched.) */
 html[data-surface='pastel'] {
-  --voltage: #6d28d9;   /* violet-700 — 7.1:1 on white, AA at 12px */
-  --voltage-lt: #c4b5fd;/* violet-400 — only on DARK plates */
-  --bg: #ffffff;
-  --bg-raise: #faf9fd;  /* cards, install bar */
-  --ink: #17141f;
-  --ink-dim: #524d5e;   /* ≥7:1 on white */
-  --ink-faint: #6e687a; /* ≥4.6:1 on white */
-  --line: #eceaf2;
+  --voltage: #6d28d9;
+  --voltage-lt: #c4b5fd; /* violet-400 — only on DARK plates */
 }
 
-/* ghscaff — industrial foundry: dark iron with copper accents, the heat of a
-   working forge. Distinct from Quorum's warm lamp — this is raw metal and
-   rivets, not a card table. */
-html[data-surface='industrial'] {
-  --bg: #0e0c0a;
-  --bg-raise: #161210;
-  --ink: #e0d5c8;
-  --ink-dim: #9a8b7a;
-  --ink-faint: #897869; /* lifted from #5e5248 (2.58:1) to clear AA at 4.6:1 */
-  --line: #2a2320;
-}
-
-/* cadspec — architect's plan: clean, light and geometric, near-black ink on a
-   cool white sheet. */
-html[data-surface='blueprint'] {
-  --bg: #f6f8fa;
-  --bg-raise: #ffffff;
-  --ink: #15202a;
-  --ink-dim: #4d5a64;
-  --ink-faint: #697279; /* darkened from #8a97a0 (2.81:1) to clear AA at 4.6:1 */
-  --line: #dde5ea;
-}
-
-/* astro-denoise — observatory: deep space, a violet-black night sky. */
-html[data-surface='observatory'] {
-  --bg: #0a0911;
-  --bg-raise: #110f1b;
-  --ink: #ddd9e8;
-  --ink-dim: #8f8aa3;
-  --ink-faint: #7c7696; /* lifted from #5b566e (2.83:1) to clear AA at 4.6:1 */
-  --line: #1e1b2c;
-}
-
-/* quorum — the card table under a lamp: a warm espresso ground, cream ink and
-   amber cards. Tones of wood and leather. */
-html[data-surface='quorum'] {
-  --bg: #241a12;
-  --bg-raise: #2f2318;
-  --ink: #f2e7d3;
-  --ink-dim: #b8a583;
-  --ink-faint: #948365; /* lifted from #8a7a5e (4.08:1) to clear AA at 4.6:1 */
-  --line: #40331f;
-}
-
-/* demostage — Altius thermal command room (ground truth: docs/landing-poc/styles/altius.md).
-   KEY STAYS `studio` per specs/altius-demostage.md + experiments.ts + BaseLayout.
-   `obsidian` in task prose = the .band-dark section color, not the html surface. */
+/* demostage — Altius extras. BaseLayout's colorScheme list still calls `studio`
+   light and prints <meta name="color-scheme" content="light">; this property on
+   the root outranks the meta suggestion (see specs/altius-demostage.md). */
 html[data-surface='studio'] {
-  /* BaseLayout's colorScheme list still calls `studio` a light surface (it was
-     a white "recording stage" pre-Altius) and prints
-     <meta name="color-scheme" content="light">. BaseLayout is out of this
-     surface's edit scope; the CSS property on the root outranks the meta
-     suggestion, so UA scrollbars/controls follow the obsidian canvas here. */
   color-scheme: dark;
-  --bg: #190501;        /* Obsidian Ember — canvas/hero/dark bands */
-  --bg-raise: #340a01;  /* Dark Cocoa — cards, install bar, player */
   --molten: #631303;    /* Molten Core — inset glow source only */
-  --ink: #f7f6ff;       /* Linen — primary on dark */
-  --ink-dim: #baadab;   /* Warm Ash — secondary text, 9.07:1 on the canvas.
-                           Kept equal to the value the preserved POC block pins
-                           on `:root[data-surface='studio']` (higher
-                           specificity than this block), so what this file
-                           declares is what renders. Vapor Peach (#feeae6) is
-                           the light-BAND surface (--peach below), not a dark
-                           ink: altius.md — "Don't apply color to body text". */
   --ink-mute: #baadab;  /* Warm Ash — tertiary/dividers on dark */
-  --ink-faint: #baadab; /* same — darkest warm gray clearing AA here */
   --peach: #feeae6;     /* Vapor Peach — light section bg */
   --blush: #fcac9c;     /* Warm Blush — soft wash / motif tint, never body text */
   --flare: #fa5838;     /* Flare Orange — SOLE punctuation on dark. NEVER text on
                            peach, NEVER button fill */
-  --line: #951c04;      /* Signal Red — hairline borders on dark + ghost outlines */
   --ember-glow: inset 0 0 20px 0 rgb(99,19,3); /* ONLY on filled primary buttons */
   --radius-card: 8px;
   --radius-ctl: 4px;
 }
+
+/* industrial / blueprint / observatory / quorum declare no extras — the group IS
+   the whole palette. Their old html-only blocks (warm-iron and cool-blueprint
+   substrates, observatory/quorum) are deleted: substrate values now live in the
+   groups above. */
 
 * { box-sizing: border-box; }
 
