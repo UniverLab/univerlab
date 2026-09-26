@@ -1,7 +1,23 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { experiments } from '../lib/experiments';
+const topicColors: Record<string, string> = Object.fromEntries(
+  experiments.map((e) => [e.id, e.essenceHex]),
+);
 ---
 <BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
+  <section class="wrap roadmap" id="roadmap-section" hidden>
+    <div class="roadmap-head">
+      <span class="label">ROADMAP</span>
+      <button id="roadmap-edit-toggle" class="rm-edit-btn" type="button">Edit</button>
+    </div>
+    <p id="roadmap-notice" class="rm-notice" role="status" hidden></p>
+    <div id="roadmap">
+      <div class="rm-skeleton"></div>
+      <div class="rm-skeleton"></div>
+      <div class="rm-skeleton"></div>
+    </div>
+  </section>
   <section class="wrap log">
     <div class="log-head">
       <span class="label">MISSION LOG</span>
@@ -401,11 +417,172 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         grid-column: 1 / -1;
       }
     }
+    .roadmap {
+      max-width: 42rem;
+      padding-block: 4rem 0;
+    }
+    .roadmap .label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: block;
+    }
+    .roadmap-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+    .roadmap-head .label { margin-bottom: 0; }
+    .rm-edit-btn {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: none;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .rm-edit-btn:hover,
+    .rm-edit-btn:focus-visible {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+    .rm-notice {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      padding: 0.4rem 0.6rem;
+      border-radius: 3px;
+      margin-bottom: 1rem;
+    }
+    .rm-lane {
+      border-bottom: 1px solid var(--line);
+      padding-block: 1.2rem;
+    }
+    .rm-lane:last-child { border-bottom: none; }
+    .rm-lane-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+      align-items: baseline;
+    }
+    summary.rm-lane-label { cursor: pointer; list-style: none; }
+    summary.rm-lane-label::-webkit-details-marker { display: none; }
+    summary.rm-lane-label::before { content: '\25b8'; }
+    details[open] > summary.rm-lane-label::before { content: '\25be'; }
+    .rm-count {
+      color: var(--ink-faint);
+      font-size: 0.58rem;
+    }
+    .rm-row {
+      display: grid;
+      grid-template-columns: 2.6rem 1fr auto;
+      gap: 0.4rem 0.9rem;
+      padding-block: 0.7rem;
+      align-items: start;
+    }
+    .rm-pos {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+    }
+    .rm-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--ink);
+    }
+    .rm-chip {
+      border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent);
+      background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent);
+      color: var(--chip, var(--accent));
+      padding: 0.12rem 0.5rem;
+      font-size: 0.58rem;
+      margin-left: 0.5rem;
+    }
+    .rm-blocked {
+      grid-column: 2;
+      color: var(--ink-dim);
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+    }
+    .rm-date {
+      color: var(--ink-faint);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      display: block;
+      margin-top: 0.2rem;
+    }
+    .rm-side { display: none; gap: 0.3rem; }
+    .roadmap.rm-editing .rm-side { display: flex; }
+    .roadmap.rm-editing .rm-row { align-items: center; }
+    .rm-busy .rm-side { pointer-events: none; opacity: 0.5; }
+    .rm-arrow, .rm-item-edit, .rm-item-archive {
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--ink-dim);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      padding: 0.1rem 0.35rem;
+    }
+    .rm-arrow:hover, .rm-item-edit:hover, .rm-item-archive:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .rm-form { display: flex; flex-direction: column; gap: 0.5rem; }
+    .rm-form input, .rm-form select {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--ink);
+      padding: 0.3rem 0.4rem;
+    }
+    .rm-more {
+      background: none;
+      border: 0;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0.3rem 0 0;
+      opacity: 0.8;
+    }
+    .rm-more:hover { opacity: 1; text-decoration: underline; }
+    .rm-skeleton {
+      height: 0.9rem;
+      border-radius: 3px;
+      margin-block: 0.6rem;
+      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-pulse 1.8s ease-in-out infinite;
+    }
+    @media (max-width: 640px) {
+      .rm-row { grid-template-columns: 2.6rem 1fr; }
+      .rm-side { grid-column: 1 / -1; }
+  }
   </style>
 
-  <script is:inline>
+  <script is:inline define:vars={{ topicColors }}>
     (function () {
       var API = 'https://announcements.univerlab.org';
+      var TOPIC_COLORS = topicColors;
       var container = document.getElementById('log-entries');
       if (!container) return;
 
@@ -424,6 +601,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       MOCK[3].topic = 'general';
       MOCK[4].topic = 'general';
       MOCK[5].topic = null;
+
+      var MOCK_ROADMAP = [
+        { id: 'rm-1', title: 'Ship SSE reconcile', state: 'now', topic: 'canopy', essence_hex: '#5dd39e', blocked_reason: null, pos: 0, archived_at: null, updatedAt: '2026-09-20T10:00:00Z' },
+        { id: 'rm-2', title: 'Topic cross-filter', state: 'now', topic: 'general', essence_hex: null, blocked_reason: null, pos: 1, archived_at: null, updatedAt: '2026-09-20T09:00:00Z' },
+        { id: 'rm-3', title: 'Token edit mode', state: 'now', topic: null, essence_hex: null, blocked_reason: null, pos: 2, archived_at: null, updatedAt: '2026-09-19T10:00:00Z' },
+        { id: 'rm-4', title: 'Mystery topic row', state: 'next', topic: 'unknown-topic', essence_hex: null, blocked_reason: null, pos: 3, archived_at: null, updatedAt: '2026-09-19T09:00:00Z' },
+        { id: 'rm-5', title: 'Blocked deploy lane', state: 'next', topic: 'texforge', essence_hex: null, blocked_reason: 'Waiting on infra quota', pos: 4, archived_at: null, updatedAt: '2026-09-18T10:00:00Z' },
+        { id: 'rm-6', title: 'Later horizon item', state: 'later', topic: 'gitkit', essence_hex: null, blocked_reason: null, pos: 5, archived_at: null, updatedAt: '2026-09-18T09:00:00Z' },
+        { id: 'rm-7', title: 'Wild idea', state: 'idea', topic: 'cadspec', essence_hex: '#6ec6e6', blocked_reason: null, pos: 6, archived_at: null, updatedAt: '2026-09-17T10:00:00Z' },
+        { id: 'rm-8', title: 'First delivery', state: 'done', topic: 'canopy', essence_hex: null, blocked_reason: null, pos: 7, archived_at: null, updatedAt: '2026-09-16T10:00:00Z' },
+        { id: 'rm-9', title: 'Second delivery', state: 'done', topic: 'general', essence_hex: null, blocked_reason: null, pos: 8, archived_at: null, updatedAt: '2026-09-15T10:00:00Z' }
+      ];
 
       var TOPIC_DEFS = [
         { id: 'general', label: 'General' },
@@ -696,18 +885,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         setTimeout(dismiss, 4000);
       }
 
+      function applyTopic(topic) {
+        activeTopic = topic || 'all';
+        var nextUrl = activeTopic === 'all'
+          ? location.pathname
+          : location.pathname + '?topic=' + encodeURIComponent(activeTopic);
+        history.replaceState(null, '', nextUrl);
+        updateTypeFilters();
+        updateTopicFilters();
+        renderEntries();
+        rmRender();
+      }
+
       if (topicFilters) {
         topicFilters.addEventListener('click', function (event) {
           var button = event.target.closest('button[data-topic]');
           if (!button) return;
-          activeTopic = button.dataset.topic || 'all';
-          var nextUrl = activeTopic === 'all'
-            ? location.pathname
-            : location.pathname + '?topic=' + encodeURIComponent(activeTopic);
-          history.replaceState(null, '', nextUrl);
-          updateTypeFilters();
-          updateTopicFilters();
-          renderEntries();
+          applyTopic(button.dataset.topic);
         });
       }
 
@@ -722,6 +916,468 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
       }
 
+      // ---- Roadmap -----------------------------------------------------------
+      var rmSection = document.getElementById('roadmap-section');
+      var rmContainer = document.getElementById('roadmap');
+      var rmNoticeEl = document.getElementById('roadmap-notice');
+      var rmEditBtn = document.getElementById('roadmap-edit-toggle');
+      var TOKEN_KEY = 'ul-roadmap-token';
+      var HEX_RE = /^#[0-9a-fA-F]{6}$/;
+      var RM_LANES = [
+        { id: 'now', label: 'Now', fold: false },
+        { id: 'next', label: 'Next', fold: false },
+        { id: 'later', label: 'Later', fold: true },
+        { id: 'idea', label: 'Idea', fold: true },
+        { id: 'done', label: 'Done', fold: true }
+      ];
+      var NOW_MAX = 6;
+      var rmItems = [];
+      var rmVersion = 0;
+      var rmNowExpanded = false;
+      var rmEditing = false;
+      var rmInFlight = false;
+      var rmEditorOpenId = null;
+      var rmDirty = false;
+      var rmToken = null;
+      var rmNoticeTimer = null;
+
+      function rmKnownTopic(id) {
+        return TOPIC_DEFS.some(function (t) { return t.id === id; });
+      }
+      function rmNormalize(item) {
+        var copy = Object.assign({}, item);
+        copy.topic = rmKnownTopic(copy.topic) ? copy.topic : 'general';
+        return copy;
+      }
+      function rmSort() {
+        rmItems.sort(function (a, b) { return a.pos - b.pos; });
+      }
+      function rmById(id) {
+        for (var i = 0; i < rmItems.length; i++) {
+          if (rmItems[i].id === id) return rmItems[i];
+        }
+        return null;
+      }
+      function rmChipHex(item) {
+        if (item.essence_hex && HEX_RE.test(item.essence_hex)) return item.essence_hex;
+        var reg = TOPIC_COLORS && TOPIC_COLORS[item.topic];
+        if (reg && HEX_RE.test(reg)) return reg;
+        return null;
+      }
+      function rmFilteredByLane(lane) {
+        return rmItems.filter(function (item) {
+          if (item.state !== lane) return false;
+          if (activeTopic !== 'all' && item.topic !== activeTopic) return false;
+          return true;
+        });
+      }
+      function rmNotice(msg, sticky) {
+        if (!rmNoticeEl) return;
+        rmNoticeEl.textContent = msg;
+        rmNoticeEl.hidden = false;
+        if (rmNoticeTimer) { clearTimeout(rmNoticeTimer); rmNoticeTimer = null; }
+        if (!sticky) {
+          rmNoticeTimer = setTimeout(function () {
+            rmNoticeEl.hidden = true;
+            rmNoticeTimer = null;
+          }, 6000);
+        }
+      }
+      function rmRenderRow(item) {
+        var article = document.createElement('article');
+        article.className = 'rm-row';
+        article.setAttribute('data-id', item.id);
+
+        var pos = document.createElement('span');
+        pos.className = 'rm-pos';
+        pos.textContent = '#' + (item.pos + 1);
+        pos.setAttribute('title', String(item.pos));
+        article.appendChild(pos);
+
+        var main = document.createElement('div');
+        main.className = 'rm-main';
+        if (rmEditorOpenId === item.id) {
+          main.appendChild(rmRenderForm(item));
+        } else {
+          var title = document.createElement('span');
+          title.className = 'rm-title';
+          title.textContent = item.title;
+          main.appendChild(title);
+
+          var chip = document.createElement('button');
+          chip.className = 'topic-filter rm-chip';
+          chip.type = 'button';
+          chip.setAttribute('data-topic', item.topic);
+          chip.setAttribute('aria-pressed', activeTopic === item.topic ? 'true' : 'false');
+          if (activeTopic === item.topic) chip.classList.add('is-active');
+          chip.appendChild(document.createTextNode(topicLabel(item.topic)));
+          var hex = rmChipHex(item);
+          if (hex) chip.style.setProperty('--chip', hex);
+          main.appendChild(chip);
+
+          if (item.blocked_reason) {
+            var blocked = document.createElement('div');
+            blocked.className = 'rm-blocked';
+            blocked.textContent = '\u26d4 ' + item.blocked_reason;
+            main.appendChild(blocked);
+          }
+          if (item.state === 'done' && item.updatedAt) {
+            var time = document.createElement('time');
+            time.className = 'rm-date';
+            time.setAttribute('datetime', item.updatedAt);
+            time.textContent = formatDate(item.updatedAt);
+            main.appendChild(time);
+          }
+        }
+        article.appendChild(main);
+
+        var side = document.createElement('div');
+        side.className = 'rm-side';
+        var sameLane = rmItems.filter(function (i) { return i.state === item.state; });
+        var idx = sameLane.findIndex(function (i) { return i.id === item.id; });
+        var up = document.createElement('button');
+        up.className = 'rm-arrow rm-up';
+        up.type = 'button';
+        up.textContent = '\u25b2';
+        up.setAttribute('aria-label', 'Move up');
+        if (idx <= 0) up.disabled = true;
+        side.appendChild(up);
+        var down = document.createElement('button');
+        down.className = 'rm-arrow rm-down';
+        down.type = 'button';
+        down.textContent = '\u25bc';
+        down.setAttribute('aria-label', 'Move down');
+        if (idx < 0 || idx >= sameLane.length - 1) down.disabled = true;
+        side.appendChild(down);
+        var editB = document.createElement('button');
+        editB.className = 'rm-item-edit';
+        editB.type = 'button';
+        editB.textContent = 'edit';
+        side.appendChild(editB);
+        var archB = document.createElement('button');
+        archB.className = 'rm-item-archive';
+        archB.type = 'button';
+        archB.textContent = 'archive';
+        side.appendChild(archB);
+        article.appendChild(side);
+        return article;
+      }
+      function rmRenderForm(item) {
+        var form = document.createElement('form');
+        form.className = 'rm-form';
+        var titleI = document.createElement('input');
+        titleI.name = 'title';
+        titleI.value = item.title;
+        titleI.setAttribute('aria-label', 'Title');
+        form.appendChild(titleI);
+        var stateS = document.createElement('select');
+        stateS.name = 'state';
+        stateS.setAttribute('aria-label', 'State');
+        RM_LANES.forEach(function (lane) {
+          var opt = document.createElement('option');
+          opt.value = lane.id;
+          opt.textContent = lane.label;
+          if (item.state === lane.id) opt.selected = true;
+          stateS.appendChild(opt);
+        });
+        form.appendChild(stateS);
+        var topicS = document.createElement('select');
+        topicS.name = 'topic';
+        topicS.setAttribute('aria-label', 'Topic');
+        TOPIC_DEFS.forEach(function (t) {
+          var opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.label;
+          if (item.topic === t.id) opt.selected = true;
+          topicS.appendChild(opt);
+        });
+        form.appendChild(topicS);
+        var blockedI = document.createElement('input');
+        blockedI.name = 'blocked_reason';
+        blockedI.value = item.blocked_reason || '';
+        blockedI.placeholder = 'Blocked reason (optional)';
+        blockedI.setAttribute('aria-label', 'Blocked reason');
+        form.appendChild(blockedI);
+        var save = document.createElement('button');
+        save.className = 'rm-item-edit';
+        save.type = 'submit';
+        save.textContent = 'Save';
+        form.appendChild(save);
+        var cancel = document.createElement('button');
+        cancel.className = 'rm-item-archive';
+        cancel.type = 'button';
+        cancel.textContent = 'Cancel';
+        cancel.addEventListener('click', function () {
+          rmEditorOpenId = null;
+          rmRenderFlush();
+        });
+        form.appendChild(cancel);
+        form.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          var patch = {};
+          var nt = titleI.value.trim();
+          if (nt && nt !== item.title) patch.title = nt;
+          if (stateS.value !== item.state) patch.state = stateS.value;
+          if (topicS.value !== item.topic) patch.topic = topicS.value;
+          var nb = blockedI.value.trim();
+          var ob = item.blocked_reason || '';
+          if (nb !== ob) patch.blocked_reason = nb === '' ? null : nb;
+          if (!Object.keys(patch).length) {
+            rmEditorOpenId = null;
+            rmRenderFlush();
+            return;
+          }
+          if (isDev) {
+            var local = rmById(item.id);
+            if (local) Object.assign(local, patch);
+            rmItems = rmItems.map(rmNormalize);
+            rmSort();
+            rmEditorOpenId = null;
+            rmRenderFlush();
+            return;
+          }
+          rmWrite('PATCH', API + '/roadmap/' + item.id, patch, function (data) {
+            var updated = rmNormalize(data);
+            rmItems = rmItems.map(function (i) { return i.id === updated.id ? updated : i; });
+            rmSort();
+            rmEditorOpenId = null;
+            rmRenderFlush();
+          });
+        });
+        return form;
+      }
+      function rmRender(force) {
+        if (!rmContainer || !rmSection) return;
+        if (rmEditorOpenId && !force) { rmDirty = true; return; }
+        if (!rmItems.length && !rmEditing) { rmSection.hidden = true; return; }
+        rmSection.hidden = false;
+        var openMap = {};
+        rmContainer.querySelectorAll('.rm-lane-fold').forEach(function (d) {
+          openMap[d.getAttribute('data-lane')] = d.open;
+        });
+        rmContainer.innerHTML = '';
+        var anyRows = false;
+        RM_LANES.forEach(function (lane) {
+          var rows = rmFilteredByLane(lane.id);
+          if (!rows.length) return;
+          anyRows = true;
+          var laneEl;
+          if (lane.fold) {
+            laneEl = document.createElement('details');
+            laneEl.className = 'rm-lane rm-lane-fold';
+            laneEl.setAttribute('data-lane', lane.id);
+            if (openMap[lane.id]) laneEl.open = true;
+            var summary = document.createElement('summary');
+            summary.className = 'rm-lane-label';
+            summary.appendChild(document.createTextNode(lane.label.toUpperCase() + ' '));
+            var count = document.createElement('span');
+            count.className = 'rm-count';
+            count.textContent = String(rows.length);
+            summary.appendChild(count);
+            laneEl.appendChild(summary);
+          } else {
+            laneEl = document.createElement('div');
+            laneEl.className = 'rm-lane';
+            laneEl.setAttribute('data-lane', lane.id);
+            var div = document.createElement('div');
+            div.className = 'rm-lane-label';
+            div.appendChild(document.createTextNode(lane.label.toUpperCase() + ' '));
+            var count2 = document.createElement('span');
+            count2.className = 'rm-count';
+            count2.textContent = String(rows.length);
+            div.appendChild(count2);
+            laneEl.appendChild(div);
+          }
+          var toShow = rows;
+          if (lane.id === 'now' && !rmNowExpanded && rows.length > NOW_MAX) {
+            toShow = rows.slice(0, NOW_MAX);
+          }
+          toShow.forEach(function (item) { laneEl.appendChild(rmRenderRow(item)); });
+          if (lane.id === 'now' && rows.length > NOW_MAX) {
+            var more = document.createElement('button');
+            more.className = 'rm-more';
+            more.type = 'button';
+            more.textContent = rmNowExpanded ? 'Less' : 'More (' + (rows.length - NOW_MAX) + ')';
+            laneEl.appendChild(more);
+          }
+          rmContainer.appendChild(laneEl);
+        });
+        if (!anyRows) {
+          var empty = document.createElement('p');
+          empty.className = 'filter-empty';
+          empty.textContent = 'Nothing on the roadmap under ' + topicLabel(activeTopic) + '.';
+          rmContainer.appendChild(empty);
+        }
+      }
+      function rmRenderFlush() {
+        if (rmDirty) rmDirty = false;
+        rmRender(true);
+      }
+      function rmFetchAll(cb) {
+        if (!rmContainer || !rmSection) { if (cb) cb(); return; }
+        if (isDev) {
+          rmItems = MOCK_ROADMAP.map(rmNormalize);
+          rmVersion = 1;
+          rmSort();
+          rmRender();
+          if (cb) cb();
+          return;
+        }
+        var acc = [];
+        var version = 0;
+        var off = 0;
+        function step() {
+          fetch(API + '/roadmap?offset=' + off + '&limit=100')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              acc = acc.concat(data.items || []);
+              version = data.version || 0;
+              if (data.hasMore) { off += (data.items || []).length; step(); return; }
+              rmItems = acc.filter(function (i) { return i.archived_at == null; }).map(rmNormalize);
+              rmVersion = version;
+              rmSort();
+              rmRender();
+              if (cb) cb();
+            })
+            .catch(function () { if (!rmItems.length) rmSection.hidden = true; });
+        }
+        step();
+      }
+      function rmWrite(method, url, body, onOk) {
+        rmInFlight = true;
+        if (rmSection) rmSection.classList.add('rm-busy');
+        fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + rmToken },
+          body: JSON.stringify(body)
+        })
+          .then(function (r) {
+            if (r.status === 200) return r.json().then(onOk);
+            if (r.status === 401) { rmNotice('Token rejected — sign out of edit mode.', true); rmExitEdit(); return; }
+            if (r.status === 409) { rmNotice('Order changed elsewhere — list refreshed. Re-apply your move.'); rmFetchAll(); return; }
+            return r.json().catch(function () { return {}; }).then(function (e) { rmNotice('Rejected: ' + (e.error || r.status)); });
+          })
+          .catch(function () { rmNotice('Network error — roadmap not saved.'); })
+          .then(function () {
+            rmInFlight = false;
+            if (rmSection) rmSection.classList.remove('rm-busy');
+          });
+      }
+      function rmMove(id, dir) {
+        if (rmInFlight) return;
+        var item = rmById(id);
+        if (!item) return;
+        if (isDev) {
+          var laneItems = rmItems.filter(function (i) { return i.state === item.state; });
+          var li = laneItems.findIndex(function (i) { return i.id === id; });
+          var lj = li + dir;
+          if (li < 0 || lj < 0 || lj >= laneItems.length) return;
+          var a = laneItems[li];
+          var b = laneItems[lj];
+          var tmp = a.pos;
+          a.pos = b.pos;
+          b.pos = tmp;
+          rmSort();
+          rmRender();
+          return;
+        }
+        var ids = rmItems.map(function (i) { return i.id; });
+        var i0 = ids.indexOf(id);
+        var j = i0 + dir;
+        while (j >= 0 && j < rmItems.length && rmItems[j].state !== item.state) j += dir;
+        if (j < 0 || j >= rmItems.length) return;
+        var swapped = ids.slice();
+        swapped[i0] = ids[j];
+        swapped[j] = ids[i0];
+        rmWrite('PUT', API + '/roadmap/order', { version: rmVersion, items: swapped }, function (payload) {
+          rmItems = (payload.items || []).map(rmNormalize);
+          rmVersion = payload.version;
+          rmSort();
+          rmRender();
+        });
+      }
+      function rmArchive(id) {
+        var item = rmById(id);
+        if (!item) return;
+        if (!window.confirm('Archive "' + item.title + '"? It leaves the board but stays recoverable via the API.')) return;
+        if (isDev) {
+          rmItems = rmItems.filter(function (i) { return i.id !== id; });
+          rmRender();
+          return;
+        }
+        rmWrite('PATCH', API + '/roadmap/' + id, { archived: true }, function () {
+          rmItems = rmItems.filter(function (i) { return i.id !== id; });
+          rmRender();
+        });
+      }
+      function rmEnterEdit() {
+        var token = null;
+        try { token = sessionStorage.getItem(TOKEN_KEY); } catch (e) {}
+        if (!token) {
+          var entered = window.prompt('Roadmap admin token');
+          if (!entered) return;
+          token = entered.trim().replace(/^Bearer\s+/i, '');
+          if (!token) return;
+          try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+        }
+        rmToken = token;
+        rmEditing = true;
+        if (rmSection) {
+          rmSection.hidden = false;
+          rmSection.classList.add('rm-editing');
+        }
+        if (rmEditBtn) rmEditBtn.textContent = 'Exit edit';
+        rmRender();
+      }
+      function rmExitEdit() {
+        rmEditing = false;
+        rmToken = null;
+        rmEditorOpenId = null;
+        rmDirty = false;
+        try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+        if (rmSection) rmSection.classList.remove('rm-editing');
+        if (rmEditBtn) rmEditBtn.textContent = 'Edit';
+        rmRender();
+      }
+      if (rmEditBtn) {
+        rmEditBtn.addEventListener('click', function () {
+          if (rmEditing) rmExitEdit();
+          else rmEnterEdit();
+        });
+      }
+      if (rmContainer) {
+        rmContainer.addEventListener('click', function (event) {
+          var chip = event.target.closest('.rm-chip');
+          if (chip && rmContainer.contains(chip)) {
+            var t = chip.getAttribute('data-topic') || 'all';
+            applyTopic(activeTopic === t ? 'all' : t);
+            return;
+          }
+          var more = event.target.closest('.rm-more');
+          if (more && rmContainer.contains(more)) {
+            rmNowExpanded = !rmNowExpanded;
+            rmRender(true);
+            return;
+          }
+          var row = event.target.closest('.rm-row');
+          if (!row || !rmContainer.contains(row)) return;
+          var id = row.getAttribute('data-id');
+          if (event.target.closest('.rm-up')) { rmMove(id, -1); return; }
+          if (event.target.closest('.rm-down')) { rmMove(id, 1); return; }
+          if (event.target.closest('.rm-item-edit')) {
+            if (!rmEditing) return;
+            rmEditorOpenId = rmEditorOpenId === id ? null : id;
+            rmDirty = false;
+            rmRender(true);
+            return;
+          }
+          if (event.target.closest('.rm-item-archive')) {
+            if (!rmEditing) return;
+            rmArchive(id);
+            return;
+          }
+        });
+      }
       // Infinite scroll sentinel
       var sentinel = document.createElement('div');
       sentinel.className = 'scroll-sentinel';
@@ -734,6 +1390,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       // Initial load
       loadMore();
+      rmFetchAll();
 
       // Force announcement toast in dev mode
       if (isDev) {
@@ -817,8 +1474,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             updateEntry(JSON.parse(e.data));
           } catch (err) {}
         });
+        source.addEventListener('roadmap', function (e) {
+          try {
+            var payload = JSON.parse(e.data);
+            if (!payload || typeof payload.version !== 'number' || payload.version < rmVersion) return;
+            rmItems = (payload.items || []).filter(function (i) { return i.archived_at == null; }).map(rmNormalize);
+            rmVersion = payload.version;
+            rmSort();
+            rmRender();
+          } catch (err) {}
+        });
         source.onerror = function () {};
       }
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && !isDev) rmFetchAll();
+      });
     })();
   </script>
 </BaseLayout>
