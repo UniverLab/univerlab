@@ -470,6 +470,12 @@ export const en = {
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
+      // The two empty 16:9 slots on this page: captions paraphrase capture and
+      // export — no feature that the pipeline doesn't already name.
+      demos: {
+        first: 'Capture — terminal session composited with the browser source',
+        second: 'Export — the same score rendered to gif and mp4',
+      },
       faq: [
         ['What is DemoStage?',
           'A tool for planning and recording multi-source demos — terminal, browser, and files in one scene. Not just screen recording: you configure typography, aspect ratio, fps, and terminal style. Output is optimized for web.'],

@@ -4,18 +4,27 @@ import { getLang, useTranslations } from '../../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['demostage'];
+
+// Exactly two demo slots, both empty: the frames the score will fill.
+const slots = [
+  { fig: 'Fig. 1', caption: e.demos.first },
+  { fig: 'Fig. 2', caption: e.demos.second },
+];
 ---
 <ExperimentLayout id="demostage">
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
-  <section class="wrap section">
-    <!-- The signature: the artifact DemoStage produces — a terminal demo with a
-         player scrubber, its steps marked along the timeline. -->
-    <figure class="player" id="demo-player">
-      <div class="bar mono">
-        <span class="d r"></span><span class="d y"></span><span class="d g"></span>
-        <span class="name">demo.cast</span>
-      </div>
-      <pre class="mono body" translate="no"><code>$ demo capture
+
+  <!-- The ONE hero motif: the artifact DemoStage produces — a terminal demo
+       with a player scrubber, its steps marked along the timeline. Full width,
+       with the thin spectrum baseline ruled underneath it. -->
+  <Fragment slot="before-genesis">
+    <div class="wrap stage">
+      <figure class="player" id="demo-player">
+        <div class="bar mono">
+          <span class="d r"></span><span class="d y"></span><span class="d g"></span>
+          <span class="name">demo.cast</span>
+        </div>
+        <pre class="mono body" translate="no"><code>$ demo capture
   → demo.toml (8 steps) + demo.rec
 $ demo focus main docs --scroll
   → terminal | docs — browser source composited in
@@ -23,34 +32,69 @@ $ demo record
   → demo.rec (clean humanized take)
 $ demo export gif,mp4
   → dist/demo.gif  dist/demo.mp4</code></pre>
-      <div class="scrubber mono">
-        <span class="play" aria-hidden="true">▶</span>
-        <div class="track">
-          <span class="fill"></span>
-          <span class="tick" style="left:20%"></span>
-          <span class="tick" style="left:55%"></span>
-          <span class="tick" style="left:82%"></span>
-          <span class="head"></span>
+        <div class="scrubber mono">
+          <span class="play" aria-hidden="true">▶</span>
+          <div class="track">
+            <span class="fill"></span>
+            <span class="tick" style="left:20%"></span>
+            <span class="tick" style="left:55%"></span>
+            <span class="tick" style="left:82%"></span>
+            <span class="head"></span>
+          </div>
+          <span class="tc">0:06</span>
         </div>
-        <span class="tc">0:06</span>
+      </figure>
+      <div class="spectrum" aria-hidden="true"></div>
+    </div>
+  </Fragment>
+
+  <!-- The confident light section: the two 16:9 slots the capture and the
+       export will land in, with the koan as a signature line at its foot. -->
+  <section class="band-light">
+    <div class="wrap slots-wrap">
+      <div class="slots">
+        {slots.map((s) => (
+          <figure class="demo-slot">
+            <!-- The frame is empty on purpose, so it has nothing to name: it is
+                 hidden from assistive tech and the figcaption is the slot's
+                 description. Labelling it too would read the caption twice. -->
+            <div class="ds-frame" aria-hidden="true">
+              <span class="rec mono">REC</span>
+            </div>
+            <figcaption class="ds-cap"><span class="label mono">{s.fig}</span>{s.caption}</figcaption>
+          </figure>
+        ))}
       </div>
-    </figure>
-    <div class="features">
-      <span class="label">{e.pipeline.kicker}</span>
-      <ul>
-        {e.pipeline.items.map((f, i) => <li><span class="step">{String(i + 1).padStart(2, '0')}</span><span set:html={f} /></li>)}
-      </ul>
+      <p class="sig mono" aria-hidden="true">{e.koan}</p>
+    </div>
+  </section>
+
+  <!-- Obsidian band — the five commands, inverted. The page's single dark
+       counterweight: light everywhere else. -->
+  <section class="band-dark">
+    <div class="wrap band-wrap">
+      <div class="features">
+        <span class="label">{e.pipeline.kicker}</span>
+        <ul>
+          {e.pipeline.items.map((f, i) => <li><span class="step">{String(i + 1).padStart(2, '0')}</span><span set:html={f} /></li>)}
+        </ul>
+      </div>
     </div>
   </section>
 </ExperimentLayout>
 
 <style>
-  .section { padding-block: 1.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
-  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
-
-  /* Demo player — a real terminal: a black monitor on the bright set, coral as
-     its phosphor. The dark/light contrast lives here. */
-  .player { margin: 0; border: 1px solid color-mix(in srgb, var(--demostage) 45%, #2a2520); border-radius: 9px; overflow: hidden; background: #14110d; box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22); }
+  /* The hero figure: a black monitor on the bright set, coral as its phosphor.
+     The dark/light contrast of the page lives here and in the obsidian band. */
+  .stage { padding-block: 1.75rem 2.5rem; }
+  .player {
+    margin: 0;
+    max-width: 56rem;
+    border: 1px solid color-mix(in srgb, var(--demostage) 45%, #2a2520);
+    border-radius: 9px;
+    overflow: hidden;
+    background: #14110d; /* flat — the dropped shadow was half the clutter */
+  }
   .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid #2a241d; font-size: 0.75rem; }
   .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
   .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
@@ -65,6 +109,68 @@ $ demo export gif,mp4
   .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: #4a4339; transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
   .scrubber .tick.on { background: var(--demostage); box-shadow: 0 0 6px color-mix(in srgb, var(--demostage) 70%, transparent); }
   .scrubber .tc { color: #9a9082; }
+
+  /* The one gradient the page is allowed: a thin spectrum baseline under the
+     hero figure. Nothing else on the page carries one. */
+  .spectrum {
+    max-width: 56rem;
+    height: 2px;
+    margin-top: 0.7rem;
+    opacity: 0.55;
+    background: linear-gradient(90deg, #e0a458, #ef8354, #e8a4c8, #6ec6e6, #5dd39e);
+  }
+
+  /* Two empty 16:9 slots, side by side, stacking below 52rem. Flat frames: no
+     grid texture, no glow, no video, no lens, no dialog. */
+  .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+  @media (max-width: 52rem) { .slots { grid-template-columns: 1fr; } }
+  .demo-slot { margin: 0; }
+  .ds-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    /* The studio hairline is tuned for linen; on the peach band it all but
+       vanishes, so the frame carries its own ink-mixed rule. */
+    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    border-radius: 8px;
+    background: var(--bg-raise);
+  }
+  .rec {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+  }
+  .rec::before {
+    content: '';
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: var(--demostage); /* graphics only — never text on the light band */
+  }
+  .ds-cap {
+    margin-top: 0.7rem;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--ink-dim);
+  }
+  .ds-cap .label { font-style: normal; color: var(--ink); margin-right: 0.6rem; }
+
+  /* The signature line at the foot of the light section — the koan reused
+     verbatim, small and quiet, hidden from assistive tech (it repeats the
+     hero's). Ink-dim, not the essence: the coral is spent on the REC dots and
+     the step numerals, and orange text on peach has nowhere near AA. */
+  .sig {
+    margin: 2.2rem 0 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+  }
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }

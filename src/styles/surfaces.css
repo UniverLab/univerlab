@@ -353,14 +353,15 @@ html[data-surface='studio'] {
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 /* A bright set: a faint coral key-light wash from the top of the white page;
-   the black terminal monitor provides the contrast. */
+   the black terminal monitor provides the contrast. Dimmed (12% → 6%) and
+   widened so the light bands below punch instead of sitting under a glow. */
 html[data-surface='studio'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: radial-gradient(58% 40% at 50% 0%, color-mix(in srgb, var(--essence) 12%, transparent), transparent 70%);
+  background: radial-gradient(70% 34% at 50% 0%, color-mix(in srgb, var(--essence) 6%, transparent), transparent 70%);
 }
 html[data-surface='studio'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -371,6 +372,54 @@ html[data-surface='studio'] .koan {
   font-style: italic;
   opacity: 1;
 }
+
+/* ── The light/dark rhythm of the DemoStage page ────────────────────────────
+   One confident light section — vapor-peach (#f7ece1 over the studio linen),
+   dark ink — carrying the origin story and both demo slots, and exactly ONE
+   obsidian band (#14110d, the player chrome's own tone) for the five
+   commands. Sections are block-level, so the bands are full-bleed by default
+   and `.wrap` carries the measure. Everything else on the page stays light:
+   two dark bands would tip the page dark-heavy. ─────────────────────────── */
+html[data-surface='studio'] .band-light {
+  background: #f7ece1;
+  color: #221d18;
+  padding-block: 3rem 3.25rem;
+}
+html[data-surface='studio'] .band-dark {
+  background: #14110d;
+  color: #ece7dd;
+  padding-block: 2.5rem 2.75rem;
+}
+/* The origin story is layout-owned and sits right above the light section —
+   wash it in the same vapor-peach so the two read as ONE light block instead
+   of a tinted card. The row goes full width; `.genesis` (a .wrap) carries the
+   measure, and the single-column override replaces the empty second column. */
+html[data-surface='studio'] .genesis-row {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+  grid-template-columns: 1fr;
+  background: #f7ece1;
+}
+/* `.genesis` is a .wrap grid item with auto margins, so it shrink-wraps to its
+   prose measure and centres itself. Give it the row's full width to optically
+   align with the demo slots below; `.wrap`'s max-width + auto margins still
+   centre the block and `.prose` still holds the measure. */
+html[data-surface='studio'] .genesis-row .genesis { width: 100%; }
+/* This page's spec is exactly two EMPTY 16:9 slots, so the recorded demo the
+   layout renders for us is hidden here. CSS only — the registry is shared. */
+html[data-surface='studio'] .demo-col { display: none; }
+/* Inside the obsidian band the light-band tokens invert: the mono kicker, the
+   dim row copy and the hairlines lift off the dark, and inline code goes to
+   ink. The coral stays on the step numerals (graphics, high contrast on
+   #14110d) — no orange body copy. */
+html[data-surface='studio'] .band-dark .label { color: #a39c8e; }
+html[data-surface='studio'] .band-dark .features li {
+  color: #a39c8e;
+  border-bottom-color: #2a241d;
+}
+html[data-surface='studio'] .band-dark .features code { color: #ece7dd; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-surface HERO layouts — each experiment's hero has its own structure, not
@@ -536,14 +585,15 @@ html[data-surface='observatory'] .num {
 /* .lede override moved to ExperimentLayout.astro — owns the element's styles. */
 
 /* demostage · studio — the hero is a framed screen with a REC tally, lit by
-   the spotlight behind it. */
+   the spotlight behind it. Flat plate: the 45% wash was a second texture the
+   declutter pass drops (border stays). */
 html[data-surface='studio'] .hero {
   position: relative;
   margin-top: 1rem;
   padding: 1.7rem;
   border: 1px solid color-mix(in srgb, var(--essence) 45%, var(--line));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-raise) 45%, transparent);
+  background: var(--bg-raise);
 }
 /* Static fallback REC; the script swaps in a live, counting one (`.rec`). */
 html[data-surface='studio'] .hero::before {

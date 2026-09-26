@@ -468,6 +468,10 @@ export const es: Dict = {
           '<code>edit</code> — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
       },
+      demos: {
+        first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
+        second: 'Export — la misma partitura renderizada a gif y mp4',
+      },
       faq: [
         ['¿Qué es DemoStage?',
           'Una herramienta para planificar y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No es solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
