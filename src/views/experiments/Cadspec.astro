@@ -413,11 +413,18 @@ offset = 0.5</code></pre>
     .art { animation: none; }
   }
 
-  /* Responsive guard — mandatory: below 60rem the absolute cards would sit
+  /* Responsive guard — mandatory: below 64rem the absolute cards would sit
      on the centered headline and can force a horizontal scrollbar. They go
      static and flow into the flexing, wrapping `.actions` row (after the
-     docs button, because they come from the cta slot). */
-  @media (max-width: 60rem) {
+     docs button, because they come from the cta slot).
+
+     The threshold is 64rem (1024px), not 60rem: the hero has to fit the
+     banner art (~416px, centred) *between* the two side cards, and it only
+     clears it above ~1024px. Between 961px and 1020px the coords card's box
+     already overlaps the banner's (15px at 961px, leaving a 2px gap to its
+     glyphs and its shadow across the art), so the guard has to bite before
+     that band opens. */
+  @media (max-width: 64rem) {
     .art-coords,
     .art-dim,
     .art-chip {

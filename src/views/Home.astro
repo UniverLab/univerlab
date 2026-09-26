@@ -593,7 +593,8 @@ const webSite = {
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
 
-  // Gate the cursor-seeded FIELD runner (see backgrounds.ts) on this page only
+  // Gate the cursor-seeded field runner (see field.ts, via backgrounds.ts
+  // `cosmic`) on this page only
   // — set on the documentElement before ThemeBackground's load-time import has
   // a chance to resolve, so `cosmic` sees the flag and delegates.
   document.documentElement.dataset.page = 'home';
