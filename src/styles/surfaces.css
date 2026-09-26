@@ -49,79 +49,102 @@ html[data-surface='tui'] .koan::after {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   texforge · `paper` — a galley proof the tool itself set.
+   texforge · `paper` — the Antimetal editorial register.
 
-   Not "cream + display Didone + terracotta" (the templated editorial look):
-   grounded instead in journal/TeX typesetting — a restrained masthead, a
-   sturdy low-contrast serif (Spectral), justified & hyphenated body, oldstyle
-   figures, and a single vermilion proofreader's change-bar as the one accent.
+   Cream stock and bistre ink; the display voice is a *system* serif at 400
+   only (BaseLayout stops pushing Spectral for this surface), the body is sans,
+   markers stay mono uppercase. Ruling is the dash vocabulary — T1 wide section
+   dividers, T2 dense list separators, T3 dotted figure-meta rows — never a
+   solid rule inside content and never an accent colour fighting the cream.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='paper'] {
-  /* The page is typeset: serif body, serif display. Labels stay mono. */
-  --font-body: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-serif: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  /* Vermilion — the proofreader's mark / change-bar. Used once. */
-  --proof: #b2362c;
+  /* Display: system serif only — no webfont name in the stack. */
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  /* Body: sans (the page is typeset, not set in Spectral). */
+  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Headings: serif 400 across the page — no 500/600 display weights, no
+   grotesque headline face. */
+html[data-surface='paper'] h1,
+html[data-surface='paper'] h2,
+html[data-surface='paper'] h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Emphasis stays in bistre: the experiment's terracotta essence has ~2:1 on
+   cream and isn't this surface's voice — essence is left to the install sigil
+   and the status dot. No weight jump either: 400 only. */
+html[data-surface='paper'] strong {
+  color: var(--ink);
+  font-weight: 400;
 }
 
 html[data-surface='paper'] .exp {
-  font-variant-numeric: oldstyle-nums;
+  font-family: var(--font-body);
 }
 
-/* The hero becomes a title block, ruled off by the proof change-bar. */
+/* The hero is a title block: no proof change-bar down its side and no solid
+   rule under it — the section is ruled off by the wide dashed divider (T1). */
 html[data-surface='paper'] .hero {
-  border-left: 2px solid var(--proof);
-  padding-left: clamp(1.1rem, 3vw, 1.8rem);
+  padding-top: 1.6rem;
 }
 html[data-surface='paper'] .num {
-  color: var(--proof);
+  color: var(--ink-faint);
 }
 
-/* The ASCII banner stays — it is each experiment's own signature mark. On paper
-   it reads like a letterpress masthead; the editorial voice comes from how the
-   text is *set*, not from removing the art. */
+/* The ASCII banner stays — it is each experiment's own signature mark. On
+   paper it reads like a letterpress masthead: the art is untouched, only
+   tinted bistre (tint-only restyle — no gradient, no letterform edits). */
+html[data-surface='paper'] .banner {
+  color: var(--ink);
+  opacity: 0.88;
+  text-shadow: none;
+}
 
-/* Koan as an indented epigraph, ruled with a faint proof mark. */
+/* Koan as a system-serif epigraph at 400, indented against a dashed hairline
+   instead of the old vermilion proof mark. */
 html[data-surface='paper'] .koan {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: normal;
   font-size: 1.15rem;
+  color: var(--ink);
+  opacity: 1;
   padding-left: 1rem;
-  border-left: 1px solid color-mix(in srgb, var(--proof) 50%, var(--line));
+  border-left: 1px dashed var(--rule-t1);
 }
 
-/* Lede & genesis set as a justified, hyphenated column — and the lede opens
-   with a drop cap, the oldest editorial signal there is. */
+/* Lede & genesis prose: left-aligned sans. No justification, no hyphenation
+   and no drop cap — the old galley voice (justify + hyphens + Didone initial)
+   is gone. */
 html[data-surface='paper'] .lede,
 html[data-surface='paper'] .genesis .prose {
-  text-align: justify;
-  hyphens: auto;
-}
-html[data-surface='paper'] .lede::first-letter {
-  float: left;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 3.2em;
-  line-height: 0.76;
-  padding: 0.05em 0.14em 0 0;
-  color: var(--ink);
+  font-family: var(--font-body);
+  text-align: left;
+  hyphens: manual;
 }
 
-/* A centered asterism breaks the page before the origin note — the classic
-   book section divider — and the genesis is set as a numbered section. */
-html[data-surface='paper'] .genesis::before {
-  content: '⁂';
-  display: block;
-  margin: 0 0 2rem;
-  text-align: center;
-  max-width: 60ch;
+/* The genesis is a plain section: the asterism (⁂) and the § marker are both
+   retired rather than restyled — one editorial voice, not three. Its headline
+   is 400 like every other heading here (see the h2 rule above). */
+
+/* The demo figure sits inside the cream page: its frame joins the wide dash
+   (T1) and its "Fig. 1" marker is bistre-faint, not the amber essence. */
+html[data-surface='paper'] .demo-frame {
+  border: 1px dashed var(--rule-t1);
+}
+html[data-surface='paper'] .exp .demo-cap .label {
   color: var(--ink-faint);
-  font-size: 1.3rem;
 }
-html[data-surface='paper'] .genesis .label::before {
-  content: '§ ';
-  color: var(--proof);
-}
-html[data-surface='paper'] .genesis h2 {
-  font-weight: 600;
+
+/* The quiet paper motif mounts on canvas now (see backgrounds.ts): keep it
+   faint enough that it never washes the cream out. `pointer-events: none`
+   and `z-index: -1` stay as ThemeBackground sets them. */
+html[data-surface='paper'] canvas.bg {
+  opacity: 0.25;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -386,15 +409,15 @@ html[data-surface='tui'] .hero::before {
   color: var(--ink-faint);
 }
 
-/* texforge · paper — a journal title page: ruled top and bottom, proof bar left. */
-html[data-surface='paper'] .hero {
-  padding-top: 1.6rem;
-}
+/* texforge · paper — a journal title page: the hero is ruled off by the wide
+   dashed divider (T1), never a solid rule. The divider is the section's own
+   pseudo-element, so only the line carries the alpha — the content never
+   fades with it. */
 html[data-surface='paper'] .hero::after {
   content: '';
   align-self: stretch;
   margin-top: 1.4rem;
-  border-bottom: 1px solid var(--ink);
+  border-top: 1px dashed var(--rule-t1);
 }
 
 /* cadspec · blueprint — an architect's plan: a clean white sheet, a thin frame

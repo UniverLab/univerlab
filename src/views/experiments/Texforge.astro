@@ -9,7 +9,9 @@ const tfInitial =
   '\\begin{mermaid}\nflowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log\n\\end{mermaid}';
 ---
 <ExperimentLayout id="texforge">
-  <section class="wrap section">
+  <!-- `trule` = wide section divider (T1 of the dash vocabulary): one dashed
+       hairline per section boundary, never one per item. -->
+  <section class="wrap section trule">
     <div class="galley">
       <figure class="plate-fig" id="tf-figure" data-figures={JSON.stringify(e.figures)}>
         <pre class="mono plate"><code>{tfInitial}</code></pre>
@@ -26,7 +28,7 @@ const tfInitial =
     </div>
   </section>
 
-  <section class="wrap section">
+  <section class="wrap section trule">
     <div class="sub">
       <span class="label">{e.subproject.kicker}</span>
       <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
@@ -87,36 +89,52 @@ const tfInitial =
 
 <style>
   .section { padding-block: 1.5rem; }
+  /* Wide section divider (T1): one dashed hairline rules each major section
+     off from the one above it — never one per item, never a solid rule. */
+  .section.trule { border-top: 1px dashed var(--rule-t1); }
   .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
-  /* A typeset figure plate, not a card: a hairline frame and the soft shadow of
-     a sheet on the desk — no hard offset. It cycles through the diagram
-     environments texforge intercepts, captioned "Fig. N · <env>". */
+  /* A typeset figure plate, not a card: a dashed hairline frame on parchment,
+     flat on the page (no card shadow), holding the sheet's own tone. It cycles
+     through the diagram environments texforge intercepts, captioned
+     "Fig. N · <env>". */
   .plate-fig { margin: 0; }
   .plate {
     margin: 0; padding: 1.9rem 2.1rem;
-    border: 1px solid var(--line);
-    background: var(--bg-raise); color: var(--texforge);
+    border: 1px dashed var(--rule-t1);
+    background: var(--bg-raise); color: var(--ink);
     font-size: 0.9rem; line-height: 1.9;
-    box-shadow: 0 12px 30px -16px rgba(60, 45, 30, 0.28);
     min-height: 10.6rem; /* fits the tallest environment, so cycling never jumps */
   }
   .plate code { display: block; transition: opacity 0.26s ease; }
   .plate code.fade { opacity: 0; }
+  /* Dotted figure-meta row (T3) above the caption — the third and last
+     treatment in the dash vocabulary. */
   .fig-cap {
-    margin-top: 0.7rem; font-family: var(--font-mono);
+    margin-top: 0.8rem; padding-top: 0.6rem;
+    border-top: 1px dotted var(--rule-t3);
+    font-family: var(--font-mono);
     font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase;
     color: var(--ink-faint);
   }
   .fig-label { transition: opacity 0.26s ease; }
   .fig-label.fade { opacity: 0; }
   .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
-  .colophon li { display: flex; align-items: baseline; gap: 0.8rem; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--proof); min-width: 1.5rem; }
-  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 500; font-style: italic; }
+  .colophon li { display: flex; align-items: baseline; gap: 0.8rem; padding-block: 0.7rem; border-bottom: 1px dashed var(--rule-t2); color: var(--ink-dim); font-size: 0.97rem; }
+  .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); min-width: 1.5rem; }
+  /* Press terms are headline voice: system serif at 400, upright, bistre. */
+  .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 400; font-style: normal; }
   .sub { max-width: 46rem; }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
-  .sub h3 a { color: var(--texforge); text-decoration: none; }
+  /* Bistre link with a dashed underline — the amber essence has no contrast on
+     cream and isn't this surface's accent. */
+  .sub h3 a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: var(--rule-t2);
+    text-underline-offset: 0.3em;
+  }
   .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
-  .sub :global(code) { color: var(--texforge); font-size: 0.9em; }
+  .sub :global(code) { color: var(--ink); font-size: 0.9em; }
 </style>

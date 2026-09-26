@@ -35,7 +35,15 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   resize();
   window.addEventListener('resize', debounce(resize, 200));
 
-  const runner = THEMES[theme] ?? THEMES.drift;
+  // The cream `paper` surface (texforge) mounts its own quiet motif instead of
+  // the experiment's BgTheme: forge embers are the wrong register on
+  // parchment, and BgTheme's type is owned by the experiment registry (out of
+  // scope to extend with a new key), so the surface flag is the selector.
+  // Reduced motion never reaches this module at all — ThemeBackground returns
+  // before importing it.
+  const isPaper = document.documentElement.dataset.surface === 'paper';
+  if (isPaper) ctx.color = '#6a563e'; // bistre fibres, never amber embers
+  const runner = isPaper ? PAPER : (THEMES[theme] ?? THEMES.drift);
   const tick = runner(ctx);
 
   let raf = 0;
@@ -1072,4 +1080,98 @@ const THEMES: Record<Theme, Runner> = {
       c.globalAlpha = 1;
     };
   },
+};
+
+/* Paper — the quiet motif for the cream `paper` surface (texforge): a scatter
+   of short fibres, the flecks in a laid sheet, lying still. The cursor is the
+   only input — passing over the stock stirs the fibres it crosses and they
+   damp back to rest — so an untouched page reads as paper, not as an
+   animation. It is picked in startBackground() by `data-surface="paper"`
+   rather than keyed on BgTheme, whose type the experiment registry owns (and
+   which is out of scope to extend). The ~30fps cap, the resize handling and
+   the hidden-tab pause all come from startBackground; prefers-reduced-motion
+   never reaches this module at all, because ThemeBackground returns before
+   importing it. */
+const PAPER: Runner = (ctx) => {
+  const { c } = ctx;
+  const N = Math.min(34, Math.max(16, Math.floor((ctx.w * ctx.h) / 34000)));
+  type Fibre = { x: number; y: number; a: number; len: number; al: number; vx: number; vy: number; va: number };
+  const fibres: Fibre[] = Array.from({ length: N }, () => ({
+    x: rand(0, ctx.w),
+    y: rand(0, ctx.h),
+    a: rand(0, Math.PI),
+    len: rand(5, 17),
+    al: rand(0.2, 0.5),
+    vx: 0,
+    vy: 0,
+    va: 0,
+  }));
+
+  // Cursor stir: fibres within reach pick up a nudge along the pointer's path
+  // (at most one impulse per frame), then ease back to rest. The first move
+  // only records where the pointer came from, so there is no jump from an
+  // off-screen origin. Touch has no pointer to stir with — it stays still,
+  // and nothing drifts on its own.
+  const REACH = 140;
+  let px = 0;
+  let py = 0;
+  let nx = 0;
+  let ny = 0;
+  let seen = false;
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!seen) {
+        px = e.clientX;
+        py = e.clientY;
+        seen = true;
+      }
+      nx = e.clientX;
+      ny = e.clientY;
+    },
+    { passive: true }
+  );
+
+  return () => {
+    if (seen) {
+      const dx = nx - px;
+      const dy = ny - py;
+      if (dx || dy) {
+        for (const f of fibres) {
+          const d = Math.hypot(f.x - nx, f.y - ny);
+          if (d >= REACH) continue;
+          const k = 1 - d / REACH;
+          f.vx += dx * k * 0.05;
+          f.vy += dy * k * 0.05;
+          f.va += (dx + dy) * k * 0.00004;
+        }
+      }
+      px = nx;
+      py = ny;
+    }
+
+    c.clearRect(0, 0, ctx.w, ctx.h);
+    c.strokeStyle = ctx.color;
+    c.lineWidth = 1;
+    for (const f of fibres) {
+      f.x += f.vx;
+      f.y += f.vy;
+      f.a += f.va;
+      f.vx *= 0.9;
+      f.vy *= 0.9;
+      f.va *= 0.9;
+      if (f.x < -20) f.x += ctx.w + 40;
+      else if (f.x > ctx.w + 20) f.x -= ctx.w + 40;
+      if (f.y < -20) f.y += ctx.h + 40;
+      else if (f.y > ctx.h + 20) f.y -= ctx.h + 40;
+      const ca = Math.cos(f.a) * f.len;
+      const sa = Math.sin(f.a) * f.len;
+      c.globalAlpha = f.al;
+      c.beginPath();
+      c.moveTo(f.x - ca, f.y - sa);
+      c.lineTo(f.x + ca, f.y + sa);
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+  };
 };

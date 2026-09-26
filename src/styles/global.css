@@ -39,14 +39,27 @@
 /* Fixed per-experiment surfaces (set as data-surface on <html>). They override
    only the substrate tokens; each experiment keeps its own --essence accent. */
 
-/* texforge — editorial / classic print: warm paper, near-black ink. */
+/* texforge — the Antimetal editorial register: cream stock, bistre ink.
+   Display is a *system* serif at 400 only (no webfont is pushed for this
+   surface), body is sans, markers stay mono. Ruling comes from the dash
+   vocabulary below, never from a solid rule inside content. */
 html[data-surface='paper'] {
-  --bg: #f5f5f3;
-  --bg-raise: #ffffff;
-  --ink: #1b1b1a;
-  --ink-dim: #54514c;
-  --ink-faint: #736e68; /* lifted from #8a857d (3.36:1) to clear AA at 4.6:1 */
-  --line: #e3ded4;
+  --bg: #faf6ec;        /* cream paper */
+  --bg-raise: #f3ecdc;  /* parchment — raised sheets (install bar, figure plate) */
+  --ink: #3a2e22;       /* bistre — 12.2:1 on the cream */
+  --ink-dim: #6b5844;   /* 6.3:1 on the cream */
+  --ink-faint: #7d6a50; /* darkest warm tone that still clears AA at 4.8:1 on the cream */
+  --line: #d8cdb4;      /* bistre hairline */
+
+  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+
+  /* Dash vocabulary (max 3 treatments per viewport): T1 wide section dividers,
+     T2 dense list separators, T3 dotted figure-meta rows. Hierarchy lives in
+     the line's alpha — content never fades with it. */
+  --rule-t1: color-mix(in srgb, var(--line) 85%, transparent);
+  --rule-t2: color-mix(in srgb, var(--line) 70%, transparent);
+  --rule-t3: color-mix(in srgb, var(--line) 60%, transparent);
 }
 
 /* canopy — modern TUI / DevOS: cold slate dark, blue-grey ink. */

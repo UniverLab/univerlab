@@ -334,6 +334,72 @@ const ogImage = `/og/${id}.png`;
     color: var(--ink); margin: 0 0 0.5rem; letter-spacing: 0.01em;
   }
   .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
+
+  /* ── paper (texforge) — Antimetal editorial overrides.
+     The structure above is untouched: same hero, install bar, genesis, faq and
+     exp-nav (which keeps its "no top rule" — the footer opens with one). What
+     changes is only the ruling — dashed frames (T1) and dense dashed
+     separators (T2), never a solid rule inside content — and the accent:
+     bistre in place of the amber essence, which sits at ~2:1 on cream and is
+     therefore left to the install sigil and the status dot alone. ────────── */
+
+  /* Buttons: wide dashed frame (T1), bistre label; hover inverts to bistre. */
+  :global(html[data-surface='paper'] .btn),
+  :global(html[data-surface='paper'] .btn.ghost) {
+    border: 1px dashed var(--rule-t1);
+    color: var(--ink);
+  }
+  :global(html[data-surface='paper'] .btn:hover),
+  :global(html[data-surface='paper'] .btn.ghost:hover) {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Install bar in the hero — a parchment slip framed in the wide dash, its
+     head ruled off by a dense separator (T2). Tabs stay mono uppercase:
+     active tab bistre, inactive bistre-faint; the copy rule is dashed too. */
+  :global(html[data-surface='paper'] .install-head) {
+    border-bottom: 1px dashed var(--rule-t2);
+    padding-bottom: 0.35rem;
+  }
+  :global(html[data-surface='paper'] .cmd) {
+    border: 1px dashed var(--rule-t1);
+    background: var(--bg-raise);
+  }
+  :global(html[data-surface='paper'] .copy) {
+    border-left: 1px dashed var(--rule-t1);
+  }
+  :global(html[data-surface='paper'] .os-tab) { color: var(--ink-faint); }
+  :global(html[data-surface='paper'] .os-tab[aria-selected='true']) { color: var(--ink); }
+  :global(html[data-surface='paper'] .copy:hover),
+  :global(html[data-surface='paper'] .exp .copy.done .copy-done) { color: var(--ink); }
+
+  /* Lede & genesis emphasis and inline code: bistre, no display weight jump
+     (400 only) — the essence accent is not this surface's voice. */
+  :global(html[data-surface='paper'] .exp .lede strong),
+  :global(html[data-surface='paper'] .exp .genesis .prose strong) {
+    color: var(--ink);
+    font-weight: 400;
+  }
+  :global(html[data-surface='paper'] .exp .lede code),
+  :global(html[data-surface='paper'] .exp .genesis .prose code),
+  :global(html[data-surface='paper'] .exp .genesis .prose em) {
+    color: var(--ink);
+  }
+
+  /* FAQ: ruled off from the content above by the wide divider (T1), then
+     dense dashed separators (T2). The first item's top rule is the same
+     treatment, not a fourth one. */
+  :global(html[data-surface='paper'] .faq-section) {
+    border-top: 1px dashed var(--rule-t1);
+  }
+  :global(html[data-surface='paper'] .faq-item) {
+    border-bottom: 1px dashed var(--rule-t2);
+  }
+  :global(html[data-surface='paper'] .faq-item:first-child) {
+    border-top: 1px dashed var(--rule-t2);
+  }
 </style>
 
 <script>
