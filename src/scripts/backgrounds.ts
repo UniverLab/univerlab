@@ -400,6 +400,29 @@ const THEMES: Record<Theme, Runner> = {
     let shot: Shot | null = null;
     let nextShot = rand(1000, 2800);
     let acc = 0;
+    // pointer-tracing state
+    let mx = -9999;
+    let my = -9999;
+    let hasPointer = false;
+    const traceSeen = new Map<string, number>();
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        mx = e.clientX;
+        my = e.clientY;
+        hasPointer = true;
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false;
+      },
+      { passive: true, signal: ac.signal }
+    );
     // aurora curtains — slow undulating bands near the top (green + essence)
     const aurora = [
       { color: 'rgb(110,231,183)', yBase: ctx.h * 0.14, amp: 26, freq: 0.005, sp: 0.00028, ph: 0, h: 120, a: 0.09 },
@@ -407,6 +430,10 @@ const THEMES: Record<Theme, Runner> = {
     ];
     let prevT = 0;
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       c.clearRect(0, 0, ctx.w, ctx.h);
@@ -447,6 +474,8 @@ const THEMES: Record<Theme, Runner> = {
       }
 
       // stars — rigid rotation around the pole, each twinkling on its own
+      // collect positions for pointer tracing
+      const starPos: { x: number; y: number }[] = [];
       for (const s of stars) {
         s.ang += OMEGA * dt;
         let x = poleX + s.rad * Math.cos(s.ang);
@@ -460,6 +489,7 @@ const THEMES: Record<Theme, Runner> = {
           x = poleX + s.rad * Math.cos(s.ang);
           y = poleY + s.rad * Math.sin(s.ang);
         }
+        starPos.push({ x, y });
         let tw = s.base + s.amp * Math.sin(t * 0.0016 * s.sp + s.ph);
         tw = tw < 0 ? 0 : tw > 1 ? 1 : tw;
         if (s.chroma) {
@@ -510,6 +540,63 @@ const THEMES: Record<Theme, Runner> = {
         c.stroke();
         if (k >= 1) shot = null;
       }
+
+      // pointer-traced edges between nearby stars
+      if (hasPointer && starPos.length) {
+        // collect indices of stars within 130px of cursor
+        const nearby: number[] = [];
+        for (let i = 0; i < starPos.length; i++) {
+          const dx = starPos[i].x - mx;
+          const dy = starPos[i].y - my;
+          if (dx * dx + dy * dy < 16900) nearby.push(i); // 130^2
+        }
+        // record live edges between nearby pairs within 90px
+        for (let a = 0; a < nearby.length; a++) {
+          const i = nearby[a];
+          for (let b = a + 1; b < nearby.length; b++) {
+            const j = nearby[b];
+            const dx = starPos[i].x - starPos[j].x;
+            const dy = starPos[i].y - starPos[j].y;
+            if (dx * dx + dy * dy < 8100) { // 90^2
+              traceSeen.set(`${i}-${j}`, t);
+            }
+          }
+        }
+      }
+      if (starPos.length) {
+        // draw and sweep edges
+        const edges: { i: number; j: number; age: number }[] = [];
+        for (const [key, seen] of traceSeen) {
+          const age = t - seen;
+          if (age > 1500) {
+            traceSeen.delete(key);
+          } else {
+            const [si, sj] = key.split('-').map(Number);
+            if (si < starPos.length && sj < starPos.length) {
+              edges.push({ i: si, j: sj, age });
+            }
+          }
+        }
+        // cap at ~40 nearest-first
+        edges.sort((e1, e2) => {
+          const d1 = (starPos[e1.i].x - mx) ** 2 + (starPos[e1.i].y - my) ** 2;
+          const d2 = (starPos[e2.i].x - mx) ** 2 + (starPos[e2.i].y - my) ** 2;
+          return d1 - d2;
+        });
+        const maxEdges = 40;
+        c.strokeStyle = '#eef2ff';
+        c.lineWidth = 1;
+        for (let e = 0; e < Math.min(maxEdges, edges.length); e++) {
+          const { i, j, age } = edges[e];
+          const a = 0.14 * (1 - age / 1500);
+          c.globalAlpha = a;
+          c.beginPath();
+          c.moveTo(starPos[i].x, starPos[i].y);
+          c.lineTo(starPos[j].x, starPos[j].y);
+          c.stroke();
+        }
+      }
+
       c.globalAlpha = 1;
     };
   },
