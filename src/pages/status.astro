@@ -45,25 +45,9 @@ const topicColors: Record<string, string> = Object.fromEntries(
   </section>
 
   <style is:global>
-    .log {
-      max-width: 42rem;
-      padding-block: 4rem 6rem;
-    }
-    .log .label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-      display: block;
-      margin-bottom: 1.2rem;
-    }
-    .log-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.6rem;
-      margin-bottom: 1.2rem;
-    }
+    .log { max-width: 42rem; padding-block: 4rem 6rem; }
+    .log .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 1.2rem; }
+    .log-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 1.2rem; }
     .log-head .label { margin-bottom: 0; }
     .feed-link {
       font-family: var(--font-mono);
@@ -82,42 +66,12 @@ const topicColors: Record<string, string> = Object.fromEntries(
       color: var(--ink);
       border-color: var(--accent);
     }
-    .log h1 {
-      font-family: var(--font-mono);
-      font-size: 1.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ink);
-      margin-bottom: 0.6rem;
-    }
-    .log .intro {
-      color: var(--ink-dim);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 3rem;
-    }
-    .topic-index {
-      display: flex;
-      align-items: baseline;
-      gap: 1rem;
-      padding-block: 0.5rem;
-    }
-    .topic-index + .topic-index {
-      padding-top: 0;
-      margin-top: -0.15rem;
-    }
-    .topic-index-label {
-      flex: 0 0 auto;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.16em;
-      color: var(--ink-faint);
-    }
-    .topic-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
+    .log h1 { font-family: var(--font-mono); font-size: 1.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin-bottom: 0.6rem; }
+    .log .intro { color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; margin-bottom: 3rem; }
+    .topic-index { display: flex; align-items: baseline; gap: 1rem; padding-block: 0.5rem; }
+    .topic-index + .topic-index { padding-top: 0; margin-top: -0.15rem; }
+    .topic-index-label { flex: 0 0 auto; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--ink-faint); }
+    .topic-filters { display: flex; flex-wrap: wrap; gap: 0.35rem; }
     .topic-filter {
       display: inline-flex;
       align-items: baseline;
@@ -138,43 +92,16 @@ const topicColors: Record<string, string> = Object.fromEntries(
       background: color-mix(in srgb, var(--ink) 12%, transparent);
       color: var(--ink);
     }
-    .topic-filter.is-active {
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      color: var(--accent);
-    }
-    .topic-filter-count {
-      color: var(--ink-faint);
-      font-size: 0.58rem;
-    }
+    .topic-filter.is-active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+    .topic-filter-count { color: var(--ink-faint); font-size: 0.58rem; }
     .topic-filter.is-active .topic-filter-count,
     .topic-filter:hover .topic-filter-count {
       color: currentColor;
     }
-    .filter-empty {
-      padding-block: 3rem;
-      color: var(--ink-faint);
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      text-align: center;
-    }
+    .filter-empty { padding-block: 3rem; color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.82rem; text-align: center; }
     #log-entries { display: flex; flex-direction: column; }
-    .entry {
-      display: grid;
-      grid-template-columns: 7rem 1fr auto;
-      grid-template-rows: auto auto;
-      gap: 0.4rem 1.2rem;
-      padding-block: 1.8rem;
-      border-bottom: 1px solid var(--line);
-      align-items: start;
-    }
-    .entry time {
-      grid-column: 1;
-      grid-row: 1;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--ink-faint);
-      white-space: nowrap;
-    }
+    .entry { display: grid; grid-template-columns: 7rem 1fr auto; grid-template-rows: auto auto; gap: 0.4rem 1.2rem; padding-block: 1.8rem; border-bottom: 1px solid var(--line); align-items: start; }
+    .entry time { grid-column: 1; grid-row: 1; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-faint); white-space: nowrap; }
     .entry .type-badge {
       grid-column: 3;
       grid-row: 1;
@@ -189,94 +116,25 @@ const topicColors: Record<string, string> = Object.fromEntries(
       align-self: start;
       opacity: 0.8;
     }
-    .entry .entry-body {
-      grid-column: 1 / -1;
-      grid-row: 2;
-    }
-    .entry h3 {
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      color: var(--accent);
-      margin-bottom: 0.3rem;
-    }
-    .entry p {
-      color: var(--ink-dim);
-      font-size: 0.88rem;
-      line-height: 1.65;
-      white-space: pre-line;
-    }
-    .entry p a {
-      color: var(--accent);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-    .entry p a:hover {
-      color: var(--ink);
-    }
-    .entry-link {
-      display: inline-block;
-      margin-top: 0.5rem;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--accent);
-      text-decoration: none;
-      letter-spacing: 0.05em;
-    }
-    .entry-link:hover {
-      text-decoration: underline;
-      color: var(--ink);
-    }
+    .entry .entry-body { grid-column: 1 / -1; grid-row: 2; }
+    .entry h3 { font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent); margin-bottom: 0.3rem; }
+    .entry p { color: var(--ink-dim); font-size: 0.88rem; line-height: 1.65; white-space: pre-line; }
+    .entry p a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    .entry p a:hover { color: var(--ink); }
+    .entry-link { display: inline-block; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); text-decoration: none; letter-spacing: 0.05em; }
+    .entry-link:hover { text-decoration: underline; color: var(--ink); }
 
     /* Skeleton */
-    .skeleton .entry-body {
-      height: 3rem;
-      border-radius: 4px;
-      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-pulse 1.8s ease-in-out infinite;
-    }
-    .skeleton time {
-      height: 0.8rem;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-pulse 1.8s ease-in-out infinite;
-      display: block;
-    }
-    .skeleton .type-badge {
-      height: 0.9rem;
-      width: 3rem;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-pulse 1.8s ease-in-out infinite;
-    }
-    @keyframes skeleton-pulse {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .skeleton .entry-body { height: 3rem; border-radius: 4px; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
+    .skeleton time { height: 0.8rem; border-radius: 3px; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; display: block; }
+    .skeleton .type-badge { height: 0.9rem; width: 3rem; border-radius: 3px; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
+    @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* Empty state */
-    #log-entries:empty::after {
-      content: 'No entries yet. The log is waiting for its first transmission.';
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: var(--ink-faint);
-      padding-block: 3rem;
-      text-align: center;
-    }
+    #log-entries:empty::after { content: 'No entries yet. The log is waiting for its first transmission.'; display: block; font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-faint); padding-block: 3rem; text-align: center; }
 
     /* Toast — same style as the announcement toast in BaseLayout */
-    .gl-toast-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 319;
-      animation: gl-backdrop-in 0.2s ease;
-    }
+    .gl-toast-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 319; animation: gl-backdrop-in 0.2s ease; }
     .gl-toast {
       position: fixed;
       top: 50%;
@@ -300,141 +158,39 @@ const topicColors: Record<string, string> = Object.fromEntries(
       display: flex;
       flex-direction: column;
     }
-    .gl-toast span {
-      color: #d4a843;
-      font-weight: 600;
-    }
-    .gl-toast-close {
-      position: absolute;
-      top: 0.3rem;
-      right: 0.5rem;
-      background: none;
-      border: none;
-      color: #d4a843;
-      font-size: 1.2rem;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0 0.2rem;
-      opacity: 0.7;
-    }
-    .gl-toast-close:hover {
-      opacity: 1;
-    }
-    .gl-toast.gl-toast-out {
-      animation: gl-toast-out 0.3s ease forwards;
-    }
-    .gl-toast-backdrop.gl-toast-out {
-      animation: gl-backdrop-out 0.3s ease forwards;
-    }
-    .gl-toast-body {
-      margin-top: 0.5rem;
-      text-align: left;
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .gl-toast-body-inner {
-      color: #ccc;
-      font-size: 0.82rem;
-      line-height: 1.5;
-      max-height: 4.5em;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-      white-space: pre-line;
-    }
-    .gl-toast-body-inner.expanded {
-      max-height: none;
-      overflow-y: auto;
-    }
-    .gl-toast-expand {
-      background: none;
-      border: 0;
-      color: #d4a843;
-      font-family: "IBM Plex Mono", monospace;
-      font-size: 0.72rem;
-      cursor: pointer;
-      padding: 0.3rem 0 0;
-      text-align: left;
-      opacity: 0.8;
-    }
-    .gl-toast-expand:hover {
-      opacity: 1;
-      text-decoration: underline;
-    }
-    @keyframes gl-toast-in {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes gl-toast-out {
-      from { opacity: 1; }
-      to { opacity: 0; transform: scale(0.95); }
-    }
-    @keyframes gl-backdrop-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes gl-backdrop-out {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
+    .gl-toast span { color: #d4a843; font-weight: 600; }
+    .gl-toast-close { position: absolute; top: 0.3rem; right: 0.5rem; background: none; border: none; color: #d4a843; font-size: 1.2rem; cursor: pointer; line-height: 1; padding: 0 0.2rem; opacity: 0.7; }
+    .gl-toast-close:hover { opacity: 1; }
+    .gl-toast.gl-toast-out { animation: gl-toast-out 0.3s ease forwards; }
+    .gl-toast-backdrop.gl-toast-out { animation: gl-backdrop-out 0.3s ease forwards; }
+    .gl-toast-body { margin-top: 0.5rem; text-align: left; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
+    .gl-toast-body-inner { color: #ccc; font-size: 0.82rem; line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s ease; white-space: pre-line; }
+    .gl-toast-body-inner.expanded { max-height: none; overflow-y: auto; }
+    .gl-toast-expand { background: none; border: 0; color: #d4a843; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; text-align: left; opacity: 0.8; }
+    .gl-toast-expand:hover { opacity: 1; text-decoration: underline; }
+    @keyframes gl-toast-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes gl-toast-out { from { opacity: 1; } to { opacity: 0; transform: scale(0.95); } }
+    @keyframes gl-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes gl-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
 
     /* Scroll-driven fade-in (progressive enhancement) */
     @media (prefers-reduced-motion: no-preference) {
       @supports (animation-timeline: view()) {
-        .entry {
-          animation: entry-rise linear both;
-          animation-timeline: view();
-          animation-range: entry 0% cover 30%;
-        }
-        @keyframes entry-rise {
-          from { opacity: 0.1; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        .entry { animation: entry-rise linear both; animation-timeline: view(); animation-range: entry 0% cover 30%; }
+        @keyframes entry-rise { from { opacity: 0.1; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       }
     }
-
     @media (max-width: 640px) {
-      .topic-index {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.6rem;
-      }
-      .topic-filters {
-        flex-wrap: wrap;
-        max-width: 100%;
-      }
-      .topic-filter {
-        flex: 0 0 auto;
-      }
-      .entry {
-        grid-template-columns: 1fr auto;
-      }
-      .entry time {
-        grid-column: 1 / -1;
-      }
-      .entry .entry-body {
-        grid-column: 1 / -1;
-      }
+      .topic-index { align-items: flex-start; flex-direction: column; gap: 0.6rem; }
+      .topic-filters { flex-wrap: wrap; max-width: 100%; }
+      .topic-filter { flex: 0 0 auto; }
+      .entry { grid-template-columns: 1fr auto; }
+      .entry time { grid-column: 1 / -1; }
+      .entry .entry-body { grid-column: 1 / -1; }
     }
-    .roadmap {
-      max-width: 42rem;
-      padding-block: 4rem 0;
-    }
-    .roadmap .label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-      display: block;
-    }
-    .roadmap-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.6rem;
-      margin-bottom: 1.2rem;
-    }
+    .roadmap { max-width: 42rem; padding-block: 4rem 0; }
+    .roadmap .label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); display: block; }
+    .roadmap-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 1.2rem; }
     .roadmap-head .label { margin-bottom: 0; }
     .rm-edit-btn {
       font-family: var(--font-mono);
@@ -455,56 +211,18 @@ const topicColors: Record<string, string> = Object.fromEntries(
       color: var(--ink);
       border-color: var(--accent);
     }
-    .rm-notice {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--accent);
-      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-      padding: 0.4rem 0.6rem;
-      border-radius: 3px;
-      margin-bottom: 1rem;
-    }
-    .rm-lane {
-      border-bottom: 1px solid var(--line);
-      padding-block: 1.2rem;
-    }
+    .rm-notice { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); padding: 0.4rem 0.6rem; border-radius: 3px; margin-bottom: 1rem; }
+    .rm-lane { border-bottom: 1px solid var(--line); padding-block: 1.2rem; }
     .rm-lane:last-child { border-bottom: none; }
-    .rm-lane-label {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.8rem;
-      align-items: baseline;
-    }
+    .rm-lane-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 0.5rem; margin-bottom: 0.8rem; align-items: baseline; }
     summary.rm-lane-label { cursor: pointer; list-style: none; }
     summary.rm-lane-label::-webkit-details-marker { display: none; }
     summary.rm-lane-label::before { content: '\25b8'; }
     details[open] > summary.rm-lane-label::before { content: '\25be'; }
-    .rm-count {
-      color: var(--ink-faint);
-      font-size: 0.58rem;
-    }
-    .rm-row {
-      display: grid;
-      grid-template-columns: 2.6rem 1fr auto;
-      gap: 0.4rem 0.9rem;
-      padding-block: 0.7rem;
-      align-items: start;
-    }
-    .rm-pos {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--ink-faint);
-    }
-    .rm-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--ink);
-    }
+    .rm-count { color: var(--ink-faint); font-size: 0.58rem; }
+    .rm-row { display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 0.4rem 0.9rem; padding-block: 0.7rem; align-items: start; }
+    .rm-pos { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+    .rm-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); }
     .rm-chip {
       border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent);
       background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent);
@@ -513,70 +231,20 @@ const topicColors: Record<string, string> = Object.fromEntries(
       font-size: 0.58rem;
       margin-left: 0.5rem;
     }
-    .rm-blocked {
-      grid-column: 2;
-      color: var(--ink-dim);
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-    }
-    .rm-date {
-      color: var(--ink-faint);
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      display: block;
-      margin-top: 0.2rem;
-    }
+    .rm-blocked { grid-column: 2; color: var(--ink-dim); font-size: 0.78rem; font-family: var(--font-mono); }
+    .rm-date { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.68rem; display: block; margin-top: 0.2rem; }
     .rm-side { display: none; gap: 0.3rem; }
     .roadmap.rm-editing .rm-side { display: flex; }
     .roadmap.rm-editing .rm-row { align-items: center; }
     .rm-busy .rm-side { pointer-events: none; opacity: 0.5; }
-    .rm-arrow, .rm-item-edit, .rm-item-archive {
-      background: none;
-      border: 1px solid var(--line);
-      border-radius: 3px;
-      color: var(--ink-dim);
-      cursor: pointer;
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      padding: 0.1rem 0.35rem;
-    }
-    .rm-arrow:hover, .rm-item-edit:hover, .rm-item-archive:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-    }
+    .rm-arrow, .rm-item-edit, .rm-item-archive, .rm-form-save, .rm-form-cancel { background: none; border: 1px solid var(--line); border-radius: 3px; color: var(--ink-dim); cursor: pointer; font-family: var(--font-mono); font-size: 0.62rem; padding: 0.1rem 0.35rem; }
+    .rm-arrow:hover, .rm-item-edit:hover, .rm-item-archive:hover, .rm-form-save:hover, .rm-form-cancel:hover { color: var(--accent); border-color: var(--accent); }
     .rm-form { display: flex; flex-direction: column; gap: 0.5rem; }
-    .rm-form input, .rm-form select {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      background: transparent;
-      border: 1px solid var(--line);
-      border-radius: 3px;
-      color: var(--ink);
-      padding: 0.3rem 0.4rem;
-    }
-    .rm-more {
-      background: none;
-      border: 0;
-      color: var(--accent);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      cursor: pointer;
-      padding: 0.3rem 0 0;
-      opacity: 0.8;
-    }
+    .rm-form input, .rm-form select { font-family: var(--font-mono); font-size: 0.8rem; background: transparent; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); padding: 0.3rem 0.4rem; }
+    .rm-more { background: none; border: 0; color: var(--accent); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; opacity: 0.8; }
     .rm-more:hover { opacity: 1; text-decoration: underline; }
-    .rm-skeleton {
-      height: 0.9rem;
-      border-radius: 3px;
-      margin-block: 0.6rem;
-      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-pulse 1.8s ease-in-out infinite;
-    }
-    @media (max-width: 640px) {
-      .rm-row { grid-template-columns: 2.6rem 1fr; }
-      .rm-side { grid-column: 1 / -1; }
-  }
+    .rm-skeleton { height: 0.9rem; border-radius: 3px; margin-block: 0.6rem; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
+    @media (max-width: 640px) { .rm-row { grid-template-columns: 2.6rem 1fr; } .rm-side { grid-column: 1 / -1; } }
   </style>
 
   <script is:inline define:vars={{ topicColors }}>
@@ -1099,12 +767,12 @@ const topicColors: Record<string, string> = Object.fromEntries(
         blockedI.setAttribute('aria-label', 'Blocked reason');
         form.appendChild(blockedI);
         var save = document.createElement('button');
-        save.className = 'rm-item-edit';
+        save.className = 'rm-form-save';
         save.type = 'submit';
         save.textContent = 'Save';
         form.appendChild(save);
         var cancel = document.createElement('button');
-        cancel.className = 'rm-item-archive';
+        cancel.className = 'rm-form-cancel';
         cancel.type = 'button';
         cancel.textContent = 'Cancel';
         cancel.addEventListener('click', function () {
@@ -1205,7 +873,9 @@ const topicColors: Record<string, string> = Object.fromEntries(
         if (!anyRows) {
           var empty = document.createElement('p');
           empty.className = 'filter-empty';
-          empty.textContent = 'Nothing on the roadmap under ' + topicLabel(activeTopic) + '.';
+          empty.textContent = activeTopic === 'all'
+            ? 'Nothing on the roadmap yet.'
+            : 'Nothing on the roadmap under ' + topicLabel(activeTopic) + '.';
           rmContainer.appendChild(empty);
         }
       }
@@ -1264,7 +934,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
           });
       }
       function rmMove(id, dir) {
-        if (rmInFlight) return;
+        if (rmInFlight || !rmEditing) return;
         var item = rmById(id);
         if (!item) return;
         if (isDev) {
@@ -1297,6 +967,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
         });
       }
       function rmArchive(id) {
+        if (!rmEditing) return;
         var item = rmById(id);
         if (!item) return;
         if (!window.confirm('Archive "' + item.title + '"? It leaves the board but stays recoverable via the API.')) return;
@@ -1356,14 +1027,14 @@ const topicColors: Record<string, string> = Object.fromEntries(
           var more = event.target.closest('.rm-more');
           if (more && rmContainer.contains(more)) {
             rmNowExpanded = !rmNowExpanded;
-            rmRender(true);
+            rmRender();
             return;
           }
           var row = event.target.closest('.rm-row');
           if (!row || !rmContainer.contains(row)) return;
           var id = row.getAttribute('data-id');
-          if (event.target.closest('.rm-up')) { rmMove(id, -1); return; }
-          if (event.target.closest('.rm-down')) { rmMove(id, 1); return; }
+          if (event.target.closest('.rm-up')) { if (!rmEditing) return; rmMove(id, -1); return; }
+          if (event.target.closest('.rm-down')) { if (!rmEditing) return; rmMove(id, 1); return; }
           if (event.target.closest('.rm-item-edit')) {
             if (!rmEditing) return;
             rmEditorOpenId = rmEditorOpenId === id ? null : id;
