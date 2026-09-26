@@ -31,7 +31,10 @@ const mid = (deck.length - 1) / 2;
       <div class="deck">
         {deck.map((v, i) => (
           <div class:list={['pc', { sel: i === mid }]} style={`--a:${(i - mid) * 8}deg`}>
-            <span>{v}</span>
+            <div class="flip">
+              <span class="face front">{v}</span>
+              <span class="face back" aria-hidden="true">∞</span>
+            </div>
           </div>
         ))}
       </div>
@@ -41,22 +44,67 @@ const mid = (deck.length - 1) / 2;
 </ExperimentLayout>
 
 <style>
+  /* ── The Quorum refresh: twice the air, a narrower measure, quieter chrome.
+     Scoped by surface — only Quorum carries data-surface='quorum' — so the
+     shared ExperimentLayout stays byte-identical for every other experiment. */
+  :global(html[data-surface='quorum']) { --measure: 54ch; }          /* 64ch → 54ch: lede & .prose */
+
+  :global(html[data-surface='quorum'] .hero) {
+    padding-block: clamp(3rem, 5vw, 5rem) clamp(2.25rem, 3.5vw, 3rem); /* 2.5/1.5 → 5/3 */
+    gap: clamp(1.5rem, 2.2vw, 2.4rem);                                /* 1.2 → 2.4 */
+  }
+  :global(html[data-surface='quorum'] .genesis-row) {
+    padding-block: clamp(3.5rem, 6vw, 5rem) clamp(3rem, 5vw, 4.5rem);  /* 2.5/2 → 5/4.5 */
+    gap: clamp(1.5rem, 3vw, 2.5rem);                                  /* 1 → 2.5 */
+  }
+  :global(html[data-surface='quorum'] .exp .genesis h2) { margin-block: 0.8rem 1.6rem; }
+
+  :global(html[data-surface='quorum'] .faq-section) {
+    padding-block: clamp(4rem, 8vw, 6rem);   /* 3 → 6 */
+    max-width: 46rem;                        /* 52rem → 46rem */
+  }
+  :global(html[data-surface='quorum'] .exp .faq-section h2) { margin-block: 0.8rem 2.2rem; }
+  :global(html[data-surface='quorum'] .faq-item) {
+    padding-block: clamp(1.5rem, 3vw, 2.25rem);                             /* 1.2 → 2.25 */
+    border-bottom-color: color-mix(in srgb, var(--line) 55%, transparent);  /* chrome recedes */
+  }
+  :global(html[data-surface='quorum'] .faq-item:first-child) {
+    border-top-color: color-mix(in srgb, var(--line) 55%, transparent);
+  }
+  :global(html[data-surface='quorum'] .faq-a) { max-width: 60ch; }   /* answers ≈ 62 chars */
+
+  :global(html[data-surface='quorum'] .exp-nav) {
+    padding-block: 1.25rem clamp(4rem, 7vw, 6rem);                    /* 0.5/3.5 → 1.25/6 */
+  }
+
+  /* Dim competing chrome — Launch keeps the only full-strength outline. */
+  :global(html[data-surface='quorum'] .actions .btn:not(.launch)) {
+    border-color: var(--line);
+    color: var(--ink-dim);
+  }
+  :global(html[data-surface='quorum'] .actions .btn:not(.launch):hover) {
+    border-color: color-mix(in srgb, var(--essence) 50%, transparent);
+    color: var(--essence);
+    background: transparent;
+  }
+
   .section {
-    padding-block: 1.5rem 2.5rem;
+    padding-block: clamp(2.5rem, 4.5vw, 3.5rem) clamp(3.5rem, 6vw, 5rem); /* 1.5/2.5 → 3.5/5 */
     display: grid;
-    grid-template-columns: minmax(18rem, 1fr) 1.1fr;
-    gap: 3rem;
+    grid-template-columns: minmax(18rem, 1fr) 1.1fr;                     /* columns unchanged */
+    gap: clamp(3rem, 6vw, 6rem);                                          /* 3 → 6 */
     align-items: center;
   }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
 
-  /* Fanned planning-poker deck */
+  /* Fanned planning-poker deck. .pc owns position + fan rotation + the drop
+     shadow; .flip owns the turn; .faces own ink, border and fill. */
   .deck-fig {
     margin: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.8rem;
+    gap: 2.4rem;                                                         /* 1.8 → 2.4 */
   }
   .deck {
     position: relative;
@@ -73,8 +121,26 @@ const mid = (deck.length - 1) / 2;
     height: 86px;
     margin-left: -30px;
     border-radius: 9px;
+    transform-origin: 50% 250%;          /* the shared pivot below the fan */
+    transform: rotate(var(--a));
+    perspective: 700px;                  /* depth for the child flip (must be here, not on .deck) */
+    box-shadow: 0 8px 22px color-mix(in srgb, #000 45%, transparent);
+    z-index: 1;
+  }
+  .flip {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);  /* springy overshoot */
+  }
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 9px;
     border: 1.5px solid color-mix(in srgb, var(--essence) 55%, transparent);
     background: color-mix(in srgb, var(--essence) 8%, var(--bg-raise));
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     display: flex;
     justify-content: center;
     padding-top: 8px;
@@ -83,39 +149,46 @@ const mid = (deck.length - 1) / 2;
     font-weight: 600;
     line-height: 1;
     color: var(--essence);
-    transform-origin: 50% 250%;
-    transform: rotate(var(--a));
-    box-shadow: 0 8px 22px color-mix(in srgb, #000 45%, transparent);
   }
-  /* The played card lifts off the fan and brightens. */
-  .pc.sel {
-    align-items: center;
+  .face.back {
+    transform: rotateY(180deg);
     padding-top: 0;
+    align-items: center;
+    font-size: 1.35rem;
+    color: color-mix(in srgb, var(--essence) 78%, transparent);
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--essence) 55%, transparent),
+                inset 0 0 0 5px color-mix(in srgb, var(--essence) 16%, transparent);
+  }
+
+  /* The played card: bigger rank, hotter fill, lifted off the fan. */
+  .pc.sel {
+    transform: rotate(var(--a)) translateY(-26px);
+    z-index: 3;
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--essence) 28%, transparent);
+  }
+  .pc.sel .face {
+    padding-top: 0;
+    align-items: center;
     font-size: 1.5rem;
     border-color: var(--essence);
     background: color-mix(in srgb, var(--essence) 20%, var(--bg-raise));
-    box-shadow: 0 16px 34px color-mix(in srgb, var(--essence) 28%, transparent);
-    transform: rotate(var(--a)) translateY(-26px);
-    z-index: 3;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .pc.sel { animation: play 4.5s ease-in-out infinite; }
-    @keyframes play {
-      0%, 100% { transform: rotate(var(--a)) translateY(-26px); }
-      50%      { transform: rotate(var(--a)) translateY(-34px); }
-    }
-  }
+  .pc.sel .face.back { font-size: 1.5rem; }
+
+  /* ★ Exactly one playful touch: pick a card up and turn it over. */
+  .pc:hover { z-index: 5; }              /* later siblings paint on top otherwise */
+  .pc:hover .flip { transform: rotateY(180deg); }
 
   .fig-label { font-size: 0.75rem; color: var(--ink-dim); letter-spacing: 0.16em; text-transform: uppercase; }
 
   /* Feature list */
-  .features ol { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .features ol { list-style: none; padding: 0; margin: clamp(1.6rem, 3vw, 2.6rem) 0 0; }  /* 1.2 → 2.6 */
   .features li {
     display: flex;
     gap: 0.9rem;
     align-items: baseline;
-    padding-block: 0.7rem;
-    border-bottom: 1px solid var(--line);
+    padding-block: clamp(1rem, 1.8vw, 1.5rem);                 /* 0.7 → 1.5 */
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
     color: var(--ink-dim);
     font-size: 0.97rem;
   }
@@ -137,7 +210,9 @@ const mid = (deck.length - 1) / 2;
     box-shadow: 0 8px 22px color-mix(in srgb, #000 14%, transparent);
   }
   :global(html[data-circadian][data-celestial='sun'] .pc.sel) {
-    background: color-mix(in srgb, var(--essence) 14%, var(--bg-raise));
     box-shadow: 0 16px 34px color-mix(in srgb, var(--essence) 18%, transparent);
+  }
+  :global(html[data-circadian][data-celestial='sun'] .pc.sel .face) {
+    background: color-mix(in srgb, var(--essence) 14%, var(--bg-raise));
   }
 </style>

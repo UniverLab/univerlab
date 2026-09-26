@@ -446,8 +446,7 @@ export const en = {
           'Share the room URL — no sign-up, no invite flow.',
           'Pick a card from the Fibonacci deck (0, 1, 2, 3, 5, 8, 13, 21, ?).',
           'Cards reveal with a multi-phase animation — particles, slide and flip — the moment everyone votes.',
-          'Load stories from a CSV or add them one at a time, and step through in order.',
-          'Disconnect and reconnect — state syncs back from any peer still in the room.',
+          'Load stories from a CSV or add them one at a time, step through in order — drop out and reconnect, and state syncs back from any peer still in the room.',
         ],
       },
       faq: [

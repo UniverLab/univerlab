@@ -444,8 +444,7 @@ export const es: Dict = {
           'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
           'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
           'Las cartas se revelan con una animación multi-fase en cuanto todos votan — partículas, slide y flip sincronizados.',
-          'Carga historias desde un CSV o agrégalas una a una, y avanza por ellas en orden.',
-          'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
+          'Carga historias desde un CSV o agrégalas una a una, avanza por ellas en orden — desconéctate y vuelve a conectar: el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
       faq: [

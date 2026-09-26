@@ -283,8 +283,11 @@ html[data-surface='pastel'] .btn:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
-/* Pill tags — hero badges row + mockup cards. */
-html[data-surface='pastel'] .tag {
+/* Pill tags — hero badges row + mockup cards. Scoped to `.exp`: the shared
+   footer frame also owns a `.tag`, and an unscoped surface rule would
+   out-specify its component styles and print a light pill on the black
+   footer. The frame stays constant; only the experiment content is dressed. */
+html[data-surface='pastel'] .exp .tag {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
