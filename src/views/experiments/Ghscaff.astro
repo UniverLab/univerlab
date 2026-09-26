@@ -1,21 +1,28 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
+import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.ghscaff;
+const exp = byId('ghscaff');
 ---
-<ExperimentLayout id="ghscaff">
-  <section class="wrap section">
-    <div class="frame">
-      <span class="label">{e.lifts.kicker}</span>
-      <ol class="lifts">
+<ExperimentLayout id="ghscaff" hideGithub>
+  <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
+  <Fragment slot="before-genesis">
+    <div class="wrap section wizard">
+      <p class="ascii-motif" aria-hidden="true">+--+ scaffold · 08 lifts · idempotent +--+</p>
+      <p class="mono-kicker"><span class="label">{e.lifts.kicker}</span></p>
+      <ol class="fan">
         {e.lifts.items.map((step, i) => (
-          <li><span class="mono tick">{String(i + 1).padStart(2, '0')}</span><span>{step}</span></li>
+          <li class="glass"><span class="mono idx">{String(i + 1).padStart(2, '0')}</span><span class="step-name">{step}</span></li>
         ))}
       </ol>
     </div>
-    <div class="specsheet">
+  </Fragment>
+
+  <section class="wrap section">
+    <div class="specsheet glass">
       <span class="label">{e.details.kicker}</span>
       <ul>
         {e.details.items.map((d) => <li><span class="mark" aria-hidden="true">◇</span><span set:html={d} /></li>)}
@@ -33,17 +40,44 @@ const e = t.experiments.ghscaff;
 </ExperimentLayout>
 
 <style>
-  .section { padding-block: 1.5rem; display: grid; grid-template-columns: minmax(15rem, 1fr) 1.4fr; gap: 3rem; align-items: start; }
+  .section { padding-block: 1.5rem; }
   .section.single { display: block; }
-  @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
-  .lifts { list-style: none; margin: 1.2rem 0 0; padding: 0; }
-  .lifts li { display: flex; gap: 1rem; align-items: baseline; padding-block: 0.6rem; border-left: 2px solid color-mix(in srgb, var(--ghscaff) 45%, var(--line)); padding-left: 1rem; }
-  .tick { color: var(--ghscaff); font-size: 0.8rem; }
+  .wizard { padding-block: 1.75rem 2rem; }
+  .ascii-motif {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--glass-v, #8b7cf6);
+    opacity: 0.5;
+    margin: 0 0 0.5rem;
+  }
+  .mono-kicker { margin: 0 0 1.4rem; }
+  .fan {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  .fan li {
+    display: flex;
+    gap: 0.8rem;
+    align-items: baseline;
+    padding: 1rem 1.1rem;
+  }
+  .idx { font-size: 0.8rem; flex: none; }
+  .step-name { font-size: 0.95rem; }
+  @media (max-width: 52rem) {
+    .fan { grid-template-columns: 1fr; }
+  }
+  .specsheet { padding: 1.5rem 1.6rem; }
   .specsheet ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .specsheet li { display: flex; gap: 0.7rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .mark { color: var(--ghscaff); font-size: 0.7rem; flex: none; }
+  .specsheet li:last-child { border-bottom: 0; }
+  .mark { color: var(--glass-v); font-size: 0.7rem; flex: none; }
   .specsheet :global(strong) { color: var(--ink); font-weight: 500; }
-  .specsheet :global(code) { color: var(--ghscaff); font-size: 0.88em; }
+  .specsheet :global(code) { color: var(--glass-v); font-size: 0.88em; }
   .sub { max-width: 46rem; }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
   .sub h3 a { color: var(--ghscaff); text-decoration: none; }

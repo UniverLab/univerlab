@@ -217,6 +217,14 @@ html[data-surface='pastel'] body::before {
 html[data-surface='industrial'] {
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --glass-v: #8b7cf6;
+  --bg: #0b0a14;
+  --bg-raise: #12101e;
+  --ink: #e8e6f2;
+  --ink-dim: #a5a0b8;
+  --ink-faint: #8a86a0;
+  --line: #232035;
+  --ghscaff: #8b7cf6;
 }
 html[data-surface='industrial'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -229,7 +237,7 @@ html[data-surface='industrial'] .koan {
   font-weight: 500;
   opacity: 1;
 }
-/* A faint copper warmth pools from the top — like heat rising from the forge. */
+/* A faint violet wash pools from the top — midnight, not forge heat. */
 html[data-surface='industrial'] body::before {
   content: '';
   position: fixed;
@@ -237,19 +245,7 @@ html[data-surface='industrial'] body::before {
   z-index: -2;
   pointer-events: none;
   background:
-    /* Corrugated metal texture — horizontal ridges like alfajor wafer */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      color-mix(in srgb, #b87333 4%, transparent) 3px,
-      color-mix(in srgb, #b87333 4%, transparent) 4px
-    ),
-    /* Subtle rust/oxidation patches */
-    radial-gradient(ellipse at 20% 30%, color-mix(in srgb, #8b4513 6%, transparent), transparent 40%),
-    radial-gradient(ellipse at 75% 70%, color-mix(in srgb, #654321 5%, transparent), transparent 35%),
-    /* Heat glow from above */
-    radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, #b87333 10%, transparent), transparent 55%);
+    radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, #8b7cf6 8%, transparent), transparent 55%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -537,34 +533,21 @@ html[data-surface='pastel'] .hero::before {
   color: var(--ink-faint);
 }
 
-/* ghscaff · industrial — a riveted iron plate: a dark card with copper bolts
-   at the corners and a stamped serial tag. The foundry floor. */
+/* ghscaff · industrial — a midnight glass frame: frosted scaffold bay at
+   night. The riveted iron plate (copper bolts + corrugated texture) is
+   retired — iron foundry reads forge, not scaffold-at-midnight. */
 html[data-surface='industrial'] .hero {
   position: relative;
   margin-top: 1.4rem;
   padding: 1.7rem;
-  border: 1.5px solid color-mix(in srgb, var(--essence) 45%, var(--line));
-  background-color: color-mix(in srgb, var(--bg-raise) 78%, transparent);
-  background-origin: border-box;
-  background-repeat: no-repeat;
-  /* Corner bolts + corrugated metal texture */
-  background-image:
-    /* Corner bolts */
-    radial-gradient(circle at 0 0, var(--essence) 3.5px, transparent 4px),
-    radial-gradient(circle at 100% 0, var(--essence) 3.5px, transparent 4px),
-    radial-gradient(circle at 0 100%, var(--essence) 3.5px, transparent 4px),
-    radial-gradient(circle at 100% 100%, var(--essence) 3.5px, transparent 4px),
-    /* Corrugated texture inside the card */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      color-mix(in srgb, var(--essence) 3%, transparent) 2px,
-      color-mix(in srgb, var(--essence) 3%, transparent) 3px
-    );
+  border: 1px solid color-mix(in srgb, var(--glass-v) 28%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, #151226 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
 }
 html[data-surface='industrial'] .hero::before {
-  content: 'ghScaff · PLATE 01';
+  content: 'ghScaff · SCAFFOLD · BAY 01';
   position: absolute;
   top: 0;
   left: 1.2rem;
@@ -617,4 +600,169 @@ html[data-surface='studio'] .hero .rec {
   font-size: 0.62rem;
   letter-spacing: 0.14em;
   color: var(--essence);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ghscaff · industrial — frosted glass cathedral at midnight.
+   Single violet hue (--glass-v) throughout; copper is suppressed on this
+   surface only (registry keeps #b87333 for OG/home). Glass stays
+   translucent so the scaffold lattice reads behind it.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Visually suppress copper on this surface only — the inline --essence
+   (copper) loses to this scoped override; --ghscaff is already re-pointed
+   to violet in the surface block above. */
+html[data-surface='industrial'] .exp {
+  --essence: var(--glass-v) !important;
+}
+
+/* Display wordmark: unhide the industrial .exp-name as a gradient masthead.
+   Banner ASCII stays small above it as the signature (tint-only). */
+html[data-surface='industrial'] .exp-name {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  overflow: visible;
+  white-space: normal;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
+  line-height: 1.02;
+  margin: 0.2rem 0 0;
+  background: linear-gradient(180deg, #fff 20%, #c9bfff 60%, var(--glass-v));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@supports not (background-clip: text) {
+  html[data-surface='industrial'] .exp-name {
+    background: none;
+    color: var(--ink);
+  }
+}
+html[data-surface='industrial'] .banner {
+  color: var(--ink);
+  opacity: 0.85;
+  text-shadow: none;
+}
+
+/* Status + koan + emphasis in the single violet voice. */
+html[data-surface='industrial'] .num {
+  color: var(--glass-v);
+}
+html[data-surface='industrial'] .dot {
+  background: var(--glass-v);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--glass-v) 22%, transparent);
+}
+html[data-surface='industrial'] .dot[data-status='beta'],
+html[data-surface='industrial'] .dot[data-status='research'] {
+  background: var(--ink-dim);
+  box-shadow: none;
+}
+html[data-surface='industrial'] .koan {
+  color: var(--ink);
+  opacity: 0.9;
+}
+html[data-surface='industrial'] .exp .lede strong,
+html[data-surface='industrial'] .exp .genesis .prose strong {
+  color: var(--ink);
+}
+html[data-surface='industrial'] .exp .lede code,
+html[data-surface='industrial'] .exp .genesis .prose code,
+html[data-surface='industrial'] .exp .genesis .prose em {
+  color: var(--glass-v);
+}
+
+/* Exactly ONE violet CTA — the primary action. All other buttons stay ink. */
+html[data-surface='industrial'] .btn-violet {
+  background: var(--glass-v);
+  border-color: var(--glass-v);
+  color: #0b0a14;
+}
+html[data-surface='industrial'] .btn-violet:hover {
+  filter: brightness(1.08);
+  background: var(--glass-v);
+  color: #0b0a14;
+}
+html[data-surface='industrial'] .btn-violet:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Install bar in hero: a glass slip with the inset hairline, not paper's dash. */
+html[data-surface='industrial'] .cmd {
+  border: 1px solid color-mix(in srgb, var(--glass-v) 22%, transparent);
+  background: color-mix(in srgb, var(--glass-v) 10%, rgba(18, 16, 30, 0.55));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  border-radius: 12px;
+}
+html[data-surface='industrial'] .copy {
+  border-left: 1px solid color-mix(in srgb, var(--glass-v) 22%, transparent);
+}
+html[data-surface='industrial'] .os-tab[aria-selected='true'] {
+  color: var(--glass-v);
+}
+html[data-surface='industrial'] .cmd-line[data-os='unix']::before,
+html[data-surface='industrial'] .cmd-line[data-os='windows']::before {
+  color: var(--glass-v);
+}
+html[data-surface='industrial'] .copy:hover,
+html[data-surface='industrial'] .copy.done .copy-done {
+  color: var(--glass-v);
+}
+
+/* Frosted glass cards — translucent violet-tinted fill, inset hairline,
+   no drop shadows, no glow rings (the canvas spotlight is the only glow).
+   Fill stays well under 65% opaque so the scaffold lattice reads behind. */
+html[data-surface='industrial'] .glass {
+  background: color-mix(in srgb, var(--glass-v) 10%, rgba(18, 16, 30, 0.55));
+  border: 1px solid color-mix(in srgb, var(--glass-v) 22%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  border-radius: 12px;
+}
+
+/* Fanned floating wizard: slight rotate/translateY fan on desktop, clean
+   vertical stack below 52rem. Never causes horizontal scroll. */
+html[data-surface='industrial'] .fan {
+  overflow-x: clip;
+}
+html[data-surface='industrial'] .fan li:nth-child(8n+1) { transform: rotate(-4deg) translateY(6px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+2) { transform: rotate(-2.5deg) translateY(2px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+3) { transform: rotate(-1deg) translateY(-2px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+4) { transform: rotate(1deg) translateY(-4px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+5) { transform: rotate(2.5deg) translateY(-2px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+6) { transform: rotate(4deg) translateY(2px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+7) { transform: rotate(-3deg) translateY(4px); }
+html[data-surface='industrial'] .fan li:nth-child(8n+8) { transform: rotate(3deg) translateY(6px); }
+@media (max-width: 52rem) {
+  html[data-surface='industrial'] .fan li:nth-child(n) {
+    transform: none;
+  }
+}
+
+/* Luminous text progression: numerals/titles brighten along the flow in the
+   single violet hue — 01 dim, 08 near-white. No second accent. */
+html[data-surface='industrial'] .fan li:nth-child(1) .idx { color: color-mix(in srgb, var(--glass-v) 35%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(2) .idx { color: color-mix(in srgb, var(--glass-v) 43%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(3) .idx { color: color-mix(in srgb, var(--glass-v) 51%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(4) .idx { color: color-mix(in srgb, var(--glass-v) 59%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(5) .idx { color: color-mix(in srgb, var(--glass-v) 67%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(6) .idx { color: color-mix(in srgb, var(--glass-v) 75%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(7) .idx { color: color-mix(in srgb, var(--glass-v) 85%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(8) .idx { color: color-mix(in srgb, var(--glass-v) 95%, var(--ink)); }
+html[data-surface='industrial'] .fan li:nth-child(1) .step-name { color: var(--ink-dim); }
+html[data-surface='industrial'] .fan li:nth-child(8) .step-name { color: #f4f1ff; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-surface='industrial'] .fan li:nth-child(n) {
+    transform: none;
+  }
 }

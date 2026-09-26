@@ -974,6 +974,13 @@ const THEMES: Record<Theme, Runner> = {
      joints. Ghscaff. */
   scaffold(ctx) {
     const { c } = ctx;
+    // Midnight re-tint on the industrial surface only: the registry still
+    // carries copper for OG/home, but the live lattice reads blueprint-violet
+    // behind the glass. c.strokeStyle keeps using ctx.color — the caller value
+    // is swapped here, no second hue is introduced.
+    if (typeof document !== 'undefined' && document.documentElement.dataset.surface === 'industrial') {
+      ctx.color = '#8b7cf6';
+    }
     const g = 84;
     let cols = 0;
     let rows = 0;
@@ -995,7 +1002,35 @@ const THEMES: Record<Theme, Runner> = {
     for (let i = 0; i < 4; i++) add();
     let spawnAcc = 0;
     let prevT = 0;
+    // Cursor-anchored spotlight: one radial violet-white wash following the
+    // pointer, lerped to avoid jitter. Touch parks at 50%/30%; reduced-motion
+    // never reaches here (ThemeBackground returns early).
+    const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window && navigator.maxTouchPoints > 0;
+    let tx = ctx.w * 0.5;
+    let ty = ctx.h * 0.3;
+    let sx = tx;
+    let sy = ty;
+    let hasPointer = false;
+    const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    if (!isTouch && typeof document !== 'undefined') {
+      document.addEventListener(
+        'pointermove',
+        (e: PointerEvent) => {
+          tx = e.clientX;
+          ty = e.clientY;
+          hasPointer = true;
+        },
+        { passive: true, signal: ac?.signal }
+      );
+      document.addEventListener('pointerleave', () => {
+        hasPointer = false;
+      }, { signal: ac?.signal });
+    }
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac?.abort();
+        return;
+      }
       if (cols !== Math.ceil(ctx.w / g) + 1) dims();
       const dt = prevT ? t - prevT : 16;
       prevT = t;
@@ -1004,6 +1039,12 @@ const THEMES: Record<Theme, Runner> = {
         spawnAcc = 0;
         add();
       }
+      if (!hasPointer) {
+        tx = ctx.w * 0.5;
+        ty = ctx.h * 0.3;
+      }
+      sx += (tx - sx) * 0.08;
+      sy += (ty - sy) * 0.08;
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
       c.lineWidth = 1;
@@ -1051,6 +1092,17 @@ const THEMES: Record<Theme, Runner> = {
           }
         }
       }
+      // ONE cursor-anchored spotlight: violet-white wash over the grid, under
+      // content. Single radial gradient, composited additively on the dark.
+      c.globalCompositeOperation = 'lighter';
+      c.globalAlpha = 1;
+      const R = 420;
+      const spot = c.createRadialGradient(sx, sy, 0, sx, sy, R);
+      spot.addColorStop(0, 'rgba(167,139,250,0.10)');
+      spot.addColorStop(1, 'rgba(167,139,250,0)');
+      c.fillStyle = spot;
+      c.fillRect(sx - R, sy - R, R * 2, R * 2);
+      c.globalCompositeOperation = 'source-over';
       c.globalAlpha = 1;
     };
   },
