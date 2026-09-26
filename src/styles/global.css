@@ -62,14 +62,24 @@ html[data-surface='paper'] {
   --rule-t3: color-mix(in srgb, var(--line) 60%, transparent);
 }
 
-/* canopy — modern TUI / DevOS: cold slate dark, blue-grey ink. */
+/* canopy — Auros abyssal terminal (ground truth: docs/landing-poc/styles/auros.md).
+   Liquid Abyss canvas, Liquid Deep recessed, Liquid Kelp raised. No shadows anywhere
+   on this surface; depth comes from the teal stack only. */
 html[data-surface='tui'] {
-  --bg: #0d0e10;
-  --bg-raise: #131519;
-  --ink: #cdd6df;
-  --ink-dim: #8b97a3;
-  --ink-faint: #717d8a; /* lifted from #58616b (3.07:1) to clear AA at 4.6:1 */
-  --line: #20242a;
+  --bg: #012624;        /* Liquid Abyss — canvas */
+  --bg-raise: #003734;  /* Liquid Kelp — raised cards, install bar */
+  --bg-deep: #011d1c;   /* Liquid Deep — recessed wells, footer */
+  --ink: #edfffe;       /* Liquid Mist — emphasized body */
+  --ink-hi: #ffffff;    /* Platinum — headings/nav only, never body */
+  --ink-dim: #bbc7c6;   /* Silver Mist — secondary */
+  --ink-faint: #9aa8a7; /* lifted breeze-gray: lowest value clearing 4.5:1 on #012624.
+                           #707777 (Slate Deep) stays as decorative-only var below */
+  --slate-deep: #707777;/* decorative/inactive fills only — NOT text */
+  --phosphor: #fde9ff;  /* Lavender Phosphor — large statistics only, never body/UI */
+  --line: rgba(255,255,255,.10); /* hairline */
+  --cta-gradient: linear-gradient(90deg, rgb(203,255,252) 0%, rgb(237,255,254) 26.25%, rgb(255,253,250) 47.57%, rgb(250,209,255) 88.96%); /* Aurora — primary/install CTA only */
+  --radius-card: 16px;
+  --radius-ctl: 6px;
 }
 
 /* gitkit — pastel sunlit canvas (key kept for stability): white canvas with
@@ -129,15 +139,25 @@ html[data-surface='quorum'] {
   --line: #40331f;
 }
 
-/* demostage — recording studio: a bright warm-white set; the black terminal
-   monitor and the coral REC carry the contrast. */
+/* demostage — Altius thermal command room (ground truth: docs/landing-poc/styles/altius.md).
+   KEY STAYS `studio` per specs/altius-demostage.md + experiments.ts + BaseLayout.
+   `obsidian` in task prose = the .band-dark section color, not the html surface. */
 html[data-surface='studio'] {
-  --bg: #f6f3ee;
-  --bg-raise: #ffffff;
-  --ink: #221d18;
-  --ink-dim: #5b5249;
-  --ink-faint: #756d63; /* darkened from #9a9082 (2.84:1) to clear AA at 4.6:1 */
-  --line: #e6ded2;
+  --bg: #190501;        /* Obsidian Ember — canvas/hero/dark bands */
+  --bg-raise: #340a01;  /* Dark Cocoa — cards, install bar, player */
+  --molten: #631303;    /* Molten Core — inset glow source only */
+  --ink: #f7f6ff;       /* Linen — primary on dark */
+  --ink-dim: #feeae6;   /* Vapor Peach — light bands + body substitute */
+  --ink-mute: #baadab;  /* Warm Ash — tertiary/dividers on dark */
+  --ink-faint: #baadab; /* same — darkest warm gray clearing AA here */
+  --peach: #feeae6;     /* Vapor Peach — light section bg */
+  --blush: #fcac9c;     /* Warm Blush — soft wash / motif tint, never body text */
+  --flare: #fa5838;     /* Flare Orange — SOLE punctuation on dark. NEVER text on
+                           peach, NEVER button fill */
+  --line: #951c04;      /* Signal Red — hairline borders on dark + ghost outlines */
+  --ember-glow: inset 0 0 20px 0 rgb(99,19,3); /* ONLY on filled primary buttons */
+  --radius-card: 8px;
+  --radius-ctl: 4px;
 }
 
 * { box-sizing: border-box; }

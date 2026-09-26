@@ -92,28 +92,28 @@ $ demo export gif,mp4
   .player {
     margin: 0;
     max-width: 56rem;
-    border: 1px solid color-mix(in srgb, var(--demostage) 45%, #2a2520);
-    border-radius: 9px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-ctl);
     overflow: hidden;
-    background: #14110d; /* flat — the dropped shadow was half the clutter */
+    background: var(--bg-raise); /* Dark Cocoa — flat, no drop shadow */
   }
-  .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid #2a241d; font-size: 0.75rem; }
+  .bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
   .bar .d { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
-  .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
+  .bar .d.r { background: var(--flare); } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
   .bar .name { margin-left: 0.5rem; color: #8a8175; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
-  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demostage); min-height: 8rem; }
-  .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid #2a241d; font-size: 0.72rem; }
-  .scrubber .play { color: var(--demostage); font-size: 0.7rem; }
+  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: color-mix(in srgb, #f7f6ff 85%, transparent); min-height: 8rem; }
+  .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid var(--line); font-size: 0.72rem; }
+  .scrubber .play { color: var(--flare); font-size: 0.7rem; }
   .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #322b22; }
-  .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--demostage); border-radius: 2px; }
-  .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--demostage); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--demostage) 70%, transparent); }
+  .scrubber .fill { position: absolute; inset: 0 38% 0 0; background: var(--flare); border-radius: 2px; }
+  .scrubber .head { position: absolute; left: 62%; top: 50%; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: var(--flare); transform: translate(-50%, -50%); box-shadow: 0 0 9px color-mix(in srgb, var(--flare) 70%, transparent); }
   .scrubber .tick { position: absolute; top: -2px; width: 1px; height: 7px; background: #4a4339; transform: translateX(-50%); transition: background .2s, box-shadow .2s; }
-  .scrubber .tick.on { background: var(--demostage); box-shadow: 0 0 6px color-mix(in srgb, var(--demostage) 70%, transparent); }
-  .scrubber .tc { color: #9a9082; }
+  .scrubber .tick.on { background: var(--flare); box-shadow: 0 0 6px color-mix(in srgb, var(--flare) 70%, transparent); }
+  .scrubber .tc { color: var(--ink-mute); }
 
-  /* The one gradient the page is allowed: a thin spectrum baseline under the
-     hero figure. Nothing else on the page carries one. */
+  /* The spectrum is solid-color bars with an opacity fade (peak-to-zero) —
+     that fade is the motif, not a color gradient. Nothing else carries one. */
   .spectrum {
     width: min(100%, 56rem);
     height: 11.5rem;
@@ -129,7 +129,8 @@ $ demo export gif,mp4
     max-width: 4.5rem;
     height: var(--bar-height);
     opacity: var(--bar-opacity);
-    background: #fa5838;
+    background: var(--flare);
+    border-radius: 2px;
   }
   .ascii-motif { color: #fcac9c; font-size: .72rem; letter-spacing: .16em; }
 
@@ -141,11 +142,11 @@ $ demo export gif,mp4
   .ds-frame {
     position: relative;
     aspect-ratio: 16 / 9;
-    /* The studio hairline is tuned for linen; on the peach band it all but
-       vanishes, so the frame carries its own ink-mixed rule. */
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-    border-radius: 8px;
-    background: var(--bg-raise);
+    /* Warm Ash hairline reads on the peach band; Linen card per altius.md. */
+    border: 1px solid var(--ink-mute);
+    border-radius: var(--radius-card);
+    background: #f7f6ff;
+    box-shadow: none;
   }
   .rec {
     position: absolute;
@@ -156,14 +157,14 @@ $ demo export gif,mp4
     gap: 0.35rem;
     font-size: 0.62rem;
     letter-spacing: 0.14em;
-    color: var(--ink);
+    color: #190501;
   }
   .rec::before {
     content: '';
     width: 0.42rem;
     height: 0.42rem;
     border-radius: 50%;
-    background: var(--demostage); /* graphics only — never text on the light band */
+    background: var(--flare); /* graphics only — never text on the light band */
   }
   .ds-cap {
     margin-top: 0.7rem;
@@ -172,12 +173,18 @@ $ demo export gif,mp4
     font-size: 0.88rem;
     color: var(--ink-dim);
   }
-  .ds-cap .label { font-style: normal; color: var(--ink); margin-right: 0.6rem; }
+  .ds-cap .label { font-style: normal; margin-right: 0.6rem; }
+  /* The peach band inverts its inks: Warm Ash (the dark-side tertiary) would
+     sit at 1.9:1 here, so captions and the signature line take Obsidian Ember
+     (17.0:1) — the light-section body ink. Flare stays on the REC dot. */
+  .band-light .ds-cap,
+  .band-light .sig { color: #190501; }
 
   /* The signature line at the foot of the light section — the koan reused
      verbatim, small and quiet, hidden from assistive tech (it repeats the
-     hero's). Ink-dim, not the essence: the coral is spent on the REC dots and
-     the step numerals, and orange text on peach has nowhere near AA. */
+     hero's). Obsidian on the peach band, like every other line of body copy
+     there: the coral is spent on the REC dots and the step numerals, and
+     orange text on peach has nowhere near AA. */
   .sig {
     margin: 2.2rem 0 0;
     font-size: 0.72rem;
@@ -187,8 +194,28 @@ $ demo export gif,mp4
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .step { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; color: var(--demostage); flex: none; min-width: 1.5rem; }
-  .features :global(code) { color: var(--demostage); font-size: 0.88em; }
+  .step { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; color: var(--flare); flex: none; min-width: 1.5rem; }
+  .features :global(code) { color: #f7f6ff; font-size: 0.88em; }
+
+  /* Band labels and list rows are the last things the pre-Altius surface block
+     in surfaces.css still reaches: it dresses them in cool greys (#a39c8e,
+     #2a241d) that belong to no Altius value. Component CSS is bundled *before*
+     the surface stylesheet, so these rules name the surface key to earn the
+     weight they need to win — the bands then speak Flare on obsidian, Signal
+     Red on peach, and the row rules keep the hairline warm. */
+  :global(html[data-surface='studio']) .band-dark .label { color: var(--flare); }
+  :global(html[data-surface='studio']) .band-light .label { color: #951c04; }
+  :global(html[data-surface='studio']) .features li { color: var(--ink-dim); border-bottom-color: var(--line); }
+  :global(html[data-surface='studio']) .features :global(code) { color: #f7f6ff; }
+
+  /* The origin story is layout-owned, but it is painted the same vapor-peach as
+     the slots below it (surfaces.css washes .genesis-row), so it has to invert
+     with them. Left alone it inherits Linen from the obsidian canvas: a white
+     heading and 1.9:1 body copy on peach. The light half of the thermal rhythm
+     is Obsidian body, Signal Red labels. */
+  :global(html[data-surface='studio'] .exp .genesis-row) { color: #190501; background: var(--peach); }
+  :global(html[data-surface='studio'] .genesis-row .genesis .label) { color: #951c04; }
+  :global(html[data-surface='studio'] .genesis-row .genesis .prose) { color: #190501; }
 </style>
 
 <script>

@@ -207,13 +207,15 @@ const ORBIT_DOTS = [
 <style>
   .section { padding-block: 2rem; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.4rem; }
-  .col { border-top: 2px solid color-mix(in srgb, var(--canopy) 45%, transparent); padding-top: 1rem; }
-  .col h3 { color: var(--canopy); font-size: 1.05rem; margin-bottom: 0.5rem; }
+  .col { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 1.5rem 1.5rem 1.4rem; }
+  .col h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
 
   /* ── Hero extras ──────────────────────────────────────────────────────
-     A fragment of the field the TUI actually draws, a mono kicker row and
-     an open 16:9 demo frame. The machine's own vocabulary, on hairlines. */
+     A fragment of the field the TUI actually draws, and a mono kicker row.
+     The machine's own vocabulary, on hairlines. (The empty 16:9 placeholder
+     that used to live here is gone: the layout renders the real recorded
+     demo, and a second empty frame would say the same thing twice.) */
 
   .ascii-motif {
     font-family: var(--font-mono);
@@ -243,7 +245,7 @@ const ORBIT_DOTS = [
   .orb-dot:nth-of-type(3n) { opacity: .9; }
   .orb-dot:nth-of-type(2n) { fill: #edfffe; opacity: .7; }
   .orb-trace { fill: none; stroke: #00a9a0; stroke-width: .55; opacity: .8; stroke-dasharray: 2 2; }
-  .orb-readout { position: absolute; bottom: .25rem; color: #bbc7c6; font-size: .58rem; letter-spacing: .14em; }
+  .orb-readout { position: absolute; bottom: .25rem; color: var(--ink-dim); font-size: .58rem; letter-spacing: .14em; }
   @keyframes orb-spin { to { rotate: 360deg; } }
   @media (prefers-reduced-motion: reduce) { .ring-a, .ring-b { animation: none; } }
 
@@ -255,31 +257,11 @@ const ORBIT_DOTS = [
   }
   .kicker-badge {
     border: 1px solid var(--line);
+    border-radius: var(--radius-ctl);
     padding: 0.2rem 0.55rem;
     color: var(--ink-dim);
   }
   .kicker-sep { color: var(--ink-faint); }
-
-  /* 16:9 demo slot — empty on purpose. The frame is held open so the hero
-     keeps its shape when the real clip lands. */
-  .demo-slot { margin: 0 0 2rem; max-width: 52rem; }
-  .ds-frame {
-    aspect-ratio: 16 / 9;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    background-color: var(--bg-raise);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--canopy) 12%, transparent);
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--canopy) 5%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--canopy) 5%, transparent) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-  .ds-cap {
-    margin-top: 0.7rem;
-    font-family: var(--font-serif); font-style: italic;
-    font-size: 0.85rem; color: var(--ink-dim);
-  }
-  .ds-cap .label { font-style: normal; color: var(--canopy); margin-right: 0.6rem; }
 
   /* Platforms — colored badges from registry */
   .platforms-section { padding-block: 0.5rem 1rem; }
@@ -287,14 +269,14 @@ const ORBIT_DOTS = [
   .platforms li {
     font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em;
     color: var(--pcolor); padding: 0.3rem 0.65rem;
-    background: #0a0a0c;
+    background: var(--bg-deep, #011d1c);
     border: 1px solid var(--pcolor);
-    border-radius: 2px;
+    border-radius: var(--radius-ctl);
     white-space: nowrap;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .platforms li:hover {
-    background: color-mix(in srgb, var(--pcolor) 15%, #0a0a0c);
+    background: color-mix(in srgb, var(--pcolor) 15%, #011d1c);
   }
 
   /* ── Graph engine figure ──────────────────────────────────────────────
@@ -312,11 +294,16 @@ const ORBIT_DOTS = [
   .ag-caption { max-width: 24rem; }
   .ag-caption h2 { font-size: 1.7rem; margin: 0 0 1.4rem; }
 
+  /* The quietest *text* on this page carries the AA lift, not the token: the
+     surface block pins --ink-faint to Slate Deep #707777 (3.52:1 on the Abyss
+     canvas — a decorative tint, fine for fills), so the step numerals and the
+     outro below use the same Silver-Mist-family grey global.css declares for
+     the tui substrate (6.54:1). Numbers that no one can read are not quiet. */
   .ag-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.4rem; }
-  .ag-step-num { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
-  .ag-step h3 { color: var(--canopy); font-size: 1.05rem; margin: 0 0 0.5rem; }
+  .ag-step-num { display: block; color: #9aa8a7; font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+  .ag-step h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin: 0 0 0.5rem; }
   .ag-step p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
-  .ag-outro { margin: 1.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; line-height: 1.6; }
+  .ag-outro { margin: 1.4rem 0 0; color: #9aa8a7; font-size: 0.88rem; line-height: 1.6; }
 
   /* Nodes */
   .ag-shape {
