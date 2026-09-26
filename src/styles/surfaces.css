@@ -7,10 +7,9 @@
 
    "Un edificio, muchas salas." */
 
-/* A real <h1> with the experiment name now lives in every hero (an a11y/SEO
-   win). By default the ASCII banner is the visual signature and the name is
-   read only by assistive tech. Surfaces that aren't terminal-native reveal the
-   name as a typeset masthead instead. */
+/* A real, visible <h1> with the experiment name lives in every hero. The large
+   README wordmarks are reference assets, not page titles; each view provides
+   one small, essence-tinted ASCII motif instead. */
 .exp-name {
   position: absolute;
   width: 1px;
@@ -95,14 +94,8 @@ html[data-surface='paper'] .num {
   color: var(--ink-faint);
 }
 
-/* The ASCII banner stays — it is each experiment's own signature mark. On
-   paper it reads like a letterpress masthead: the art is untouched, only
-   tinted bistre (tint-only restyle — no gradient, no letterform edits). */
-html[data-surface='paper'] .banner {
-  color: var(--ink);
-  opacity: 0.88;
-  text-shadow: none;
-}
+/* The compact process motif is typeset like a tracked figure label. */
+html[data-surface='paper'] .ascii-motif { color: var(--ink-faint); }
 
 /* Koan as a system-serif epigraph at 400, indented against a dashed hairline
    instead of the old vermilion proof mark. */
@@ -155,8 +148,8 @@ html[data-surface='paper'] canvas.bg {
    canopy · `tui` — modern TUI / DevOS.
 
    The whole interface reads as a terminal: headings set in the mono signature
-   face, the koan typed as a shell comment. The ASCII banner stays as the
-   prompt's masthead; the cold slate palette does the rest.
+   face, the koan typed as a shell comment. A small Braille field motif carries
+   the terminal signature; the visible H1 names the product once.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='tui'] {
   --font-serif: var(--font-mono);
@@ -212,8 +205,7 @@ html[data-surface='pastel'] .exp,
 html[data-surface='pastel'] .demo-fig {
   --essence: var(--voltage) !important;
 }
-/* Wordmark: unhidden flat masthead — no gradient text. Banner stays above
-   it, small, tinted ink. */
+/* Product name: one unhidden masthead; the view supplies a small Git motif. */
 html[data-surface='pastel'] .exp-name {
   position: static;
   width: auto;
@@ -871,4 +863,273 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   html[data-surface='industrial'] .fan li:nth-child(n) {
     transform: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2026-09-26 preserved POC styles. Each target has a full style reference in
+   docs/landing-poc/styles/ and an executable page contract in docs/.../specs.
+   The shared hero is one H1 + small ASCII motif + product-specific artwork;
+   block-letter README wordmarks remain reference assets, never a second title.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Steep → cadSpec: editorial analytics on paper. */
+:root[data-surface='blueprint'] {
+  --bg: #ffffff;
+  --bg-raise: #f2f2f3;
+  --ink: #17191c;
+  --ink-dim: #777b86;
+  --ink-faint: #979799;
+  --line: #ececec;
+  --essence: #5d2a1a;
+  --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+:root[data-surface='blueprint'] body::before {
+  background-image:
+    linear-gradient(90deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px)),
+    linear-gradient(0deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px));
+}
+:root[data-surface='blueprint'] .exp { --essence: #5d2a1a !important; }
+:root[data-surface='blueprint'] { --accent: #17191c !important; }
+:root[data-surface='blueprint'] .hero {
+  background: transparent;
+  border: 0;
+  text-align: center;
+  align-items: center;
+  padding: 1.5rem 0 11rem;
+  gap: .7rem;
+}
+:root[data-surface='blueprint'] .hero::before,
+:root[data-surface='blueprint'] .hero::after { content: none; }
+:root[data-surface='blueprint'] .exp-name {
+  position: static; width: auto; height: auto; margin: 0; padding: 0;
+  overflow: visible; clip: auto; white-space: normal; border: 0;
+  font: 400 clamp(2.75rem, 6.25vw, 5.625rem)/1.3 var(--font-serif);
+  letter-spacing: -.015em; color: var(--ink);
+}
+:root[data-surface='blueprint'] .koan {
+  border: 0; padding: 0; margin: 0;
+  font: italic 400 1.25rem/1.4 var(--font-serif);
+  letter-spacing: 0; color: #5d2a1a; opacity: 1;
+}
+:root[data-surface='blueprint'] .lede { max-width: 58ch; margin-inline: auto; }
+:root[data-surface='blueprint'] .actions { justify-content: center; gap: .75rem; margin-top: .4rem; }
+:root[data-surface='blueprint'] .actions .btn { background: #17191c; border: 1px solid #17191c; color: #fff; border-radius: 9999px; font: 400 1rem/1.4 var(--font-body); padding: .65rem 1.25rem; }
+:root[data-surface='blueprint'] .actions .btn.ghost { background: transparent; color: #17191c; }
+:root[data-surface='blueprint'] .install { margin: .4rem auto 0; }
+:root[data-surface='blueprint'] .cmd { background: #f2f2f3; border: 0; border-radius: 16px; box-shadow: 0 0 0 1px rgba(4,23,43,.05); }
+:root[data-surface='blueprint'] .ascii-motif { color: #777b86; }
+
+/* Auros → Canopy: abyssal teal, restrained bioluminescence. */
+:root[data-surface='tui'] {
+  --bg: #012624;
+  --bg-raise: #003734;
+  --ink: #ffffff;
+  --ink-dim: #bbc7c6;
+  --ink-faint: #707777;
+  --line: rgba(203,255,252,.16);
+  --canopy: #00a9a0;
+  --canvas-color: #00a9a0;
+  --canvas-mute: #003734;
+  --font-serif: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --accent: #00827c !important;
+}
+:root[data-surface='tui'] .exp { --essence: #00a9a0 !important; --accent: #00827c !important; }
+:root[data-surface='tui'] .hero {
+  width: min(100% - 2 * var(--space), 76rem);
+  margin: 1rem auto 0;
+  padding: 2rem 1rem 1.5rem;
+  border: 0; border-radius: 0; background: transparent;
+  align-items: center; text-align: center; gap: .8rem;
+}
+:root[data-surface='tui'] .hero::before,
+:root[data-surface='tui'] .hero::after { content: none; }
+:root[data-surface='tui'] .exp-name {
+  position: static; width: auto; height: auto; margin: 0; padding: 0;
+  overflow: visible; clip: auto; white-space: normal; border: 0;
+  font: 500 clamp(3.8rem, 8vw, 6rem)/1 Matter, 'Inter', sans-serif;
+  letter-spacing: -.04em; color: #fff;
+}
+:root[data-surface='tui'] .koan { font: 400 1rem/1.5 var(--font-body); font-style: normal; color: #edfffe; opacity: 1; margin: 0; }
+:root[data-surface='tui'] .koan::before,
+:root[data-surface='tui'] .koan::after { content: none; }
+:root[data-surface='tui'] .lede { color: #bbc7c6; max-width: 58ch; margin-inline: auto; }
+:root[data-surface='tui'] .ascii-motif { color: #cbfffc; letter-spacing: .18em; opacity: .8; }
+:root[data-surface='tui'] .hero-visual { width: min(100%, 23rem); }
+:root[data-surface='tui'] .actions { justify-content: center; margin-top: .4rem; }
+:root[data-surface='tui'] .actions .btn { background: linear-gradient(90deg,#00827c,#cbfffc); border: 0; border-radius: 6px; color: #012624; font: 500 .875rem/1.4 Arial,sans-serif; text-transform: uppercase; padding: .7rem 1.4rem; }
+:root[data-surface='tui'] .actions .btn.ghost { background: transparent; border: 1px solid #edfffe; color: #edfffe; }
+:root[data-surface='tui'] .install { margin: .5rem auto 0; }
+:root[data-surface='tui'] .cmd { background: #003734; border: 1px solid rgba(203,255,252,.16); }
+:root[data-surface='tui'] .cmd-line { color: #edfffe; }
+
+/* Antimetal → TeXForge: cream journal and dashed ruling. */
+:root[data-surface='paper'] {
+  --bg: #d7d7d0;
+  --bg-raise: #f7f6f3;
+  --ink: #1a1614;
+  --ink-dim: #66635f;
+  --ink-faint: #a8a7a1;
+  --line: #e3e3de;
+  --essence: #53504c;
+  --accent: #1a1614;
+  --font-serif: 'Noto Serif', 'Iowan Old Style', Georgia, serif;
+  --font-body: Inter, system-ui, sans-serif;
+  --accent: #1a1614 !important;
+}
+:root[data-surface='paper'] .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);
+  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'actions visual' 'install install';
+  align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
+}
+:root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
+:root[data-surface='paper'] .hero > .ascii-motif { grid-area: mark; color: #53504c; }
+:root[data-surface='paper'] .exp-name { grid-area: title; position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 400 clamp(2.8rem,5vw,3.375rem)/1.1 var(--font-serif); letter-spacing: -.037em; color: #1a1614; }
+:root[data-surface='paper'] .koan { grid-area: koan; border: 0; padding: 0; margin: 0; font: 400 1.25rem/1.5 var(--font-serif); font-style: normal; color: #66635f; opacity: 1; }
+:root[data-surface='paper'] .lede { grid-area: lede; color: #66635f; }
+:root[data-surface='paper'] .hero-visual { grid-area: visual; }
+:root[data-surface='paper'] .actions { grid-area: actions; gap: 1rem; }
+:root[data-surface='paper'] .install { grid-area: install; max-width: none; margin-top: 1.5rem; }
+:root[data-surface='paper'] .install-head { border: 0; }
+:root[data-surface='paper'] .cmd { border: 1px dashed #a8a7a1; background: #f7f6f3; }
+:root[data-surface='paper'] .actions .btn { border: 0; border-radius: 9999px; background: #1a1614; color: #f4f4e7; padding: .78rem 1.55rem; font: 500 .875rem/1.4 var(--font-body); }
+:root[data-surface='paper'] .actions .btn.ghost { background: transparent; color: #1a1614; border: 1px solid rgba(26,22,20,.92); }
+:root[data-surface='paper'] .hero::after { content: none; }
+
+/* Altius → DemoStage: ember-night / vapor-peach thermal rhythm. */
+:root[data-surface='studio'] {
+  --bg: #190501;
+  --bg-raise: #340a01;
+  --ink: #f7f6ff;
+  --ink-dim: #baadab;
+  --ink-faint: #baadab;
+  --line: #951c04;
+  --demostage: #fa5838;
+  --font-serif: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --accent: #fa5838 !important;
+}
+:root[data-surface='studio'] .exp { --essence: #fa5838 !important; --accent: #fa5838 !important; }
+:root[data-surface='studio'] .hero { width: 100%; max-width: none; margin: 0; background: #190501; color: #f7f6ff; border: 0 !important; border-radius: 0; align-items: center; text-align: center; padding: 2rem max(var(--space),calc((100vw - 70rem)/2)) 1.5rem; }
+:root[data-surface='studio'] .hero::before,
+:root[data-surface='studio'] .hero::after { content: none; }
+:root[data-surface='studio'] .hero.js-rec::before { content: none !important; }
+:root[data-surface='studio'] .hero .rec { display: none; }
+:root[data-surface='studio'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 700 clamp(3rem,5.5vw,3.75rem)/1.08 var(--font-body); letter-spacing: -.043em; color: #f7f6ff; }
+:root[data-surface='studio'] .koan { color: #fcac9c; font-style: normal; opacity: 1; }
+:root[data-surface='studio'] .lede { color: #f7f6ff; opacity: .75; max-width: 58ch; text-align: center; }
+:root[data-surface='studio'] .ascii-motif { color: #fcac9c; }
+:root[data-surface='studio'] .actions { justify-content: center; }
+:root[data-surface='studio'] .actions .btn { background: #340a01; color: #f7f6ff; border: 0; border-radius: 4px; box-shadow: inset 0 0 20px #631303; font: 500 1rem/1.4 var(--font-body); padding: .5rem 1.25rem; }
+:root[data-surface='studio'] .actions .btn.ghost { background: transparent; box-shadow: none; border: 1px solid #f7f6ff; }
+:root[data-surface='studio'] .actions .btn { text-decoration: none; }
+:root[data-surface='studio'] .install { margin-inline: auto; }
+:root[data-surface='studio'] .cmd { background: #340a01; border-color: #951c04; }
+:root[data-surface='studio'] .player { width: min(100%,56rem); }
+:root[data-surface='studio'] .band-light { background: #feeae6; color: #190501; }
+:root[data-surface='studio'] .band-light .lede,
+:root[data-surface='studio'] .band-light .label { color: #190501; }
+:root[data-surface='studio'] .band-dark { background: #190501; color: #f7f6ff; }
+:root[data-surface='studio'] .spectrum { gap: clamp(.3rem,1vw,.8rem); }
+:root[data-surface='studio'] .spectrum span { background: #fa5838; }
+
+/* AuthKit → ghScaff: frosted midnight glass. */
+:root[data-surface='industrial'] {
+  --bg: #05060f;
+  --bg-raise: rgba(186,214,247,.05);
+  --ink: #ffffff;
+  --ink-dim: #c7d3ea;
+  --ink-faint: #9da7ba;
+  --line: rgba(186,215,247,.12);
+  --glass-v: #b6d9fc;
+  --canvas-color: #b6d9fc;
+  --canvas-mute: #3f4959;
+  --font-serif: 'Space Grotesk', sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --accent: #b6d9fc !important;
+}
+:root[data-surface='industrial'] .exp { --essence: #b6d9fc !important; --accent: #b6d9fc !important; }
+:root[data-surface='industrial'] body::before {
+  background-image: linear-gradient(rgba(186,215,247,.06) 1px, transparent 1px), linear-gradient(90deg,rgba(186,215,247,.06) 1px,transparent 1px), radial-gradient(ellipse at 50% 0%,rgba(124,145,182,.34),transparent 58%);
+  background-size: 88px 88px,88px 88px,auto;
+  mask-image: linear-gradient(to bottom,black,transparent 85%);
+}
+:root[data-surface='industrial'] canvas.bg { opacity: .04; }
+:root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: transparent; border: 0; padding: 2rem 1rem 1rem; }
+:root[data-surface='industrial'] .hero::before,
+:root[data-surface='industrial'] .hero::after { content: none; }
+:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: #d8ecf8; background: linear-gradient(180deg,#d8ecf8,#98c0ef); background-clip: text; -webkit-text-fill-color: transparent; }
+:root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
+:root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
+:root[data-surface='industrial'] .ascii-motif { color: #b6d9fc; }
+:root[data-surface='industrial'] .actions { justify-content: center; }
+:root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
+:root[data-surface='industrial'] .actions .btn.ghost { background: transparent; color: #d1e4fa; }
+:root[data-surface='industrial'] .install { margin-inline: auto; }
+:root[data-surface='industrial'] .cmd { background: rgba(186,214,247,.05); border-color: rgba(186,215,247,.12); }
+:root[data-surface='industrial'] .fan li,
+:root[data-surface='industrial'] .glass { background: rgba(186,214,247,.035); border: 1px solid rgba(186,215,247,.12); box-shadow: inset 0 1px 1px rgba(216,236,248,.12), inset 0 24px 48px rgba(168,216,245,.04), 0 18px 30px rgba(0,0,0,.22); backdrop-filter: blur(12px); }
+
+/* Supahub → GitKit: violet sun, real product previews. */
+:root[data-surface='pastel'] {
+  --bg: #ffffff;
+  --bg-raise: #f1f5f9;
+  --ink: #111827;
+  --ink-dim: #3f4654;
+  --ink-faint: #6b7589;
+  --line: #d8e0ea;
+  --voltage: #862fe7;
+  --canvas-color: #862fe7;
+  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --accent: #862fe7 !important;
+}
+:root[data-surface='pastel'] .exp { --essence: #862fe7 !important; --accent: #862fe7 !important; }
+:root[data-surface='pastel'] .hero { align-items: center; text-align: center; background: #fff; border: 0; padding: 1.4rem 1rem .5rem; gap: .8rem; }
+:root[data-surface='pastel'] .hero::before,
+:root[data-surface='pastel'] .hero::after { content: none; }
+:root[data-surface='pastel'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 600 clamp(3rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif; letter-spacing: -.025em; color: #111827; }
+:root[data-surface='pastel'] .koan { font-family: var(--font-body); font-style: normal; color: #3f4654; opacity: 1; }
+:root[data-surface='pastel'] .lede { color: #6b7589; max-width: 58ch; text-align: center; }
+:root[data-surface='pastel'] .ascii-motif { color: #862fe7; }
+:root[data-surface='pastel'] .hero-visual { width: 100%; }
+:root[data-surface='pastel'] .actions { justify-content: center; }
+:root[data-surface='pastel'] .actions .btn { background: #862fe7; color: #fff; border: 1px solid #862fe7; border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+:root[data-surface='pastel'] .actions .btn.ghost { color: #111827; background: transparent; border-color: #111827; font-weight: 500; }
+:root[data-surface='pastel'] .install { margin: .45rem auto 0; }
+:root[data-surface='pastel'] .hero-stage { margin-block: .3rem 0; }
+:root[data-surface='pastel'] .cmd { background: #f1f5f9; border: 1px solid #d8e0ea; border-radius: 12px; }
+:root[data-surface='pastel'] .mock::before { background: radial-gradient(closest-side,rgba(134,47,231,.16),rgba(134,47,231,0) 72%); }
+:root[data-surface='pastel'] .mock-b::before { background: radial-gradient(closest-side,rgba(226,43,164,.18),rgba(226,43,164,0) 72%); }
+:root[data-surface='pastel'] .card { border-radius: 24px; border-color: #d8e0ea; box-shadow: 0 12px 28px rgba(17,24,39,.07); }
+:root[data-surface='pastel'] .card { padding: .9rem 1rem; }
+:root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
+:root[data-surface='pastel'] canvas.bg { opacity: .12; }
+
+/* Preserve single-name heroes on the two pages without a supplied style file. */
+:root[data-surface='quorum'] .exp-name {
+  position: static; width: auto; height: auto; margin: 0; padding: 0;
+  overflow: visible; clip: auto; white-space: normal; border: 0;
+  font: 600 clamp(2.6rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif;
+  letter-spacing: -.02em; color: var(--ink);
+}
+:root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
+:root[data-surface='quorum'] .ascii-motif { color: var(--essence); }
+:root[data-surface='observatory'] .exp-name {
+  position: static; width: auto; height: auto; margin: 0; padding: 0;
+  overflow: visible; clip: auto; white-space: normal; border: 0;
+  font: 500 clamp(3rem,7vw,5.5rem)/1 'Space Grotesk',sans-serif;
+  letter-spacing: -.04em; color: #f7f8fc;
+}
+:root[data-surface='observatory'] .ascii-motif { color: var(--astro-denoise); }
+
+@media (max-width: 52rem) {
+  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install'; text-align: center; }
+  :root[data-surface='paper'] .hero > * { min-width: 0; }
+  :root[data-surface='paper'] .network-mark { width: min(100%, 18rem); overflow: hidden; }
+  :root[data-surface='paper'] .hero > .lede { margin-inline: auto; }
+  :root[data-surface='paper'] .actions { justify-content: center; }
+  :root[data-surface='blueprint'] .hero { padding-bottom: 2rem; }
 }

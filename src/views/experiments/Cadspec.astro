@@ -6,12 +6,9 @@ const t = useTranslations(lang);
 const e = t.experiments.cadspec;
 ---
 <ExperimentLayout id="cadspec">
-  <!-- The three product artifacts and the ASCII motif ride the layout's cta
-       slot. Absolutely positioned they resolve against `.hero` (position:
-       relative, already set by surfaces.css) — never against `.actions`,
-       which must stay static. On narrow screens they go static and fall into
-       the flexing `.actions` row after the docs button. -->
-  <Fragment slot="cta">
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
+  <!-- Product artifacts are anchored to the hero, not inserted into the CTA row. -->
+  <Fragment slot="hero-visual">
     <div class="art art-coords">
       <p class="label">{e.hero.artifacts.coords.label}</p>
       <pre class="mono art-code"><code>{e.hero.artifacts.coords.code}</code></pre>
@@ -36,7 +33,6 @@ const e = t.experiments.cadspec;
       <span class="chip-label">{e.hero.artifacts.compile.label}</span>
       <span class="chip-status">{e.hero.artifacts.compile.status}</span>
     </div>
-    <p class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
   </Fragment>
 
   <section class="wrap section">
@@ -197,15 +193,15 @@ offset = 0.5</code></pre>
 
   /* (a) Tokens — warm paper, mist cards, one blush reserved for the chip. */
   :global(:root[data-surface='blueprint']) {
-    --bg: #faf8f3;        /* warm paper */
-    --bg-raise: #eef1f4;  /* mist — cards, install bar, code plate */
-    --ink: #16202a;
-    --ink-dim: #47535e;   /* 7.3:1 on paper, 6.8:1 on mist */
-    --ink-faint: #5e676e; /* 5.4:1 on paper, 5.1:1 on mist */
-    --line: #e3e1db;      /* warm hairline */
-    --blush: #f8ded0;     /* used exactly once — .art-chip */
-    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-    --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --bg: #ffffff;
+    --bg-raise: #f2f2f3;
+    --ink: #17191c;
+    --ink-dim: #777b86;
+    --ink-faint: #979799;
+    --line: #ececec;
+    --blush: #fbe1d1;
+    --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   /* (b) Type — serif display at 400 only. global.css forces 500 on
@@ -227,17 +223,14 @@ offset = 0.5</code></pre>
     color: var(--ink);
   }
 
-  /* (c) Hero — open paper, centered, an oversized serif masthead.
-     .hero keeps position: relative (it anchors the artifact cards) and
-     keeps surfaces.css's width/margin; the mist plate, frame and titleblock
-     retire — the ASCII motif carries the titleblock's information now. */
+  /* (c) Hero — editorial title with a contained artifact collage. */
   :global(:root[data-surface='blueprint'] .hero) {
     align-items: center;
     text-align: center;
     gap: 1rem;
     background: none;
     border: 0;
-    padding: 2rem 1rem 4.6rem; /* bottom room for the motif */
+    padding: 2rem 1rem 11rem;
   }
   :global(:root[data-surface='blueprint'] .hero::after) { content: none; }
   :global(:root[data-surface='blueprint'] .hero::before) {
@@ -245,8 +238,7 @@ offset = 0.5</code></pre>
     border-color: var(--essence);
     background: transparent;
   }
-  /* The masthead: surfaces.css hides .exp-name behind clip:rect — unhide
-     every part of the clip, then set the display voice. */
+  /* The one product name: surfaces.css hides .exp-name by default. */
   :global(:root[data-surface='blueprint'] .exp-name) {
     position: static;
     width: auto;
@@ -257,9 +249,9 @@ offset = 0.5</code></pre>
     margin: 0;
     font-family: var(--font-serif);
     font-weight: 400;
-    font-size: clamp(2.8rem, 6.5vw, 4.6rem);
-    line-height: 1.02;
-    letter-spacing: 0;
+    font-size: clamp(2.75rem, 6.25vw, 5.625rem);
+    line-height: 1.3;
+    letter-spacing: -0.025em;
     color: var(--ink);
   }
   :global(:root[data-surface='blueprint'] .koan) {
@@ -279,35 +271,37 @@ offset = 0.5</code></pre>
   }
   :global(:root[data-surface='blueprint'] .num) { color: var(--ink-faint); }
   :global(:root[data-surface='blueprint'] .actions) { justify-content: center; }
-  :global(:root[data-surface='blueprint'] .banner) {
-    /* the hero centers its type; the block art is left-set or it goes ragged */
-    text-align: left;
+  .ascii-motif {
+    margin: 0;
+    color: var(--ink-faint);
+    font: 400 0.72rem/1.5 var(--font-mono);
+    letter-spacing: 0.08em;
   }
 
   /* (d) Pill button pair — filled (repo) + ghost (docs). The layout already
      renders exactly this pair; only the dress changes. */
   :global(:root[data-surface='blueprint'] .actions .btn),
   :global(:root[data-surface='blueprint'] .actions .btn.ghost) {
-    border-radius: 999px;
+    border-radius: 9999px;
     font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: 500;
     padding: 0.6rem 1.35rem;
   }
   :global(:root[data-surface='blueprint'] .actions .btn) {
-    background: var(--essence);
-    border-color: var(--essence);
-    color: #fff; /* 6.0:1 on the teal */
+    background: #17191c;
+    border-color: #17191c;
+    color: #fff;
   }
   :global(:root[data-surface='blueprint'] .actions .btn:hover) { filter: brightness(1.1); }
   :global(:root[data-surface='blueprint'] .actions .btn.ghost) {
     background: transparent;
-    border-color: var(--line);
-    color: var(--ink-dim);
+    border-color: #17191c;
+    color: #17191c;
   }
   :global(:root[data-surface='blueprint'] .actions .btn.ghost:hover) {
-    border-color: var(--essence);
-    color: var(--essence);
+    border-color: #17191c;
+    color: #17191c;
     background: transparent;
   }
 
@@ -337,19 +331,19 @@ offset = 0.5</code></pre>
      `translate` (not `transform`) animates alongside each card's rotation. */
   .art {
     position: absolute;      /* anchored to .hero, never to .actions */
-    background: var(--bg-raise);
-    border: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
-    border-radius: 24px;
+    background: #ffffff;
+    border: 0;
+    border-radius: 20px;
     padding: 0.9rem 1.05rem;
-    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 12px 30px rgba(22, 32, 42, 0.06);
+    box-shadow: 0 0 0 1px rgba(4,23,43,0.05), 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
     text-align: left;
     overflow: hidden;        /* nothing spills past the hero — no h-scroll */
     z-index: 1;
     animation: art-float 7s ease-in-out infinite;
   }
   .art .label { margin: 0 0 0.45rem; }
-  .art-coords { left: 0.5rem; top: 5.5rem; width: 14.5rem; transform: rotate(-1deg); }
-  .art-dim    { right: 0.5rem; top: 4.5rem; width: 13rem; transform: rotate(1.2deg); }
+  .art-coords { left: 1rem; top: 7.4rem; width: 14.5rem; transform: rotate(-1deg); }
+  .art-dim    { right: 1rem; top: 8rem; width: 13rem; transform: rotate(1deg); }
   .art-dim svg { display: block; width: 100%; height: auto; }
   .art-val {
     fill: var(--essence);
@@ -372,8 +366,8 @@ offset = 0.5</code></pre>
     gap: 0.5rem;
     padding: 0.5rem 0.9rem;
     background: var(--blush);
-    border-color: color-mix(in srgb, var(--blush) 70%, var(--ink));
-    box-shadow: 0 1px 2px rgba(22, 32, 42, 0.05), 0 10px 24px rgba(22, 32, 42, 0.07);
+    border: 0;
+    box-shadow: none;
   }
   .chip-dot {
     flex: none;
@@ -387,16 +381,12 @@ offset = 0.5</code></pre>
     font-size: 0.68rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ink-dim);
+    color: #5d2a1a;
   }
-  .chip-status { font-size: 0.78rem; color: var(--ink); }
+  .chip-status { font-size: 0.78rem; color: #5d2a1a; }
   .ascii-motif {
-    position: absolute;
-    left: 50%;
-    bottom: 0.9rem;
-    transform: translateX(-50%);
     margin: 0;
-    max-width: calc(100% - 40rem); /* keeps it clear of the chip's lane */
+    max-width: 42rem;
     text-align: center;
     white-space: normal;
     font-family: var(--font-mono);
@@ -425,6 +415,7 @@ offset = 0.5</code></pre>
      glyphs and its shadow across the art), so the guard has to bite before
      that band opens. */
   @media (max-width: 64rem) {
+    :global(:root[data-surface='blueprint'] .hero) { padding-bottom: 2rem; }
     .art-coords,
     .art-dim,
     .art-chip {
@@ -432,14 +423,14 @@ offset = 0.5</code></pre>
       width: min(100%, 24rem);
       transform: none;
       animation: none;
-      margin-top: 1rem;
+      margin: 0.5rem auto 0;
     }
     .ascii-motif {
       position: static;
       transform: none;
       width: 100%;
       max-width: none;
-      margin-top: 1.2rem;
+      margin: 0.8rem auto 0;
       text-align: center;
       white-space: normal;
     }

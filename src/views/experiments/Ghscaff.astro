@@ -9,9 +9,9 @@ const exp = byId('ghscaff');
 ---
 <ExperimentLayout id="ghscaff" hideGithub>
   <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-  <Fragment slot="before-genesis">
-    <div class="wrap section wizard">
-      <p class="ascii-motif" aria-hidden="true">+--+ scaffold · 07 lifts · idempotent +--+</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">+--+ 07 lifts · idempotent +--+</p>
+  <Fragment slot="hero-visual">
+    <div class="wizard">
       <p class="mono-kicker"><span class="label">{e.lifts.kicker}</span></p>
       <ol class="fan">
         {e.lifts.items.map((step, i) => (

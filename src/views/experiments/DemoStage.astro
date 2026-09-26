@@ -10,15 +10,15 @@ const slots = [
   { fig: 'Fig. 1', caption: e.demos.first },
   { fig: 'Fig. 2', caption: e.demos.second },
 ];
+const spectrumBars = [42, 62, 88, 122, 154, 178, 158, 128, 96, 68, 44];
 ---
 <ExperimentLayout id="demostage">
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
+  <p slot="hero-mark" class="ascii-motif mono" aria-hidden="true">▶──●────●───□</p>
 
-  <!-- The ONE hero motif: the artifact DemoStage produces — a terminal demo
-       with a player scrubber, its steps marked along the timeline. Full width,
-       with the thin spectrum baseline ruled underneath it. -->
-  <Fragment slot="before-genesis">
-    <div class="wrap stage">
+  <!-- The real terminal/export sequence is the Altius thermal-spectrum hero. -->
+  <Fragment slot="hero-visual">
+    <div class="stage">
       <figure class="player" id="demo-player">
         <div class="bar mono">
           <span class="d r"></span><span class="d y"></span><span class="d g"></span>
@@ -44,7 +44,9 @@ $ demo export gif,mp4
           <span class="tc">0:06</span>
         </div>
       </figure>
-      <div class="spectrum" aria-hidden="true"></div>
+      <div class="spectrum" aria-hidden="true">
+        {spectrumBars.map((height) => <span style={`--bar-height:${height}px; --bar-opacity:${(height / 228).toFixed(2)}`} />)}
+      </div>
     </div>
   </Fragment>
 
@@ -86,7 +88,7 @@ $ demo export gif,mp4
 <style>
   /* The hero figure: a black monitor on the bright set, coral as its phosphor.
      The dark/light contrast of the page lives here and in the obsidian band. */
-  .stage { padding-block: 1.75rem 2.5rem; }
+  .stage { width: 100%; display: grid; justify-items: center; padding-block: .5rem 1rem; }
   .player {
     margin: 0;
     max-width: 56rem;
@@ -100,7 +102,7 @@ $ demo export gif,mp4
   .bar .d.r { background: #ef8354; } .bar .d.y { background: #e0c34a; } .bar .d.g { background: #5dd39e; }
   .bar .name { margin-left: 0.5rem; color: #8a8175; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
-  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demostage); min-height: 12rem; }
+  .body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--demostage); min-height: 8rem; }
   .scrubber { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem 0.7rem; border-top: 1px solid #2a241d; font-size: 0.72rem; }
   .scrubber .play { color: var(--demostage); font-size: 0.7rem; }
   .scrubber .track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #322b22; }
@@ -113,12 +115,23 @@ $ demo export gif,mp4
   /* The one gradient the page is allowed: a thin spectrum baseline under the
      hero figure. Nothing else on the page carries one. */
   .spectrum {
-    max-width: 56rem;
-    height: 2px;
-    margin-top: 0.7rem;
-    opacity: 0.55;
-    background: linear-gradient(90deg, #e0a458, #ef8354, #e8a4c8, #6ec6e6, #5dd39e);
+    width: min(100%, 56rem);
+    height: 11.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(.25rem, 1vw, .75rem);
+    overflow: hidden;
+    margin-top: 1.5rem;
   }
+  .spectrum span {
+    flex: 1 1 0;
+    max-width: 4.5rem;
+    height: var(--bar-height);
+    opacity: var(--bar-opacity);
+    background: #fa5838;
+  }
+  .ascii-motif { color: #fcac9c; font-size: .72rem; letter-spacing: .16em; }
 
   /* Two empty 16:9 slots, side by side, stacking below 52rem. Flat frames: no
      grid texture, no glow, no video, no lens, no dialog. */

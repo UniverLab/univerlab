@@ -1,6 +1,5 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
@@ -10,6 +9,8 @@ const { id, hideGithub = false } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+const hasHeroMark = Astro.slots.has('hero-mark');
+const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
 const statusLabel = t.status[exp.status];
 const surface = exp.surface;
@@ -90,10 +91,11 @@ const ogImage = `/og/${id}.png`;
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
-      <Banner id={id} color={exp.essenceHex} />
+      {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
+      {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
       <div class="actions">
           <slot name="cta-first" />
         {!hideGithub && <a class="btn" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>}
@@ -193,8 +195,9 @@ const ogImage = `/og/${id}.png`;
   }
 
   /* Hero */
-  .hero { padding-block: 2.5rem 1.5rem; }
+  .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+  .hero-visual { width: 100%; }
 
   .genesis-row {
     display: grid;

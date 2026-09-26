@@ -9,6 +9,22 @@ const tfInitial =
   '\\begin{mermaid}\nflowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log\n\\end{mermaid}';
 ---
 <ExperimentLayout id="texforge">
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">.tex ──→ lint ──→ typeset ──→ PDF</p>
+  <div slot="hero-visual" class="network-mark" aria-hidden="true">
+    <svg viewBox="0 0 420 340" role="presentation">
+      <g class="network-lines">
+        <path d="M210 170 L92 58 M210 170 L170 35 M210 170 L292 47 M210 170 L362 112 M210 170 L340 250 M210 170 L236 310 M210 170 L88 260 M210 170 L52 160" />
+        <path d="M92 58 L170 35 M292 47 L362 112 M340 250 L236 310 M88 260 L52 160" />
+      </g>
+      <g class="network-nodes">
+        <circle cx="210" cy="170" r="8" />
+        <circle cx="92" cy="58" r="4" /><circle cx="170" cy="35" r="4" />
+        <circle cx="292" cy="47" r="5" /><circle cx="362" cy="112" r="4" />
+        <circle cx="340" cy="250" r="4" /><circle cx="236" cy="310" r="5" />
+        <circle cx="88" cy="260" r="4" /><circle cx="52" cy="160" r="4" />
+      </g>
+    </svg>
+  </div>
   <!-- `trule` = wide section divider (T1 of the dash vocabulary): one dashed
        hairline per section boundary, never one per item. -->
   <section class="wrap section trule">
@@ -88,6 +104,13 @@ const tfInitial =
 </script>
 
 <style>
+  .network-mark { width: min(100%, 24rem); margin: 0 auto; }
+  .network-mark svg { display: block; width: 100%; height: auto; }
+  .network-lines path { fill: none; stroke: #a8a7a1; stroke-width: 1; stroke-dasharray: 3 5; }
+  .network-nodes { fill: #1a1614; }
+  .network-nodes circle:first-child { fill: #e2e67d; }
+  .ascii-motif { font: 400 .68rem/1.4 var(--font-mono); letter-spacing: .08em; }
+
   .section { padding-block: 1.5rem; }
   /* Wide section divider (T1): one dashed hairline rules each major section
      off from the one above it — never one per item, never a solid rule. */

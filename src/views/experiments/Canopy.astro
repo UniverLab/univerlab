@@ -80,15 +80,25 @@ const gbPulses = [
   { from: 'p2', to: 'quorum', d: 1 },
   { from: 'quorum', to: 'implement', d: 2 },
 ];
-// Small essence-tinted Braille motif, a fragment of the field the TUI draws.
-const ASCII_MOTIF = '⠿⠶⠦⠤ canopy ⠤⠦⠶⠿';
+const ORBIT_DOTS = [
+  [50, 9], [68, 14], [81, 29], [78, 50], [61, 67], [39, 68], [20, 54],
+  [15, 32], [29, 16], [50, 22], [66, 32], [58, 50], [39, 49], [33, 32],
+];
 ---
 <ExperimentLayout id="canopy">
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">⠿⠶⠦⠤ · ⠤⠦⠶⠿</p>
+  <div slot="hero-visual" class="orb-stage" aria-hidden="true">
+    <svg viewBox="0 0 100 78" role="presentation">
+      <ellipse class="orb-ring ring-a" cx="50" cy="39" rx="35" ry="22" />
+      <ellipse class="orb-ring ring-b" cx="50" cy="39" rx="23" ry="34" />
+      <circle class="orb-core" cx="50" cy="39" r="17" />
+      {ORBIT_DOTS.map(([x, y], i) => <circle class="orb-dot" style={`--i:${i}`} cx={x} cy={y} r={i % 3 === 0 ? 1.4 : 0.85} />)}
+      <path class="orb-trace" d="M18 39 C28 21 36 57 50 39 S72 20 82 39" />
+    </svg>
+    <span class="orb-readout mono">GRAPH ENGINE · LIVE</span>
+  </div>
   <Fragment slot="before-genesis">
     <div class="wrap section">
-      <!-- A fragment of the field the TUI actually draws, in the same glyphs. -->
-      <p class="ascii-motif" aria-hidden="true">{ASCII_MOTIF}</p>
-
       <p class="mono-kicker">
         <span class="kicker-badge">daemon</span>
         <span class="kicker-sep" aria-hidden="true">·</span>
@@ -98,17 +108,6 @@ const ASCII_MOTIF = '⠿⠶⠦⠤ canopy ⠤⠦⠶⠿';
         <span class="kicker-sep" aria-hidden="true">·</span>
         <span class="kicker-badge">mcp</span>
       </p>
-
-      <!-- Demo figure slot. The 16:9 frame is held open on purpose so the hero
-           keeps its shape when the real clip lands; the genesis-row below
-           already carries the recorded demo. -->
-      <figure class="demo-slot">
-        <div class="ds-frame" role="img" aria-label={demoCaption}></div>
-        <figcaption class="ds-cap">
-          <span class="label mono">Fig. 1</span>
-          {demoCaption}
-        </figcaption>
-      </figure>
 
       <section class="platforms-section">
         <span class="label">{e.platforms.kicker}</span>
@@ -224,6 +223,29 @@ const ASCII_MOTIF = '⠿⠶⠦⠤ canopy ⠤⠦⠶⠿';
     opacity: 0.5;
     margin: 0 0 0.5rem;
   }
+
+  .orb-stage {
+    width: min(100%, 27rem);
+    aspect-ratio: 1.45;
+    position: relative;
+    margin: 0.25rem auto 0.5rem;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,130,124,.2), transparent 68%);
+  }
+  .orb-stage svg { width: 100%; height: 100%; overflow: visible; }
+  .orb-ring { fill: none; stroke: rgba(203,255,252,.26); stroke-width: .3; }
+  .ring-a { transform-origin: 50px 39px; animation: orb-spin 24s linear infinite; }
+  .ring-b { transform-origin: 50px 39px; animation: orb-spin 31s linear infinite reverse; }
+  .orb-core { fill: rgba(0,55,52,.7); stroke: rgba(203,255,252,.54); stroke-width: .5; }
+  .orb-dot { fill: #cbfffc; opacity: .55; }
+  .orb-dot:nth-of-type(3n) { opacity: .9; }
+  .orb-dot:nth-of-type(2n) { fill: #edfffe; opacity: .7; }
+  .orb-trace { fill: none; stroke: #00a9a0; stroke-width: .55; opacity: .8; stroke-dasharray: 2 2; }
+  .orb-readout { position: absolute; bottom: .25rem; color: #bbc7c6; font-size: .58rem; letter-spacing: .14em; }
+  @keyframes orb-spin { to { rotate: 360deg; } }
+  @media (prefers-reduced-motion: reduce) { .ring-a, .ring-b { animation: none; } }
 
   .mono-kicker {
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.7rem;
