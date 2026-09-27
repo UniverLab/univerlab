@@ -46,7 +46,7 @@ export function field(ctx: FieldCtx): (t: number) => void {
     };
   });
 
-  // Cursor stir — last-move delta like PAPER's fibre stir: motes within
+  // Cursor stir — last-move delta like PAPER's ink-mark stir: motes within
   // REACH pick up a single impulse along the pointer's travel, then ease back
   // to their own idle drift (bubbles' vy0 pattern). Touch input never stirs —
   // the field stays at idle. The lerped (smoothX, smoothY) is what counts as

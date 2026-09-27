@@ -49,7 +49,7 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   // Reduced motion never reaches this module at all — ThemeBackground returns
   // before importing it.
   const isPaper = document.documentElement.dataset.surface === 'paper';
-  if (isPaper) ctx.color = '#6a563e'; // bistre fibres, never amber embers
+  if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
   const isPastel = document.documentElement.dataset.surface === 'pastel';
   if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
   const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.drift);
