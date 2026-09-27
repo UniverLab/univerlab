@@ -251,6 +251,27 @@ export const en = {
       description:
         'Hooks, .gitignore, .gitattributes and config in one guided, idempotent flow. Composable hooks that survive being reapplied. One binary, no Node, no Python.',
       koan: '// the ritual, automated',
+      hero: {
+        badges: ['one binary', 'offline hooks', 'idempotent'],
+        wizard: {
+          kicker: 'gitkit init',
+          steps: [
+            'Repository profile',
+            'Hooks',
+            'Ignore & attributes',
+            'Config presets',
+            'Save as build',
+          ],
+        },
+        hooks: {
+          kicker: 'hook stack',
+          items: [
+            ['conventional-commits', 'commit-msg'],
+            ['no-secrets', 'pre-commit'],
+            ['branch-naming', 'pre-push'],
+          ] as [string, string][],
+        },
+      },
       lede:
         'One guided flow for hooks, <code>.gitignore</code>, <code>.gitattributes</code> and git config — then saved as a <strong>build</strong> you can re-apply to any project with a single command.',
       genesis: {
@@ -304,7 +325,6 @@ export const en = {
           'Language template',
           'Branches',
           'Features & license',
-          'Sponsor button',
           'Review & confirm',
         ],
       },
@@ -345,6 +365,17 @@ export const en = {
       koan: 'The drawing is not drawn. It is declared.',
       lede:
         'cadSpec treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
+      hero: {
+        motif: '├─ 8.50 ─┤ · plan 1:1 · sheet 01 · declared, not drawn',
+        artifacts: {
+          coords: {
+            label: 'Coordinates',
+            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
+          },
+          dim: { label: 'Dimension' },
+          compile: { label: 'Compile', status: '✓ bit-identical DXF' },
+        },
+      },
       genesis: {
         kicker: 'Genesis',
         title: 'For the architect in the house.',
@@ -426,8 +457,7 @@ export const en = {
           'Share the room URL — no sign-up, no invite flow.',
           'Pick a card from the Fibonacci deck (0, 1, 2, 3, 5, 8, 13, 21, ?).',
           'Cards reveal with a multi-phase animation — particles, slide and flip — the moment everyone votes.',
-          'Load stories from a CSV or add them one at a time, and step through in order.',
-          'Disconnect and reconnect — state syncs back from any peer still in the room.',
+          'Load stories from a CSV or add them one at a time, step through in order — drop out and reconnect, and state syncs back from any peer still in the room.',
         ],
       },
       faq: [
@@ -469,6 +499,12 @@ export const en = {
           '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
+      },
+      // The two empty 16:9 slots on this page: captions paraphrase capture and
+      // export — no feature that the pipeline doesn't already name.
+      demos: {
+        first: 'Capture — terminal session composited with the browser source',
+        second: 'Export — the same score rendered to gif and mp4',
       },
       faq: [
         ['What is DemoStage?',

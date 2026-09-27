@@ -249,6 +249,27 @@ export const es: Dict = {
       description:
         'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
       koan: '// el ritual, automatizado',
+      hero: {
+        badges: ['un binario', 'hooks sin conexión', 'idempotente'],
+        wizard: {
+          kicker: 'gitkit init',
+          steps: [
+            'Perfil del repositorio',
+            'Hooks',
+            'Ignore & attributes',
+            'Presets de config',
+            'Guardar como build',
+          ],
+        },
+        hooks: {
+          kicker: 'pila de hooks',
+          items: [
+            ['conventional-commits', 'commit-msg'],
+            ['no-secrets', 'pre-commit'],
+            ['branch-naming', 'pre-push'],
+          ] as [string, string][],
+        },
+      },
       lede:
         'Un flujo guiado para hooks, <code>.gitignore</code>, <code>.gitattributes</code> y configuración de git — y luego guardado como un <strong>build</strong> que puedes reaplicar a cualquier proyecto con un solo comando.',
       genesis: {
@@ -302,7 +323,6 @@ export const es: Dict = {
           'Plantilla de lenguaje',
           'Ramas',
           'Características y licencia',
-          'Sponsor button',
           'Revisar y confirmar',
         ],
       },
@@ -343,6 +363,17 @@ export const es: Dict = {
       koan: 'El dibujo no se dibuja. Se declara.',
       lede:
         'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
+      hero: {
+        motif: '├─ 8.50 ─┤ · plano 1:1 · hoja 01 · declarado, no dibujado',
+        artifacts: {
+          coords: {
+            label: 'Coordenadas',
+            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
+          },
+          dim: { label: 'Cota' },
+          compile: { label: 'Compilación', status: '✓ DXF idéntico bit a bit' },
+        },
+      },
       genesis: {
         kicker: 'Génesis',
         title: 'Para la arquitecta de la casa.',
@@ -424,8 +455,7 @@ export const es: Dict = {
           'Comparte la URL de la sala — sin registro, sin flujo de invitación.',
           'Elige una carta del mazo Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, ?).',
           'Las cartas se revelan con una animación multi-fase en cuanto todos votan — partículas, slide y flip sincronizados.',
-          'Carga historias desde un CSV o agrégalas una a una, y avanza por ellas en orden.',
-          'Desconéctate y vuelve a conectar — el estado se sincroniza desde cualquier par que siga en la sala.',
+          'Carga historias desde un CSV o agrégalas una a una, avanza por ellas en orden — desconéctate y vuelve a conectar: el estado se sincroniza desde cualquier par que siga en la sala.',
         ],
       },
       faq: [
@@ -467,6 +497,10 @@ export const es: Dict = {
           '<code>export</code> — reproducción pura: renderiza a gif o mp4 sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
           '<code>edit</code> — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
+      },
+      demos: {
+        first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
+        second: 'Export — la misma partitura renderizada a gif y mp4',
       },
       faq: [
         ['¿Qué es DemoStage?',
