@@ -159,20 +159,21 @@ const topicColors: Record<string, string> = Object.fromEntries(
     .rm-edit-btn { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none; border: 1px solid var(--line); background: none; padding: 0.15rem 0.45rem; border-radius: 3px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease; }
     .rm-edit-btn:hover, .rm-edit-btn:focus-visible { color: var(--ink); border-color: var(--accent); }
     .rm-notice { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); padding: 0.4rem 0.6rem; border-radius: 3px; margin-bottom: 1rem; }
-    .rm-lane { border-bottom: 1px solid var(--line); padding-block: 1.2rem; }
+    .rm-lane { border-bottom: 1px solid var(--line); padding-block: 0.6rem; }
     .rm-lane:last-child { border-bottom: none; }
-    .rm-lane-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 0.5rem; margin-bottom: 0.8rem; align-items: baseline; }
+    .rm-lane-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 0.5rem; margin-block: 0.9rem 0.4rem; align-items: baseline; line-height: 1; }
     summary.rm-lane-label { cursor: pointer; list-style: none; }
     summary.rm-lane-label::-webkit-details-marker { display: none; }
     summary.rm-lane-label::before { content: '\25b8'; }
     details[open] > summary.rm-lane-label::before { content: '\25be'; }
     .rm-count { color: var(--ink-faint); font-size: 0.58rem; }
-    .rm-row { display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 0.4rem 0.9rem; padding-block: 0.7rem; align-items: start; }
-    .rm-pos { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
-    .rm-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); }
-    .rm-chip { border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent); color: var(--chip, var(--accent)); padding: 0.12rem 0.5rem; font-size: 0.58rem; margin-left: 0.5rem; }
-    .rm-blocked { grid-column: 2; color: var(--ink-dim); font-size: 0.78rem; font-family: var(--font-mono); }
-    .rm-date { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.68rem; display: block; margin-top: 0.2rem; }
+    .rm-row { display: grid; grid-template-columns: 1fr auto; gap: 0.4rem 0.9rem; padding-block: 0.35rem; align-items: baseline; }
+    .rm-main { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.5rem; row-gap: 0.15rem; min-width: 0; }
+    .rm-pos { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); flex: 0 0 auto; }
+    .rm-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); flex: 1 1 auto; min-width: 0; }
+    .rm-chip { border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent); color: var(--chip, var(--accent)); padding: 0.12rem 0.5rem; font-size: 0.58rem; flex: 0 0 auto; margin-left: auto; }
+    .rm-blocked { flex: 0 0 100%; color: var(--ink-dim); font-size: 0.78rem; font-family: var(--font-mono); line-height: 0.85; margin-top: 0.15rem; }
+    .rm-date { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.68rem; display: block; flex: 0 0 100%; margin-top: 0.2rem; }
     .rm-side { display: none; gap: 0.3rem; }
     #roadmap-section.rm-editing .rm-side { display: flex; }
     #roadmap-section.rm-editing .rm-row { align-items: center; }
@@ -180,11 +181,12 @@ const topicColors: Record<string, string> = Object.fromEntries(
     .rm-arrow, .rm-item-edit, .rm-item-archive, .rm-form-save, .rm-form-cancel { background: none; border: 1px solid var(--line); border-radius: 3px; color: var(--ink-dim); cursor: pointer; font-family: var(--font-mono); font-size: 0.62rem; padding: 0.1rem 0.35rem; }
     .rm-arrow:hover, .rm-item-edit:hover, .rm-item-archive:hover, .rm-form-save:hover, .rm-form-cancel:hover { color: var(--accent); border-color: var(--accent); }
     .rm-form { display: flex; flex-direction: column; gap: 0.5rem; }
+    .rm-main > .rm-form { flex: 0 0 100%; }
     .rm-form input, .rm-form select { font-family: var(--font-mono); font-size: 0.8rem; background: transparent; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); padding: 0.3rem 0.4rem; }
     .rm-more { background: none; border: 0; color: var(--accent); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; opacity: 0.8; }
     .rm-more:hover { opacity: 1; text-decoration: underline; }
     .rm-skeleton { height: 0.9rem; border-radius: 3px; margin-block: 0.6rem; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
-    @media (max-width: 640px) { .rm-row { grid-template-columns: 2.6rem 1fr; } .rm-side { grid-column: 1 / -1; } }
+    @media (max-width: 640px) { .rm-row { grid-template-columns: 1fr; } .rm-side { grid-column: 1 / -1; } }
 
     /* Topic filter dims log rows instead of removing them — the roadmap lanes
        hard-filter instead, so the two columns read as one board. */
@@ -195,9 +197,9 @@ const topicColors: Record<string, string> = Object.fromEntries(
     /* Wide split: roadmap and mission log side by side, each its own scroll
        context. Below the breakpoint this whole block is inert — narrow keeps
        the stacked order and page scroll. */
-    @media (min-width: 90rem) {
+    @media (min-width: 78rem) {
       .board-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; align-items: start; }
-      .board-col { max-width: none; margin-inline: 0; }
+      .board-col { max-width: 100%; margin-inline: 0; }
       .board-roadmap #roadmap,
       .board-log .log-scroller { max-height: calc(100dvh - 26rem); min-height: 24rem; overflow-y: auto; overscroll-behavior: contain; }
     }
@@ -629,14 +631,15 @@ const topicColors: Record<string, string> = Object.fromEntries(
         article.className = 'rm-row';
         article.setAttribute('data-id', item.id);
 
+        var main = document.createElement('div');
+        main.className = 'rm-main';
+
         var pos = document.createElement('span');
         pos.className = 'rm-pos';
         pos.textContent = '#' + (item.pos + 1);
         pos.setAttribute('title', String(item.pos));
-        article.appendChild(pos);
+        main.appendChild(pos);
 
-        var main = document.createElement('div');
-        main.className = 'rm-main';
         if (rmEditorOpenId === item.id) {
           main.appendChild(rmRenderForm(item));
         } else {
@@ -1037,7 +1040,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
       sentinel.className = 'scroll-sentinel';
       placeSentinel();
 
-      var splitMq = window.matchMedia('(min-width: 90rem)');
+      var splitMq = window.matchMedia('(min-width: 78rem)');
       var observer = null;
       function bindSentinelObserver() {
         if (observer) observer.disconnect();
