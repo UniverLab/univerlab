@@ -1,6 +1,7 @@
-// Paper — the quiet motif for the cream `paper` surface (texforge): a scatter
-// of short fibres, the flecks in a laid sheet, lying still. The cursor is the
-// only input — passing over the stock nudges the fibres it crosses and gives
+// Paper — the quiet motif for the cream `paper` surface (texforge): a sparse
+// scatter of drifting typographic ink marks — short LaTeX tokens set in the
+// mono font, cross-fading in and out like a proof being set. The cursor is the
+// only stir — passing over the stock nudges the marks it crosses and gives
 // them a brief brightness bump that decays over ~1 s; an untouched page reads
 // as paper, not as an animation. It is picked in startBackground() by
 // `data-surface="paper"` rather than keyed on BgTheme, whose type the
@@ -22,32 +23,61 @@ interface PaperCtx {
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
+const TOKENS = ['\\begin', '\\end', '{}', '$', '\\ref', '[htbp]', '0.618', '\\to'];
+
 export function paper(ctx: PaperCtx): (t: number) => void {
   const { c } = ctx;
-  const N = Math.min(30, Math.max(16, Math.floor((ctx.w * ctx.h) / 34000)));
-  type Fibre = { x: number; y: number; a: number; len: number; al: number; vx: number; vy: number; va: number; glow: number };
-  const fibres: Fibre[] = Array.from({ length: N }, () => ({
-    x: rand(0, ctx.w),
-    y: rand(0, ctx.h),
-    a: rand(0, Math.PI),
-    len: rand(5, 17),
-    al: rand(0.2, 0.5),
-    vx: 0,
-    vy: 0,
-    va: 0,
-    glow: 0, // pointer-driven brightness bump (0 ⇒ byte-identical ambient draw)
-  }));
+  const N = Math.min(18, Math.max(12, Math.floor((ctx.w * ctx.h) / 68000)));
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  type Mark = {
+    tok: string;
+    x: number;
+    y: number;
+    a: number;
+    size: number;
+    al: number;
+    ix: number;
+    iy: number;
+    ia: number;
+    vx: number;
+    vy: number;
+    va: number;
+    glow: number;
+    age: number;
+    life: number;
+  };
+  const pick = () => TOKENS[Math.floor(Math.random() * TOKENS.length)];
+  const marks: Mark[] = Array.from({ length: N }, (_, i) => {
+    const life = rand(7000, 14000);
+    return {
+      tok: pick(),
+      x: rand(0, ctx.w),
+      y: rand(0, ctx.h),
+      a: ((i % 7) - 3) * 0.05,
+      size: rem * rand(0.9, 1.3),
+      al: rand(0.05, 0.12),
+      ix: ((i % 5) - 2) * 0.035,
+      iy: ((i % 3) - 1) * 0.035,
+      ia: ((i % 7) - 3) * 0.0003,
+      vx: 0,
+      vy: 0,
+      va: 0,
+      glow: 0, // pointer-driven brightness bump (0 ⇒ pure ambient draw)
+      age: rand(0, life),
+      life,
+    };
+  });
 
-  // Cursor nudge — fibres within reach pick up a directional kick along the
+  // Cursor nudge — marks within reach pick up a directional kick along the
   // pointer's travel (one impulse per frame) plus a brightness bump that
-  // decays in ~1 s; they damp back to rest. The first move only records
-  // where the pointer came from, so there is no jump from an off-screen
-  // origin. Touch input has no pointer to nudge with — the sheet stays still,
-  // and nothing drifts on its own. document-level (not window) so an Astro
-  // view transition cannot leave a ghost listener behind.
+  // decays in ~1 s; they damp back to their idle drift. The first move only
+  // records where the pointer came from, so there is no jump from an
+  // off-screen origin. Touch input has no pointer to nudge with — the sheet
+  // keeps its own quiet drift, and nothing else stirs it. document-level (not
+  // window) so an Astro view transition cannot leave a ghost listener behind.
   const REACH = 170;
-  const GAIN = 0.16;    // directional kick on touched fibres (~3× today's)
-  const VCAP = 3;       // px/frame velocity cap so a hard flick cannot fling a fibre
+  const GAIN = 0.16;    // directional kick on touched marks (~3× the old fibres')
+  const VCAP = 3;       // px/frame velocity cap so a hard flick cannot fling a mark
   let px = 0;
   let py = 0;
   let nx = 0;
@@ -102,14 +132,14 @@ export function paper(ctx: PaperCtx): (t: number) => void {
       const dx = nx - px;
       const dy = ny - py;
       if (dx || dy) {
-        for (const f of fibres) {
-          const d = Math.hypot(f.x - nx, f.y - ny);
+        for (const m of marks) {
+          const d = Math.hypot(m.x - nx, m.y - ny);
           if (d >= REACH) continue;
           const k = 1 - d / REACH;
-          f.vx = clamp(f.vx + dx * k * GAIN, -VCAP, VCAP);
-          f.vy = clamp(f.vy + dy * k * GAIN, -VCAP, VCAP);
-          f.va += (dx + dy) * k * 0.00012;          // visible reorientation
-          f.glow = Math.max(f.glow, 0.4 + 0.6 * k); // brightness bump, hottest at the cursor
+          m.vx = clamp(m.vx + dx * k * GAIN, -VCAP, VCAP);
+          m.vy = clamp(m.vy + dy * k * GAIN, -VCAP, VCAP);
+          m.va += (dx + dy) * k * 0.00012;          // visible reorientation
+          m.glow = Math.max(m.glow, 0.4 + 0.6 * k); // brightness bump, hottest at the cursor
         }
       }
       px = nx;
@@ -117,34 +147,53 @@ export function paper(ctx: PaperCtx): (t: number) => void {
     }
     // Frame-rate independent glow decay (τ = 400 ms ⇒ ~1 s); a bare `*= 0.94`
     // would silently double under the 30fps cap and worse if it ever changed.
-    for (const f of fibres) {
-      f.glow *= Math.exp(-dt / 400);
-      if (f.glow < 0.004) f.glow = 0; // ⇒ exactly lineWidth 1 and alpha f.al
+    for (const m of marks) {
+      m.glow *= Math.exp(-dt / 400);
+      if (m.glow < 0.004) m.glow = 0; // ⇒ exactly m.al * env
     }
 
     c.clearRect(0, 0, ctx.w, ctx.h);
-    c.strokeStyle = ctx.color;
-    for (const f of fibres) {
-      f.x += f.vx;
-      f.y += f.vy;
-      f.a += f.va;
-      f.vx *= 0.9;
-      f.vy *= 0.9;
-      f.va *= 0.9;
-      if (f.x < -20) f.x += ctx.w + 40;
-      else if (f.x > ctx.w + 20) f.x -= ctx.w + 40;
-      if (f.y < -20) f.y += ctx.h + 40;
-      else if (f.y > ctx.h + 20) f.y -= ctx.h + 40;
-      const ca = Math.cos(f.a) * f.len;
-      const sa = Math.sin(f.a) * f.len;
-      // When glow === 0 both reads reduce exactly to today's values:
-      //   lineWidth = 1, globalAlpha = f.al — idle look byte-identical.
-      c.lineWidth = 1 + f.glow;
-      c.globalAlpha = f.al + (0.95 - f.al) * f.glow;
-      c.beginPath();
-      c.moveTo(f.x - ca, f.y - sa);
-      c.lineTo(f.x + ca, f.y + sa);
-      c.stroke();
+    c.fillStyle = ctx.color; // bistre comes from backgrounds.ts — never hardcoded
+    c.textBaseline = 'top';
+    for (const m of marks) {
+      // Cross-fade clock — the proof being set. The increment is clamped so a
+      // huge dt after a hidden-tab pause cannot mass-respawn every mark (which
+      // would blank the sheet for the 1.5 s fade-in); glow decay above is safe
+      // unclamped (a huge dt just settles it to 0).
+      m.age += Math.min(dt, 250);
+      if (m.age >= m.life) {
+        m.tok = pick();
+        m.x = rand(0, ctx.w);
+        m.y = rand(0, ctx.h);
+        m.life = rand(7000, 14000);
+        m.age = 0;
+        m.glow = 0;
+        m.vx = m.ix;
+        m.vy = m.iy;
+        m.va = m.ia;
+      }
+      const env = Math.min(1, m.age / 1500) * Math.min(1, (m.life - m.age) / 1500);
+      // Excess velocity damps back to the idle drift (drift.ts EASE pattern);
+      // the position updates in the same frame as the cursor kick above, so a
+      // sweep displaces its marks immediately (well inside the 0.5 s bar).
+      m.vx = m.ix + (m.vx - m.ix) * 0.9;
+      m.vy = m.iy + (m.vy - m.iy) * 0.9;
+      m.va = m.ia + (m.va - m.ia) * 0.9;
+      m.x += m.vx;
+      m.y += m.vy;
+      m.a += m.va;
+      if (m.x < -140) m.x += ctx.w + 280;
+      else if (m.x > ctx.w + 140) m.x -= ctx.w + 280;
+      if (m.y < -50) m.y += ctx.h + 100;
+      else if (m.y > ctx.h + 50) m.y -= ctx.h + 100;
+      c.save();
+      c.font = `${m.size}px ui-monospace, "DejaVu Sans Mono", monospace`; // brain.ts stack
+      // When glow === 0 the read reduces exactly to ambient: m.al * env.
+      c.globalAlpha = Math.min(0.5, m.al * env + m.glow * 0.33);
+      c.translate(m.x, m.y);
+      c.rotate(m.a);
+      c.fillText(m.tok, 0, 0);
+      c.restore();
     }
     c.globalAlpha = 1;
   };
