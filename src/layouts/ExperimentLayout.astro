@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
@@ -91,6 +92,7 @@ const ogImage = `/og/${id}.png`;
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
+      <Banner id={id} color={exp.essenceHex} />
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
