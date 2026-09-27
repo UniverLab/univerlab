@@ -4,6 +4,13 @@
  *  counts, capped DPR, and animation paused while the tab is hidden. */
 
 import type { BgTheme as Theme } from '../lib/experiments';
+import { brain } from './brain';
+import { field } from './field';
+import { createSpotlight } from './spotlight';
+import { bubbles } from './bg-bubbles';
+import { drift } from './bg-drift';
+import { spiral } from './bg-spiral';
+import { paper } from './bg-paper';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -35,7 +42,17 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   resize();
   window.addEventListener('resize', debounce(resize, 200));
 
-  const runner = THEMES[theme] ?? THEMES.drift;
+  // The cream `paper` surface (texforge) mounts its own quiet motif instead of
+  // the experiment's BgTheme: forge embers are the wrong register on
+  // parchment, and BgTheme's type is owned by the experiment registry (out of
+  // scope to extend with a new key), so the surface flag is the selector.
+  // Reduced motion never reaches this module at all — ThemeBackground returns
+  // before importing it.
+  const isPaper = document.documentElement.dataset.surface === 'paper';
+  if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
+  const isPastel = document.documentElement.dataset.surface === 'pastel';
+  if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
+  const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.drift);
   const tick = runner(ctx);
 
   let raf = 0;
@@ -66,14 +83,22 @@ function debounce(fn: () => void, ms: number) {
   };
 }
 
+
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 type Runner = (ctx: Ctx) => (t: number) => void;
 
 const THEMES: Record<Theme, Runner> = {
   /* Cosmic — particles orbiting a gentle gravity well, faint constellations.
-     The universe / Pensamiento Cósmico of the main site. */
+   The universe / Pensamiento Cósmico of the main site. On the home page this
+   is replaced by the cursor-seeded living field (field.ts); every other
+   cosmic page keeps the gravity-well orbit byte-identical. The home flag is
+   set by Home.astro's module script, which runs (module = deferred) long
+   before ThemeBackground's load-time import resolves. */
   cosmic(ctx) {
+    if (typeof document !== 'undefined' && document.documentElement.dataset.page === 'home') {
+      return field(ctx);
+    }
     const { c } = ctx;
     const N = Math.min(90, Math.floor((ctx.w * ctx.h) / 16000));
     const ps = Array.from({ length: N }, () => spawn(ctx));
@@ -131,247 +156,12 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Golden fractal — the Fibonacci whirling squares (1,1,2,3,5,8,13,21…) with
-     the golden spiral they inscribe, drawn faint and static, while a sparkling
-     mote sweeps out along the spiral. A nod to the Fibonacci deck. Quorum. */
-  spiral(ctx) {
-    const { c } = ctx;
-    const K = Math.log(1.618) / (Math.PI / 2); // golden growth per radian
-    // Whirling-squares tiling in unit coords: each square's side follows the
-    // Fibonacci sequence, spiralling out left → top → right → bottom.
-    let bx = 0;
-    let by = 0;
-    let bw = 1;
-    let bh = 1;
-    const squares = [{ x: 0, y: 0, s: 1 }];
-    const dirs = ['left', 'top', 'right', 'bottom'];
-    for (let i = 0; i < 8; i++) {
-      const d = dirs[i % 4];
-      if (d === 'left') { const s = bh; bx -= s; bw += s; squares.push({ x: bx, y: by, s }); }
-      else if (d === 'top') { const s = bw; by -= s; bh += s; squares.push({ x: bx, y: by, s }); }
-      else if (d === 'right') { const s = bh; squares.push({ x: bx + bw, y: by, s }); bw += s; }
-      else { const s = bw; squares.push({ x: bx, y: by + bh, s }); bh += s; }
-    }
-    // Spiral pole ≈ the eye the squares whirl into.
-    const pu = 0.0;
-    const pv = 0.5;
-    const rMin = 0.28;
-    const rMax = Math.max(bw, bh) * 0.5;
-    const thMax = Math.log(rMax / rMin) / K;
-    const A = ctx.color.length === 7 ? ctx.color : '#e6b24a';
+  /* Golden fractal — the Fibonacci whirling squares with the golden
+     spiral they inscribe, and sparks wandering it. Quorum. The cursor
+     biases spark spawning toward the nearest arc point (bg-spiral.ts). */
+  spiral,
 
-    // A handful of sparks wander the spiral at once — a new one spawns every
-    // few seconds and lives ~10–15 s, so several drift about at any moment,
-    // each on its own erratic path (sometimes doubling back).
-    interface Spark { born: number; life: number; s0: number; drift: number; amp: number; w1: number; w2: number; p1: number; p2: number; }
-    const sparks: Spark[] = [];
-    let nextSpawn = 300 + Math.random() * 1200;
-    // Fold a value into [lo, hi] by reflection, so a spark bounces off the eye
-    // and the rim instead of clamping (and sticking) there.
-    const reflect = (q: number, lo: number, hi: number) => {
-      const r = hi - lo;
-      const m = (((q - lo) % (2 * r)) + 2 * r) % (2 * r);
-      return m <= r ? lo + m : hi - (m - r);
-    };
-
-    return (t) => {
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      // Fit the tiling to a tall region on the right, static.
-      const S = (ctx.h * 0.82) / bh;
-      const ox = ctx.w * 0.64 - (bx + bw / 2) * S;
-      const oy = ctx.h * 0.5 - (by + bh / 2) * S;
-      const toX = (u: number) => ox + u * S;
-      const toY = (v: number) => oy + v * S;
-
-      // Whirling squares — very faint structure.
-      c.strokeStyle = A;
-      c.lineWidth = 1;
-      c.globalAlpha = 0.13;
-      for (const q of squares) {
-        c.strokeRect(toX(q.x), toY(q.y), q.s * S, q.s * S);
-      }
-
-      // The golden spiral through them.
-      c.lineCap = 'round';
-      c.lineWidth = 1.3;
-      c.globalAlpha = 0.13;
-      c.beginPath();
-      for (let i = 0; i <= 220; i++) {
-        const th = (i / 220) * thMax;
-        const r = rMin * Math.exp(K * th);
-        const x = toX(pu + r * Math.cos(th));
-        const y = toY(pv + r * Math.sin(th));
-        i ? c.lineTo(x, y) : c.moveTo(x, y);
-      }
-      c.stroke();
-
-      // Spawn a new spark every 3–5 s.
-      if (t >= nextSpawn) {
-        sparks.push({
-          born: t,
-          life: 10000 + Math.random() * 5000, // 10–15 s
-          s0: 0.05 + Math.random() * 0.4,
-          drift: -0.2 + Math.random() * 0.7, // net drift; can wander inward
-          amp: 0.16 + Math.random() * 0.18,
-          w1: 0.0005 + Math.random() * 0.0007,
-          w2: 0.0011 + Math.random() * 0.001,
-          p1: Math.random() * 6.283,
-          p2: Math.random() * 6.283,
-        });
-        nextSpawn = t + 3000 + Math.random() * 2000; // 3–5 s
-      }
-      for (let k = sparks.length - 1; k >= 0; k--) {
-        const sp = sparks[k];
-        const lt = t - sp.born;
-        if (lt > sp.life) {
-          sparks.splice(k, 1);
-          continue;
-        }
-        const u = lt / sp.life;
-        const env = Math.min(1, u / 0.12) * Math.min(1, (1 - u) / 0.15); // fade in/out
-        let s = sp.s0 + sp.drift * u +
-          sp.amp * (Math.sin(lt * sp.w1 + sp.p1) + 0.6 * Math.sin(lt * sp.w2 + sp.p2));
-        s = reflect(s, 0.02, 0.98);
-        const rHead = rMin + s * (rMax - rMin);
-        const thHead = Math.log(rHead / rMin) / K;
-        const hx = toX(pu + rHead * Math.cos(thHead));
-        const hy = toY(pv + rHead * Math.sin(thHead));
-        const tw = 0.6 + 0.4 * Math.sin(t * 0.005 + sp.p1); // gentle twinkle
-        const rad = 7 * (0.8 + 0.2 * tw);
-        const g = c.createRadialGradient(hx, hy, 0, hx, hy, rad);
-        g.addColorStop(0, A + 'aa');
-        g.addColorStop(0.4, A + '2a');
-        g.addColorStop(1, A + '00');
-        c.globalAlpha = env;
-        c.fillStyle = g;
-        c.beginPath();
-        c.arc(hx, hy, rad, 0, Math.PI * 2);
-        c.fill();
-        c.fillStyle = A;
-        c.globalAlpha = env * (0.35 + 0.35 * tw);
-        c.beginPath();
-        c.arc(hx, hy, 1.4, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
-
-  /* Brian's Brain — the same 3-state automaton as the Canopy TUI, rendered the
-     way the terminal draws it: in Braille glyphs (U+2800–U+28FF). The automaton
-     runs on a fine sub-grid and every 2×4 block of cells is packed into one
-     Braille character, so the field reads as varied glyphs instead of uniform
-     dots. Firing cells are drawn bright, dying cells faint. Starts sparse and
-     reseeds in small clusters when activity fades, so it revives instead of
-     flickering into static. */
-  brain(ctx) {
-    const { c } = ctx;
-    // On-screen size of one Braille character; each packs 2×4 automaton cells.
-    const charW = 14;
-    const charH = 24;
-    // Sub-cell → Braille dot bit, indexed [row 0..3][col 0..1].
-    const DOT = [
-      [0x01, 0x08],
-      [0x02, 0x10],
-      [0x04, 0x20],
-      [0x40, 0x80],
-    ];
-    const glyph = (mask: number) => String.fromCharCode(0x2800 + mask);
-
-    let cols = 0; // character columns
-    let rows = 0; // character rows
-    let gw = 0; // sub-grid width  (cols × 2)
-    let gh = 0; // sub-grid height (rows × 4)
-    let grid: Uint8Array;
-
-    function init() {
-      cols = Math.ceil(ctx.w / charW) + 1;
-      rows = Math.ceil(ctx.h / charH) + 1;
-      gw = cols * 2;
-      gh = rows * 4;
-      grid = new Uint8Array(gw * gh);
-      // start with very little noise — the field should read as sparse and quiet
-      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.012 ? 1 : 0;
-    }
-    init();
-
-    const idx = (x: number, y: number) => ((y + gh) % gh) * gw + ((x + gw) % gw);
-
-    // A cluster of adjacent firing cells: neighbours then see exactly 2 firing
-    // cells and ignite, so reseeding actually propagates instead of dying out.
-    function seedCluster() {
-      const x = Math.floor(Math.random() * gw);
-      const y = Math.floor(Math.random() * gh);
-      grid[idx(x, y)] = 1;
-      grid[idx(x + 1, y)] = 1;
-      grid[idx(x, y + 1)] = 1;
-    }
-
-    let acc = 0;
-    let prev = 0;
-    return (t) => {
-      if (cols !== Math.ceil(ctx.w / charW) + 1) init();
-      acc += prev ? t - prev : 0;
-      prev = t;
-      if (acc > 130) {
-        acc = 0;
-        const next = new Uint8Array(grid.length);
-        let firing = 0;
-        for (let y = 0; y < gh; y++) {
-          for (let x = 0; x < gw; x++) {
-            const s = grid[y * gw + x];
-            if (s === 1) next[y * gw + x] = 2; // firing -> dying
-            else if (s === 2) next[y * gw + x] = 0; // dying -> ready
-            else {
-              let n = 0;
-              for (let dy = -1; dy <= 1; dy++)
-                for (let dx = -1; dx <= 1; dx++)
-                  if ((dx || dy) && grid[idx(x + dx, y + dy)] === 1) n++;
-              next[y * gw + x] = n === 2 ? 1 : 0;
-              if (n === 2) firing++;
-            }
-          }
-        }
-        grid = next;
-        // Gentle revival: only step in once activity is low, with a few
-        // propagating clusters so the field stays sparse rather than busy.
-        const threshold = Math.max(5, Math.floor(grid.length * 0.0035));
-        if (firing < threshold) {
-          const clusters = Math.max(2, Math.floor(grid.length * 0.0007));
-          for (let i = 0; i < clusters; i++) seedCluster();
-        }
-      }
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      c.fillStyle = ctx.color;
-      c.textBaseline = 'top';
-      c.font = `${charH}px ui-monospace, "DejaVu Sans Mono", monospace`;
-      for (let cy = 0; cy < rows; cy++) {
-        for (let cx = 0; cx < cols; cx++) {
-          let fire = 0;
-          let dying = 0;
-          for (let r = 0; r < 4; r++) {
-            for (let col = 0; col < 2; col++) {
-              const s = grid[(cy * 4 + r) * gw + (cx * 2 + col)];
-              if (s === 1) fire |= DOT[r][col];
-              else if (s === 2) dying |= DOT[r][col];
-            }
-          }
-          if (!fire && !dying) continue;
-          const px = cx * charW;
-          const py = cy * charH;
-          if (dying) {
-            c.globalAlpha = 0.07;
-            c.fillText(glyph(dying), px, py);
-          }
-          if (fire) {
-            c.globalAlpha = 0.26;
-            c.fillText(glyph(fire), px, py);
-          }
-        }
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  brain,
 
   /* Primitives — lines, arcs, bézier curves and dimension lines (cotas)
      emerging at random positions, drawing themselves in, then fading. The
@@ -502,6 +292,29 @@ const THEMES: Record<Theme, Runner> = {
     let shot: Shot | null = null;
     let nextShot = rand(1000, 2800);
     let acc = 0;
+    // pointer-tracing state
+    let mx = -9999;
+    let my = -9999;
+    let hasPointer = false;
+    const traceSeen = new Map<string, number>();
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        mx = e.clientX;
+        my = e.clientY;
+        hasPointer = true;
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false;
+      },
+      { passive: true, signal: ac.signal }
+    );
     // aurora curtains — slow undulating bands near the top (green + essence)
     const aurora = [
       { color: 'rgb(110,231,183)', yBase: ctx.h * 0.14, amp: 26, freq: 0.005, sp: 0.00028, ph: 0, h: 120, a: 0.09 },
@@ -509,6 +322,10 @@ const THEMES: Record<Theme, Runner> = {
     ];
     let prevT = 0;
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
       const dt = prevT ? t - prevT : 16;
       prevT = t;
       c.clearRect(0, 0, ctx.w, ctx.h);
@@ -549,6 +366,8 @@ const THEMES: Record<Theme, Runner> = {
       }
 
       // stars — rigid rotation around the pole, each twinkling on its own
+      // collect positions for pointer tracing
+      const starPos: { x: number; y: number }[] = [];
       for (const s of stars) {
         s.ang += OMEGA * dt;
         let x = poleX + s.rad * Math.cos(s.ang);
@@ -562,6 +381,7 @@ const THEMES: Record<Theme, Runner> = {
           x = poleX + s.rad * Math.cos(s.ang);
           y = poleY + s.rad * Math.sin(s.ang);
         }
+        starPos.push({ x, y });
         let tw = s.base + s.amp * Math.sin(t * 0.0016 * s.sp + s.ph);
         tw = tw < 0 ? 0 : tw > 1 ? 1 : tw;
         if (s.chroma) {
@@ -612,6 +432,63 @@ const THEMES: Record<Theme, Runner> = {
         c.stroke();
         if (k >= 1) shot = null;
       }
+
+      // pointer-traced edges between nearby stars
+      if (hasPointer && starPos.length) {
+        // collect indices of stars within 130px of cursor
+        const nearby: number[] = [];
+        for (let i = 0; i < starPos.length; i++) {
+          const dx = starPos[i].x - mx;
+          const dy = starPos[i].y - my;
+          if (dx * dx + dy * dy < 16900) nearby.push(i); // 130^2
+        }
+        // record live edges between nearby pairs within 90px
+        for (let a = 0; a < nearby.length; a++) {
+          const i = nearby[a];
+          for (let b = a + 1; b < nearby.length; b++) {
+            const j = nearby[b];
+            const dx = starPos[i].x - starPos[j].x;
+            const dy = starPos[i].y - starPos[j].y;
+            if (dx * dx + dy * dy < 8100) { // 90^2
+              traceSeen.set(`${i}-${j}`, t);
+            }
+          }
+        }
+      }
+      if (starPos.length) {
+        // draw and sweep edges
+        const edges: { i: number; j: number; age: number }[] = [];
+        for (const [key, seen] of traceSeen) {
+          const age = t - seen;
+          if (age > 1500) {
+            traceSeen.delete(key);
+          } else {
+            const [si, sj] = key.split('-').map(Number);
+            if (si < starPos.length && sj < starPos.length) {
+              edges.push({ i: si, j: sj, age });
+            }
+          }
+        }
+        // cap at ~40 nearest-first
+        edges.sort((e1, e2) => {
+          const d1 = (starPos[e1.i].x - mx) ** 2 + (starPos[e1.i].y - my) ** 2;
+          const d2 = (starPos[e2.i].x - mx) ** 2 + (starPos[e2.i].y - my) ** 2;
+          return d1 - d2;
+        });
+        const maxEdges = 40;
+        c.strokeStyle = '#eef2ff';
+        c.lineWidth = 1;
+        for (let e = 0; e < Math.min(maxEdges, edges.length); e++) {
+          const { i, j, age } = edges[e];
+          const a = 0.14 * (1 - age / 1500);
+          c.globalAlpha = a;
+          c.beginPath();
+          c.moveTo(starPos[i].x, starPos[i].y);
+          c.lineTo(starPos[j].x, starPos[j].y);
+          c.stroke();
+        }
+      }
+
       c.globalAlpha = 1;
     };
   },
@@ -717,58 +594,9 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Bubbles — soft pastel circles floating upward, like champagne bubbles
-     or soap bubbles. GitKit's cherry-on-top aesthetic. */
-  bubbles(ctx) {
-    const { c } = ctx;
-    const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
-    const hex = ctx.bg.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    const dark = lum < 0.4;
-    const N = Math.min(35, Math.floor((ctx.w * ctx.h) / 35000));
-    type Bubble = { x: number; y: number; r: number; vy: number; vx: number; ph: number; opacity: number };
-    const bubbles: Bubble[] = Array.from({ length: N }, () => ({
-      x: rand(0, ctx.w),
-      y: rand(0, ctx.h),
-      r: rand(12, 35),
-      vy: rand(0.25, 0.7),
-      vx: rand(-0.3, 0.3),
-      ph: rand(0, Math.PI * 2),
-      opacity: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
-    }));
-    let prevT = 0;
-    return (t) => {
-      const dt = prevT ? t - prevT : 16;
-      prevT = t;
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      for (const b of bubbles) {
-        b.y -= b.vy;
-        b.x += Math.sin(t * 0.0008 + b.ph) * 0.5 + b.vx;
-        if (b.y < -b.r * 2) {
-          b.y = ctx.h + b.r * 2;
-          b.x = rand(0, ctx.w);
-        }
-        const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + (dark ? '20' : '80'));
-        grad.addColorStop(0.5, A + (dark ? '10' : '50'));
-        grad.addColorStop(1, A + '00');
-        c.globalAlpha = b.opacity;
-        c.fillStyle = grad;
-        c.beginPath();
-        c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        c.fill();
-        c.globalAlpha = b.opacity * (dark ? 0.3 : 0.8);
-        c.fillStyle = dark ? '#ffffff' : A;
-        c.beginPath();
-        c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  /* Bubbles — GitKit's drifting commit graph. The cursor sows fresh
+     bubbles under it that join the upward float (bg-bubbles.ts). */
+  bubbles,
 
   /* Industrial — slow-turning gears and copper sparks rising from below.
      Ghscaff's foundry floor. */
@@ -866,6 +694,13 @@ const THEMES: Record<Theme, Runner> = {
      joints. Ghscaff. */
   scaffold(ctx) {
     const { c } = ctx;
+    // Midnight re-tint on the industrial surface only: the registry still
+    // carries copper for OG/home, but the live lattice reads blueprint-violet
+    // behind the glass. c.strokeStyle keeps using ctx.color — the caller value
+    // is swapped here, no second hue is introduced.
+    if (typeof document !== 'undefined' && document.documentElement.dataset.surface === 'industrial') {
+      ctx.color = '#8b7cf6';
+    }
     const g = 84;
     let cols = 0;
     let rows = 0;
@@ -887,7 +722,13 @@ const THEMES: Record<Theme, Runner> = {
     for (let i = 0; i < 4; i++) add();
     let spawnAcc = 0;
     let prevT = 0;
+    // Cursor-anchored spotlight: one radial violet-white wash following the
+    // pointer, lerped to avoid jitter. Touch parks at 50%/30%; reduced-motion
+    // never reaches here (ThemeBackground returns early).
+    const spot = createSpotlight(ctx);
     return (t) => {
+      const sp = spot.step();
+      if (!sp) return;
       if (cols !== Math.ceil(ctx.w / g) + 1) dims();
       const dt = prevT ? t - prevT : 16;
       prevT = t;
@@ -943,33 +784,15 @@ const THEMES: Record<Theme, Runner> = {
           }
         }
       }
+      // ONE cursor-anchored spotlight: violet-white wash over the grid, under
+      // content. Single radial gradient, composited additively on the dark.
+      spot.paint(c, sp.x, sp.y);
       c.globalAlpha = 1;
     };
   },
 
-  /* Drift — a calm field of slow particles in the essence color. Default. */
-  drift(ctx) {
-    const { c } = ctx;
-    const N = Math.min(54, Math.floor((ctx.w * ctx.h) / 26000));
-    const ps = Array.from({ length: N }, () => ({
-      x: Math.random() * ctx.w,
-      y: Math.random() * ctx.h,
-      vx: rand(-0.18, 0.18),
-      vy: rand(-0.18, 0.18),
-      s: rand(0.8, 1.8),
-    }));
-    return () => {
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      c.fillStyle = ctx.color;
-      for (const p of ps) {
-        p.x = (p.x + p.vx + ctx.w) % ctx.w;
-        p.y = (p.y + p.vy + ctx.h) % ctx.h;
-        c.globalAlpha = 0.7;
-        c.beginPath();
-        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  /* Drift — a calm field of slow particles in the essence color.
+     Default. The cursor stirs and flashes the motes it sweeps past
+     (bg-drift.ts). */
+  drift,
 };
