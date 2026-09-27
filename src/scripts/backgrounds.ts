@@ -182,8 +182,11 @@ const THEMES: Record<Theme, Runner> = {
 
     // A handful of sparks wander the spiral at once — a new one spawns every
     // few seconds and lives ~10–15 s, so several drift about at any moment,
-    // each on its own erratic path (sometimes doubling back).
-    interface Spark { born: number; life: number; s0: number; drift: number; amp: number; w1: number; w2: number; p1: number; p2: number; }
+    // each on its own erratic path (sometimes doubling back). When the
+    // pointer is active the spawn cadence tightens and each new spark is
+    // biased toward the arc point nearest the cursor (so the reaction reads
+    // within the 0.5 s bar); idle cadence is byte-identical to before.
+    interface Spark { born: number; life: number; s0: number; drift: number; amp: number; w1: number; w2: number; p1: number; p2: number; fast: boolean; }
     const sparks: Spark[] = [];
     let nextSpawn = 300 + Math.random() * 1200;
     // Fold a value into [lo, hi] by reflection, so a spark bounces off the eye
@@ -194,7 +197,43 @@ const THEMES: Record<Theme, Runner> = {
       return m <= r ? lo + m : hi - (m - r);
     };
 
+    // Cursor input — pointer is read once per move; the tick decides whether
+    // we are still "active" (the pointer has moved within the last second).
+    // Touch input is ignored entirely.
+    const POINTER_IDLE_MS = 1000;
+    const ACTIVE_EVERY_MIN = 750;  // ms — fastest cadence while the pointer is moving
+    const ACTIVE_EVERY_RND = 450;  // ms — added jitter on top
+    const MAX_SPARKS = 16;         // cap so an active pointer never saturates the spiral
+    let tx = ctx.w * 0.5;
+    let ty = ctx.h * 0.3;
+    let hasPointer = false;
+    let lastMoveMs = -Infinity;
+    let sawActive = false;
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        tx = e.clientX;
+        ty = e.clientY;
+        hasPointer = true;
+        lastMoveMs = performance.now();
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false;
+      },
+      { passive: true, signal: ac.signal }
+    );
+
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
       c.clearRect(0, 0, ctx.w, ctx.h);
       // Fit the tiling to a tall region on the right, static.
       const S = (ctx.h * 0.82) / bh;
@@ -225,20 +264,63 @@ const THEMES: Record<Theme, Runner> = {
       }
       c.stroke();
 
-      // Spawn a new spark every 3–5 s.
-      if (t >= nextSpawn) {
+      // Pointer activity gate. rAF `t` and performance.now() share the time
+      // origin so the comparison is sound.
+      const active = hasPointer && t - lastMoveMs < POINTER_IDLE_MS;
+      // Cadence pull on the idle→active transition: the first biased spark
+      // must land within the 0.5 s bar; without this pull the existing
+      // 3–5 s ambient cadence would skip the very first move.
+      if (active && !sawActive) {
+        nextSpawn = Math.min(nextSpawn, t + 180);
+      }
+      sawActive = active;
+
+      // Spawn a new spark. Idle: today's ambient (random s0, 3–5 s cadence).
+      // Active: nearest-arc-point bias + faster cadence, capped at MAX_SPARKS
+      // (skip the push at the cap — popping an on-screen spark would be the
+      // wrong kind of visible).
+      if (t >= nextSpawn && (!active || sparks.length < MAX_SPARKS)) {
+        let s0: number;
+        if (!active) {
+          s0 = 0.05 + Math.random() * 0.4;
+        } else {
+          // Sample the same curve the spark loop rides; pick the θ whose point
+          // is closest to the cursor, convert to the `s` the spark consumes.
+          // 240 samples once per spawn, not per frame — cheap.
+          const rect = ctx.canvas.getBoundingClientRect();
+          const mx = tx - rect.left;
+          const my = ty - rect.top;
+          let best = 0;
+          let bestD = Infinity;
+          for (let i = 0; i <= 240; i++) {
+            const th = (i / 240) * thMax;
+            const r = rMin * Math.exp(K * th);
+            const d = (toX(pu + r * Math.cos(th)) - mx) ** 2 +
+                      (toY(pv + r * Math.sin(th)) - my) ** 2;
+            if (d < bestD) { bestD = d; best = th; }
+          }
+          const rN = rMin * Math.exp(K * best);
+          const sNear = (rN - rMin) / (rMax - rMin);
+          s0 = reflect(sNear + rand(-0.05, 0.05), 0.03, 0.97);
+        }
         sparks.push({
           born: t,
           life: 10000 + Math.random() * 5000, // 10–15 s
-          s0: 0.05 + Math.random() * 0.4,
+          s0,
           drift: -0.2 + Math.random() * 0.7, // net drift; can wander inward
           amp: 0.16 + Math.random() * 0.18,
           w1: 0.0005 + Math.random() * 0.0007,
           w2: 0.0011 + Math.random() * 0.001,
           p1: Math.random() * 6.283,
           p2: Math.random() * 6.283,
+          // Pointer-born sparks ramp up fast: the ambient fade-in covers 12 %
+          // of a 10–15 s life (≈1.4 s), which would miss the 0.5 s bar by a
+          // mile. Idle sparks keep today's slow ramp byte-for-byte.
+          fast: active,
         });
-        nextSpawn = t + 3000 + Math.random() * 2000; // 3–5 s
+        nextSpawn = t + (active
+          ? ACTIVE_EVERY_MIN + Math.random() * ACTIVE_EVERY_RND // 0.75–1.2 s
+          : 3000 + Math.random() * 2000);                       // 3–5 s ambient
       }
       for (let k = sparks.length - 1; k >= 0; k--) {
         const sp = sparks[k];
@@ -248,7 +330,10 @@ const THEMES: Record<Theme, Runner> = {
           continue;
         }
         const u = lt / sp.life;
-        const env = Math.min(1, u / 0.12) * Math.min(1, (1 - u) / 0.15); // fade in/out
+        // Fade out over the last 15 % as before; fade in over 12 % of the
+        // life (ambient, ≈1.4 s) or the first 200 ms (pointer-born).
+        const env = (sp.fast ? Math.min(1, lt / 200) : Math.min(1, u / 0.12)) *
+          Math.min(1, (1 - u) / 0.15);
         let s = sp.s0 + sp.drift * u +
           sp.amp * (Math.sin(lt * sp.w1 + sp.p1) + 0.6 * Math.sin(lt * sp.w2 + sp.p2));
         s = reflect(s, 0.02, 0.98);
@@ -713,7 +798,10 @@ const THEMES: Record<Theme, Runner> = {
   /* Bubbles — GitKit's drifting commit graph: soft orbs rise like bubbles,
      each drawn as a commit node (filled core + ring), linked by gitgraph
      lane segments that re-link from live positions so the graph breathes.
-     The cursor stirs nearby orbs; they ease back to their rise. */
+     The cursor is the only input: sweeping the pointer sows fresh bubbles
+     under it (throttled to ~275 ms apart) that join the upward float and
+     glow visibly for ~1 s before settling to ambient; parked the field
+     reads as before. */
   bubbles(ctx) {
     const { c } = ctx;
     const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
@@ -723,8 +811,22 @@ const THEMES: Record<Theme, Runner> = {
     const b = parseInt(hex.substring(4, 6), 16);
     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     const dark = lum < 0.4;
+    // The pastel canvas is capped at 0.12 element opacity (§1.2). The
+    // largest legal lift is internal alpha → 1.0 plus a stroke mixed 45 %
+    // toward black (same hue, no new colour token). On the dark branch the
+    // ring/core stays white, so shadeA degenerates to #ffffff and no helper
+    // work is wasted.
+    const shadeA = (() => {
+      if (dark) return '#ffffff';
+      const ar = parseInt(A.substring(1, 3), 16);
+      const ag = parseInt(A.substring(3, 5), 16);
+      const ab = parseInt(A.substring(5, 7), 16);
+      const mix = (v: number) => Math.round(v + (0 - v) * 0.45);
+      const hx = (v: number) => v.toString(16).padStart(2, '0');
+      return '#' + hx(mix(ar)) + hx(mix(ag)) + hx(mix(ab));
+    })();
     const N = Math.min(35, Math.floor((ctx.w * ctx.h) / 35000));
-    type Bubble = { x: number; y: number; r: number; vy: number; vy0: number; vx: number; ph: number; opacity: number };
+    type Bubble = { x: number; y: number; r: number; vy: number; vy0: number; vx: number; ph: number; amb: number; glow: number; extra: boolean };
     const bubbles: Bubble[] = Array.from({ length: N }, () => {
       const vy = rand(0.25, 0.7);
       return {
@@ -735,27 +837,69 @@ const THEMES: Record<Theme, Runner> = {
         vy0: vy,
         vx: rand(-0.3, 0.3),
         ph: rand(0, Math.PI * 2),
-        opacity: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
+        amb: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55),
+        glow: 0,    // pointer-driven brightness bump (0 ⇒ ambient draw is byte-identical)
+        extra: false,
       };
     });
-    // Cursor stir (same shape as the scaffold spotlight, inlined — no import):
-    // a lerped pointer; orbs within REACH pick up a sideways impulse and ease
-    // back. Touch input never drags; leaving the window parks at 50%/30%.
-    // Reduced motion never reaches here (ThemeBackground returns early).
-    const REACH = 160;
-    let tx = ctx.w * 0.5;
-    let ty = ctx.h * 0.3;
-    let sx = tx;
-    let sy = ty;
+    // Cursor sowing — brain.ts's "seed along path" model, throttled to one
+    // bubble every SPAWN_EVERY ms, capped at MAX_EXTRAS live at once. Touch
+    // never spawns; the pointerout gate stops further spawns when the pointer
+    // leaves the window. document-level so an Astro view transition cannot
+    // leave a ghost listener behind.
+    const SPAWN_EVERY = 275;  // ms — spec: ~250–300 per cursor bubble
+    const MAX_EXTRAS = 24;    // cursor-born bubbles on top of the N ambient ones
+    const GLOW_TAU = 600;     // ms — frame-rate independent decay of the spawn flash
+    const POP_MS = 450;       // ms — expanding birth ring
+    let tx = 0;
+    let ty = 0;
     let hasPointer = false;
+    let lastSpawnMs = -Infinity;
+    const pops: { x: number; y: number; born: number }[] = [];
     const ac = new AbortController();
     document.addEventListener(
       'pointermove',
       (e: PointerEvent) => {
         if (e.pointerType === 'touch') return;
+        const now = performance.now();
         tx = e.clientX;
         ty = e.clientY;
-        hasPointer = true;
+        // The first move after entering (or re-entering) the window only
+        // seeds the pointer record: the pointerout gate has just been lifted
+        // and a stale origin must never sow a bubble (no off-screen jump).
+        // That gate is what stops spawning once the pointer leaves.
+        if (!hasPointer) {
+          hasPointer = true;
+          return;
+        }
+        if (now - lastSpawnMs < SPAWN_EVERY) return;
+        lastSpawnMs = now;
+        const rect = ctx.canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(ctx.w, tx - rect.left));
+        const y = Math.max(0, Math.min(ctx.h, ty - rect.top));
+        // Cap the live extras — drop the highest (smallest y ≈ oldest ≈
+        // nearest its exit, glow long faded) rather than splice an on-screen
+        // orb, which would read as a pop in the wrong sense.
+        const extras = bubbles.filter((bb) => bb.extra);
+        if (extras.length >= MAX_EXTRAS) {
+          let victim = extras[0];
+          for (const bb of extras) if (bb.y < victim.y) victim = bb;
+          bubbles.splice(bubbles.indexOf(victim), 1);
+        }
+        const vy = rand(0.45, 0.9);   // joins the upward float immediately
+        bubbles.push({
+          x,
+          y,
+          r: rand(16, 30),
+          vy,
+          vy0: vy,
+          vx: rand(-0.15, 0.15),
+          ph: rand(0, Math.PI * 2),
+          amb: rand(dark ? 0.06 : 0.3, dark ? 0.15 : 0.55), // same band as ambient
+          glow: 1,
+          extra: true,
+        });
+        pops.push({ x, y, born: now });
       },
       { passive: true, signal: ac.signal }
     );
@@ -766,33 +910,61 @@ const THEMES: Record<Theme, Runner> = {
       },
       { passive: true, signal: ac.signal }
     );
+    // Lerp helpers used only by the glow-lifted draws; glow === 0 ⇒ the
+    // original hex byte / number is returned exactly, so ambient is unchanged.
+    const lerpStop = (from: string, to: string, k: number) => {
+      const a = parseInt(from, 16);
+      const b = parseInt(to, 16);
+      return Math.round(a + (b - a) * k).toString(16).padStart(2, '0');
+    };
+    const lerpNum = (a: number, b: number, k: number) => a + (b - a) * k;
+
     let prevT = 0;
     return (t) => {
       if (!ctx.canvas.isConnected) {
         ac.abort();
         return;
       }
-      if (!hasPointer) {
-        tx = ctx.w * 0.5;
-        ty = ctx.h * 0.3;
-      }
-      sx += (tx - sx) * 0.08;
-      sy += (ty - sy) * 0.08;
       const dt = prevT ? t - prevT : 16;
       prevT = t;
+      // Frame-rate independent glow decay (τ = 600 ms ⇒ ~1 s); a bare
+      // `*= 0.94` would silently double under the 30fps cap and worse if it
+      // ever changed.
+      const glowDecay = Math.exp(-dt / GLOW_TAU);
+      for (const b of bubbles) {
+        b.glow *= glowDecay;
+        // Snap to exactly 0 once the flash is invisible (ΔL < 0.1 on the
+        // 0.12 canvas), so a recycled extra is *byte*-identical to an
+        // ambient bubble again instead of carrying a forever-tiny glow.
+        if (b.glow < 0.004) b.glow = 0;
+      }
+
       c.clearRect(0, 0, ctx.w, ctx.h);
+      // Birth pops first (under the bubbles): expanding ring, fades out.
+      // The motion cue survives the 0.12 canvas opacity cap because the
+      // ring is drawn at internal alpha 1.0.
+      const now = performance.now();
+      c.strokeStyle = shadeA;
+      c.lineWidth = 1.5;
+      for (let i = pops.length - 1; i >= 0; i--) {
+        const p = pops[i];
+        const k = (now - p.born) / POP_MS;
+        if (k >= 1) {
+          pops.splice(i, 1);
+          continue;
+        }
+        c.globalAlpha = 1 - k;
+        c.beginPath();
+        c.arc(p.x, p.y, 8 + 38 * k, 0, Math.PI * 2);
+        c.stroke();
+      }
+      // Ambient physics — same as before, with the old sideways stir removed.
+      // The vy ease-back to vy0 is kept (extras born under the cursor pick up
+      // the same rise rate, with no special-case code path).
       for (const b of bubbles) {
         b.y -= b.vy;
         b.x += Math.sin(t * 0.0008 + b.ph) * 0.5 + b.vx;
-        const dx = b.x - sx;
-        const dy = b.y - sy;
-        if (Math.hypot(dx, dy) < REACH) {
-          b.vx += dx * 0.00012 * dt;
-          if (b.vx > 0.6) b.vx = 0.6;
-          else if (b.vx < -0.6) b.vx = -0.6;
-          b.vy *= 0.995; // tiny damp: orbs near the pointer pause their rise
-        }
-        b.vy += (b.vy0 - b.vy) * 0.02; // …and ease back to their own rise rate
+        b.vy += (b.vy0 - b.vy) * 0.02;
         b.vx *= 0.985;
         if (b.y < -b.r * 2) {
           b.y = ctx.h + b.r * 2;
@@ -816,24 +988,31 @@ const THEMES: Record<Theme, Runner> = {
         c.stroke();
       }
       // Nodes over the lanes: the halo wash, then the commit core + ring.
+      // ambient (glow = 0) ⇒ every expression collapses to today's bytes:
+      //   opacity = amb, halos use '80'/'50' (light) or '20'/'10' (dark),
+      //   core fill = (dark ? '#ffffff' : A), line width = 1.
       for (const b of bubbles) {
-        const grad = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0, A + (dark ? '20' : '80'));
-        grad.addColorStop(0.5, A + (dark ? '10' : '50'));
-        grad.addColorStop(1, A + '00');
-        c.globalAlpha = b.opacity;
-        c.fillStyle = grad;
+        const opacity = b.amb + (1 - b.amb) * b.glow;
+        const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        g.addColorStop(0, A + lerpStop(dark ? '20' : '80', 'ff', b.glow));
+        g.addColorStop(0.5, A + lerpStop(dark ? '10' : '50', '66', b.glow));
+        g.addColorStop(1, A + '00');
+        c.globalAlpha = opacity;
+        c.fillStyle = g;
         c.beginPath();
         c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         c.fill();
-        c.globalAlpha = b.opacity * (dark ? 0.3 : 0.8);
-        c.fillStyle = dark ? '#ffffff' : A;
+        // Ring/core: darker same-hue stroke while glowing lifts the contrast
+        // further (ΔL 21 → 25 on pastel); the dark branch keeps white.
+        const ringA = b.glow > 0 ? shadeA : (dark ? '#ffffff' : A);
+        c.globalAlpha = opacity * lerpNum(dark ? 0.3 : 0.8, 1, b.glow);
+        c.fillStyle = ringA;
         c.beginPath();
         c.arc(b.x, b.y, b.r * 0.32, 0, Math.PI * 2);
         c.fill();
-        c.globalAlpha = b.opacity;
-        c.strokeStyle = dark ? '#ffffff' : A;
-        c.lineWidth = 1;
+        c.globalAlpha = opacity;
+        c.strokeStyle = ringA;
+        c.lineWidth = 1 + b.glow;
         c.beginPath();
         c.arc(b.x, b.y, b.r * 0.52, 0, Math.PI * 2);
         c.stroke();
@@ -1035,26 +1214,138 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Drift — a calm field of slow particles in the essence color. Default. */
+  /* Drift — a calm field of slow particles in the essence color. Default.
+     The cursor is the only input: a sweep pushes the motes it passes along
+     the path and flashes them brighter for ~1 s (field.ts's lerp stir,
+     tuned up for 1–2 px motes), then the field settles back to its quiet
+     drift. Touch never stirs. */
   drift(ctx) {
     const { c } = ctx;
     const N = Math.min(54, Math.floor((ctx.w * ctx.h) / 26000));
-    const ps = Array.from({ length: N }, () => ({
-      x: Math.random() * ctx.w,
-      y: Math.random() * ctx.h,
-      vx: rand(-0.18, 0.18),
-      vy: rand(-0.18, 0.18),
-      s: rand(0.8, 1.8),
-    }));
-    return () => {
+    // Mote shape borrowed from field.ts: each mote carries its own idle drift
+    // (ix, iy) so the cursor stir is an *excess* over rest and an untouched
+    // field keeps breathing — quiet, but never frozen. Identical distribution
+    // to the previous version ⇒ idle look unchanged. `glow` is the pointer
+    // brightness bump (0 ⇒ the draw is exactly today's 0.7).
+    type Mote = { x: number; y: number; vx: number; vy: number; ix: number; iy: number; s: number; glow: number };
+    const ps: Mote[] = Array.from({ length: N }, () => {
+      const ix = rand(-0.18, 0.18);
+      const iy = rand(-0.18, 0.18);
+      return {
+        x: Math.random() * ctx.w,
+        y: Math.random() * ctx.h,
+        vx: ix,
+        vy: iy,
+        ix,
+        iy,
+        s: rand(0.8, 1.8),
+        glow: 0,
+      };
+    });
+    // Cursor stir — field.ts pattern, tuned up until the wake reads at 1080p:
+    // 1–2 px motes need a wider reach, a harder impulse and a brighter flash
+    // than field's (which also carries a link network to sell the reaction —
+    // drift has nothing but the motes). document-level so an Astro view
+    // transition cannot leave a ghost listener behind.
+    const REACH = 300;
+    const GAIN = 0.11;
+    const CAP = 2.2;        // px/frame cap — a hard flick cannot teleport a mote
+    const EASE = 0.965;     // excess decays; p.vx === p.ix ⇒ identity, idle untouched.
+                            // 0.965 ⇒ the wake is quiet again ~2 s after the pointer
+                            // stops (0.975, field's value, left motes stirring ~4 s).
+    const GLOW_TAU = 550;   // ms — frame-rate independent decay of the stir flash
+    let lastX = ctx.w * 0.5;
+    let lastY = ctx.h * 0.3;
+    let targetX = lastX;
+    let targetY = lastY;
+    let smoothX = lastX;
+    let smoothY = lastY;
+    let hasPointer = false;
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        if (!hasPointer) {
+          // First move after entering the window: seed the sampled position so
+          // re-entry reads as zero travel instead of a screen-wide burst.
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+        targetX = e.clientX;
+        targetY = e.clientY;
+        hasPointer = true;
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false;
+      },
+      { passive: true, signal: ac.signal }
+    );
+    let prevT = 0;
+    return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort();
+        return;
+      }
+      const dt = prevT ? t - prevT : 16;
+      prevT = t;
+      // Travel since the last frame is the stir impulse — only while the
+      // pointer is actually in the window. Parked: influence is 0, and the
+      // smoothed point glides back to 50%/30% (house pattern) without stirring
+      // anything on the way there.
+      let dxm = 0;
+      let dym = 0;
+      if (hasPointer) {
+        dxm = targetX - lastX;
+        dym = targetY - lastY;
+      } else {
+        targetX = ctx.w * 0.5;
+        targetY = ctx.h * 0.3;
+      }
+      lastX = targetX;
+      lastY = targetY;
+      smoothX += (targetX - smoothX) * 0.08;
+      smoothY += (targetY - smoothY) * 0.08;
+
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.fillStyle = ctx.color;
+      // Frame-rate independent flash decay (τ = 550 ms ⇒ ~1 s to settle); a
+      // bare `*= 0.94` would silently double under the 30fps cap.
+      const glowDecay = Math.exp(-dt / GLOW_TAU);
       for (const p of ps) {
+        const d = Math.hypot(p.x - smoothX, p.y - smoothY);
+        if (hasPointer && d < REACH) {
+          const k = 1 - d / REACH;
+          p.vx += dxm * k * GAIN;
+          p.vy += dym * k * GAIN;
+          // Only actual pointer travel lights a mote, so a *parked* cursor
+          // leaves no static bright patch — the flash exists while moving.
+          if (dxm || dym) p.glow = Math.max(p.glow, 0.35 + 0.65 * k);
+        }
+        p.glow *= glowDecay;
+        if (p.glow < 0.004) p.glow = 0; // ⇒ exactly 0.7 alpha, exactly p.s
+        const sp = Math.hypot(p.vx, p.vy);
+        if (sp > CAP) {
+          p.vx = (p.vx / sp) * CAP;
+          p.vy = (p.vy / sp) * CAP;
+        }
+        // Ease the *excess* over rest back toward idle: with p.vx === p.ix
+        // this is an identity, so the ambient field is byte-identical to
+        // before. EASE = 0.965 ⇒ wake settles in ~2 s at the 30fps cap.
+        p.vx = p.ix + (p.vx - p.ix) * EASE;
+        p.vy = p.iy + (p.vy - p.iy) * EASE;
         p.x = (p.x + p.vx + ctx.w) % ctx.w;
         p.y = (p.y + p.vy + ctx.h) % ctx.h;
-        c.globalAlpha = 0.7;
+        // glow === 0 ⇒ exactly today's 0.7 and today's radius, so an untouched
+        // field is unchanged; lit motes also swell slightly — on a 0.68 canvas
+        // a 1 px dot needs the extra ink to read at all.
+        c.globalAlpha = 0.7 + 0.3 * p.glow;
         c.beginPath();
-        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+        c.arc(p.x, p.y, p.s + p.glow * 1.1, 0, Math.PI * 2);
         c.fill();
       }
       c.globalAlpha = 1;
@@ -1064,18 +1355,18 @@ const THEMES: Record<Theme, Runner> = {
 
 /* Paper — the quiet motif for the cream `paper` surface (texforge): a scatter
    of short fibres, the flecks in a laid sheet, lying still. The cursor is the
-   only input — passing over the stock stirs the fibres it crosses and they
-   damp back to rest — so an untouched page reads as paper, not as an
-   animation. It is picked in startBackground() by `data-surface="paper"`
-   rather than keyed on BgTheme, whose type the experiment registry owns (and
-   which is out of scope to extend). The ~30fps cap, the resize handling and
-   the hidden-tab pause all come from startBackground; prefers-reduced-motion
-   never reaches this module at all, because ThemeBackground returns before
-   importing it. */
+   only input — passing over the stock nudges the fibres it crosses and gives
+   them a brief brightness bump that decays over ~1 s; an untouched page reads
+   as paper, not as an animation. It is picked in startBackground() by
+   `data-surface="paper"` rather than keyed on BgTheme, whose type the
+   experiment registry owns (and which is out of scope to extend). The ~30fps
+   cap, the resize handling and the hidden-tab pause all come from
+   startBackground; prefers-reduced-motion never reaches this module at all,
+   because ThemeBackground returns before importing it. */
 const PAPER: Runner = (ctx) => {
   const { c } = ctx;
   const N = Math.min(30, Math.max(16, Math.floor((ctx.w * ctx.h) / 34000)));
-  type Fibre = { x: number; y: number; a: number; len: number; al: number; vx: number; vy: number; va: number };
+  type Fibre = { x: number; y: number; a: number; len: number; al: number; vx: number; vy: number; va: number; glow: number };
   const fibres: Fibre[] = Array.from({ length: N }, () => ({
     x: rand(0, ctx.w),
     y: rand(0, ctx.h),
@@ -1085,35 +1376,64 @@ const PAPER: Runner = (ctx) => {
     vx: 0,
     vy: 0,
     va: 0,
+    glow: 0, // pointer-driven brightness bump (0 ⇒ byte-identical ambient draw)
   }));
 
-  // Cursor stir: fibres within reach pick up a nudge along the pointer's path
-  // (at most one impulse per frame), then ease back to rest. The first move
-  // only records where the pointer came from, so there is no jump from an
-  // off-screen origin. Touch has no pointer to stir with — it stays still,
-  // and nothing drifts on its own.
-  const REACH = 140;
+  // Cursor nudge — fibres within reach pick up a directional kick along the
+  // pointer's travel (one impulse per frame) plus a brightness bump that
+  // decays in ~1 s; they damp back to rest. The first move only records
+  // where the pointer came from, so there is no jump from an off-screen
+  // origin. Touch input has no pointer to nudge with — the sheet stays still,
+  // and nothing drifts on its own. document-level (not window) so an Astro
+  // view transition cannot leave a ghost listener behind.
+  const REACH = 170;
+  const GAIN = 0.16;    // directional kick on touched fibres (~3× today's)
+  const VCAP = 3;       // px/frame velocity cap so a hard flick cannot fling a fibre
   let px = 0;
   let py = 0;
   let nx = 0;
   let ny = 0;
   let seen = false;
-  window.addEventListener(
+  let hasPointer = false;
+  const ac = new AbortController();
+  document.addEventListener(
     'pointermove',
-    (e) => {
+    (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      const x = e.clientX;
+      const y = e.clientY;
       if (!seen) {
-        px = e.clientX;
-        py = e.clientY;
+        px = x;
+        py = y;
+        nx = x;
+        ny = y;
         seen = true;
+      } else {
+        nx = x;
+        ny = y;
       }
-      nx = e.clientX;
-      ny = e.clientY;
+      hasPointer = true;
     },
-    { passive: true }
+    { passive: true, signal: ac.signal }
   );
+  document.addEventListener(
+    'pointerout',
+    (e: PointerEvent) => {
+      if (!e.relatedTarget) hasPointer = false;
+    },
+    { passive: true, signal: ac.signal }
+  );
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-  return () => {
-    if (seen) {
+  let prevT = 0;
+  return (t) => {
+    if (!ctx.canvas.isConnected) {
+      ac.abort();
+      return;
+    }
+    const dt = prevT ? t - prevT : 16;
+    prevT = t;
+    if (hasPointer && seen) {
       const dx = nx - px;
       const dy = ny - py;
       if (dx || dy) {
@@ -1121,18 +1441,24 @@ const PAPER: Runner = (ctx) => {
           const d = Math.hypot(f.x - nx, f.y - ny);
           if (d >= REACH) continue;
           const k = 1 - d / REACH;
-          f.vx += dx * k * 0.05;
-          f.vy += dy * k * 0.05;
-          f.va += (dx + dy) * k * 0.00004;
+          f.vx = clamp(f.vx + dx * k * GAIN, -VCAP, VCAP);
+          f.vy = clamp(f.vy + dy * k * GAIN, -VCAP, VCAP);
+          f.va += (dx + dy) * k * 0.00012;          // visible reorientation
+          f.glow = Math.max(f.glow, 0.4 + 0.6 * k); // brightness bump, hottest at the cursor
         }
       }
       px = nx;
       py = ny;
     }
+    // Frame-rate independent glow decay (τ = 400 ms ⇒ ~1 s); a bare `*= 0.94`
+    // would silently double under the 30fps cap and worse if it ever changed.
+    for (const f of fibres) {
+      f.glow *= Math.exp(-dt / 400);
+      if (f.glow < 0.004) f.glow = 0; // ⇒ exactly lineWidth 1 and alpha f.al
+    }
 
     c.clearRect(0, 0, ctx.w, ctx.h);
     c.strokeStyle = ctx.color;
-    c.lineWidth = 1;
     for (const f of fibres) {
       f.x += f.vx;
       f.y += f.vy;
@@ -1146,7 +1472,10 @@ const PAPER: Runner = (ctx) => {
       else if (f.y > ctx.h + 20) f.y -= ctx.h + 40;
       const ca = Math.cos(f.a) * f.len;
       const sa = Math.sin(f.a) * f.len;
-      c.globalAlpha = f.al;
+      // When glow === 0 both reads reduce exactly to today's values:
+      //   lineWidth = 1, globalAlpha = f.al — idle look byte-identical.
+      c.lineWidth = 1 + f.glow;
+      c.globalAlpha = f.al + (0.95 - f.al) * f.glow;
       c.beginPath();
       c.moveTo(f.x - ca, f.y - sa);
       c.lineTo(f.x + ca, f.y + sa);

@@ -165,15 +165,19 @@
    six substrate tokens — the same mechanism the old tui-only guard used, now
    unified. Values are seeded equal to the POC's where the POC was winning, so
    every experiment page renders identical tokens to before this refactor.
-   (A surface key with no group degrades gracefully: unset --surface-* makes the
-   mapped property inherit-as-unset → the dark lab :root defaults, same as today.) */
+   The fallbacks are the dark-lab :root values above and are REQUIRED: this
+   declaration replaces :root's, so a data-surface key with no group would NOT
+   fall through to :root — an undefined --surface-* computes --bg/--ink to the
+   guaranteed-invalid value and `html { background: var(--bg) }` resolves to
+   transparent (verified: black-on-transparent page). With the fallback, an
+   unmatched key renders the lab defaults, exactly as before this refactor. */
 html[data-surface]:root {
-  --bg: var(--surface-bg);
-  --bg-raise: var(--surface-bg-raise);
-  --ink: var(--surface-ink);
-  --ink-dim: var(--surface-ink-dim);
-  --ink-faint: var(--surface-ink-faint);
-  --line: var(--surface-line);
+  --bg: var(--surface-bg, #0a0b0e);
+  --bg-raise: var(--surface-bg-raise, #101218);
+  --ink: var(--surface-ink, #e8e6e1);
+  --ink-dim: var(--surface-ink-dim, #9a9890);
+  --ink-faint: var(--surface-ink-faint, #7f7c76);
+  --line: var(--surface-line, #23252c);
 }
 
 /* ── Page-only surface extras (substrates now live in the groups above) ───── */

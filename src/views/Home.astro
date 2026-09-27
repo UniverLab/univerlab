@@ -41,8 +41,8 @@ const webSite = {
       {experiments.map((exp) => {
         const e = t.experiments[exp.id];
         return (
-<li style={`--essence: ${exp.essenceHex}`}>
-              <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg} data-flip-surface={exp.surface}>
+          <li style={`--essence: ${exp.essenceHex}`}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg} data-flip-surface={exp.surface}>
               <canvas class="card-bg-canvas" aria-hidden="true"></canvas>
               <div class="card-glow" aria-hidden="true"></div>
               <div class="card-top">
