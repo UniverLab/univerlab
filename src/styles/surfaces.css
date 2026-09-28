@@ -543,7 +543,7 @@ html[data-surface='studio'] .demo-col { display: none; }
 /* With the aside figure hidden, the 2-col grid would strand .genesis in the
    left track on ultrawide — collapse to the single-column measure instead,
    same as rows that never had a demo. */
-html[data-surface='studio'] .genesis-row { grid-template-columns: 1fr; max-width: 60ch; }
+html[data-surface='studio'] .genesis-row { grid-template-columns: 1fr; max-width: 60ch; margin-inline: auto; }
 /* Inside the obsidian band the light-band tokens invert: the mono kicker, the
    dim row copy and the hairlines lift off the dark, and inline code goes to
    ink. The coral stays on the step numerals (graphics, high contrast on
