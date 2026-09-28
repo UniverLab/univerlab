@@ -500,7 +500,6 @@ export const es: Dict = {
       },
       demos: {
         first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
-        second: 'Export — la misma partitura renderizada a gif y mp4',
       },
       faq: [
         ['¿Qué es DemoStage?',
