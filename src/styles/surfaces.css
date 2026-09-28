@@ -145,6 +145,21 @@ html[data-surface='paper'] canvas.bg {
   opacity: 0.25;
 }
 
+/* Parchment canvas with cream section bands (Antimetal layout law): the two
+   narrative blocks — genesis and FAQ — sit on full-bleed cream #f7f6f3 bands,
+   everything else rests on the parchment canvas. The band is a positioned
+   ::before so the content's own stacking is untouched; width:100vw is clipped
+   by overflow-x:clip on the root (the scrollbar-compensation trap). */
+html[data-surface='paper'] .genesis-row,
+html[data-surface='paper'] .faq-section { position: relative; }
+html[data-surface='paper'] .genesis-row::before,
+html[data-surface='paper'] .faq-section::before {
+  content: ''; position: absolute; z-index: -1;
+  inset-block: 0; left: 50%; transform: translateX(-50%);
+  width: 100vw; background: var(--bg-raise);
+}
+html[data-surface='paper'] { overflow-x: clip; }
+
 /* ─────────────────────────────────────────────────────────────────────────
    canopy · `tui` — modern TUI / DevOS.
 
