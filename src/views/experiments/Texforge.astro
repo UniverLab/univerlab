@@ -148,6 +148,13 @@ const tfInitial =
      off from the one above it — never one per item, never a solid rule. */
   .section.trule { border-top: 1px dashed var(--rule-t1); }
   .galley { display: grid; grid-template-columns: minmax(16rem, 1fr) 1.3fr; gap: 3rem; align-items: start; }
+  /* Grid items default to min-width:auto, so the plate's unbreakable `pre`
+     (white-space: pre) sets the track's min-content and blows the single
+     column past the viewport at 320–390px. Zeroing it lets the track take the
+     column, and the plate scrolls its own long lines instead of the page —
+     measured: documentElement.scrollWidth goes 398 → 320 at a 320px viewport
+     (no horizontal scroll, no clipped figure). */
+  .galley > * { min-width: 0; }
   @media (max-width: 50rem) { .galley { grid-template-columns: 1fr; } }
   /* A typeset figure plate, not a card: a dashed hairline frame on parchment,
      flat on the page (no card shadow), holding the sheet's own tone. It cycles
@@ -160,6 +167,8 @@ const tfInitial =
     background: var(--bg-raise); color: var(--ink);
     font-size: 0.9rem; line-height: 1.9;
     min-height: 11.8rem; /* fits the tallest environment, so cycling never jumps */
+    overflow-x: auto; /* long diagram lines scroll inside the plate, not the page */
+    scrollbar-width: thin;
   }
   .plate code { display: block; transition: opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1); }
   .plate code.fade { opacity: 0; }

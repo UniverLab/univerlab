@@ -160,9 +160,9 @@ offset = 0.5</code></pre>
 
   // The drafting grid is quiet and cursor-stirred: a faint teal bloom follows
   // the pointer and the grid drifts a few pixels behind it (lerped, so it
-  // reads as paper being nudged, not as a cursor effect). This is the CSS layer under
-  // the primitives canvas (body::before z-index -2, canvas .bg z-index -1), and these
-  // --stir-* are its only variables. Reduced motion never registers the listener or
+  // reads as paper being nudged, not as a cursor effect). This is the page's whole
+  // living background: it paints body::before (z-index -2) directly — no canvas
+  // mounts here any more — and these --stir-* are its only variables. Reduced motion never registers the listener or
   // the loop: the grid renders static. Touch never moves it either (the
   // pointer is the finger, which would shake the page while scrolling).
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
