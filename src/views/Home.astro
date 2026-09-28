@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LabSystem from '../components/LabSystem.astro';
 import { experiments } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
@@ -17,17 +18,20 @@ const webSite = {
 ---
 <BaseLayout title={t.meta.title} bg="cosmic" circadian structuredData={webSite}>
   <section class="wrap hero">
-    <h1>{t.home.hero.title}</h1>
-    <p class="subtitle">{t.home.hero.subtitle}</p>
-    <p class="lede prose" set:html={t.home.hero.lede} />
-    <div class="pitch">
-      <p class="pitch-domains">{t.home.hero.pitch}</p>
-      <p class="pitch-sub">{t.home.hero.pitchSub}</p>
+    <div class="hero-col">
+      <h1>{t.home.hero.title}</h1>
+      <p class="subtitle">{t.home.hero.subtitle}</p>
+      <p class="lede prose" set:html={t.home.hero.lede} />
+      <div class="pitch">
+        <p class="pitch-domains">{t.home.hero.pitch}</p>
+        <p class="pitch-sub">{t.home.hero.pitchSub}</p>
+      </div>
+      <div class="hero-cta">
+        <a class="btn" href="#experiments">{t.home.hero.ctaExperiments}</a>
+        <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
+      </div>
     </div>
-    <div class="hero-cta">
-      <a class="btn" href="#experiments">{t.home.hero.ctaExperiments}</a>
-      <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
-    </div>
+    <LabSystem />
   </section>
 
   <hr class="rule" />
@@ -114,6 +118,14 @@ const webSite = {
 
 <style>
   .hero { padding-block: clamp(2rem, 6vh, 4rem) clamp(1.75rem, 4vh, 2.75rem); display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+  /* The text column keeps the hero's rhythm verbatim; the figure takes the
+     right 40 % from 1100 px up (spec: two-column hero from 1100 px). */
+  .hero-col { display: flex; flex-direction: column; gap: 1.2rem;
+              align-items: flex-start; min-width: 0; }
+  @media (min-width: 1100px) {
+    .hero { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            column-gap: clamp(1.5rem, 3vw, 3rem); align-items: start; }
+  }
   /* Logo anchors the name gloss to its right (wordmark + a shared line that
      holds the slogan at rest, the sense gloss while open). */
   .hero h1 { font-size: clamp(2rem, 4.6vw, 3.2rem); max-width: 20ch; line-height: 1.1; text-wrap: balance; }
@@ -438,13 +450,7 @@ const webSite = {
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
 
-  // Gate the cursor-seeded field runner (see field.ts, via backgrounds.ts
-  // `cosmic`) on this page only
-  // — set on the documentElement before ThemeBackground's load-time import has
-  // a chance to resolve, so `cosmic` sees the flag and delegates.
-  document.documentElement.dataset.page = 'home';
-
-   const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; bgHexLight: string; motif?: string }> = {
+  const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; bgHexLight: string; motif?: string }> = {
     canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', bgHexLight: '#f5f5f3', motif: '◉' },
     texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', bgHexLight: '#f5f5f3', motif: '⁂' },
     gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', bgHexLight: '#f5eef5', motif: '🍒' },

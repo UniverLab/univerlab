@@ -53,6 +53,7 @@ export const es: Dict = {
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
+      systemCaption: 'El laboratorio como sistema — cada experimento orbita la misma pregunta.',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
       // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra

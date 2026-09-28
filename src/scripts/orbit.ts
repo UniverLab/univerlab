@@ -16,7 +16,9 @@
  *  Reduced motion never reaches here (ThemeBackground returns before importing
  *  this module). The ~30fps cap, the resize handling and the hidden-tab pause
  *  all come from startBackground. Split out of backgrounds.ts to keep that
- *  module within its size budget. */
+ *  module within its size budget.
+ *  The home figure (LabSystem.astro) publishes `data-orbit-well` and owns the
+ *  well on that page; /status keeps 0.75w; everything else 0.5w.
 
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    (the same move brain.ts and spotlight.ts made) so the module needs no runtime
@@ -70,6 +72,9 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
      would freeze the decision at import time. trailingSlash is 'ignore' in
      astro.config, hence the optional slash. */
   const wellx = /(^|\/)status\/?$/i.test(window.location.pathname) ? 0.75 : 0.5;
+  /* The home figure (LabSystem.astro) is the system's centre on that page.
+     Read ONCE here, like the pathname: the runner never outlives a navigation. */
+  const marker = document.querySelector('[data-orbit-well]');
   const N = Math.min(90, Math.floor((ctx.w * ctx.h) / 16000));
   /* Ring spawn about the canvas centre with a tangential velocity — the
      baseline spawn, verbatim, including the exact number and order of
@@ -135,8 +140,20 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
     mass = hasPointer && t - lastMove < FRESH ? 1 : Math.max(0, mass - dt / DECAY);
 
     c.clearRect(0, 0, ctx.w, ctx.h);
-    const cx = ctx.w * wellx;
-    const cy = ctx.h * WELLY;
+    let cx = ctx.w * wellx;
+    let cy = ctx.h * WELLY;
+    if (marker && marker.isConnected) {
+      const r = marker.getBoundingClientRect();
+      // jsdom, display:none and a scrolled-away figure all give a zero-size rect → baseline
+      if (r.width > 0 && r.height > 0) {
+        const cr = ctx.canvas.getBoundingClientRect();
+        const mx = r.left + r.width / 2 - cr.left;
+        const my = r.top + r.height / 2 - cr.top;
+        // only take the well while the figure's centre is actually on screen —
+        // a fixed canvas must not drag the system off-frame after the hero scrolls away
+        if (mx >= 0 && mx <= ctx.w && my >= 0 && my <= ctx.h) { cx = mx; cy = my; }
+      }
+    }
     for (const p of motes) {
       // (a) the central well — the baseline step, byte-for-byte
       const dx = cx - p.x;

@@ -321,7 +321,12 @@ describe('orbit', () => {
     PIN();
     const { ctx, arcs, alphas, stroke, reset } = makeCtx();
     const tick = orbit(ctx);
-    let t = 0;
+    // Anchor the synthetic frame clock to the wall clock: the runner's
+    // freshness test compares tick `t` against `performance.now()` taken in
+    // the pointer handler, so a `t` starting at 0 stays "fresh" forever once
+    // the suite has been running longer than FRESH — the mass would never die
+    // and the relax assertion would flake under --coverage load.
+    let t = performance.now();
     for (let i = 0; i < 30; i++) {
       t += 33;
       firePointer('pointermove', { pointerType: 'mouse', clientX: 275, clientY: 300 });
@@ -450,5 +455,49 @@ describe('orbit', () => {
     reset();
     firePointer('pointermove', { pointerType: 'mouse', clientX: 10, clientY: 10 });
     expect(() => tick(66)).not.toThrow();
+  });
+
+  it('moves the well to the figure centre while it is on screen', () => {
+    // Given: a pinned field with the home figure on screen (well at (600, 300))
+    // and a canvas whose own rect is zeros in jsdom
+    const marker = document.createElement('div');
+    marker.setAttribute('data-orbit-well', '');
+    document.body.appendChild(marker);
+    marker.getBoundingClientRect = () =>
+      ({ left: 500, top: 200, width: 200, height: 200 }) as DOMRect;
+    PIN();
+    const { ctx, arcs } = makeCtx();
+    // When: one massless frame steps
+    orbit(ctx)(0);
+    // Then: the mote falls toward the figure centre, not the baseline well —
+    // dy = 0 (same row), dx = 14·370/(370²+2000), far from the home baseline
+    const wellAx = (14 * 370) / (370 * 370 + 2000);
+    expect(arcs[0].x - P0X).toBeCloseTo(wellAx, 9);
+    expect(arcs[0].y - P0Y).toBeCloseTo(0.25, 9);
+    expect(Math.abs(arcs[0].x - P0X - HOME_STEP.ax)).toBeGreaterThan(0.03);
+  });
+
+  it('falls back to the baseline well for zero-size, off-screen or missing figures', () => {
+    // Given: the same pinned field and the untouched home baseline
+    PIN();
+    const base = makeCtx();
+    orbit(base.ctx)(0);
+    const baseArcs = base.arcs.map((p) => ({ ...p }));
+    // When: the marker is zero-size, then parked far off-screen
+    const marker = document.createElement('div');
+    marker.setAttribute('data-orbit-well', '');
+    document.body.appendChild(marker);
+    marker.getBoundingClientRect = () => ({ left: 0, top: 0, width: 0, height: 0 }) as DOMRect;
+    PIN();
+    const zero = makeCtx();
+    orbit(zero.ctx)(0);
+    marker.getBoundingClientRect = () => ({ left: 0, top: -5000, width: 200, height: 200 }) as DOMRect;
+    PIN();
+    const away = makeCtx();
+    orbit(away.ctx)(0);
+    // Then: both reproduce the baseline exactly — and with no marker at all
+    // the byte-parity guard for every other page still holds
+    expect(zero.arcs).toEqual(baseArcs);
+    expect(away.arcs).toEqual(baseArcs);
   });
 });
