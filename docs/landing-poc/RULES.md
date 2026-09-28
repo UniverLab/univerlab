@@ -1,4 +1,4 @@
-# Landing PoC — reglas de fidelidad (R1–R12)
+# Landing PoC — reglas de fidelidad (R1–R13)
 
 Origen: destilado de `/tmp/opencode/landing-poc/AUDIT.md` (2026-09-25).
 Los HTML originales del PoC se perdieron con el wipe de `/tmp`; estas reglas
@@ -30,3 +30,22 @@ Decisión vigente (Intelligence `b33ca94e`, "Landing POC review round"):
 el PoC del home se RECHAZÓ (B/N, perdía el circadian) — **el home se
 queda como está**, solo presentación + fondo de cursor. "Sin cambios"
 es el estado decidido, no un fallo. R9 (identidad circadiana) manda.
+
+## R13 — The cursor speaks the product's language (2026-09-28)
+
+Aprobada por el usuario (2026-09-28): esta edición es la excepción a
+"No editar sin el usuario".
+
+13. The living background reacts to the cursor with the experiment's own
+    mechanism — the pointer seeds, builds, records, compiles or attracts
+    something the product itself does; a wind, a push or a spotlight over
+    generic particles fails R13.
+
+Passing references:
+
+- Canopy: the pointer seeds Brian's Brain clusters, like the TUI.
+- cadSpec: the pointer makes declared geometry appear.
+
+Applies next to: home/status orbit, demostage (takes), ghscaff (raise),
+texforge (compile), gitkit (commit). Astro and Quorum are explicitly kept
+as they are by the user's decision.
