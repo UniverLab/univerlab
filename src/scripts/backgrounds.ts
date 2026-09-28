@@ -5,7 +5,7 @@
 
 import type { BgTheme as Theme } from '../lib/experiments';
 import { brain } from './brain';
-import { field } from './field';
+import { orbit } from './orbit';
 import { createSpotlight } from './spotlight';
 import { bubbles } from './bg-bubbles';
 import { drift } from './bg-drift';
@@ -89,72 +89,16 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 type Runner = (ctx: Ctx) => (t: number) => void;
 
 const THEMES: Record<Theme, Runner> = {
-  /* Cosmic — particles orbiting a gentle gravity well, faint constellations.
-   The universe / Pensamiento Cósmico of the main site. On the home page this
-   is replaced by the cursor-seeded living field (field.ts); every other
-   cosmic page keeps the gravity-well orbit byte-identical. The home flag is
-   set by Home.astro's module script, which runs (module = deferred) long
-   before ThemeBackground's load-time import resolves. */
-  cosmic(ctx) {
-    if (typeof document !== 'undefined' && document.documentElement.dataset.page === 'home') {
-      return field(ctx);
-    }
-    const { c } = ctx;
-    const N = Math.min(90, Math.floor((ctx.w * ctx.h) / 16000));
-    const ps = Array.from({ length: N }, () => spawn(ctx));
-    function spawn(x: Ctx) {
-      const a = rand(0, Math.PI * 2);
-      const r = rand(40, Math.min(x.w, x.h) * 0.5);
-      return {
-        x: x.w / 2 + Math.cos(a) * r,
-        y: x.h / 2 + Math.sin(a) * r,
-        vx: Math.sin(a) * 0.25,
-        vy: -Math.cos(a) * 0.25,
-        s: rand(0.6, 1.6),
-      };
-    }
-    return () => {
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      const cx = ctx.w / 2;
-      const cy = ctx.h * 0.42;
-      for (const p of ps) {
-        const dx = cx - p.x;
-        const dy = cy - p.y;
-        const d2 = dx * dx + dy * dy + 2000;
-        const f = 14 / d2;
-        p.vx += dx * f;
-        p.vy += dy * f;
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < -20 || p.x > ctx.w + 20 || p.y < -20 || p.y > ctx.h + 20) {
-          Object.assign(p, spawn(ctx));
-        }
-      }
-      // faint links
-      c.strokeStyle = ctx.color;
-      c.globalAlpha = 0.05;
-      for (let i = 0; i < ps.length; i++) {
-        for (let j = i + 1; j < ps.length; j++) {
-          const dx = ps[i].x - ps[j].x;
-          const dy = ps[i].y - ps[j].y;
-          if (dx * dx + dy * dy < 9000) {
-            c.beginPath();
-            c.moveTo(ps[i].x, ps[i].y);
-            c.lineTo(ps[j].x, ps[j].y);
-            c.stroke();
-          }
-        }
-      }
-      c.globalAlpha = 0.7;
-      c.fillStyle = ctx.color;
-      for (const p of ps) {
-        c.beginPath();
-        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  /* Cosmic — motes orbiting a gravity well at (w/2, 0.42h): the universe /
+   Pensamiento Cósmico of the main site, with faint links between neighbours.
+   The cursor is a second, moving mass in that same system (R13) — it pulls the
+   motes it passes into temporary orbits and brightens the links between them,
+   so the pointer speaks the product's own language (gravity) instead of
+   blowing generic particles about. /status moves the well to 0.75w so the
+   orbits stay clear of the Mission Log column's text; every other cosmic page
+   keeps the centred well. Restores the pre-lvis-home-windows mechanics on
+   every cosmic page; the home-only "field" runner is gone. orbit.ts. */
+  cosmic: orbit,
 
   /* Golden fractal — the Fibonacci whirling squares with the golden
      spiral they inscribe, and sparks wandering it. Quorum. The cursor
