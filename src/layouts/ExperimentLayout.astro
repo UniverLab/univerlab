@@ -93,11 +93,11 @@ const ogImage = `/og/${id}.png`;
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
-      {/* The one and only product name on the page. It is `sr-only` because the
-          ASCII banner below spells the same name and IS what you see — the h1
-          stays in the DOM so SEO, screen readers and the page title all still
-          read the product. */}
-      <h1 class="exp-name sr-only" translate="no">{exp.name}</h1>
+      {/* The product name is stated twice on purpose (user decision
+          2026-09-28): this visible <h1> is the name/SEO copy in the name
+          position, and the ASCII banner below closes the hero as the
+          signature — right after the install bar, where it already sits. */}
+      <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
@@ -208,21 +208,6 @@ const ogImage = `/og/${id}.png`;
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .hero-visual { width: 100%; }
-  /* The banner is the visible name; the h1 only exists to be read. The
-     absolute 1px box is also in surfaces.css (.exp-name) — this rule keeps the
-     contract local to the layout that renders the class, so the two can never
-     drift into showing the name twice. */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
 
   .genesis-row {
     display: grid;
