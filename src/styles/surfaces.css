@@ -111,9 +111,10 @@ html[data-surface='paper'] .koan {
   border-left: 1px dashed var(--rule-t1);
 }
 
-/* Lede & genesis prose: left-aligned sans. No justification, no hyphenation
-   and no drop cap — the old galley voice (justify + hyphens + Didone initial)
-   is gone. */
+/* Lede & genesis prose: left-aligned sans. No justification and no
+   hyphenation — the old galley voice (justify + hyphens + Didone initial) is
+   gone; the drop cap itself is restored per the Antimetal law (system serif
+   400 at 2.2×, set in Texforge.astro's page styles — never a Didone initial). */
 html[data-surface='paper'] .lede,
 html[data-surface='paper'] .genesis .prose {
   font-family: var(--font-body);
