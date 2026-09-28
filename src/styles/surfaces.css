@@ -503,11 +503,11 @@ html[data-surface='studio'] .koan {
 
 /* ── The light/dark rhythm of the DemoStage page ────────────────────────────
    One confident light section — vapor-peach (#f7ece1 over the studio linen),
-   dark ink — carrying the origin story and both demo slots, and exactly ONE
-   obsidian band (#14110d, the player chrome's own tone) for the five
-   commands. Sections are block-level, so the bands are full-bleed by default
-   and `.wrap` carries the measure. Everything else on the page stays light:
-   two dark bands would tip the page dark-heavy. ─────────────────────────── */
+   dark ink — carrying the origin story and the single real demo figure, and
+   exactly ONE obsidian band (#14110d, the player chrome's own tone) for the
+   five commands. Sections are block-level, so the bands are full-bleed by
+   default and `.wrap` carries the measure. Everything else on the page stays
+   light: two dark bands would tip the page dark-heavy. ───────────────────── */
 html[data-surface='studio'] .band-light {
   background: #f7ece1;
   color: #221d18;
@@ -532,11 +532,13 @@ html[data-surface='studio'] .genesis-row {
 }
 /* `.genesis` is a .wrap grid item with auto margins, so it shrink-wraps to its
    prose measure and centres itself. Give it the row's full width to optically
-   align with the demo slots below; `.wrap`'s max-width + auto margins still
+   align with the demo figure below; `.wrap`'s max-width + auto margins still
    centre the block and `.prose` still holds the measure. */
 html[data-surface='studio'] .genesis-row .genesis { width: 100%; }
-/* This page's spec is exactly two EMPTY 16:9 slots, so the recorded demo the
-   layout renders for us is hidden here. CSS only — the registry is shared. */
+/* The page already shows the registered capture as Fig. 1 in its light band
+   (RULES R6: real asset, never a fabricated frame), so the layout's own aside
+   figure would be a second copy of the same clip — hidden here. CSS only —
+   the registry is shared. */
 html[data-surface='studio'] .demo-col { display: none; }
 /* Inside the obsidian band the light-band tokens invert: the mono kicker, the
    dim row copy and the hairlines lift off the dark, and inline code goes to
