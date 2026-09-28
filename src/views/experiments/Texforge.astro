@@ -120,6 +120,29 @@ const tfInitial =
   .network-nodes circle:first-child { fill: #e2e67d; }
   .ascii-motif { font: 400 .68rem/1.4 var(--font-mono); letter-spacing: .08em; }
 
+  /* The network-dandelion breathes — Antimetal motion law: autonomous, slow,
+     no scroll/cursor trigger, static under prefers-reduced-motion (also zeroed
+     site-wide by global.css). Centre node ~2.6s scale/opacity pulse; connector
+     dashes drift one whole pattern period per loop (seamless), 24s/30s — faint,
+     even slower than the pulse. No new colours: chartreuse stays only the
+     first circle; nothing typographic is touched. */
+  @keyframes tf-node-breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.28); opacity: 0.82; }
+  }
+  @keyframes tf-dash-drift { to { stroke-dashoffset: -96; } }
+  .network-nodes circle:first-child {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: tf-node-breathe 2.6s ease-in-out infinite;
+  }
+  .network-lines path { animation: tf-dash-drift 24s linear infinite; }
+  .network-lines path:nth-child(2) { animation-duration: 30s; }
+  @media (prefers-reduced-motion: reduce) {
+    .network-nodes circle:first-child,
+    .network-lines path { animation: none; }
+  }
+
   .section { padding-block: 60px; }
   /* Wide section divider (T1): one dashed hairline rules each major section
      off from the one above it — never one per item, never a solid rule. */
