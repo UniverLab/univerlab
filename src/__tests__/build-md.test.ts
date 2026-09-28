@@ -36,11 +36,13 @@ describe('htmlToMarkdown', () => {
   });
 
   // The ASCII banner is the reason this exists: it rendered as one unreadable
-  // line of block characters ahead of the real heading in every experiment page.
-  it('drops the aria-hidden ASCII banner but keeps the heading after it', () => {
+  // line of block characters in every experiment page. The banner now closes
+  // the hero, AFTER the heading — and it is still dropped, because the h1 is
+  // the name markdown should carry.
+  it('drops the trailing aria-hidden ASCII banner but keeps the heading', () => {
     const html = `<!DOCTYPE html><html><head><title>Canopy</title></head><body><main>` +
-      `<pre class="banner" aria-hidden="true"><code>#### ##  ##</code></pre>` +
-      `<h1>Harness Canopy</h1><p>Real prose.</p></main></body></html>`;
+      `<h1>Harness Canopy</h1><p>Real prose.</p>` +
+      `<pre class="banner" aria-hidden="true"><code>#### ##  ##</code></pre></main></body></html>`;
     const md = htmlToMarkdown(html);
     expect(md).toContain('# Harness Canopy');
     expect(md).toContain('Real prose.');

@@ -43,8 +43,34 @@ const gradColor = (i: number) => {
     font-display: swap;
   }
 
+  /* The banner is the ONLY visible product name, so it has to behave like
+     body text: it never exceeds the content measure, and it lines up with
+     whatever the hero's own alignment already is.
+
+     `width: auto` is the load-bearing choice, not an omission. As a flex item
+     the banner is shrink-to-fit, so the box takes the art's own width and the
+     hero's `align-items` decides the rest for free: left-flow heroes (texforge,
+     astro-denoise) get it flush with the lede, centred heroes (canopy,
+     cadspec, demostage, gitkit, ghscaff, quorum) get it centred, and the one
+     grid hero (paper) stretches it across both columns via `justify-self`. No
+     per-surface rule is needed, and none is wanted.
+
+     Two independent guards, because one is not enough:
+       · `max-width:100%` + `min-width:0` + `overflow:hidden` make it
+         structurally incapable of forcing a horizontal scrollbar — the grid
+         and flex parents both size to it, never the other way round.
+       · the font-size clamp is tuned so the WIDEST art (demostage, 94 columns,
+         0.6023em advance in DejaVu Sans Mono) still fits the narrowest content
+         column at 320px, so it shrinks to fit rather than being clipped.
+     `text-align:left` is load-bearing too: several hero surfaces centre their
+     text, and centring each line of block art would shear the letters apart. */
   .banner {
     margin: 0;
+    padding: 0;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    text-align: left;
     overflow: hidden;
     color: var(--c);
     font-family: 'DejaVu Sans Mono', ui-monospace, monospace;
@@ -59,8 +85,19 @@ const gradColor = (i: number) => {
     text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
     scrollbar-width: none;
   }
+  /* Below 40rem the base clamp bottoms out on its 5px floor, which leaves the
+     widest art 60px short of the column on a 375px screen. This range trades
+     the old floor for a slightly larger glyph (5.44px at 375px), which still
+     fits — 94 columns × 5.44px × 0.6023em ≈ 308px inside 343px. Legibility,
+     not overflow: the guards above are what make clipping impossible. */
+  @media (max-width: 40rem) {
+    .banner { font-size: clamp(3px, 1.45vw, 6px); }
+  }
   .banner::-webkit-scrollbar { display: none; }
   .banner code {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
