@@ -144,6 +144,7 @@ Rectangular with 1px solid border in Bistre, Geist 14px weight 500, padding 12px
 - Keep the canvas at #d7d7d0 (warm gray) and surfaces at #f7f6f3 (cream); never use pure white or pure black — the warm cast is the signature.
 - Reserve chartreuse #e2e67d for single-element accents (one badge, one highlight, one dot); it must never appear as a fill on large surfaces.
 - Use the 82px pill radius for the navigation capsule and 9999px for buttons; cards and dividers stay rectangular at 0–4px.
+- Ease every interaction with cubic-bezier(0.4, 0, 0.2, 1) between 0.15s and 0.3s.
 
 ### Don't
 - Do not bold any heading — Test Signifier at weight 400 is non-negotiable; introducing 600/700 destroys the editorial register.
@@ -153,10 +154,17 @@ Rectangular with 1px solid border in Bistre, Geist 14px weight 500, padding 12px
 - Do not use drop shadows on cards or content blocks; depth is achieved through the liquid-glass nav and warm-gray layering only.
 - Do not set body text in the serif — Geist handles all body, nav, and UI; the serif is display-only.
 - Do not use the network/dandelion graphic in contexts other than the hero; it is a singular signature, not a reusable pattern.
+- Do not use linear timing or durations outside 0.15–0.3s for interactive transitions; the standard ease-out curve is the only motion signature.
 
 ## Elevation
 
 Depth is created through warm-gray surface layering and the liquid-glass navigation, never through drop shadows. The only shadows in the system are the inset rgba(0,0,0,0.08) glows on the nav capsule that simulate refraction. Content blocks are flat; separation is communicated by background color shifts and dashed hairlines, not by elevation.
+
+## Motion & Timing
+
+- Interaction transitions run 0.15–0.3s on cubic-bezier(0.4, 0, 0.2, 1) — never linear, never bounce.
+- Hover/press feedback sits at the 0.15s end; content crossfades (figure cycling, caption swaps) at 0.26s.
+- Reduced-motion: every loop rests on its first state; nothing animates offscreen.
 
 ## Surfaces
 

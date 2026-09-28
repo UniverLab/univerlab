@@ -6,6 +6,13 @@
   /* Ink & paper (dark lab) */
   --bg: #0a0b0e;
   --bg-raise: #101218;
+  /* Floating header panels (flyout, collapsed menu, popup) need an OPAQUE plate.
+     --bg-raise is a per-surface *content* color and is deliberately translucent on
+     industrial glass; menus must not inherit that. Default aliases --bg-raise so
+     every currently-legible surface (paper cream, tui abyss, studio cocoa, pastel,
+     blueprint, observatory, quorum incl. its circadian inline overrides) renders
+     identically; surfaces override via --surface-menu-bg only where broken. */
+  --menu-bg: var(--bg-raise);
   --ink: #e8e6e1;
   --ink-dim: #9a9890;
   /* Tertiary ink. The old #55534e sat at 2.56:1 on --bg — below WCAG AA for
@@ -102,6 +109,10 @@
 [data-flip-surface='industrial'] {
   --surface-bg: #05060f;
   --surface-bg-raise: rgba(186,214,247,.05);
+  /* Header menu plate only — NOT --bg-raise: the glass cards, .cmd and hero
+     plates on ghscaff depend on that 5% translucency (it is the surface's
+     identity). Menus over the hero need a solid read instead. */
+  --surface-menu-bg: #05060ff7; /* near-opaque midnight deep-glass */
   --surface-ink: #ffffff;
   --surface-ink-dim: #c7d3ea;
   --surface-ink-faint: #9da7ba;
@@ -174,6 +185,7 @@
 html[data-surface]:root {
   --bg: var(--surface-bg, #0a0b0e);
   --bg-raise: var(--surface-bg-raise, #101218);
+  --menu-bg: var(--surface-menu-bg, var(--bg-raise));
   --ink: var(--surface-ink, #e8e6e1);
   --ink-dim: var(--surface-ink-dim, #9a9890);
   --ink-faint: var(--surface-ink-faint, #7f7c76);

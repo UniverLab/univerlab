@@ -156,8 +156,6 @@ export const es: Dict = {
       },
       graphs: {
         kicker: 'Motor de grafos',
-        title: 'Flujos de trabajo que se ejecutan solos',
-        body: 'Define un DAG — los specs fluyen a través de nodos de agente, chequeo y gate. El grafo corre autónomamente: implementar, verificar, revisar, commitear. Cuando se traba, pausa y te consulta.',
         cols: [
           ['Automatización basada en DAG', 'Define flujos de trabajo como grafos acíclicos dirigidos: los specs fluyen a través de nodos de agente, chequeo y gate con enrutamiento pass/fail. Automatiza corrección de bugs, revisión de código y tareas de múltiples pasos.'],
           ['Ejecución en segundo plano', 'Los grafos corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],
@@ -165,20 +163,21 @@ export const es: Dict = {
         ],
       },
       builder: {
-        kicker: 'Motor de grafos',
-        title: 'Mira un grafo ensamblarse solo',
-        outro: 'Cada nodo corre en el harness que elijas. Mezcla proveedores libremente — el grafo es tuyo para editarlo.',
+        kicker: 'Grafo autónomo',
+        title: 'Falló. No se detuvo.',
+        stat: ['0', 'veces que se detuvo'] as [string, string],
+        outro: 'Cada nodo corre en el harness que elijas, y el loop que acabas de ver es el motor real haciendo su trabajo real.',
         steps: [
-          ['Un spec encuentra a un agente',
-            'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en el harness que elijas.'],
-          ['Puertas deterministas',
-            'Un nodo de chequeo ejecuta tus comandos reales — build, lint, tests. El rojo regresa al implementador; solo el verde avanza.'],
-          ['Revisión adversarial',
-            'Un harness distinto revisa el diff contra el spec y commitea. Los puntos ciegos de un mismo proveedor no llegan a tu rama.'],
-          ['Cada fallo recibe su tratamiento',
-            'Si el implementador muere a mitad de la corrida, un nodo de resiliencia lo triagea: los glitches reintentan ya; una muerte por cuota programa el grafo para despertarse a la hora exacta del reset.'],
-          ['Modo ensemble',
-            'Reparte el spec a varios modelos en paralelo, espera todas las propuestas, y un árbitro extrae los puntos en común para generar una versión consensuada antes de implementar.'],
+          ['Un spec, de punta a punta',
+            'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en tu harness y arranca.'],
+          ['Falló: cargo test, 2 rojos',
+            'El nodo de chequeo corre tus comandos reales. El rojo devuelve el token directo al implementador — nunca llega a ti.'],
+          ['Verde — y una segunda opinión',
+            'El reintento pasa las puertas. Un harness distinto revisa el diff contra el spec antes de que algo avance.'],
+          ['Ensemble y resiliencia',
+            'El mismo spec se reparte entre tres modelos y un quorum se queda con el consenso. Si un agente muere por cuota, un reloj programa el grafo para despertarse a la hora exacta del reset.'],
+          ['Commiteado. Pusheado. Otra vez.',
+            'La rama se pushea y la corrida queda en memoria — el próximo spec ya está recorriendo el mismo grafo.'],
         ] as [string, string][],
       },
       faq: [
@@ -500,7 +499,6 @@ export const es: Dict = {
       },
       demos: {
         first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
-        second: 'Export — la misma partitura renderizada a gif y mp4',
       },
       faq: [
         ['¿Qué es DemoStage?',

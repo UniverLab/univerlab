@@ -1,18 +1,15 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import DemoFigure from '../../components/DemoFigure.astro';
+import { byId } from '../../lib/experiments';
 import { getLang, useTranslations } from '../../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['demostage'];
-
-// Exactly two demo slots, both empty: the frames the score will fill.
-const slots = [
-  { fig: 'Fig. 1', caption: e.demos.first },
-  { fig: 'Fig. 2', caption: e.demos.second },
-];
+const exp = byId('demostage');
 const spectrumBars = [42, 62, 88, 122, 154, 178, 158, 128, 96, 68, 44];
 ---
-<ExperimentLayout id="demostage">
+<ExperimentLayout id="demostage" hideDemo>
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
   <p slot="hero-mark" class="ascii-motif mono" aria-hidden="true">▶──●────●───□</p>
 
@@ -50,22 +47,13 @@ $ demo export gif,mp4
     </div>
   </Fragment>
 
-  <!-- The confident light section: the two 16:9 slots the capture and the
-       export will land in, with the koan as a signature line at its foot. -->
+  <!-- The confident light section: the single genuine capture, with the
+       koan as a signature line at its foot. No second figure exists —
+       one honest figure beats two props. -->
   <section class="band-light">
     <div class="wrap slots-wrap">
-      <div class="slots">
-        {slots.map((s) => (
-          <figure class="demo-slot">
-            <!-- The frame is empty on purpose, so it has nothing to name: it is
-                 hidden from assistive tech and the figcaption is the slot's
-                 description. Labelling it too would read the caption twice. -->
-            <div class="ds-frame" aria-hidden="true">
-              <span class="rec mono">REC</span>
-            </div>
-            <figcaption class="ds-cap"><span class="label mono">{s.fig}</span>{s.caption}</figcaption>
-          </figure>
-        ))}
+      <div class="slots single">
+        <DemoFigure src="/demos/demostage.mp4" essence={exp.essenceHex} label="Fig. 1" caption={e.demos.first} />
       </div>
       <p class="sig mono" aria-hidden="true">{e.koan}</p>
     </div>
@@ -136,57 +124,19 @@ $ demo export gif,mp4
   }
   .ascii-motif { color: #fcac9c; font-size: .72rem; letter-spacing: .16em; }
 
-  /* Two empty 16:9 slots, side by side, stacking below 52rem. Flat frames: no
-     grid texture, no glow, no video, no lens, no dialog. */
-  .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
-  @media (max-width: 52rem) { .slots { grid-template-columns: 1fr; } }
-  .demo-slot { margin: 0; }
-  .ds-frame {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    /* Warm Ash hairline reads on the peach band; Linen card per altius.md. */
-    border: 1px solid var(--ink-mute);
-    border-radius: var(--radius-card);
-    background: #f7f6ff;
-    box-shadow: none;
-  }
-  .rec {
-    position: absolute;
-    top: 0.7rem;
-    right: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
-    color: #190501;
-  }
-  .rec::before {
-    content: '';
-    width: 0.42rem;
-    height: 0.42rem;
-    border-radius: 50%;
-    background: var(--flare); /* graphics only — never text on the light band */
-  }
-  .ds-cap {
-    margin-top: 0.7rem;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: 0.88rem;
-    color: var(--ink-dim);
-  }
-  .ds-cap .label { font-style: normal; margin-right: 0.6rem; }
-  /* The peach band inverts its inks: Warm Ash (the dark-side tertiary) would
-     sit at 1.9:1 here, so captions and the signature line take Obsidian Ember
-     (17.0:1) — the light-section body ink. Flare stays on the REC dot. */
-  .band-light .ds-cap,
+  /* One genuine capture, centred on the hero measure. DemoFigure brings
+     its own frame, lens and caption — no flat empty frames here. */
+  .slots.single { max-width: 56rem; margin-inline: auto; }
+  /* The peach band inverts its inks: the signature line takes Obsidian Ember
+     (17.0:1) — the light-section body ink. */
   .band-light .sig { color: #190501; }
+  :global(html[data-surface='studio'] .band-light .demo-cap) { color: #190501; }
 
   /* The signature line at the foot of the light section — the koan reused
      verbatim, small and quiet, hidden from assistive tech (it repeats the
      hero's). Obsidian on the peach band, like every other line of body copy
-     there: the coral is spent on the REC dots and the step numerals, and
-     orange text on peach has nowhere near AA. */
+     there: the coral is spent on the step numerals, and orange text on peach
+     has nowhere near AA. */
   .sig {
     margin: 2.2rem 0 0;
     font-size: 0.72rem;

@@ -5,8 +5,8 @@ import DemoFigure from '../components/DemoFigure.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
 
-interface Props { id: ExperimentId; hideGithub?: boolean; }
-const { id, hideGithub = false } = Astro.props;
+interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; }
+const { id, hideGithub = false, hideDemo = false } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -92,8 +92,11 @@ const ogImage = `/og/${id}.png`;
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <section class="wrap hero">
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
-      <Banner id={id} color={exp.essenceHex} />
       {hasHeroMark && <slot name="hero-mark" />}
+      {/* The product name is stated twice on purpose (user decision
+          2026-09-28): this visible <h1> is the name/SEO copy in the name
+          position, and the ASCII banner below closes the hero as the
+          signature — right after the install bar, where it already sits. */}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
@@ -128,20 +131,25 @@ const ogImage = `/og/${id}.png`;
           </div>
         </div>
       )}
+      {/* Banner LAST: the ASCII wordmark closes the hero, under the install /
+          entry bar (pages with no install command land here straight after the
+          CTA row). Renders nothing for an id with no art — `banners` covers
+          every shipped experiment except astro-denoise. */}
+      <Banner id={id} color={exp.essenceHex} />
     </section>
 
     <slot name="before-genesis" />
 
     <!-- The origin story is the strongest copy on the page — it comes right
          after the hero, before the feature sections, not buried at the end. -->
-    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo }]}>
+    <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo && !hideDemo }]}>
       <section class="wrap genesis">
         <span class="label">{e.genesis.kicker}{genesisDate ? ` · ${genesisDate}` : ''}</span>
         <h2>{e.genesis.title}</h2>
         <p class="prose" set:html={e.genesis.body} />
       </section>
 
-      {exp.demo && (
+      {exp.demo && !hideDemo && (
         <aside class="demo-col" id="demo" aria-label="Demo">
           <DemoFigure
             src={exp.demo}

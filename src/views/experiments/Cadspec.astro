@@ -6,6 +6,12 @@ const t = useTranslations(lang);
 const e = t.experiments.cadspec;
 ---
 <ExperimentLayout id="cadspec">
+  <!-- No canvas on this page: the decided register is that the living
+       background is the CSS drifting grid alone (the two-pitch sheet below,
+       the teal bloom and the --stir-* parallax driven by the pointermove/rAF
+       script). Nothing mounts a runner here — BaseLayout already skips its
+       own canvas for stillSurfaces (blueprint included) — so no strokes,
+       arcs or cotas ever paint over the paper. -->
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
   <!-- Product artifacts are anchored to the hero, not inserted into the CTA row. -->
   <Fragment slot="hero-visual">
@@ -154,9 +160,9 @@ offset = 0.5</code></pre>
 
   // The drafting grid is quiet and cursor-stirred: a faint teal bloom follows
   // the pointer and the grid drifts a few pixels behind it (lerped, so it
-  // reads as paper being nudged, not as a cursor effect). blueprint is a
-  // stillSurface — no canvas runs here — so the grid is pure CSS and these
-  // are its only variables. Reduced motion never registers the listener or
+  // reads as paper being nudged, not as a cursor effect). This is the page's whole
+  // living background: it paints body::before (z-index -2) directly — no canvas
+  // mounts here any more — and these --stir-* are its only variables. Reduced motion never registers the listener or
   // the loop: the grid renders static. Touch never moves it either (the
   // pointer is the finger, which would shake the page while scrolling).
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -238,24 +244,8 @@ offset = 0.5</code></pre>
     border-color: var(--essence);
     background: transparent;
   }
-  /* The one product name: surfaces.css hides .exp-name by default. */
-  :global(:root[data-surface='blueprint'] .exp-name) {
-    position: static;
-    width: auto;
-    height: auto;
-    clip: auto;
-    overflow: visible;
-    white-space: normal;
-    margin: 0;
-    font-family: var(--font-serif);
-    font-weight: 400;
-    font-size: clamp(2.75rem, 6.25vw, 5.625rem);
-    line-height: 1.3;
-    letter-spacing: -0.025em;
-    color: var(--ink);
-  }
   :global(:root[data-surface='blueprint'] .koan) {
-    /* serif epigraph under the masthead (surfaces.css wants it mono) */
+    /* serif epigraph under the hero motif (surfaces.css wants it mono) */
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 400;
@@ -403,18 +393,24 @@ offset = 0.5</code></pre>
     .art { animation: none; }
   }
 
-  /* Responsive guard — mandatory: below 64rem the absolute cards would sit
-     on the centered headline and can force a horizontal scrollbar. They go
-     static and flow into the flexing, wrapping `.actions` row (after the
-     docs button, because they come from the cta slot).
+  /* Responsive guard — mandatory: below 80rem the absolute cards would sit on
+     the centred hero text and can force a horizontal scrollbar. They go static
+     and flow into the `hero-visual` slot that holds them (the old comment said
+     the `.actions` row and the cta slot; both are stale — they have been
+     product artifacts anchored to the hero since the `hero-visual` slot).
 
-     The threshold is 64rem (1024px), not 60rem: the hero has to fit the
-     banner art (~416px, centred) *between* the two side cards, and it only
-     clears it above ~1024px. Between 961px and 1020px the coords card's box
-     already overlaps the banner's (15px at 961px, leaving a 2px gap to its
-     glyphs and its shadow across the art), so the guard has to bite before
-     that band opens. */
-  @media (max-width: 64rem) {
+     The threshold was 64rem (1024px) and it was measured against the big serif
+     masthead, which used to sit between the two side cards and is no longer
+     rendered: the name moved to the ASCII banner at the foot of the hero. The
+     masthead's 90px is gone, so the text block rose into the cards' band and
+     the binding constraint is now the lede's own 54ch measure.
+
+     Measured, not guessed. `.wrap` caps the hero at 72rem, so past ~1280px the
+     geometry stops changing: the absolute layout is verified clash-free at
+     1280px (lede 297→968, coords card ends at 294 — 3px clear) and identical
+     at every wider viewport. The guard therefore bites all the way to 1280px,
+     which is exactly where the two regimes meet. Below it the cards stack. */
+  @media (max-width: 80rem) {
     :global(:root[data-surface='blueprint'] .hero) { padding-bottom: 2rem; }
     .art-coords,
     .art-dim,
@@ -510,13 +506,13 @@ offset = 0.5</code></pre>
     color: var(--essence);
   }
 
-  /* (i) Background — a quiet drafting grid, cursor-stirred. blueprint is a
-     stillSurface (no canvas ever runs), so this replaces surfaces.css's two
-     centre-line axes from the view: two grid pitches (140px / 28px) in warm
-     ink, a teal bloom under the cursor, and a few pixels of parallax the
-     script feeds through --stir-*. Under reduced motion the variables stay
-     unset and the grid renders static. body::before's position/inset/
-     z-index come from surfaces.css. */
+  /* (i) Backdrop — the LIVING background of this page: a quiet drafting grid,
+     cursor-stirred, painting straight onto body::before (z-index -2) with no
+     canvas above it any more, so the paper drifts on its own: two grid pitches
+     (140px / 28px) in warm ink, a teal bloom under the cursor, and a few pixels
+     of parallax the script feeds through --stir-*. Under reduced motion the
+     variables stay unset and the grid renders static. body::before's
+     position/inset/z-index come from surfaces.css. */
   :global(:root[data-surface='blueprint'] body::before) {
     background-image:
       radial-gradient(420px circle at var(--stir-x, 50%) var(--stir-y, 40%),

@@ -165,31 +165,105 @@ const THEMES: Record<Theme, Runner> = {
 
   /* Primitives — lines, arcs, bézier curves and dimension lines (cotas)
      emerging at random positions, drawing themselves in, then fading. The
-     CAD drafting feel: geometry appearing on the sheet. */
+     CAD drafting feel: geometry appearing on the sheet. Cursor-near spawn:
+     while the pointer has moved within the last second, a new element is
+     born inside a 160 px disc under it; idle (or pointer left the window,
+     or touch) falls back to the original whole-sheet randomness. Idle
+     cadence, cap and draw are unchanged. */
   primitives(ctx) {
     const { c } = ctx;
     type P = { kind: number; x: number; y: number; r: number; a0: number; bend: number; t: number; life: number };
     const items: P[] = [];
     let spawnAcc = 0;
     let prev = 0;
-    const add = () =>
+    // Cursor input — the lfix-cursor-reactions house pattern (bubbles/spiral):
+    // document-level listeners with an AbortController, touch ignored, the
+    // position folded into canvas coordinates. The tick decides whether the
+    // pointer is still "recent". Reduced motion never reaches this module
+    // (ThemeBackground returns before importing it).
+    const RECENT_MS = 1000; // how long a move stays recent
+    const REACH = 160;      // px — spawn disc radius around the pointer
+    let px = -9999;
+    let py = -9999;
+    let hasPointer = false;
+    let lastMove = -Infinity;
+    const ac = new AbortController();
+    document.addEventListener(
+      'pointermove',
+      (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        const rect = ctx.canvas.getBoundingClientRect();
+        px = e.clientX - rect.left;   // rect math is mandatory: on the home
+        py = e.clientY - rect.top;    // card the canvas is a small box in a card
+        hasPointer = true;
+        lastMove = performance.now();
+      },
+      { passive: true, signal: ac.signal }
+    );
+    document.addEventListener(
+      'pointerout',
+      (e: PointerEvent) => {
+        if (!e.relatedTarget) hasPointer = false; // left the window → idle
+      },
+      { passive: true, signal: ac.signal }
+    );
+    // "Recent pointer, inside the sheet" — one expression, used both by the
+    // spawn gate and by `add`, so the two can never disagree. The in-bounds
+    // test keeps a pointer parked outside the canvas from piling elements on
+    // the edge (on /cadspec the canvas is the viewport, so it is always true;
+    // on the home card it is false whenever the pointer is off-card).
+    const recentAt = (t: number) =>
+      hasPointer && t - lastMove < RECENT_MS &&
+      px >= 0 && px <= ctx.w && py >= 0 && py <= ctx.h;
+
+    const add = (t: number) => {
+      let x: number;
+      let y: number;
+      if (recentAt(t)) {
+        // uniform sample inside the 160 px disc (sqrt keeps it a disc, not a
+        // ring), clamped into the same margins the whole-sheet band uses so a
+        // pointer at the edge can never push geometry off the sheet
+        const a = rand(0, Math.PI * 2);
+        const d = REACH * Math.sqrt(Math.random());
+        x = px + Math.cos(a) * d;
+        y = py + Math.sin(a) * d;
+        x = Math.min(Math.max(x, 0.1 * ctx.w), 0.9 * ctx.w);
+        y = Math.min(Math.max(y, 0.12 * ctx.h), 0.88 * ctx.h);
+      } else {
+        x = rand(0.1, 0.9) * ctx.w;   // the old whole-sheet randomness
+        y = rand(0.12, 0.88) * ctx.h;
+      }
       items.push({
         kind: Math.floor(rand(0, 4)), // 0 line · 1 arc · 2 curve · 3 cota
-        x: rand(0.1, 0.9) * ctx.w,
-        y: rand(0.12, 0.88) * ctx.h,
+        x,
+        y,
         r: rand(50, 150),
         a0: rand(0, Math.PI * 2),
         bend: rand(0.35, 0.85) * (Math.random() < 0.5 ? -1 : 1),
         t: 0,
         life: rand(2800, 4400),
       });
+    };
+
+    let sawRecent = false;
     return (t) => {
+      if (!ctx.canvas.isConnected) {
+        ac.abort(); // the runner now owns listeners (house pattern)
+        return;
+      }
       const dt = prev ? t - prev : 16;
       prev = t;
       spawnAcc += dt;
+      // idle→recent transition pulls the first cursor-born element onto the
+      // sheet right away (same cadence pull as spiral in lfix-cursor-reactions),
+      // so the reaction lands well inside the 0.5 s bar. From there the old
+      // 650 ms throttle and the 9-item cap apply unchanged in both states.
+      const recent = recentAt(t);
+      if (recent && !sawRecent) spawnAcc = 650;
+      sawRecent = recent;
       if (spawnAcc > 650 && items.length < 9) {
         spawnAcc = 0;
-        add();
+        add(t);
       }
       c.clearRect(0, 0, ctx.w, ctx.h);
       c.strokeStyle = ctx.color;
