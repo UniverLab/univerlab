@@ -110,9 +110,10 @@ html[data-surface='paper'] .koan {
   border-left: 1px dashed var(--rule-t1);
 }
 
-/* Lede & genesis prose: left-aligned sans. No justification, no hyphenation
-   and no drop cap — the old galley voice (justify + hyphens + Didone initial)
-   is gone. */
+/* Lede & genesis prose: left-aligned sans. No justification and no
+   hyphenation — the old galley voice (justify + hyphens + Didone initial) is
+   gone; the drop cap itself is restored per the Antimetal law (system serif
+   400 at 2.2×, set in Texforge.astro's page styles — never a Didone initial). */
 html[data-surface='paper'] .lede,
 html[data-surface='paper'] .genesis .prose {
   font-family: var(--font-body);
@@ -143,6 +144,21 @@ html[data-surface='paper'] .exp .demo-cap .label {
 html[data-surface='paper'] canvas.bg {
   opacity: 0.25;
 }
+
+/* Parchment canvas with cream section bands (Antimetal layout law): the two
+   narrative blocks — genesis and FAQ — sit on full-bleed cream #f7f6f3 bands,
+   everything else rests on the parchment canvas. The band is a positioned
+   ::before so the content's own stacking is untouched; width:100vw is clipped
+   by overflow-x:clip on the root (the scrollbar-compensation trap). */
+html[data-surface='paper'] .genesis-row,
+html[data-surface='paper'] .faq-section { position: relative; }
+html[data-surface='paper'] .genesis-row::before,
+html[data-surface='paper'] .faq-section::before {
+  content: ''; position: absolute; z-index: -1;
+  inset-block: 0; left: 50%; transform: translateX(-50%);
+  width: 100vw; background: var(--bg-raise);
+}
+html[data-surface='paper'] { overflow-x: clip; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    canopy · `tui` — modern TUI / DevOS.
@@ -487,11 +503,11 @@ html[data-surface='studio'] .koan {
 
 /* ── The light/dark rhythm of the DemoStage page ────────────────────────────
    One confident light section — vapor-peach (#f7ece1 over the studio linen),
-   dark ink — carrying the origin story and both demo slots, and exactly ONE
-   obsidian band (#14110d, the player chrome's own tone) for the five
-   commands. Sections are block-level, so the bands are full-bleed by default
-   and `.wrap` carries the measure. Everything else on the page stays light:
-   two dark bands would tip the page dark-heavy. ─────────────────────────── */
+   dark ink — carrying the origin story and the single real demo figure, and
+   exactly ONE obsidian band (#14110d, the player chrome's own tone) for the
+   five commands. Sections are block-level, so the bands are full-bleed by
+   default and `.wrap` carries the measure. Everything else on the page stays
+   light: two dark bands would tip the page dark-heavy. ───────────────────── */
 html[data-surface='studio'] .band-light {
   background: #f7ece1;
   color: #221d18;
@@ -516,12 +532,18 @@ html[data-surface='studio'] .genesis-row {
 }
 /* `.genesis` is a .wrap grid item with auto margins, so it shrink-wraps to its
    prose measure and centres itself. Give it the row's full width to optically
-   align with the demo slots below; `.wrap`'s max-width + auto margins still
+   align with the demo figure below; `.wrap`'s max-width + auto margins still
    centre the block and `.prose` still holds the measure. */
 html[data-surface='studio'] .genesis-row .genesis { width: 100%; }
-/* This page's spec is exactly two EMPTY 16:9 slots, so the recorded demo the
-   layout renders for us is hidden here. CSS only — the registry is shared. */
+/* The page already shows the registered capture as Fig. 1 in its light band
+   (RULES R6: real asset, never a fabricated frame), so the layout's own aside
+   figure would be a second copy of the same clip — hidden here. CSS only —
+   the registry is shared. */
 html[data-surface='studio'] .demo-col { display: none; }
+/* With the aside figure hidden, the 2-col grid would strand .genesis in the
+   left track on ultrawide — collapse to the single-column measure instead,
+   same as rows that never had a demo. */
+html[data-surface='studio'] .genesis-row { grid-template-columns: 1fr; max-width: 60ch; }
 /* Inside the obsidian band the light-band tokens invert: the mono kicker, the
    dim row copy and the hairlines lift off the dark, and inline code goes to
    ink. The coral stays on the step numerals (graphics, high contrast on
@@ -535,8 +557,8 @@ html[data-surface='studio'] .band-dark .features code { color: #ece7dd; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-surface HERO layouts — each experiment's hero has its own structure, not
-   just its own colour/type. The shared pieces (num · banner · koan · lede ·
-   actions · install) are reflowed/framed differently per surface.
+   just its own colour/type. The shared pieces (num · motif · koan · lede ·
+   actions · install · banner) are reflowed/framed differently per surface.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* The framed heroes (bordered plates) are .wrap elements, so on narrow screens
@@ -868,8 +890,10 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 /* ═══════════════════════════════════════════════════════════════════════════
    2026-09-26 preserved POC styles. Each target has a full style reference in
    docs/landing-poc/styles/ and an executable page contract in docs/.../specs.
-   The shared hero is one H1 + small ASCII motif + product-specific artwork;
-   block-letter README wordmarks remain reference assets, never a second title.
+   The shared hero is one visible H1 + small ASCII motif + product-specific
+   artwork, closed by the block-letter README wordmark banner as the
+   signature (the H1 carries the same name for SEO — see the hide rule at the
+   top of this file, which each surface un-hides below).
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Steep → cadSpec: editorial analytics on paper. */
@@ -884,11 +908,14 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
-:root[data-surface='blueprint'] body::before {
-  background-image:
-    linear-gradient(90deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px)),
-    linear-gradient(0deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px));
-}
+/* The `:root` centre-line axes that used to sit here are gone: they tied with
+   Cadspec.astro's page grid on specificity ((0,2,2)) and won on source order
+   (BaseLayout.css is linked after the page's CSS), so the built sheet was
+   axes + a mis-sized 140px tile instead of the drifting paper grid — a third
+   texture. Blueprint is cadspec's surface alone, so the surviving background
+   is the page's own grid (surfaces.css still draws the faint axes at
+   `html[data-surface='blueprint'] body::before`, (0,1,3) — outranked by the
+   page rule on specificity, never on order). */
 :root[data-surface='blueprint'] .exp { --essence: #5d2a1a !important; }
 :root[data-surface='blueprint'] { --accent: #17191c !important; }
 :root[data-surface='blueprint'] .hero {
@@ -981,7 +1008,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);
-  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'actions visual' 'install install';
+  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'actions visual' 'install install' 'banner banner';
   align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
 }
 :root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
@@ -992,6 +1019,10 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .hero-visual { grid-area: visual; }
 :root[data-surface='paper'] .actions { grid-area: actions; gap: 1rem; }
 :root[data-surface='paper'] .install { grid-area: install; max-width: none; margin-top: 1.5rem; }
+/* The banner is the name, so it is the one hero row that spans both columns —
+   full measure, starting on the same left edge as the lede. `min-width` and
+   `justify-self` are what stop the unbreakable <pre> from widening the grid. */
+:root[data-surface='paper'] .hero > .banner { grid-area: banner; justify-self: stretch; min-width: 0; max-width: 100%; }
 :root[data-surface='paper'] .install-head { border: 0; }
 :root[data-surface='paper'] .cmd { border: 1px dashed #a8a7a1; background: #f7f6f3; }
 :root[data-surface='paper'] .actions .btn { border: 0; border-radius: 9999px; background: #1a1614; color: #f4f4e7; padding: .78rem 1.55rem; font: 500 .875rem/1.4 var(--font-body); }
@@ -1056,13 +1087,13 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   background-size: 88px 88px,88px 88px,auto;
   mask-image: linear-gradient(to bottom,black,transparent 85%);
 }
-:root[data-surface='industrial'] canvas.bg { opacity: .04; }
+:root[data-surface='industrial'] canvas.bg { opacity: .68; }
 :root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: transparent; border: 0; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,
 :root[data-surface='industrial'] .hero::after { content: none; }
-:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: #d8ecf8; background: linear-gradient(180deg,#d8ecf8,#98c0ef); background-clip: text; -webkit-text-fill-color: transparent; }
 :root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
 :root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
+:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: #d8ecf8; background: linear-gradient(180deg,#d8ecf8,#98c0ef); background-clip: text; -webkit-text-fill-color: transparent; }
 :root[data-surface='industrial'] .ascii-motif { color: #b6d9fc; }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 :root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
@@ -1108,6 +1139,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
 :root[data-surface='pastel'] canvas.bg { opacity: .12; }
 
+:root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 /* Preserve single-name heroes on the two pages without a supplied style file. */
 :root[data-surface='quorum'] .exp-name {
   position: static; width: auto; height: auto; margin: 0; padding: 0;
@@ -1115,7 +1147,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   font: 600 clamp(2.6rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif;
   letter-spacing: -.02em; color: var(--ink);
 }
-:root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 :root[data-surface='quorum'] .ascii-motif { color: var(--essence); }
 :root[data-surface='observatory'] .exp-name {
   position: static; width: auto; height: auto; margin: 0; padding: 0;
@@ -1126,7 +1157,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='observatory'] .ascii-motif { color: var(--astro-denoise); }
 
 @media (max-width: 52rem) {
-  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install'; text-align: center; }
+  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install' 'banner'; text-align: center; }
   :root[data-surface='paper'] .hero > * { min-width: 0; }
   :root[data-surface='paper'] .network-mark { width: min(100%, 18rem); overflow: hidden; }
   :root[data-surface='paper'] .hero > .lede { margin-inline: auto; }

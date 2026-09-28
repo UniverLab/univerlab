@@ -34,23 +34,26 @@ if (existsSync(platformsDir)) {
   }
 }
 
-// The graph-engine figure: a static graph that runs on its own clock — a token
-// travelling the happy path, forever, with no scroll position involved. Harness
-// accents come from the registry read above.
+// One spec survives the graph: a single 18s autonomous loop — spec →
+// implement → gates RED (bounce back) → implement → gates GREEN (latches) →
+// review → ensemble fan-out (3 proposers + quorum) → resilience (quota death
+// + clock wake) → review → commit (aurora badge) → 2s hold → restart.
+// Harness accents come from the registry read above.
 const hue = (id: string, fallback: string) =>
   platformEntries.find((p) => p.name === id || p.stem === id)?.color ?? fallback;
 
 const NEUTRAL = 'var(--ink-dim)';
 const gbNodes = [
-  { id: 'spec', kind: 'chip', x: 7, y: 32, label: 'spec', harness: '', color: NEUTRAL },
-  { id: 'implement', kind: 'agent', x: 46, y: 32, label: 'implement', harness: 'claude', color: hue('claude', '#d97757') },
-  { id: 'gates', kind: 'check', x: 64, y: 13, label: 'gates', harness: 'sh', color: NEUTRAL },
-  { id: 'review', kind: 'agent', x: 84, y: 32, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5') },
-  { id: 'resilience', kind: 'agent', x: 64, y: 53, label: 'resilience', harness: 'mimo', color: hue('mimo', '#fb8147') },
-  { id: 'p1', kind: 'agent', x: 21, y: 11, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3') },
-  { id: 'p2', kind: 'agent', x: 24, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4') },
-  { id: 'p3', kind: 'agent', x: 21, y: 53, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa') },
-  { id: 'quorum', kind: 'gate', x: 34, y: 32, label: 'quorum', harness: '', color: NEUTRAL },
+  { id: 'spec', kind: 'chip', x: 6, y: 32, label: 'spec', harness: '', color: NEUTRAL, flash: 0.50 },
+  { id: 'p1', kind: 'agent', x: 17, y: 12, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3'), flash: 0.57 },
+  { id: 'p2', kind: 'agent', x: 17, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4'), flash: 0.56 },
+  { id: 'p3', kind: 'agent', x: 17, y: 52, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa'), flash: 0.58 },
+  { id: 'quorum', kind: 'gate', x: 28, y: 32, label: 'quorum', harness: '', color: NEUTRAL, flash: 0.655 },
+  { id: 'implement', kind: 'agent', x: 43, y: 32, label: 'implement', harness: 'claude', color: hue('claude', '#d97757'), flash: 0.07 },
+  { id: 'gates', kind: 'check', x: 57, y: 12, label: 'gates', harness: 'sh', color: NEUTRAL, flash: 0.20 },
+  { id: 'resilience', kind: 'agent', x: 57, y: 52, label: 'resilience', harness: 'mimo', color: hue('mimo', '#fb8147'), flash: 0.80 },
+  { id: 'review', kind: 'agent', x: 72, y: 32, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5'), flash: 0.47 },
+  { id: 'commit', kind: 'commit', x: 89, y: 32, label: '', harness: '', color: NEUTRAL, flash: 0.87 },
 ];
 const gbEdges = [
   { from: 'spec', to: 'implement', cond: 'pass' },
@@ -67,18 +70,27 @@ const gbEdges = [
   { from: 'p2', to: 'quorum', cond: 'pass' },
   { from: 'p3', to: 'quorum', cond: 'pass' },
   { from: 'quorum', to: 'implement', cond: 'pass' },
+  { from: 'review', to: 'commit', cond: 'pass' },
 ];
 const gbNode = (id: string) => gbNodes.find((n) => n.id === id)!;
-// Happy-path pulses: one token flowing spec → implement → gates → review, and in
-// parallel the ensemble route spec → p2 → quorum → implement. `d` staggers the
-// legs on a shared CSS clock so the token appears to hop node to node.
+// Loop schedule (fractions of the 18s cycle; arrive = depart + 0.06). Red legs:
+// the gates bounce-back and the implement → resilience quota death.
 const gbPulses = [
-  { from: 'spec', to: 'implement', d: 0 },
-  { from: 'implement', to: 'gates', d: 1 },
-  { from: 'gates', to: 'review', d: 2 },
-  { from: 'spec', to: 'p2', d: 0 },
-  { from: 'p2', to: 'quorum', d: 1 },
-  { from: 'quorum', to: 'implement', d: 2 },
+  { from: 'spec', to: 'implement', t0: 0.01, red: false },
+  { from: 'implement', to: 'gates', t0: 0.14, red: false },
+  { from: 'gates', to: 'implement', t0: 0.21, red: true },
+  { from: 'implement', to: 'gates', t0: 0.31, red: false },
+  { from: 'gates', to: 'review', t0: 0.41, red: false },
+  { from: 'spec', to: 'p2', t0: 0.50, red: false },
+  { from: 'spec', to: 'p1', t0: 0.51, red: false },
+  { from: 'spec', to: 'p3', t0: 0.52, red: false },
+  { from: 'p1', to: 'quorum', t0: 0.59, red: false },
+  { from: 'p2', to: 'quorum', t0: 0.595, red: false },
+  { from: 'p3', to: 'quorum', t0: 0.60, red: false },
+  { from: 'quorum', to: 'implement', t0: 0.67, red: false },
+  { from: 'implement', to: 'resilience', t0: 0.74, red: true },
+  { from: 'resilience', to: 'implement', t0: 0.775, red: false },
+  { from: 'review', to: 'commit', t0: 0.84, red: false },
 ];
 const ORBIT_DOTS = [
   [50, 9], [68, 14], [81, 29], [78, 50], [61, 67], [39, 68], [20, 54],
@@ -129,14 +141,22 @@ const ORBIT_DOTS = [
     </div>
   </section>
 
-  <!-- Graph engine — a graph that runs on its own. Every edge is already there
-       and a token travels the happy path on a pure CSS loop, so the figure
-       reads the same at any scroll position: nothing here waits for you. Each
-       agent node sits on a different harness color from the registry. -->
+  <!-- One spec survives the graph — a single spec runs the whole engine on a
+       pure CSS 18s loop, red legs included, ending on the commit. Nothing
+       here waits for scroll. Each agent node sits on a different harness
+       color from the registry. -->
   <section class="wrap section auto-graph">
     <span class="label">{e.builder.kicker}</span>
     <div class="ag-stage">
       <svg class="ag-svg" viewBox="0 0 100 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="ag-aurora" x1="0" x2="1">
+            <stop offset="0" stop-color="rgb(203,255,252)" />
+            <stop offset=".2625" stop-color="rgb(237,255,254)" />
+            <stop offset=".4757" stop-color="rgb(255,253,250)" />
+            <stop offset=".8896" stop-color="rgb(250,209,255)" />
+          </linearGradient>
+        </defs>
         {gbEdges.map((edge) => {
           const a = gbNode(edge.from);
           const b = gbNode(edge.to);
@@ -157,9 +177,9 @@ const ORBIT_DOTS = [
           const b = gbNode(p.to);
           return (
             <circle
-              class="ag-pulse"
+              class={p.red ? 'ag-pulse ag-pulse-red' : 'ag-pulse'}
               r="0.9"
-              style={`--x1:${a.x}px; --y1:${a.y}px; --x2:${b.x}px; --y2:${b.y}px; --d:${p.d}s`}
+              style={`--x1:${a.x}px; --y1:${a.y}px; --x2:${b.x}px; --y2:${b.y}px; --t0:${p.t0}`}
             />
           );
         })}
@@ -171,18 +191,38 @@ const ORBIT_DOTS = [
           >
             {n.kind === 'chip' && <rect x="-4.5" y="-2.6" width="9" height="5.2" rx="1" class="ag-shape" />}
             {n.kind === 'agent' && <circle r="3" class="ag-shape" />}
-            {n.kind === 'check' && <rect x="-2.7" y="-2.7" width="5.4" height="5.4" rx="0.6" class="ag-shape" />}
+            {n.kind === 'check' && <rect x="-2.7" y="-2.7" width="5.4" height="5.4" rx="0.6" class="ag-shape ag-gateshape" />}
+            {n.kind === 'check' && <path class="ag-gatecheck" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
             {n.kind === 'gate' && <rect x="-2.5" y="-2.5" width="5" height="5" rx="0.5" class="ag-shape ag-diamond" />}
-            <text class="ag-label" dy={n.kind === 'chip' ? 1 : 5.8} text-anchor="middle">{n.label}</text>
+            {n.kind === 'commit' && <circle r="3" class="ag-shape ag-commitshape" />}
+            {n.kind === 'commit' && <path class="ag-check" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
+            {n.kind === 'commit' && (
+              <g class="ag-badge">
+                <rect x="-8" y="6.6" width="16" height="4.4" rx="1" />
+                <text dy="9.7" text-anchor="middle">⇡ pushed</text>
+              </g>
+            )}
+            {n.kind !== 'commit' && <text class="ag-label" dy={n.kind === 'chip' ? 1 : 5.8} text-anchor="middle">{n.label}</text>}
             {n.harness && <text class="ag-harness" dy="8.4" text-anchor="middle">{n.harness}</text>}
+            <circle class="ag-hit" r="4.4" style={`--t0:${n.flash}`} />
           </g>
         ))}
+        <g class="ag-redmark">
+          <text x="57" y="5.5" text-anchor="middle">✕ cargo test</text>
+        </g>
+        <g class="ag-clock">
+          <circle cx="63" cy="47" r="1.6" class="ag-clockface" />
+          <line x1="63" y1="47" x2="63" y2="45.8" class="ag-hand" />
+          <line x1="63" y1="47" x2="63.9" y2="47.4" class="ag-hand" />
+          <text x="60" y="55.8" text-anchor="middle" class="ag-quota">✕</text>
+        </g>
       </svg>
       <div class="ag-caption">
+        <p class="ag-stat mono"><span>{e.builder.stat[0]}</span> {e.builder.stat[1]}</p>
         <h2>{e.builder.title}</h2>
         <ol class="ag-steps">
           {e.builder.steps.map(([h, b], i) => (
-            <li class="ag-step">
+            <li class={`ag-step ag-beat ag-beat-${i + 1}`}>
               <span class="ag-step-num mono">{String(i + 1).padStart(2, '0')}</span>
               <h3>{h}</h3>
               <p>{b}</p>
@@ -324,26 +364,28 @@ const ORBIT_DOTS = [
     background: color-mix(in srgb, var(--pcolor) 15%, #011d1c);
   }
 
-  /* ── Graph engine figure ──────────────────────────────────────────────
-     Nothing here is driven by scroll. Every node and edge is drawn at full
-     strength from the start; the only motion is the token, which rides a
-     shared CSS clock (--d staggers the legs) and loops forever. Under
-     prefers-reduced-motion the loop is never declared, so the graph is
-     simply a still, fully assembled figure. */
-  .auto-graph { padding-block: 2rem 3rem; }
+  /* ── One spec survives the graph ────────────────────────────────────
+     Single 18s master loop, phase-locked with zero/negative delays only.
+     Base styles ARE the END frame (committed graph, green checks, caption 5)
+     so prefers-reduced-motion renders a finished run with no animation
+     declared. Only opacity/transform/stroke animate — no layout shift. */
+  .auto-graph { --loop: 18s; padding-block: 2rem 3rem; }
   .ag-stage {
     display: flex; align-items: flex-start; justify-content: center; gap: 4rem;
     margin-top: 1.6rem;
   }
   .ag-svg { width: min(38rem, 54vw); height: auto; flex-shrink: 0; }
   .ag-caption { max-width: 24rem; }
+  .ag-stat { margin: 0 0 0.6rem; color: var(--ink-dim); font-size: 0.85rem; letter-spacing: 0.04em; }
+  .ag-stat span { color: var(--phosphor); font-size: 2.1rem; line-height: 1; margin-right: 0.4rem; }
   .ag-caption h2 { font-size: 1.7rem; margin: 0 0 1.4rem; }
 
   /* The quietest *text* on this page is the AA-lifted helper grey the tui
      substrate declares in global.css (6.54:1 on the Abyss canvas). Slate Deep
      #707777 stays a decorative fill (`--slate-deep`) — as text it is 3.52:1,
      which is why global.css re-states --ink-faint above surfaces.css's pin. */
-  .ag-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.4rem; }
+  .ag-steps { list-style: none; margin: 0; padding: 0; display: grid; }
+  .ag-step { grid-area: 1 / 1; }
   .ag-step-num { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
   .ag-step h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin: 0 0 0.5rem; }
   .ag-step p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
@@ -367,21 +409,113 @@ const ORBIT_DOTS = [
     stroke-dasharray: 1.3 1; opacity: 0.55;
   }
 
-  /* The travelling token. It is invisible by default and only ever shown
-     moving, so the static figure stays clean. */
+  /* Arrival flashes (base: hidden) */
+  .ag-hit { fill: none; stroke: var(--canopy); stroke-width: 0.4; opacity: 0; }
+
+  /* Travelling tokens (base: hidden) */
   .ag-pulse { fill: var(--canopy); opacity: 0; }
+  .ag-pulse-red { fill: #e0605a; }
+
+  /* Latched END states (base = committed graph) */
+  .ag-gateshape { stroke: var(--canopy); fill: color-mix(in srgb, var(--canopy) 12%, var(--bg)); }
+  .ag-gatecheck { fill: none; stroke: var(--canopy); stroke-width: 0.5; opacity: 1; }
+  .ag-commitshape { stroke: var(--canopy); fill: color-mix(in srgb, var(--canopy) 12%, var(--bg)); }
+  .ag-check { fill: none; stroke: var(--canopy); stroke-width: 0.5; opacity: 1; }
+  .ag-badge rect { fill: url(#ag-aurora); }
+  .ag-badge text { font-family: var(--font-mono); font-size: 2.2px; fill: #222222; }
+  .ag-badge { opacity: 1; }
+  .ag-redmark { opacity: 0; }
+  .ag-redmark text { font-family: var(--font-mono); font-size: 2.2px; fill: color-mix(in srgb, #e0605a 75%, var(--ink)); }
+  .ag-clock { opacity: 0; }
+  .ag-clockface { fill: color-mix(in srgb, var(--nc, var(--ink-dim)) 12%, var(--bg)); stroke: var(--ink-dim); stroke-width: 0.3; }
+  .ag-hand { stroke: var(--ink-dim); stroke-width: 0.3; }
+  .ag-quota { font-family: var(--font-mono); font-size: 3px; fill: color-mix(in srgb, #e0605a 75%, var(--ink)); }
+
+  /* Beat captions: base = END frame (beat 5 visible, rest hidden) */
+  .ag-beat { opacity: 0; }
+  .ag-beat-5 { opacity: 1; }
+
+  @keyframes ag-leg {
+    0%   { transform: translate(var(--x1), var(--y1)); opacity: 0; }
+    0.8% { opacity: 0.95; }
+    5.2% { transform: translate(var(--x2), var(--y2)); opacity: 0.95; }
+    6%   { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+    100% { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+  }
+  @keyframes ag-flash {
+    0%   { opacity: 0.9; }
+    6%   { opacity: 0; }
+    100% { opacity: 0; }
+  }
+  @keyframes ag-latch-red {
+    0% { opacity: 0; } 19.5% { opacity: 0; } 20% { opacity: 1; }
+    27.5% { opacity: 1; } 28% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-latch-gates {
+    0% { stroke: var(--ink-dim); } 36% { stroke: var(--ink-dim); }
+    37% { stroke: var(--canopy); } 100% { stroke: var(--canopy); }
+  }
+  @keyframes ag-latch-gatecheck {
+    0% { opacity: 0; } 36% { opacity: 0; } 37% { opacity: 1; } 100% { opacity: 1; }
+  }
+  @keyframes ag-latch-commitshape {
+    0% { stroke: var(--ink-dim); } 86.5% { stroke: var(--ink-dim); }
+    87% { stroke: var(--canopy); } 100% { stroke: var(--canopy); }
+  }
+  @keyframes ag-latch-commit {
+    0% { opacity: 0; } 86.5% { opacity: 0; } 87.5% { opacity: 1; } 100% { opacity: 1; }
+  }
+  @keyframes ag-latch-badge {
+    0% { opacity: 0; transform: translateY(1.5px); }
+    86.5% { opacity: 0; transform: translateY(1.5px); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ag-latch-clock {
+    0% { opacity: 0; } 73% { opacity: 0; } 74% { opacity: 1; }
+    85% { opacity: 1; } 86% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-beat-1 {
+    0% { opacity: 0; } 1% { opacity: 1; } 13% { opacity: 1; }
+    14% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-beat-2 {
+    0% { opacity: 0; } 13% { opacity: 0; } 14% { opacity: 1; }
+    27% { opacity: 1; } 28% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-beat-3 {
+    0% { opacity: 0; } 27.5% { opacity: 0; } 28.5% { opacity: 1; }
+    46% { opacity: 1; } 47% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-beat-4 {
+    0% { opacity: 0; } 47% { opacity: 0; } 48% { opacity: 1; }
+    80% { opacity: 1; } 81% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes ag-beat-5 {
+    0% { opacity: 0; } 81% { opacity: 0; } 82% { opacity: 1; } 100% { opacity: 1; }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .ag-pulse {
-      animation: ag-travel 4s linear infinite;
-      animation-delay: var(--d);
+      animation: ag-leg var(--loop) linear infinite;
+      animation-delay: calc((var(--t0) - 1) * var(--loop));
     }
-  }
-  @keyframes ag-travel {
-    0%    { transform: translate(var(--x1), var(--y1)); opacity: 0; }
-    4%    { opacity: 0.85; }
-    24%   { opacity: 0.85; }
-    27.5% { transform: translate(var(--x2), var(--y2)); opacity: 0; }
-    100%  { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+    .ag-hit {
+      animation: ag-flash var(--loop) linear infinite;
+      animation-delay: calc((var(--t0) - 1) * var(--loop));
+    }
+    .ag-redmark { animation: ag-latch-red var(--loop) linear infinite; }
+    .ag-gateshape { animation: ag-latch-gates var(--loop) linear infinite; }
+    .ag-gatecheck { animation: ag-latch-gatecheck var(--loop) linear infinite; }
+    .ag-commitshape { animation: ag-latch-commitshape var(--loop) linear infinite; }
+    .ag-check { animation: ag-latch-commit var(--loop) linear infinite; }
+    .ag-badge { animation: ag-latch-badge var(--loop) linear infinite; }
+    .ag-clock { animation: ag-latch-clock var(--loop) linear infinite; }
+    .ag-beat-1 { animation: ag-beat-1 var(--loop) linear infinite; }
+    .ag-beat-2 { animation: ag-beat-2 var(--loop) linear infinite; }
+    .ag-beat-3 { animation: ag-beat-3 var(--loop) linear infinite; }
+    .ag-beat-4 { animation: ag-beat-4 var(--loop) linear infinite; }
+    .ag-beat-5 { animation: ag-beat-5 var(--loop) linear infinite; }
   }
 
   @media (max-width: 52rem) {

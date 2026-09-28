@@ -1,12 +1,14 @@
 // Golden fractal — the Fibonacci whirling squares (1,1,2,3,5,8,13,21…) with
-// the golden spiral they inscribe, drawn faint and static, while a sparkling
-// mote sweeps out along the spiral. A nod to the Fibonacci deck. Quorum.
+// the golden spiral they inscribe, drawn static and visible-but-quiet (level
+// set per circadian surface), while a sparkling mote sweeps out along the
+// spiral. A nod to the Fibonacci deck. Quorum.
 //
 // Extracted from backgrounds.ts so the entry module stays readable; the
 // behaviour is unchanged except for the cursor reaction: when the pointer is
-// active the spawn cadence tightens and each new spark is biased toward the
-// arc point nearest the cursor, so the reaction reads within 0.5 s. Idle
-// cadence is byte-identical to before.
+// active the spawn cadence tightens to ≈900 ms, each new spark is biased
+// toward the arc point nearest the cursor and burns brighter for its first
+// second, so the reaction reads within 0.5 s. Idle cadence is byte-identical
+// to before.
 
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    (the same move brain.ts and spotlight.ts made) so the module needs no
@@ -65,8 +67,8 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
   // we are still "active" (the pointer has moved within the last second).
   // Touch input is ignored entirely.
   const POINTER_IDLE_MS = 1000;
-  const ACTIVE_EVERY_MIN = 750;  // ms — fastest cadence while the pointer is moving
-  const ACTIVE_EVERY_RND = 450;  // ms — added jitter on top
+  const ACTIVE_EVERY_MIN = 700;  // ms — fastest cadence while the pointer is moving
+  const ACTIVE_EVERY_RND = 400;  // ms — added jitter on top (mean ≈ 900 ms)
   const MAX_SPARKS = 16;         // cap so an active pointer never saturates the spiral
   let tx = ctx.w * 0.5;
   let ty = ctx.h * 0.3;
@@ -106,10 +108,15 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
     const toX = (u: number) => ox + u * S;
     const toY = (v: number) => oy + v * S;
 
-    // Whirling squares — very faint structure.
+    // Whirling squares — quiet but legible structure. The old 0.15 / 0.19
+    // washed out on the 0.68 canvas opacity, so the golden geometry read as
+    // nothing at all; raised to a visible-but-quiet level per circadian
+    // surface (day on sand: 0.18 / 0.22, night on espresso: 0.20 / 0.24).
+    // Read every frame so a celestial scrub repaints the right level.
+    const isDay = document.documentElement.dataset.celestial === 'sun';
     c.strokeStyle = A;
     c.lineWidth = 1;
-    c.globalAlpha = 0.15;
+    c.globalAlpha = isDay ? 0.18 : 0.2;
     for (const q of squares) {
       c.strokeRect(toX(q.x), toY(q.y), q.s * S, q.s * S);
     }
@@ -117,7 +124,7 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
     // The golden spiral through them.
     c.lineCap = 'round';
     c.lineWidth = 1.3;
-    c.globalAlpha = 0.19;
+    c.globalAlpha = isDay ? 0.22 : 0.24;
     c.beginPath();
     for (let i = 0; i <= 220; i++) {
       const th = (i / 220) * thMax;
@@ -183,7 +190,7 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
         fast: active,
       });
       nextSpawn = t + (active
-        ? ACTIVE_EVERY_MIN + Math.random() * ACTIVE_EVERY_RND // 0.75–1.2 s
+        ? ACTIVE_EVERY_MIN + Math.random() * ACTIVE_EVERY_RND // 0.7–1.1 s (≈900 ms mean)
         : 3000 + Math.random() * 2000);                       // 3–5 s ambient
     }
     for (let k = sparks.length - 1; k >= 0; k--) {
@@ -206,10 +213,15 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
       const hx = toX(pu + rHead * Math.cos(thHead));
       const hy = toY(pv + rHead * Math.sin(thHead));
       const tw = 0.6 + 0.4 * Math.sin(t * 0.005 + sp.p1); // gentle twinkle
-      const rad = 7 * (0.8 + 0.2 * tw);
+      // Pointer-born sparks burn clearly brighter for their first second —
+      // bigger halo, hotter core, tighter core — so the cursor reaction
+      // dominates the ambient. Ambient sparks are fast === false ⇒ bright = 0
+      // ⇒ every term reduces exactly to today's ambient draw.
+      const bright = sp.fast ? Math.max(0, 1 - lt / 1000) : 0;
+      const rad = 7 * (0.8 + 0.2 * tw) * (1 + 0.45 * bright);
       const g = c.createRadialGradient(hx, hy, 0, hx, hy, rad);
-      g.addColorStop(0, A + 'aa');
-      g.addColorStop(0.4, A + '2a');
+      g.addColorStop(0, A + (bright > 0 ? 'ee' : 'aa'));
+      g.addColorStop(0.4, A + (bright > 0 ? '4a' : '2a'));
       g.addColorStop(1, A + '00');
       c.globalAlpha = env;
       c.fillStyle = g;
@@ -217,9 +229,9 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
       c.arc(hx, hy, rad, 0, Math.PI * 2);
       c.fill();
       c.fillStyle = A;
-      c.globalAlpha = env * (0.35 + 0.35 * tw);
+      c.globalAlpha = env * Math.min(1, (0.35 + 0.35 * tw) + 0.5 * bright);
       c.beginPath();
-      c.arc(hx, hy, 1.4, 0, Math.PI * 2);
+      c.arc(hx, hy, 1.4 + 1.0 * bright, 0, Math.PI * 2);
       c.fill();
     }
     c.globalAlpha = 1;

@@ -2,12 +2,13 @@
  * Tests for the spiral runner (src/scripts/bg-spiral.ts) — the Quorum
  * background, split out of backgrounds.ts so that module stays within its
  * size budget. Verifies the cursor contract: the static whirling-squares
- * structure and the 3–5 s ambient spark wander stay untouched, while an
- * active pointer pulls the next spawn to (first active frame + 180 ms),
- * biases each new spark toward the arc point nearest the cursor, ramps
- * pointer-born sparks in over 200 ms, and tightens the cadence to 0.75–1.2 s.
- * Touch is ignored; a detached canvas aborts the listeners. Given-When-Then
- * pattern, like field.test.ts and brain.test.ts.
+ * structure is drawn at a visible-but-quiet level per circadian surface and
+ * the 3–5 s ambient spark wander stays untouched, while an active pointer
+ * pulls the next spawn to (first active frame + 180 ms), biases each new
+ * spark toward the arc point nearest the cursor, ramps pointer-born sparks
+ * in over 200 ms, burns them brighter for their first second, and tightens
+ * the cadence to ≈900 ms. Touch is ignored; a detached canvas aborts the
+ * listeners. Given-When-Then pattern, like field.test.ts and brain.test.ts.
  */
 import { spiral } from '../scripts/bg-spiral';
 
@@ -25,7 +26,7 @@ function firePointer(type: string, props: Record<string, unknown>) {
  * together (setClock / step) so the runner's 1 s activity gate is testable.
  * Math.random is pinned to 0.5, making every spawn deterministic:
  *   nextSpawn₀ = 300 + 0.5 * 1200 = 900, life = 10000 + 0.5 * 5000 = 12500,
- *   ambient cadence = 3000 + 0.5 * 2000 = 4000, active = 750 + 0.5 * 450 = 975.
+ *   ambient cadence = 3000 + 0.5 * 2000 = 4000, active = 700 + 0.5 * 400 = 900.
  */
 function makeCtx(w = 800, h = 600) {
   const canvas = document.createElement('canvas');
@@ -84,6 +85,7 @@ function makeCtx(w = 800, h = 600) {
 afterEach(() => {
   jest.restoreAllMocks();
   document.body.innerHTML = '';
+  delete document.documentElement.dataset.celestial;
 });
 
 describe('spiral', () => {
@@ -142,9 +144,11 @@ describe('spiral', () => {
     step(tick, 900); // spark born at t = 900, life = 12500
     expect(sparks()).toBe(1);
     alphas.length = 0;
-    // Spark alphas only — the static structure strokes (0.15 / 0.19) and the
-    // trailing reset-to-1 are not part of the fade-in envelope.
-    const envAlphas = () => alphas.filter((v) => v < 1 && v !== 0.15 && v !== 0.19);
+    // Spark alphas only — the static structure strokes (0.18/0.22 by day,
+    // 0.20/0.24 by night) and the trailing reset-to-1 are not part of the
+    // fade-in envelope.
+    const STRUCT = [0.18, 0.2, 0.22, 0.24];
+    const envAlphas = () => alphas.filter((v) => v < 1 && !STRUCT.includes(v));
     // When: a frame lands 100 ms after birth (env = u / 0.12 ≈ 0.067)
     step(tick, 1000);
     const early = Math.max(...envAlphas());
@@ -191,6 +195,59 @@ describe('spiral', () => {
     expect(maxEnv).toBeGreaterThan(0.5);
   });
 
+  it('cursor-born sparks burn clearly brighter for their first second, then settle back to ambient', () => {
+    // Given: a spiral pulled early by a pointer that entered at t = 100
+    const { ctx, setClock, alphas, arcs, step } = makeCtx();
+    const tick = spiral(ctx);
+    step(tick, 100);
+    setClock(100);
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 700, clientY: 280 });
+    step(tick, 101); // pull ⇒ spawn scheduled at 281
+    step(tick, 281); // biased spark born
+    // When: a frame lands 100 ms into its life (bright ≈ 0.9)
+    alphas.length = 0;
+    arcs.length = 0;
+    step(tick, 381);
+    // Then: the spark draws [halo, core] — both inflated over the ambient
+    // bounds (7 px halo, 1.4 px core) and a hotter core for its alpha…
+    expect(arcs).toHaveLength(2);
+    expect(arcs[0].r).toBeGreaterThan(7);
+    expect(arcs[1].r).toBeGreaterThan(1.4 + 1e-9);
+    // …the core/halo alpha ratio (ambient: 0.42–0.7) proves the boost
+    const haloA = alphas[alphas.length - 3];
+    const coreA = alphas[alphas.length - 2];
+    expect(coreA / haloA).toBeGreaterThan(0.8);
+    // When: 1.5 s have passed — the burn is over (an ambient spark may have
+    // joined in the same frame; the pointer-born one draws last)
+    alphas.length = 0;
+    arcs.length = 0;
+    step(tick, 1781);
+    // Then: its halo, core radius and core alpha are back to ambient bounds
+    expect(arcs[arcs.length - 2].r).toBeLessThanOrEqual(7 + 1e-9);
+    expect(arcs[arcs.length - 1].r).toBeCloseTo(1.4, 6);
+    expect(alphas[alphas.length - 2]).toBeLessThanOrEqual(0.7 + 1e-9);
+  });
+
+  it('raises the structure strokes to a visible-but-quiet level per circadian surface', () => {
+    // Given: the day surface (gold on sand)
+    const { ctx, alphas, step } = makeCtx();
+    document.documentElement.dataset.celestial = 'sun';
+    const tick = spiral(ctx);
+    // When: a frame paints
+    step(tick, 100);
+    // Then: whirling squares at 0.18, golden spiral at 0.22
+    expect(alphas[0]).toBeCloseTo(0.18, 6);
+    expect(alphas[1]).toBeCloseTo(0.22, 6);
+    // When: the surface flips to night (gold on espresso)
+    document.documentElement.dataset.celestial = 'moon';
+    alphas.length = 0;
+    step(tick, 200);
+    // Then: whirling squares at 0.20, golden spiral at 0.24
+    expect(alphas[0]).toBeCloseTo(0.2, 6);
+    expect(alphas[1]).toBeCloseTo(0.24, 6);
+    delete document.documentElement.dataset.celestial;
+  });
+
   it('the spawn bias tracks the cursor: opposite arcs birth opposite heads', () => {
     // Given: a spiral pulled by a pointer seeded at the outer right
     const right = makeCtx();
@@ -217,7 +274,7 @@ describe('spiral', () => {
     left.randomSpy.mockRestore();
   });
 
-  it('active cadence tightens to 750–1200 ms while the pointer keeps travelling', () => {
+  it('active cadence tightens to 700–1100 ms (≈900 ms mean) while the pointer keeps travelling', () => {
     // Given: a pointer that keeps moving (each move refreshes the 1 s gate)
     const { ctx, setClock, step, sparks, reset } = makeCtx();
     const tick = spiral(ctx);

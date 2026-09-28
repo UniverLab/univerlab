@@ -12,8 +12,8 @@ son la fuente de verdad hasta recuperarlos. No editar sin el usuario.
 4. Living cursor-seeded canvas background, quiet when idle,
    prefers-reduced-motion respected, touch fallback sane.
 5. No scroll-driven storytelling (any SVG animation must be autonomous).
-6. Real copy throughout, demo slots as clearly-marked empty frames
-   (no fake screenshots/content).
+6. Demo slots must use real assets when registered in experiments.ts;
+   never fabricate empty REC frames.
 7. Body never reads as a menu (nav links only in header).
 8. Astro: stars never look clickable, mouse lines only between real
    nearby stars, ephemeral.

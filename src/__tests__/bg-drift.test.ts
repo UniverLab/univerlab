@@ -2,8 +2,9 @@
  * Tests for the drift runner (src/scripts/bg-drift.ts) — the DemoStage
  * background, split out of backgrounds.ts so that module stays within its
  * size budget. Verifies the cursor contract: travel within REACH kicks and
- * flashes the motes, glow decays to the byte-identical idle draw, touch never
- * stirs, and a detached canvas aborts the listeners.
+ * flashes the motes, a moving pointer sows a faint ~300 ms comet trail that
+ * prunes itself within ~2 s, glow decays to the byte-identical idle draw,
+ * touch never stirs, and a detached canvas aborts the listeners.
  * Given-When-Then pattern, like field.test.ts and brain.test.ts.
  */
 import { drift } from '../scripts/bg-drift';
@@ -119,9 +120,10 @@ describe('drift', () => {
     tick(133);
     // Then: the motes flash brighter than idle and the wake moves them
     expect(Math.max(...alphas.filter((a) => a !== 1))).toBeGreaterThan(0.7);
-    expect(Math.max(...arcs.map((p, i) => Math.abs(p.x - seeded[i].x)))).toBeGreaterThan(0.18);
-    // And: lit motes are drawn a touch bigger (the extra ink cue)
-    expect(Math.max(...arcs.map((p) => p.r))).toBeGreaterThan(1.3 + 1e-9);
+    expect(Math.max(...arcs.slice(0, N).map((p, i) => Math.abs(p.x - seeded[i].x)))).toBeGreaterThan(0.18);
+    // And: lit motes are drawn a touch bigger (the extra ink cue) — the
+    // trailing arcs belong to the comet trail and are checked on their own
+    expect(Math.max(...arcs.slice(0, N).map((p) => p.r))).toBeGreaterThan(1.3 + 1e-9);
     // When: the pointer parks and ~6 s pass (τ = 550 ms ⇒ glow snaps to 0)
     let t = 183;
     for (let i = 0; i < 120; i++) {
@@ -148,11 +150,54 @@ describe('drift', () => {
     firePointer('pointermove', { pointerType: 'mouse', clientX: 799, clientY: 599 });
     reset();
     tick(66);
-    // Then: every mote advanced at most CAP = 2.2 px (wrap-safe)
+    // Then: every mote advanced at most CAP = 3.8 px (wrap-safe)
     for (let i = 0; i < N; i++) {
-      expect(wrapStep(arcs[i].x, before[i].x, W)).toBeLessThanOrEqual(2.2 + 1e-9);
-      expect(wrapStep(arcs[i].y, before[i].y, H)).toBeLessThanOrEqual(2.2 + 1e-9);
+      expect(wrapStep(arcs[i].x, before[i].x, W)).toBeLessThanOrEqual(3.8 + 1e-9);
+      expect(wrapStep(arcs[i].y, before[i].y, H)).toBeLessThanOrEqual(3.8 + 1e-9);
     }
+  });
+
+  it('sows a faint comet trail at the cursor per ~300 ms beat while moving, then prunes it within ~2 s', () => {
+    // Given: a field whose pointer has seeded once (no travel yet)
+    const { ctx, arcs, alphas, reset } = makeCtx();
+    const tick = drift(ctx);
+    tick(0);
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 400, clientY: 300 });
+    reset();
+    tick(50);
+    expect(arcs).toHaveLength(N);
+    // When: a drag — the pointer sweeps 40 px between frames, 100 ms apart
+    let t = 50;
+    let prev = [...arcs];
+    let maxStep = 0;
+    for (let i = 1; i <= 6; i++) {
+      t += 100;
+      firePointer('pointermove', { pointerType: 'mouse', clientX: 400 + i * 40, clientY: 300 + i * 20 });
+      reset();
+      tick(t);
+      for (let k = 0; k < N; k++) {
+        maxStep = Math.max(maxStep, wrapStep(arcs[k].x, prev[k].x, W), wrapStep(arcs[k].y, prev[k].y, H));
+      }
+      prev = arcs.slice(0, N);
+    }
+    // Then: the motes visibly scatter along the path — far beyond the 0.18 px idle drift
+    expect(maxStep).toBeGreaterThan(1);
+    // And: the beat left faint motes behind the cursor (N motes + trail)
+    expect(arcs.length).toBeGreaterThan(N);
+    // The frame drew N motes, then the trail, then reset the alpha to 1
+    const trailAlphas = alphas.slice(N, alphas.length - 1);
+    expect(trailAlphas.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...trailAlphas)).toBeLessThan(0.5);
+    expect(Math.min(...trailAlphas)).toBeGreaterThan(0);
+    // When: the pointer parks and 6 s pass (trail life ≤ 2.2 s, glow τ = 550 ms)
+    for (let i = 0; i < 60; i++) {
+      t += 100;
+      reset();
+      tick(t);
+    }
+    // Then: the trail is gone — exactly N motes at the byte-identical idle draw
+    expect(arcs).toHaveLength(N);
+    expect(alphas.filter((a) => a !== 1)).toEqual(new Array(N).fill(0.7));
   });
 
   it('ignores touch pointer input — a tap never stirs the field', () => {

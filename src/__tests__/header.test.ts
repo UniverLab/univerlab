@@ -121,7 +121,7 @@ describe('Header experiments dropdown', () => {
     expect(mobileBlock).toMatch(/right:\s*calc\(100% \+ 0\.6rem\)/);
     expect(mobileBlock).toMatch(/left:\s*auto/);
     expect(mobileBlock).toMatch(/top:\s*0/);
-    expect(mobileBlock).toMatch(/background:\s*var\(--bg-raise\)/);
+    expect(mobileBlock).toMatch(/background:\s*var\(--menu-bg\)/);
     expect(mobileBlock).toMatch(/border:\s*1px solid var\(--line\)/);
     expect(mobileBlock).toMatch(/border-radius:\s*12px/);
     expect(mobileBlock).toMatch(/box-shadow:\s*0 14px 36px/);
