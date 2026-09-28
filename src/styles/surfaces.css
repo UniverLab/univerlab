@@ -904,11 +904,14 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
-:root[data-surface='blueprint'] body::before {
-  background-image:
-    linear-gradient(90deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px)),
-    linear-gradient(0deg, transparent calc(50% - .5px), rgba(23,25,28,.025) 50%, transparent calc(50% + .5px));
-}
+/* The `:root` centre-line axes that used to sit here are gone: they tied with
+   Cadspec.astro's page grid on specificity ((0,2,2)) and won on source order
+   (BaseLayout.css is linked after the page's CSS), so the built sheet was
+   axes + a mis-sized 140px tile instead of the drifting paper grid — a third
+   texture. Blueprint is cadspec's surface alone, so the surviving background
+   is the page's own grid (surfaces.css still draws the faint axes at
+   `html[data-surface='blueprint'] body::before`, (0,1,3) — outranked by the
+   page rule on specificity, never on order). */
 :root[data-surface='blueprint'] .exp { --essence: #5d2a1a !important; }
 :root[data-surface='blueprint'] { --accent: #17191c !important; }
 :root[data-surface='blueprint'] .hero {
@@ -1080,7 +1083,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   background-size: 88px 88px,88px 88px,auto;
   mask-image: linear-gradient(to bottom,black,transparent 85%);
 }
-:root[data-surface='industrial'] canvas.bg { opacity: .04; }
+:root[data-surface='industrial'] canvas.bg { opacity: .68; }
 :root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: transparent; border: 0; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,
 :root[data-surface='industrial'] .hero::after { content: none; }
