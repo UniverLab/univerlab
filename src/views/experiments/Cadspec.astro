@@ -1,11 +1,21 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import ThemeBackground from '../../components/ThemeBackground.astro';
+import { byId } from '../../lib/experiments';
 import { getLang, useTranslations } from '../../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.cadspec;
+const exp = byId('cadspec');
 ---
 <ExperimentLayout id="cadspec">
+  <!-- The live background: the registry's primitives runner (lines, arcs,
+       béziers and cotas drawing themselves on the sheet). BaseLayout skips
+       its own mount for stillSurfaces, so this landing block mounts it
+       itself — same idea as Home.astro starting its card canvases. Theme and
+       colour are registry values, never literals. The drafting backdrop
+       stays under it: body::before is z-index -2, this canvas .bg is -1. -->
+  <ThemeBackground theme={exp.bg} color={exp.essenceHex} />
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
   <!-- Product artifacts are anchored to the hero, not inserted into the CTA row. -->
   <Fragment slot="hero-visual">
@@ -154,9 +164,9 @@ offset = 0.5</code></pre>
 
   // The drafting grid is quiet and cursor-stirred: a faint teal bloom follows
   // the pointer and the grid drifts a few pixels behind it (lerped, so it
-  // reads as paper being nudged, not as a cursor effect). blueprint is a
-  // stillSurface — no canvas runs here — so the grid is pure CSS and these
-  // are its only variables. Reduced motion never registers the listener or
+  // reads as paper being nudged, not as a cursor effect). This is the CSS layer under
+  // the primitives canvas (body::before z-index -2, canvas .bg z-index -1), and these
+  // --stir-* are its only variables. Reduced motion never registers the listener or
   // the loop: the grid renders static. Touch never moves it either (the
   // pointer is the finger, which would shake the page while scrolling).
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -239,7 +249,7 @@ offset = 0.5</code></pre>
     background: transparent;
   }
   :global(:root[data-surface='blueprint'] .koan) {
-    /* serif epigraph under the masthead (surfaces.css wants it mono) */
+    /* serif epigraph under the hero motif (surfaces.css wants it mono) */
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 400;
@@ -500,9 +510,10 @@ offset = 0.5</code></pre>
     color: var(--essence);
   }
 
-  /* (i) Background — a quiet drafting grid, cursor-stirred. blueprint is a
-     stillSurface (no canvas ever runs), so this replaces surfaces.css's two
-     centre-line axes from the view: two grid pitches (140px / 28px) in warm
+  /* (i) Backdrop — a quiet drafting grid, cursor-stirred, BEHIND the live
+     primitives canvas (body::before z-index -2, ThemeBackground's .bg -1), so
+     the drafting elements that draw themselves are the background and the grid
+     is only the paper under them: two grid pitches (140px / 28px) in warm
      ink, a teal bloom under the cursor, and a few pixels of parallax the
      script feeds through --stir-*. Under reduced motion the variables stay
      unset and the grid renders static. body::before's position/inset/

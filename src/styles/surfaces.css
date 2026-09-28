@@ -827,8 +827,9 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 /* ═══════════════════════════════════════════════════════════════════════════
    2026-09-26 preserved POC styles. Each target has a full style reference in
    docs/landing-poc/styles/ and an executable page contract in docs/.../specs.
-   The shared hero is one H1 + small ASCII motif + product-specific artwork;
-   block-letter README wordmarks remain reference assets, never a second title.
+   The shared hero is one sr-only H1 + small ASCII motif + product-specific
+   artwork, closed by the block-letter README wordmark banner as the single
+   visible name (see the hide rule at the top of this file).
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Steep → cadSpec: editorial analytics on paper. */
