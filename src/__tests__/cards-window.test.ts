@@ -81,6 +81,38 @@ describe('Cards window — no hand-kept surfaces map in Home.astro', () => {
     expect(homeSrc).toMatch(/startBackground\(canvas, theme, color, bg, surf\)/);
     expect(homeSrc).toMatch(/card\.dataset\.flipSurface/);
   });
+
+  it('should read the PAGE accent as the runner colour, not the registry hex', () => {
+    // Given: a card whose inline --essence is the registry hex (ghScaff copper)
+    // When: startCard resolves the colour
+    // Then: --surface-essence wins, with the registry hex as the fallback
+    expect(homeSrc).toMatch(
+      /getPropertyValue\('--surface-essence'\)\.trim\(\)[\s\S]*?getPropertyValue\('--essence'\)\.trim\(\)/
+    );
+  });
+
+  it('should re-point --essence at --surface-essence on the flip', () => {
+    // A flipped card's EXP number, status dot, name and motif must wear the
+    // page accent, so the flip rule re-points the token every element reads.
+    expect(homeSrc).toMatch(/--essence: var\(--surface-essence\);/);
+    expect(homeSrc).toMatch(/\.card-motif[^}]*color: var\(--essence\)/);
+  });
+
+  it('should declare a --surface-essence in every flip-surface group, in global.css', () => {
+    // One token per surface, declared in the reusable group — never in Home.
+    for (const surface of [
+      'paper', 'tui', 'pastel', 'industrial',
+      'blueprint', 'observatory', 'quorum', 'studio',
+    ]) {
+      const group = globalCss.match(
+        new RegExp(`\\[data-flip-surface='${surface}'\\][^{]*\\{[^}]*\\}`)
+      );
+      expect(group).not.toBeNull();
+      expect(group![0]).toMatch(/--surface-essence:\s*#[0-9a-f]{3,8};/);
+    }
+    // …and Home holds no hex of its own for it.
+    expect(homeSrc).not.toMatch(/--surface-essence:\s*#/);
+  });
 });
 
 describe('Cards window — template wires the transition + motif', () => {
@@ -274,6 +306,26 @@ describe('Cards window — startBackground surface selector', () => {
 
   it('should leave ThemeBackground call sites on the 4-arg page path', () => {
     expect(themeBgSrc).not.toMatch(/bg\s*,/);
+  });
+
+  it('should hand the surface to the runner instead of letting it read the DOM', () => {
+    // startBackground is the ONLY resolver (argument first, page second) and
+    // passes the result on ctx.surface …
+    expect(backgroundsSrc).toMatch(/const surf = surface \?\? document\.documentElement\.dataset\.surface;/);
+    expect(backgroundsSrc).toMatch(/ctx\.surface = surf;/);
+    expect(backgroundsSrc).toMatch(/surface\?: string/);
+    // … so no runner may read documentElement itself: on the home page <html>
+    // has no surface, and a direct read silently skips the re-tint. Every
+    // runner module is checked, not just the one that had the bug.
+    const offenders = readdirSync(resolve(__dirname, '..', 'scripts'))
+      .filter((f) => f.endsWith('.ts') && f !== 'backgrounds.ts')
+      .filter((f) => {
+        const code = readFileSync(resolve(__dirname, '..', 'scripts', f), 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '') // comments may name the old read
+          .replace(/\/\/.*$/gm, '');
+        return /documentElement\.dataset\.surface/.test(code);
+      });
+    expect(offenders).toEqual([]);
   });
 });
 

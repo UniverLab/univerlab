@@ -23,17 +23,23 @@ interface ScaffoldCtx {
   color: string;
   w: number;
   h: number;
+  /** Resolved surface, handed in by startBackground (argument first, page
+   *  second). Read it here — never documentElement.dataset.surface, which is
+   *  unset on the home page and would silently skip the re-tint. */
+  surface?: string;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 export function scaffold(ctx: ScaffoldCtx): (t: number) => void {
   const { c } = ctx;
-  // Midnight re-tint on the industrial surface only: the registry still
-  // carries copper for OG/home, but the live lattice reads blueprint-violet
-  // behind the glass. c.strokeStyle keeps using ctx.color — the caller value
-  // is swapped here, no second hue is introduced.
-  if (typeof document !== 'undefined' && document.documentElement.dataset.surface === 'industrial') {
+  // Midnight re-tint on the industrial surface: the registry still carries
+  // copper for OG/home, but the live lattice reads blueprint-violet behind the
+  // glass. c.strokeStyle keeps using ctx.color — the caller value is swapped
+  // here, no second hue is introduced. The surface arrives through ctx (the
+  // argument startBackground was given, else the page's own data-surface), so
+  // the home card's window and the /ghscaff page take the same branch.
+  if (ctx.surface === 'industrial') {
     ctx.color = '#8b7cf6';
   }
 

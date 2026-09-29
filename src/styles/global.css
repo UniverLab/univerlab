@@ -55,13 +55,18 @@
    keeps the pages pixel-identical. (A follow-up surfaces spec may delete the
    now-redundant POC substrate lines in surfaces.css — one edit then moves a
    whole surface everywhere: page + card window. Do not do that edit here:
-   surfaces.css is out of this spec's scope.) */
+   surfaces.css is out of this spec's scope.)
+   Each group also carries `--surface-essence`: the accent the experiment PAGE
+   paints with today (the runner's final re-tint, or the surface accent the page
+   pins on `.exp`) — never the registry `essenceHex`, which stays on the collapsed
+   card and the OG images. Read by the home card flip only; no page reads it. */
 
 /* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
    Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,
    Quill hairline. Dash vocabulary (--rule-t1…t3) and fonts stay html-only below. */
 [data-surface='paper'],
 [data-flip-surface='paper'] {
+  --surface-essence: #6a563e; /* bistre ink — the ink the parchment motif draws */
   --surface-bg: #d7d7d0;
   --surface-bg-raise: #f7f6f3;
   --surface-ink: #1a1614;
@@ -77,6 +82,7 @@
    edge highlight (Home) uses an ink-mix so it stays whisper-light here. */
 [data-surface='tui'],
 [data-flip-surface='tui'] {
+  --surface-essence: #00a9a0; /* Auros accent — the teal the page pins on .exp */
   --surface-bg: #012624;
   --surface-bg-raise: #003734;
   --surface-ink: #edfffe;
@@ -89,6 +95,7 @@
    Voltage violet + fonts are page-only extras below. */
 [data-surface='pastel'],
 [data-flip-surface='pastel'] {
+  --surface-essence: #6d28d9; /* voltage violet — what the bubbles runner draws */
   --surface-bg: #ffffff;
   --surface-bg-raise: #f1f5f9;
   --surface-ink: #111827;
@@ -102,6 +109,7 @@
    in this file were never rendered (the POC block out-ranked them). */
 [data-surface='industrial'],
 [data-flip-surface='industrial'] {
+  --surface-essence: #8b7cf6; /* blueprint violet — what the scaffold runner draws */
   --surface-bg: #05060f;
   --surface-bg-raise: rgba(186,214,247,.05);
   /* Header menu plate only — NOT --bg-raise: the glass cards, .cmd and hero
@@ -119,6 +127,7 @@
    token, not substrate — the landing card keeps the registry essence). */
 [data-surface='blueprint'],
 [data-flip-surface='blueprint'] {
+  --surface-essence: #5d2a1a; /* sienna — the page-pinned Steep essence (.exp) */
   --surface-bg: #ffffff;
   --surface-bg-raise: #f2f2f3;
   --surface-ink: #17191c;
@@ -130,6 +139,7 @@
 /* astro-denoise — observatory: deep space, violet-black night sky. */
 [data-surface='observatory'],
 [data-flip-surface='observatory'] {
+  --surface-essence: #a78bfa; /* no re-tint: the page colour IS the registry violet */
   --surface-bg: #0a0911;
   --surface-bg-raise: #110f1b;
   --surface-ink: #ddd9e8;
@@ -143,6 +153,7 @@
    the reference the landing's circadian flip cards are tuned against. */
 [data-surface='quorum'],
 [data-flip-surface='quorum'] {
+  --surface-essence: #e6b24a; /* both circadian palettes carry this accent */
   --surface-bg: #241a12;
   --surface-bg-raise: #2f2318;
   --surface-ink: #f2e7d3;
@@ -158,6 +169,7 @@
    radii, color-scheme) are page-only extras below. */
 [data-surface='studio'],
 [data-flip-surface='studio'] {
+  --surface-essence: #fa5838; /* Altius Flare — the page-pinned Altius accent */
   --surface-bg: #190501;
   --surface-bg-raise: #340a01;
   --surface-ink: #f7f6ff;

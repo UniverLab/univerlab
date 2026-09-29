@@ -20,6 +20,12 @@ interface Ctx {
   w: number;
   h: number;
   dpr: number;
+  /** The resolved surface — the `surface` argument when the caller has one,
+   *  else the page's `data-surface` on <html>. Runners that branch on the
+   *  surface read it from here, never from `documentElement.dataset` directly:
+   *  on the home page <html> carries no surface, so a direct DOM read silently
+   *  skips the re-tint the window must show. Filled in by startBackground. */
+  surface?: string;
 }
 
 /** Mount a themed runner on a canvas.
@@ -65,6 +71,9 @@ export function startBackground(
   // Reduced motion never reaches this module at all — ThemeBackground returns
   // before importing it.
   const surf = surface ?? document.documentElement.dataset.surface;
+  ctx.surface = surf; // the one resolution of "what surface is this" — the
+  // runner receives it here instead of re-reading the DOM, so a card window
+  // gets the same branch a page would take.
   const isPaper = surf === 'paper';
   if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
   const isPastel = surf === 'pastel';

@@ -43,7 +43,7 @@ function firePointer(type: string, props: Record<string, unknown>) {
 }
 
 /** Harness with a shared clock and a 2D context that records every stroke. */
-function makeCtx(w = 800, h = 600) {
+function makeCtx(w = 800, h = 600, surface?: string) {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
   const now = { v: 0 };
@@ -76,7 +76,9 @@ function makeCtx(w = 800, h = 600) {
     get: () => alpha,
     set: (v: number) => { alpha = v; },
   });
-  const ctx: ScaffoldCtx = { canvas, c, color: '#b87333', w, h };
+  // `surface` is what startBackground would have resolved and handed in — the
+  // runner never reads the page's data-surface itself.
+  const ctx: ScaffoldCtx = { canvas, c, color: '#b87333', w, h, surface };
   /** Step one frame at rAF-time t (performance.now follows t), keeping only
    *  that frame's strokes. */
   const step = (tick: (t: number) => void, t: number) => {
@@ -325,9 +327,9 @@ describe('scaffold — IDLE / TOUCH', () => {
 
 describe('scaffold — surface / lifecycle', () => {
   it('paints the lattice at rest alpha 0.16 and re-tints the industrial surface', () => {
-    // Given: the industrial (midnight) surface
-    document.documentElement.dataset.surface = 'industrial';
-    const { ctx, step, setClock, strokes } = makeCtx();
+    // Given: the industrial (midnight) surface, handed in through ctx the way
+    // startBackground hands it over (argument first, page second)
+    const { ctx, step, setClock, strokes } = makeCtx(800, 600, 'industrial');
     const tick = scaffold(ctx);
     // Then: the midnight re-tint replaced the registry copper, one hue only
     expect(ctx.color).toBe('#8b7cf6');
@@ -341,6 +343,22 @@ describe('scaffold — surface / lifecycle', () => {
     expect(grid.alpha).toBeCloseTo(0.16, 6);
     expect(grid.style).toBe('#8b7cf6');
     expect(members(strokes).every((s) => s.style === '#8b7cf6')).toBe(true);
+  });
+
+  it('ignores a page data-surface and re-tints only from the handed-in surface', () => {
+    // Given: <html> says industrial, but startBackground resolved no surface
+    // for this mount (the home page: <html> has no surface of its own, so a
+    // direct DOM read is what broke the card window in the first place)
+    document.documentElement.dataset.surface = 'industrial';
+    const { ctx, step, setClock, strokes } = makeCtx();
+    const tick = scaffold(ctx);
+    // Then: the registry colour survives — the runner never reads the document
+    expect(ctx.color).toBe('#b87333');
+    // And: the lattice paints in that colour, one hue only
+    setClock(1000);
+    step(tick, 1000);
+    expect(strokes).toHaveLength(1);
+    expect(gridOf(strokes).style).toBe('#b87333');
   });
 
   it('keeps the default essence colour and the same visible grid off the industrial surface', () => {

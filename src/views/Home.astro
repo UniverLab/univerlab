@@ -258,6 +258,10 @@ const webSite = {
     --ink-dim: var(--surface-ink-dim);
     --ink-faint: var(--surface-ink-faint);
     --line: var(--surface-line);
+    /* The window's accent is the PAGE's accent (--surface-essence), not the
+       registry hex the collapsed card carries: EXP number, status dot, name and
+       motif on a flipped card must read as that experiment's own surface. */
+    --essence: var(--surface-essence);
     background: var(--bg);
     color: var(--ink);
     /* window edge sheen — derived from the surface's own ink so it reads on
@@ -266,8 +270,24 @@ const webSite = {
     box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent);
   }
 
+  /* cadSpec: the page's own backdrop is a quiet two-pitch drafting grid, so the
+     window reproduces that grid in the surface's own ink (no hex) and the
+     primitives runner draws its geometry over it — later source at equal
+     specificity wins `background-image` over the `background` shorthand. */
+  .card:hover[data-flip-surface='blueprint'],
+  .card:focus-visible[data-flip-surface='blueprint'],
+  .card.is-tapped[data-flip-surface='blueprint'] {
+    background-image:
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
+    background-size: 140px 140px, 140px 140px, 28px 28px, 28px 28px;
+  }
+
   /* ── Card motif strip: the page's own hero ASCII motif, revealed with the
-     window flip in the surface's current faint ink (mono, page register). ── */
+     window flip in the page's own accent (--essence, re-pointed at
+     --surface-essence by the flip rule above — mono, page register). ── */
   .card-motif {
     position: absolute;
     top: 0.55rem;
@@ -287,7 +307,7 @@ const webSite = {
   }
   .card:hover .card-motif,
   .card:focus-visible .card-motif,
-  .card.is-tapped .card-motif { opacity: 0.85; }
+  .card.is-tapped .card-motif { opacity: 0.85; color: var(--essence); }
 
   /* ── Quorum — circadian exception: redirects to the ACTIVE day/night tokens
      (the inline --q-day-* and --q-night-* vars from the registry's
@@ -396,7 +416,14 @@ const webSite = {
     const theme = (card.dataset.theme ?? 'cosmic') as BgTheme;
     const surf = card.dataset.flipSurface;
     const cs = getComputedStyle(card);
-    const color = cs.getPropertyValue('--essence').trim() || '#e6c84a';
+    // The runner's colour is the page's accent: --surface-essence when the
+    // group declares it, the registry hex (--essence) as the fallback. Read at
+    // start time, after the flip rule has applied, so focus and tap agree with
+    // hover.
+    const color =
+      cs.getPropertyValue('--surface-essence').trim() ||
+      cs.getPropertyValue('--essence').trim() ||
+      '#e6c84a';
     const bg = cs.getPropertyValue('--surface-bg').trim() || '#0a0b0e';
     startBackground(canvas, theme, color, bg, surf);
   };
