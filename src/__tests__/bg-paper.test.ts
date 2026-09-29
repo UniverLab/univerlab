@@ -5,7 +5,8 @@
  * sweep lays grey LaTeX SOURCE fragments along its path that ~550 ms later
  * compile — cross-fading into their typeset serif forms while snapping onto an
  * invisible 28 px baseline grid — then hold and bleed out. Verifies the compile
- * mapping, the grid snap, the 14-fragment cap, the ~220 ms spawn throttle, the
+ * mapping, the grid snap, the 5-pointer-fragment cap, the ≥450 ms spawn
+ * throttle with a ≥12 px travel floor (a parked pointer compiles nothing), the
  * 6 s / 5 s idle compiler, that touch never seeds from a pointer (and gets no
  * listener at all on touch devices), that the ambient draw is untouched, and
  * that a detached canvas aborts the listeners. Given-When-Then pattern, like
@@ -20,8 +21,9 @@ import {
   HOLD_MS,
   LIFE_MS,
   GRID_PX,
-  MAX_FRAGS,
+  MAX_POINTER_FRAGS,
   SPAWN_EVERY,
+  MOVE_PX,
   IDLE_AFTER,
   IDLE_EVERY,
   SOURCE_ALPHA,
@@ -65,8 +67,8 @@ type Draw = {
 
 /**
  * Harness with Math.random pinned to 0.5: every mark is born at (400, 300)
- * with tok '\\ref', size 17.6 px (rem 16), ambient alpha AMBIENT, life 10500 ms,
- * age 5250 ms (mid-life ⇒ envelope 1) — so ambient and lit draws are directly
+ * with tok '\\ref', size 17.6 px (rem 16), ambient alpha AMBIENT, life 19000 ms,
+ * age 9500 ms (mid-life ⇒ envelope 1) — so ambient and lit draws are directly
  * comparable. Idle drift/rotation stay index-derived, so they survive the stub.
  * Every fillText is recorded with the alpha, font, fillStyle and position that
  * were in force at that moment — the compile asserts on those.
@@ -184,7 +186,7 @@ afterEach(() => {
 });
 
 /** N at 800×600 — same formula as the runner. */
-const N = Math.min(18, Math.max(12, Math.floor((800 * 600) / 68000)));
+const N = Math.min(9, Math.max(6, Math.floor((800 * 600) / 136000)));
 
 describe('paper', () => {
   it('the untouched sheet reads as typesetting: fillText tokens at ambient alpha, never strokes', () => {
@@ -239,7 +241,7 @@ describe('paper', () => {
   });
 
   it('marks cross-fade like a proof being set: fade out, respawn, fade back to ambient', () => {
-    // Given: a fresh sheet ageing mid-life (age 5250 of 10500 ms)
+    // Given: a fresh sheet ageing mid-life (age 9500 of 19000 ms)
     const h = makeCtx();
     const tick = paper(h.ctx);
     let t = 0;
@@ -258,7 +260,7 @@ describe('paper', () => {
     // Then: some frame drew below ambient (the fade-out) and a mark respawned
     expect(sawFade).toBe(true);
     expect(respawned).toBe(true);
-    // When: the fade-in completes (~1.5 s more of still frames)
+    // When: the fade-in completes (~2.5 s more of still frames)
     for (let i = 0; i < 60; i++) {
       t += 50;
       h.reset();
@@ -317,7 +319,7 @@ describe('paper', () => {
     tick(0);
     move(tick, 33, 100, 100); // entry seed
     move(tick, 66, 200, 300); // spawn 1 at y = 300
-    move(tick, 330, 260, 310); // spawn 2 at y = 310 (330 − 66 ≥ 220)
+    move(tick, 521, 260, 310); // spawn 2 at y = 310 (521 − 66 = 455 ≥ 450)
     // When: both are still source
     h.reset();
     tick(66 + SOURCE_MS - 1);
@@ -332,7 +334,7 @@ describe('paper', () => {
     expect(mid[0].y).toBeLessThan(308); // eased toward the line, never past it
     // When: the second fragment's snap window closes too
     h.reset();
-    tick(330 + SOURCE_MS + SNAP_MS);
+    tick(521 + SOURCE_MS + SNAP_MS);
     // Then: both set lines are on grid multiples measured from the canvas top…
     const set = h.fragDraws.filter((d) => SETS.includes(d.text));
     expect(set.map((d) => d.text).sort()).toEqual(['a⁄b', '∫₀¹']);
@@ -341,53 +343,96 @@ describe('paper', () => {
     expect(new Set(set.map((d) => d.y))).toEqual(new Set([308]));
   });
 
-  it('keeps at most 14 live fragments and drops the oldest source first', () => {
-    // Given: a sheet swept fast enough that 15 fragments overlap in time
+  it('keeps at most 5 pointer-born fragments alive — the oldest drops when a sixth would spawn', () => {
+    // Given: a sweep whose spawns outpace the 3.3 s fragment life
     const h = makeCtx();
     const tick = paper(h.ctx);
     tick(0);
-    move(tick, 33, 100, 100); // entry seed
+    move(tick, 33, 100, 100); // entry seed, no travel ⇒ no spawn
     let t = 33;
     let peak = 0;
-    for (let i = 1; i <= 15; i++) {
-      t += SPAWN_EVERY + 5; // one spawn per frame, 15 alive inside one 3.3 s life
+    for (let i = 1; i <= 9; i++) {
+      t += SPAWN_EVERY + 5; // one spawn per frame, 455 ms apart
       h.reset();
-      move(tick, t, 120 + i * 8, 200 + i * 10);
+      move(tick, t, 120 + i * 20, 200 + i * 20); // travel ≈ 28.3 px ≥ 12
       peak = Math.max(peak, liveCount(h));
     }
-    // Then: no frame ever held more than the cap…
-    expect(peak).toBeLessThanOrEqual(MAX_FRAGS);
+    // Then: no frame ever held more than the pointer cap…
+    expect(peak).toBeLessThanOrEqual(MAX_POINTER_FRAGS);
     // …the last frame sits exactly on it…
-    expect(liveCount(h)).toBe(MAX_FRAGS);
+    expect(liveCount(h)).toBe(MAX_POINTER_FRAGS);
     const xs = new Set(h.fragDraws.map((d) => d.x));
-    expect(xs.size).toBe(MAX_FRAGS);
-    // …and the oldest line (x = 128, from the first spawn) was the one dropped,
-    // while the runner-up (x = 136) is still set
-    expect(xs.has(128)).toBe(false);
-    expect(xs.has(136)).toBe(true);
+    expect(xs.size).toBe(MAX_POINTER_FRAGS);
+    // …and the oldest (spawn 1, x = 140) was the one dropped, while spawn 5
+    // (x = 220) still stands with the newer four
+    expect(xs.has(140)).toBe(false);
+    expect(xs.has(220)).toBe(true);
   });
 
-  it('spawns at most one source fragment per ~220 ms of travel — a spaced trail, not a spray', () => {
+  it('spawns at most one fragment per ~450 ms of travel, and never under 12 px of travel', () => {
     // Given: a fresh sheet whose pointer entered
     const h = makeCtx();
     const tick = paper(h.ctx);
     tick(0);
-    move(tick, 33, 100, 100); // entry: seeds the path
+    move(tick, 33, 100, 100); // entry seed
     h.reset();
-    move(tick, 60, 150, 150); // travel ⇒ fragment 1 (born 60)
+    move(tick, 60, 150, 150); // ≥12 px, first window ⇒ fragment 1 (born 60)
     expect(liveCount(h)).toBe(1);
     h.reset();
-    move(tick, 110, 200, 200); // 50 ms after the spawn — throttled
+    move(tick, 200, 250, 250); // 140 ms after the spawn — throttled
     expect(liveCount(h)).toBe(1);
     h.reset();
-    move(tick, 200, 250, 250); // 140 ms after the spawn — still throttled
+    move(tick, 300, 300, 300); // 240 ms — throttled
     expect(liveCount(h)).toBe(1);
     h.reset();
-    move(tick, 300, 300, 300); // 240 ms after the spawn ⇒ fragment 2
+    move(tick, 509, 350, 350); // 449 ms — still throttled
+    expect(liveCount(h)).toBe(1);
+    h.reset();
+    move(tick, 511, 400, 400); // 451 ms + travel ⇒ fragment 2
     expect(liveCount(h)).toBe(2);
     h.reset();
-    move(tick, 400, 300, 300); // moving but not travelling — a parked cursor compiles nothing
+    // 489 ms elapsed but only 9.9 px since the last spawn — under the floor
+    move(tick, 1000, 400 + MOVE_PX - 2.1, 400);
     expect(liveCount(h)).toBe(2);
+    h.reset();
+    move(tick, 1100, 400 + MOVE_PX, 400); // exactly MOVE_PX of travel ⇒ fragment 3
+    expect(liveCount(h)).toBe(3);
+  });
+
+  it('a parked pointer spawns nothing for 10 s — only the ambient set lives', () => {
+    // Given: a sheet whose pointer arrived and then stood still
+    const h = makeCtx();
+    const tick = paper(h.ctx);
+    tick(0);
+    move(tick, 33, 100, 100); // entry seed — no travel ⇒ no spawn
+    // When: 10 s of frames pass with the pointer parked on the page
+    let t = 33;
+    for (let i = 0; i < 100; i++) {
+      t += 100;
+      h.reset();
+      tick(t);
+    }
+    // Then: not one pointer-born fragment was compiled — the sweep throttle
+    // needs travel, and the idle compiler is gated off while a pointer is present
+    expect(h.fragDraws).toHaveLength(0);
+    // And: the ambient set alone carries the sheet, respawned on its own slow clock
+    expect(h.ambientAlphas.length).toBe(N);
+    expect(h.fillText).toHaveBeenCalledTimes(N);
+  });
+
+  it('the ambient set stays sparse: at 1440×900 the runner keeps at most 9 marks', () => {
+    // Given: a full-HD-ish viewport (area/136000 ⇒ 9 before the cap)
+    const h = makeCtx(1440, 900);
+    const tick = paper(h.ctx);
+    // When: a frame steps
+    tick(0);
+    // Then: the mark count is inside the 6–9 band the spec pins
+    expect(h.ambientAlphas.length).toBeLessThanOrEqual(9);
+    expect(h.ambientAlphas.length).toBeGreaterThanOrEqual(6);
+    expect(h.ambientAlphas.length).toBe(
+      Math.min(9, Math.max(6, Math.floor((1440 * 900) / 136000))),
+    );
+    expect(h.fragDraws).toHaveLength(0);
   });
 
   it('idle: past 6 s without a pointer the sheet keeps its marks and compiles one lone fragment every ~5 s', () => {
@@ -498,7 +543,8 @@ describe('paper', () => {
     let t = 33;
     for (let i = 1; i <= 12; i++) {
       t += SPAWN_EVERY + 5;
-      move(tick, t, 120 + i * 8, 200 + i * 10);
+      // travel √(12² + 16²) = 20 px ≥ 12 — well clear of the floor
+      move(tick, t, 120 + i * 12, 200 + i * 16);
     }
     const emphBorn = t;
     // When: that fragment compiles
