@@ -7,7 +7,7 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['demostage'];
 const exp = byId('demostage');
-const spectrumBars = [42, 62, 88, 122, 154, 178, 158, 128, 96, 68, 44];
+const spectrumBars = [21, 31, 44, 61, 77, 89, 79, 64, 48, 34, 22];
 ---
 <ExperimentLayout id="demostage" hideDemo>
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
@@ -42,7 +42,7 @@ $ demo export gif,mp4
         </div>
       </figure>
       <div class="spectrum" aria-hidden="true">
-        {spectrumBars.map((height) => <span style={`--bar-height:${height}px; --bar-opacity:${(height / 228).toFixed(2)}`} />)}
+        {spectrumBars.map((height) => <span style={`--bar-height:${height}px; --bar-opacity:${(height / 114).toFixed(2)}`} />)}
       </div>
     </div>
   </Fragment>
@@ -106,7 +106,7 @@ $ demo export gif,mp4
      that fade is the motif, not a color gradient. Nothing else carries one. */
   .spectrum {
     width: min(100%, 56rem);
-    height: 11.5rem;
+    height: 6rem;
     display: flex;
     align-items: center;
     justify-content: center;
