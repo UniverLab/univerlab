@@ -36,23 +36,32 @@
  * `postbuild` so `npm run build` fails on a regression. Run on demand:
  * `node scripts/check-seo.ts`.
  */
-import { existsSync, globSync, readFileSync } from 'node:fs';
+import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DOCS_BASES, ROOT, STATIC_RULES, docsRoute, readDocsRedirects } from './build-redirects.ts';
+import { NOINDEX } from './build-md.ts';
+import { MAX_FULL_BYTES } from './build-llms.ts';
 import { experiments, type Experiment } from '../src/lib/experiments.ts';
 
 const DIST = resolve(ROOT, 'dist');
 
 export type Failure = string;
 
-/** Matches BaseLayout's `<meta name="robots" content="noindex, nofollow" />`. */
-const NOINDEX = /<meta\s+name=["']robots["']\s+content=["'][^"']*\bnoindex\b/i;
-
 /** An in-site `href` still pointing at markdown — the bug the plugin fixes. */
 const MD_HREF = /<a\b[^>]*\bhref=["']([^"']*\.md(?:#[^"']*)?)["']/gi;
 
 /** A `https://univerlab.org/...` URL written without a trailing slash. */
 const SITE_URL = /https:\/\/univerlab\.org(\/[^)\s]*)?/g;
+
+/** A generated documentation line: `- [<title>](<canonical>index.md): <desc>`.
+ *  Core/optional lines link trailing-slash routes, so the `index.md` tail
+ *  matches only the generated `## Documentation` section. */
+const DOCS_LINE = /^- \[.+?\]\(https:\/\/univerlab\.org\/[^()\s]*?index\.md\): /gm;
+
+/** How many generated documentation lines a copy of `llms.txt` carries. */
+export function llmsDocsLines(text: string): number {
+  return text.match(DOCS_LINE)?.length ?? 0;
+}
 
 // ---------------------------------------------------------------- sitemap
 
@@ -188,10 +197,136 @@ export function checkLlmsTxt(dist = DIST): Failure[] {
   if (!file) return ['llms.txt: not found in dist/ or public/'];
 
   const failures: Failure[] = [];
-  for (const m of readFileSync(file, 'utf-8').matchAll(SITE_URL)) {
+  const text = readFileSync(file, 'utf-8');
+  for (const m of text.matchAll(SITE_URL)) {
     const path = m[1] ?? '/';
     if (path === '/' || path.endsWith('/') || /\/[^/]+\.[a-z0-9]+$/i.test(path)) continue;
     failures.push(`llms.txt: "${m[0]}" is not the canonical trailing-slash form`);
+  }
+  // The generated section comes from the same dist/ the sitemap enumerates,
+  // so its line count must equal the built docs pages — never drift.
+  if (existsSync(dist)) {
+    const lines = llmsDocsLines(text);
+    const pages = globSync('**/docs/**/index.html', { cwd: dist }).length;
+    if (lines !== pages) {
+      failures.push(`llms.txt: ${lines} documentation lines for ${pages} built docs pages`);
+    }
+  }
+  return failures;
+}
+
+/**
+ * Agents follow every link in `llms.txt`, so each one must resolve to a file
+ * `dist/` actually serves. Resolver: strip the origin; a trailing slash is a
+ * directory (`…/index.html`), a tail with a file extension is served as-is
+ * (the `…/index.md` twins), anything else is a directory missing its slash.
+ */
+export function distFileForLlmsUrl(urlPath: string, dist = DIST): string {
+  const rel = urlPath.replace(/^\/+/, '');
+  if (rel === '') return resolve(dist, 'index.html');
+  if (urlPath.endsWith('/')) return resolve(dist, rel, 'index.html');
+  if (/\/[^/]+\.[a-z0-9]+$/i.test(urlPath)) return resolve(dist, rel);
+  return resolve(dist, rel, 'index.html');
+}
+
+export function checkLlmsLinks(dist = DIST): Failure[] {
+  const file = resolve(dist, 'llms.txt');
+  if (!existsSync(file)) return ['llms.txt: not found in dist/ — build-llms did not run'];
+
+  const failures: Failure[] = [];
+  for (const m of readFileSync(file, 'utf-8').matchAll(SITE_URL)) {
+    // A prose URL followed by sentence punctuation still names the page.
+    const path = (m[1] ?? '/').replace(/[.,;:!?'"’”)\]]+$/, '') || '/';
+    if (!existsSync(distFileForLlmsUrl(path, dist))) {
+      failures.push(`llms.txt: "${m[0]}" has no built file`);
+    }
+  }
+  return failures;
+}
+
+/** The byte size of `dist/llms-full.txt`, or -1 when it was not built. */
+export function llmsFullBytes(dist = DIST): number {
+  const file = resolve(dist, 'llms-full.txt');
+  return existsSync(file) ? statSync(file).size : -1;
+}
+
+export function checkLlmsFull(dist = DIST): Failure[] {
+  const size = llmsFullBytes(dist);
+  if (size < 0) return ['llms-full.txt: not found in dist/ — build-llms did not run'];
+  if (size === 0) return ['llms-full.txt: empty'];
+  if (size > MAX_FULL_BYTES) {
+    return [`llms-full.txt: ${size} bytes, over the ${MAX_FULL_BYTES} byte limit`];
+  }
+  return [];
+}
+
+/** A `<link rel="alternate" type="text/markdown" …>` twin advertisement —
+ *  matched on the type, not the rel: hreflang and the Atom feed already use
+ *  `rel="alternate"` on every page. */
+const MD_LINK = /<link[^>]*\btype="text\/markdown"[^>]*>/gi;
+const MD_LINK_HREF = /href="([^"]*)"/i;
+
+/** Counts for the success line: indexable pages, built twins, emitted links. */
+export interface MarkdownTwinStats {
+  indexable: number;
+  twins: number;
+  links: number;
+}
+
+export function markdownTwinStats(dist = DIST): MarkdownTwinStats {
+  let indexable = 0;
+  let links = 0;
+  for (const file of globSync('**/index.html', { cwd: dist })) {
+    const html = readFileSync(resolve(dist, file), 'utf-8');
+    if (NOINDEX.test(html)) continue;
+    indexable++;
+    links += [...html.matchAll(MD_LINK)].length;
+  }
+  return { indexable, twins: globSync('**/index.md', { cwd: dist }).length, links };
+}
+
+/**
+ * Every indexable page advertises exactly its own markdown twin, and the
+ * advertised set is exactly the built set: one `<link … type="text/markdown"
+ * href="<canonical>index.md">` per indexable `index.html`, no link on
+ * noindex pages or on `404.html` (which builds no `index.md`).
+ */
+export function checkMarkdownTwins(dist = DIST): Failure[] {
+  const failures: Failure[] = [];
+  const twinFiles = new Set(globSync('**/index.md', { cwd: dist }));
+  let links = 0;
+  for (const file of globSync('**/index.html', { cwd: dist })) {
+    const html = readFileSync(resolve(dist, file), 'utf-8');
+    const tags = [...html.matchAll(MD_LINK)];
+    const url = file === 'index.html' ? '/' : `/${file.replace(/index\.html$/, '')}`;
+    if (NOINDEX.test(html)) {
+      if (tags.length > 0) failures.push(`${url}: noindex page must not advertise a markdown twin`);
+      continue;
+    }
+    if (tags.length !== 1) {
+      failures.push(`${url}: expected one text/markdown alternate link, found ${tags.length}`);
+      continue;
+    }
+    links++;
+    const href = MD_LINK_HREF.exec(tags[0][0])?.[1] ?? '';
+    const canonical = html.match(CANONICAL)?.[1] ?? '';
+    if (href !== `${canonical}index.md`) {
+      failures.push(`${url}: markdown twin link ${JSON.stringify(href)} is not ${JSON.stringify(`${canonical}index.md`)}`);
+    }
+    if (!href.startsWith('https://univerlab.org/')) {
+      failures.push(`${url}: markdown twin link ${JSON.stringify(href)} is not absolute`);
+    } else if (!twinFiles.has(new URL(href).pathname.replace(/^\/+/, ''))) {
+      failures.push(`${url}: markdown twin ${href} was not built`);
+    }
+  }
+  const notFound = resolve(dist, '404.html');
+  // A fresh literal, not MD_LINK: `.test` on a /g regex advances its
+  // lastIndex, which would make repeated calls flaky.
+  if (existsSync(notFound) && /<link[^>]*\btype="text\/markdown"[^>]*>/i.test(readFileSync(notFound, 'utf-8'))) {
+    failures.push('/404.html: must not advertise a markdown twin');
+  }
+  if (links !== twinFiles.size) {
+    failures.push(`markdown twins: ${links} pages advertise a twin but ${twinFiles.size} twins were built`);
   }
   return failures;
 }
@@ -671,6 +806,9 @@ export function checkAll(dist = DIST): Failure[] {
     ...checkRedirects(dist),
     ...checkDocsLinks(dist),
     ...checkLlmsTxt(dist),
+    ...checkLlmsLinks(dist),
+    ...checkLlmsFull(dist),
+    ...checkMarkdownTwins(dist),
     ...checkMetaDescriptions(dist),
     ...checkTitles(dist),
     ...checkJsonLd(dist),
@@ -691,8 +829,13 @@ function main(): void {
     process.exit(1);
   }
   const stats = jsonLdStats(DIST);
+  const twins = markdownTwinStats(DIST);
+  const llmsFile = [resolve(DIST, 'llms.txt'), resolve(ROOT, 'public/llms.txt')].find((f) => existsSync(f));
+  const docsLines = llmsFile ? llmsDocsLines(readFileSync(llmsFile, 'utf-8')) : 0;
   console.log(
     `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–60 char titles, ` +
+      `${twins.indexable} indexable pages with ${twins.twins} markdown twins (${twins.links} alternate links), ` +
+      `${docsLines} llms.txt documentation lines, llms-full.txt ${llmsFullBytes(DIST)} bytes, ` +
       `${stats.blocks} JSON-LD blocks parse (${stats.docs} docs graphs: ${stats.withDate} with dateModified, ${stats.withoutDate} without, ${stats.unparseable} unparseable), redirects and doc links clean.`,
   );
 }

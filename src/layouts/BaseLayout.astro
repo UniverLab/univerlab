@@ -40,6 +40,9 @@ interface Props {
   articleModifiedTime?: string;
   /** Hidden pages: prevent indexing by search engines. */
   noindex?: boolean;
+  /** The page builds an `index.html` and therefore has a markdown twin.
+   *  `false` only for pages whose output is not `index.html` (404). */
+  markdownTwin?: boolean;
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
@@ -61,6 +64,7 @@ const {
   articleModifiedTime,
   circadianPalette,
   noindex = false,
+  markdownTwin = true,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
@@ -120,6 +124,9 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
+    {!noindex && markdownTwin && (
+      <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
+    )}
     <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
     <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
          labels); Inter is the default body. Per-surface display voices:

@@ -354,7 +354,7 @@ describe('check-seo', () => {
       'index.html': page(),
       'gitkit/docs/index.html': page(),
       '_redirects': ['/sitemap.xml /sitemap-index.xml 301', ...STATIC_RULES].join('\n'),
-      'llms.txt': '- [Home](https://univerlab.org/)\n',
+      'llms.txt': '- [Home](https://univerlab.org/)\n- [Docs](https://univerlab.org/gitkit/docs/index.md): x\n',
     });
     try {
       expect(checkSitemap(dist)).toEqual([]);

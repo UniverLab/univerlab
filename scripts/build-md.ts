@@ -1,5 +1,5 @@
 import TurndownService from 'turndown';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { globSync } from 'node:fs';
 
@@ -64,6 +64,11 @@ const VOID_ELEMENTS = new Set([
   'input', 'link', 'meta', 'source', 'track', 'wbr',
 ]);
 
+/** Matches BaseLayout's `<meta name="robots" content="noindex, nofollow" />`.
+ *  Shared with scripts/check-seo.ts and scripts/build-llms.ts so the three
+ *  cannot drift on what "indexable" means. */
+export const NOINDEX = /<meta\s+name=["']robots["']\s+content=["'][^"']*\bnoindex\b/i;
+
 export function htmlToMarkdown(html: string): string {
   const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -106,14 +111,24 @@ async function main(): Promise<void> {
   }
 
   const files = globSync('**/index.html', { cwd: distDir });
+  let skipped = 0;
   for (const file of files) {
     const fullPath = resolve(distDir, file);
     const html = readFileSync(fullPath, 'utf-8');
+    // Noindex pages are not indexable, so they get no twin and no alternate
+    // link — twins, links and sitemap locs stay the same set.
+    if (NOINDEX.test(html)) {
+      // A stale twin from an earlier build must not survive: the page is not
+      // indexable, so it advertises no twin.
+      rmSync(fullPath.replace(/index\.html$/, 'index.md'), { force: true });
+      skipped++;
+      continue;
+    }
     const md = htmlToMarkdown(html);
     const mdPath = fullPath.replace(/index\.html$/, 'index.md');
     writeFileSync(mdPath, md, 'utf-8');
   }
-  console.log(`build-md: generated ${files.length} markdown file(s).`);
+  console.log(`build-md: generated ${files.length - skipped} markdown file(s) (${skipped} noindex skipped).`);
 }
 
 const isDirectRun = process.argv[1] && (
