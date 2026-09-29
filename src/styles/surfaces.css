@@ -1009,7 +1009,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 /* AuthKit → ghScaff: midnight steel — flat plates, hairlines, canvas grid. */
 :root[data-surface='industrial'] {
   --bg: #05060f;
-  --bg-raise: rgba(186,214,247,.05);
   --ink: #ffffff;
   --ink-dim: #c7d3ea;
   --ink-faint: #9da7ba;
@@ -1022,6 +1021,13 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --accent: #b6d9fc !important;
 }
 :root[data-surface='industrial'] .exp { --essence: #b6d9fc !important; --accent: #b6d9fc !important; }
+/* ghScaff steel contract (2026-09-28 audit) — the hero plate and the seven
+   lift cards must stay OPAQUE. Without this line the unified surface mapper
+   in global.css rebinds --bg-raise at `html[data-surface]:root` (specificity
+   0,2,1) to the surface group's AuthKit 5% skywash film — translucent glass
+   again. Same specificity here, and surfaces.css bundles after global.css,
+   so the plate below stays the lab-native #12101e steel. */
+html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] canvas.bg { opacity: .68; }
 :root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,

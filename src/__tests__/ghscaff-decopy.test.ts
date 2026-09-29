@@ -32,6 +32,19 @@ describe('ghScaff de-copy — industrial steel, not glass', () => {
     expect(SURFACES).toMatch(/industrial[^{}]*\.hero[^{}]*\{[^{}]*border:\s*1px solid var\(--line\)/);
   });
 
+  it('keeps --bg-raise opaque for industrial — the plates must not fall back to the 5% skywash film', () => {
+    // global.css rebinds --bg-raise at `html[data-surface]:root` (0,2,1) from
+    // its --surface-bg-raise group; surfaces.css wins the tie at the same
+    // specificity (it bundles after global.css) — so an opaque industrial
+    // redeclaration must exist with the SAME winning selector shape.
+    expect(SURFACES).toMatch(/html\[data-surface='industrial'\]:root\s*\{\s*--bg-raise:\s*#[0-9a-fA-F]{6}\s*;\s*\}/);
+    // …and nothing inside the industrial :root token block may re-declare
+    // --bg-raise as a translucent rgba film.
+    const start = SURFACES.indexOf(`:root[data-surface='industrial'] {`);
+    const block = SURFACES.slice(start, SURFACES.indexOf('}', start));
+    expect(block).not.toMatch(/--bg-raise:/);
+  });
+
   it('drops the blueprint grid + halo layer', () => {
     expect(SURFACES).not.toMatch(/industrial[^{}]*body::before[^{}]*\{[^{}]*linear-gradient/);
   });
