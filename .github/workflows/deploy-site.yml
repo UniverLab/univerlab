@@ -68,42 +68,62 @@ jobs:
 
       # Sibling repos — ONLY their docs/ folder (sparse checkout, cone mode).
       # These org repos are public, so the default token can read them.
+      #
+      # `fetch-depth: 0` is load-bearing: a docs page's `dateModified` is the
+      # last commit of its source file, read with `git log -1` in this checkout
+      # (see src/lib/doc-last-modified.ts). The default shallow clone would make
+      # every file look freshly committed at checkout time, so the helper
+      # refuses to date a shallow repo — which is the correct fallback, but it
+      # would silently cost every page its freshness signal. Full history is
+      # what makes the dates real.
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/harness-canopy
           path: harness-canopy
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/texforge
           path: texforge
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/gitkit
           path: gitkit
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/ghscaff
           path: ghscaff
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/cadspec
           path: cadspec
           sparse-checkout: docs
+          fetch-depth: 0
+      # The repository is `demostage` (the old `demo-stage` name 302s to it)
+      # and the path has to be `demostage` because DOCS_BASES in
+      # src/data/docs-bases.ts reads `../demostage/docs`. Under `demo-stage`
+      # the collection resolved to nothing, `getCollection` returned `[]` with
+      # a warning, and the eight DemoStage docs never built.
       - uses: actions/checkout@v4
         with:
-          repository: UniverLab/demo-stage
-          path: demo-stage
+          repository: UniverLab/demostage
+          path: demostage
           sparse-checkout: docs
+          fetch-depth: 0
       # Canopy registry — platforms/ directory for platform badges
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/canopy-registry
           path: canopy-registry
           sparse-checkout: platforms
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:

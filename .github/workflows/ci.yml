@@ -47,10 +47,17 @@ jobs:
           repository: UniverLab/cadspec
           path: cadspec
           sparse-checkout: docs
+      # The repo is `demostage` and the path must be `demostage`: DOCS_BASES
+      # reads `../demostage/docs`, and under `demo-stage` the collection
+      # resolved to nothing — getCollection warns and returns [], so eight
+      # pages vanished from the build without failing it. CI stays shallow on
+      # purpose (see deploy-site.yml for the depth story): its docs pages
+      # carry no `dateModified`, which is the honest answer for a clone with
+      # no history to read.
       - uses: actions/checkout@v4
         with:
-          repository: UniverLab/demo-stage
-          path: demo-stage
+          repository: UniverLab/demostage
+          path: demostage
           sparse-checkout: docs
       # Canopy registry — platforms/ directory for platform badges
       - uses: actions/checkout@v4

@@ -2,25 +2,16 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getLang, useTranslations } from '../i18n';
 import { getContributors } from '../lib/contributors';
+import { founderPersonNode } from '../lib/structured-data';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const p = t.people;
 const contributors = await getContributors();
 
 const site = Astro.site ?? new URL('https://univerlab.org');
-const founderJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: p.founder.name,
-  jobTitle: p.founder.role,
-  url: new URL('/contributors/', site).href,
-  sameAs: ['https://github.com/JheisonMB'],
-  worksFor: {
-    '@type': 'Organization',
-    name: 'UniverLab',
-    url: site.href,
-  },
-};
+// The founder's Person node is defined here and *referenced* by every docs
+// page's TechArticle (`{"@id": <site>/#founder}`), so it carries that `@id`.
+const founderJsonLd = founderPersonNode(site, { name: p.founder.name, role: p.founder.role });
 ---
 <BaseLayout title={p.metaTitle} description={p.description} bg="cosmic" circadian structuredData={founderJsonLd}>
   <section class="wrap head">
