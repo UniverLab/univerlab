@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import { byId } from '../lib/experiments';
 import { composeDocsDescription } from '../lib/docs-description';
+import { composeDocsTitle } from '../lib/docs-title';
 import { getLang, useTranslations } from '../i18n';
 import { en as enDict } from '../i18n/en';
 
@@ -25,7 +26,7 @@ const metaDescription = composeDocsDescription({ description, title, expName: ex
 // without it Cloudflare Pages answers every docs link with a 308.
 const base = `/${id}/docs/`;
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={metaDescription} bg={exp.bg} circadian mutedCanvas>
+<BaseLayout title={composeDocsTitle(title, exp.name)} description={metaDescription} bg={exp.bg} circadian mutedCanvas>
   <div class="wrap docs">
     <aside>
       <a class="back label" href={`/${id}/`}>← {exp.name}</a>

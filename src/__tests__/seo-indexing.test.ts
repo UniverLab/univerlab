@@ -29,9 +29,12 @@ import {
   checkMetaDescriptions,
   checkRedirects,
   checkSitemap,
+  checkTitles,
+  decodeTitle,
   htmlFileForPath,
 } from '../../scripts/check-seo';
 import { composeDocsDescription, truncateAtWord } from '../lib/docs-description';
+import { composeDocsTitle } from '../lib/docs-title';
 
 const ROOT = resolve(__dirname, '../..');
 const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
@@ -511,6 +514,137 @@ describe('checkMetaDescriptions', () => {
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
+  });
+});
+
+describe('checkTitles', () => {
+  const titled = (t: string) => `<!doctype html><html><head><title>${t}</title></head><body></body></html>`;
+  const s = (n: number, ch = 'a') => ch.repeat(n);
+
+  it('passes distinct titles inside 30–60', () => {
+    const dist = distFixture({
+      'index.html': titled('Open-source CLI tools for LaTeX, git, CAD — UniverLab'),
+      'gitkit/index.html': titled('Git hooks are underused. GitKit puts them to work.'),
+    });
+    try {
+      expect(checkTitles(dist)).toEqual([]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a too-short title with URL and length', () => {
+    const dist = distFixture({ 'feed/index.html': titled(s(29)) });
+    try {
+      expect(checkTitles(dist)).toEqual(['/feed/: title is 29 chars (want 30–60)']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a too-long title with URL and length', () => {
+    const dist = distFixture({ 'index.html': titled(s(61, 'h')) });
+    try {
+      expect(checkTitles(dist)).toEqual(['/: title is 61 chars (want 30–60)']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a page with no <title> element', () => {
+    const dist = distFixture({
+      'feed/index.html': '<!doctype html><html><head></head><body></body></html>',
+    });
+    try {
+      expect(checkTitles(dist)).toEqual(['/feed/: no title']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('skips noindex pages', () => {
+    const dist = distFixture({ 'today/index.html': `<head>${NOINDEX}<title>${s(5, 't')}</title></head>` });
+    try {
+      expect(checkTitles(dist)).toEqual([]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags an exact duplicate across two indexable pages', () => {
+    const shared = 'Mission Log RSS feed — UniverLab';
+    expect(shared.length).toBe(32);
+    const dist = distFixture({
+      'feed/index.html': titled(shared),
+      'es/feed/index.html': titled(shared),
+    });
+    try {
+      expect(checkTitles(dist)).toEqual(['/es/feed/: title duplicates /feed/ (32 chars)']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('measures the decoded title, so entities count as one character', () => {
+    // Raw markup is 65 chars — it only passes because `&amp;` decodes to `&`.
+    const raw = `${s(16)} &amp; ${s(16)} &amp; ${s(19, 'c')}`;
+    expect(raw.length).toBe(65);
+    expect(decodeTitle(raw).length).toBe(57);
+    const dist = distFixture({ 'index.html': titled(raw) });
+    try {
+      expect(checkTitles(dist)).toEqual([]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('decodeTitle reverses every entity Astro escapes into a title', () => {
+    expect(decodeTitle('A &amp; B &lt;tag&gt; &quot;q&quot; &#34;r&#34; &#39;s&#39; &apos;t&apos; &#x27;u&#x27;')).toBe(
+      `A & B <tag> "q" "r" 's' 't' 'u'`,
+    );
+    expect(decodeTitle('literal &amp;lt; stays')).toBe('literal &lt; stays');
+  });
+});
+
+describe('composeDocsTitle', () => {
+  it('keeps the full form up to 60 characters', () => {
+    const page = 'x'.repeat(34); // 34 + 26 = 60 with GitKit
+    const out = composeDocsTitle(page, 'GitKit');
+    expect(out).toBe(`${page} — GitKit docs | UniverLab`);
+    expect(out.length).toBe(60);
+  });
+
+  it('drops ` | UniverLab` once the full form reaches 61', () => {
+    const page = 'x'.repeat(35);
+    const out = composeDocsTitle(page, 'GitKit');
+    expect(out).toBe(`${page} — GitKit docs`);
+    expect(out.length).toBe(49);
+  });
+
+  it('keeps `<page> — <exp> docs` up to 60 characters', () => {
+    const page = 'x'.repeat(46); // 46 + 14 = 60 with GitKit
+    const out = composeDocsTitle(page, 'GitKit');
+    expect(out).toBe(`${page} — GitKit docs`);
+    expect(out.length).toBe(60);
+  });
+
+  it('falls back to `<page> — <exp>` when even the docs form exceeds 60', () => {
+    const page = 'x'.repeat(47);
+    const out = composeDocsTitle(page, 'GitKit');
+    expect(out).toBe(`${page} — GitKit`);
+    expect(out.length).toBe(56);
+  });
+
+  it('holds the 30-character floor for the shortest real page', () => {
+    const out = composeDocsTitle('Lock', 'GitKit');
+    expect(out).toBe('Lock — GitKit docs | UniverLab');
+    expect(out.length).toBe(30);
+  });
+
+  it('drops the suffix for the one real page that needs the third rung', () => {
+    const out = composeDocsTitle('ADR: Recipes — Installable Graph and Node Designs', 'Canopy');
+    expect(out).toBe('ADR: Recipes — Installable Graph and Node Designs — Canopy');
+    expect(out.length).toBe(58);
   });
 });
 

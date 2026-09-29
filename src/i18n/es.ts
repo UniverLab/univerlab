@@ -4,7 +4,7 @@ import type { Dict } from './en';
  *  los repositorios permanece solo en inglés. */
 export const es: Dict = {
   meta: {
-    title: 'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — UniverLab',
+    title: 'Herramientas CLI abiertas para LaTeX, git y CAD — UniverLab',
     description:
       'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
   },
@@ -176,7 +176,7 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       title:
-        'LaTeX con diagramas Mermaid — TeXForge',
+        'LaTeX con diagramas Mermaid, Graphviz y D2 — TeXForge',
       description:
         'Un solo binario, sin distribución de LaTeX que instalar. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
@@ -224,7 +224,7 @@ export const es: Dict = {
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
       title:
-        'Los git hooks están desaprovechados. GitKit los pone a trabajar.',
+        'Git hooks desaprovechados. GitKit los pone a trabajar.',
       description:
         'Hooks, .gitignore, .gitattributes y config en un flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node ni Python.',
       koan: '// el ritual, automatizado',
@@ -280,7 +280,7 @@ export const es: Dict = {
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       title:
-        'Crea repos de GitHub con las convenciones ya aplicadas — ghScaff',
+        'Repos de GitHub con convenciones aplicadas — ghScaff',
       description:
         'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit — idempotente y seguro de reaplicar.',
       koan: 'Un edificio es tan recto como su andamio.',
@@ -413,7 +413,7 @@ export const es: Dict = {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       title:
-        'Planning poker donde tus votos nunca llegan a un servidor — Quorum',
+        'Planning poker donde tus votos no ven un servidor — Quorum',
       description:
         'Los peers hablan directamente entre sí por WebRTC. No se guarda nada, no se recoge nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
@@ -490,6 +490,8 @@ export const es: Dict = {
   manifesto: {
     kicker: 'Manifiesto',
     title: 'Pensamiento Cósmico',
+    // Solo para `<title>`/og:title — `title` de arriba es el <h1> visible.
+    metaTitle: 'Pensamiento Cósmico — el manifiesto de UniverLab',
     sub: 'Una filosofía de la continuidad de la conciencia',
     description:
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
@@ -668,6 +670,8 @@ export const es: Dict = {
   people: {
     kicker: 'El laboratorio',
     title: 'Colaboradores',
+    // Solo meta — `title` de arriba renderiza el <h1> visible.
+    metaTitle: 'Colaboradores — las personas y modelos tras UniverLab',
     description:
       'El fundador, los colaboradores y los modelos de lenguaje detrás de UniverLab — cada experimento acepta issues y pull requests enfocados. Tú, quizá.',
     founder: {
@@ -717,7 +721,7 @@ export const es: Dict = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'RSS — UniverLab',
+    title: 'Sigue el Mission Log en tu lector de RSS — UniverLab',
     description: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
     heading: 'RSS',
     intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',

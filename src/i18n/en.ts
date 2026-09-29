@@ -7,7 +7,7 @@ export const en = {
     // query "univerlab". Its title still names what the lab makes, so a reader
     // arriving from anywhere learns it in the tab, and so title and description
     // agree instead of describing two different things.
-    title: 'Open-source CLI tools for LaTeX, git, CAD and AI agents — UniverLab',
+    title: 'Open-source CLI tools for LaTeX, git, CAD — UniverLab',
     description:
       'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, installable today, reproducible, with docs that ship alongside the code.',
   },
@@ -178,7 +178,7 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       title:
-        'LaTeX with Mermaid diagrams — TeXForge',
+        'LaTeX with Mermaid, Graphviz and D2 diagrams — TeXForge',
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
@@ -415,7 +415,7 @@ export const en = {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       title:
-        'Planning poker where your votes never reach a server — Quorum',
+        'Planning poker where your votes reach no server — Quorum',
       description:
         'Peers talk directly to each other over WebRTC. Nothing is stored, nothing is collected, no account exists to create. Share a room link and estimate together.',
       koan: '// the estimate is already in the room',
@@ -494,6 +494,8 @@ export const en = {
   manifesto: {
     kicker: 'Manifesto',
     title: 'Pensamiento Cósmico',
+    // `<title>`/og:title only — `title` above is the visible <h1> and must stay.
+    metaTitle: 'Pensamiento Cósmico — the UniverLab manifesto',
     sub: 'A philosophy of the continuity of consciousness',
     description:
       'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
@@ -672,6 +674,8 @@ export const en = {
   people: {
     kicker: 'The laboratory',
     title: 'Collaborators',
+    // Meta only — `title` above renders the visible <h1> on /contributors/.
+    metaTitle: 'Collaborators — the people and models behind UniverLab',
     description:
       'The founder, contributors and language models behind UniverLab — every experiment takes issues and focused pull requests. Your help is genuinely welcome.',
     founder: {
@@ -721,7 +725,7 @@ export const en = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'RSS — UniverLab',
+    title: 'Follow the Mission Log in your RSS reader — UniverLab',
     description: 'The UniverLab Mission Log is published as an RSS feed you can follow from your own reader — any reader works, just paste the URL and stay current.',
     heading: 'RSS',
     intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',

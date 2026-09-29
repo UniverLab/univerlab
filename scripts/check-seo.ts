@@ -3,7 +3,7 @@
  * reported for univerlab.org on 2026-09-28, or the meta-description errors
  * Bing reported on 2026-09-29.
  *
- * Five invariants, each one a lever that actually moves a metric in Search
+ * Six invariants, each one a lever that actually moves a metric in Search
  * Console:
  *
  *   1. Every `<loc>` in the built sitemap maps to a real HTML file that is not
@@ -18,6 +18,9 @@
  *   5. Every indexable page carries a distinct meta description of 120–160
  *      characters — Bing's "meta description too short" report. Missing, too
  *      short, too long, or duplicated descriptions fail with the URL + length.
+ *   6. Every indexable page carries a distinct `<title>` of 30–60 characters —
+ *      the too-short/too-long/duplicate title reports of 2026-09-29. Failures
+ *      name the URL and the length.
  *
  * This is the half of the check `astro.config.mjs`'s sitemap `filter` cannot
  * do: the filter sees URL strings at build time, this sees `dist/`. Wired as
@@ -218,8 +221,78 @@ export function checkMetaDescriptions(dist = DIST): Failure[] {
   return failures;
 }
 
+// ---------------------------------------------------------------- titles
+
+/** Matches BaseLayout's `<title>…</title>` — the same string is emitted as
+ *  `og:title` and `twitter:title`, so measuring it once covers all three. */
+const TITLE = /<title>([^<]*)<\/title>/i;
+
+/**
+ * Entities a built title can carry (Astro escapes the `&`, `<`, `>` and quotes
+ * of a frontmatter or dictionary string), back to the characters they name.
+ * `&amp;` is replaced last so a literal `&amp;lt;` decodes to `&lt;` and not
+ * to `<` — lengths are counted on the string a reader sees in the tab.
+ */
+export function decodeTitle(s: string): string {
+  return s
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#34;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&amp;/gi, '&');
+}
+
+/**
+ * Every indexable page (each dist index.html without `noindex`) must carry a
+ * `<title>` of 30–60 characters that no other indexable page shares — the
+ * title report of 2026-09-29: 51 titles under 30, a home title over 60, and
+ * two titles repeated across languages. A missing tag, a length outside the
+ * window, or an exact duplicate each fail, naming the URL (and the length).
+ * Titles shorter than 40 are legitimate when the page title itself is short —
+ * 30 is the floor, not the target. `404.html` is outside the glob by
+ * construction, and the noindex `today` pages are skipped like everywhere else.
+ */
+export function checkTitles(dist = DIST): Failure[] {
+  const failures: Failure[] = [];
+  const seen = new Map<string, string>();
+  for (const file of globSync('**/index.html', { cwd: dist })) {
+    const html = readFileSync(resolve(dist, file), 'utf-8');
+    if (NOINDEX.test(html)) continue;
+    const url = file === 'index.html' ? '/' : `/${file.replace(/index\.html$/, '')}`;
+    const m = html.match(TITLE);
+    if (!m) {
+      failures.push(`${url}: no title`);
+      continue;
+    }
+    const title = decodeTitle(m[1]);
+    const len = title.length;
+    if (len < 30 || len > 60) {
+      failures.push(`${url}: title is ${len} chars (want 30–60)`);
+    }
+    const first = seen.get(title);
+    if (first !== undefined) {
+      failures.push(`${url}: title duplicates ${first} (${len} chars)`);
+    } else {
+      seen.set(title, url);
+    }
+  }
+  return failures;
+}
+
+/** How many built pages checkTitles sees — printed in the success line. */
+function indexableCount(dist: string): number {
+  let n = 0;
+  for (const file of globSync('**/index.html', { cwd: dist })) {
+    if (!NOINDEX.test(readFileSync(resolve(dist, file), 'utf-8'))) n++;
+  }
+  return n;
+}
+
 export function checkAll(dist = DIST): Failure[] {
-  return [...checkSitemap(dist), ...checkRedirects(dist), ...checkDocsLinks(dist), ...checkLlmsTxt(dist), ...checkMetaDescriptions(dist)];
+  return [...checkSitemap(dist), ...checkRedirects(dist), ...checkDocsLinks(dist), ...checkLlmsTxt(dist), ...checkMetaDescriptions(dist), ...checkTitles(dist)];
 }
 
 function main(): void {
@@ -234,7 +307,9 @@ function main(): void {
     console.error('');
     process.exit(1);
   }
-  console.log(`✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, redirects and doc links clean.`);
+  console.log(
+    `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–60 char titles, redirects and doc links clean.`,
+  );
 }
 
 const isDirectRun = process.argv[1] && /(?:^|[/\\])check-seo\.(?:ts|js)$/.test(process.argv[1]);
