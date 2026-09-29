@@ -339,10 +339,10 @@ html[data-surface='pastel'] .mock-b { animation: mock-float 7s ease-in-out -3.5s
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   ghscaff · `industrial` — frosted glass cathedral at midnight.
+   ghscaff · `industrial` — midnight steel: an aligned scaffold grid.
 
-   Violet-black midnight substrate with a blueprint-violet scaffold lattice;
-   the hero reads as a frosted scaffold bay at night. Type is a sturdy
+   Violet-black midnight substrate with a single violet accent; the hero
+   reads as a flat steel plate with one hairline frame. Type is a sturdy
    grotesque; the koan is set in ink. The canvas paints the scaffold grid
    with a cursor-anchored spotlight.
    ───────────────────────────────────────────────────────────────────────── */
@@ -368,16 +368,6 @@ html[data-surface='industrial'] .koan {
   font-style: normal;
   font-weight: 500;
   opacity: 1;
-}
-/* A faint violet wash pools from the top — midnight, not forge heat. */
-html[data-surface='industrial'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background:
-    radial-gradient(80% 60% at 50% -10%, color-mix(in srgb, #8b7cf6 8%, transparent), transparent 55%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -649,18 +639,14 @@ html[data-surface='blueprint'] .hero::after {
 /* gitkit · pastel — the old bordered dessert card is retired; the hero is a
    centered stack on the white canvas (see the sunlit section above). */
 
-/* ghscaff · industrial — a midnight glass frame: frosted scaffold bay at
-   night. The riveted iron plate (copper bolts + corrugated texture) is
-   retired — iron foundry reads forge, not scaffold-at-midnight. */
+/* ghscaff · industrial — a midnight steel plate: the scaffold bay at night,
+   flat and hairline-framed. The riveted iron plate (copper bolts +
+   corrugated texture) is retired — iron foundry reads forge, not
+   scaffold-at-midnight. The visible plate (fill + border) is painted by the
+   later `:root[...]` rule near the end of this file. */
 html[data-surface='industrial'] .hero {
   position: relative;
   margin-top: 1.4rem;
-  padding: 1.7rem;
-  border: 1px solid color-mix(in srgb, var(--glass-v) 28%, var(--line));
-  border-radius: 12px;
-  background: color-mix(in srgb, #151226 72%, transparent);
-  -webkit-backdrop-filter: blur(16px) saturate(1.25);
-  backdrop-filter: blur(16px) saturate(1.25);
 }
 html[data-surface='industrial'] .hero::before {
   content: 'ghScaff · SCAFFOLD · BAY 01';
@@ -719,10 +705,10 @@ html[data-surface='studio'] .hero .rec {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   ghscaff · industrial — frosted glass cathedral at midnight.
+   ghscaff · industrial — midnight steel, not frosted glass.
    Single violet hue (--glass-v) throughout; copper is suppressed on this
-   surface only (registry keeps #b87333 for OG/home). Glass stays
-   translucent so the scaffold lattice reads behind it.
+   surface only (registry keeps #b87333 for OG/home). Cards and the hero
+   are flat plates so the scaffold canvas reads behind them, unblurred.
    ───────────────────────────────────────────────────────────────────────── */
 
 /* Visually suppress copper on this surface only — the inline --essence
@@ -738,7 +724,7 @@ html[data-surface='industrial'] .demo-fig {
   --essence: var(--glass-v) !important;
 }
 
-/* Display wordmark: unhide the industrial .exp-name as a gradient masthead.
+/* Display wordmark: unhide the industrial .exp-name in plain ink.
    Banner ASCII stays small above it as the signature (tint-only). */
 html[data-surface='industrial'] .exp-name {
   position: static;
@@ -753,16 +739,7 @@ html[data-surface='industrial'] .exp-name {
   font-size: clamp(2.6rem, 7vw, 4.6rem);
   line-height: 1.02;
   margin: 0.2rem 0 0;
-  background: linear-gradient(180deg, #fff 20%, #c9bfff 60%, var(--glass-v));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-@supports not (background-clip: text) {
-  html[data-surface='industrial'] .exp-name {
-    background: none;
-    color: var(--ink);
-  }
+  color: var(--ink);
 }
 html[data-surface='industrial'] .banner {
   color: var(--ink);
@@ -813,13 +790,11 @@ html[data-surface='industrial'] .btn-violet:focus-visible {
   outline-offset: 2px;
 }
 
-/* Install bar in hero: a glass slip with the inset hairline, not paper's dash. */
+/* Install bar in hero: a flat steel slip with the inset hairline, not paper's dash. */
 html[data-surface='industrial'] .cmd {
   border: 1px solid color-mix(in srgb, var(--glass-v) 22%, transparent);
   background: color-mix(in srgb, var(--glass-v) 10%, rgba(18, 16, 30, 0.55));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
-  backdrop-filter: blur(14px) saturate(1.25);
   border-radius: 12px;
 }
 html[data-surface='industrial'] .copy {
@@ -837,37 +812,8 @@ html[data-surface='industrial'] .copy.done .copy-done {
   color: var(--glass-v);
 }
 
-/* Frosted glass cards — translucent violet-tinted fill, inset hairline,
-   no drop shadows, no glow rings (the canvas spotlight is the only glow).
-   Fill stays well under 65% opaque so the scaffold lattice reads behind. */
-html[data-surface='industrial'] .glass {
-  background: color-mix(in srgb, var(--glass-v) 10%, rgba(18, 16, 30, 0.55));
-  border: 1px solid color-mix(in srgb, var(--glass-v) 22%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
-  backdrop-filter: blur(14px) saturate(1.25);
-  border-radius: 12px;
-}
-
-/* Fanned floating wizard: slight rotate/translateY fan on desktop, clean
-   vertical stack below 52rem. Never causes horizontal scroll. */
-html[data-surface='industrial'] .fan {
-  overflow-x: clip;
-}
-html[data-surface='industrial'] .fan li:nth-child(8n+1) { transform: rotate(-4deg) translateY(6px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+2) { transform: rotate(-2.5deg) translateY(2px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+3) { transform: rotate(-1deg) translateY(-2px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+4) { transform: rotate(1deg) translateY(-4px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+5) { transform: rotate(2.5deg) translateY(-2px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+6) { transform: rotate(4deg) translateY(2px); }
-html[data-surface='industrial'] .fan li:nth-child(8n+7) { transform: rotate(-3deg) translateY(4px); }
-@media (max-width: 52rem) {
-  html[data-surface='industrial'] .fan li:nth-child(n) {
-    transform: none;
-  }
-}
+/* Fanned cards are retired: the seven lifts sit in a straight, aligned grid
+   (flat fill + hairline from the later `:root[...] .fan li / .glass` rule). */
 
 /* Luminous text progression: numerals/titles brighten along the flow in the
    single violet hue — 01 dim, 07 near-white. No second accent. */
@@ -880,12 +826,6 @@ html[data-surface='industrial'] .fan li:nth-child(6) .idx { color: color-mix(in 
 html[data-surface='industrial'] .fan li:nth-child(7) .idx { color: color-mix(in srgb, var(--glass-v) 95%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(1) .step-name { color: var(--ink-dim); }
 html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff; }
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-surface='industrial'] .fan li:nth-child(n) {
-    transform: none;
-  }
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    2026-09-26 preserved POC styles. Each target has a full style reference in
@@ -1066,7 +1006,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='studio'] .spectrum { gap: clamp(.3rem,1vw,.8rem); }
 :root[data-surface='studio'] .spectrum span { background: #fa5838; }
 
-/* AuthKit → ghScaff: frosted midnight glass. */
+/* AuthKit → ghScaff: midnight steel — flat plates, hairlines, canvas grid. */
 :root[data-surface='industrial'] {
   --bg: #05060f;
   --bg-raise: rgba(186,214,247,.05);
@@ -1082,18 +1022,13 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --accent: #b6d9fc !important;
 }
 :root[data-surface='industrial'] .exp { --essence: #b6d9fc !important; --accent: #b6d9fc !important; }
-:root[data-surface='industrial'] body::before {
-  background-image: linear-gradient(rgba(186,215,247,.06) 1px, transparent 1px), linear-gradient(90deg,rgba(186,215,247,.06) 1px,transparent 1px), radial-gradient(ellipse at 50% 0%,rgba(124,145,182,.34),transparent 58%);
-  background-size: 88px 88px,88px 88px,auto;
-  mask-image: linear-gradient(to bottom,black,transparent 85%);
-}
 :root[data-surface='industrial'] canvas.bg { opacity: .68; }
-:root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: transparent; border: 0; padding: 2rem 1rem 1rem; }
+:root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,
 :root[data-surface='industrial'] .hero::after { content: none; }
 :root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
 :root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
-:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: #d8ecf8; background: linear-gradient(180deg,#d8ecf8,#98c0ef); background-clip: text; -webkit-text-fill-color: transparent; }
+:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: var(--ink); }
 :root[data-surface='industrial'] .ascii-motif { color: #b6d9fc; }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 :root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
@@ -1101,7 +1036,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='industrial'] .install { margin-inline: auto; }
 :root[data-surface='industrial'] .cmd { background: rgba(186,214,247,.05); border-color: rgba(186,215,247,.12); }
 :root[data-surface='industrial'] .fan li,
-:root[data-surface='industrial'] .glass { background: rgba(186,214,247,.035); border: 1px solid rgba(186,215,247,.12); box-shadow: inset 0 1px 1px rgba(216,236,248,.12), inset 0 24px 48px rgba(168,216,245,.04), 0 18px 30px rgba(0,0,0,.22); backdrop-filter: blur(12px); }
+:root[data-surface='industrial'] .glass { background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; }
 
 /* Supahub → GitKit: violet sun, real product previews. */
 :root[data-surface='pastel'] {
