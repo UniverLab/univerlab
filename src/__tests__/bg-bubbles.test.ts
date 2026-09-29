@@ -362,6 +362,18 @@ describe('bubbles', () => {
     expect(segs.length).toBeLessThanOrEqual(N - 1);
   });
 
+  it("keeps the home window's link when its two nodes sit >260 px apart", () => {
+    // Given: a 352×210 card field (the GitKit home window) whose only two nodes
+    // are 310 px apart — past 260 if the cull were a straight-line distance
+    scriptField({ 0: { x: 20, y: 105, r: 20 }, 1: { x: 330, y: 105, r: 20 } }, 352, 210);
+    const { ctx, segs } = makeCtx({ w: 352, h: 210 });
+    const tick = bubbles(ctx);
+    // When: one frame paints (ambient drift ≪ 1 px, both nodes move together)
+    tick(33);
+    // Then: the card still shows its two circles joined by the one parent line
+    expect(segs).toHaveLength(1);
+  });
+
   it('caps the merged radius at 26 px', () => {
     // Given: 3 staged bubbles with r=20 (area sum would be ~34.6)
     scriptField({ 0: { x: 96, y: 300, r: 20 }, 1: { x: 120, y: 310, r: 20 }, 2: { x: 80, y: 290, r: 20 } });

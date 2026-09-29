@@ -351,12 +351,15 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
     // One unified link pass: every node draws its edge to its parent with the
     // card's style — bezier child→parent, lineWidth 1, ambient alpha 0.14,
     // commit 0.22 × top-fade, 260 px cull on ambient edges only (commit edges
-    // keep only the top fade so the ~270 px causal link still draws).
+    // keep only the top fade so the ~270 px causal link still draws). The cull
+    // is on Δy — the home window's own rule: the card is 210 px tall, so its
+    // single pair can never exceed 260 and the liked "two circles joined by a
+    // line" always draws; a Euclidean cull would drop that link ~10 % of mounts.
     for (const bb of bubbles) {
       if (!bb.parent) continue;
       const p = bb.parent;
       if (!bb.commit) {
-        if (Math.hypot(p.x - bb.x, p.y - bb.y) > 260) continue;
+        if (p.y - bb.y > 260) continue;
       }
       const fade = bb.commit ? Math.max(0, Math.min(1, bb.y / (0.14 * ctx.h))) : 1;
       const my = (bb.y + p.y) / 2;
