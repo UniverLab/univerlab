@@ -189,8 +189,8 @@ html[data-surface='tui'] .koan::before {
    gitkit · `pastel` — sunlit SaaS with violet confidence.
 
    White canvas with fog bands and a single voltage violet. The hero is a
-   centered stack (copy · violet CTA · install bar · badges · ascii motif ·
-   floating mockups on orbs); the gitgraph/commit motif is pushed through the
+   centered stack (copy · violet CTA · install bar · ascii motif · two flat
+   mockup cards); the gitgraph/commit motif is pushed through the
    bubbles canvas runner and the wizard git-rail below. (Key name kept for
    stability.)
    ───────────────────────────────────────────────────────────────────────── */
@@ -291,19 +291,15 @@ html[data-surface='pastel'] .btn:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
-/* Pill tags — hero badges row + mockup cards. Scoped to `.exp`: the shared
-   footer frame also owns a `.tag`, and an unscoped surface rule would
-   out-specify its component styles and print a light pill on the black
-   footer. The frame stays constant; only the experiment content is dressed. */
+/* Plain mono step/hook labels — no pill chip. The hero badge row is gone (the
+   ascii motif already says it). Scoped to `.exp`: the shared footer frame also
+   owns a `.tag`, and an unscoped surface rule would out-specify its component
+   styles and print a light chip on the black footer. */
 html[data-surface='pastel'] .exp .tag {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.2rem 0.6rem;
-  background: var(--bg-raise);
-  color: var(--ink-dim);
+  color: var(--ink-faint);
 }
 /* Install bar (layout-owned markup; style only). No violet fill here. */
 html[data-surface='pastel'] .cmd {
@@ -318,25 +314,9 @@ html[data-surface='pastel'] .cmd-line[data-os='unix']::before,
 html[data-surface='pastel'] .cmd-line[data-os='windows']::before { color: var(--voltage); }
 html[data-surface='pastel'] .copy:hover,
 html[data-surface='pastel'] .copy.done .copy-done { color: var(--voltage); }
-/* Hero stage + gitgraph rail + floating mockups on orbs. */
+/* Hero stage. No orbs behind the cards and no float loop: the two mockup
+   cards are flat plates on the pastel surface (the view owns their geometry). */
 html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; }
-html[data-surface='pastel'] .mock { position: relative; }
-html[data-surface='pastel'] .mock::before {         /* gradient orb — ONLY here */
-  content: '';
-  position: absolute;
-  inset: -18% -10%;
-  background: radial-gradient(closest-side, rgba(109,40,217,.16), rgba(109,40,217,0) 72%);
-  z-index: 0;
-  pointer-events: none;
-}
-html[data-surface='pastel'] .mock > .card { position: relative; z-index: 1; }
-@keyframes mock-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-html[data-surface='pastel'] .mock-a { animation: mock-float 7s ease-in-out infinite; }
-html[data-surface='pastel'] .mock-b { animation: mock-float 7s ease-in-out -3.5s infinite; }
-@media (prefers-reduced-motion: reduce) {
-  html[data-surface='pastel'] .mock-a,
-  html[data-surface='pastel'] .mock-b { animation: none; }
-}
 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · `industrial` — midnight steel: an aligned scaffold grid.
@@ -1073,9 +1053,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .install { margin: .45rem auto 0; }
 :root[data-surface='pastel'] .hero-stage { margin-block: .3rem 0; }
 :root[data-surface='pastel'] .cmd { background: #f1f5f9; border: 1px solid #d8e0ea; border-radius: 12px; }
-:root[data-surface='pastel'] .mock::before { background: radial-gradient(closest-side,rgba(134,47,231,.16),rgba(134,47,231,0) 72%); }
-:root[data-surface='pastel'] .mock-b::before { background: radial-gradient(closest-side,rgba(226,43,164,.18),rgba(226,43,164,0) 72%); }
-:root[data-surface='pastel'] .card { border-radius: 24px; border-color: #d8e0ea; box-shadow: 0 12px 28px rgba(17,24,39,.07); }
+:root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
 :root[data-surface='pastel'] canvas.bg { opacity: .12; }

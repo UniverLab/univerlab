@@ -12,7 +12,6 @@ const exp = byId('gitkit');
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">o──o──◆ origin/main · 3 hooks · idempotent</p>
   <Fragment slot="hero-visual">
     <div class="wrap section hero-stage">
-      <p class="badges">{e.hero.badges.map((b) => <span class="tag">{b}</span>)}</p>
       <div class="mocks" aria-hidden="true">
         <div class="mock mock-a">
           <div class="card wizard">
@@ -38,7 +37,7 @@ const exp = byId('gitkit');
 
   <section class="wrap section">
     <div class="term" id="gitkit-term">
-      <div class="term-bar mono"><span>●</span><span>●</span><span>●</span> gitkit · commit</div>
+      <div class="term-bar mono">~/repo — gitkit</div>
       <pre class="mono term-body"><code>$ git commit -m "feat: parse manifests"
   ✓ conventional-commits  (commit-msg)
   ✓ no-secrets            (pre-commit)
@@ -59,7 +58,6 @@ $ git push
   .section { padding-block: 0.5rem 2rem; display: grid; grid-template-columns: minmax(20rem, 1.1fr) 1fr; gap: 3rem; align-items: start; }
   @media (max-width: 50rem) { .section { grid-template-columns: 1fr; } }
   .hero-stage { display: block; }
-  .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1.6rem 0 0.6rem; }
   .ascii-motif {
     font-family: var(--font-mono);
     font-size: 0.78rem;
@@ -77,17 +75,15 @@ $ git push
     margin-inline: auto;
     text-align: left;
   }
-  .mock-a .card { transform: rotate(-1deg); }
-  .mock-b .card { transform: rotate(1.2deg) translateY(1.4rem); }
+  /* Two flat, straight cards — no tilt, no float, no drop shadow. The
+     gitgraph motif carries the hero, not a borrowed product-shot stage. */
   @media (max-width: 52rem) {
     .mocks { grid-template-columns: 1fr; }
-    .mock-a .card, .mock-b .card { transform: none; }
   }
   .card {
     background: var(--bg-raise);
     border: 1px solid var(--line);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(23,20,31,.06);
     padding: 1.2rem 1.3rem;
   }
   .card .label { margin: 0 0 0.9rem; }
@@ -125,7 +121,6 @@ $ git push
   .hooks .tag { margin-left: auto; }
   .term { background: #17141f; border: 1px solid #2c2740; border-radius: 12px; overflow: hidden; }
   .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid #2c2740; color: #8f8aa3; font-size: 0.75rem; }
-  .term-bar span { margin-right: 0.3rem; font-size: 0.6rem; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
   .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--voltage-lt, #c4b5fd); min-height: 9rem; }
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
