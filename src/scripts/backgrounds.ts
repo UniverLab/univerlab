@@ -612,8 +612,8 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Bubbles — GitKit's drifting commit graph. The cursor sows fresh
-     bubbles under it that join the upward float (bg-bubbles.ts). */
+  /* Bubbles — GitKit's drifting commit graph. The cursor stages nearby
+     commit nodes and a dwell commits them (bg-bubbles.ts). */
   bubbles,
 
   /* Industrial — slow-turning gears and copper sparks rising from below.
