@@ -12,7 +12,7 @@ export const LAB = {
   periodMin: 60, periodMax: 180,
 } as const;
 
-export interface LabBody {
+interface LabBody {
   id: ExperimentId; number: string; essenceHex: string; status: Status;
   ring: number;
   rx: number; ry: number;

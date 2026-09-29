@@ -2,9 +2,8 @@
  * Tests for src/scripts/backgrounds.ts — the module a home card window
  * mounts. Two things live here: the optional 5th `surface` argument (a card
  * previews the SAME runner its page runs: paper for texforge, studio for
- * demostage, blueprint for cadspec…), and the five runners that still live
- * inline in this file (primitives · starfield · forge · gitgraph ·
- * industrial) — their split-out siblings (brain/orbit/bubbles/takes/spiral/
+ * demostage, blueprint for cadspec…), and the three runners that still live
+ * inline in this file (primitives · starfield · forge) — their split-out siblings (brain/orbit/bubbles/takes/spiral/
  * paper/scaffold) are covered by their own suites. Given-When-Then, like
  * brain.test.ts and bg-paper.test.ts.
  */
@@ -79,7 +78,7 @@ function sheet(w = 280, h = 240, color = '#6ec6e6', bg = '#0b1020'): BgCtx {
 /** Every experiment surface the registry can hand a card. */
 const SURFACES: BgTheme[] = [
   'cosmic', 'spiral', 'brain', 'primitives', 'starfield',
-  'forge', 'gitgraph', 'scaffold', 'industrial', 'bubbles', 'takes',
+  'forge', 'scaffold', 'bubbles', 'takes',
 ];
 
 afterEach(() => {
@@ -371,57 +370,5 @@ describe('forge (texforge) — embers rise, flicker and respawn', () => {
     expect(count(ctx.c, 'clearRect')).toBe(300);
     expect(count(ctx.c, 'arc')).toBeGreaterThan(300);
     expect(count(ctx.c, 'fill')).toBeGreaterThan(300);
-  });
-});
-
-describe('gitgraph (gitkit) — lanes, forks and merges', () => {
-  it('draws straight lanes when nothing forks', () => {
-    // Given: a graph that never changes lane
-    jest.spyOn(Math, 'random').mockReturnValue(0.9);
-    const ctx = sheet(280, 240, '#e8a4c8', '#120b14');
-    const tick = pickRunner('gitgraph', 'pastel')(ctx);
-    for (let i = 1; i <= 30; i++) tick(i * 100);
-    // Then: every segment is a straight drop and nodes were pruned off-frame
-    expect(count(ctx.c, 'clearRect')).toBe(30);
-    expect(count(ctx.c, 'stroke')).toBeGreaterThan(30);
-    expect(count(ctx.c, 'bezierCurveTo')).toBe(0);
-    expect(count(ctx.c, 'arc')).toBeGreaterThan(0);
-  });
-
-  it('bends the lanes and forks when the tip wanders', () => {
-    // Given: a graph that changes lane on every node (clamping at the edges)
-    jest.spyOn(Math, 'random').mockReturnValue(0.1);
-    const ctx = sheet(280, 240, '#e8a4c8', '#120b14');
-    const tick = pickRunner('gitgraph', 'pastel')(ctx);
-    for (let i = 1; i <= 30; i++) tick(i * 100);
-    // Then: the merge curves and the fork nodes both drew
-    expect(count(ctx.c, 'bezierCurveTo')).toBeGreaterThan(0);
-    expect(count(ctx.c, 'arc')).toBeGreaterThan(0);
-  });
-});
-
-describe('industrial (ghscaff) — gears, sparks and the copper fallback', () => {
-  it('turns the gears and recycles the sparks', () => {
-    // Given: copper sparks low on the sheet, gear speed turning one way
-    jest.spyOn(Math, 'random').mockReturnValue(0.1);
-    const ctx = sheet(280, 120, '#b87333', '#120d0a');
-    const tick = pickRunner('industrial', 'industrial')(ctx);
-    for (let i = 1; i <= 400; i++) tick(i * 16);
-    // Then: gears drew (save/rotate/restore) and every spark recycled
-    expect(count(ctx.c, 'save')).toBeGreaterThan(400);
-    expect(count(ctx.c, 'restore')).toBeGreaterThan(400);
-    expect(count(ctx.c, 'clearRect')).toBe(400);
-    expect(count(ctx.c, 'fill')).toBeGreaterThan(0);
-  });
-
-  it('falls back to copper when the colour is not a plain hex', () => {
-    // Given: a colour with an alpha channel (9 chars, not 7)
-    jest.spyOn(Math, 'random').mockReturnValue(0.9);
-    const ctx = sheet(280, 120, '#b8733380', '#120d0a');
-    const tick = pickRunner('industrial', 'industrial')(ctx);
-    for (let i = 1; i <= 400; i++) tick(i * 16);
-    // Then: the gear pass still ran on the fallback copper
-    expect(count(ctx.c, 'save')).toBeGreaterThan(400);
-    expect(count(ctx.c, 'clearRect')).toBe(400);
   });
 });

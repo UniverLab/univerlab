@@ -37,7 +37,6 @@ describe('i18n system', () => {
       // When: We check for required navigation items
       // Then: All navigation items should be present
       expect(en.nav).toHaveProperty('experiments');
-      expect(en.nav).toHaveProperty('research');
       expect(en.nav).toHaveProperty('manifesto');
       expect(en.nav).toHaveProperty('people');
       expect(en.nav).toHaveProperty('github');

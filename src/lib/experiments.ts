@@ -10,9 +10,7 @@ export type BgTheme =
   | 'primitives'
   | 'starfield'
   | 'forge'
-  | 'gitgraph'
   | 'scaffold'
-  | 'industrial'
   | 'bubbles'
   | 'takes'
   | 'spiral';

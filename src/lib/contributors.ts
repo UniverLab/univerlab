@@ -9,7 +9,7 @@
 const ORG = 'UniverLab';
 const FOUNDER = 'jheisonmb'; // lowercased; already shown as the founder
 
-export interface Contributor {
+interface Contributor {
   login: string;
   avatar: string;
   url: string;

@@ -1,7 +1,7 @@
 /** Shared two-fetch loader: announcements + roadmap, memoised on window. */
 import type { Entry, RoadmapItem } from './field-notes';
 
-export interface BoardData {
+interface BoardData {
   entries: Entry[];
   roadmap: RoadmapItem[];
 }

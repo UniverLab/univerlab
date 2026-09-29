@@ -23,20 +23,20 @@ interface TakesCtx {
 
 export type Pt = { x: number; y: number };
 
-export const SAMPLE_MS = 40; // path sample interval while moving
-export const MAX_SAMPLES = 60; // ≈ 2.4 s hard stop → compile
+const SAMPLE_MS = 40; // path sample interval while moving
+const MAX_SAMPLES = 60; // ≈ 2.4 s hard stop → compile
 export const STILL_MS = 600; // stillness → compile
-export const RDP_EPS = 6; // px, in canvas CSS space (context is pre-scaled)
+const RDP_EPS = 6; // px, in canvas CSS space (context is pre-scaled)
 export const MAX_TAKES = 3; // oldest compiled take drops first
-export const REPLAY_DUR_MULT = 1.2; // replay wall-clock = recordedMs × 1.2
-export const FADE_MS = 2000; // take fades out after its replay ends
-export const IDLE_AFTER = 8000; // ms without pointer before synthetic takes
-export const IDLE_EVERY = 6000; // ms between synthetic takes
-export const REC_R = 4; // pulsing REC head radius
-export const GHOST_R = 6; // hollow ghost cursor radius
-export const PATH_A = 0.5; // max path alpha
-export const GHOST_A = 0.8; // ghost stroke alpha
-export const TICK_EVERY = 4; // keyframe tick every Nth normalized point
+const REPLAY_DUR_MULT = 1.2; // replay wall-clock = recordedMs × 1.2
+const FADE_MS = 2000; // take fades out after its replay ends
+const IDLE_AFTER = 8000; // ms without pointer before synthetic takes
+const IDLE_EVERY = 6000; // ms between synthetic takes
+const REC_R = 4; // pulsing REC head radius
+const GHOST_R = 6; // hollow ghost cursor radius
+const PATH_A = 0.5; // max path alpha
+const GHOST_A = 0.8; // ghost stroke alpha
+const TICK_EVERY = 4; // keyframe tick every Nth normalized point
 
 /** Pure Ramer–Douglas–Peucker simplification, for the normalize step. */
 export function rdp(points: Pt[], epsilon: number): Pt[] {
@@ -66,8 +66,8 @@ export function rdp(points: Pt[], epsilon: number): Pt[] {
   return [first, last];
 }
 
-export type Phase = 'normalized' | 'replaying' | 'fading';
-export interface Take {
+type Phase = 'normalized' | 'replaying' | 'fading';
+interface Take {
   phase: Phase;
   score: Pt[]; // RDP-normalized path
   t0: number; // phase-local clock (replay start / fade start)
@@ -75,7 +75,7 @@ export interface Take {
   trail: Array<Pt & { t: number }>; // fading ghost trail samples
   alpha: number; // fades 1 → 0 while fading
 }
-export interface TakesTick {
+interface TakesTick {
   (t: number): void;
   takes: Take[]; // live compiled takes, oldest first (for tests)
 }

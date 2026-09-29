@@ -123,7 +123,7 @@ export const SVG_TPAD = 4;
 export const SVG_RPAD = 4;
 export const SVG_BPAD = 14; // bottom margin: X-axis labels
 
-export interface SvgCoord {
+interface SvgCoord {
   year: number;
   value: number;
   x: number;

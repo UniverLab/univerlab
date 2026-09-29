@@ -1,11 +1,8 @@
 import { en, type Dict } from './en';
 import { es } from './es';
 
-export type { Dict, ExperimentId } from './en';
-
 export const languages = { en: 'EN', es: 'ES' } as const;
-export type Lang = keyof typeof languages;
-export const defaultLang: Lang = 'en';
+type Lang = keyof typeof languages;
 
 const dict: Record<Lang, Dict> = { en, es };
 

@@ -20,7 +20,7 @@ export interface RoadmapCardItem {
   entries?: EntriesSummary | null;
 }
 
-export const ROADMAP_PEEK = 2;
+const ROADMAP_PEEK = 2;
 
 export function shouldShowEntriesMeta(
   entries: EntriesSummary | null | undefined,

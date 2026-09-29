@@ -57,7 +57,7 @@ export const SOURCE_MS = 550;      // source sits before it compiles
 export const FADE_MS = 250;        // cross-fade source → typeset
 export const SNAP_MS = 180;        // y snap to the baseline grid (ease-out)
 export const HOLD_MS = 1500;       // the set line holds
-export const BLEED_MS = 1000;      // …and bleeds out
+const BLEED_MS = 1000;      // …and bleeds out
 export const LIFE_MS = SOURCE_MS + FADE_MS + HOLD_MS + BLEED_MS; // 3300
 
 export const GRID_PX = 28;         // the invisible baseline grid

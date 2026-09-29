@@ -35,7 +35,7 @@ import { DOCS_BASES } from '../data/docs-bases';
 /** Prefixes that make an href something other than a relative docs link. */
 const EXTERNAL_PREFIX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
-export type HrefRewrite = { href: string; rewritten: boolean };
+type HrefRewrite = { href: string; rewritten: boolean };
 
 /**
  * Resolve `target` against `docDir`, both relative to the docs base.
