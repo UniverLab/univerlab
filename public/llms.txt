@@ -7,21 +7,21 @@ UniverLab follows one loop: a real need becomes an open experiment, and that exp
 ## Core pages
 
 - [Home](https://univerlab.org/): What UniverLab is, the experiment loop, research directions, and the experiment index.
-- [Manifesto — Pensamiento Cósmico](https://univerlab.org/manifesto): The philosophy behind the lab — a philosophy of the continuity of consciousness, and the values that guide which experiments get built.
-- [Contributors](https://univerlab.org/contributors): The people and language models behind the lab, and how to contribute.
+- [Manifesto — Pensamiento Cósmico](https://univerlab.org/manifesto/): The philosophy behind the lab — a philosophy of the continuity of consciousness, and the values that guide which experiments get built.
+- [Contributors](https://univerlab.org/contributors/): The people and language models behind the lab, and how to contribute.
 
 ## Experiments
 
-- [Harness Canopy](https://univerlab.org/canopy): EXP-001 (active) — a CLI-based agentic development ecosystem that gives AI coding agents persistent memory and cross-agent coordination, with RAG, context transfer, mission/sync signalling, and prompt templates.
-- [TexForge](https://univerlab.org/texforge): EXP-002 (active) — a unified workspace and CLI for LaTeX that compiles documents to PDF, renders diagrams, and manages templates without installing a multi-gigabyte TeX distribution.
-- [GitKit](https://univerlab.org/gitkit): EXP-003 (active) — git tooling that wires up `.gitattributes` and git hooks automatically the moment a repository lands on disk, so every repo starts configured.
-- [ghScaff](https://univerlab.org/ghscaff): EXP-004 (active) — scaffolds a complete GitHub repository (manifests, entry points, CI/release workflows) in one step; Rust today, more languages on the way.
-- [cadSpec](https://univerlab.org/cadspec): EXP-005 (beta) — declarative CAD as code in TOML: semantic, diffable, reviewable drawings that compile to DXF, built so AI agents can read and generate them.
-- [Astro Denoise](https://univerlab.org/astro-denoise): EXP-006 (research) — a reproducible benchmarking platform for denoising methods on astronomical images (a master's thesis project).
-- [DemoStage](https://univerlab.org/demostage): EXP-007 (active) — records terminal and app demos as editable event files you can prune, pace, and replay, exporting to cast, html, or gif.
-- [Quorum](https://univerlab.org/quorum): EXP-008 (active) — serverless planning poker that runs peer-to-peer over WebRTC: share a link, estimate together, no sign-up required.
+- [Harness Canopy](https://univerlab.org/canopy/): EXP-001 (active) — a CLI-based agentic development ecosystem that gives AI coding agents persistent memory and cross-agent coordination, with RAG, context transfer, mission/sync signalling, and prompt templates.
+- [TexForge](https://univerlab.org/texforge/): EXP-002 (active) — a unified workspace and CLI for LaTeX that compiles documents to PDF, renders diagrams, and manages templates without installing a multi-gigabyte TeX distribution.
+- [GitKit](https://univerlab.org/gitkit/): EXP-003 (active) — git tooling that wires up `.gitattributes` and git hooks automatically the moment a repository lands on disk, so every repo starts configured.
+- [ghScaff](https://univerlab.org/ghscaff/): EXP-004 (active) — scaffolds a complete GitHub repository (manifests, entry points, CI/release workflows) in one step; Rust today, more languages on the way.
+- [cadSpec](https://univerlab.org/cadspec/): EXP-005 (beta) — declarative CAD as code in TOML: semantic, diffable, reviewable drawings that compile to DXF, built so AI agents can read and generate them.
+- [Astro Denoise](https://univerlab.org/astro-denoise/): EXP-006 (research) — a reproducible benchmarking platform for denoising methods on astronomical images (a master's thesis project).
+- [DemoStage](https://univerlab.org/demostage/): EXP-007 (active) — records terminal and app demos as editable event files you can prune, pace, and replay, exporting to cast, html, or gif.
+- [Quorum](https://univerlab.org/quorum/): EXP-008 (active) — serverless planning poker that runs peer-to-peer over WebRTC: share a link, estimate together, no sign-up required.
 
 ## Optional
 
 - [GitHub organization](https://github.com/UniverLab): Source code for every experiment.
-- [Spanish site](https://univerlab.org/es): The full site in Spanish.
+- [Spanish site](https://univerlab.org/es/): The full site in Spanish.

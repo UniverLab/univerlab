@@ -2,8 +2,11 @@
 import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
+import LabPlate from '../components/LabPlate.astro';
+import FieldNotes from '../components/FieldNotes.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations, localizePath } from '../i18n';
+import { startSolLabel } from '../lib/mission-time';
 
 interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; }
 const { id, hideGithub = false, hideDemo = false } = Astro.props;
@@ -23,13 +26,7 @@ const nextExp = experiments[(idx + 1) % experiments.length];
 
 // Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
 const genesisDate = exp.startDate
-  ? (() => {
-      const d = new Date(exp.startDate + 'T00:00:00');
-      const start = new Date(d.getFullYear(), 0, 0);
-      const diff = d.getTime() - start.getTime();
-      const sol = Math.floor(diff / 86400000);
-      return `TERRA ${d.getFullYear()} · Sol ${sol}`;
-    })()
+  ? `TERRA ${new Date(exp.startDate).getFullYear()} · ${startSolLabel(exp.startDate)}`
   : undefined;
 
 // Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
@@ -90,7 +87,8 @@ const ogImage = `/og/${id}.png`;
 ---
 <BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
-    <section class="wrap hero">
+    <LabPlate id={id} />
+    <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
       {/* The product name is stated twice on purpose (user decision
@@ -194,11 +192,20 @@ const ogImage = `/og/${id}.png`;
         <span class="arrow" aria-hidden="true">→</span>
       </a>
     </nav>
+
+    <FieldNotes id={id} />
   </div>
 </BaseLayout>
 
 <style>
-  .exp { --essence: var(--accent); animation: page-reveal 0.5s ease both; }
+  .exp { --essence: var(--accent); }
+  /* The new-document snapshot is frozen at first paint: a page-reveal running
+     inside the morph would capture the hero at opacity 0 (invisible). Gate the
+     fade-in to engines without (cross-document) view transitions; the Chrome
+     morph replaces it, Firefox keeps the reveal. */
+  @supports not (view-transition-name: none) {
+    .exp { animation: page-reveal 0.5s ease both; }
+  }
   @keyframes page-reveal {
     from { opacity: 0; }
     to   { opacity: 1; }

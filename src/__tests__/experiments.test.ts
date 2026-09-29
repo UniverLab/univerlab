@@ -131,8 +131,8 @@ describe('experiments.ts', () => {
 
   describe('background themes', () => {
     const validThemes: BgTheme[] = [
-      'cosmic', 'brain', 'primitives', 'starfield', 
-      'forge', 'gitgraph', 'scaffold', 'industrial', 'bubbles', 'drift', 'spiral'
+      'cosmic', 'brain', 'primitives', 'starfield',
+      'forge', 'scaffold', 'bubbles', 'takes', 'spiral'
     ];
 
     it('should use valid background themes for all experiments', () => {

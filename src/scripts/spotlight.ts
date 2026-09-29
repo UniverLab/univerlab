@@ -1,8 +1,9 @@
 /** Cursor-anchored spotlight for the scaffold lattice (ghscaff · midnight).
  *  One radial violet-white wash that lerps toward the pointer and parks at
- *  50%/30% otherwise. Split out of backgrounds.ts to keep that module within
- *  its size budget. Reduced motion never reaches here (ThemeBackground
- *  returns before importing the runners). */
+ *  50%/30% otherwise — at half intensity (0.05, was 0.10) so the cells the
+ *  cursor raises stay the protagonist of this page. Split out of
+ *  backgrounds.ts to keep that module within its size budget. Reduced motion
+ *  never reaches here (ThemeBackground returns before importing the runners). */
 
 interface SpotCtx {
   canvas: HTMLCanvasElement;
@@ -67,7 +68,7 @@ export function createSpotlight(ctx: SpotCtx) {
       c.globalCompositeOperation = 'lighter';
       c.globalAlpha = 1;
       const grad = c.createRadialGradient(x, y, 0, x, y, R);
-      grad.addColorStop(0, 'rgba(167,139,250,0.10)');
+      grad.addColorStop(0, 'rgba(167,139,250,0.05)');
       grad.addColorStop(1, 'rgba(167,139,250,0)');
       c.fillStyle = grad;
       c.fillRect(x - R, y - R, R * 2, R * 2);

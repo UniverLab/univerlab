@@ -13,7 +13,6 @@ export const en = {
   },
   nav: {
     experiments: 'Experiments',
-    research: 'Research',
     manifesto: 'Manifesto',
     people: 'Collaborators',
     github: 'GitHub',
@@ -29,11 +28,8 @@ export const en = {
     docs: 'Documentation →',
     install: 'Install',
     copy: 'Copy',
-    copied: 'Copied',
-    allExperiments: 'All experiments →',
     inPreparation: 'in preparation',
     docsHome: 'Documentation',
-    onThisExperiment: 'Experiment',
     skipToContent: 'Skip to content',
     demo: 'Watch demo',
     demoBy: 'recorded with DemoStage',
@@ -56,6 +52,7 @@ export const en = {
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
+      systemCaption: 'The lab as a system — every experiment orbits the same question.',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
       // small catalog; the hero shuffles each catalog and shows every gloss once
@@ -138,23 +135,6 @@ export const en = {
       },
       platforms: {
         kicker: 'Supported platforms',
-        items: [
-          'Claude',
-          'Codex',
-          'Cursor',
-          'Copilot',
-          'Gemini',
-          'Cline',
-          'OpenCode',
-          'Kiro',
-          'Mistral',
-          'Qwen',
-          'MiMo',
-          'Blackbox',
-          'Kilo',
-          'CN',
-          'Antigravity',
-        ],
       },
       graphs: {
         kicker: 'Graph engine',
@@ -251,7 +231,6 @@ export const en = {
         'Hooks, .gitignore, .gitattributes and config in one guided, idempotent flow. Composable hooks that survive being reapplied. One binary, no Node, no Python.',
       koan: '// the ritual, automated',
       hero: {
-        badges: ['one binary', 'offline hooks', 'idempotent'],
         wizard: {
           kicker: 'gitkit init',
           steps: [
@@ -412,8 +391,6 @@ export const en = {
         body:
           "This started as a master's thesis and is still taking shape. The first working version is in place: four open modules (metrics engine, BM3D and U-Net baselines, and an orchestrator with a terminal dashboard), a curated multi-band block of sky regions prepared for distribution on Hugging Face, a one-command scaffold so any researcher can plug in a new method, and initial BM3D-vs-U-Net comparisons with a proper train/eval split. The experiments are running — in the open, right here — but there is more work ahead before this becomes a finished benchmark.",
       },
-      followLab: 'Follow the lab ↗',
-      papersSoon: 'proposal out · curated dataset & first results in progress',
       proposalCta: 'Read the proposal (PDF) ↗',
       questions: {
         kicker: 'Open questions',
@@ -585,9 +562,6 @@ export const en = {
     youDetail: 'the universe, observing itself',
     addressTitle: 'Your cosmic address',
     addressIntro: 'Zoom out',
-    // Closing beat of the opening scene — names the wonder it has been building,
-    // and hands off to the philosophy ("What we value…").
-    wonder: 'And a part of it wonders that it exists.',
     address: [
       ['Earth', 'r ≈ 6 400 km'],
       ['Solar System', 'Ø ≈ 9 Tm'],
@@ -608,8 +582,6 @@ export const en = {
     kicker: 'Observatory',
     intro:
       'The Imperative of Continuity is not only philosophy — it is a measurable trajectory. Four series, chosen not for optimism but for honesty: what is growing, and what we are losing.',
-    rising: 'Rising',
-    falling: 'Falling',
     series: {
       wikipedia: {
         title: 'Human knowledge, written in common',
@@ -727,13 +699,30 @@ export const en = {
       commits: 'commits',
     },
   },
+  roadmap: {
+    lanes: { now: 'Now', next: 'Next', later: 'Later', idea: 'Idea', done: 'Done' },
+    hold: 'hold',
+    entriesMeta: '{n} log entries · last Sol {sol}',
+    entriesMetaOne: '1 log entry · last Sol {sol}',
+    landed: 'landed Sol {sol}',
+    more: '+{n} more',
+    clearRoadmapFilter: 'Clear roadmap filter',
+    empty: 'Nothing on the roadmap yet.',
+    emptyTopic: 'Nothing on the roadmap under {topic}.',
+    unavailable: 'Roadmap unavailable.',
+  },
+  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—' },
+  notes: {
+    heading: 'Field notes',
+    empty: 'No field notes yet — this is where the log will speak.',
+    statusLink: 'Mission Log →',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
     description: 'Follow the UniverLab Mission Log via RSS.',
     heading: 'RSS',
     intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
-    url: 'https://announcements.univerlab.org/feed.atom',
     copy: 'Copy',
     copied: 'Copied',
     hint: 'Any RSS reader works — no specific app needed, just paste the URL.',

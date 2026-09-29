@@ -1,9 +1,11 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
-import { getLang, useTranslations } from '../../i18n';
+import { getLang, useTranslations, motifOf } from '../../i18n';
+import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.cadspec;
+const exp = byId('cadspec');
 ---
 <ExperimentLayout id="cadspec">
   <!-- No canvas on this page: the decided register is that the living
@@ -12,7 +14,7 @@ const e = t.experiments.cadspec;
        script). Nothing mounts a runner here — BaseLayout already skips its
        own canvas for stillSurfaces (blueprint included) — so no strokes,
        arcs or cotas ever paint over the paper. -->
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{motifOf(exp, t)}</p>
   <!-- Product artifacts are anchored to the hero, not inserted into the CTA row. -->
   <Fragment slot="hero-visual">
     <div class="art art-coords">
@@ -434,7 +436,7 @@ offset = 0.5</code></pre>
 
   /* (g) Below the hero — the plan sheet and its notes. The old cyan hairline
      plate goes; the drawing and the code become two mist cards. Every
-     var(--cadspec) (#6ec6e6, ~1.9:1 on paper) in this file is replaced by
+     cyan hairline (#6ec6e6, ~1.9:1 on paper) in this file is replaced by
      var(--essence) (#156c80, 5.3:1 on mist). */
   .section { padding-block: 1.5rem 2rem; }
   .sheet {

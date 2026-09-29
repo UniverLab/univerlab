@@ -6,7 +6,7 @@ interface Props {
   theme?: BgTheme;
   color?: string;
 }
-const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
+const { theme = 'cosmic', color = '#b9b6ae' } = Astro.props;
 ---
 <canvas class="bg" data-theme={theme} data-color={color} aria-hidden="true"></canvas>
 
@@ -32,7 +32,7 @@ const { theme = 'drift', color = '#b9b6ae' } = Astro.props;
     import('../scripts/backgrounds').then(({ startBackground }) => {
       (startBackground as typeof Start)(
         canvas,
-        (canvas.dataset.theme as BgTheme) || 'drift',
+        (canvas.dataset.theme as BgTheme) || 'cosmic',
         color,
         bg
       );

@@ -5,12 +5,12 @@
 
 import type { BgTheme as Theme } from '../lib/experiments';
 import { brain } from './brain';
-import { field } from './field';
-import { createSpotlight } from './spotlight';
+import { orbit } from './orbit';
 import { bubbles } from './bg-bubbles';
-import { drift } from './bg-drift';
+import { takes } from './takes';
 import { spiral } from './bg-spiral';
 import { paper } from './bg-paper';
+import { scaffold } from './bg-scaffold';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -22,7 +22,19 @@ interface Ctx {
   dpr: number;
 }
 
-export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: string, bg = '#0a0b0e') {
+/** Mount a themed runner on a canvas.
+ *  `surface` is optional: when passed it selects the runner (and the surface's
+ *  colour overrides) instead of `documentElement.dataset.surface` — the home
+ *  cards pass their experiment's own surface so a card window previews exactly
+ *  what its page runs. With no 5th argument the behavior is bit-for-bit what
+ *  the pages do today. */
+export function startBackground(
+  canvas: HTMLCanvasElement,
+  theme: Theme,
+  color: string,
+  bg = '#0a0b0e',
+  surface?: string
+) {
   const c = canvas.getContext('2d');
   if (!c) return;
 
@@ -37,22 +49,27 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
     ctx.h = canvas.clientHeight;
     canvas.width = Math.floor(ctx.w * dpr);
     canvas.height = Math.floor(ctx.h * dpr);
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.c.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
   window.addEventListener('resize', debounce(resize, 200));
 
-  // The cream `paper` surface (texforge) mounts its own quiet motif instead of
-  // the experiment's BgTheme: forge embers are the wrong register on
-  // parchment, and BgTheme's type is owned by the experiment registry (out of
-  // scope to extend with a new key), so the surface flag is the selector.
+  // The surface selector — the explicit `surface` argument when the caller
+  // has one (the home card passes its experiment's own surface, so the window
+  // previews exactly what its page runs), else the page's `data-surface` on
+  // <html>, which is the path every experiment page takes. The cream `paper`
+  // surface (texforge) mounts its own quiet motif instead of the experiment's
+  // BgTheme: forge embers are the wrong register on parchment, and BgTheme's
+  // type is owned by the experiment registry (out of scope to extend with a
+  // new key), so the surface flag is the selector.
   // Reduced motion never reaches this module at all — ThemeBackground returns
   // before importing it.
-  const isPaper = document.documentElement.dataset.surface === 'paper';
+  const surf = surface ?? document.documentElement.dataset.surface;
+  const isPaper = surf === 'paper';
   if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
-  const isPastel = document.documentElement.dataset.surface === 'pastel';
+  const isPastel = surf === 'pastel';
   if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
-  const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.drift);
+  const runner = pickRunner(theme, surf);
   const tick = runner(ctx);
 
   let raf = 0;
@@ -88,73 +105,28 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 type Runner = (ctx: Ctx) => (t: number) => void;
 
+/** Which runner a theme gets on a given surface. The surface wins whenever it
+ *  is known: `paper` (texforge) mounts the quiet parchment motif instead of
+ *  the theme's own runner, so a landing card that passes its experiment's
+ *  surface runs the very runner its page runs. With no surface the selector
+ *  falls back to the page's `data-surface` — the unchanged path for every
+ *  experiment page. Pure: no DOM write, one DOM read (the page fallback). */
+export function pickRunner(theme: Theme, surface?: string): Runner {
+  const surf = surface ?? document.documentElement.dataset.surface;
+  return surf === 'paper' ? paper : (THEMES[theme] ?? THEMES.cosmic);
+}
+
 const THEMES: Record<Theme, Runner> = {
-  /* Cosmic — particles orbiting a gentle gravity well, faint constellations.
-   The universe / Pensamiento Cósmico of the main site. On the home page this
-   is replaced by the cursor-seeded living field (field.ts); every other
-   cosmic page keeps the gravity-well orbit byte-identical. The home flag is
-   set by Home.astro's module script, which runs (module = deferred) long
-   before ThemeBackground's load-time import resolves. */
-  cosmic(ctx) {
-    if (typeof document !== 'undefined' && document.documentElement.dataset.page === 'home') {
-      return field(ctx);
-    }
-    const { c } = ctx;
-    const N = Math.min(90, Math.floor((ctx.w * ctx.h) / 16000));
-    const ps = Array.from({ length: N }, () => spawn(ctx));
-    function spawn(x: Ctx) {
-      const a = rand(0, Math.PI * 2);
-      const r = rand(40, Math.min(x.w, x.h) * 0.5);
-      return {
-        x: x.w / 2 + Math.cos(a) * r,
-        y: x.h / 2 + Math.sin(a) * r,
-        vx: Math.sin(a) * 0.25,
-        vy: -Math.cos(a) * 0.25,
-        s: rand(0.6, 1.6),
-      };
-    }
-    return () => {
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      const cx = ctx.w / 2;
-      const cy = ctx.h * 0.42;
-      for (const p of ps) {
-        const dx = cx - p.x;
-        const dy = cy - p.y;
-        const d2 = dx * dx + dy * dy + 2000;
-        const f = 14 / d2;
-        p.vx += dx * f;
-        p.vy += dy * f;
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < -20 || p.x > ctx.w + 20 || p.y < -20 || p.y > ctx.h + 20) {
-          Object.assign(p, spawn(ctx));
-        }
-      }
-      // faint links
-      c.strokeStyle = ctx.color;
-      c.globalAlpha = 0.05;
-      for (let i = 0; i < ps.length; i++) {
-        for (let j = i + 1; j < ps.length; j++) {
-          const dx = ps[i].x - ps[j].x;
-          const dy = ps[i].y - ps[j].y;
-          if (dx * dx + dy * dy < 9000) {
-            c.beginPath();
-            c.moveTo(ps[i].x, ps[i].y);
-            c.lineTo(ps[j].x, ps[j].y);
-            c.stroke();
-          }
-        }
-      }
-      c.globalAlpha = 0.7;
-      c.fillStyle = ctx.color;
-      for (const p of ps) {
-        c.beginPath();
-        c.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  /* Cosmic — motes orbiting a gravity well at (w/2, 0.42h): the universe /
+   Pensamiento Cósmico of the main site, with faint links between neighbours.
+   The cursor is a second, moving mass in that same system (R13) — it pulls the
+   motes it passes into temporary orbits and brightens the links between them,
+   so the pointer speaks the product's own language (gravity) instead of
+   blowing generic particles about. /status moves the well to 0.75w so the
+   orbits stay clear of the Mission Log column's text; every other cosmic page
+   keeps the centred well. Restores the pre-lvis-home-windows mechanics on
+   every cosmic page; the home-only "field" runner is gone. orbit.ts. */
+  cosmic: orbit,
 
   /* Golden fractal — the Fibonacci whirling squares with the golden
      spiral they inscribe, and sparks wandering it. Quorum. The cursor
@@ -597,276 +569,17 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Gitgraph — a commit graph flowing down its lanes, branching and merging.
-     Gitkit. */
-  gitgraph(ctx) {
-    const { c } = ctx;
-    const gap = 72;
-    const lanes = Math.max(2, Math.floor((ctx.w - 80) / gap));
-    const x0 = (ctx.w - (lanes - 1) * gap) / 2;
-    const laneX = (i: number) => x0 + i * gap;
-    const vgap = 46;
-    const speed = 0.14;
-    type Node = { x: number; y: number; px: number; py: number; r: number };
-    let nodes: Node[] = [];
-    let tipLane = Math.floor(lanes / 2);
-    let tipX = laneX(tipLane);
-    let tipY = ctx.h;
-    function addNode() {
-      const py = tipY;
-      const px = tipX;
-      if (Math.random() < 0.5) {
-        tipLane = Math.min(lanes - 1, Math.max(0, tipLane + (Math.random() < 0.5 ? -1 : 1)));
-      }
-      tipX = laneX(tipLane);
-      tipY -= vgap;
-      nodes.push({ x: tipX, y: tipY, px, py, r: rand(2.2, 3.4) });
-      // fork: a short branch splitting off into an adjacent lane
-      if (Math.random() < 0.5) {
-        const bl = Math.min(lanes - 1, Math.max(0, tipLane + (Math.random() < 0.5 ? -1 : 1)));
-        if (bl !== tipLane) {
-          nodes.push({ x: laneX(bl), y: tipY - rand(8, 20), px: tipX, py: tipY, r: rand(1.8, 2.8) });
-        }
-      }
-    }
-    while (tipY > -vgap) addNode();
-    let prevT = 0;
-    return (t) => {
-      const dt = prevT ? t - prevT : 16;
-      prevT = t;
-      const dy = speed * dt;
-      for (const n of nodes) {
-        n.y += dy;
-        n.py += dy;
-      }
-      tipY += dy;
-      while (tipY > -vgap) addNode();
-      nodes = nodes.filter((n) => n.y < ctx.h + 80);
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      c.strokeStyle = ctx.color;
-      c.fillStyle = ctx.color;
-      c.lineWidth = 1.1;
-      c.globalAlpha = 0.18;
-      for (const n of nodes) {
-        c.beginPath();
-        c.moveTo(n.px, n.py);
-        if (Math.abs(n.x - n.px) < 0.5) {
-          c.lineTo(n.x, n.y);
-        } else {
-          const my = (n.py + n.y) / 2;
-          c.bezierCurveTo(n.px, my, n.x, my, n.x, n.y);
-        }
-        c.stroke();
-      }
-      c.globalAlpha = 0.45;
-      for (const n of nodes) {
-        c.beginPath();
-        c.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
-
-  /* Bubbles — GitKit's drifting commit graph. The cursor sows fresh
-     bubbles under it that join the upward float (bg-bubbles.ts). */
+  /* Bubbles — GitKit's drifting commit graph. The cursor stages nearby
+     commit nodes and a dwell commits them (bg-bubbles.ts). */
   bubbles,
 
-  /* Industrial — slow-turning gears and copper sparks rising from below.
-     Ghscaff's foundry floor. */
-  industrial(ctx) {
-    const { c } = ctx;
-    const A = ctx.color.length === 7 ? ctx.color : '#b87333';
-    // Gears: fixed positions, each rotates at its own speed.
-    type Gear = { x: number; y: number; r: number; teeth: number; speed: number; angle: number };
-    const gears: Gear[] = [];
-    const N = Math.min(6, Math.floor((ctx.w * ctx.h) / 80000) + 2);
-    for (let i = 0; i < N; i++) {
-      gears.push({
-        x: rand(ctx.w * 0.1, ctx.w * 0.9),
-        y: rand(ctx.h * 0.15, ctx.h * 0.85),
-        r: rand(40, 100),
-        teeth: Math.floor(rand(8, 16)),
-        speed: rand(0.00003, 0.00012) * (Math.random() < 0.5 ? 1 : -1),
-        angle: rand(0, Math.PI * 2),
-      });
-    }
-    // Sparks: copper embers rising, like forge heat.
-    const sparks = Array.from({ length: Math.min(40, Math.floor((ctx.w * ctx.h) / 30000)) }, () => ({
-      x: rand(0, ctx.w),
-      y: rand(0, ctx.h),
-      vy: rand(0.15, 0.45),
-      s: rand(0.5, 1.8),
-      ph: rand(0, Math.PI * 2),
-    }));
-    let prevT = 0;
-    return (t) => {
-      const dt = prevT ? t - prevT : 16;
-      prevT = t;
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      // Gears — faint mechanical structure
-      c.strokeStyle = A;
-      c.lineWidth = 1;
-      c.globalAlpha = 0.08;
-      for (const g of gears) {
-        g.angle += g.speed * dt;
-        c.save();
-        c.translate(g.x, g.y);
-        c.rotate(g.angle);
-        // Outer ring with teeth
-        c.beginPath();
-        const step = (Math.PI * 2) / g.teeth;
-        for (let i = 0; i < g.teeth; i++) {
-          const a0 = i * step;
-          const a1 = a0 + step * 0.3;
-          const a2 = a0 + step * 0.7;
-          const a3 = a0 + step;
-          const rInner = g.r * 0.85;
-          const rOuter = g.r;
-          c.lineTo(Math.cos(a0) * rInner, Math.sin(a0) * rInner);
-          c.lineTo(Math.cos(a1) * rOuter, Math.sin(a1) * rOuter);
-          c.lineTo(Math.cos(a2) * rOuter, Math.sin(a2) * rOuter);
-          c.lineTo(Math.cos(a3) * rInner, Math.sin(a3) * rInner);
-        }
-        c.closePath();
-        c.stroke();
-        // Inner circle
-        c.beginPath();
-        c.arc(0, 0, g.r * 0.35, 0, Math.PI * 2);
-        c.stroke();
-        // Spokes
-        for (let i = 0; i < 4; i++) {
-          const a = (i / 4) * Math.PI * 2;
-          c.beginPath();
-          c.moveTo(Math.cos(a) * g.r * 0.35, Math.sin(a) * g.r * 0.35);
-          c.lineTo(Math.cos(a) * g.r * 0.8, Math.sin(a) * g.r * 0.8);
-          c.stroke();
-        }
-        c.restore();
-      }
-      // Sparks — copper embers rising
-      c.fillStyle = A;
-      for (const s of sparks) {
-        s.y -= s.vy;
-        s.x += Math.sin(t * 0.001 + s.ph) * 0.3;
-        if (s.y < -10) {
-          s.y = ctx.h + rand(0, 20);
-          s.x = rand(0, ctx.w);
-        }
-        const flick = 0.5 + 0.4 * Math.sin(t * 0.003 + s.ph * 4);
-        const heat = Math.max(0, s.y / ctx.h);
-        c.globalAlpha = flick * (0.25 + 0.4 * heat);
-        c.beginPath();
-        c.arc(s.x, s.y, s.s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    };
-  },
+  /* Scaffold — the lattice the cursor raises: cells near the pointer build
+     their members in sequence (uprights → ledger → brace) and a re-pass
+     levels them instead of stacking. bg-scaffold.ts (R13 · ghscaff). */
+  scaffold,
 
-  /* Scaffold — an orthogonal frame, braced diagonally and bolted at the
-     joints. Ghscaff. */
-  scaffold(ctx) {
-    const { c } = ctx;
-    // Midnight re-tint on the industrial surface only: the registry still
-    // carries copper for OG/home, but the live lattice reads blueprint-violet
-    // behind the glass. c.strokeStyle keeps using ctx.color — the caller value
-    // is swapped here, no second hue is introduced.
-    if (typeof document !== 'undefined' && document.documentElement.dataset.surface === 'industrial') {
-      ctx.color = '#8b7cf6';
-    }
-    const g = 84;
-    let cols = 0;
-    let rows = 0;
-    const dims = () => {
-      cols = Math.ceil(ctx.w / g) + 1;
-      rows = Math.ceil(ctx.h / g) + 1;
-    };
-    dims();
-    type Brace = { gx: number; gy: number; diag: number; t: number; life: number };
-    const braces: Brace[] = [];
-    const add = () =>
-      braces.push({
-        gx: Math.floor(rand(0, cols - 1)),
-        gy: Math.floor(rand(0, rows - 1)),
-        diag: Math.random() < 0.5 ? 0 : 1,
-        t: 0,
-        life: rand(3200, 5600),
-      });
-    for (let i = 0; i < 4; i++) add();
-    let spawnAcc = 0;
-    let prevT = 0;
-    // Cursor-anchored spotlight: one radial violet-white wash following the
-    // pointer, lerped to avoid jitter. Touch parks at 50%/30%; reduced-motion
-    // never reaches here (ThemeBackground returns early).
-    const spot = createSpotlight(ctx);
-    return (t) => {
-      const sp = spot.step();
-      if (!sp) return;
-      if (cols !== Math.ceil(ctx.w / g) + 1) dims();
-      const dt = prevT ? t - prevT : 16;
-      prevT = t;
-      spawnAcc += dt;
-      if (spawnAcc > 1000 && braces.length < 9) {
-        spawnAcc = 0;
-        add();
-      }
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      c.strokeStyle = ctx.color;
-      c.lineWidth = 1;
-      // standing frame — the persistent grid
-      c.globalAlpha = 0.13;
-      c.beginPath();
-      for (let x = 0; x <= cols; x++) {
-        c.moveTo(x * g, 0);
-        c.lineTo(x * g, ctx.h);
-      }
-      for (let y = 0; y <= rows; y++) {
-        c.moveTo(0, y * g);
-        c.lineTo(ctx.w, y * g);
-      }
-      c.stroke();
-      // diagonal braces: paint in quickly, then hold (a persistent lattice that
-      // only fades gently at the very end) — the lines being drawn are the motion
-      for (let i = braces.length - 1; i >= 0; i--) {
-        const b = braces[i];
-        b.t += dt;
-        const k = b.t / b.life;
-        if (k >= 1) {
-          braces.splice(i, 1);
-          continue;
-        }
-        const grow = Math.min(1, k * 12);
-        const fade = k > 0.85 ? 1 - (k - 0.85) / 0.15 : 1;
-        const x = b.gx * g;
-        const y = b.gy * g;
-        c.globalAlpha = 0.5 * fade;
-        c.beginPath();
-        if (b.diag === 0) {
-          c.moveTo(x, y);
-          c.lineTo(x + g * grow, y + g * grow);
-        } else {
-          c.moveTo(x + g, y);
-          c.lineTo(x + g - g * grow, y + g * grow);
-        }
-        c.stroke();
-        if (grow > 0.5) {
-          c.globalAlpha = 0.55 * fade;
-          c.fillStyle = ctx.color;
-          for (const [bx, by] of [[x, y], [x + g, y], [x, y + g], [x + g, y + g]]) {
-            c.fillRect(bx - 1.5, by - 1.5, 3, 3);
-          }
-        }
-      }
-      // ONE cursor-anchored spotlight: violet-white wash over the grid, under
-      // content. Single radial gradient, composited additively on the dark.
-      spot.paint(c, sp.x, sp.y);
-      c.globalAlpha = 1;
-    };
-  },
-
-  /* Drift — a calm field of slow particles in the essence color.
-     Default. The cursor stirs and flashes the motes it sweeps past
-     (bg-drift.ts). */
-  drift,
+  /* Takes — the cursor's own gesture becomes a take that the background
+     records, normalizes into a score, and replays with a ghost cursor.
+     DemoStage: "the demo is the source" (takes.ts). */
+  takes,
 };

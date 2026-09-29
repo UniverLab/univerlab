@@ -10,7 +10,6 @@ export const es: Dict = {
   },
   nav: {
     experiments: 'Experimentos',
-    research: 'Investigación',
     manifesto: 'Manifiesto',
     people: 'Colaboradores',
     github: 'GitHub',
@@ -26,11 +25,8 @@ export const es: Dict = {
     docs: 'Documentación →',
     install: 'Instalar',
     copy: 'Copiar',
-    copied: 'Copiado',
-    allExperiments: 'Todos los experimentos →',
     inPreparation: 'en preparación',
     docsHome: 'Documentación',
-    onThisExperiment: 'Experimento',
     skipToContent: 'Saltar al contenido',
     demo: 'Ver demo',
     demoBy: 'grabado con DemoStage',
@@ -53,6 +49,7 @@ export const es: Dict = {
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
+      systemCaption: 'El laboratorio como sistema — cada experimento orbita la misma pregunta.',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
       // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
@@ -136,23 +133,6 @@ export const es: Dict = {
       },
       platforms: {
         kicker: 'Plataformas soportadas',
-        items: [
-          'Claude',
-          'Codex',
-          'Cursor',
-          'Copilot',
-          'Gemini',
-          'Cline',
-          'OpenCode',
-          'Kiro',
-          'Mistral',
-          'Qwen',
-          'MiMo',
-          'Blackbox',
-          'Kilo',
-          'CN',
-          'Antigravity',
-        ],
       },
       graphs: {
         kicker: 'Motor de grafos',
@@ -249,7 +229,6 @@ export const es: Dict = {
         'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
       koan: '// el ritual, automatizado',
       hero: {
-        badges: ['un binario', 'hooks sin conexión', 'idempotente'],
         wizard: {
           kicker: 'gitkit init',
           steps: [
@@ -410,8 +389,6 @@ export const es: Dict = {
         body:
           'Esto empezó como tesis de maestría y aún está tomando forma. La primera versión funcional está en su lugar: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo preparado para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y comparaciones iniciales BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo — pero queda trabajo por delante antes de que esto sea un benchmark terminado.',
       },
-      followLab: 'Sigue el laboratorio ↗',
-      papersSoon: 'propuesta publicada · dataset curado y primeros resultados en curso',
       proposalCta: 'Leer la propuesta (PDF) ↗',
       questions: {
         kicker: 'Preguntas abiertas',
@@ -581,9 +558,6 @@ export const es: Dict = {
     youDetail: 'el universo, observándose',
     addressTitle: 'Tu dirección cósmica',
     addressIntro: 'Aleja la vista',
-    // Beat final de la escena de apertura — nombra el asombro que venía
-    // construyendo y entrega a la filosofía ("Qué valoramos…").
-    wonder: 'Y una parte de él se asombra de existir.',
     address: [
       ['Tierra', 'r ≈ 6 400 km'],
       ['Sistema Solar', 'Ø ≈ 9 Tm'],
@@ -604,8 +578,6 @@ export const es: Dict = {
     kicker: 'Observatorio',
     intro:
       'El Imperativo de Continuidad no es solo filosofía — es una trayectoria medible. Cuatro series, elegidas no por optimismo sino por honestidad: lo que crece, y lo que estamos perdiendo.',
-    rising: 'En ascenso',
-    falling: 'En descenso',
     series: {
       wikipedia: {
         title: 'El conocimiento humano, escrito en común',
@@ -723,13 +695,30 @@ export const es: Dict = {
       commits: 'commits',
     },
   },
+  roadmap: {
+    lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },
+    hold: 'en espera',
+    entriesMeta: '{n} entradas del registro · último Sol {sol}',
+    entriesMetaOne: '1 entrada del registro · último Sol {sol}',
+    landed: 'aterrizó Sol {sol}',
+    more: '+{n} más',
+    clearRoadmapFilter: 'Quitar filtro del roadmap',
+    empty: 'Aún no hay nada en el roadmap.',
+    emptyTopic: 'Nada en el roadmap bajo {topic}.',
+    unavailable: 'Roadmap no disponible.',
+  },
+  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—' },
+  notes: {
+    heading: 'Notas de campo',
+    empty: 'Aún no hay notas de campo — aquí hablará la bitácora.',
+    statusLink: 'Bitácora →',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
     description: 'Sigue el Mission Log de UniverLab por RSS.',
     heading: 'RSS',
     intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
-    url: 'https://announcements.univerlab.org/feed.atom',
     copy: 'Copiar',
     copied: 'Copiado',
     hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',

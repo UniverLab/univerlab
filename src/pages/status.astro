@@ -1,9 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { experiments } from '../lib/experiments';
+import { en } from '../i18n/en';
 const topicColors: Record<string, string> = Object.fromEntries(
   experiments.map((e) => [e.id, e.essenceHex]),
 );
+const rmStrings = en.roadmap;
 ---
 <BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
   <section class="wrap board" id="status-board">
@@ -30,9 +32,9 @@ const topicColors: Record<string, string> = Object.fromEntries(
     <div class="board-cols">
       <section class="board-col board-roadmap" id="roadmap-section" aria-label="Roadmap" hidden>
         <div class="col-label" aria-hidden="true"><span class="label">ROADMAP</span></div>
-        <p class="rm-quiet">Project updates live at <a href="https://univerlab.org/">univerlab.org</a>.</p>
+        <div id="roadmap-clear" class="rm-clear" hidden></div>
         <p id="roadmap-notice" class="rm-notice" role="status" hidden></p>
-        <div id="roadmap">
+        <div id="roadmap" class="rm-flight">
           <div class="rm-skeleton"></div>
           <div class="rm-skeleton"></div>
           <div class="rm-skeleton"></div>
@@ -148,34 +150,41 @@ const topicColors: Record<string, string> = Object.fromEntries(
         @keyframes entry-rise { from { opacity: 0.1; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       }
     }
-    @media (max-width: 640px) {
-      .topic-index { align-items: flex-start; flex-direction: column; gap: 0.6rem; }
-      .topic-filters { flex-wrap: wrap; max-width: 100%; }
-      .topic-filter { flex: 0 0 auto; }
-      .entry { grid-template-columns: 1fr auto; }
-      .entry time { grid-column: 1 / -1; }
-      .entry .entry-body { grid-column: 1 / -1; }
-    }
     .rm-notice { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); padding: 0.4rem 0.6rem; border-radius: 3px; margin-bottom: 1rem; }
-    .rm-quiet { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-faint); margin-bottom: 1rem; }
-    .rm-quiet a { color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
-    .rm-quiet a:hover, .rm-quiet a:focus-visible { color: var(--accent); }
-    .rm-lane { border-bottom: 1px solid var(--line); padding-block: 0.6rem; }
-    .rm-lane:last-child { border-bottom: none; }
-    .rm-lane-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 0.5rem; margin-block: 0.9rem 0.4rem; align-items: baseline; line-height: 1; }
-    summary.rm-lane-label { cursor: pointer; list-style: none; }
-    summary.rm-lane-label::-webkit-details-marker { display: none; }
-    summary.rm-lane-label::before { content: '\25b8'; }
-    details[open] > summary.rm-lane-label::before { content: '\25be'; }
+    .rm-clear { margin-bottom: 1rem; }
+    .rm-clear-btn { display: inline-flex; align-items: baseline; gap: 0.35rem; padding: 0.3rem 0.65rem; border: none; border-radius: 100px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; }
+    .rm-clear-btn:hover, .rm-clear-btn:focus-visible { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--ink); }
+
+    /* Flight plan — one continuous rail in the left gutter; each segment
+       tints it. Content is padded so the rail never causes overflow. */
+    #roadmap.rm-flight { position: relative; padding-left: 1.6rem; }
+    #roadmap.rm-flight::before { content: ''; position: absolute; left: 0.45rem; top: 0.4rem; bottom: 0.4rem; width: 2px; background: color-mix(in srgb, var(--ink) 18%, transparent); border-radius: 2px; }
+    .rm-seg { position: relative; padding-block: 0.4rem 1.1rem; }
+    .rm-seg-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 0.5rem; margin-block: 0.9rem 0.7rem; align-items: baseline; line-height: 1; }
+    .rm-seg[data-lane="now"] .rm-seg-label { color: var(--accent); }
+    .rm-seg[data-lane="idea"] .rm-seg-label { font-style: italic; }
     .rm-count { color: var(--ink-faint); font-size: 0.58rem; }
-    .rm-row { padding-block: 0.35rem; }
-    .rm-main { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.5rem; row-gap: 0.15rem; min-width: 0; }
-    .rm-pos { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); flex: 0 0 auto; }
-    .rm-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink); flex: 1 1 auto; min-width: 0; }
-    .rm-chip { border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent); color: var(--chip, var(--accent)); padding: 0.12rem 0.5rem; font-size: 0.58rem; flex: 0 0 auto; margin-left: auto; }
-    .rm-blocked { flex: 0 0 100%; color: var(--ink-dim); font-size: 0.78rem; font-family: var(--font-mono); line-height: 0.85; margin-top: 0.15rem; }
-    .rm-date { color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.68rem; display: block; flex: 0 0 100%; margin-top: 0.2rem; }
-    .rm-more { background: none; border: 0; color: var(--accent); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; opacity: 0.8; }
+    .rm-card { position: relative; padding-block: 0.55rem; }
+    .rm-dot { position: absolute; left: -1.6rem; top: 0.85rem; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--dot, var(--accent)); transform: translateX(0.1rem); border: 2px solid var(--surface, #fff); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
+    .rm-seg[data-lane="now"] .rm-dot { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent); }
+    .rm-seg[data-lane="next"] .rm-dot { opacity: 0.9; }
+    .rm-seg[data-lane="later"] .rm-dot { opacity: 0.65; }
+    .rm-seg[data-lane="idea"] .rm-dot { opacity: 0.5; background: transparent; border: 2px dashed var(--dot, var(--ink-faint)); box-shadow: none; width: 0.6rem; height: 0.6rem; }
+    .rm-seg[data-lane="done"] .rm-dot { opacity: 0.55; }
+    .rm-card-body { min-width: 0; }
+    .rm-title { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+    .rm-seg[data-lane="done"] .rm-title { color: var(--ink-dim); font-weight: 500; }
+    .rm-summary { color: var(--ink-dim); font-size: 0.88rem; line-height: 1.65; margin-top: 0.25rem; max-width: 36rem; }
+    .rm-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.7rem; margin-top: 0.35rem; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-faint); }
+    .rm-chip { border: 1px solid color-mix(in srgb, var(--chip, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--chip, var(--accent)) 12%, transparent); color: var(--chip, var(--accent)); padding: 0.12rem 0.5rem; font-size: 0.58rem; border-radius: 100px; cursor: pointer; font-family: var(--font-mono); letter-spacing: 0.04em; }
+    .rm-chip:hover, .rm-chip:focus-visible { color: var(--ink); border-color: var(--accent); }
+    .rm-chip.is-active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+    .rm-entries { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; opacity: 0.9; }
+    .rm-entries:hover, .rm-entries:focus-visible { color: var(--ink); opacity: 1; }
+    .rm-entries.is-active { color: var(--ink); font-weight: 600; }
+    .rm-landed { color: var(--ink-faint); }
+    .rm-hold { margin-top: 0.35rem; font-family: var(--font-mono); font-size: 0.7rem; line-height: 1.5; color: color-mix(in srgb, #b45309 80%, var(--ink) 20%); background: color-mix(in srgb, #b45309 10%, transparent); border: 1px solid color-mix(in srgb, #b45309 35%, transparent); border-radius: 3px; padding: 0.25rem 0.5rem; max-width: 36rem; }
+    .rm-more { background: none; border: 0; color: var(--accent); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0 0; opacity: 0.8; }
     .rm-more:hover { opacity: 1; text-decoration: underline; }
     .rm-skeleton { height: 0.9rem; border-radius: 3px; margin-block: 0.6rem; background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.8s ease-in-out infinite; }
 
@@ -194,12 +203,28 @@ const topicColors: Record<string, string> = Object.fromEntries(
       .board-roadmap #roadmap,
       .board-log .log-scroller { max-height: calc(100dvh - 26rem); min-height: 24rem; overflow-y: auto; overscroll-behavior: contain; }
     }
+    /* Mobile overrides last: media queries add no specificity, so these must
+       follow the base `.rm-dot` / `#roadmap.rm-flight` rules above or they are
+       silently overridden. */
+    @media (max-width: 640px) {
+      .topic-index { align-items: flex-start; flex-direction: column; gap: 0.6rem; }
+      .topic-filters { flex-wrap: wrap; max-width: 100%; }
+      .topic-filter { flex: 0 0 auto; }
+      .entry { grid-template-columns: 1fr auto; }
+      .entry time { grid-column: 1 / -1; }
+      .entry .entry-body { grid-column: 1 / -1; }
+      #roadmap.rm-flight { padding-left: 1.4rem; overflow-x: clip; }
+      #roadmap.rm-flight::before { left: 0.3rem; }
+      .rm-dot { left: -1.5rem; }
+      .rm-summary { overflow-wrap: anywhere; }
+    }
   </style>
 
-  <script is:inline define:vars={{ topicColors }}>
+  <script is:inline define:vars={{ topicColors, rmStrings }}>
     (function () {
       var API = 'https://announcements.univerlab.org';
       var TOPIC_COLORS = topicColors;
+      var RM_STR = rmStrings || {};
       var container = document.getElementById('log-entries');
       if (!container) return;
       var logScroller = document.getElementById('log-scroller') || container.parentElement;
@@ -224,22 +249,29 @@ const topicColors: Record<string, string> = Object.fromEntries(
         { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
       ];
       MOCK[0].topic = 'canopy';
+      MOCK[0].roadmap_id = 'rm-now-1';
       MOCK[1].topic = 'canopy';
+      MOCK[1].roadmap_id = 'rm-now-1';
       MOCK[2].topic = 'general';
+      MOCK[2].roadmap_id = null;
       MOCK[3].topic = 'general';
       MOCK[4].topic = 'general';
       MOCK[5].topic = null;
 
       var MOCK_ROADMAP = [
-        { id: 'rm-1', title: 'Ship SSE reconcile', state: 'now', topic: 'canopy', essence_hex: '#5dd39e', blocked_reason: null, pos: 0, archived_at: null, updatedAt: '2026-09-20T10:00:00Z' },
-        { id: 'rm-2', title: 'Topic cross-filter', state: 'now', topic: 'general', essence_hex: null, blocked_reason: null, pos: 1, archived_at: null, updatedAt: '2026-09-20T09:00:00Z' },
-        { id: 'rm-3', title: 'Read-only board', state: 'now', topic: null, essence_hex: null, blocked_reason: null, pos: 2, archived_at: null, updatedAt: '2026-09-19T10:00:00Z' },
-        { id: 'rm-4', title: 'Mystery topic row', state: 'next', topic: 'unknown-topic', essence_hex: null, blocked_reason: null, pos: 3, archived_at: null, updatedAt: '2026-09-19T09:00:00Z' },
-        { id: 'rm-5', title: 'Blocked deploy lane', state: 'next', topic: 'texforge', essence_hex: null, blocked_reason: 'Waiting on infra quota', pos: 4, archived_at: null, updatedAt: '2026-09-18T10:00:00Z' },
-        { id: 'rm-6', title: 'Later horizon item', state: 'later', topic: 'gitkit', essence_hex: null, blocked_reason: null, pos: 5, archived_at: null, updatedAt: '2026-09-18T09:00:00Z' },
-        { id: 'rm-7', title: 'Wild idea', state: 'idea', topic: 'cadspec', essence_hex: '#6ec6e6', blocked_reason: null, pos: 6, archived_at: null, updatedAt: '2026-09-17T10:00:00Z' },
-        { id: 'rm-8', title: 'First delivery', state: 'done', topic: 'canopy', essence_hex: null, blocked_reason: null, pos: 7, archived_at: null, updatedAt: '2026-09-16T10:00:00Z' },
-        { id: 'rm-9', title: 'Second delivery', state: 'done', topic: 'general', essence_hex: null, blocked_reason: null, pos: 8, archived_at: null, updatedAt: '2026-09-15T10:00:00Z' }
+        { id: 'rm-now-1', title: 'Ship SSE reconcile', state: 'now', topic: 'canopy', essence_hex: '#5dd39e', blocked_reason: null, pos: 0, archived_at: null, updatedAt: '2026-09-20T10:00:00Z', summary: 'Live entries reconcile over SSE so the log never shows a stale gap.', entries: { count: 2, last_date: '2026-07-18T10:00:00Z', last_id: 'm1' }, shipped_at: null },
+        { id: 'rm-next-1', title: 'Topic cross-filter', state: 'next', topic: 'general', essence_hex: null, blocked_reason: null, pos: 1, archived_at: null, updatedAt: '2026-09-20T09:00:00Z', summary: 'One tap on a roadmap card dims the Mission Log to its entries.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-next-2', title: 'Read-only board', state: 'next', topic: null, essence_hex: null, blocked_reason: null, pos: 2, archived_at: null, updatedAt: '2026-09-19T10:00:00Z', summary: 'The public board stays read-only; edits live behind auth.', entries: { count: 1, last_date: '2026-07-17T12:00:00Z', last_id: 'm4' }, shipped_at: null },
+        { id: 'rm-next-3', title: 'Mystery topic row', state: 'next', topic: 'unknown-topic', essence_hex: null, blocked_reason: null, pos: 3, archived_at: null, updatedAt: '2026-09-19T09:00:00Z', summary: null, entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-next-4', title: 'Blocked deploy lane', state: 'next', topic: 'texforge', essence_hex: null, blocked_reason: 'Waiting on infra quota', pos: 4, archived_at: null, updatedAt: '2026-09-18T10:00:00Z', summary: 'Deploy lane for the press pipeline.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-later-1', title: 'Later horizon item', state: 'later', topic: 'gitkit', essence_hex: null, blocked_reason: null, pos: 5, archived_at: null, updatedAt: '2026-09-18T09:00:00Z', summary: 'Beyond the next burn: hook packs for agent fleets.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-later-2', title: 'Later item two', state: 'later', topic: 'ghscaff', essence_hex: null, blocked_reason: null, pos: 6, archived_at: null, updatedAt: '2026-09-18T08:00:00Z', summary: 'Second item past the horizon.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-later-3', title: 'Later item three', state: 'later', topic: 'quorum', essence_hex: null, blocked_reason: null, pos: 7, archived_at: null, updatedAt: '2026-09-17T10:00:00Z', summary: 'Third item past the horizon.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-later-4', title: 'Later item four', state: 'later', topic: 'demostage', essence_hex: null, blocked_reason: null, pos: 8, archived_at: null, updatedAt: '2026-09-17T09:00:00Z', summary: 'Fourth item past the horizon.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-idea-1', title: 'Wild idea', state: 'idea', topic: 'cadspec', essence_hex: '#6ec6e6', blocked_reason: null, pos: 9, archived_at: null, updatedAt: '2026-09-17T10:00:00Z', summary: 'Unlit sketch: declare a whole sheet from one prompt.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: null },
+        { id: 'rm-done-1', title: 'First delivery', state: 'done', topic: 'canopy', essence_hex: null, blocked_reason: null, pos: 10, archived_at: null, updatedAt: '2026-09-16T10:00:00Z', summary: 'Announcements worker online with SSE fan-out.', entries: { count: 3, last_date: '2026-07-17T12:00:00Z', last_id: 'm4' }, shipped_at: '2026-09-16T10:00:00Z' },
+        { id: 'rm-done-2', title: 'Second delivery', state: 'done', topic: 'general', essence_hex: null, blocked_reason: null, pos: 11, archived_at: null, updatedAt: '2026-09-15T10:00:00Z', summary: 'Status page ships with the cosmic background.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: '2026-09-15T10:00:00Z' },
+        { id: 'rm-done-3', title: 'Third delivery', state: 'done', topic: 'general', essence_hex: null, blocked_reason: null, pos: 12, archived_at: null, updatedAt: '2026-09-14T10:00:00Z', summary: 'Skeleton placeholders cleared from the log.', entries: { count: 0, last_date: null, last_id: null }, shipped_at: '2026-09-14T10:00:00Z' }
       ];
 
       var TOPIC_DEFS = [
@@ -271,6 +303,8 @@ const topicColors: Record<string, string> = Object.fromEntries(
       var hasMore = true;
 
       function formatDate(iso) {
+        // Sol day-of-year shared with src/lib/mission-time.ts (solDayOfYear):
+        // local-midnight epoch on purpose — keep byte-for-byte in sync.
         var d = new Date(iso);
         var y = d.getFullYear();
         var start = new Date(y, 0, 0);
@@ -278,6 +312,21 @@ const topicColors: Record<string, string> = Object.fromEntries(
         var hh = String(d.getUTCHours()).padStart(2, '0');
         var mm = String(d.getUTCMinutes()).padStart(2, '0');
         return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear + ' \u00b7 ' + hh + ':' + mm + ' UTC';
+      }
+      function solOf(iso) {
+        var d = new Date(iso);
+        var y = d.getFullYear();
+        var start = new Date(y, 0, 0);
+        return Math.floor((d - start) / 86400000);
+      }
+      function fillTpl(tpl, vars) {
+        var out = String(tpl == null ? '' : tpl);
+        for (var k in vars) {
+          if (Object.prototype.hasOwnProperty.call(vars, k)) {
+            out = out.split('{' + k + '}').join(String(vars[k]));
+          }
+        }
+        return out;
       }
 
       function escapeHtml(s) {
@@ -366,8 +415,13 @@ const topicColors: Record<string, string> = Object.fromEntries(
 
       // Topic selection dims non-matching log rows instead of removing them, so
       // the log keeps its scroll position and reads as the same board as the
-      // (hard-filtered) roadmap lanes. Type still hard-filters.
+      // (hard-filtered) roadmap lanes. Type still hard-filters. A roadmap
+      // entries-link sets activeRoadmapId and dims by roadmap_id as well.
+      var activeRoadmapId = null;
       function entryIsDimmed(entry) {
+        if (activeRoadmapId) {
+          if ((entry.roadmap_id || null) !== activeRoadmapId) return true;
+        }
         if (activeTopic === 'all') return false;
         return normalizeEntry(entry).topic !== activeTopic;
       }
@@ -531,6 +585,28 @@ const topicColors: Record<string, string> = Object.fromEntries(
         rmRender();
       }
 
+      var rmClearEl = document.getElementById('roadmap-clear');
+      function rmApplyRoadmapFilter(id, title) {
+        activeRoadmapId = id || null;
+        renderEntries();
+        rmRender();
+        rmRenderClear(title);
+      }
+      function rmRenderClear(title) {
+        if (!rmClearEl) return;
+        rmClearEl.innerHTML = '';
+        if (!activeRoadmapId) { rmClearEl.hidden = true; return; }
+        rmClearEl.hidden = false;
+        var btn = document.createElement('button');
+        btn.className = 'rm-clear-btn';
+        btn.type = 'button';
+        btn.setAttribute('aria-label', (RM_STR.clearRoadmapFilter || 'Clear roadmap filter') + (title ? ': ' + title : ''));
+        btn.textContent = (title ? title + ' \u00d7' : (RM_STR.clearRoadmapFilter || 'Clear roadmap filter \u00d7'));
+        btn.title = RM_STR.clearRoadmapFilter || 'Clear roadmap filter';
+        btn.addEventListener('click', function () { rmApplyRoadmapFilter(null); });
+        rmClearEl.appendChild(btn);
+      }
+
       if (topicFilters) {
         topicFilters.addEventListener('click', function (event) {
           var button = event.target.closest('button[data-topic]');
@@ -556,16 +632,21 @@ const topicColors: Record<string, string> = Object.fromEntries(
       var rmNoticeEl = document.getElementById('roadmap-notice');
       var HEX_RE = /^#[0-9a-fA-F]{6}$/;
       var RM_LANES = [
-        { id: 'now', label: 'Now', fold: false },
-        { id: 'next', label: 'Next', fold: false },
-        { id: 'later', label: 'Later', fold: true },
-        { id: 'idea', label: 'Idea', fold: true },
-        { id: 'done', label: 'Done', fold: true }
+        { id: 'now', fold: false },
+        { id: 'next', fold: false },
+        { id: 'later', fold: true },
+        { id: 'idea', fold: true },
+        { id: 'done', fold: true }
       ];
-      var NOW_MAX = 6;
+      var RM_PEEK = 2;
+      function rmLaneLabel(id) {
+        var lanes = (RM_STR && RM_STR.lanes) || {};
+        if (lanes[id]) return lanes[id];
+        return id.charAt(0).toUpperCase() + id.slice(1);
+      }
       var rmItems = [];
       var rmVersion = 0;
-      var rmNowExpanded = false;
+      var rmOpen = { later: false, idea: false, done: false };
 
       function rmKnownTopic(id) {
         return TOPIC_DEFS.some(function (t) { return t.id === id; });
@@ -596,23 +677,39 @@ const topicColors: Record<string, string> = Object.fromEntries(
         rmNoticeEl.textContent = msg;
         rmNoticeEl.hidden = false;
       }
+      function rmEntriesCount(item) {
+        if (!item || !item.entries) return 0;
+        return item.entries.count || 0;
+      }
       function rmRenderRow(item) {
         var article = document.createElement('article');
-        article.className = 'rm-row';
+        article.className = 'rm-card';
+        article.setAttribute('data-roadmap-id', item.id || '');
 
-        var main = document.createElement('div');
-        main.className = 'rm-main';
+        var dot = document.createElement('span');
+        dot.className = 'rm-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        var hex = rmChipHex(item);
+        if (hex) dot.style.setProperty('--dot', hex);
+        article.appendChild(dot);
 
-        var pos = document.createElement('span');
-        pos.className = 'rm-pos';
-        pos.textContent = '#' + (item.pos + 1);
-        pos.setAttribute('title', String(item.pos));
-        main.appendChild(pos);
+        var body = document.createElement('div');
+        body.className = 'rm-card-body';
 
-        var title = document.createElement('span');
+        var title = document.createElement('div');
         title.className = 'rm-title';
         title.textContent = item.title;
-        main.appendChild(title);
+        body.appendChild(title);
+
+        if (typeof item.summary === 'string' && item.summary.trim()) {
+          var summary = document.createElement('p');
+          summary.className = 'rm-summary';
+          summary.textContent = item.summary;
+          body.appendChild(summary);
+        }
+
+        var meta = document.createElement('div');
+        meta.className = 'rm-meta';
 
         var chip = document.createElement('button');
         chip.className = 'topic-filter rm-chip';
@@ -621,24 +718,37 @@ const topicColors: Record<string, string> = Object.fromEntries(
         chip.setAttribute('aria-pressed', activeTopic === item.topic ? 'true' : 'false');
         if (activeTopic === item.topic) chip.classList.add('is-active');
         chip.appendChild(document.createTextNode(topicLabel(item.topic)));
-        var hex = rmChipHex(item);
         if (hex) chip.style.setProperty('--chip', hex);
-        main.appendChild(chip);
+        meta.appendChild(chip);
+
+        if (rmEntriesCount(item) > 0 && item.entries && item.entries.last_date) {
+          var n = rmEntriesCount(item);
+          var sol = solOf(item.entries.last_date);
+          var tpl = n === 1
+            ? (RM_STR.entriesMetaOne || '1 log entry \u00b7 last Sol {sol}')
+            : (RM_STR.entriesMeta || '{n} log entries \u00b7 last Sol {sol}');
+          var link = document.createElement('button');
+          link.className = 'rm-entries' + (activeRoadmapId === item.id ? ' is-active' : '');
+          link.type = 'button';
+          link.setAttribute('data-roadmap-entries', item.id);
+          link.textContent = fillTpl(tpl, { n: n, sol: sol });
+          meta.appendChild(link);
+        }
+        if (item.state === 'done' && item.shipped_at) {
+          var landed = document.createElement('span');
+          landed.className = 'rm-landed';
+          landed.textContent = fillTpl(RM_STR.landed || 'landed Sol {sol}', { sol: solOf(item.shipped_at) });
+          meta.appendChild(landed);
+        }
+        body.appendChild(meta);
 
         if (item.blocked_reason) {
-          var blocked = document.createElement('div');
-          blocked.className = 'rm-blocked';
-          blocked.textContent = '\u26d4 ' + item.blocked_reason;
-          main.appendChild(blocked);
+          var hold = document.createElement('div');
+          hold.className = 'rm-hold';
+          hold.textContent = (RM_STR.hold || 'hold') + ': ' + item.blocked_reason;
+          body.appendChild(hold);
         }
-        if (item.state === 'done' && item.updatedAt) {
-          var time = document.createElement('time');
-          time.className = 'rm-date';
-          time.setAttribute('datetime', item.updatedAt);
-          time.textContent = formatDate(item.updatedAt);
-          main.appendChild(time);
-        }
-        article.appendChild(main);
+        article.appendChild(body);
         return article;
       }
       function rmRender() {
@@ -646,63 +756,58 @@ const topicColors: Record<string, string> = Object.fromEntries(
         // The roadmap column never collapses the board: an empty roadmap renders
         // its own empty state so the log keeps its column and its position.
         rmSection.hidden = false;
-        var openMap = {};
-        rmContainer.querySelectorAll('.rm-lane-fold').forEach(function (d) {
-          openMap[d.getAttribute('data-lane')] = d.open;
-        });
         rmContainer.innerHTML = '';
         var anyRows = false;
         RM_LANES.forEach(function (lane) {
           var rows = rmFilteredByLane(lane.id);
           if (!rows.length) return;
+          if (lane.id === 'done') {
+            rows = rows.slice().sort(function (a, b) {
+              var sa = a.shipped_at || null;
+              var sb = b.shipped_at || null;
+              if (sa === sb) return a.pos - b.pos;
+              if (sa == null) return 1;
+              if (sb == null) return -1;
+              return sa < sb ? 1 : -1;
+            });
+          }
           anyRows = true;
-          var laneEl;
-          if (lane.fold) {
-            laneEl = document.createElement('details');
-            laneEl.className = 'rm-lane rm-lane-fold';
-            laneEl.setAttribute('data-lane', lane.id);
-            if (openMap[lane.id]) laneEl.open = true;
-            var summary = document.createElement('summary');
-            summary.className = 'rm-lane-label';
-            summary.appendChild(document.createTextNode(lane.label.toUpperCase() + ' '));
-            var count = document.createElement('span');
-            count.className = 'rm-count';
-            count.textContent = String(rows.length);
-            summary.appendChild(count);
-            laneEl.appendChild(summary);
-          } else {
-            laneEl = document.createElement('div');
-            laneEl.className = 'rm-lane';
-            laneEl.setAttribute('data-lane', lane.id);
-            var div = document.createElement('div');
-            div.className = 'rm-lane-label';
-            div.appendChild(document.createTextNode(lane.label.toUpperCase() + ' '));
-            var count2 = document.createElement('span');
-            count2.className = 'rm-count';
-            count2.textContent = String(rows.length);
-            div.appendChild(count2);
-            laneEl.appendChild(div);
-          }
+          var seg = document.createElement('div');
+          seg.className = 'rm-seg';
+          seg.setAttribute('data-lane', lane.id);
+          var label = document.createElement('div');
+          label.className = 'rm-seg-label';
+          label.appendChild(document.createTextNode(rmLaneLabel(lane.id).toUpperCase() + ' '));
+          var count = document.createElement('span');
+          count.className = 'rm-count';
+          count.textContent = String(rows.length);
+          label.appendChild(count);
+          seg.appendChild(label);
           var toShow = rows;
-          if (lane.id === 'now' && !rmNowExpanded && rows.length > NOW_MAX) {
-            toShow = rows.slice(0, NOW_MAX);
+          var hidden = 0;
+          if (lane.fold && !rmOpen[lane.id] && rows.length > RM_PEEK) {
+            toShow = rows.slice(0, RM_PEEK);
+            hidden = rows.length - RM_PEEK;
           }
-          toShow.forEach(function (item) { laneEl.appendChild(rmRenderRow(item)); });
-          if (lane.id === 'now' && rows.length > NOW_MAX) {
+          toShow.forEach(function (item) { seg.appendChild(rmRenderRow(item)); });
+          if (hidden > 0 || (lane.fold && rmOpen[lane.id] && rows.length > RM_PEEK)) {
             var more = document.createElement('button');
             more.className = 'rm-more';
             more.type = 'button';
-            more.textContent = rmNowExpanded ? 'Less' : 'More (' + (rows.length - NOW_MAX) + ')';
-            laneEl.appendChild(more);
+            more.setAttribute('data-lane-more', lane.id);
+            more.setAttribute('aria-expanded', rmOpen[lane.id] ? 'true' : 'false');
+            var moreLabel = fillTpl(RM_STR.more || '+{n} more', { n: rows.length - RM_PEEK });
+            more.textContent = rmOpen[lane.id] ? '\u2212' + moreLabel.slice(1) : moreLabel;
+            seg.appendChild(more);
           }
-          rmContainer.appendChild(laneEl);
+          rmContainer.appendChild(seg);
         });
         if (!anyRows) {
           var empty = document.createElement('p');
           empty.className = 'filter-empty';
           empty.textContent = activeTopic === 'all'
-            ? 'Nothing on the roadmap yet.'
-            : 'Nothing on the roadmap under ' + topicLabel(activeTopic) + '.';
+            ? (RM_STR.empty || 'Nothing on the roadmap yet.')
+            : fillTpl(RM_STR.emptyTopic || 'Nothing on the roadmap under {topic}.', { topic: topicLabel(activeTopic) });
           rmContainer.appendChild(empty);
         }
       }
@@ -734,7 +839,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
             })
             .catch(function () {
               if (rmItems.length) return;
-              rmNotice('Roadmap unavailable.');
+              rmNotice(RM_STR.unavailable || 'Roadmap unavailable.');
               rmRender();
             });
         }
@@ -742,16 +847,31 @@ const topicColors: Record<string, string> = Object.fromEntries(
       }
       if (rmContainer) {
         rmContainer.addEventListener('click', function (event) {
-          var chip = event.target.closest('.rm-chip');
-          if (chip && rmContainer.contains(chip)) {
-            var t = chip.getAttribute('data-topic') || 'all';
-            applyTopic(activeTopic === t ? 'all' : t);
+          var entriesBtn = event.target.closest('[data-roadmap-entries]');
+          if (entriesBtn && rmContainer.contains(entriesBtn)) {
+            var rid = entriesBtn.getAttribute('data-roadmap-entries');
+            var card = entriesBtn.closest('.rm-card');
+            var rtitle = null;
+            if (card) {
+              var t = card.querySelector('.rm-title');
+              if (t) rtitle = t.textContent;
+            }
+            rmApplyRoadmapFilter(activeRoadmapId === rid ? null : rid, activeRoadmapId === rid ? null : rtitle);
             return;
           }
-          var more = event.target.closest('.rm-more');
+          var chip = event.target.closest('.rm-chip');
+          if (chip && rmContainer.contains(chip)) {
+            var t2 = chip.getAttribute('data-topic') || 'all';
+            applyTopic(activeTopic === t2 ? 'all' : t2);
+            return;
+          }
+          var more = event.target.closest('[data-lane-more]');
           if (more && rmContainer.contains(more)) {
-            rmNowExpanded = !rmNowExpanded;
-            rmRender();
+            var lane = more.getAttribute('data-lane-more');
+            if (lane && rmOpen[lane] !== undefined) {
+              rmOpen[lane] = !rmOpen[lane];
+              rmRender();
+            }
             return;
           }
         });

@@ -142,11 +142,6 @@ describe('feed i18n', () => {
     expect(es.feed.hint).not.toMatch(/Feedly|Inoreader|NetNewsWire|Reeder/i);
   });
 
-  it('feed url is identical in both locales', () => {
-    expect(en.feed.url).toBe(FEED_URL);
-    expect(es.feed.url).toBe(FEED_URL);
-  });
-
   it('has same keys in both languages', () => {
     expect(Object.keys(en.feed).sort()).toEqual(Object.keys(es.feed).sort());
   });

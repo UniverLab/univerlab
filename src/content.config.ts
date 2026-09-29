@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { DOCS_BASES } from './data/docs-bases';
 
 // Documentation is the single source of truth inside each experiment's repo.
 // Locally we glob the sibling repositories' docs/ folders; in production this
@@ -17,11 +18,8 @@ const docSchema = z.object({
 const docsCollection = (base: string) =>
   defineCollection({ loader: glob({ pattern: '**/*.md', base }), schema: docSchema });
 
-export const collections = {
-  'docs-canopy': docsCollection('../harness-canopy/docs'),
-  'docs-texforge': docsCollection('../texforge/docs'),
-  'docs-gitkit': docsCollection('../gitkit/docs'),
-  'docs-ghscaff': docsCollection('../ghscaff/docs'),
-  'docs-cadspec': docsCollection('../cadspec/docs'),
-  'docs-demostage': docsCollection('../demostage/docs'),
-};
+// One collection per entry in DOCS_BASES, which is also what the link-rewrite
+// plugin and the redirects generator read — see src/data/docs-bases.ts.
+export const collections = Object.fromEntries(
+  Object.entries(DOCS_BASES).map(([id, base]) => [`docs-${id}`, docsCollection(base)]),
+);

@@ -9,7 +9,10 @@ module.exports = {
     '\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
-    '^.+\.(ts|tsx)$': 'ts-jest',
+    // Workers use runtime globals (`cloudflare:workers`, KVNamespace, .ctx …)
+    // that the root tsconfig types do not know; typechecking of workers/**
+    // belongs to `workers/announcements` (npm run typecheck), not to ts-jest.
+    '^.+\.(ts|tsx)$': ['ts-jest', { diagnostics: { exclude: ['**/workers/**'] } }],
   },
   testMatch: ['**/?(*.)+(spec|test).+(ts|tsx|js)'],
   collectCoverageFrom: [
