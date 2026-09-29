@@ -7,24 +7,25 @@
  *   PATCH /:id         → Update an entry's topic and/or roadmap_id (Bearer)
  *   DELETE /:id        → Remove entry by id (Bearer token required)
  *
- *   GET  /roadmap       → roadmap items from the KV mirror ({items,total,hasMore,version})
+ *   GET  /roadmap       → roadmap items (KV mirror by default; DO behind ?private=1 / ?state=all)
  *   GET  /roadmap/:id   → one roadmap item + the announcements linked to it
  *   POST /roadmap       → Create a roadmap item (Bearer token required)
  *   PUT  /roadmap/order → Rewrite roadmap order, optimistic versioning (Bearer)
  *   PATCH /roadmap/:id  → Update/archive a roadmap item (Bearer token required)
  *   DELETE /roadmap/:id → Hard delete a roadmap item (Bearer token required)
  *
- * Every roadmap read returns public fields only: `summary`, `shipped_at` and
+ * Public roadmap reads return public fields only: `summary`, `shipped_at` and
  * the per-item `entries` roll-up are public; `notes` and `refs` are PRIVATE and
  * exist only behind `?private=1` together with a valid Bearer token — without
  * one that query is a 401, never a silent public answer. The KV mirror and the
  * SSE frames never carry private fields, which is what keeps them off a page
  * anyone can read.
  *
- * Reads never touch the Durable Object: every write mirrors the latest entries
- * into KV key "entries", so GET / stays a plain edge read. Only /events, PUT and
- * PATCH reach the LogHub DO, which owns writes and the SSE fan-out. The roadmap
- * follows that same path through KV key "roadmap", which holds active items only.
+ * Public reads stay KV-only (no DO hit): every write mirrors the latest entries
+ * into KV key "entries" and active roadmap items into "roadmap", so GET / and
+ * GET /roadmap stay edge-cheap. /events, writes, and authorised private /
+ * ?state=all roadmap reads reach the LogHub DO, which owns SQLite, writes and
+ * the SSE fan-out. The KV roadmap mirror holds active items only.
  *
  * A single hub instance is deliberate — there is one mission log, so the log is
  * the coordination atom. That also makes writes serialized by construction,
@@ -402,7 +403,8 @@ export function computeShippedAt(
 /**
  * Roll up linked announcements per roadmap id: `{count,last_date,last_id}`.
  * Rows without a `roadmap_id` are ignored. ISO dates compare lexicographically,
- * so the largest date is the newest — order of arrival does not matter.
+ * so the largest date is the newest; equal dates break on `id` DESC so the
+ * public KV roll-up matches the DO's `ORDER BY date DESC, id DESC`.
  */
 export function summarizeEntries(
   rows: Array<{ id: string; date: string; roadmap_id?: string | null }>
@@ -416,7 +418,11 @@ export function summarizeEntries(
       summary[row.roadmap_id] = bucket;
     }
     bucket.count += 1;
-    if (bucket.last_date === null || row.date > bucket.last_date) {
+    if (
+      bucket.last_date === null ||
+      row.date > bucket.last_date ||
+      (row.date === bucket.last_date && row.id > (bucket.last_id ?? ''))
+    ) {
       bucket.last_date = row.date;
       bucket.last_id = row.id;
     }
@@ -1140,9 +1146,12 @@ export default {
 
           const linked = readEntriesMirror(await env.ANNOUNCEMENTS.get('entries'));
           const summary = summarizeEntries(linked);
+          // Same order as the DO query: date DESC, id DESC (id breaks ties).
           const announcements = linked
             .filter((entry) => entry.roadmap_id === id)
-            .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+            .sort((a, b) =>
+              a.date < b.date ? 1 : a.date > b.date ? -1 : a.id < b.id ? 1 : a.id > b.id ? -1 : 0
+            )
             .map((entry) => ({ id: entry.id, date: entry.date, title: entry.title, type: entry.type }));
           return json({
             item: toPublicRoadmapItem({ ...found, entries: summary[id] ?? undefined }),

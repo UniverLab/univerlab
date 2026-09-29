@@ -279,6 +279,23 @@ describe('GET /roadmap/:id', () => {
     expect(Object.keys(body.announcements[0]).sort()).toEqual(['date', 'id', 'title', 'type']);
   });
 
+  it('breaks announcement ties on id DESC when dates collide', async () => {
+    const same = '2026-09-20T00:00:00.000Z';
+    const kv = fakeKV({
+      roadmap: mirror([publicItem({ id: 'r1' })]),
+      entries: JSON.stringify([
+        { id: 'e1', date: same, title: 'first', body: 'b', type: 'note', topic: 'general', roadmap_id: 'r1' },
+        { id: 'e9', date: same, title: 'ninth', body: 'b', type: 'update', topic: 'general', roadmap_id: 'r1' },
+        { id: 'e2', date: same, title: 'second', body: 'b', type: 'launch', topic: 'general', roadmap_id: 'r1' },
+      ]),
+    });
+    const { status, body } = await call(get('/roadmap/r1'), fakeEnv(kv, fakeHub().hub));
+
+    expect(status).toBe(200);
+    expect(body.announcements.map((entry: any) => entry.id)).toEqual(['e9', 'e2', 'e1']);
+    expect(body.item.entries).toEqual({ count: 3, last_date: same, last_id: 'e9' });
+  });
+
   it('404s an unknown id and refuses `order` as an id', async () => {
     const kv = fakeKV({ roadmap: mirror([publicItem()]), entries });
     const env = fakeEnv(kv, fakeHub().hub);
@@ -435,6 +452,18 @@ describe('guards', () => {
     ]);
     // 'b' (newer) has no link and 'd' has null: neither may win over 'c'.
     expect(summary).toEqual({ r1: { count: 2, last_date: '2026-01-02T00:00:00.000Z', last_id: 'c' } });
+  });
+
+  it('summarizeEntries breaks equal dates on id DESC (matches DO ORDER BY)', () => {
+    // Arrival order must not matter: 'e1' is first in the array but loses to 'e9'.
+    const summary = summarizeEntries([
+      { id: 'e1', date: '2026-09-20T00:00:00.000Z', roadmap_id: 'r1' },
+      { id: 'e9', date: '2026-09-20T00:00:00.000Z', roadmap_id: 'r1' },
+      { id: 'e2', date: '2026-09-20T00:00:00.000Z', roadmap_id: 'r1' },
+    ]);
+    expect(summary).toEqual({
+      r1: { count: 3, last_date: '2026-09-20T00:00:00.000Z', last_id: 'e9' },
+    });
   });
 
   it('toPublicRoadmapItem rebuilds the item without private fields', () => {
