@@ -2,7 +2,7 @@
  * Where each experiment's documentation lives, and the one place that says so.
  *
  * `src/content.config.ts` builds a `docs-<id>` collection per entry; the Sätteri
- * link plugin (`src/plugins/rehype-docs-md-links.ts`) matches a document's path
+ * link plugin (`src/plugins/docs-md-links.ts`) matches a document's path
  * back to an `<id>`; `scripts/build-redirects.ts` globs the same folders to
  * emit a `.md` rule per page. Three consumers, one table — when they disagreed
  * the plugin would rewrite links to routes that do not exist, which is the same

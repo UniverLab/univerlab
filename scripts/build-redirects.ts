@@ -8,7 +8,7 @@
  *   - `src/data/docs-redirects.json` → one line per renamed docs page.
  *   - the sibling repos' `docs/` folders → one `.md` → route line per page, so
  *     the `foo.md` URLs already in Google's index land on the real page
- *     instead of 404ing (see `src/plugins/rehype-docs-md-links.ts` for the
+ *     instead of 404ing (see `src/plugins/docs-md-links.ts` for the
  *     matching link rewrite).
  *
  * Only the `# BEGIN GENERATED` … `# END GENERATED` block is rewritten, so the
