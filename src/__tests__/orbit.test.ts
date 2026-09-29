@@ -5,7 +5,7 @@
  * mass (R13). The headline assertion is the first one — with no pointer input
  * a step is byte-identical to the old cosmic step, which is what proves the
  * restore is faithful and the cursor is purely additive.
- * Given-When-Then pattern, like field.test.ts and bg-drift.test.ts.
+ * Given-When-Then pattern, like field.test.ts and takes.test.ts.
  */
 import { orbit } from '../scripts/orbit';
 

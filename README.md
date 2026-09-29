@@ -56,7 +56,7 @@ Example: a tool with id `widgetforge`, repo `UniverLab/widgetforge`.
    ```ts
    { id: 'widgetforge', name: 'WidgetForge', number: 'EXP-007', status: 'beta',
      essenceHex: '#c98aa0', github: 'https://github.com/UniverLab/widgetforge',
-     bg: 'drift', install: both('widgetforge'), hasDocs: true },
+     bg: 'cosmic', install: both('widgetforge'), hasDocs: true },
    ```
    `install`: `both('repo')` (sh + ps1), `unix('repo')` (sh only), or omit it
    (research, no binary).

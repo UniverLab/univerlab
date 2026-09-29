@@ -14,7 +14,7 @@ export type BgTheme =
   | 'scaffold'
   | 'industrial'
   | 'bubbles'
-  | 'drift'
+  | 'takes'
   | 'spiral';
 
 export interface Experiment {
@@ -79,7 +79,7 @@ export const experiments: Experiment[] = [
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#b87333', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4' },
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#6ec6e6', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', surface: 'blueprint', startDate: '2026-04-10', install: both('cadspec'), hasDocs: true },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', surface: 'observatory', startDate: '2026-04-10' },
-  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'drift', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4' },
+  { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#ef8354', github: 'https://github.com/UniverLab/demostage', bg: 'takes', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4' },
   { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', surface: 'quorum', startDate: '2026-06-30', url: 'https://quorum.univerlab.org', circadian: true,
     circadianPalette: {
       day:   { '--bg': '#f0e8da', '--bg-raise': '#f7f2e8', '--ink': '#3a2a1a', '--ink-dim': '#7a6a52', '--ink-faint': '#a89878', '--line': '#ddd2c0', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#c4b8a0' },

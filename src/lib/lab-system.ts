@@ -2,7 +2,10 @@ import { experiments, type Experiment, type Status, type ExperimentId } from './
 
 export const LAB = {
   vbW: 460, vbH: 420,
-  cx: 210, cy: 210,
+  /* The mark/orbits sit at the viewBox centre so the svg centre — where the
+     orbit runner places its well (`data-orbit-well`) — is the diagram's own
+     gravitational centre: the drifting motes and the diagram share one. */
+  cx: 230, cy: 210,
   squash: 0.66,
   rMin: 62, rMax: 168,
   stops: 16,

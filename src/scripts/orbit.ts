@@ -18,7 +18,7 @@
  *  all come from startBackground. Split out of backgrounds.ts to keep that
  *  module within its size budget.
  *  The home figure (LabSystem.astro) publishes `data-orbit-well` and owns the
- *  well on that page; /status keeps 0.75w; everything else 0.5w.
+ *  well on that page; /status keeps 0.75w; everything else 0.5w. */
 
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    (the same move brain.ts and spotlight.ts made) so the module needs no runtime

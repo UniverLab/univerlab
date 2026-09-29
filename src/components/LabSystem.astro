@@ -43,7 +43,9 @@ const rings = labRings(bodies);
   .halo-a { stop-color: var(--accent); stop-opacity: 0.16; }
   .halo-b { stop-color: var(--accent); stop-opacity: 0; }
   .lab-rings ellipse { fill: none; stroke: var(--line); stroke-width: 1; opacity: 0.55; }
-  .lab-mark svg { fill: var(--accent); opacity: 0.92; }
+  /* Mark is a child component: its svg carries no LabSystem scope attribute,
+     so the descendant must be :global() or the accent fill never applies. */
+  .lab-mark :global(svg) { fill: var(--accent); opacity: 0.92; }
   .lab-dot { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--body-color) 60%, transparent)); }
   .lab-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; fill: var(--ink-dim); }
   .lab-cap { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;

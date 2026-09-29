@@ -8,7 +8,7 @@ import { brain } from './brain';
 import { orbit } from './orbit';
 import { createSpotlight } from './spotlight';
 import { bubbles } from './bg-bubbles';
-import { drift } from './bg-drift';
+import { takes } from './takes';
 import { spiral } from './bg-spiral';
 import { paper } from './bg-paper';
 
@@ -52,7 +52,7 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
   if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
   const isPastel = document.documentElement.dataset.surface === 'pastel';
   if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
-  const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.drift);
+  const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.cosmic);
   const tick = runner(ctx);
 
   let raf = 0;
@@ -809,8 +809,8 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Drift — a calm field of slow particles in the essence color.
-     Default. The cursor stirs and flashes the motes it sweeps past
-     (bg-drift.ts). */
-  drift,
+  /* Takes — the cursor's own gesture becomes a take that the background
+     records, normalizes into a score, and replays with a ghost cursor.
+     DemoStage: "the demo is the source" (takes.ts). */
+  takes,
 };

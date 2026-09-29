@@ -76,6 +76,11 @@ describe('lab-system', () => {
     // And: the rightmost label stays inside the 460-wide viewBox
     const maxX = Math.max(...bodies.flatMap((b) => b.pts.map((p) => p.x)));
     expect(maxX + 9 + 46).toBeLessThanOrEqual(LAB.vbW);
+    // And: the diagram is centred in its viewBox, so the svg centre (where the
+    // orbit runner drops its well via data-orbit-well) is the diagram's own
+    // gravitational centre — the motes and the orbits share one.
+    expect(LAB.cx).toBe(LAB.vbW / 2);
+    expect(LAB.cy).toBe(LAB.vbH / 2);
   });
 
   it('revolves inner orbits fastest within the 60–180 s band', () => {
