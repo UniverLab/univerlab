@@ -1100,7 +1100,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 @media (max-width: 52rem) {
   :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install' 'banner'; text-align: center; }
   :root[data-surface='paper'] .hero > * { min-width: 0; }
-  :root[data-surface='paper'] .network-mark { width: min(100%, 18rem); overflow: hidden; }
+  :root[data-surface='paper'] .galley-proof { width: min(100%, 18rem); overflow: hidden; }
   :root[data-surface='paper'] .hero > .lede { margin-inline: auto; }
   :root[data-surface='paper'] .actions { justify-content: center; }
   :root[data-surface='blueprint'] .hero { padding-bottom: 2rem; }

@@ -9,7 +9,7 @@
  * 6 s / 5 s idle compiler, that touch never seeds from a pointer (and gets no
  * listener at all on touch devices), that the ambient draw is untouched, and
  * that a detached canvas aborts the listeners. Given-When-Then pattern, like
- * field.test.ts and brain.test.ts.
+ * brain.test.ts and orbit.test.ts.
  */
 import {
   paper,

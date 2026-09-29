@@ -248,7 +248,7 @@ export function paper(ctx: PaperCtx): (t: number) => void {
         m.va = m.ia;
       }
       const env = Math.min(1, m.age / 1500) * Math.min(1, (m.life - m.age) / 1500);
-      // Excess velocity damps back to the idle drift (drift.ts EASE pattern).
+      // Excess velocity damps back to the idle drift (bg-bubbles ease-back).
       m.vx = m.ix + (m.vx - m.ix) * 0.9;
       m.vy = m.iy + (m.vy - m.iy) * 0.9;
       m.va = m.ia + (m.va - m.ia) * 0.9;
