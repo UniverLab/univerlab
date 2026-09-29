@@ -336,7 +336,6 @@ html[data-surface='industrial'] {
   --ink-dim: #a5a0b8;
   --ink-faint: #8a86a0;
   --line: #232035;
-  --ghscaff: #8b7cf6;
 }
 html[data-surface='industrial'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -692,8 +691,8 @@ html[data-surface='studio'] .hero .rec {
    ───────────────────────────────────────────────────────────────────────── */
 
 /* Visually suppress copper on this surface only — the inline --essence
-   (copper) loses to this scoped override; --ghscaff is already re-pointed
-   to violet in the surface block above. */
+   (copper) loses to this scoped override; the surface block above already
+   paints the whole surface violet via --glass-v. */
 html[data-surface='industrial'] .exp {
   --essence: var(--glass-v) !important;
 }
@@ -957,7 +956,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #baadab;
   --ink-faint: #baadab;
   --line: #951c04;
-  --demostage: #fa5838;
   --font-serif: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
   --accent: #fa5838 !important;

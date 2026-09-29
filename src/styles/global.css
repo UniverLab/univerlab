@@ -27,12 +27,7 @@
 
   /* Experiment essences */
   --canopy: #5dd39e;
-  --texforge: #e0a458;
-  --gitkit: #e8a4c8;
-  --ghscaff: #b87333;
-  --cadspec: #6ec6e6;
   --astro-denoise: #a78bfa;
-  --demostage: #ef8354;
 
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
   --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -159,7 +154,7 @@
 /* demostage — Altius thermal command room (docs/landing-poc/styles/altius.md).
    KEY STAYS `studio` per specs/altius-demostage.md + experiments.ts + BaseLayout.
    Obsidian Ember canvas, Dark Cocoa raise, Linen ink, Warm Ash inks, Signal Red
-   hairline. The Altius furniture (--molten/--peach/--blush/--flare/--ember-glow,
+   hairline. The Altius furniture (--molten/--peach/--blush/--flare,
    radii, color-scheme) are page-only extras below. */
 [data-surface='studio'],
 [data-flip-surface='studio'] {
@@ -207,12 +202,11 @@ html[data-surface='paper'] {
 }
 
 /* canopy — Auros extras: recessed well + footer (Liquid Deep), Platinum display
-   ink, decorative Slate Deep (NEVER text), Lavender Phosphor (large stats only),
-   the Aurora CTA gradient, and the card/control radii. */
+   ink, Lavender Phosphor (large stats only), the Aurora CTA gradient, and the
+   card/control radii. */
 html[data-surface='tui'] {
   --bg-deep: #011d1c;
   --ink-hi: #ffffff;
-  --slate-deep: #707777; /* decorative/inactive fills only — NOT text */
   --phosphor: #fde9ff;
   --cta-gradient: linear-gradient(90deg, rgb(203,255,252) 0%, rgb(237,255,254) 26.25%, rgb(255,253,250) 47.57%, rgb(250,209,255) 88.96%);
   --radius-card: 16px;
@@ -237,7 +231,6 @@ html[data-surface='studio'] {
   --blush: #fcac9c;     /* Warm Blush — soft wash / motif tint, never body text */
   --flare: #fa5838;     /* Flare Orange — SOLE punctuation on dark. NEVER text on
                            peach, NEVER button fill */
-  --ember-glow: inset 0 0 20px 0 rgb(99,19,3); /* ONLY on filled primary buttons */
   --radius-card: 8px;
   --radius-ctl: 4px;
 }

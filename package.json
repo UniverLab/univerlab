@@ -43,6 +43,5 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3"
-  },
-  "main": "index.js"
+  }
 }

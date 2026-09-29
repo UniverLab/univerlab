@@ -455,7 +455,6 @@ const rings = c.address.flatMap((_, i) => {
        as time shrinks toward a human life. Big = slow, small = fast. */
     --tz: calc(var(--tsteps, 6) * var(--dt) * (0.15 + 0.85 * var(--dt)));
     --tx: clamp(0, (var(--p) - 0.40) / 0.04, 1);
-    --hold: clamp(0, (var(--p) - 0.44) / 0.06, 1);
     --morph: clamp(0, (var(--p) - 0.47) / 0.03, 1);
     --zm: clamp(0, (var(--p) - 0.50) / 0.50, 1);
     --tl-fade: clamp(1 - (var(--p) - 0.36) / 0.08, 0, 1);
@@ -470,7 +469,6 @@ const rings = c.address.flatMap((_, i) => {
        the end. Used only to retire the final "93 Gly" cota after it has held
        long enough to read — the ring itself stays. See .zo-gauge. */
     --settle: 0;
-    --wonder: clamp(0, (var(--p) - 0.95) / 0.04, 1);
   }
   /* Default height for touch (scroll-position mapping). JS overrides to a
      short section on desktop where wheel momentum drives the animation. */
