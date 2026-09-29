@@ -133,6 +133,14 @@ $ demo export gif,mp4
      (17.0:1) — the light-section body ink. */
   .band-light .sig { color: #190501; }
   :global(html[data-surface='studio'] .band-light .demo-cap) { color: #190501; }
+  /* …but the caption's own "Fig. 1" tag escaped both rules above: it renders in
+     DemoFigure's cid, so the cid-scoped `.band-light .label` (Signal Red) never
+     matches it, and it inherits nothing because it sets its own colour — the
+     registry coral (#ef8354) on Vapor Peach, 1.7:1. altius.md puts labels in
+     Signal Red on light and Flare on dark; this is the same #951c04 every other
+     label on this band wears (5.7:1 even with the takes trail at its brightest
+     behind the 88% veil — FR3). */
+  :global(html[data-surface='studio'] .band-light .demo-cap .label) { color: #951c04; }
 
   /* The signature line at the foot of the light section — the koan reused
      verbatim, small and quiet, hidden from assistive tech (it repeats the
@@ -212,6 +220,14 @@ $ demo export gif,mp4
      above; the hero install label is the remaining dark eyebrow (layout-owned
      → full :global). The origin label is already Flare two rules up. */
   :global(html[data-surface='studio'] .exp .install-head .label) { color: var(--flare); }
+
+  /* FR3 — AA with the takes trail at its brightest behind the hero: the studio
+     lede runs at opacity .75, and that drags its Flare inline code
+     (`demo.toml`) down to 3.6:1 over the 82% veil. Band opacity cannot rescue
+     it (an opaque hero still only reaches 3.9:1), so the code takes Warm
+     Blush — this surface's warm tint on dark (koan, motif) — which clears
+     5.9:1 at its worst. */
+  :global(html[data-surface='studio'] .exp .lede code) { color: #fcac9c; }
 </style>
 
 <script>
