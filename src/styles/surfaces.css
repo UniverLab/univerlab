@@ -1057,7 +1057,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
-:root[data-surface='pastel'] canvas.bg { opacity: .12; }
+:root[data-surface='pastel'] canvas.bg { opacity: .6; }
 
 :root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 /* Preserve single-name heroes on the two pages without a supplied style file. */

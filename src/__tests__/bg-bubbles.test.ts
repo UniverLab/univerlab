@@ -1,8 +1,8 @@
 /**
  * Tests for the bubbles runner (src/scripts/bg-bubbles.ts) — the GitKit
- * background. The cursor stages nearby commit nodes and a >=700 ms dwell
+ * background. The cursor stages nearby commit nodes and a >=1200 ms dwell
  * commits them into one labelled hash node; touch never stages; idle float
- * and lane re-linking unchanged. Given-When-Then pattern, like field.test.ts.
+ * and parent re-linking unchanged. Given-When-Then pattern, like field.test.ts.
  */
 import { bubbles } from '../scripts/bg-bubbles';
 
@@ -139,8 +139,10 @@ afterEach(() => {
 
 const W = 800;
 const H = 600;
+/** Ambient nodes per px² — same constant as the runner (card-anchored density). */
+const AREA_PER_NODE = 37000;
 /** N at 800×600 — same formula as the runner. */
-const N = Math.min(35, Math.floor((W * H) / 35000));
+const N = Math.max(1, Math.round((W * H) / AREA_PER_NODE));
 
 describe('bubbles', () => {
   it('rises the ambient field without the cursor: N nodes, ambient alphas, no labels', () => {
@@ -177,7 +179,52 @@ describe('bubbles', () => {
     expect(arcs).toHaveLength(3 * N);
   });
 
-  it('stages at most 6 bubbles that trail the cursor', () => {
+  it('scales ambient density with canvas area — card window and page are one system', () => {
+    // Given: pinned randomness and two canvases — the card window and a page viewport
+    jest.spyOn(Math, 'random').mockReturnValue(0.5);
+    const card = makeCtx({ w: 352, h: 210 });
+    const page = makeCtx({ w: 1440, h: 900 });
+    const tickCard = bubbles(card.ctx);
+    tickCard(0);
+    const tickPage = bubbles(page.ctx);
+    tickPage(0);
+    // When: one frame paints on each
+    card.reset();
+    page.reset();
+    tickCard(33);
+    tickPage(33);
+    // Then: each count is the shared area law N = round(area / AREA_PER_NODE)
+    const nCard = card.arcs.length / 3;
+    const nPage = page.arcs.length / 3;
+    expect(nCard).toBe(Math.max(1, Math.round((352 * 210) / AREA_PER_NODE)));
+    expect(nPage).toBe(Math.max(1, Math.round((1440 * 900) / AREA_PER_NODE)));
+    // And: the window reads as two circles joined by a line
+    expect(nCard).toBe(2);
+    // And: the page count is the card count scaled by area, within rounding (±1)
+    const ratio = (1440 * 900) / (352 * 210);
+    expect(nPage).toBeGreaterThanOrEqual(Math.round(nCard * ratio) - 1);
+    expect(nPage).toBeLessThanOrEqual(Math.round(nCard * ratio) + 1);
+    // And: doubling the area doubles the count; a tiny canvas still draws ≥ 1
+    const single = makeCtx({ w: 800, h: 600 });
+    const dbl = makeCtx({ w: 1600, h: 600 });
+    const tickSingle = bubbles(single.ctx);
+    tickSingle(0);
+    const tickDbl = bubbles(dbl.ctx);
+    tickDbl(0);
+    single.reset();
+    dbl.reset();
+    tickSingle(66);
+    tickDbl(66);
+    expect(dbl.arcs.length / 3).toBe(2 * (single.arcs.length / 3));
+    const tiny = makeCtx({ w: 100, h: 100 });
+    const tickTiny = bubbles(tiny.ctx);
+    tickTiny(0);
+    tiny.reset();
+    tickTiny(99);
+    expect(tiny.arcs.length / 3).toBeGreaterThanOrEqual(1);
+  });
+
+  it('stages at most 3 bubbles that trail the cursor', () => {
     // Given: pinned randomness (all 13 coincide at 400,300)
     jest.spyOn(Math, 'random').mockReturnValue(0.5);
     const { ctx, arcs, strokeLWs, reset } = makeCtx();
@@ -194,30 +241,30 @@ describe('bubbles', () => {
     reset();
     t += 33;
     tick(t);
-    // Then: exactly 6 glow-lifted ring strokes (lw > 1.5)
+    // Then: exactly 3 glow-lifted ring strokes (lw > 1.5) — no 4th ever appears
     const lifted = strokeLWs.filter((lw) => lw > 1.5);
-    expect(lifted).toHaveLength(6);
+    expect(lifted).toHaveLength(3);
     // And: the staged halos cluster near the trail point (~30px behind cursor)
-    // (pinned rand keeps the 7 unstaged coincident at first, so assert >= 6)
+    // (pinned rand keeps the 10 unstaged coincident at first, so assert >= 3)
     const halos = arcs.filter((_, i) => i % 3 === 0);
     const near = halos.filter((a) => Math.hypot(a.x - 400, a.y - 270) < 45);
-    expect(near.length).toBeGreaterThanOrEqual(6);
+    expect(near.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('a 700 ms dwell commits 3 staged into one area-summed labelled bubble', () => {
+  it('a 1200 ms dwell commits 3 staged into one area-summed labelled bubble', () => {
     // Given: 3 bubbles near the sweep path, rest parked far
     scriptField({ 0: { x: 96, y: 300, r: 12 }, 1: { x: 120, y: 310, r: 12 }, 2: { x: 80, y: 290, r: 12 } });
     const { ctx, arcs, texts, segs, reset } = makeCtx();
     const tick = bubbles(ctx);
     tick(16);
-    // When: one sweep stages all three, then the pointer rests 750 ms…
+    // When: one sweep stages all three, then the pointer rests 1233 ms…
     firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 300 });
     tick(33);
     reset();
-    tick(783); // 750 ms after the move ⇒ commit triggers
-    tick(900);
+    tick(1266); // 1233 ms after the move ⇒ commit triggers
+    tick(1300);
     reset();
-    tick(1250); // trigger + 400 ms merge ⇒ complete
+    tick(1950); // trigger + 600 ms merge ⇒ complete
     // Then: two members removed → 3·(N−2) arcs
     expect(arcs).toHaveLength(3 * (N - 2));
     // And: the merged halo radius is the area sum (below the cap) — the
@@ -238,6 +285,83 @@ describe('bubbles', () => {
     expect(touch.length).toBeGreaterThanOrEqual(1);
   });
 
+  it('never jumps more than 4 px per frame during staging (staged ease ≤ 0.6 px)', () => {
+    // Given: 3 bubbles near the sweep path, rest parked far
+    scriptField({ 0: { x: 96, y: 300, r: 12 }, 1: { x: 120, y: 310, r: 12 }, 2: { x: 80, y: 290, r: 12 } });
+    const { ctx, arcs, reset } = makeCtx();
+    const tick = bubbles(ctx);
+    tick(16);
+    // NOTE: the top→bottom respawn (y < −2r → y = h + 2r) is an intentional
+    // off-screen teleport outside FR3's scope; this run is short with slow
+    // bubbles (vy ≈ 0.475 px/tick) so no wrap can occur mid-run.
+    const halos = () => arcs.filter((_, i) => i % 3 === 0).map((a) => ({ x: a.x, y: a.y }));
+    const frames: Array<Array<{ x: number; y: number }>> = [];
+    // When: a sweep stages three, frames step, then the pointer teleports +300 px mid-dwell
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 300 });
+    let t = 33;
+    for (let i = 0; i < 10; i++) {
+      reset();
+      tick(t);
+      frames.push(halos());
+      t += 33;
+    }
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 400, clientY: 300 });
+    for (let i = 0; i < 10; i++) {
+      reset();
+      tick(t);
+      frames.push(halos());
+      t += 33;
+    }
+    // Then: no node moves more than 4 px in any single frame (660 ms < dwell ⇒ no merge, indices stable)
+    expect(frames.length).toBe(20);
+    for (let f = 1; f < frames.length; f++) {
+      expect(frames[f].length).toBe(N);
+      for (let b = 0; b < frames[f].length; b++) {
+        const d = Math.hypot(frames[f][b].x - frames[f - 1][b].x, frames[f][b].y - frames[f - 1][b].y);
+        expect(d).toBeLessThanOrEqual(4);
+      }
+    }
+    // And: the three staged (scripted) nodes ease at ≤ 0.6 px per frame — even across the teleport
+    for (let f = 1; f < frames.length; f++) {
+      for (let b = 0; b < 3; b++) {
+        const d = Math.hypot(frames[f][b].x - frames[f - 1][b].x, frames[f][b].y - frames[f - 1][b].y);
+        expect(d).toBeLessThanOrEqual(0.6 + 1e-9);
+      }
+    }
+  });
+
+  it('links each node to its nearest parent below — the legacy y-chain is gone', () => {
+    // Given: positions where nearest-below disagrees with y-successor —
+    // A(400,100), C(700,140), B(400,300); the 10 remaining bubbles coincide far above A
+    scriptField({
+      0: { x: 400, y: 100, r: 12 },
+      1: { x: 700, y: 140, r: 12 },
+      2: { x: 400, y: 300, r: 12 },
+      3: { x: 100, y: 40, r: 12 }, 4: { x: 100, y: 40, r: 12 }, 5: { x: 100, y: 40, r: 12 },
+      6: { x: 100, y: 40, r: 12 }, 7: { x: 100, y: 40, r: 12 }, 8: { x: 100, y: 40, r: 12 },
+      9: { x: 100, y: 40, r: 12 }, 10: { x: 100, y: 40, r: 12 }, 11: { x: 100, y: 40, r: 12 },
+      12: { x: 100, y: 40, r: 12 },
+    });
+    const { ctx, segs } = makeCtx();
+    const tick = bubbles(ctx);
+    // When: one frame paints with no pointer input (ambient drift < 1 px)
+    tick(33);
+    // Then: A links down to B (nearest below, 200 px) …
+    const near = (s: { x1: number; y1: number }, x: number, y: number) => Math.hypot(s.x1 - x, s.y1 - y) < 2;
+    const near2 = (s: { x2: number; y2: number }, x: number, y: number) => Math.hypot(s.x2 - x, s.y2 - y) < 2;
+    const ab = segs.filter(
+      (s) => (near(s, 400, 100) && near2(s, 400, 300)) || (near2(s, 400, 100) && near(s, 400, 300))
+    );
+    expect(ab.length).toBeGreaterThanOrEqual(1);
+    // … and the legacy chain edge A→C (y-successor, 303 px) is never drawn …
+    const ac = segs.filter(
+      (s) => (near(s, 400, 100) && near2(s, 700, 140)) || (near2(s, 400, 100) && near(s, 700, 140))
+    );
+    expect(ac).toHaveLength(0);
+    // … with the graph still acyclic: at most N − 1 edges
+    expect(segs.length).toBeLessThanOrEqual(N - 1);
+  });
+
   it('caps the merged radius at 26 px', () => {
     // Given: 3 staged bubbles with r=20 (area sum would be ~34.6)
     scriptField({ 0: { x: 96, y: 300, r: 20 }, 1: { x: 120, y: 310, r: 20 }, 2: { x: 80, y: 290, r: 20 } });
@@ -246,9 +370,9 @@ describe('bubbles', () => {
     tick(16);
     firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 300 });
     tick(33);
-    tick(783);
+    tick(1266);
     reset();
-    tick(1250);
+    tick(1900);
     // Then: the merged halo is exactly the cap
     const halos = arcs.filter((_, i) => i % 3 === 0);
     expect(Math.max(...halos.map((a) => a.r))).toBe(26);
@@ -260,11 +384,11 @@ describe('bubbles', () => {
     const { ctx, arcs, alphas, texts, reset } = makeCtx();
     const tick = bubbles(ctx);
     tick(16);
-    // When: sweep + 800 ms dwell
+    // When: sweep + 1250 ms dwell
     firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 300 });
     tick(33);
     reset();
-    let t = 33 + 800;
+    let t = 33 + 1250;
     tick(t);
     // Then: nothing merged, no label
     expect(arcs).toHaveLength(3 * N);
@@ -313,9 +437,9 @@ describe('bubbles', () => {
     tick(16);
     firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 500 });
     tick(33);
-    tick(783);
+    tick(1266);
     reset();
-    tick(1250);
+    tick(1900);
     // Then: merged node + label, but no lane touches it
     const halos = arcs.filter((_, i) => i % 3 === 0);
     const big = halos.reduce((p, q) => (q.r > p.r ? q : p));
@@ -335,8 +459,8 @@ describe('bubbles', () => {
     // When: a sweep stages and the dwell commits
     firePointer('pointermove', { pointerType: 'mouse', clientX: 300, clientY: 300 });
     tick(33);
-    tick(783);
-    tick(1250);
+    tick(1266);
+    tick(1900);
     // Then: cores and the merged label are white
     expect(fillStyles).toContain('#ffffff');
     expect(texts).toHaveLength(1);

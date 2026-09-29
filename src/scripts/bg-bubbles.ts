@@ -1,12 +1,12 @@
 // Bubbles — GitKit's drifting commit graph: soft orbs rise like bubbles, each
-// drawn as a commit node (filled core + ring), linked by gitgraph lane
-// segments that re-link from live positions so the graph breathes.
+// drawn as a commit node (filled core + ring), each node linked to its parent
+// that re-links from live positions so the graph breathes.
 //
 // The cursor stages nearby commit nodes (ring fills to a solid pastel core,
-// cluster trails ~30 px behind the pointer, max 6 staged, with a wobble) and
-// a >=700 ms dwell commits the cluster into one labelled hash node linked to
+// cluster trails ~30 px behind the pointer, max 3 staged, with a wobble) and
+// a >=1200 ms dwell commits the cluster into one labelled hash node linked to
 // its parent below; a single staged bubble is just released. Idle upward
-// float and lane re-linking unchanged; touch never stages.
+// float and parent re-linking unchanged; touch never stages.
 // Extracted from backgrounds.ts.
 
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
@@ -24,13 +24,15 @@ interface BubblesCtx {
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 const STAGE_R = 90; // px — ambient bubble centre this near the pointer gets staged
-const MAX_STAGED = 6; // spec cap
+const MAX_STAGED = 3; // spec cap
 const TRAIL = 30; // px — spring anchor sits this far BEHIND the pointer
-const DWELL = 700; // ms of pointer stillness that commits
-const MERGE_MS = 400; // ms of coalescing
+const DWELL = 1200; // ms of pointer stillness that commits
+const MERGE_MS = 600; // ms of coalescing
 const R_CAP = 26; // px — merged radius cap
 const LIFT_K = 0.12; // per-frame glow rise while staged
 const GLOW_TAU = 600; // ms — frame-rate independent decay of the release settle
+const STEP_MAX = 0.6; // px per tick — staged ease cap (tick ≤ 30 fps ⇒ per-frame cap)
+const JUMP_MAX = 4; // px per tick — hard clamp on EVERY position write (FR3)
 
 function hash7(): string {
   const digits = '0123456789abcdef';
@@ -48,7 +50,8 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
   const b = parseInt(hex.substring(4, 6), 16);
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   const dark = lum < 0.4;
-  // The pastel canvas is capped at 0.12 element opacity (§1.2). The
+  // The pastel page canvas runs at 0.6 element opacity (FR4 — the lowest
+  // ladder value at which the 1 px link strokes read on white). The
   // largest legal lift is internal alpha → 1.0 plus a stroke mixed 45 %
   // toward black (same hue, no new colour token). On the dark branch the
   // ring/core stays white, so shadeA degenerates to #ffffff and no helper
@@ -62,16 +65,23 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
     const hx = (v: number) => v.toString(16).padStart(2, '0');
     return '#' + hx(mix(ar)) + hx(mix(ag)) + hx(mix(ab));
   })();
-  const N = Math.min(35, Math.floor((ctx.w * ctx.h) / 35000));
+  // FR1 — ambient density anchored to the GitKit home card window: at the
+  // reference viewport (1440×900) the card canvas measures w×h ≈ 74 000 px²
+  // and renders N_card = 2 nodes ⇒ AREA_PER_NODE = A_card / N_card ≈ 37 000.
+  // Both surfaces run this one expression, so the page count is exactly
+  // N_card × (viewport area / card area). The old min(35, …) cap broke that
+  // above 1.225 MPx (a 1920×1080 page ran 35 nodes where the area law asks 59).
+  const AREA_PER_NODE = 37000; // CSS-derived provisional (browser unavailable for live measure — see report)
+  const N = Math.max(1, Math.round((ctx.w * ctx.h) / AREA_PER_NODE));
   type Bubble = {
     x: number; y: number; r: number; vy: number; vy0: number; vx: number; ph: number; amb: number; glow: number;
-    stg: boolean; svx: number; svy: number; ao: number;
+    stg: boolean; ao: number;
     merging: { t0: number; surv: Bubble; r0: number } | null;
     commit: string | null; mergeR: number; parent: Bubble | null;
   };
   const mk = (x: number, y: number, rr: number, vy: number, vx: number, ph: number, amb: number): Bubble => ({
     x, y, r: rr, vy, vy0: vy, vx, ph, amb, glow: 0,
-    stg: false, svx: 0, svy: 0, ao: 0, merging: null, commit: null, mergeR: 0, parent: null,
+    stg: false, ao: 0, merging: null, commit: null, mergeR: 0, parent: null,
   });
   const bubbles: Bubble[] = Array.from({ length: N }, () => {
     const vy = rand(0.25, 0.7);
@@ -194,41 +204,50 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
         if (stagedCount >= MAX_STAGED) break;
         if (bb.stg) continue;
         bb.stg = true;
-        bb.svx = 0;
-        bb.svy = 0;
         bb.ao = Math.hypot(bb.x - ax0, bb.y - ay0) > 2
           ? Math.atan2(bb.y - ay0, bb.x - ax0)
           : stagedCount * 2.39996; // golden angle when coincident (pinned-rand)
         stagedCount++;
       }
     }
-    // 5. Physics pass.
+    // 5. Physics pass. Every position write goes through capStep so no node
+    // ever jumps more than JUMP_MAX px in one tick (FR3); merge completion
+    // is time-based (t − t0 ≥ MERGE_MS), so the clamp can never strand a node.
+    const capStep = (dx: number, dy: number): [number, number] => {
+      const m = Math.hypot(dx, dy);
+      return m <= JUMP_MAX || m === 0 ? [dx, dy] : [(dx * JUMP_MAX) / m, (dy * JUMP_MAX) / m];
+    };
     for (const bb of bubbles) {
       if (bb.merging) {
         const m = bb.merging;
         const k = Math.min(1, (t - m.t0) / MERGE_MS);
         const e = 1 - Math.pow(1 - k, 3);
         if (bb !== m.surv) {
-          bb.x += (m.surv.x - bb.x) * 0.22;
-          bb.y += (m.surv.y - bb.y) * 0.22;
+          const [sx, sy] = capStep((m.surv.x - bb.x) * 0.22, (m.surv.y - bb.y) * 0.22);
+          bb.x += sx;
+          bb.y += sy;
           bb.r = Math.max(0.001, m.r0 * (1 - e));
         } else {
-          bb.x += (mergeCx - bb.x) * 0.04;
-          bb.y += (mergeCy - bb.y) * 0.04;
+          const [sx, sy] = capStep((mergeCx - bb.x) * 0.04, (mergeCy - bb.y) * 0.04);
+          bb.x += sx;
+          bb.y += sy;
           bb.r = m.r0 + (bb.mergeR - m.r0) * e;
         }
         bb.glow += (1 - bb.glow) * LIFT_K;
         continue;
       }
       if (bb.stg) {
-        const w = Math.sin(t * 0.004 + bb.ph) * 3; // the wobble
+        const w = Math.sin(t * 0.004 + bb.ph) * 3; // the wobble moves the ANCHOR only
         const d = 10 + bb.r * 0.45 + w;
-        const gx = ax0 + Math.cos(bb.ao) * d;
-        const gy = ay0 + Math.sin(bb.ao) * d;
-        bb.svx = (bb.svx + (gx - bb.x) * 0.02) * 0.86;
-        bb.svy = (bb.svy + (gy - bb.y) * 0.02) * 0.86;
-        bb.x += bb.svx;
-        bb.y += bb.svy;
+        const dx = ax0 + Math.cos(bb.ao) * d - bb.x;
+        const dy = ay0 + Math.sin(bb.ao) * d - bb.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+          const s = Math.min(STEP_MAX, dist) / dist; // ≤ 0.6 px/tick, no spring
+          const [sx, sy] = capStep(dx * s, dy * s);
+          bb.x += sx;
+          bb.y += sy;
+        }
         bb.glow += (1 - bb.glow) * LIFT_K; // ring fills
         continue;
       }
@@ -310,31 +329,40 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
     }
 
     c.clearRect(0, 0, ctx.w, ctx.h);
-    // Lanes: ambient chain only — commit nodes are excluded so their causal
-    // edge is the explicit parent link. Same 260 px bezier math.
-    const sorted = [...bubbles].filter((bb) => !bb.commit).sort((p, q) => p.y - q.y);
-    c.strokeStyle = ctx.color;
-    c.lineWidth = 1;
-    c.globalAlpha = 0.14;
-    for (let i = 0; i + 1 < sorted.length; i++) {
-      const p = sorted[i];
-      const q = sorted[i + 1];
-      if (q.y - p.y > 260) continue;
-      const my = (p.y + q.y) / 2;
-      c.beginPath();
-      c.moveTo(p.x, p.y);
-      c.bezierCurveTo(p.x, my, q.x, my, q.x, q.y);
-      c.stroke();
+    // FR2 — one parent per node (nearest other node at or below its own line;
+    // equal y → higher index, which keeps the graph acyclic). Live from current
+    // positions, exactly the re-linking the card window already shows — now
+    // expressed as parenthood instead of an anonymous chain. Commit nodes keep
+    // the causal parent chosen at their dwell commit (set at merge completion).
+    for (let i = 0; i < bubbles.length; i++) {
+      const bb = bubbles[i];
+      if (bb.commit) continue;
+      let best = -1;
+      let bd = Infinity;
+      for (let j = 0; j < bubbles.length; j++) {
+        if (j === i || bubbles[j].merging) continue;
+        const q = bubbles[j];
+        if (q.y < bb.y || (q.y === bb.y && j <= i)) continue;
+        const d = Math.hypot(q.x - bb.x, q.y - bb.y);
+        if (d < bd) { bd = d; best = j; }
+      }
+      bb.parent = best === -1 ? null : bubbles[best];
     }
-    // Parent links for live commit nodes (slightly stronger edge).
+    // One unified link pass: every node draws its edge to its parent with the
+    // card's style — bezier child→parent, lineWidth 1, ambient alpha 0.14,
+    // commit 0.22 × top-fade, 260 px cull on ambient edges only (commit edges
+    // keep only the top fade so the ~270 px causal link still draws).
     for (const bb of bubbles) {
-      if (!bb.commit || !bb.parent) continue;
+      if (!bb.parent) continue;
       const p = bb.parent;
-      const fade = Math.max(0, Math.min(1, bb.y / (0.14 * ctx.h)));
+      if (!bb.commit) {
+        if (Math.hypot(p.x - bb.x, p.y - bb.y) > 260) continue;
+      }
+      const fade = bb.commit ? Math.max(0, Math.min(1, bb.y / (0.14 * ctx.h))) : 1;
       const my = (bb.y + p.y) / 2;
       c.strokeStyle = ctx.color;
       c.lineWidth = 1;
-      c.globalAlpha = 0.22 * fade;
+      c.globalAlpha = (bb.commit ? 0.22 : 0.14) * fade;
       c.beginPath();
       if (bb.y <= p.y) {
         c.moveTo(bb.x, bb.y);
