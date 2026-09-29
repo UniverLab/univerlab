@@ -290,10 +290,14 @@ const webSite = {
   .card.is-tapped .card-motif { opacity: 0.85; }
 
   /* ── Quorum — circadian exception: redirects to the ACTIVE day/night tokens
-     (inline --q-day-*/--q-night-* from the registry's circadianPalette, set on
-     the card anchor). Only --surface-* are reassigned; background, color and
-     box-shadow come from the generic flip rule above, so the card can never
-     drift from the registry again. ── */
+     (the inline --q-day-* and --q-night-* vars from the registry's
+     circadianPalette, set on the card anchor). Only --surface-* are reassigned;
+     background, color and box-shadow come from the generic flip rule above, so
+     the card can never drift from the registry again. ──
+     NOTE: keep the glob and the comment's closing delimiter apart — an earlier
+     version spelled the day glob as --q-day- immediately followed by an
+     asterisk and a slash, which closed THIS comment early, glued the leftover
+     prose to the day selector and made the build drop the whole SUN rule. ── */
   html[data-celestial='sun'] .card[data-exp='quorum']:hover,
   html[data-celestial='sun'] .card[data-exp='quorum']:focus-visible,
   html[data-celestial='sun'] .card[data-exp='quorum'].is-tapped {

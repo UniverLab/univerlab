@@ -8,7 +8,7 @@
  * (same style as hero-scale.test.ts), plus a unit test of the exported
  * pure runner selector in src/scripts/backgrounds.ts.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { experiments } from '../lib/experiments';
 import { pickRunner } from '../scripts/backgrounds';
@@ -274,5 +274,94 @@ describe('Cards window — startBackground surface selector', () => {
 
   it('should leave ThemeBackground call sites on the 4-arg page path', () => {
     expect(themeBgSrc).not.toMatch(/bg\s*,/);
+  });
+});
+
+describe('Cards window — CSS comments close only where they were meant to', () => {
+  /** Strip comments the way the CSS parser does: the FIRST close delimiter
+   *  ends the comment, whatever the author intended. A `*` glued to the
+   *  closing slash of a glob (the day/night variable prefix) used to end the
+   *  quorum comment early, and the leftover prose fused itself onto the day
+   *  selector — an invalid qualified rule, so the build silently dropped the
+   *  SUN flip rule. Source-level assertions can't see a rule the build drops,
+   *  so assert the comment structure itself. */
+  const stripComments = (src: string): string => {
+    let out = '';
+    let i = 0;
+    let inComment = false;
+    while (i < src.length) {
+      if (!inComment && src.startsWith('/*', i)) {
+        inComment = true;
+        i += 2;
+        continue;
+      }
+      if (inComment) {
+        const end = src.indexOf('*/', i);
+        if (end === -1) return out + '<<UNTERMINATED COMMENT>>';
+        inComment = false;
+        i = end + 2;
+        continue;
+      }
+      out += src[i];
+      i += 1;
+    }
+    return out;
+  };
+
+  /** Every CSS source the site actually renders: stylesheets + Astro styles. */
+  const cssSources = (): Array<{ file: string; css: string }> => {
+    const root = resolve(__dirname, '..');
+    const out: Array<{ file: string; css: string }> = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const abs = resolve(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name !== '__tests__') walk(abs);
+          continue;
+        }
+        if (entry.name.endsWith('.css')) {
+          out.push({ file: abs, css: readFileSync(abs, 'utf8') });
+        } else if (entry.name.endsWith('.astro')) {
+          const src = readFileSync(abs, 'utf8');
+          for (const m of src.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) {
+            out.push({ file: abs, css: m[1] });
+          }
+        }
+      }
+    };
+    walk(root);
+    return out;
+  };
+
+  it('should not end a comment early or leave one unterminated', () => {
+    const offenders = cssSources()
+      .filter(({ css }) => {
+        const stripped = stripComments(css);
+        return stripped.includes('*/') || stripped.includes('<<UNTERMINATED');
+      })
+      .map((o) => o.file);
+    expect(offenders).toEqual([]);
+  });
+
+  it('should keep the quorum day rule as real rules, not comment debris', () => {
+    // Given Home's style block, comments stripped exactly as a parser would
+    // When the day rule is located, its prelude is just the three selectors —
+    // with an early-closed comment the leftover prose (ornament + delimiter)
+    // rides along in front of them, which is what makes the rule invalid and
+    // the build drop it.
+    const homeStyle = cssSources().find((s) => s.file.endsWith('Home.astro'))!;
+    const stripped = stripComments(homeStyle.css);
+    const valueAt = stripped.indexOf('var(--q-day-bg)');
+    expect(valueAt).toBeGreaterThan(-1);
+    const blockStart = stripped.lastIndexOf('{', valueAt);
+    const prelude = stripped.slice(stripped.lastIndexOf('}', blockStart) + 1, blockStart);
+    expect(prelude).toContain("html[data-celestial='sun'] .card[data-exp='quorum']:hover");
+    expect(prelude).not.toContain('─');
+    expect(prelude).not.toContain('*/');
+    // And every day/night token is still declared on its own side.
+    for (const token of ['bg', 'bg-raise', 'ink', 'ink-dim', 'ink-faint', 'line']) {
+      expect(stripped).toContain(`var(--q-day-${token})`);
+      expect(stripped).toContain(`var(--q-night-${token})`);
+    }
   });
 });
