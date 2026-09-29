@@ -128,10 +128,11 @@ export function pickRunner(theme: Theme, surface?: string): Runner {
 const THEMES: Record<Theme, Runner> = {
   /* Cosmic — motes orbiting a gravity well at (w/2, 0.42h): the universe /
    Pensamiento Cósmico of the main site, with faint links between neighbours.
-   The cursor is a second, moving mass in that same system (R13) — it pulls the
-   motes it passes into temporary orbits and brightens the links between them,
-   so the pointer speaks the product's own language (gravity) instead of
-   blowing generic particles about. /status moves the well to 0.75w so the
+   The cursor is a LENS on that same system (R13) — it never pulls a mote, it
+   only bends their light: motes within 220 px are DRAWN displaced away from the
+   lens (up to 18 px) and brightened, their links likewise, so the pointer
+   speaks the product's own language (gravity) instead of blowing generic
+   particles about. /status moves the well to 0.75w so the
    orbits stay clear of the Mission Log column's text; every other cosmic page
    keeps the centred well. Restores the pre-lvis-home-windows mechanics on
    every cosmic page; the home-only "field" runner is gone. orbit.ts. */
