@@ -724,6 +724,18 @@ export const es: Dict = {
       commits: 'commits',
     },
   },
+  roadmap: {
+    lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },
+    hold: 'en espera',
+    entriesMeta: '{n} entradas del registro · último Sol {sol}',
+    entriesMetaOne: '1 entrada del registro · último Sol {sol}',
+    landed: 'aterrizó Sol {sol}',
+    more: '+{n} más',
+    clearRoadmapFilter: 'Quitar filtro del roadmap',
+    empty: 'Aún no hay nada en el roadmap.',
+    emptyTopic: 'Nada en el roadmap bajo {topic}.',
+    unavailable: 'Roadmap no disponible.',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',

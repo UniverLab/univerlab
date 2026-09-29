@@ -728,6 +728,18 @@ export const en = {
       commits: 'commits',
     },
   },
+  roadmap: {
+    lanes: { now: 'Now', next: 'Next', later: 'Later', idea: 'Idea', done: 'Done' },
+    hold: 'hold',
+    entriesMeta: '{n} log entries · last Sol {sol}',
+    entriesMetaOne: '1 log entry · last Sol {sol}',
+    landed: 'landed Sol {sol}',
+    more: '+{n} more',
+    clearRoadmapFilter: 'Clear roadmap filter',
+    empty: 'Nothing on the roadmap yet.',
+    emptyTopic: 'Nothing on the roadmap under {topic}.',
+    unavailable: 'Roadmap unavailable.',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
