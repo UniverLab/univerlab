@@ -95,6 +95,47 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
     { passive: true, signal: ac.signal }
   );
 
+  /* Third pass — keep the figure out of the hero copy (the spec's WCAG AA
+     constraint on the /quorum lede). Raising the strokes to 0.42 / 0.40 put
+     the old centre anchor's squares and outer arc straight behind the centred
+     lede: measured 3.75:1 (day) and 3.83:1 (night) against a 4.5:1 bar, where
+     the pre-pass strokes managed 3.98 / 5.29. So when this runner paints a
+     full experiment page we read the copy column once — and again on resize
+     and once web fonts settle — and anchor beside it:
+       · the whirling squares start just right of the lede;
+       · their top line clears the header rule (the nav reaches that far right);
+       · the curve's outer tail — the only ink that pokes out to the left of
+         the squares — drops below the lede instead of crossing it.
+     The home Quorum card has no `.exp .lede`, so it keeps the compact centre
+     anchor and fills its window exactly as before. */
+  interface CopyBox { right: number; bottom: number; head: number; tailV: number }
+  let copy: CopyBox | null = null;
+  const readCopy = () => {
+    const el = document.querySelector('.exp .lede');
+    if (!el) { copy = null; return; }
+    const box = el.getBoundingClientRect();
+    const hd = document.querySelector('header');
+    // Lowest unit-v point of the part of the curve left of the squares: the
+    // only part of the figure that can reach back across the copy column.
+    let tailV = Infinity;
+    for (let i = 0; i <= 220; i++) {
+      const th = (i / 220) * thMax;
+      const r = rMin * Math.exp(K * th);
+      if (pu + r * Math.cos(th) < bx && pv + r * Math.sin(th) < tailV) {
+        tailV = pv + r * Math.sin(th);
+      }
+    }
+    copy = {
+      right: box.right + 8,
+      bottom: box.bottom + 8,
+      head: (hd ? hd.getBoundingClientRect().bottom : 56) + 6,
+      tailV: Number.isFinite(tailV) ? tailV : by,
+    };
+  };
+  readCopy();
+  document.fonts?.ready.then(readCopy).catch(() => {});
+  window.addEventListener('resize', readCopy, { passive: true, signal: ac.signal });
+
   return (t) => {
     if (!ctx.canvas.isConnected) {
       ac.abort();
@@ -103,22 +144,19 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
     c.clearRect(0, 0, ctx.w, ctx.h);
     // Fit the tiling to a tall region on the right, static. Third pass: the
     // whole figure (rects, curve and the sparks riding toX/toY) grows 15 %
-    // about its current centre so the outer arc reaches further across the
-    // hero — S feeds every transform, so the anchor fractions stay put.
+    // about its centre so the outer arc reaches further across the hero —
+    // S feeds every transform, so the anchor maths below is all that moves.
     const SCALE = 1.15;
     const S = ((ctx.h * 0.82) / bh) * SCALE;
-    // Anchor: third pass moved the figure out of the hero copy. At 1440 × 900
-    // the old 0.64 / 0.5 anchor sat the golden squares and the arc straight
-    // behind the centred /quorum lede, so the raised 0.42 / 0.40 spiral
-    // dropped the lede to 3.75:1 (day) and 3.83:1 (night) — under the 4.5:1
-    // AA bar the constraint asks us to keep. The figure now starts below the
-    // header rule and right of the copy column: every hero text block (status
-    // line, nav, eyebrow, koan, lede, install bar, ascii block) ends before
-    // x ≈ 1030, and the squares begin at x ≈ 1039 — no stroke lands behind a
-    // glyph, so the lede falls back to its own token contrast (4.30:1 day,
-    // 7.10:1 night — both better than the pre-pass 3.98 / 5.29).
-    const ox = ctx.w * 0.904 - (bx + bw / 2) * S;
-    const oy = ctx.h * 0.64 - (by + bh / 2) * S;
+    // Anchored clear of the copy when there is a copy to clear (page), centred
+    // on the old 0.64 / 0.5 spot otherwise (card window). Measured at
+    // 1440 × 900: no stroke lands behind a glyph, so the lede sits on its own
+    // token contrast — 4.30:1 day, 7.10:1 night, both better than the
+    // pre-pass 3.98 / 5.29.
+    const ox = copy ? copy.right - bx * S : ctx.w * 0.64 - (bx + bw / 2) * S;
+    const oy = copy
+      ? Math.max(copy.head - by * S, copy.bottom - copy.tailV * S)
+      : ctx.h * 0.5 - (by + bh / 2) * S;
     const toX = (u: number) => ox + u * S;
     const toY = (v: number) => oy + v * S;
 
