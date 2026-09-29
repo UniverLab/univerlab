@@ -48,12 +48,14 @@ const {
   noindex = false,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
-// Surfaces that drop the ambient canvas: studio (a lit stage, not drift) and
-// blueprint (cadspec's clean plan — calm and geometric, no animation). Paper
+// Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
+// calm and geometric; its cursor reaction is the CSS grid parallax alone). Paper
 // mounts one too, but its own quiet motif — see backgrounds.ts, which picks it
 // for `data-surface="paper"` instead of the experiment's BgTheme. ghscaff
-// (scaffold) keeps its live drawing.
-const stillSurface = ['studio', 'blueprint'].includes(surface ?? '');
+// (scaffold) keeps its live drawing. studio keeps its canvas: DemoStage's takes
+// runner records and replays the cursor (R13) — the generic drift motes, not the
+// stage itself, were why it used to be dropped.
+const stillSurface = ['blueprint'].includes(surface ?? '');
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
 // Only request the font families a given surface actually uses. Every page

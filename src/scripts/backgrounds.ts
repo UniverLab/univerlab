@@ -6,11 +6,11 @@
 import type { BgTheme as Theme } from '../lib/experiments';
 import { brain } from './brain';
 import { orbit } from './orbit';
-import { createSpotlight } from './spotlight';
 import { bubbles } from './bg-bubbles';
 import { takes } from './takes';
 import { spiral } from './bg-spiral';
 import { paper } from './bg-paper';
+import { scaffold } from './bg-scaffold';
 
 interface Ctx {
   canvas: HTMLCanvasElement;
@@ -708,106 +708,10 @@ const THEMES: Record<Theme, Runner> = {
     };
   },
 
-  /* Scaffold — an orthogonal frame, braced diagonally and bolted at the
-     joints. Ghscaff. */
-  scaffold(ctx) {
-    const { c } = ctx;
-    // Midnight re-tint on the industrial surface only: the registry still
-    // carries copper for OG/home, but the live lattice reads blueprint-violet
-    // behind the glass. c.strokeStyle keeps using ctx.color — the caller value
-    // is swapped here, no second hue is introduced.
-    if (typeof document !== 'undefined' && document.documentElement.dataset.surface === 'industrial') {
-      ctx.color = '#8b7cf6';
-    }
-    const g = 84;
-    let cols = 0;
-    let rows = 0;
-    const dims = () => {
-      cols = Math.ceil(ctx.w / g) + 1;
-      rows = Math.ceil(ctx.h / g) + 1;
-    };
-    dims();
-    type Brace = { gx: number; gy: number; diag: number; t: number; life: number };
-    const braces: Brace[] = [];
-    const add = () =>
-      braces.push({
-        gx: Math.floor(rand(0, cols - 1)),
-        gy: Math.floor(rand(0, rows - 1)),
-        diag: Math.random() < 0.5 ? 0 : 1,
-        t: 0,
-        life: rand(3200, 5600),
-      });
-    for (let i = 0; i < 4; i++) add();
-    let spawnAcc = 0;
-    let prevT = 0;
-    // Cursor-anchored spotlight: one radial violet-white wash following the
-    // pointer, lerped to avoid jitter. Touch parks at 50%/30%; reduced-motion
-    // never reaches here (ThemeBackground returns early).
-    const spot = createSpotlight(ctx);
-    return (t) => {
-      const sp = spot.step();
-      if (!sp) return;
-      if (cols !== Math.ceil(ctx.w / g) + 1) dims();
-      const dt = prevT ? t - prevT : 16;
-      prevT = t;
-      spawnAcc += dt;
-      if (spawnAcc > 1000 && braces.length < 9) {
-        spawnAcc = 0;
-        add();
-      }
-      c.clearRect(0, 0, ctx.w, ctx.h);
-      c.strokeStyle = ctx.color;
-      c.lineWidth = 1;
-      // standing frame — the persistent grid
-      c.globalAlpha = 0.13;
-      c.beginPath();
-      for (let x = 0; x <= cols; x++) {
-        c.moveTo(x * g, 0);
-        c.lineTo(x * g, ctx.h);
-      }
-      for (let y = 0; y <= rows; y++) {
-        c.moveTo(0, y * g);
-        c.lineTo(ctx.w, y * g);
-      }
-      c.stroke();
-      // diagonal braces: paint in quickly, then hold (a persistent lattice that
-      // only fades gently at the very end) — the lines being drawn are the motion
-      for (let i = braces.length - 1; i >= 0; i--) {
-        const b = braces[i];
-        b.t += dt;
-        const k = b.t / b.life;
-        if (k >= 1) {
-          braces.splice(i, 1);
-          continue;
-        }
-        const grow = Math.min(1, k * 12);
-        const fade = k > 0.85 ? 1 - (k - 0.85) / 0.15 : 1;
-        const x = b.gx * g;
-        const y = b.gy * g;
-        c.globalAlpha = 0.5 * fade;
-        c.beginPath();
-        if (b.diag === 0) {
-          c.moveTo(x, y);
-          c.lineTo(x + g * grow, y + g * grow);
-        } else {
-          c.moveTo(x + g, y);
-          c.lineTo(x + g - g * grow, y + g * grow);
-        }
-        c.stroke();
-        if (grow > 0.5) {
-          c.globalAlpha = 0.55 * fade;
-          c.fillStyle = ctx.color;
-          for (const [bx, by] of [[x, y], [x + g, y], [x, y + g], [x + g, y + g]]) {
-            c.fillRect(bx - 1.5, by - 1.5, 3, 3);
-          }
-        }
-      }
-      // ONE cursor-anchored spotlight: violet-white wash over the grid, under
-      // content. Single radial gradient, composited additively on the dark.
-      spot.paint(c, sp.x, sp.y);
-      c.globalAlpha = 1;
-    };
-  },
+  /* Scaffold — the lattice the cursor raises: cells near the pointer build
+     their members in sequence (uprights → ledger → brace) and a re-pass
+     levels them instead of stacking. bg-scaffold.ts (R13 · ghscaff). */
+  scaffold,
 
   /* Takes — the cursor's own gesture becomes a take that the background
      records, normalizes into a score, and replays with a ghost cursor.
