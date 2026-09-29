@@ -1,7 +1,12 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Hoy en la Ciencia — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." bg="cosmic" circadian>
+<!-- `noindex` because the built HTML holds only a heading and a quote: the
+     events come from a client-side fetch of Wikipedia's "On this day" feed, so
+     the page has no content for a crawler to index (Google reported /es/today/
+     as a Soft 404). The sitemap filter in astro.config.mjs excludes it for the
+     same reason — a noindex URL in the sitemap is a reported error. -->
+<BaseLayout title="Hoy en la Ciencia — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." bg="cosmic" circadian noindex>
   <section class="wrap today-page">
     <span class="label">HOY EN LA CIENCIA</span>
     <h1>Hoy</h1>
