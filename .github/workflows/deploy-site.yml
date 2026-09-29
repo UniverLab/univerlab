@@ -235,14 +235,19 @@ jobs:
           # All sitemap page URLs from the BUILD OUTPUT (never the live site).
           # sitemap-*.xml also matches sitemap-index.xml whose <loc> points at
           # the child sitemap file itself, so drop any loc ending in .xml.
+          # `|| true` is load-bearing: with no match grep exits nonzero, and
+          # `set -e`/pipefail would abort this warn-only step after a
+          # successful deploy. An empty URLS lands in the COUNT guard below.
           URLS=$(grep -ho '<loc>[^<]*</loc>' dist/sitemap-*.xml \
             | sed -e 's/<[^>]*>//g' \
             | grep "^https://${HOST}/" \
             | grep -v '\.xml$' \
-            | sort -u)
+            | sort -u || true)
           COUNT=$(printf '%s\n' "$URLS" | grep -c . || true)
           [ "$COUNT" -gt 0 ] || { echo "::warning::IndexNow: no sitemap URLs found — skipping"; exit 0; }
 
+          # `|| true` + empty guard: a failed builder must not abort the
+          # warn-only step with an unset PAYLOAD (set -e / set -u).
           PAYLOAD=$(printf '%s\n' "$URLS" | HOST="$HOST" KEY="$KEY" KEY_LOCATION="$KEY_LOCATION" node -e '
             let data = "";
             process.stdin.on("data", (c) => { data += c; }).on("end", () => {
@@ -254,7 +259,8 @@ jobs:
                 urlList,
               }));
             });
-          ')
+          ' || true)
+          [ -n "$PAYLOAD" ] || { echo "::warning::IndexNow: payload build failed — skipping"; exit 0; }
 
           if [ "${INDEXNOW_DRY_RUN:-0}" = "1" ]; then printf '%s\n' "$PAYLOAD"; exit 0; fi
 
