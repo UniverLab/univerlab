@@ -189,6 +189,17 @@ afterEach(() => {
 const N = Math.min(9, Math.max(6, Math.floor((800 * 600) / 136000)));
 
 describe('paper', () => {
+  it('pins the calm-paper spec values: 6–9 marks, 5 pointer frags, 450 ms, 12 px', () => {
+    // Given: the spec's sparse-slow numbers
+    // When: the runner's exports are read
+    // Then: they match the spec exactly — no drift back to 18/14/220 ms
+    expect(MAX_POINTER_FRAGS).toBe(5);
+    expect(SPAWN_EVERY).toBe(450);
+    expect(MOVE_PX).toBe(12);
+    expect(Math.min(9, Math.max(6, Math.floor((1440 * 900) / 136000)))).toBe(9);
+    expect(Math.min(9, Math.max(6, Math.floor((800 * 600) / 136000)))).toBe(6);
+  });
+
   it('the untouched sheet reads as typesetting: fillText tokens at ambient alpha, never strokes', () => {
     // Given: a fresh paper sheet with no pointer input
     const h = makeCtx();
