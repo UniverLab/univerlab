@@ -150,18 +150,6 @@ const rmStrings = en.roadmap;
         @keyframes entry-rise { from { opacity: 0.1; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       }
     }
-    @media (max-width: 640px) {
-      .topic-index { align-items: flex-start; flex-direction: column; gap: 0.6rem; }
-      .topic-filters { flex-wrap: wrap; max-width: 100%; }
-      .topic-filter { flex: 0 0 auto; }
-      .entry { grid-template-columns: 1fr auto; }
-      .entry time { grid-column: 1 / -1; }
-      .entry .entry-body { grid-column: 1 / -1; }
-      #roadmap.rm-flight { padding-left: 1.4rem; overflow-x: clip; }
-      #roadmap.rm-flight::before { left: 0.3rem; }
-      .rm-dot { left: -1.4rem; }
-      .rm-summary { overflow-wrap: anywhere; }
-    }
     .rm-notice { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); padding: 0.4rem 0.6rem; border-radius: 3px; margin-bottom: 1rem; }
     .rm-clear { margin-bottom: 1rem; }
     .rm-clear-btn { display: inline-flex; align-items: baseline; gap: 0.35rem; padding: 0.3rem 0.65rem; border: none; border-radius: 100px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.04em; cursor: pointer; }
@@ -214,6 +202,21 @@ const rmStrings = en.roadmap;
       .board-col { max-width: 100%; margin-inline: 0; }
       .board-roadmap #roadmap,
       .board-log .log-scroller { max-height: calc(100dvh - 26rem); min-height: 24rem; overflow-y: auto; overscroll-behavior: contain; }
+    }
+    /* Mobile overrides last: media queries add no specificity, so these must
+       follow the base `.rm-dot` / `#roadmap.rm-flight` rules above or they are
+       silently overridden. */
+    @media (max-width: 640px) {
+      .topic-index { align-items: flex-start; flex-direction: column; gap: 0.6rem; }
+      .topic-filters { flex-wrap: wrap; max-width: 100%; }
+      .topic-filter { flex: 0 0 auto; }
+      .entry { grid-template-columns: 1fr auto; }
+      .entry time { grid-column: 1 / -1; }
+      .entry .entry-body { grid-column: 1 / -1; }
+      #roadmap.rm-flight { padding-left: 1.4rem; overflow-x: clip; }
+      #roadmap.rm-flight::before { left: 0.3rem; }
+      .rm-dot { left: -1.5rem; }
+      .rm-summary { overflow-wrap: anywhere; }
     }
   </style>
 

@@ -105,6 +105,36 @@ describe('Sol parity with the Mission Log formatter', () => {
     expect(src).toContain('86400000');
     expect(src).toContain('mission-time');
   });
+
+  it('page inline formatter equals the shared formatter for the same instants', () => {
+    // The page cannot import the lib (is:inline script), so it duplicates the
+    // Sol math. Execute that duplicate against the shared helpers to catch drift
+    // instead of trusting a substring match on the source.
+    const src = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
+    const between = (from: string, to: string): string => {
+      const a = src.indexOf(from);
+      const b = src.indexOf(to);
+      if (a === -1 || b === -1 || b <= a) throw new Error(`cannot isolate ${from}`);
+      return src.slice(a, b);
+    };
+    const body =
+      between('function formatDate', 'function solOf') +
+      between('function solOf', 'function fillTpl');
+    const page = new Function(`${body}; return { formatDate, solOf };`)() as {
+      formatDate: (iso: string) => string;
+      solOf: (iso: string) => number;
+    };
+    for (const iso of [
+      '2026-01-01T00:00:00Z',
+      '2026-09-16T10:00:00Z',
+      '2026-07-18T10:00:00Z',
+      '2024-02-29T23:30:00Z',
+      '2026-12-31T23:59:00Z',
+    ]) {
+      expect(page.solOf(iso)).toBe(solDayOfYear(iso));
+      expect(page.formatDate(iso)).toBe(formatMissionDate(iso));
+    }
+  });
 });
 
 describe('done order', () => {
