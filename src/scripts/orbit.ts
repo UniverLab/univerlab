@@ -1,14 +1,18 @@
 /** Orbit — the cosmic background: motes bound to a gravity well, orbiting and
  *  oscillating around it, with faint links drawn between neighbours. The
  *  universe / Pensamiento Cósmico of the main site, and (R13) the product's own
- *  mechanism: the cursor is a SECOND, MOVING MASS in that same system, not a
- *  wind blowing generic particles. While the pointer has moved within the last
- *  ~1.2 s it pulls on the motes it passes (2.5× the central well, hard-cut at
- *  260 px), so they swing into temporary orbits around it and slingshot away
- *  when it moves on; the motes it carries brighten and their links draw a small
- *  constellation. Park the pointer or leave the window and the mass decays to
- *  zero over ~1.5 s, handing the system back to its single well untouched —
- *  no snap, no freeze. Touch never stirs it.
+ *  mechanism: the cursor is a LENS on that same gravitational system, not a
+ *  wind blowing generic particles. It bends the light of the field around it:
+ *  every mote within 220 px is DRAWN displaced radially away from the lens
+ *  centre by up to 18 px on a 0→1→0 profile (f peaks at 90 px) and brightens by
+ *  up to +0.25 alpha, links between two such motes by up to +0.08 — and it
+ *  NEVER captures: velocities and orbits are exactly the central well's alone,
+ *  identical to a run that never saw a pointer. The lens centre follows the
+ *  pointer with a ~120 ms ease, so the field bends where the cursor has been,
+ *  not snapping where it is; leaving the window or idling 1.5 s fades the lens
+ *  out over 800 ms, handing the draw back to the byte-exact baseline. No mote
+ *  can be collapsed into another — nothing moves, only light bends. Touch never
+ *  lenses.
  *  Restores the pre-lvis-home-windows cosmic mechanics on every cosmic page
  *  (the home-only cursor-seeded "field" runner is gone); /status and /es/status
  *  move the well to 0.75w so the orbits stay clear of the Mission Log column's
@@ -41,27 +45,29 @@ const SOFT = 2000;
 const WELLY = 0.42;
 const LINK2 = 9000; // 95² — the baseline link reach, unchanged
 
-/* The cursor as a second mass. */
-const GP = 35; // 2.5 × G
-const REACH2 = 260 * 260; // the pointer's force is exactly 0 beyond this
-const FRESH = 1200; // ms a move stays "recent" (the mass is at full strength)
-const DECAY = 1500; // ms for the mass to fade to 0 once the pointer parks or leaves
-/* Speed cap — anti-ejection insurance for the cursor, NOT a brake on the well.
-   It bounds what the pointer may ADD to a mote's own orbital speed, so a fast
-   swipe can never fling the system apart. A flat |v| ≤ 2.2 px/frame would be
-   the wrong instrument: measured at 1440×900, the restored baseline runs at a
-   median 2.46 and a p90 of 5.46 px/frame, so a flat cap would slow the whole
-   system down and break the equivalence that makes this runner a faithful
-   restore (a massless step must equal the old cosmic step at EVERY state, not
-   only a fresh one). Hence: |v| ≤ max(|v_well|, VMAX). */
-const VMAX = 2.2;
+/* The cursor as a lens — render-time only. */
+const LENS_RIN = 90; // f peaks (== 1) here
+const LENS_ROUT = 220; // f is exactly 0 at and beyond this
+const LENS_A = 18; // max radial displacement, px
+const LENS_BRIGHT = 0.25; // mote alpha lift at f = 1
+const LENS_LINKBRIGHT = 0.08; // link alpha lift at f_i·f_j = 1
+const LENS_FOLLOW = 120; // ms, e-constant of the lens centre ease
+const LENS_IDLE = 1500; // ms without a move before the lens starts fading
+const LENS_FADE = 800; // ms linear fade-out once fading
+const LENS_RISE = 120; // ms linear fade-in (design choice; mirrors FOLLOW)
 
-/* Capture visuals: the "weaving" cue. */
-const CAP_R2 = 120 * 120; // capture radius
-const CAPK = 0.12; // per-frame lerp of the capture level (≈0.8 s rise/decay at 30fps)
-const CAPMID = 0.5; // capture level at which a mote counts as captured for its links
+/* Radial lensing profile: 0 at d=0 → 1 at d=LENS_RIN → 0 at d=LENS_ROUT, C1 at both
+   seams (sin rise, sin² fall — flat at the rim, which matters: a plain sin fall peaks
+   its slope AT 220 and pairs straddling the rim lose >2 px, see the no-collapse note).
+   Worst compression of a radially-aligned gap is ~0.22·gap, mid-fall-branch only. */
+function lensF(d: number): number {
+  if (d >= LENS_ROUT) return 0;
+  if (d <= LENS_RIN) return Math.sin((Math.PI / 2) * (d / LENS_RIN));
+  const s = Math.sin((Math.PI / 2) * ((LENS_ROUT - d) / (LENS_ROUT - LENS_RIN)));
+  return s * s;
+}
 
-type Mote = { x: number; y: number; vx: number; vy: number; s: number; cap: number };
+type Mote = { x: number; y: number; vx: number; vy: number; s: number };
 
 export function orbit(ctx: OrbitCtx): (t: number) => void {
   const { c } = ctx;
@@ -78,8 +84,8 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
   const N = Math.min(90, Math.floor((ctx.w * ctx.h) / 16000));
   /* Ring spawn about the canvas centre with a tangential velocity — the
      baseline spawn, verbatim, including the exact number and order of
-     Math.random() calls (a, r, s). That parity is what keeps a massless orbit
-     step byte-identical to the old cosmic step. cap starts at 0. */
+     Math.random() calls (a, r, s). That parity is what keeps a lens-free orbit
+     step byte-identical to the old cosmic step. */
   function spawn(x: OrbitCtx): Mote {
     const a = rand(0, Math.PI * 2);
     const r = rand(40, Math.min(x.w, x.h) * 0.5);
@@ -89,21 +95,27 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
       vx: Math.sin(a) * 0.25,
       vy: -Math.cos(a) * 0.25,
       s: rand(0.6, 1.6),
-      cap: 0,
     };
   }
   const motes: Mote[] = Array.from({ length: N }, () => spawn(ctx));
+  /* Scratch for the drawn (lensed) positions and profiles — allocated ONCE, N
+     never changes. Unlit frames store the real coordinates verbatim. */
+  const dsx = new Float64Array(N);
+  const dsy = new Float64Array(N);
+  const fs = new Float64Array(N);
 
   /* Cursor bookkeeping — the document-level house pattern (brain/primitives):
      the full-bleed canvas is pointer-events:none, so a canvas-bound listener
      would never fire, and an AbortController releases both on view navigation.
      Rect math is mandatory: the position is folded into canvas coordinates.
-     Touch never becomes a mass. */
+     Touch never becomes a lens. */
   let px = -9999; // canvas-local; off-screen until a move arrives, so a mote
   let py = -9999; // can never be "near" the pointer before the first event
   let hasPointer = false;
   let lastMove = -Infinity;
-  let mass = 0; // the pointer's gravity strength, 0…1
+  let lx = -9999; // the EASED lens centre — what the field actually bends around
+  let ly = -9999;
+  let strength = 0; // the lens' visibility, 0…1
   let prev = 0;
   const ac = new AbortController();
   document.addEventListener(
@@ -121,7 +133,7 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
   document.addEventListener(
     'pointerout',
     (e: PointerEvent) => {
-      if (!e.relatedTarget) hasPointer = false; // left the window → the mass decays
+      if (!e.relatedTarget) hasPointer = false; // left the window → the lens fades
     },
     { passive: true, signal: ac.signal }
   );
@@ -133,11 +145,23 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
     }
     const dt = prev ? t - prev : 16;
     prev = t;
-    /* A recent move holds the mass at full strength; otherwise it bleeds away
-       over DECAY. Note the freshness test has no lower bound: a handler's
-       performance.now() can sit slightly AHEAD of the next frame's `t`, and a
-       negative difference must read as fresh, not as expired. */
-    mass = hasPointer && t - lastMove < FRESH ? 1 : Math.max(0, mass - dt / DECAY);
+    /* Lens envelope: a recent move holds it lit, otherwise it fades out. Note
+       the freshness test has no lower bound: a handler's performance.now() can
+       sit slightly AHEAD of the next frame's `t`, and a negative difference must
+       read as fresh, not as expired. */
+    if (hasPointer && strength === 0) {
+      lx = px;
+      ly = py;
+    } // the lens forms ON the cursor, never gliding in from off-screen
+    strength =
+      hasPointer && t - lastMove < LENS_IDLE
+        ? Math.min(1, strength + dt / LENS_RISE)
+        : Math.max(0, strength - dt / LENS_FADE); // linear → hits exact 0
+    if (strength > 0) {
+      const k = 1 - Math.exp(-dt / LENS_FOLLOW);
+      lx += (px - lx) * k;
+      ly += (py - ly) * k;
+    }
 
     c.clearRect(0, 0, ctx.w, ctx.h);
     let cx = ctx.w * wellx;
@@ -161,70 +185,70 @@ export function orbit(ctx: OrbitCtx): (t: number) => void {
       const f = G / (dx * dx + dy * dy + SOFT);
       p.vx += dx * f;
       p.vy += dy * f;
-      const wvx = p.vx; // the velocity the well alone gives this mote
-      const wvy = p.vy;
-      // (b) the cursor as a second mass. Same softening, 2.5× the strength, and
-      // a HARD cut at 260 px (the spec asks for exactly zero beyond it; the
-      // largest step that cut can produce is ~0.14 px/frame², invisible).
-      const ex = px - p.x;
-      const ey = py - p.y;
-      const e2 = ex * ex + ey * ey;
-      const pulled = mass > 0 && e2 < REACH2;
-      if (pulled) {
-        const fp = (GP * mass) / (e2 + SOFT);
-        p.vx += ex * fp;
-        p.vy += ey * fp;
-        // (c) speed cap — the cursor may not take a mote past its own orbital
-        // speed, or past VMAX, whichever is higher. Gated on the pull so a
-        // massless step is untouched: Math.hypot rounds, so an ungated cap
-        // would rescale the velocity by a rounding hair and quietly break the
-        // equivalence this whole runner exists to keep.
-        const lim = Math.max(Math.hypot(wvx, wvy), VMAX);
-        const sp2 = p.vx * p.vx + p.vy * p.vy;
-        if (sp2 > lim * lim) {
-          const k = lim / Math.sqrt(sp2);
-          p.vx *= k;
-          p.vy *= k;
-        }
-      }
-      // (d) integrate — the fixed per-frame step of the baseline; the ~30fps
-      // cap in startBackground IS the timestep, so gravity is never dt-scaled
+      // (b) integrate — the fixed per-frame step of the baseline; the ~30fps
+      // cap in startBackground IS the timestep, so gravity is never dt-scaled.
+      // Nothing else touches a velocity: the lens is render-time only, so this
+      // loop is the whole physics and stays byte-equivalent to the legacy cosmic.
       p.x += p.vx;
       p.y += p.vy;
-      // (e) respawn off-screen exactly as the baseline does (±20 margin), which
-      // also resets the capture level
+      // (c) respawn off-screen exactly as the baseline does (±20 margin)
       if (p.x < -20 || p.x > ctx.w + 20 || p.y < -20 || p.y > ctx.h + 20) {
         Object.assign(p, spawn(ctx));
       }
-      // (f) capture: motes the cursor is carrying brighten and thicken, and
-      // relax back over CAPK once the mass dies. Uses the pre-integration
-      // distance — one frame of lag on a ~0.8 s envelope is invisible.
-      p.cap += ((mass > 0 && e2 < CAP_R2 ? 1 : 0) - p.cap) * CAPK;
+    }
+
+    /* The lens, drawn: every mote is DRAWN radially away from the eased lens
+       centre by A·f(d) and brightened by the same f. The real coordinates are
+       untouched, so nothing can be pulled together — a mote's drawn position is
+       exactly p.x/p.y whenever the lens is off or f is 0 (the dsx/dsy stores are
+       verbatim assignments, not x + 0·k arithmetic: unlit frames must stay
+       byte-identical to the baseline). Links bend between the drawn endpoints. */
+    const lit = strength > 0;
+    for (let i = 0; i < motes.length; i++) {
+      const p = motes[i];
+      fs[i] = 0;
+      if (lit) {
+        const ex = p.x - lx;
+        const ey = p.y - ly;
+        const e = Math.hypot(ex, ey); // f(0) === 0, so fi > 0 is the division guard
+        const fi = lensF(e);
+        if (fi > 0) {
+          fs[i] = fi;
+          const k = (LENS_A * strength * fi) / e;
+          dsx[i] = p.x + ex * k; // displaced AWAY from the lens centre
+          dsy[i] = p.y + ey * k;
+          continue;
+        }
+      }
+      dsx[i] = p.x;
+      dsy[i] = p.y;
     }
 
     // faint links — strokeStyle read live (never destructured) so the circadian
-    // palette passes through on every tick (R9)
+    // palette passes through on every tick (R9). Which PAIRS are linked is
+    // decided on the REAL positions (unchanged baseline semantics, so no link
+    // flickers in or out as the lens moves); only the drawn endpoints bend.
     c.strokeStyle = ctx.color;
     for (let i = 0; i < motes.length; i++) {
       for (let j = i + 1; j < motes.length; j++) {
-        const lx = motes[i].x - motes[j].x;
-        const ly = motes[i].y - motes[j].y;
-        if (lx * lx + ly * ly < LINK2) {
-          // two carried motes draw their link brighter — the cursor weaves a
-          // small constellation instead of stirring dust
-          c.globalAlpha = motes[i].cap > CAPMID && motes[j].cap > CAPMID ? 0.12 : 0.05;
+        const dx = motes[i].x - motes[j].x;
+        const dy = motes[i].y - motes[j].y;
+        if (dx * dx + dy * dy < LINK2) {
+          // two lensed motes draw their link brighter — the field glows along
+          // the ring the lens bends, not along a capture constellation
+          c.globalAlpha = 0.05 + LENS_LINKBRIGHT * strength * fs[i] * fs[j];
           c.beginPath();
-          c.moveTo(motes[i].x, motes[i].y);
-          c.lineTo(motes[j].x, motes[j].y);
+          c.moveTo(dsx[i], dsy[i]);
+          c.lineTo(dsx[j], dsy[j]);
           c.stroke();
         }
       }
     }
     c.fillStyle = ctx.color;
-    for (const p of motes) {
-      c.globalAlpha = 0.7 + 0.3 * p.cap; // 0.7 idle → 1.0 fully captured
+    for (let i = 0; i < motes.length; i++) {
+      c.globalAlpha = 0.7 + LENS_BRIGHT * strength * fs[i]; // 0.7 baseline → 0.95 peak
       c.beginPath();
-      c.arc(p.x, p.y, p.s + 0.4 * p.cap, 0, Math.PI * 2);
+      c.arc(dsx[i], dsy[i], motes[i].s, 0, Math.PI * 2);
       c.fill();
     }
     c.globalAlpha = 1;

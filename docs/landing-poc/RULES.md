@@ -46,6 +46,7 @@ Passing references:
 - Canopy: the pointer seeds Brian's Brain clusters, like the TUI.
 - cadSpec: the pointer makes declared geometry appear.
 
-Applies next to: home/status orbit, demostage (takes), ghscaff (raise),
-texforge (compile), gitkit (commit). Astro and Quorum are explicitly kept
+Applies next to: home/status orbit — allí el cursor es una lente sobre el sistema gravitatorio
+del lab: *the cursor is a lens on the lab's gravitational system — it bends the light, it
+never captures* —, demostage (takes), ghscaff (raise), texforge (compile), gitkit (commit). Astro and Quorum are explicitly kept
 as they are by the user's decision.
