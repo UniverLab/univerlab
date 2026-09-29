@@ -101,30 +101,45 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
       return;
     }
     c.clearRect(0, 0, ctx.w, ctx.h);
-    // Fit the tiling to a tall region on the right, static.
-    const S = (ctx.h * 0.82) / bh;
-    const ox = ctx.w * 0.64 - (bx + bw / 2) * S;
-    const oy = ctx.h * 0.5 - (by + bh / 2) * S;
+    // Fit the tiling to a tall region on the right, static. Third pass: the
+    // whole figure (rects, curve and the sparks riding toX/toY) grows 15 %
+    // about its current centre so the outer arc reaches further across the
+    // hero — S feeds every transform, so the anchor fractions stay put.
+    const SCALE = 1.15;
+    const S = ((ctx.h * 0.82) / bh) * SCALE;
+    // Anchor: third pass moved the figure out of the hero copy. At 1440 × 900
+    // the old 0.64 / 0.5 anchor sat the golden squares and the arc straight
+    // behind the centred /quorum lede, so the raised 0.42 / 0.40 spiral
+    // dropped the lede to 3.75:1 (day) and 3.83:1 (night) — under the 4.5:1
+    // AA bar the constraint asks us to keep. The figure now starts below the
+    // header rule and right of the copy column: every hero text block (status
+    // line, nav, eyebrow, koan, lede, install bar, ascii block) ends before
+    // x ≈ 1030, and the squares begin at x ≈ 1039 — no stroke lands behind a
+    // glyph, so the lede falls back to its own token contrast (4.30:1 day,
+    // 7.10:1 night — both better than the pre-pass 3.98 / 5.29).
+    const ox = ctx.w * 0.904 - (bx + bw / 2) * S;
+    const oy = ctx.h * 0.64 - (by + bh / 2) * S;
     const toX = (u: number) => ox + u * S;
     const toY = (v: number) => oy + v * S;
 
     // Whirling squares — quiet but legible structure. The old 0.15 / 0.19
     // washed out on the 0.68 canvas opacity, so the golden geometry read as
-    // nothing at all; raised to a visible-but-quiet level per circadian
-    // surface (day on sand: 0.18 / 0.22, night on espresso: 0.20 / 0.24).
+    // nothing at all; raised again on the third pass so the figure reads on
+    // the cream day palette (day on sand: 0.30 / 0.42, night on espresso:
+    // 0.28 / 0.40).
     // Read every frame so a celestial scrub repaints the right level.
     const isDay = document.documentElement.dataset.celestial === 'sun';
     c.strokeStyle = A;
-    c.lineWidth = 1;
-    c.globalAlpha = isDay ? 0.18 : 0.2;
+    c.lineWidth = 1.2;
+    c.globalAlpha = isDay ? 0.3 : 0.28;
     for (const q of squares) {
       c.strokeRect(toX(q.x), toY(q.y), q.s * S, q.s * S);
     }
 
     // The golden spiral through them.
     c.lineCap = 'round';
-    c.lineWidth = 1.3;
-    c.globalAlpha = isDay ? 0.22 : 0.24;
+    c.lineWidth = 1.8;
+    c.globalAlpha = isDay ? 0.42 : 0.4;
     c.beginPath();
     for (let i = 0; i <= 220; i++) {
       const th = (i / 220) * thMax;
