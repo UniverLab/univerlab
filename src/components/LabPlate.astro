@@ -1,0 +1,78 @@
+---
+import { byId, type ExperimentId } from '../lib/experiments';
+import { getLang, useTranslations } from '../i18n';
+import { startSolLabel } from '../lib/mission-time';
+
+interface Props { id: ExperimentId; }
+const { id } = Astro.props;
+const exp = byId(id);
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const statusLabel = t.status[exp.status];
+const solLabel = exp.startDate ? startSolLabel(exp.startDate) : null;
+---
+<p class="lab-plate" translate="no"
+   data-exp-id={exp.id} data-exp-name={exp.name}
+   data-roadmap-label={t.plate.roadmap} data-lastlog-label={t.plate.lastLog}
+   data-dash={t.plate.none} data-lanes={JSON.stringify(t.roadmap.lanes)}
+   data-status-label={statusLabel} data-start-sol={solLabel ?? ''}>
+  <span class="lp-num">{exp.number}</span>
+  <span class="lp-sep"> · </span><span class="lp-status">{statusLabel}</span>
+  {solLabel && (<><span class="lp-sep"> · </span><span class="lp-sol">{solLabel}</span></>)}
+  <span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap>—</span></span>
+  <span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog>{t.plate.lastLog}: —</span>
+</p>
+
+<style>
+  .lab-plate {
+    display: flex; flex-wrap: nowrap; align-items: baseline; gap: 0;
+    max-width: var(--max-w, 70rem); margin: 0 auto;
+    padding: 0.9rem var(--page-gutter) 0;
+    min-height: 1.5rem;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    color: var(--ink-dim); white-space: nowrap; overflow: hidden;
+  }
+  .lab-plate .lp-num, .lab-plate .lp-status { color: var(--essence); }
+  .lab-plate .lp-sep { color: var(--ink-faint); }
+  .lab-plate .lp-lastlog { overflow: hidden; text-overflow: ellipsis; }
+</style>
+
+<script>
+  import { loadBoardData } from '../lib/announcements-client';
+  import { selectEntries, firstNonDone, normalizeTopic } from '../lib/field-notes';
+  import { formatSolLabel } from '../lib/mission-time';
+
+  (async () => {
+    const el = document.querySelector<HTMLElement>('.lab-plate[data-exp-id]');
+    if (!el) return;
+    let data: Awaited<ReturnType<typeof loadBoardData>>;
+    try {
+      data = await loadBoardData();
+    } catch {
+      return;
+    }
+    if (!data) return;
+    const id = el.dataset.expId ?? '';
+    const name = el.dataset.expName ?? '';
+    const exp = { id, name };
+    const mine = data.roadmap.filter((i) => normalizeTopic(i.topic) === id);
+    const state = firstNonDone(mine, id);
+    const rmSpan = el.querySelector('[data-plate-roadmap]');
+    if (state && rmSpan) {
+      let label = state;
+      try {
+        const lanes = el.dataset.lanes ? JSON.parse(el.dataset.lanes) : null;
+        if (lanes && typeof lanes[state] === 'string') label = lanes[state];
+      } catch {
+        // Keep the raw state.
+      }
+      rmSpan.textContent = label;
+    }
+    const newest = selectEntries(data.entries, exp, 1)[0];
+    const ll = el.querySelector('[data-plate-lastlog]');
+    if (newest && ll) {
+      const lastLogLabel = el.dataset.lastlogLabel ?? 'last log';
+      ll.textContent = `${lastLogLabel}: ${formatSolLabel(newest.date)} \u201c${newest.title}\u201d`;
+    }
+  })();
+</script>

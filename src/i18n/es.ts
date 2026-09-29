@@ -736,6 +736,12 @@ export const es: Dict = {
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
   },
+  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—' },
+  notes: {
+    heading: 'Notas de campo',
+    empty: 'Aún no hay notas de campo — aquí hablará la bitácora.',
+    statusLink: 'Bitácora →',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',

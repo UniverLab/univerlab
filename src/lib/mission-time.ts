@@ -24,3 +24,8 @@ export function formatMissionDate(iso: string): string {
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   return 'TERRA ' + y + ' \u00b7 Sol ' + sol + ' \u00b7 ' + hh + ':' + mm + ' UTC';
 }
+
+/** Sol of an experiment's registry startDate (local-midnight parse, same as the genesis line). The plate's "Sol n since startDate". */
+export function startSolLabel(startDate: string): string {
+  return formatSolLabel(startDate + 'T00:00:00');
+}

@@ -740,6 +740,12 @@ export const en = {
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
   },
+  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—' },
+  notes: {
+    heading: 'Field notes',
+    empty: 'No field notes yet — this is where the log will speak.',
+    statusLink: 'Mission Log →',
+  },
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
