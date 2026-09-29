@@ -9,6 +9,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      indexnow:
+        description: 'Submit sitemap to IndexNow after deploy'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -206,3 +212,58 @@ jobs:
           # whatever the index actually advertises.
           skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//')
           expect_content_type "$skill" 'text/markdown; charset=utf-8'
+
+      # IndexNow notifies Bing (and through it Copilot) plus the other
+      # participating engines about changed pages on each release deploy.
+      # Runs after the verify step so a failed verify blocks notification.
+      # Warn-only by design: any non-200/202 status or network error is
+      # reported as a workflow warning and never fails the deploy.
+      - name: Notify IndexNow
+        if: github.event_name != 'workflow_dispatch' || inputs.indexnow == true
+        working-directory: univerlab
+        env:
+          # IndexNow keys are public by design (served at the keyLocation URL).
+          INDEXNOW_KEY: 3af77270f75a7a2e2f2c55b12e13bba7
+        run: |
+          set -euo pipefail
+          HOST="univerlab.org"
+          KEY="${INDEXNOW_KEY}"
+          KEY_LOCATION="https://${HOST}/${KEY}.txt"
+
+          test -f "dist/${KEY}.txt" || { echo "::warning::IndexNow key file dist/${KEY}.txt missing — skipping"; exit 0; }
+
+          # All sitemap page URLs from the BUILD OUTPUT (never the live site).
+          # sitemap-*.xml also matches sitemap-index.xml whose <loc> points at
+          # the child sitemap file itself, so drop any loc ending in .xml.
+          URLS=$(grep -ho '<loc>[^<]*</loc>' dist/sitemap-*.xml \
+            | sed -e 's/<[^>]*>//g' \
+            | grep "^https://${HOST}/" \
+            | grep -v '\.xml$' \
+            | sort -u)
+          COUNT=$(printf '%s\n' "$URLS" | grep -c . || true)
+          [ "$COUNT" -gt 0 ] || { echo "::warning::IndexNow: no sitemap URLs found — skipping"; exit 0; }
+
+          PAYLOAD=$(printf '%s\n' "$URLS" | HOST="$HOST" KEY="$KEY" KEY_LOCATION="$KEY_LOCATION" node -e '
+            let data = "";
+            process.stdin.on("data", (c) => { data += c; }).on("end", () => {
+              const urlList = data.split("\n").map((s) => s.trim()).filter(Boolean);
+              process.stdout.write(JSON.stringify({
+                host: process.env.HOST,
+                key: process.env.KEY,
+                keyLocation: process.env.KEY_LOCATION,
+                urlList,
+              }));
+            });
+          ')
+
+          if [ "${INDEXNOW_DRY_RUN:-0}" = "1" ]; then printf '%s\n' "$PAYLOAD"; exit 0; fi
+
+          BODY=$(mktemp)
+          # `|| true` is load-bearing: curl's nonzero exit on network error must
+          # not fail the deploy under `set -e`; every path below exits 0.
+          STATUS=$(curl -sS -o "$BODY" -w '%{http_code}' -X POST 'https://api.indexnow.org/indexnow' \
+            -H 'Content-Type: application/json; charset=utf-8' --data "$PAYLOAD" || true)
+          echo "IndexNow submission: HTTP ${STATUS:-000}, ${COUNT} URLs"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "202" ]; then exit 0; fi
+          echo "::warning::IndexNow returned HTTP ${STATUS:-000}: $(cat "$BODY")"
+          exit 0
