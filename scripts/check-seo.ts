@@ -1,8 +1,9 @@
 /**
  * Fails the build when the site would reproduce the indexing errors Google
- * reported for univerlab.org on 2026-09-28.
+ * reported for univerlab.org on 2026-09-28, or the meta-description errors
+ * Bing reported on 2026-09-29.
  *
- * Four invariants, each one a lever that actually moves a metric in Search
+ * Five invariants, each one a lever that actually moves a metric in Search
  * Console:
  *
  *   1. Every `<loc>` in the built sitemap maps to a real HTML file that is not
@@ -14,6 +15,9 @@
  *      one that mints fresh broken URLs every time a repo's docs change.
  *   4. `llms.txt` only links canonical trailing-slash routes — every
  *      no-slash link is a redirect hop for the agents that read the file.
+ *   5. Every indexable page carries a distinct meta description of 120–160
+ *      characters — Bing's "meta description too short" report. Missing, too
+ *      short, too long, or duplicated descriptions fail with the URL + length.
  *
  * This is the half of the check `astro.config.mjs`'s sitemap `filter` cannot
  * do: the filter sees URL strings at build time, this sees `dist/`. Wired as
@@ -154,6 +158,11 @@ export function checkDocsLinks(dist = DIST): Failure[] {
   return failures;
 }
 
+/** Matches BaseLayout's `<meta name="description" …>` — Astro always emits
+ *  double-quoted attributes, so the value may hold apostrophes but never a
+ *  bare double quote. */
+const META_DESC = /<meta\s+name="description"\s+content="([^"]*)"/i;
+
 // --------------------------------------------------------------- llms.txt
 
 /**
@@ -174,8 +183,43 @@ export function checkLlmsTxt(dist = DIST): Failure[] {
   return failures;
 }
 
+// ----------------------------------------------------- meta descriptions
+
+/**
+ * Every indexable page (each dist index.html without `noindex`) must carry a
+ * distinct meta description of 120–160 characters — Bing's "meta description
+ * too short" report of 2026-09-29. A missing tag, a length outside the window,
+ * or an exact duplicate across two indexable pages each fail, naming the URL
+ * and its length. `404.html` is outside the glob by construction.
+ */
+export function checkMetaDescriptions(dist = DIST): Failure[] {
+  const failures: Failure[] = [];
+  const seen = new Map<string, string>();
+  for (const file of globSync('**/index.html', { cwd: dist })) {
+    const html = readFileSync(resolve(dist, file), 'utf-8');
+    if (NOINDEX.test(html)) continue;
+    const url = file === 'index.html' ? '/' : `/${file.replace(/index\.html$/, '')}`;
+    const m = html.match(META_DESC);
+    if (!m) {
+      failures.push(`${url}: no meta description`);
+      continue;
+    }
+    const desc = m[1];
+    if (desc.length < 120 || desc.length > 160) {
+      failures.push(`${url}: description is ${desc.length} chars (want 120–160)`);
+    }
+    const first = seen.get(desc);
+    if (first !== undefined) {
+      failures.push(`${url}: description duplicates ${first} (${desc.length} chars)`);
+    } else {
+      seen.set(desc, url);
+    }
+  }
+  return failures;
+}
+
 export function checkAll(dist = DIST): Failure[] {
-  return [...checkSitemap(dist), ...checkRedirects(dist), ...checkDocsLinks(dist), ...checkLlmsTxt(dist)];
+  return [...checkSitemap(dist), ...checkRedirects(dist), ...checkDocsLinks(dist), ...checkLlmsTxt(dist), ...checkMetaDescriptions(dist)];
 }
 
 function main(): void {

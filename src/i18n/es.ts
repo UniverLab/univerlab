@@ -6,7 +6,7 @@ export const es: Dict = {
   meta: {
     title: 'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — UniverLab',
     description:
-      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, sin dependencias de runtime.',
+      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -178,7 +178,7 @@ export const es: Dict = {
       title:
         'LaTeX con diagramas Mermaid — TeXForge',
       description:
-        'Un solo binario, sin instalar una distribución de LaTeX. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para que los lea un agente.',
+        'Un solo binario, sin distribución de LaTeX que instalar. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
@@ -226,7 +226,7 @@ export const es: Dict = {
       title:
         'Los git hooks están desaprovechados. GitKit los pone a trabajar.',
       description:
-        'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
+        'Hooks, .gitignore, .gitattributes y config en un flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node ni Python.',
       koan: '// el ritual, automatizado',
       hero: {
         wizard: {
@@ -282,7 +282,7 @@ export const es: Dict = {
       title:
         'Crea repos de GitHub con las convenciones ya aplicadas — ghScaff',
       description:
-        'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit.',
+        'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit — idempotente y seguro de reaplicar.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
         'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>wizard interactivo</strong> — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
@@ -379,7 +379,7 @@ export const es: Dict = {
       title:
         'Benchmarking de denoising astronómico — Astro Denoise',
       description:
-        'Una propuesta de investigación evaluada por la ciencia que recupera, no por lo limpia que se ve la imagen.',
+        'Una propuesta de investigación para un benchmark reproducible de métodos de denoising en imágenes simuladas del Observatorio Rubin — evaluada por ciencia.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
       lede:
         'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
@@ -454,7 +454,7 @@ export const es: Dict = {
       title:
         'Demos de terminal reproducibles, como código — DemoStage',
       description:
-        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo después de cada cambio; exporta gif o mp4.',
+        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif o mp4 — versionado, re-ejecutable y comparable.',
       koan: '// el demo es el código fuente',
       lede:
         'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
@@ -491,6 +491,8 @@ export const es: Dict = {
     kicker: 'Manifiesto',
     title: 'Pensamiento Cósmico',
     sub: 'Una filosofía de la continuidad de la conciencia',
+    description:
+      'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
       '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
     purposeTitle: 'Qué valoramos',
@@ -607,7 +609,7 @@ export const es: Dict = {
     kicker: 'Ideas archivadas',
     title: 'El Archivo',
     description:
-      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y por qué murió. No es un roadmap, es un registro.',
+      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y la razón honesta de por qué murió. Lo que muere aquí puede vivir en otro lugar.',
     intro:
       'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
@@ -667,7 +669,7 @@ export const es: Dict = {
     kicker: 'El laboratorio',
     title: 'Colaboradores',
     description:
-      'Las personas y modelos de IA detrás de UniverLab — fundador, colaboradores y los modelos de lenguaje que trabajan con nosotros.',
+      'El fundador, los colaboradores y los modelos de lenguaje detrás de UniverLab — cada experimento acepta issues y pull requests enfocados. Tú, quizá.',
     founder: {
       role: 'Fundador',
       name: 'Jheison Martinez',
@@ -716,7 +718,7 @@ export const es: Dict = {
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
-    description: 'Sigue el Mission Log de UniverLab por RSS.',
+    description: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
     heading: 'RSS',
     intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
     copy: 'Copiar',

@@ -26,10 +26,12 @@ import {
 import {
   checkDocsLinks,
   checkLlmsTxt,
+  checkMetaDescriptions,
   checkRedirects,
   checkSitemap,
   htmlFileForPath,
 } from '../../scripts/check-seo';
+import { composeDocsDescription, truncateAtWord } from '../lib/docs-description';
 
 const ROOT = resolve(__dirname, '../..');
 const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
@@ -441,5 +443,128 @@ describe('check-seo', () => {
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
+  });
+});
+
+describe('checkMetaDescriptions', () => {
+  const desc = (n: number, ch = 'x') => ch.repeat(n);
+  const meta = (d: string) => `<meta name="description" content="${d}" />`;
+
+  it('passes distinct descriptions inside 120–160', () => {
+    const dist = distFixture({
+      'index.html': page(meta(desc(140, 'a'))),
+      'canopy/index.html': page(meta(desc(160, 'b'))),
+    });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual([]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a too-short description with URL and length', () => {
+    const dist = distFixture({ 'index.html': page(meta(desc(99, 'a'))) });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual(['/: description is 99 chars (want 120–160)']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a too-long description with URL and length', () => {
+    const dist = distFixture({ 'gitkit/docs/hooks/index.html': page(meta(desc(194, 'h'))) });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual([
+        '/gitkit/docs/hooks/: description is 194 chars (want 120–160)',
+      ]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a missing description tag', () => {
+    const dist = distFixture({ 'index.html': page() });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual(['/: no meta description']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('skips noindex pages', () => {
+    const dist = distFixture({ 'today/index.html': page(NOINDEX + meta(desc(40, 't'))) });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual([]);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+
+  it('flags an exact duplicate across two indexable pages', () => {
+    const shared = desc(150, 'd');
+    const dist = distFixture({
+      'index.html': page(meta(shared)),
+      'es/index.html': page(meta(shared)),
+    });
+    try {
+      expect(checkMetaDescriptions(dist)).toEqual(['/es/: description duplicates / (150 chars)']);
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('composeDocsDescription', () => {
+  const TAGLINE = 'Guided git repository setup — hooks, ignores, attributes, and config in one flow.';
+
+  it('extends a short frontmatter description with the experiment suffix', () => {
+    const out = composeDocsDescription({
+      description: 'The wizard, the status overview, and clone-and-configure in one command.',
+      title: 'Quick Start',
+      expName: 'GitKit',
+      tagline: TAGLINE,
+    });
+    expect(out.startsWith('The wizard, the status overview, and clone-and-configure in one command. GitKit documentation — ')).toBe(true);
+    expect(out.length).toBeLessThanOrEqual(160);
+    expect(out).not.toMatch(/[.,;:!?—–\-…'"')\]]$/);
+  });
+
+  it('uses an in-range description as is, including the 140 and 160 boundaries', () => {
+    const exactly140 = 'Demos as Code — record a terminal session, normalize it into a clean declarative score, and compile it to gif, mp4, or an opt-in SVG poster.';
+    expect(exactly140.length).toBe(140);
+    expect(composeDocsDescription({ description: exactly140, title: 'T', expName: 'E', tagline: TAGLINE })).toBe(exactly140);
+    const exactly160 = `x${'y'.repeat(158)}z`;
+    expect(exactly160.length).toBe(160);
+    expect(composeDocsDescription({ description: exactly160, title: 'T', expName: 'E', tagline: TAGLINE })).toBe(exactly160);
+    const mid = 'Self-contained MCP server and TUI for orchestrating AI agent sessions, background tasks, and file event triggers with scheduling built right in.';
+    expect(composeDocsDescription({ description: mid, title: 'T', expName: 'E', tagline: TAGLINE })).toBe(mid);
+  });
+
+  it('cuts an over-long description at a word boundary', () => {
+    const out = composeDocsDescription({
+      description:
+        'Built-in hooks (conventional commits, no-body messages, AI trailer rejection, secret detection, branch naming, invisible Unicode detection, user-defined message rules) and custom shell commands.',
+      title: 'Hooks',
+      expName: 'GitKit',
+      tagline: TAGLINE,
+    });
+    expect(out.length).toBeLessThanOrEqual(160);
+    expect(out).not.toContain('GitKit documentation');
+    expect(out).not.toMatch(/[.,;:!?—–\-…'"')\]]$/);
+  });
+
+  it('falls back to the title when the frontmatter description is missing', () => {
+    const out = composeDocsDescription({
+      title: 'ADR: Recipes — Installable Graph and Node Designs',
+      expName: 'Canopy',
+      tagline: 'The runtime layer for AI agents that need memory, scheduling, and each other.',
+    });
+    expect(out.startsWith('ADR: Recipes — Installable Graph and Node Designs Canopy documentation — ')).toBe(true);
+    expect(out.length).toBeLessThanOrEqual(160);
+  });
+
+  it('truncateAtWord never splits a word and strips trailing punctuation', () => {
+    expect(truncateAtWord('alpha beta, gamma', 11)).toBe('alpha beta');
+    expect(truncateAtWord('short', 160)).toBe('short');
   });
 });

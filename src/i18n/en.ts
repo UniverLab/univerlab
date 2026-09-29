@@ -9,7 +9,7 @@ export const en = {
     // agree instead of describing two different things.
     title: 'Open-source CLI tools for LaTeX, git, CAD and AI agents — UniverLab',
     description:
-      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, no runtime dependencies.',
+      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, installable today, reproducible, with docs that ship alongside the code.',
   },
   nav: {
     experiments: 'Experiments',
@@ -284,7 +284,7 @@ export const en = {
       title:
         'Create GitHub repos with conventions enforced — ghScaff',
       description:
-        'An interactive wizard that scaffolds a repository and applies labels, branch protection and status checks from the start.',
+        'An interactive wizard that scaffolds a repository and applies labels, branch protection and status checks from the start — idempotent and safe to re-run.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
         'ghScaff raises the whole structure in one interactive <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
@@ -381,7 +381,7 @@ export const en = {
       title:
         'Benchmarking astronomical denoising — Astro Denoise',
       description:
-        'A research proposal evaluated on the science it recovers, not on how clean the image looks.',
+        'A research proposal for a reproducible benchmark of denoising methods on simulated Rubin Observatory images — scored on the science it recovers, not the look.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
         'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
@@ -456,7 +456,7 @@ export const en = {
       title:
         'Reproducible terminal demos as code — DemoStage',
       description:
-        'An asciinema alternative where the demo is a file, not a take. Re-record it after every change; export gif or mp4.',
+        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif or mp4 — version-controlled and diffable.',
       koan: '// the demo is the source',
       lede:
         'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',
@@ -495,6 +495,8 @@ export const en = {
     kicker: 'Manifesto',
     title: 'Pensamiento Cósmico',
     sub: 'A philosophy of the continuity of consciousness',
+    description:
+      'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
     epigraph:
       '«Wonder at the existence of consciousness is the root of all motivation for continuity.»',
     purposeTitle: 'What we value',
@@ -611,7 +613,7 @@ export const en = {
     kicker: 'Archived ideas',
     title: 'The Archive',
     description:
-      'Ideas that lived and were abandoned — each recorded with what it was and why it died. Not a roadmap, a record.',
+      'Ideas that lived and were abandoned — each recorded with what it was and the honest reason it died. Kept because what dies here may live elsewhere.',
     intro:
       'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a record.',
     what: 'What it was',
@@ -671,7 +673,7 @@ export const en = {
     kicker: 'The laboratory',
     title: 'Collaborators',
     description:
-      'The people and AI models behind UniverLab — founder, contributors, and the language models that work alongside us.',
+      'The founder, contributors and language models behind UniverLab — every experiment takes issues and focused pull requests. Your help is genuinely welcome.',
     founder: {
       role: 'Founder',
       name: 'Jheison Martinez',
@@ -720,7 +722,7 @@ export const en = {
   feed: {
     kicker: 'Feed',
     title: 'RSS — UniverLab',
-    description: 'Follow the UniverLab Mission Log via RSS.',
+    description: 'The UniverLab Mission Log is published as an RSS feed you can follow from your own reader — any reader works, just paste the URL and stay current.',
     heading: 'RSS',
     intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
     copy: 'Copy',

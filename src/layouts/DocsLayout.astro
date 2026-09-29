@@ -1,7 +1,9 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import { byId } from '../lib/experiments';
+import { composeDocsDescription } from '../lib/docs-description';
 import { getLang, useTranslations } from '../i18n';
+import { en as enDict } from '../i18n/en';
 
 interface DocLink { slug: string; title: string; }
 interface Props {
@@ -15,11 +17,15 @@ const { id, title, description, links, current } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+// Docs are English-only, so the composer always gets the en tagline even
+// though the chrome around it is localized.
+const enTagline = enDict.experiments[id as keyof typeof enDict.experiments]?.tagline ?? '';
+const metaDescription = composeDocsDescription({ description, title, expName: exp.name, tagline: enTagline });
 // Trailing slash is canonical (astro.config.mjs `trailingSlash: 'always'`);
 // without it Cloudflare Pages answers every docs link with a 308.
 const base = `/${id}/docs/`;
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} circadian mutedCanvas>
+<BaseLayout title={`${title} · ${exp.name} docs`} description={metaDescription} bg={exp.bg} circadian mutedCanvas>
   <div class="wrap docs">
     <aside>
       <a class="back label" href={`/${id}/`}>← {exp.name}</a>
