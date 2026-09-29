@@ -13,8 +13,10 @@ const spectrumBars = [21, 31, 44, 61, 77, 89, 79, 64, 48, 34, 22];
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
   <p slot="hero-mark" class="ascii-motif mono" aria-hidden="true">{exp.motif}</p>
 
-  <!-- The real terminal/export sequence is the Altius thermal-spectrum hero. -->
-  <Fragment slot="hero-visual">
+  <!-- Below the hero (before genesis) is the Altius thermal-spectrum figure:
+       the text hero with CTAs, install bar and banner reads first; the fake
+       player + thermal bars close the stage. -->
+  <Fragment slot="before-genesis">
     <div class="stage">
       <figure class="player" id="demo-player">
         <div class="bar mono">
@@ -164,15 +166,16 @@ $ demo export gif,mp4
   :global(html[data-surface='studio'] .exp .band-dark .features li) { color: var(--ink-dim); border-bottom-color: var(--line); }
   :global(html[data-surface='studio'] .exp .band-dark .features code) { color: #f7f6ff; }
 
-  /* The origin story is layout-owned and sits between the dark hero and the
+  /* The origin story is layout-owned and sits between the hero figure and the
      peach slots band. surfaces.css (preserved block) washes it peach, which
      collapses altius.md's section rhythm — dark hero → dark band → light peach
      → dark solutions — into dark → peach → peach, and leaves the page with no
      dark/dark/peach beat anywhere. Put the row back on the obsidian canvas:
      two dark bands now precede the first Vapor Peach break, and its inks
      invert back with the background (Flare eyebrow, Linen body — the row's
-     previous obsidian-on-peach values would sit at 1:1 on this canvas). */
-  :global(html[data-surface='studio'] .exp .genesis-row) { color: var(--ink); background: var(--bg); }
+     previous obsidian-on-peach values would sit at 1:1 on this canvas).
+     The 82% veil lets the takes trail show through. */
+  :global(html[data-surface='studio'] .exp .genesis-row) { color: var(--ink); background: color-mix(in srgb, var(--bg) 82%, transparent); }
   :global(html[data-surface='studio'] .genesis-row .genesis .label) { color: var(--flare); }
   :global(html[data-surface='studio'] .genesis-row .genesis .prose) { color: var(--ink-dim); }
 
@@ -182,11 +185,12 @@ $ demo export gif,mp4
      `max-width: none` makes it full-bleed like .band-light/.band-dark while
      the inner cap keeps the 52rem measure. Local token inversion re-dresses
      the whole section: Obsidian body, Warm Ash hairlines, Signal Red emphasis
-     (7.41:1 on peach). Resulting rhythm:
-     hero(D) · origin(D) · slots(P) · commands(D) · faq(P) · prev/next+footer(D) */
+     (7.41:1 on peach). The 88% veil lets the takes trail show through.
+     Resulting rhythm:
+     hero(D) · stage · origin(D) · slots(P) · commands(D) · faq(P) · prev/next+footer(D) */
   :global(html[data-surface='studio'] .exp .faq-section) {
     max-width: none;
-    background: var(--peach);
+    background: color-mix(in srgb, var(--peach) 88%, transparent);
     color: #190501;
     padding-block: 3.5rem;
     padding-inline: max(var(--space), calc(50% - 26rem));
