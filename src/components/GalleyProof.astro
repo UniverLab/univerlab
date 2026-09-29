@@ -1,0 +1,153 @@
+---
+// GalleyProof — hero visual for the TeXForge experiment page.
+//
+// An original figure (not a network graph): a miniature typeset paper page
+// in bistre hairlines on the cream surface, with three ochre proofreader's
+// marks in the right margin that resolve one at a time on an autonomous
+// ~15 s CSS loop — the way `texforge check` lints a document before it is
+// typeset. Ink via page tokens, marks via var(--essence) (#e0a458 on this
+// page). Text lines are hairline strokes; only the running head, abstract
+// label, display equation, figure caption and footnote marker are real text.
+// Caret and checks are stroke paths (U+2041/U+2713 have patchy coverage);
+// pilcrow and footnote marker are Latin-1 text (universally available).
+---
+<div class="galley-proof" aria-hidden="true">
+  <svg viewBox="0 0 420 340" aria-hidden="true">
+    <g class="gp-page">
+      <!-- running head -->
+      <text x="40" y="28" class="gp-head">UNIVERLAB · EXP-002</text>
+      <text x="380" y="28" class="gp-pageno">3</text>
+      <path class="gp-rule" d="M40 33 H380" />
+      <!-- title block -->
+      <path class="gp-title" d="M150 46 H270 M165 53 H255" />
+      <path class="gp-authors" d="M170 63 H250" />
+      <text x="210" y="79" class="gp-abs">Abstract</text>
+      <path class="gp-text" d="M76 88 H344 M76 95 H342 M76 102 H344 M76 109 H250" />
+      <!-- left column -->
+      <path class="gp-text" d="M40 126 H195 M40 135 H192 M40 144 H195 M40 153 H170" />
+      <path class="gp-text" d="M40 165 H195" />
+      <path class="gp-text gp-line-a" d="M40 174 H193" />
+      <path class="gp-text" d="M40 183 H195 M40 192 H168" />
+      <path class="gp-text" d="M40 204 H195 M40 213 H190 M40 222 H195 M40 231 H160" />
+      <!-- display equation (real text): centred, number flush right -->
+      <text x="112" y="250" class="gp-eq">∫₀¹ f(x) dx = Σₙ aₙ</text>
+      <text x="195" y="250" class="gp-eqno">(1)</text>
+      <path class="gp-text" d="M40 262 H195 M40 271 H188 M40 280 H195 M40 289 H152" />
+      <!-- right column -->
+      <path class="gp-text" d="M225 126 H378" />
+      <path class="gp-text gp-line-b" d="M225 135 H380" />
+      <path class="gp-text" d="M225 144 H372 M225 153 H380" />
+      <path class="gp-text gp-line-c" d="M225 162 H380" />
+      <path class="gp-text gp-line-d" d="M237 171 H368" />
+      <!-- figure box with plotted curve -->
+      <rect class="gp-figbox" x="245" y="184" width="120" height="68" />
+      <path class="gp-axes" d="M252 194 V240 H358" />
+      <path class="gp-curve" d="M256 236 C274 204 288 230 304 214 S336 200 356 196" />
+      <text x="305" y="262" class="gp-figcap">Fig. 1</text>
+      <!-- footnote -->
+      <path class="gp-rule" d="M40 310 H110" />
+      <text x="40" y="322" class="gp-fn">¹</text>
+      <path class="gp-text" d="M48 320 H150" />
+    </g>
+    <g class="gp-proof">
+      <!-- 1 · caret (insertion) → line B lengthens -->
+      <rect x="224" y="130.5" width="158" height="8" class="gp-hl-1" />
+      <path class="gp-lead-1" d="M358 135 H383" />
+      <path class="gp-caret" d="M385 138 L391 129 L397 138" />
+      <path class="gp-ok-1" d="M386 135 l4 4 l7 -9" />
+      <!-- 2 · deletion loop → line A shortens (long leader across the gutter) -->
+      <rect x="39" y="169.5" width="156" height="8" class="gp-hl-2" />
+      <path class="gp-lead-2" d="M197 174 H382" />
+      <path class="gp-loop" d="M384 178 C389 168 400 168 400 175 C400 180 391 180 389 176" />
+      <path class="gp-ok-2" d="M386 174 l4 4 l7 -9" />
+      <!-- 3 · pilcrow (new paragraph) → line C breaks, line D writes in -->
+      <rect x="224" y="157.5" width="158" height="16" class="gp-hl-3" />
+      <path class="gp-lead-3" d="M336 161 H384" />
+      <text x="392" y="163" class="gp-pil">¶</text>
+      <path class="gp-ok-3" d="M386 160 l4 4 l7 -9" />
+    </g>
+  </svg>
+</div>
+
+<style>
+  .galley-proof { width: min(100%, 24rem); margin: 0 auto; }
+  .galley-proof svg { display: block; width: 100%; height: auto; }
+  .gp-page { stroke-linecap: butt; }
+  .gp-text { fill: none; stroke: var(--ink); stroke-width: 0.8; }
+  .gp-rule { fill: none; stroke: var(--ink); stroke-width: 0.75; }
+  .gp-title { fill: none; stroke: var(--ink); stroke-width: 2; }
+  .gp-authors { fill: none; stroke: var(--ink-dim); stroke-width: 0.8; }
+  .gp-head { font: 400 8px var(--font-mono); letter-spacing: 0.12em; fill: var(--ink-dim); }
+  .gp-pageno { font: 400 8px var(--font-mono); fill: var(--ink-dim); text-anchor: end; }
+  .gp-abs { font: italic 400 8px var(--font-serif); fill: var(--ink); text-anchor: middle; }
+  .gp-eq { font: italic 400 10px var(--font-serif); fill: var(--ink); text-anchor: middle; }
+  .gp-eqno { font: 400 7px var(--font-mono); fill: var(--ink-dim); text-anchor: end; }
+  .gp-figbox { fill: none; stroke: var(--ink-dim); stroke-width: 0.75; }
+  .gp-axes { fill: none; stroke: var(--ink-faint); stroke-width: 0.75; }
+  .gp-curve { fill: none; stroke: var(--ink); stroke-width: 0.9; }
+  .gp-figcap { font: 400 6.5px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; fill: var(--ink-faint); text-anchor: middle; }
+  .gp-fn { font: italic 400 7px var(--font-serif); fill: var(--ink-dim); }
+
+  /* Proof marks, leaders, highlights and checks: ochre only. */
+  .gp-caret, .gp-loop { fill: none; stroke: var(--essence); stroke-width: 1; opacity: 0; }
+  .gp-pil { font: 400 12px var(--font-serif); fill: var(--essence); text-anchor: middle; opacity: 0; }
+  .gp-lead-1, .gp-lead-2, .gp-lead-3 { fill: none; stroke: var(--essence); stroke-width: 0.6; opacity: 0; }
+  .gp-lead-1 { stroke-dasharray: 25; }
+  .gp-lead-2 { stroke-dasharray: 185; }
+  .gp-lead-3 { stroke-dasharray: 48; }
+  .gp-hl-1, .gp-hl-2, .gp-hl-3 { fill: var(--essence); stroke: none; opacity: 0; }
+  .gp-ok-1, .gp-ok-2, .gp-ok-3 { fill: none; stroke: var(--essence); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
+
+  /* Adjustable lines: full-length paths revealed by dasharray (base = resolved). */
+  .gp-line-b { stroke-dasharray: 155 400; }
+  .gp-line-a { stroke-dasharray: 118 400; }
+  .gp-line-c { stroke-dasharray: 105 400; }
+  .gp-line-d { stroke-dasharray: 131 400; stroke-dashoffset: 0; }
+
+  /* Autonomous 15 s proof pass, one shared grid, absolute percentages. */
+  .gp-caret { animation: gp-caret 15s linear infinite; }
+  .gp-lead-1 { animation: gp-caret-l 15s linear infinite; }
+  .gp-hl-1 { animation: gp-caret-h 15s linear infinite; }
+  .gp-line-b { animation: gp-caret-r 15s linear infinite; }
+  .gp-ok-1 { animation: gp-caret-c 15s linear infinite; }
+  .gp-loop { animation: gp-loop 15s linear infinite; }
+  .gp-lead-2 { animation: gp-loop-l 15s linear infinite; }
+  .gp-hl-2 { animation: gp-loop-h 15s linear infinite; }
+  .gp-line-a { animation: gp-loop-r 15s linear infinite; }
+  .gp-ok-2 { animation: gp-loop-c 15s linear infinite; }
+  .gp-pil { animation: gp-pil 15s linear infinite; }
+  .gp-lead-3 { animation: gp-pil-l 15s linear infinite; }
+  .gp-hl-3 { animation: gp-pil-h 15s linear infinite; }
+  .gp-line-c { animation: gp-pil-r 15s linear infinite; }
+  .gp-line-d { animation: gp-pil-n 15s linear infinite; }
+  .gp-ok-3 { animation: gp-pil-c 15s linear infinite; }
+
+  @keyframes gp-caret { 0% { opacity: 0; } 2.7% { opacity: 1; } 17% { opacity: 1; } 20%, 100% { opacity: 0; } }
+  @keyframes gp-caret-l { 0% { opacity: 0; stroke-dashoffset: 25; } 2.7% { opacity: 1; stroke-dashoffset: 0; } 17% { opacity: 1; stroke-dashoffset: 0; } 20%, 100% { opacity: 0; stroke-dashoffset: 0; } }
+  @keyframes gp-caret-h { 0% { opacity: 0; } 4% { opacity: 0.15; } 17% { opacity: 0.15; } 20%, 100% { opacity: 0; } }
+  @keyframes gp-caret-r { 0% { stroke-dasharray: 127 400; } 17% { stroke-dasharray: 127 400; } 20% { stroke-dasharray: 155 400; } 93.33% { stroke-dasharray: 155 400; } 100% { stroke-dasharray: 127 400; } }
+  @keyframes gp-caret-c { 0% { opacity: 0; } 16.5% { opacity: 0; } 20% { opacity: 1; } 22% { opacity: 1; } 26.67%, 100% { opacity: 0; } }
+  @keyframes gp-loop { 0%, 26.67% { opacity: 0; } 29.37% { opacity: 1; } 43.67% { opacity: 1; } 46.67%, 100% { opacity: 0; } }
+  @keyframes gp-loop-l { 0%, 26.67% { opacity: 0; stroke-dashoffset: 185; } 29.37% { opacity: 1; stroke-dashoffset: 0; } 43.67% { opacity: 1; stroke-dashoffset: 0; } 46.67%, 100% { opacity: 0; stroke-dashoffset: 0; } }
+  @keyframes gp-loop-h { 0%, 26.67% { opacity: 0; } 30.67% { opacity: 0.15; } 43.67% { opacity: 0.15; } 46.67%, 100% { opacity: 0; } }
+  @keyframes gp-loop-r { 0% { stroke-dasharray: 153 400; } 43.67% { stroke-dasharray: 153 400; } 46.67% { stroke-dasharray: 118 400; } 93.33% { stroke-dasharray: 118 400; } 100% { stroke-dasharray: 153 400; } }
+  @keyframes gp-loop-c { 0% { opacity: 0; } 43.17% { opacity: 0; } 46.67% { opacity: 1; } 48.67% { opacity: 1; } 53.33%, 100% { opacity: 0; } }
+  @keyframes gp-pil { 0%, 53.33% { opacity: 0; } 56.03% { opacity: 1; } 70.33% { opacity: 1; } 73.33%, 100% { opacity: 0; } }
+  @keyframes gp-pil-l { 0%, 53.33% { opacity: 0; stroke-dashoffset: 48; } 56.03% { opacity: 1; stroke-dashoffset: 0; } 70.33% { opacity: 1; stroke-dashoffset: 0; } 73.33%, 100% { opacity: 0; stroke-dashoffset: 0; } }
+  @keyframes gp-pil-h { 0%, 53.33% { opacity: 0; } 57.33% { opacity: 0.15; } 70.33% { opacity: 0.15; } 73.33%, 100% { opacity: 0; } }
+  @keyframes gp-pil-r { 0% { stroke-dasharray: 155 400; } 70.33% { stroke-dasharray: 155 400; } 73.33% { stroke-dasharray: 105 400; } 93.33% { stroke-dasharray: 105 400; } 100% { stroke-dasharray: 155 400; } }
+  @keyframes gp-pil-n { 0% { stroke-dashoffset: 131; } 70.33% { stroke-dashoffset: 131; } 73.33% { stroke-dashoffset: 0; } 93.33% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 131; } }
+  @keyframes gp-pil-c { 0% { opacity: 0; } 69.83% { opacity: 0; } 73.33% { opacity: 1; } 75.33% { opacity: 1; } 80%, 100% { opacity: 0; } }
+
+  /* Reduced motion: static frame of the clean page with the three ✓ faintly
+     in the margin — no running animation. (global.css also zeroes all
+     animations, so the base values above already are the static frame.) */
+  @media (prefers-reduced-motion: reduce) {
+    .galley-proof .gp-caret, .galley-proof .gp-loop, .galley-proof .gp-pil,
+    .galley-proof .gp-lead-1, .galley-proof .gp-lead-2, .galley-proof .gp-lead-3,
+    .galley-proof .gp-hl-1, .galley-proof .gp-hl-2, .galley-proof .gp-hl-3,
+    .galley-proof .gp-line-a, .galley-proof .gp-line-b, .galley-proof .gp-line-c,
+    .galley-proof .gp-line-d, .galley-proof .gp-ok-1, .galley-proof .gp-ok-2,
+    .galley-proof .gp-ok-3 { animation: none; }
+  }
+</style>

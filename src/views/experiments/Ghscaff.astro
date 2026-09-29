@@ -9,11 +9,11 @@ const exp = byId('ghscaff');
 ---
 <ExperimentLayout id="ghscaff" hideGithub>
   <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">+--+ 07 lifts · idempotent +--+</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <Fragment slot="hero-visual">
     <div class="wizard">
       <p class="mono-kicker"><span class="label">{e.lifts.kicker}</span></p>
-      <ol class="fan" data-tilt-fan>
+      <ol class="fan">
         {e.lifts.items.map((step, i) => (
           <li class="glass"><span class="mono idx">{String(i + 1).padStart(2, '0')}</span><span class="step-name">{step}</span></li>
         ))}
@@ -69,61 +69,6 @@ const exp = byId('ghscaff');
   .idx { font-size: 0.8rem; flex: none; }
   .step-name { font-size: 0.95rem; }
 
-  /* ── Aligned at rest, motion from the cursor only ─────────────────────────
-     surfaces.css fans these cards with a static rotate/translateY (the
-     industrial `:nth-child(8n+…)` tilt), which reads as crooked rows. That
-     tilt is neutralised below so every card computes to `transform: none`
-     while at rest; the only transform ever applied is `--lift`/`--tilt`,
-     written by the pointer script and only while `.is-near` is set, so the
-     01..07 rows keep straight left edges until a cursor comes near. */
-  .fan { overflow-x: clip; }
-  .fan li {
-    /* The hairline is pre-declared (transparent) so it can fade rather than
-       pop in and out; `box-shadow` is untouched — nothing here recolours it. */
-    outline: 1px solid transparent;
-    outline-offset: -1px;
-    transition:
-      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.35s ease,
-      outline-color 0.35s ease;
-    will-change: transform;
-  }
-  /* `:root[…]` out-specifies surfaces.css `html[data-surface=…]` (the house
-     rule — see Cadspec.astro's skin block), so this wins on specificity, not
-     on source order, and needs no `!important`. The `:nth-child(n)` keeps the
-     match a hair above the per-position `8n+…` tilt rules it retires. */
-  :global(:root[data-surface='industrial'] .fan li:nth-child(n)) {
-    transform: none;
-  }
-  /* Pointer state: lift 0..-5px + tilt clamped to ±2deg toward the cursor,
-     both scaled by proximity; the return transition springs it back flat.
-     The glass edge brightens — same hue, more of it. The highlight is an
-     outline at `offset: -1px`, not a rewritten `box-shadow`: surfaces.css
-     layers the card's drop shadow and inner fill there, and replacing that
-     list would visibly pop the card's depth on the way in. Same white the
-     hairlines already use, no new hue, no glow ring. */
-  .fan li.is-near {
-    transform: translateY(var(--lift, 0px)) rotate(var(--tilt, 0deg));
-    border-color: color-mix(in srgb, var(--glass-v) 38%, transparent);
-    outline-color: color-mix(in srgb, #fff 14%, transparent);
-  }
-  :global(:root[data-surface='industrial'] .fan li.is-near:nth-child(n)) {
-    transform: translateY(var(--lift, 0px)) rotate(var(--tilt, 0deg));
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .fan li,
-    .fan li.is-near {
-      transform: none !important;
-      transition: none;
-      will-change: auto;
-    }
-    :global(:root[data-surface='industrial'] .fan li:nth-child(n)) {
-      transform: none !important;
-    }
-    :global(:root[data-surface='industrial'] .fan li.is-near:nth-child(n)) {
-      transform: none !important;
-    }
-  }
   @media (max-width: 52rem) {
     .fan { grid-template-columns: 1fr; }
   }
@@ -139,75 +84,3 @@ const exp = byId('ghscaff');
   .sub h3 a { color: var(--glass-v); text-decoration: none; }
   .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
 </style>
-
-<script>
-  // The seven lift rows sit perfectly straight at rest; every bit of motion
-  // comes from the cursor. Each frame the pointer is measured against each
-  // card's centre: inside REACH the card lifts a few pixels and tilts toward
-  // the pointer (clamped at 2deg so the row never reads crooked), scaled by
-  // proximity, and its glass edge brightens. Distance, scroll or pointer-leave
-  // drops `.is-near` and the transition springs everything back to aligned.
-  // Reduced motion never registers a listener (the grid + spotlight stay
-  // untouched), and touch never drives it — a finger would shake the row while
-  // scrolling.
-  const fan = document.querySelector('[data-tilt-fan]');
-  if (fan && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const cards = Array.from(fan.querySelectorAll('li'));
-    const REACH = 140; // px past the card's edge where influence starts
-    const MAX_TILT = 2; // deg — any more and the row reads as static tilt
-    const MAX_LIFT = 5; // px
-    let mx = -1e9;
-    let my = -1e9;
-    let raf = 0;
-
-    const frame = () => {
-      raf = 0;
-      const live = mx > -1e8;
-      for (const el of cards) {
-        const r = el.getBoundingClientRect();
-        const dx = mx - (r.left + r.width / 2);
-        const dy = my - (r.top + r.height / 2);
-        const reach = REACH + Math.max(r.width, r.height) / 2;
-        const d = Math.hypot(dx, dy);
-        if (live && d < reach) {
-          const k = 1 - d / reach;
-          const side = Math.max(-1, Math.min(1, dx / (r.width || 1)));
-          el.style.setProperty('--tilt', (side * MAX_TILT * k).toFixed(2) + 'deg');
-          el.style.setProperty('--lift', (-MAX_LIFT * k).toFixed(1) + 'px');
-          el.classList.add('is-near');
-        } else if (el.classList.contains('is-near')) {
-          el.style.setProperty('--tilt', '0deg');
-          el.style.setProperty('--lift', '0px');
-          el.classList.remove('is-near');
-        }
-      }
-    };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(frame);
-    };
-
-    addEventListener(
-      'pointermove',
-      (e) => {
-        if (e.pointerType === 'touch') return;
-        mx = e.clientX;
-        my = e.clientY;
-        schedule();
-      },
-      { passive: true }
-    );
-    // Pointer left the document (or the window lost it): settle every card.
-    addEventListener(
-      'pointerout',
-      (e) => {
-        if (e.relatedTarget) return;
-        mx = -1e9;
-        my = -1e9;
-        schedule();
-      },
-      { passive: true }
-    );
-    // Scrolling moves every card's box — re-measure so none stays lifted.
-    addEventListener('scroll', schedule, { passive: true });
-  }
-</script>

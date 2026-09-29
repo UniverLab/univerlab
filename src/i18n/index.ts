@@ -1,11 +1,8 @@
 import { en, type Dict } from './en';
 import { es } from './es';
 
-export type { Dict, ExperimentId } from './en';
-
 export const languages = { en: 'EN', es: 'ES' } as const;
-export type Lang = keyof typeof languages;
-export const defaultLang: Lang = 'en';
+type Lang = keyof typeof languages;
 
 const dict: Record<Lang, Dict> = { en, es };
 
@@ -41,6 +38,13 @@ export function localizePath(path: string, lang: Lang): string {
     return prefix + suffix;
   }
   return ensureSlash(pathname) + suffix;
+}
+
+/** Resolve an experiment's hero motif for rendering. Language-dependent
+ *  motifs (registry value '@i18n') live in the translations dictionary; every
+ *  other experiment carries its motif literally in src/lib/experiments.ts. */
+export function motifOf(exp: { motif: string }, t: Dict): string {
+  return exp.motif === '@i18n' ? t.experiments.cadspec.hero.motif : exp.motif;
 }
 
 /** Given the current URL and a target language, return the equivalent path. */

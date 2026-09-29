@@ -1,21 +1,45 @@
 /**
- * Tests for the paper runner (src/scripts/bg-paper.ts) — the texforge ink-mark
- * motif: sparse LaTeX tokens drifting on the sheet and cross-fading like a
- * proof being set. Verifies the typographic draw (fillText, never strokes),
- * the slow idle drift with tiny rotation, the cross-fade respawn, and the
- * cursor contract: marks at rest draw at their ambient alpha; a sweeping
- * pointer nudges the marks it crosses (directional kick, capped) and bumps
- * their brightness for ~1 s before the sheet returns to ambient. Touch never
- * stirs; a detached canvas aborts the listeners. Given-When-Then pattern, like
- * field.test.ts and brain.test.ts.
+ * Tests for the paper runner (src/scripts/bg-paper.ts) — the texforge sheet:
+ * the quiet ambient ink-mark scatter (typographic texture, slow drift, proof-like
+ * cross-fade), and the product's own act as the cursor's language (R13): a
+ * sweep lays grey LaTeX SOURCE fragments along its path that ~550 ms later
+ * compile — cross-fading into their typeset serif forms while snapping onto an
+ * invisible 28 px baseline grid — then hold and bleed out. Verifies the compile
+ * mapping, the grid snap, the 14-fragment cap, the ~220 ms spawn throttle, the
+ * 6 s / 5 s idle compiler, that touch never seeds from a pointer (and gets no
+ * listener at all on touch devices), that the ambient draw is untouched, and
+ * that a detached canvas aborts the listeners. Given-When-Then pattern, like
+ * brain.test.ts and orbit.test.ts.
  */
-import { paper } from '../scripts/bg-paper';
+import {
+  paper,
+  COMPILE_MAP,
+  SOURCE_MS,
+  FADE_MS,
+  SNAP_MS,
+  HOLD_MS,
+  LIFE_MS,
+  GRID_PX,
+  MAX_FRAGS,
+  SPAWN_EVERY,
+  IDLE_AFTER,
+  IDLE_EVERY,
+  SOURCE_ALPHA,
+  COMPILED_ALPHA,
+} from '../scripts/bg-paper';
 
 type PaperCtx = Parameters<typeof paper>[0];
 
 const TOKENS = ['\\begin', '\\end', '{}', '$', '\\ref', '[htbp]', '0.618', '\\to'];
+const SRCS = COMPILE_MAP.map(([src]) => src);
+const SETS = COMPILE_MAP.map(([, set]) => set);
+/** Anything that is not an ambient token is a fragment of the compile. */
+const isFrag = (text: string) => !TOKENS.includes(text);
 /** Ambient alpha with Math.random pinned to 0.5 — same expression as the runner. */
 const AMBIENT = 0.05 + 0.5 * (0.12 - 0.05);
+/** Paper's own greys — the source pass never borrows an accent colour. */
+const SOURCE_GREY = '#66635f';
+const BISTRE = '#6a563e';
 
 /** Dispatch a pointer-like event; jsdom has no PointerEvent constructor. */
 function firePointer(type: string, props: Record<string, unknown>) {
@@ -24,12 +48,28 @@ function firePointer(type: string, props: Record<string, unknown>) {
   document.dispatchEvent(e);
 }
 
+/** Move the mouse pointer to (x, y) and step one frame at time t. */
+function move(tick: (t: number) => void, t: number, x: number, y: number) {
+  firePointer('pointermove', { pointerType: 'mouse', clientX: x, clientY: y });
+  tick(t);
+}
+
+type Draw = {
+  text: string;
+  x: number;
+  y: number;
+  alpha: number;
+  font: string;
+  fillStyle: string;
+};
+
 /**
  * Harness with Math.random pinned to 0.5: every mark is born at (400, 300)
- * with tok '\\ref', size 17.6 px (rem 16), ambient alpha AMBIENT,
- * life 10500 ms, age 5250 ms (mid-life ⇒ envelope 1) — so ambient and lit
- * draws are directly comparable. Idle drift/rotation stay index-derived, so
- * they survive the stub.
+ * with tok '\\ref', size 17.6 px (rem 16), ambient alpha AMBIENT, life 10500 ms,
+ * age 5250 ms (mid-life ⇒ envelope 1) — so ambient and lit draws are directly
+ * comparable. Idle drift/rotation stay index-derived, so they survive the stub.
+ * Every fillText is recorded with the alpha, font, fillStyle and position that
+ * were in force at that moment — the compile asserts on those.
  */
 function makeCtx(w = 800, h = 600) {
   const canvas = document.createElement('canvas');
@@ -38,70 +78,104 @@ function makeCtx(w = 800, h = 600) {
   const clearRect = jest.fn();
   const save = jest.fn();
   const restore = jest.fn();
-  const fillText = jest.fn((_text: string) => _text);
   const beginPath = jest.fn();
   const moveTo = jest.fn();
   const lineTo = jest.fn();
   const stroke = jest.fn();
   const positions: Array<{ x: number; y: number }> = [];
   const rotations: number[] = [];
-  const texts: string[] = [];
-  const fonts: string[] = [];
-  const alphas: number[] = [];
+  const draws: Draw[] = [];
   let alpha = 1;
   let font = '';
+  let fill = '';
   const c = {
     clearRect,
     save,
     restore,
     translate: jest.fn((x: number, y: number) => positions.push({ x, y })),
     rotate: jest.fn((a: number) => rotations.push(a)),
-    fillText: jest.fn((text: string, _x: number, _y: number) => {
-      texts.push(text);
-      return fillText(text);
+    fillText: jest.fn((text: string, x: number, y: number) => {
+      draws.push({ text, x, y, alpha, font, fillStyle: fill });
+      return text;
     }),
     beginPath,
     moveTo,
     lineTo,
     stroke,
-    fillStyle: '',
     textBaseline: '',
-    strokeStyle: '',
   } as unknown as CanvasRenderingContext2D;
   Object.defineProperty(c, 'globalAlpha', {
     get: () => alpha,
     set: (v: number) => {
-      alphas.push(v);
       alpha = v;
     },
   });
   Object.defineProperty(c, 'font', {
     get: () => font,
     set: (v: string) => {
-      fonts.push(v);
       font = v;
     },
   });
-  const ctx: PaperCtx = { canvas, c, color: '#6a563e', w, h };
+  Object.defineProperty(c, 'fillStyle', {
+    get: () => fill,
+    set: (v: string) => {
+      fill = v;
+    },
+  });
+  const ctx: PaperCtx = { canvas, c, color: BISTRE, w, h };
   const reset = () => {
     positions.length = 0;
     rotations.length = 0;
-    texts.length = 0;
-    fonts.length = 0;
-    alphas.length = 0;
+    draws.length = 0;
     clearRect.mockClear();
-    fillText.mockClear();
+    save.mockClear();
+    restore.mockClear();
+    (c.fillText as jest.Mock).mockClear();
     beginPath.mockClear();
     moveTo.mockClear();
     lineTo.mockClear();
     stroke.mockClear();
   };
-  const ambientAlphas = () => alphas.filter((a) => a !== 1);
   return {
-    ctx, canvas, positions, rotations, texts, fonts, alphas, ambientAlphas,
-    clearRect, fillText, beginPath, lineTo, stroke, reset, randomSpy,
+    ctx,
+    canvas,
+    positions,
+    rotations,
+    get draws() {
+      return draws.slice();
+    },
+    get texts() {
+      return draws.map((d) => d.text);
+    },
+    get fragDraws() {
+      return draws.filter((d) => isFrag(d.text));
+    },
+    get ambientDraws() {
+      return draws.filter((d) => !isFrag(d.text));
+    },
+    get ambientAlphas() {
+      return draws.filter((d) => !isFrag(d.text)).map((d) => d.alpha);
+    },
+    get fonts() {
+      return draws.map((d) => d.font);
+    },
+    clearRect,
+    beginPath,
+    lineTo,
+    stroke,
+    fillText: c.fillText as jest.Mock,
+    reset,
+    randomSpy,
   };
 }
+
+type Harness = ReturnType<typeof makeCtx>;
+
+/**
+ * Fragments live on the frame: both passes of one fragment (source and typeset
+ * during the cross-fade) share x and y, so distinct positions count fragments.
+ */
+const liveCount = (h: Harness) => new Set(h.fragDraws.map((d) => `${d.x},${d.y}`)).size;
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -115,53 +189,59 @@ const N = Math.min(18, Math.max(12, Math.floor((800 * 600) / 68000)));
 describe('paper', () => {
   it('the untouched sheet reads as typesetting: fillText tokens at ambient alpha, never strokes', () => {
     // Given: a fresh paper sheet with no pointer input
-    const { ctx, texts, fonts, ambientAlphas, beginPath, lineTo, stroke, fillText } = makeCtx();
-    const tick = paper(ctx);
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     // When: a frame steps
     tick(0);
     // Then: every mark draws as a LaTeX token in the mono stack at ambient alpha
-    expect(fillText).toHaveBeenCalledTimes(N);
-    expect(texts).toHaveLength(N);
-    for (const t of texts) expect(TOKENS).toContain(t);
-    for (const a of ambientAlphas()) expect(a).toBeGreaterThanOrEqual(0.05), expect(a).toBeLessThanOrEqual(0.12);
-    for (const f of fonts) {
-      expect(f).toMatch(/^1[4-9](\.\d+)?px ui-monospace|20(\.\d+)?px ui-monospace/);
-      expect(parseFloat(f)).toBeGreaterThanOrEqual(14.4);
-      expect(parseFloat(f)).toBeLessThanOrEqual(20.8);
+    expect(h.fillText).toHaveBeenCalledTimes(N);
+    expect(h.texts).toHaveLength(N);
+    expect(h.fragDraws).toHaveLength(0); // idle compiles only after 6 s of stillness
+    for (const t of h.texts) expect(TOKENS).toContain(t);
+    expect(h.ambientAlphas).toHaveLength(N);
+    for (const a of h.ambientAlphas) {
+      expect(a).toBeGreaterThanOrEqual(0.05);
+      expect(a).toBeLessThanOrEqual(0.12);
+    }
+    for (const d of h.ambientDraws) {
+      expect(d.fillStyle).toBe(BISTRE);
+      expect(d.font).toMatch(/^1[4-9](\.\d+)?px ui-monospace|20(\.\d+)?px ui-monospace/);
+      expect(parseFloat(d.font)).toBeGreaterThanOrEqual(14.4);
+      expect(parseFloat(d.font)).toBeLessThanOrEqual(20.8);
     }
     // And: no stroke path anywhere — the sheet holds characters, not fibres
-    expect(beginPath).not.toHaveBeenCalled();
-    expect(lineTo).not.toHaveBeenCalled();
-    expect(stroke).not.toHaveBeenCalled();
+    expect(h.beginPath).not.toHaveBeenCalled();
+    expect(h.lineTo).not.toHaveBeenCalled();
+    expect(h.stroke).not.toHaveBeenCalled();
     // And: the shared canvas never leaks alpha, bistre comes from the caller
-    expect(ctx.c.globalAlpha).toBe(1);
-    expect(ctx.c.fillStyle).toBe('#6a563e');
-    expect(ctx.c.textBaseline).toBe('top');
+    expect(h.ctx.c.globalAlpha).toBe(1);
+    expect(h.ctx.c.fillStyle).toBe(BISTRE);
+    expect(h.ctx.c.textBaseline).toBe('top');
   });
 
   it('idle drift is slow and rotation tiny — quiet paper, not static fibres, not an animation', () => {
     // Given: a fresh sheet that has painted one idle frame
-    const { ctx, positions, rotations, reset } = makeCtx();
-    const tick = paper(ctx);
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    const p1 = positions.map((p) => ({ ...p }));
-    const r1 = [...rotations];
-    reset();
+    const p1 = h.positions.map((p) => ({ ...p }));
+    const r1 = [...h.rotations];
+    h.reset();
     // When: one more idle frame steps
     tick(33);
     // Then: every mark crept by a fraction of a pixel and barely turned
-    expect(positions).toHaveLength(N);
+    expect(h.positions).toHaveLength(N);
     for (let i = 0; i < N; i++) {
-      expect(Math.abs(positions[i].x - p1[i].x)).toBeLessThanOrEqual(0.12);
-      expect(Math.abs(positions[i].y - p1[i].y)).toBeLessThanOrEqual(0.12);
-      expect(Math.abs(rotations[i] - r1[i])).toBeLessThanOrEqual(0.0004);
+      expect(Math.abs(h.positions[i].x - p1[i].x)).toBeLessThanOrEqual(0.12);
+      expect(Math.abs(h.positions[i].y - p1[i].y)).toBeLessThanOrEqual(0.12);
+      expect(Math.abs(h.rotations[i] - r1[i])).toBeLessThanOrEqual(0.0004);
     }
   });
 
   it('marks cross-fade like a proof being set: fade out, respawn, fade back to ambient', () => {
     // Given: a fresh sheet ageing mid-life (age 5250 of 10500 ms)
-    const { ctx, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     let t = 0;
     tick(t);
     // When: ~4 s+ of idle frames pass
@@ -169,9 +249,9 @@ describe('paper', () => {
     let respawned = false;
     for (let i = 0; i < 400 && !respawned; i++) {
       t += 50;
-      reset();
+      h.reset();
       tick(t);
-      const as = ambientAlphas();
+      const as = h.ambientAlphas;
       if (as.some((a) => a < AMBIENT - 1e-9)) sawFade = true;
       if (as.some((a) => a === 0)) respawned = true;
     }
@@ -181,151 +261,278 @@ describe('paper', () => {
     // When: the fade-in completes (~1.5 s more of still frames)
     for (let i = 0; i < 60; i++) {
       t += 50;
-      reset();
+      h.reset();
       tick(t);
     }
     // Then: every mark reads ambient again — the sheet never blanks as a whole
-    expect(ambientAlphas()).toEqual(new Array(N).fill(AMBIENT));
+    expect(h.ambientAlphas).toEqual(new Array(N).fill(AMBIENT));
   });
 
-  it('the first move only records the entry — no kick from an off-screen origin', () => {
-    // Given: a fresh sheet
-    const { ctx, positions, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
+  it('a sweep lays grey LaTeX source that compiles ~550 ms later into its mapped typeset form', () => {
+    // Given: a sheet whose pointer entered and then travelled
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    reset();
-    // When: the pointer enters exactly over the marks and a frame steps
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 400, clientY: 300 });
-    tick(33);
-    // Then: nothing brightened and nothing left its idle drift (moved < 0.5 px from spawn)
-    expect(ambientAlphas()).toEqual(new Array(N).fill(AMBIENT));
-    expect(Math.abs(positions[0].x - 400)).toBeLessThan(0.5);
-    expect(Math.abs(positions[0].y - 300)).toBeLessThan(0.5);
+    move(tick, 33, 100, 100); // entry: seeds the path, no travel ⇒ no spawn
+    move(tick, 66, 200, 300); // travel ⇒ the first source fragment, born at 66
+    // When: 549 ms pass — just short of the compile
+    h.reset();
+    tick(66 + SOURCE_MS - 1);
+    // Then: the fragment is still its source, in mono grey where it fell
+    const src = h.fragDraws;
+    expect(src).toHaveLength(1);
+    expect(src[0].text).toBe('\\frac{a}{b}'); // first pair of the fixed map
+    expect(src[0].font).toMatch(/ui-monospace/);
+    expect(src[0].fillStyle).toBe(SOURCE_GREY);
+    expect(src[0].alpha).toBeCloseTo(SOURCE_ALPHA);
+    expect(src[0].x).toBe(200);
+    // When: the compile window closes (550 + 250 ms)
+    h.reset();
+    tick(66 + SOURCE_MS + FADE_MS);
+    // Then: the source is gone and the typeset form stands in bistre serif
+    const set = h.fragDraws;
+    expect(set).toHaveLength(1);
+    expect(set[0].text).toBe('a⁄b');
+    expect(set[0].font).toMatch(/serif/);
+    expect(set[0].font).not.toMatch(/italic/);
+    expect(set[0].fillStyle).toBe(BISTRE);
+    expect(set[0].alpha).toBeCloseTo(COMPILED_ALPHA);
+    // And: it holds ~1.5 s, then bleeds out over ~1 s and leaves the sheet
+    h.reset();
+    tick(66 + SOURCE_MS + FADE_MS + HOLD_MS - 100); // still holding
+    expect(h.fragDraws).toHaveLength(1);
+    expect(h.fragDraws[0].alpha).toBeCloseTo(COMPILED_ALPHA);
+    h.reset();
+    tick(66 + SOURCE_MS + FADE_MS + HOLD_MS + 600); // 600 ms into the 1 s bleed
+    expect(h.fragDraws[0].alpha).toBeCloseTo(COMPILED_ALPHA * 0.4);
+    h.reset();
+    tick(66 + LIFE_MS);
+    expect(h.fragDraws).toHaveLength(0);
   });
 
-  it('a sweep nudges reachable marks and bumps their brightness', () => {
-    // Given: a sheet whose pointer has entered over the marks
-    const { ctx, positions, rotations, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
+  it('compiles onto the invisible 28 px baseline grid — set lines share their baselines', () => {
+    // Given: two fragments laid 10 px apart in y (14 px in x)
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 400, clientY: 300 });
-    tick(33);
-    const r1 = [...rotations];
-    reset();
-    // When: the pointer travels and a frame steps
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 430, clientY: 330 });
-    tick(66);
-    // Then: the kick shows — marks drew hotter and displaced in travel direction
-    expect(Math.max(...ambientAlphas())).toBeGreaterThan(0.3);
-    expect(positions[0].x).toBeGreaterThan(400);
-    expect(positions[0].y).toBeGreaterThan(300);
-    // And: the sweep visibly reoriented the marks
-    expect(Math.abs(rotations[0] - r1[0])).toBeGreaterThan(0.001);
+    move(tick, 33, 100, 100); // entry seed
+    move(tick, 66, 200, 300); // spawn 1 at y = 300
+    move(tick, 330, 260, 310); // spawn 2 at y = 310 (330 − 66 ≥ 220)
+    // When: both are still source
+    h.reset();
+    tick(66 + SOURCE_MS - 1);
+    // Then: each sits where the cursor laid it, unsnapped
+    expect(h.fragDraws.map((d) => d.y).sort((a, b) => a - b)).toEqual([300, 310]);
+    // When: 90 ms into the 180 ms ease-out snap
+    h.reset();
+    tick(66 + SOURCE_MS + 90);
+    const mid = h.fragDraws.filter((d) => d.text === '\\frac{a}{b}');
+    expect(mid).toHaveLength(1);
+    expect(mid[0].y).toBeGreaterThan(300);
+    expect(mid[0].y).toBeLessThan(308); // eased toward the line, never past it
+    // When: the second fragment's snap window closes too
+    h.reset();
+    tick(330 + SOURCE_MS + SNAP_MS);
+    // Then: both set lines are on grid multiples measured from the canvas top…
+    const set = h.fragDraws.filter((d) => SETS.includes(d.text));
+    expect(set.map((d) => d.text).sort()).toEqual(['a⁄b', '∫₀¹']);
+    for (const d of set) expect(d.y % GRID_PX).toBe(0);
+    // …and on the same line: 300 and 310 both round to round(y/28)·28 = 308
+    expect(new Set(set.map((d) => d.y))).toEqual(new Set([308]));
   });
 
-  it('caps the flick so no mark is flung more than VCAP = 3 px in one frame', () => {
-    // Given: a sheet with the pointer seeded at (0, 0)
-    const { ctx, positions, reset } = makeCtx();
-    const tick = paper(ctx);
+  it('keeps at most 14 live fragments and drops the oldest source first', () => {
+    // Given: a sheet swept fast enough that 15 fragments overlap in time
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 0, clientY: 0 });
-    tick(33);
-    const before = positions.map((p) => ({ ...p }));
-    reset();
-    // When: a screen-wide flick lands on the marks
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 410, clientY: 310 });
-    tick(66);
-    // Then: the per-frame displacement is clamped to VCAP (3)
-    for (let i = 0; i < N; i++) {
-      expect(Math.abs(positions[i].x - before[i].x)).toBeLessThanOrEqual(3 + 1e-6);
-      expect(Math.abs(positions[i].y - before[i].y)).toBeLessThanOrEqual(3 + 1e-6);
+    move(tick, 33, 100, 100); // entry seed
+    let t = 33;
+    let peak = 0;
+    for (let i = 1; i <= 15; i++) {
+      t += SPAWN_EVERY + 5; // one spawn per frame, 15 alive inside one 3.3 s life
+      h.reset();
+      move(tick, t, 120 + i * 8, 200 + i * 10);
+      peak = Math.max(peak, liveCount(h));
     }
+    // Then: no frame ever held more than the cap…
+    expect(peak).toBeLessThanOrEqual(MAX_FRAGS);
+    // …the last frame sits exactly on it…
+    expect(liveCount(h)).toBe(MAX_FRAGS);
+    const xs = new Set(h.fragDraws.map((d) => d.x));
+    expect(xs.size).toBe(MAX_FRAGS);
+    // …and the oldest line (x = 128, from the first spawn) was the one dropped,
+    // while the runner-up (x = 136) is still set
+    expect(xs.has(128)).toBe(false);
+    expect(xs.has(136)).toBe(true);
   });
 
-  it('the bump decays over ~1 s and the sheet returns to the ambient draw', () => {
-    // Given: a sheet that was just swept once
-    const { ctx, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
+  it('spawns at most one source fragment per ~220 ms of travel — a spaced trail, not a spray', () => {
+    // Given: a fresh sheet whose pointer entered
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 400, clientY: 300 });
-    tick(33);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 430, clientY: 330 });
-    tick(66);
-    // When: 3 s of still frames pass (τ = 400 ms ⇒ glow snaps to 0)
-    let t = 66;
-    for (let i = 0; i < 60; i++) {
-      t += 50;
-      reset();
-      tick(t);
-    }
-    // Then: alpha back to exactly ambient on every mark
-    expect(ambientAlphas()).toEqual(new Array(N).fill(AMBIENT));
+    move(tick, 33, 100, 100); // entry: seeds the path
+    h.reset();
+    move(tick, 60, 150, 150); // travel ⇒ fragment 1 (born 60)
+    expect(liveCount(h)).toBe(1);
+    h.reset();
+    move(tick, 110, 200, 200); // 50 ms after the spawn — throttled
+    expect(liveCount(h)).toBe(1);
+    h.reset();
+    move(tick, 200, 250, 250); // 140 ms after the spawn — still throttled
+    expect(liveCount(h)).toBe(1);
+    h.reset();
+    move(tick, 300, 300, 300); // 240 ms after the spawn ⇒ fragment 2
+    expect(liveCount(h)).toBe(2);
+    h.reset();
+    move(tick, 400, 300, 300); // moving but not travelling — a parked cursor compiles nothing
+    expect(liveCount(h)).toBe(2);
   });
 
-  it('ignores touch pointer input — touch adds no kick and no brightness', () => {
+  it('idle: past 6 s without a pointer the sheet keeps its marks and compiles one lone fragment every ~5 s', () => {
+    // Given: a sheet nobody has touched (no pointer events at all)
+    const h = makeCtx();
+    const tick = paper(h.ctx);
+    tick(0);
+    // When: stillness passes the idle window
+    h.reset();
+    tick(IDLE_AFTER + 500); // 6500 ⇒ the lone compiler is armed, not fired
+    expect(h.fragDraws).toHaveLength(0);
+    expect(h.ambientAlphas).toHaveLength(N); // the quiet motif carries on
+    h.reset();
+    tick(IDLE_AFTER + 500 + IDLE_EVERY); // 11500 ⇒ one fragment, inside the viewport
+    const lone = h.fragDraws;
+    expect(lone).toHaveLength(1);
+    expect(SRCS).toContain(lone[0].text);
+    expect(lone[0].fillStyle).toBe(SOURCE_GREY);
+    expect(lone[0].x).toBeGreaterThanOrEqual(40);
+    expect(lone[0].x).toBeLessThanOrEqual(760);
+    expect(lone[0].y).toBeGreaterThanOrEqual(40);
+    // Then: it compiles like any cursor fragment, onto the grid
+    h.reset();
+    tick(IDLE_AFTER + 500 + IDLE_EVERY + SOURCE_MS + FADE_MS);
+    expect(h.fragDraws).toHaveLength(1);
+    expect(SETS).toContain(h.fragDraws[0].text);
+    expect(h.fragDraws[0].fillStyle).toBe(BISTRE);
+    expect(h.fragDraws[0].y % GRID_PX).toBe(0);
+    // And: it dies on the same 3.3 s clock
+    h.reset();
+    tick(IDLE_AFTER + 500 + IDLE_EVERY + LIFE_MS);
+    expect(h.fragDraws).toHaveLength(0);
+    // And: the next lone compile comes ~5 s later, not sooner
+    h.reset();
+    tick(IDLE_AFTER + 500 + IDLE_EVERY + IDLE_EVERY);
+    expect(h.fragDraws).toHaveLength(1);
+  });
+
+  it('touch lays no source from the pointer — the finger only ever reaches the idle compiler', () => {
     // Given: a fresh sheet
-    const { ctx, positions, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    const before = positions.map((p) => ({ ...p }));
-    reset();
-    // When: a finger sweeps across the marks
+    const before = h.positions.map((p) => ({ ...p }));
+    h.reset();
+    // When: a finger sweeps across the sheet
     firePointer('pointermove', { pointerType: 'touch', clientX: 400, clientY: 300 });
     firePointer('pointermove', { pointerType: 'touch', clientX: 500, clientY: 400 });
     tick(33);
-    // Then: nothing beyond idle drift moved, nothing brightened
+    // Then: nothing was compiled and nothing was stirred
+    expect(h.fragDraws).toHaveLength(0);
     for (let i = 0; i < N; i++) {
-      expect(Math.abs(positions[i].x - before[i].x)).toBeLessThanOrEqual(0.12);
-      expect(Math.abs(positions[i].y - before[i].y)).toBeLessThanOrEqual(0.12);
+      expect(Math.abs(h.positions[i].x - before[i].x)).toBeLessThanOrEqual(0.12);
+      expect(Math.abs(h.positions[i].y - before[i].y)).toBeLessThanOrEqual(0.12);
     }
-    expect(ambientAlphas()).toEqual(new Array(N).fill(AMBIENT));
+    expect(h.ambientAlphas).toEqual(new Array(N).fill(AMBIENT));
+    // And: touch input does not feed the idle clock — the lone compile still fires
+    h.reset();
+    tick(IDLE_AFTER + 500);
+    expect(h.fragDraws).toHaveLength(0);
+    h.reset();
+    tick(IDLE_AFTER + 500 + IDLE_EVERY);
+    expect(h.fragDraws).toHaveLength(1);
   });
 
-  it('pointerout re-arms the seed: re-entry over the marks carries no stale-exit kick', () => {
-    // Given: a sheet whose pointer travelled far away from the marks
-    const { ctx, positions, ambientAlphas, reset } = makeCtx();
-    const tick = paper(ctx);
-    tick(0);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 50, clientY: 50 }); // seed
-    tick(33);
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 750, clientY: 550 }); // far travel, out of reach
-    tick(66);
-    // When: the pointer leaves and re-enters exactly over the marks
-    firePointer('pointerout', { pointerType: 'mouse', relatedTarget: null });
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 405, clientY: 305 });
-    reset();
-    tick(100);
-    // Then: the re-entry frame has zero travel (px re-seeded) — the stale
-    // 750→405 exit jump never became a kick: drift only, no bump
-    for (let i = 0; i < N; i++) {
-      expect(Math.abs(positions[i].x - 400)).toBeLessThan(1.5);
-      expect(Math.abs(positions[i].y - 300)).toBeLessThan(1.5);
+  it('never attaches a pointer listener on touch devices — only the idle compiler runs', () => {
+    // Given: a touch device (ontouchstart present + a nonzero touch point)
+    const hadTouch = Object.getOwnPropertyDescriptor(window, 'ontouchstart');
+    const hadPoints = Object.getOwnPropertyDescriptor(window.navigator, 'maxTouchPoints');
+    Object.defineProperty(window, 'ontouchstart', { value: null, configurable: true });
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      value: 1,
+      configurable: true,
+    });
+    try {
+      const h = makeCtx();
+      const tick = paper(h.ctx);
+      tick(0);
+      // When: a mouse sweeps the page anyway (hybrid laptop)
+      move(tick, 300, 300, 300);
+      move(tick, 600, 500, 400);
+      h.reset();
+      tick(1000);
+      // Then: no fragment was ever spawned from the pointer
+      expect(h.fragDraws).toHaveLength(0);
+      expect(h.ambientAlphas).toHaveLength(N);
+      // And: the idle compiler still runs on its own clock
+      h.reset();
+      tick(IDLE_AFTER + 500);
+      expect(h.fragDraws).toHaveLength(0);
+      h.reset();
+      tick(IDLE_AFTER + 500 + IDLE_EVERY);
+      expect(h.fragDraws).toHaveLength(1);
+    } finally {
+      if (hadTouch) Object.defineProperty(window, 'ontouchstart', hadTouch);
+      else delete (window as { ontouchstart?: unknown }).ontouchstart;
+      if (hadPoints) Object.defineProperty(window.navigator, 'maxTouchPoints', hadPoints);
+      else delete (window.navigator as { maxTouchPoints?: unknown }).maxTouchPoints;
     }
-    expect(ambientAlphas()).toEqual(new Array(N).fill(AMBIENT));
-    // When: the pointer genuinely sweeps from the re-entry point
-    firePointer('pointermove', { pointerType: 'mouse', clientX: 425, clientY: 325 });
-    reset();
-    tick(133);
-    // Then: the sweep kicks (20 px travel ⇒ visible nudge + brightness bump)
-    expect(Math.max(...ambientAlphas())).toBeGreaterThan(0.3);
-    expect(positions[0].x).toBeGreaterThan(400);
+  });
+
+  it('\\emph{ink} compiles into an italic serif set form', () => {
+    // Given: a sweep that walks the whole fixed map (the 12th fragment is emph)
+    const h = makeCtx();
+    const tick = paper(h.ctx);
+    tick(0);
+    move(tick, 33, 100, 100); // entry seed
+    let t = 33;
+    for (let i = 1; i <= 12; i++) {
+      t += SPAWN_EVERY + 5;
+      move(tick, t, 120 + i * 8, 200 + i * 10);
+    }
+    const emphBorn = t;
+    // When: that fragment compiles
+    h.reset();
+    tick(emphBorn + SOURCE_MS - 1);
+    const raw = h.fragDraws.filter((d) => d.text === '\\emph{ink}');
+    expect(raw).toHaveLength(1);
+    expect(raw[0].font).toMatch(/ui-monospace/);
+    h.reset();
+    tick(emphBorn + SOURCE_MS + FADE_MS);
+    // Then: it sets in the page's serif, italic, bistre ink
+    const ink = h.fragDraws.filter((d) => d.text === 'ink');
+    expect(ink).toHaveLength(1);
+    expect(ink[0].font).toMatch(/^italic /);
+    expect(ink[0].font).toMatch(/serif/);
+    expect(ink[0].fillStyle).toBe(BISTRE);
+    expect(ink[0].y % GRID_PX).toBe(0);
   });
 
   it('stops drawing and aborts its listeners once the canvas is detached', () => {
     // Given: a sheet that has painted
-    const { ctx, canvas, clearRect, fillText, reset } = makeCtx();
-    const tick = paper(ctx);
+    const h = makeCtx();
+    const tick = paper(h.ctx);
     tick(0);
-    expect(fillText).toHaveBeenCalledTimes(N);
-    reset();
+    expect(h.fillText).toHaveBeenCalledTimes(N);
+    h.reset();
     // When: the canvas leaves the document and frames keep ticking
-    canvas.remove();
+    h.canvas.remove();
     tick(33);
     tick(66);
     // Then: no paint happens and listeners are released
-    expect(clearRect).not.toHaveBeenCalled();
-    expect(fillText).not.toHaveBeenCalled();
-    reset();
+    expect(h.clearRect).not.toHaveBeenCalled();
+    expect(h.fillText).not.toHaveBeenCalled();
+    h.reset();
     firePointer('pointermove', { pointerType: 'mouse', clientX: 10, clientY: 10 });
     expect(() => tick(99)).not.toThrow();
   });

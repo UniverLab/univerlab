@@ -1,0 +1,77 @@
+---
+import Mark from './Mark.astro';
+import { buildLabBodies, labRings, labVarStyle, LAB } from '../lib/lab-system';
+import { getLang, useTranslations } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const bodies = buildLabBodies();
+const rings = labRings(bodies);
+---
+<figure class="lab-system">
+  <svg class="lab-svg" viewBox="0 0 460 420" data-orbit-well aria-hidden="true"
+       xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <radialGradient id="lab-halo">
+        <stop class="halo-a" offset="0" />
+        <stop class="halo-b" offset="1" />
+      </radialGradient>
+    </defs>
+    <circle class="lab-halo" cx={LAB.cx} cy={LAB.cy} r="58" />
+    <g class="lab-rings">
+      {rings.map((r) => <ellipse cx={LAB.cx} cy={LAB.cy} rx={r.rx} ry={r.ry} />)}
+    </g>
+    <g class="lab-mark" transform={`translate(${LAB.cx - 17} ${LAB.cy - 17})`}>
+      <Mark size={34} />
+    </g>
+    {bodies.map((b) => (
+      <g class="lab-body" aria-hidden="true" data-body={b.number} data-status={b.status}
+         data-ring={b.ring} style={`--body-color: ${b.essenceHex}; ${labVarStyle(b)}`}>
+        {b.status === 'active'
+          ? <circle class="lab-dot" r="4.5" fill={b.essenceHex} />
+          : <circle class="lab-dot is-hollow" r="4" fill="none" stroke={b.essenceHex} stroke-width="1.5" />}
+        <text class="lab-tag" x="9" y="0" dominant-baseline="middle">{b.number}</text>
+      </g>
+    ))}
+  </svg>
+  <figcaption class="lab-cap">{t.home.hero.systemCaption}</figcaption>
+</figure>
+<style>
+  .lab-system { margin: 0; display: flex; flex-direction: column; gap: 0.55rem;
+                width: 100%; max-width: 420px; align-items: stretch; cursor: default; }
+  .lab-svg { display: block; width: 100%; height: auto; }
+  .lab-halo { fill: url(#lab-halo); }
+  .halo-a { stop-color: var(--accent); stop-opacity: 0.16; }
+  .halo-b { stop-color: var(--accent); stop-opacity: 0; }
+  .lab-rings ellipse { fill: none; stroke: var(--line); stroke-width: 1; opacity: 0.55; }
+  /* Mark is a child component: its svg carries no LabSystem scope attribute,
+     so the descendant must be :global() or the accent fill never applies. */
+  .lab-mark :global(svg) { fill: var(--accent); opacity: 0.92; }
+  .lab-dot { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--body-color) 60%, transparent)); }
+  .lab-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; fill: var(--ink-dim); }
+  .lab-cap { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+             color: var(--ink-dim); margin: 0; }
+  .lab-body { transform: translate(var(--k0x), var(--k0y)); }
+  @media (prefers-reduced-motion: no-preference) {
+    .lab-body { animation: lab-orbit var(--period, 120s) linear infinite; }
+  }
+  @keyframes lab-orbit {
+    0% { transform: translate(var(--k0x), var(--k0y)); }
+    6.25% { transform: translate(var(--k1x), var(--k1y)); }
+    12.5% { transform: translate(var(--k2x), var(--k2y)); }
+    18.75% { transform: translate(var(--k3x), var(--k3y)); }
+    25% { transform: translate(var(--k4x), var(--k4y)); }
+    31.25% { transform: translate(var(--k5x), var(--k5y)); }
+    37.5% { transform: translate(var(--k6x), var(--k6y)); }
+    43.75% { transform: translate(var(--k7x), var(--k7y)); }
+    50% { transform: translate(var(--k8x), var(--k8y)); }
+    56.25% { transform: translate(var(--k9x), var(--k9y)); }
+    62.5% { transform: translate(var(--k10x), var(--k10y)); }
+    68.75% { transform: translate(var(--k11x), var(--k11y)); }
+    75% { transform: translate(var(--k12x), var(--k12y)); }
+    81.25% { transform: translate(var(--k13x), var(--k13y)); }
+    87.5% { transform: translate(var(--k14x), var(--k14y)); }
+    93.75% { transform: translate(var(--k15x), var(--k15y)); }
+    100% { transform: translate(var(--k0x), var(--k0y)); }
+  }
+  @media (max-height: 48rem) and (min-width: 1100px) { .lab-system { max-width: 340px; } }
+</style>

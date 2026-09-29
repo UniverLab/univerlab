@@ -104,7 +104,7 @@ describe('createSpotlight', () => {
     spot.paint(c, 10, 20);
     // Then: a single radial gradient is filled with 'lighter' and reset after
     expect(c.createRadialGradient).toHaveBeenCalledWith(10, 20, 0, 10, 20, 420);
-    expect(stops[0]).toEqual([0, 'rgba(167,139,250,0.10)']);
+    expect(stops[0]).toEqual([0, 'rgba(167,139,250,0.05)']);
     expect(stops[1]).toEqual([1, 'rgba(167,139,250,0)']);
     expect(c.fillRect).toHaveBeenCalledWith(10 - 420, 20 - 420, 840, 840);
     expect(c.globalCompositeOperation).toBe('source-over');

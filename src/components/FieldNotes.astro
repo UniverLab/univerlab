@@ -1,0 +1,125 @@
+---
+import { byId, type ExperimentId } from '../lib/experiments';
+import { getLang, useTranslations, localizePath } from '../i18n';
+
+interface Props { id: ExperimentId; }
+const { id } = Astro.props;
+const exp = byId(id);
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const statusHref = localizePath(`/status?topic=${exp.id}`, lang);
+---
+<section class="wrap field-notes" data-exp-id={exp.id} data-exp-name={exp.name}
+         data-empty={t.notes.empty} data-status-link={t.notes.statusLink}
+         data-status-href={statusHref}
+         data-lanes={JSON.stringify(t.roadmap.lanes)} data-dash={t.plate.none}>
+  <span class="label">{t.notes.heading}</span>
+  <div class="fn-body" data-fn-body>
+    <div class="fn-skeleton"></div><div class="fn-skeleton"></div><div class="fn-skeleton"></div>
+  </div>
+</section>
+
+<style>
+  .field-notes { padding-block: 3rem; max-width: 52rem; }
+  .field-notes h2, .field-notes .fn-title { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .fn-body { min-height: 12rem; display: flex; flex-direction: column; gap: 1.2rem; }
+  .fn-skeleton {
+    height: 2.6rem; border: 1px solid var(--line); background: var(--bg-raise);
+    animation: fn-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes fn-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  .fn-item { border-bottom: 1px solid var(--line); padding-block: 1rem; }
+  .fn-item:first-child { border-top: 1px solid var(--line); }
+  .fn-date { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+  .fn-item h3 { font-size: 1rem; margin: 0.4rem 0; color: var(--ink); }
+  .fn-item p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
+  .fn-empty { color: var(--ink-dim); font-size: 0.95rem; }
+  .fn-roadmap { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  .fn-roadmap li { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-dim); }
+  .fn-roadmap li::before { content: '○ '; color: var(--essence); }
+  .fn-link { color: var(--essence); font-family: var(--font-mono); font-size: 0.85rem; text-decoration: none; }
+  .fn-link:hover { text-decoration: underline; }
+</style>
+
+<script>
+  import { loadBoardData } from '../lib/announcements-client';
+  import { selectEntries, topicRoadmap, excerpt } from '../lib/field-notes';
+  import { formatMissionDate } from '../lib/mission-time';
+
+  (async () => {
+    const section = document.querySelector<HTMLElement>('.field-notes[data-exp-id]');
+    if (!section) return;
+    const body = section.querySelector('[data-fn-body]');
+    if (!body) return;
+    const id = section.dataset.expId ?? '';
+    const name = section.dataset.expName ?? '';
+    const emptyLine = section.dataset.empty ?? '';
+    const statusLink = section.dataset.statusLink ?? '';
+    const statusHref = section.dataset.statusHref ?? `/status?topic=${id}`;
+    let lanes: Record<string, string> | null = null;
+    try {
+      lanes = section.dataset.lanes ? JSON.parse(section.dataset.lanes) : null;
+    } catch {
+      lanes = null;
+    }
+    const exp = { id, name };
+
+    const statusAnchor = (): HTMLAnchorElement => {
+      const a = document.createElement('a');
+      a.className = 'fn-link';
+      a.href = statusHref;
+      a.textContent = statusLink;
+      return a;
+    };
+
+    let data: Awaited<ReturnType<typeof loadBoardData>>;
+    try {
+      data = await loadBoardData();
+    } catch {
+      data = null;
+    }
+    body.textContent = '';
+    if (!data) {
+      const p = document.createElement('p');
+      p.className = 'fn-empty';
+      p.textContent = emptyLine;
+      body.appendChild(p);
+      return;
+    }
+    const items = selectEntries(data.entries, exp, 3);
+    if (items.length > 0) {
+      for (const d of items) {
+        const article = document.createElement('article');
+        article.className = 'fn-item';
+        const time = document.createElement('time');
+        time.className = 'fn-date';
+        time.textContent = formatMissionDate(d.date);
+        const h = document.createElement('h3');
+        h.textContent = d.title;
+        const p = document.createElement('p');
+        p.textContent = excerpt(d.body, 160);
+        article.append(time, h, p);
+        body.appendChild(article);
+      }
+      body.appendChild(statusAnchor());
+      return;
+    }
+    const rows = topicRoadmap(data.roadmap, id);
+    const p = document.createElement('p');
+    p.className = 'fn-empty';
+    p.textContent = emptyLine;
+    body.appendChild(p);
+    if (rows.length > 0) {
+      const ul = document.createElement('ul');
+      ul.className = 'fn-roadmap';
+      for (const r of rows) {
+        const li = document.createElement('li');
+        const state = lanes && typeof lanes[r.state] === 'string' ? lanes[r.state] : r.state;
+        li.textContent = `${r.title} · ${state}`;
+        ul.appendChild(li);
+      }
+      body.appendChild(ul);
+    }
+    body.appendChild(statusAnchor());
+  })();
+</script>

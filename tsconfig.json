@@ -7,6 +7,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "bundler",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
     "types": ["jest"],
     "jsx": "preserve",
     "lib": ["DOM", "DOM.Iterable", "ESNext"]
