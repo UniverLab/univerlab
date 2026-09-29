@@ -90,7 +90,7 @@ const ogImage = `/og/${id}.png`;
 ---
 <BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
-    <section class="wrap hero">
+    <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
       {/* The product name is stated twice on purpose (user decision
@@ -198,7 +198,14 @@ const ogImage = `/og/${id}.png`;
 </BaseLayout>
 
 <style>
-  .exp { --essence: var(--accent); animation: page-reveal 0.5s ease both; }
+  .exp { --essence: var(--accent); }
+  /* The new-document snapshot is frozen at first paint: a page-reveal running
+     inside the morph would capture the hero at opacity 0 (invisible). Gate the
+     fade-in to engines without (cross-document) view transitions; the Chrome
+     morph replaces it, Firefox keeps the reveal. */
+  @supports not (view-transition-name: none) {
+    .exp { animation: page-reveal 0.5s ease both; }
+  }
   @keyframes page-reveal {
     from { opacity: 0; }
     to   { opacity: 1; }

@@ -1,9 +1,11 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
-import { getLang, useTranslations } from '../../i18n';
+import { getLang, useTranslations, motifOf } from '../../i18n';
+import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.cadspec;
+const exp = byId('cadspec');
 ---
 <ExperimentLayout id="cadspec">
   <!-- No canvas on this page: the decided register is that the living
@@ -12,7 +14,7 @@ const e = t.experiments.cadspec;
        script). Nothing mounts a runner here — BaseLayout already skips its
        own canvas for stillSurfaces (blueprint included) — so no strokes,
        arcs or cotas ever paint over the paper. -->
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{e.hero.motif}</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{motifOf(exp, t)}</p>
   <!-- Product artifacts are anchored to the hero, not inserted into the CTA row. -->
   <Fragment slot="hero-visual">
     <div class="art art-coords">

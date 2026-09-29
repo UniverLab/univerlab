@@ -9,7 +9,7 @@ const exp = byId('ghscaff');
 ---
 <ExperimentLayout id="ghscaff" hideGithub>
   <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">+--+ 07 lifts · idempotent +--+</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <Fragment slot="hero-visual">
     <div class="wizard">
       <p class="mono-kicker"><span class="label">{e.lifts.kicker}</span></p>

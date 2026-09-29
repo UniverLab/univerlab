@@ -22,7 +22,19 @@ interface Ctx {
   dpr: number;
 }
 
-export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: string, bg = '#0a0b0e') {
+/** Mount a themed runner on a canvas.
+ *  `surface` is optional: when passed it selects the runner (and the surface's
+ *  colour overrides) instead of `documentElement.dataset.surface` — the home
+ *  cards pass their experiment's own surface so a card window previews exactly
+ *  what its page runs. With no 5th argument the behavior is bit-for-bit what
+ *  the pages do today. */
+export function startBackground(
+  canvas: HTMLCanvasElement,
+  theme: Theme,
+  color: string,
+  bg = '#0a0b0e',
+  surface?: string
+) {
   const c = canvas.getContext('2d');
   if (!c) return;
 
@@ -37,22 +49,27 @@ export function startBackground(canvas: HTMLCanvasElement, theme: Theme, color: 
     ctx.h = canvas.clientHeight;
     canvas.width = Math.floor(ctx.w * dpr);
     canvas.height = Math.floor(ctx.h * dpr);
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.c.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
   window.addEventListener('resize', debounce(resize, 200));
 
-  // The cream `paper` surface (texforge) mounts its own quiet motif instead of
-  // the experiment's BgTheme: forge embers are the wrong register on
-  // parchment, and BgTheme's type is owned by the experiment registry (out of
-  // scope to extend with a new key), so the surface flag is the selector.
+  // The surface selector — the explicit `surface` argument when the caller
+  // has one (the home card passes its experiment's own surface, so the window
+  // previews exactly what its page runs), else the page's `data-surface` on
+  // <html>, which is the path every experiment page takes. The cream `paper`
+  // surface (texforge) mounts its own quiet motif instead of the experiment's
+  // BgTheme: forge embers are the wrong register on parchment, and BgTheme's
+  // type is owned by the experiment registry (out of scope to extend with a
+  // new key), so the surface flag is the selector.
   // Reduced motion never reaches this module at all — ThemeBackground returns
   // before importing it.
-  const isPaper = document.documentElement.dataset.surface === 'paper';
+  const surf = surface ?? document.documentElement.dataset.surface;
+  const isPaper = surf === 'paper';
   if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
-  const isPastel = document.documentElement.dataset.surface === 'pastel';
+  const isPastel = surf === 'pastel';
   if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
-  const runner = isPaper ? paper : (THEMES[theme] ?? THEMES.cosmic);
+  const runner = pickRunner(theme, surf);
   const tick = runner(ctx);
 
   let raf = 0;
@@ -87,6 +104,17 @@ function debounce(fn: () => void, ms: number) {
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 type Runner = (ctx: Ctx) => (t: number) => void;
+
+/** Which runner a theme gets on a given surface. The surface wins whenever it
+ *  is known: `paper` (texforge) mounts the quiet parchment motif instead of
+ *  the theme's own runner, so a landing card that passes its experiment's
+ *  surface runs the very runner its page runs. With no surface the selector
+ *  falls back to the page's `data-surface` — the unchanged path for every
+ *  experiment page. Pure: no DOM write, one DOM read (the page fallback). */
+export function pickRunner(theme: Theme, surface?: string): Runner {
+  const surf = surface ?? document.documentElement.dataset.surface;
+  return surf === 'paper' ? paper : (THEMES[theme] ?? THEMES.cosmic);
+}
 
 const THEMES: Record<Theme, Runner> = {
   /* Cosmic — motes orbiting a gravity well at (w/2, 0.42h): the universe /

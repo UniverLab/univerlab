@@ -1,9 +1,11 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
+import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['astro-denoise'];
+const exp = byId('astro-denoise');
 
 // Affiliation / data-source logos — brand-manual versions, made for dark bg.
 const logos = [
@@ -19,7 +21,7 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
 ---
 <ExperimentLayout id="astro-denoise" hideGithub>
   <a slot="cta-first" class="proposal btn" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">⁘∴⁙∵ ──∿──→ · ✦ ·</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
 
   <section class="wrap section">
     <span class="label">{e.questions.kicker}</span>

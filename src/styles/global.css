@@ -345,6 +345,35 @@ strong { color: var(--essence, var(--accent)); font-weight: 500; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
+/* Cross-document view transitions — landing cards are windows onto the
+   experiment (lhome-cards-window). Both documents opt in; browsers without
+   support navigate plainly. */
+@view-transition { navigation: auto; }
+
+/* `body > header`, not `header`: /manifesto and /status nest their own
+   <header>s, and a duplicate view-transition-name inside one document aborts
+   the whole transition. The site chrome alone is shared so it stays put. */
+body > header { view-transition-name: site-header; }
+
+/* The zoom: every experiment group (`exp-<id>`, on the card AND on the
+   destination hero) morphs for 550 ms on the expo-out curve. The family is
+   carried by `view-transition-class` — NOT by the literal wildcard
+   `::view-transition-group(exp-*)`: <pt-name-selector> is only `*` |
+   <custom-ident>, so Chrome parses that as `exp-` + a stray `*`, drops the
+   rule entirely, and the morph silently falls back to the UA 250 ms
+   (verified in Chrome 149). Class support (Chrome 125 / Firefox 144 /
+   Safari 18.2) covers every engine with cross-document view transitions. */
+::view-transition-group(.exp-zoom) {
+  animation-duration: 550ms;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    Global overlay skins — the chrome for elements created at runtime:
    the command palette, the in-page find bar and the demo dialog. These used

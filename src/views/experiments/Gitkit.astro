@@ -9,7 +9,7 @@ const exp = byId('gitkit');
 ---
 <ExperimentLayout id="gitkit" hideGithub>
   <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
-  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">o──o──◆ origin/main · 3 hooks · idempotent</p>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <Fragment slot="hero-visual">
     <div class="wrap section hero-stage">
       <div class="mocks" aria-hidden="true">

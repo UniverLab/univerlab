@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LabSystem from '../components/LabSystem.astro';
 import { experiments } from '../lib/experiments';
-import { getLang, useTranslations, localizePath } from '../i18n';
+import { getLang, useTranslations, localizePath, motifOf } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const site = Astro.site ?? new URL('https://univerlab.org');
@@ -44,10 +44,20 @@ const webSite = {
     <ul class="grid">
       {experiments.map((exp) => {
         const e = t.experiments[exp.id];
+        const motif = motifOf(exp, t);
+        const circVars = exp.circadianPalette
+          ? Object.entries(exp.circadianPalette.day)
+              .map(([k, v]) => `--q-day-${k.slice(2)}: ${v}`)
+              .join('; ') + '; ' +
+            Object.entries(exp.circadianPalette.night)
+              .map(([k, v]) => `--q-night-${k.slice(2)}: ${v}`)
+              .join('; ') + '; '
+          : '';
         return (
           <li style={`--essence: ${exp.essenceHex}`}>
-            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg} data-flip-surface={exp.surface}>
+            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg} data-flip-surface={exp.surface} style={`view-transition-name: exp-${exp.id}; view-transition-class: exp-zoom; ${circVars}`}>
               <canvas class="card-bg-canvas" aria-hidden="true"></canvas>
+              <span class="card-motif" aria-hidden="true">{motif}</span>
               <div class="card-glow" aria-hidden="true"></div>
               <div class="card-top">
                 <span class="num">{exp.number}</span>
@@ -209,7 +219,7 @@ const webSite = {
   .card.is-tapped .card-bg-canvas { opacity: 1; }
 
   /* Content sits above the canvas */
-  .card > *:not(.card-bg-canvas):not(.card-glow) { position: relative; z-index: 1; }
+  .card > *:not(.card-bg-canvas):not(.card-glow):not(.card-motif) { position: relative; z-index: 1; }
   .card:hover,
   .card:focus-visible,
   .card.is-tapped {
@@ -256,137 +266,61 @@ const webSite = {
     box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent);
   }
 
-  /* Terminal dots bar — canopy chrome (unchanged mechanism, kept verbatim). */
-  .card[data-exp='canopy']::before {
-    content: '● ● ●     ~/canopy';
+  /* ── Card motif strip: the page's own hero ASCII motif, revealed with the
+     window flip in the surface's current faint ink (mono, page register). ── */
+  .card-motif {
     position: absolute;
-    top: 0; left: 0; right: 0;
-    padding: 0.5rem 1rem;
+    top: 0.55rem;
+    right: 0.9rem;
+    z-index: 1;
     font-family: var(--font-mono);
     font-size: 0.6rem;
     letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.25);
-    background: rgba(255,255,255,0.03);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--ink-faint);
+    max-width: 58%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: 1;
+    pointer-events: none;
   }
-  .card[data-exp='canopy']:hover::before,
-  .card[data-exp='canopy']:focus-visible::before,
-  .card[data-exp='canopy'].is-tapped::before { opacity: 1; }
+  .card:hover .card-motif,
+  .card:focus-visible .card-motif,
+  .card.is-tapped .card-motif { opacity: 0.85; }
 
-  /* Blinking cursor */
-  .card[data-exp='canopy']::after {
-    content: '▋';
-    position: absolute;
-    bottom: 1rem; right: 1rem;
-    font-family: var(--font-mono);
-    font-size: 1.1rem;
-    color: var(--canopy);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1; /* sits above the now-full-opacity canvas */
-  }
-  .card[data-exp='canopy']:hover::after,
-  .card[data-exp='canopy']:focus-visible::after,
-  .card[data-exp='canopy'].is-tapped::after {
-    opacity: 0.8;
-    animation: cursor-blink 1.06s step-end infinite;
-  }
-  @keyframes cursor-blink {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 0; }
-  }
-
-  /* ── Quorum — circadian exception: flips to the ACTIVE day/night tokens
-     (values mirror the registry's circadianPalette in experiments.ts). These
-     rules out-rank the generic flip rule (more class/attr compounds), so
-     quorum's data-flip-surface group (its espresso no-JS substrate) never
-     applies to the card. ── */
+  /* ── Quorum — circadian exception: redirects to the ACTIVE day/night tokens
+     (inline --q-day-*/--q-night-* from the registry's circadianPalette, set on
+     the card anchor). Only --surface-* are reassigned; background, color and
+     box-shadow come from the generic flip rule above, so the card can never
+     drift from the registry again. ── */
   html[data-celestial='sun'] .card[data-exp='quorum']:hover,
   html[data-celestial='sun'] .card[data-exp='quorum']:focus-visible,
   html[data-celestial='sun'] .card[data-exp='quorum'].is-tapped {
-    --bg: #f0e8da;
-    --bg-raise: #f7f2e8;
-    --ink: #3a2a1a;
-    --ink-dim: #7a6a52;
-    --ink-faint: #a89878;
-    --line: #ddd2c0;
-    background: var(--bg);
-    color: var(--ink);
-    border-left-color: var(--essence);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    --surface-bg: var(--q-day-bg);
+    --surface-bg-raise: var(--q-day-bg-raise);
+    --surface-ink: var(--q-day-ink);
+    --surface-ink-dim: var(--q-day-ink-dim);
+    --surface-ink-faint: var(--q-day-ink-faint);
+    --surface-line: var(--q-day-line);
   }
   html[data-celestial='moon'] .card[data-exp='quorum']:hover,
   html[data-celestial='moon'] .card[data-exp='quorum']:focus-visible,
   html[data-celestial='moon'] .card[data-exp='quorum'].is-tapped {
-    --bg: #241a12;
-    --bg-raise: #2f2318;
-    --ink: #f2e7d3;
-    --ink-dim: #b8a583;
-    --ink-faint: #8a7a5e;
-    --line: #40331f;
-    background: var(--bg);
-    color: var(--ink);
-    border-left-color: var(--essence);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    --surface-bg: var(--q-night-bg);
+    --surface-bg-raise: var(--q-night-bg-raise);
+    --surface-ink: var(--q-night-ink);
+    --surface-ink-dim: var(--q-night-ink-dim);
+    --surface-ink-faint: var(--q-night-ink-faint);
+    --surface-line: var(--q-night-line);
   }
 
-  /* ── Essence accents — per-experiment by FR ("essence rules stay
-     per-experiment but reference --essence only"). --essence is the inline
-     registry hex on each card's <li>; h3 inherits the flip ink and .num the
-     essence, so only h3/.num need the flip accent. (Old quorum blocks used
-     var(--quorum), which is not defined in :root — the h3/border were
-     silently inheriting ink; --essence restores the intended amber.) */
-  .card[data-exp='canopy']:hover h3,
-  .card[data-exp='canopy']:focus-visible h3,
-  .card[data-exp='canopy'].is-tapped h3,
-  .card[data-exp='canopy']:hover .num,
-  .card[data-exp='canopy']:focus-visible .num,
-  .card[data-exp='canopy'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='texforge']:hover h3,
-  .card[data-exp='texforge']:focus-visible h3,
-  .card[data-exp='texforge'].is-tapped h3,
-  .card[data-exp='texforge']:hover .num,
-  .card[data-exp='texforge']:focus-visible .num,
-  .card[data-exp='texforge'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='gitkit']:hover h3,
-  .card[data-exp='gitkit']:focus-visible h3,
-  .card[data-exp='gitkit'].is-tapped h3,
-  .card[data-exp='gitkit']:hover .num,
-  .card[data-exp='gitkit']:focus-visible .num,
-  .card[data-exp='gitkit'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='ghscaff']:hover h3,
-  .card[data-exp='ghscaff']:focus-visible h3,
-  .card[data-exp='ghscaff'].is-tapped h3,
-  .card[data-exp='ghscaff']:hover .num,
-  .card[data-exp='ghscaff']:focus-visible .num,
-  .card[data-exp='ghscaff'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='cadspec']:hover h3,
-  .card[data-exp='cadspec']:focus-visible h3,
-  .card[data-exp='cadspec'].is-tapped h3,
-  .card[data-exp='cadspec']:hover .num,
-  .card[data-exp='cadspec']:focus-visible .num,
-  .card[data-exp='cadspec'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='astro-denoise']:hover h3,
-  .card[data-exp='astro-denoise']:focus-visible h3,
-  .card[data-exp='astro-denoise'].is-tapped h3,
-  .card[data-exp='astro-denoise']:hover .num,
-  .card[data-exp='astro-denoise']:focus-visible .num,
-  .card[data-exp='astro-denoise'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='demostage']:hover h3,
-  .card[data-exp='demostage']:focus-visible h3,
-  .card[data-exp='demostage'].is-tapped h3,
-  .card[data-exp='demostage']:hover .num,
-  .card[data-exp='demostage']:focus-visible .num,
-  .card[data-exp='demostage'].is-tapped .num { color: var(--essence); }
-  .card[data-exp='quorum']:hover h3,
-  .card[data-exp='quorum']:focus-visible h3,
-  .card[data-exp='quorum'].is-tapped h3,
-  .card[data-exp='quorum']:hover .num,
-  .card[data-exp='quorum']:focus-visible .num,
-  .card[data-exp='quorum'].is-tapped .num { color: var(--essence); }
+  /* ── Essence accent — one generic rule. --essence is the inline registry hex
+     on each card's <li>; h3 inherits the flip ink and .num already reads
+     var(--essence) by default, so only h3 needs the flip accent. ── */
+  .card:hover h3,
+  .card:focus-visible h3,
+  .card.is-tapped h3 { color: var(--essence); }
 
   /* Focus state for accessibility — generic fallback (no data-exp) */
   .card:not([data-exp]):focus-visible {
@@ -401,9 +335,6 @@ const webSite = {
   @media (hover: none) {
     .card:active { transform: scale(0.98); }
     .card:active .card-glow { opacity: 0; }  /* matches the flip: glow retires */
-    /* Only canopy still carries pseudo-element chrome; the other motifs were
-       removed with their base rules in the card rebuilds. */
-    .card[data-exp='canopy']:active::after { opacity: 0.7; }
   }
   .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
   .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
@@ -450,94 +381,32 @@ const webSite = {
   import { startBackground } from '../scripts/backgrounds';
   import type { BgTheme } from '../lib/experiments';
 
-  const surfaces: Record<string, { bg: BgTheme; essence: string; bgHex: string; bgHexLight: string; motif?: string }> = {
-    canopy:      { bg: 'brain',       essence: '#5dd39e', bgHex: '#0d0e10', bgHexLight: '#f5f5f3', motif: '◉' },
-    texforge:    { bg: 'forge',       essence: '#e0a458', bgHex: '#f5f5f3', bgHexLight: '#f5f5f3', motif: '⁂' },
-    gitkit:      { bg: 'bubbles',     essence: '#e8a4c8', bgHex: '#f5eef5', bgHexLight: '#f5eef5', motif: '🍒' },
-    ghscaff:     { bg: 'scaffold',    essence: '#b87333', bgHex: '#0e0c0a', bgHexLight: '#f5f5f3', motif: '⬡' },
-    cadspec:     { bg: 'primitives',  essence: '#6ec6e6', bgHex: '#f6f8fa', bgHexLight: '#f6f8fa', motif: '▣' },
-    'astro-denoise': { bg: 'starfield', essence: '#a78bfa', bgHex: '#0a0911', bgHexLight: '#f5f5f3', motif: '✦' },
-    demostage:   { bg: 'takes',       essence: '#ef8354', bgHex: '#f6f3ee', bgHexLight: '#f6f3ee', motif: '●' },
-    quorum:      { bg: 'spiral',      essence: '#e6b24a', bgHex: '#241a12', bgHexLight: '#f0e8da', motif: '∞' },
+  // Card window: start the experiment's OWN runner on hover/focus. The
+  // [data-flip-surface] groups apply their --surface-* tokens to the card
+  // unconditionally, so reading computed --essence/--surface-bg here always
+  // yields the surface's own current substrate — no duplicated hexes.
+  const startCard = (card: HTMLAnchorElement) => {
+    const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
+    if (!canvas || canvas.dataset.started) return;
+    canvas.dataset.started = '1';
+    const theme = (card.dataset.theme ?? 'cosmic') as BgTheme;
+    const surf = card.dataset.flipSurface;
+    const cs = getComputedStyle(card);
+    const color = cs.getPropertyValue('--essence').trim() || '#e6c84a';
+    const bg = cs.getPropertyValue('--surface-bg').trim() || '#0a0b0e';
+    startBackground(canvas, theme, color, bg, surf);
   };
 
   // Start background animation on hover
   document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
-    const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
-    const expId = card.dataset.exp;
-    if (!canvas || !expId) return;
-    const s = surfaces[expId];
-    if (!s) return;
-
-    let started = false;
-    const startAnim = () => {
-      if (started) return;
-      started = true;
-      startBackground(canvas, s.bg, s.essence, s.bgHex);
-    };
-    card.addEventListener('mouseenter', startAnim);
-    card.addEventListener('focus', startAnim);
+    card.addEventListener('mouseenter', () => startCard(card));
+    card.addEventListener('focus', () => startCard(card));
   });
 
-  // Crossfade: expand from card, navigate, fade-in on destination
-  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
-    card.addEventListener('click', (e) => {
-      const href = card.getAttribute('href');
-      const expId = card.dataset.exp;
-      if (!href || !expId) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-      e.preventDefault();
-
-      const rect = card.getBoundingClientRect();
-      const s = surfaces[expId];
-      const isMoon = document.documentElement.dataset.celestial === 'moon';
-      const color = isMoon ? (s?.bgHex || '#0a0b0e') : (s?.bgHexLight || '#f5f5f3');
-      // motif is a glyph constant from the surfaces map (user data safe to inline)
-      const motif = s?.motif || '';
-
-      // Expanding overlay — the motif lives inside a span so it scales with the
-      // expand instead of sitting static. Both the clip-path and the span
-      // transition are filtered to clip-path on transitionend so navigation
-      // doesn't race on the span's own event.
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `
-        position: fixed; inset: 0; z-index: 9999;
-        background: ${color};
-        display: flex; align-items: center; justify-content: center;
-        font-family: var(--font-mono); font-size: 4rem;
-        color: ${s?.essence || '#e6c84a'};
-        clip-path: inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px);
-        transition: clip-path 0.75s cubic-bezier(0.16, 0.84, 0.44, 1);
-      `;
-      overlay.innerHTML = `<span style="display:inline-block;transform:scale(0.55);opacity:0.4;transition:transform 0.75s cubic-bezier(0.16,0.84,0.44,1),opacity 0.75s ease">${motif}</span>`;
-      document.body.appendChild(overlay);
-
-      requestAnimationFrame(() => {
-        overlay.style.clipPath = 'inset(0px 0px 0px 0px)';
-        const motif = overlay.firstElementChild as HTMLElement | null;
-        if (motif) {
-          motif.style.transform = 'scale(1)';
-          motif.style.opacity = '1';
-        }
-      });
-
-      // Navigate when the expand finishes. The transitionend listener filters
-      // to clip-path (the span also fires its own); the timeout is a guard
-      // for browsers that don't fire transitionend reliably.
-      let nav = false;
-      const go = () => {
-        if (!nav) {
-          nav = true;
-          window.location.href = href;
-        }
-      };
-      overlay.addEventListener('transitionend', (ev) => {
-        if ((ev as TransitionEvent).propertyName === 'clip-path') go();
-      });
-      setTimeout(go, 820);
-    });
-  });
+  // Click zoom is native cross-document View Transitions (global.css opts in,
+  // each card and its destination hero share view-transition-name: exp-<id>).
+  // No JS interception: the anchor navigates immediately and the browser
+  // morphs the card into the hero. Browsers without support navigate plainly.
 
   // Mobile tap: preview the surface, then navigate. A tap only counts as a tap
   // if the finger stayed put — starting a scroll on a card must scroll, never
@@ -564,16 +433,8 @@ const webSite = {
         startedAt = performance.now();
         candidate = true;
         card.classList.add('is-tapped');
-        // Start canvas animation on tap too
-        const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
-        const expId = card.dataset.exp;
-        if (canvas && expId && !canvas.dataset.started) {
-          const s = surfaces[expId];
-          if (s) {
-            canvas.dataset.started = '1';
-            startBackground(canvas, s.bg, s.essence, s.bgHex);
-          }
-        }
+        // Start the card window preview on tap too
+        startCard(card);
       }, { passive: true });
 
       card.addEventListener('touchmove', (e) => {
@@ -594,9 +455,8 @@ const webSite = {
         if (card.dataset.navigated === 'true') return;
         e.preventDefault();
         card.dataset.navigated = 'true';
-        // Hold the surface preview briefly so the tap reads, then run the
-        // normal click handler (expanding portal transition). Total ~1.15s
-        // worst case (350 + 820 timeout) so the user perceives motion, not lag.
+        // Hold the window preview briefly so the tap reads, then run the
+        // native anchor navigation (card.click() → View Transition).
         setTimeout(() => {
           card.classList.remove('is-tapped');
           card.click();
@@ -605,9 +465,8 @@ const webSite = {
     });
   }
 
-  // Clean up stale overlays on back-navigation (BFCache restore)
+  // Clean up stale tap state on back-navigation (BFCache restore)
   window.addEventListener('pageshow', () => {
-    document.querySelectorAll('[style*="z-index: 9999"]').forEach((el) => el.remove());
     document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
       card.dataset.navigated = 'false';
       card.classList.remove('is-tapped');
