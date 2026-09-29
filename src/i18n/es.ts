@@ -4,7 +4,11 @@ import type { Dict } from './en';
  *  los repositorios permanece solo en inglés. */
 export const es: Dict = {
   meta: {
-    title: 'Herramientas CLI abiertas para LaTeX, git y CAD — UniverLab',
+    // 54 chars: "de código abierto" is the site's own term for open-source
+    // (hero h1, description) — "abiertas" alone does not say open-source, and
+    // the literal "Herramientas CLI de código abierto …" is 67 chars, so the
+    // noun goes and the topics stay, mirroring the English title's shape.
+    title: 'CLI de código abierto para LaTeX, git, CAD — UniverLab',
     description:
       'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
   },
