@@ -194,3 +194,8 @@ describe('releases.ts', () => {
     });
   });
 });
+
+// Keep this file a module: without it the top-level `mockFetch`/`originalEnv`
+// live in the global scope and collide with contributors.test.ts's identically
+// named scripts, which `tsc` reports as duplicate block-scoped variables.
+export {};
