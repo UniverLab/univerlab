@@ -29,7 +29,7 @@ const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 const nav = [
   { label: t.nav.experiments, exp: true } as { label: string; exp: boolean; href?: string },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
-  { href: localizePath('/status', lang), label: t.nav.log },
+  { href: '/status/', label: t.nav.log }, // English-only page, no /es twin
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: githubHref, label: t.nav.github, ext: true },
   { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
