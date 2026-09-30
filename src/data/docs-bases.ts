@@ -55,10 +55,17 @@ export function docsGithubUrl(id: string, rel: string, anchor = ''): string {
   return `https://github.com/${docsRepo(id)}/blob/main/docs/${rel}${anchor}`;
 }
 
-/** Routes that used to build but must now 301 to the tool docs index. */
+/**
+ * Routes that used to build (and the `.md` sources that used to redirect to
+ * them) but must now 301 to the tool docs index. The `.md` forms were live
+ * rules in `_redirects` before the exclusion; dropping them silently would
+ * turn a 301 into a 404.
+ */
 export const DOCS_EXCLUDED_REDIRECTS: readonly string[] = [
   '/canopy/docs/adr/0001-recipes/ /canopy/docs/ 301',
   '/canopy/docs/adr/0001-recipes/index.md /canopy/docs/ 301',
+  '/canopy/docs/adr/0001-recipes.md /canopy/docs/ 301',
   '/demostage/docs/decisions/browser-events/ /demostage/docs/ 301',
   '/demostage/docs/decisions/browser-events/index.md /demostage/docs/ 301',
+  '/demostage/docs/decisions/browser-events.md /demostage/docs/ 301',
 ];

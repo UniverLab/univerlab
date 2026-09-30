@@ -90,6 +90,11 @@ export function rewriteMdHref(href: string, id: string, docDir = ''): HrefRewrit
     // a true equivalent on this site, the experiment page. A `../` that stays
     // inside the docs folder, or escapes to anything else, is left alone.
     const { path: target, escaped } = resolveRelative(docDir, path);
+    if (!escaped && isDocsExcluded(target)) {
+      // A `../` that lands back inside docs/ on a design record still points
+      // at a path that never builds: the same GitHub rule as any excluded link.
+      return { href: docsGithubUrl(id, target, anchor), rewritten: true };
+    }
     if (!escaped || target.toLowerCase() !== 'readme.md') return { href, rewritten: false };
     return { href: `/${id}/`, rewritten: true };
   }
@@ -105,9 +110,14 @@ export function rewriteMdHref(href: string, id: string, docDir = ''): HrefRewrit
   // Excluded design records never build to site routes, so a link into one
   // points at the file on the repo's default branch instead of a 404 route.
   // The anchor is preserved: it names a heading of the file that does exist.
+  // Exclusion is evaluated on `rel`, the docDir-aware path the link actually
+  // resolves to — never on the extension-stripped `slug`. A published
+  // `design.md` folds to the excluded directory name `design`, and a link to
+  // that file must build a route, not leap to GitHub; `rel` keeps a file and
+  // the directory it is named after apart.
   const rel = `${docDir ? `${docDir}/` : ''}${path.replace(/^\.\//, '')}`;
-  if (isDocsExcluded(slug) || isDocsExcluded(`${slug}.md`) || isDocsExcluded(rel)) {
-    return { href: docsGithubUrl(id, `${slug}.md`, anchor), rewritten: true };
+  if (isDocsExcluded(rel)) {
+    return { href: docsGithubUrl(id, rel, anchor), rewritten: true };
   }
   return { href: `/${id}/docs/${slug ? `${slug}/` : ''}${anchor}`, rewritten: true };
 }

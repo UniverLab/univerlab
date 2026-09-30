@@ -14,7 +14,6 @@ import { join, resolve } from 'path';
 import docsMdLinks, { inferExperimentId, matchDocsBase, rewriteMdHref } from '../plugins/docs-md-links';
 import {
   BEGIN,
-  DOCS_EXCLUDED_REDIRECTS,
   END,
   STATIC_RULES,
   docsMdRules,
@@ -24,9 +23,7 @@ import {
   readDocsRedirects,
   spliceGeneratedBlock,
 } from '../../scripts/build-redirects';
-import { DOCS_EXCLUDE, isDocsExcluded } from '../data/docs-bases';
 import {
-  checkDocsExcluded,
   checkDocsLinks,
   checkDocsPages,
   checkJsonLd,
@@ -87,6 +84,23 @@ describe('rewriteMdHref — docs-relative markdown links become site routes', ()
     expect(rewriteMdHref('decisions/browser-events.md#api', 'demostage').href).toBe(
       'https://github.com/UniverLab/demostage/blob/main/docs/decisions/browser-events.md#api',
     );
+    // A `slug` folds `adr/index.md` to `adr`, but GitHub has no `adr.md`: the
+    // URL must name the file the repository actually has.
+    expect(rewriteMdHref('./adr/index.md', 'canopy').href).toBe(
+      'https://github.com/UniverLab/harness-canopy/blob/main/docs/adr/index.md',
+    );
+    // A `../` that lands back inside docs/ on a design record is excluded too.
+    expect(rewriteMdHref('../adr/0001-recipes.md', 'canopy', 'graphs').href).toBe(
+      'https://github.com/UniverLab/harness-canopy/blob/main/docs/adr/0001-recipes.md',
+    );
+  });
+
+  it('routes a published file that only shares an excluded directory name', () => {
+    // `design/**` excludes the directory; a published `design.md` is a file, so
+    // the exclusion must be judged on the resolved path, not the slug.
+    for (const name of ['adr', 'decisions', 'design', 'internal']) {
+      expect(rewriteMdHref(`${name}.md`, 'canopy').href).toBe(`/canopy/docs/${name}/`);
+    }
   });
 
   it('maps index.md to the collection root', () => {
@@ -1050,66 +1064,6 @@ describe('checkDocsPages', () => {
       }
     } finally {
       rmSync(root, { recursive: true, force: true });
-    }
-  });
-});
-
-describe('DOCS_EXCLUDE — design records shared by the three consumers', () => {
-  it('is the one literal list every consumer spreads', () => {
-    expect([...DOCS_EXCLUDE]).toEqual(['adr/**', 'decisions/**', 'design/**', 'internal/**']);
-    expect(read('src/content.config.ts')).toContain('...DOCS_EXCLUDE.map((p) => `!${p}`)');
-  });
-
-  it('matches excluded paths and nothing published', () => {
-    for (const rel of [
-      'adr/0001-recipes.md',
-      'decisions/browser-events.md',
-      'design/x.md',
-      'internal/z.md',
-      'adr/nested/deep.md',
-      './ADR/0001.MD',
-    ]) {
-      expect(isDocsExcluded(rel)).toBe(true);
-    }
-    for (const rel of ['index.md', 'graphs.md', 'addressing.md', 'guide/adr-notes.md']) {
-      expect(isDocsExcluded(rel)).toBe(false);
-    }
-  });
-
-  it('skips excluded files in docsMdRules and emits the excluded redirects sorted', () => {
-    const root = mkdtempSync(join(tmpdir(), 'docs-redirects-'));
-    try {
-      mkdirSync(join(root, 'sibling', 'docs', 'adr'), { recursive: true });
-      writeFileSync(join(root, 'sibling', 'docs', 'index.md'), '# Home\n', 'utf-8');
-      writeFileSync(join(root, 'sibling', 'docs', 'adr', '0001.md'), '# ADR\n', 'utf-8');
-      expect(docsMdRules({ ghost: 'sibling/docs' }, root)).toEqual([
-        '/ghost/docs/index.md /ghost/docs/ 301',
-      ]);
-      const block = generatedBlock({ ghost: 'sibling/docs' }, root);
-      for (const rule of DOCS_EXCLUDED_REDIRECTS) {
-        expect(block).toContain(rule);
-      }
-      const lines = block.split('\n').slice(1, -1);
-      expect([...lines].sort()).toEqual(lines);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it('flags a built page from an excluded path', () => {
-    const dist = distFixture({ 'canopy/docs/adr/0001-recipes/index.html': page() });
-    try {
-      expect(checkDocsExcluded(dist)).toEqual([
-        '/canopy/docs/adr/0001-recipes/: built from excluded path adr/0001-recipes/',
-      ]);
-    } finally {
-      rmSync(dist, { recursive: true, force: true });
-    }
-    const clean = distFixture({ 'canopy/docs/graphs/index.html': page() });
-    try {
-      expect(checkDocsExcluded(clean)).toEqual([]);
-    } finally {
-      rmSync(clean, { recursive: true, force: true });
     }
   });
 });

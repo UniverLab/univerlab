@@ -50,6 +50,14 @@ export type Failure = string;
 /** An in-site `href` still pointing at markdown — the bug the plugin fixes. */
 const MD_HREF = /<a\b[^>]*\bhref=["']([^"']*\.md(?:#[^"']*)?)["']/gi;
 
+/**
+ * An href that leaves the site. `rewriteMdHref` sends links into excluded
+ * design records to the file on the repo's default branch (see
+ * `DOCS_EXCLUDE`), and that GitHub URL legitimately ends in `.md` — the
+ * check's subject is in-site routes, never absolute links.
+ */
+const ABSOLUTE_HREF = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
 /** A `https://univerlab.org/...` URL written without a trailing slash. */
 const SITE_URL = /https:\/\/univerlab\.org(\/[^)\s]*)?/g;
 
@@ -178,6 +186,7 @@ export function checkDocsLinks(dist = DIST): Failure[] {
   const failures: Failure[] = [];
   for (const file of globSync('*/docs/**/index.html', { cwd: dist })) {
     for (const m of readFileSync(resolve(dist, file), 'utf-8').matchAll(MD_HREF)) {
+      if (ABSOLUTE_HREF.test(m[1])) continue;
       failures.push(`${file}: links to markdown URL "${m[1]}"`);
     }
   }
