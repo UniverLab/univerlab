@@ -69,6 +69,21 @@ const VOID_ELEMENTS = new Set([
  *  cannot drift on what "indexable" means. */
 export const NOINDEX = /<meta\s+name=["']robots["']\s+content=["'][^"']*\bnoindex\b/i;
 
+export function injectLatestRelease(html: string): string {
+  const openTag = html.match(/<p[^>]*class="[^"]*lab-plate[^"]*"[^>]*>/);
+  if (!openTag || openTag.index == null) return html;
+  const attrs = openTag[0];
+  const version = /\bdata-release="([^"]*)"/.exec(attrs)?.[1] ?? '';
+  const date = /\bdata-release-date="([^"]*)"/.exec(attrs)?.[1] ?? '';
+  // Only values that cannot carry an HTML entity or an attribute artefact are
+  // injected; a tag with an odd character simply loses the line (never corrupts it).
+  if (!/^[^&<>"']+$/.test(version) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return html;
+  const close = html.indexOf('</p>', openTag.index + openTag[0].length);
+  if (close === -1) return html;
+  const insertAt = close + '</p>'.length;
+  return html.slice(0, insertAt) + `<p>Latest release: ${version} (${date})</p>` + html.slice(insertAt);
+}
+
 export function htmlToMarkdown(html: string): string {
   const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -91,6 +106,7 @@ export function htmlToMarkdown(html: string): string {
   cleaned = cleaned.replace(/<header[\s\S]*?<\/header>/gi, '');
   cleaned = cleaned.replace(/<footer[\s\S]*?<\/footer>/gi, '');
   cleaned = stripAriaHidden(cleaned);
+  cleaned = injectLatestRelease(cleaned);
 
   const td = new TurndownService({ headingStyle: 'atx' });
   const markdown = td.turndown(cleaned);

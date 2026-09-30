@@ -769,7 +769,7 @@ export const es: Dict = {
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
   },
-  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—' },
+  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
   builtWithSegments: {
     canopy: 'Construido con',
     ghscaff: 'Repositorio configurado con',

@@ -148,11 +148,15 @@ describe('source guards', () => {
     expect(layout.indexOf('<FieldNotes')).toBeGreaterThan(layout.indexOf('exp-nav'));
   });
 
-  it('plate has hydrated segments, static Sol, and no links (R7)', () => {
+  it('plate has hydrated segments, static Sol, and one release link (R7 superseded)', () => {
     expect(plate).toContain('data-plate-roadmap');
     expect(plate).toContain('data-plate-lastlog');
     expect(plate).toContain('startSolLabel');
-    expect(plate).not.toContain('<a ');
+    expect(plate).toContain('latestRelease');           // build-time, not client
+    // R7 ("plate has no links") is superseded by lexp-release-signal: exactly one
+    // anchor, the release segment. Anything beyond that is a regression.
+    expect(plate.match(/<a /g) ?? []).toHaveLength(1);
+    expect(plate).toContain('lp-release');
   });
 
   it('notes use heading/empty strings, one status link, and the shared loader', () => {

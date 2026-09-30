@@ -140,7 +140,8 @@ jobs:
       - name: Build
         working-directory: univerlab
         env:
-          # Lifts the GitHub API rate limit when fetching the contributors wall.
+          # Lifts the GitHub API rate limit for the build-time fetches: the
+          # contributors wall and each experiment's latest release plate segment.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm ci

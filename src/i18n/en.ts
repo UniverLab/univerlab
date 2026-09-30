@@ -771,7 +771,7 @@ export const en = {
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
   },
-  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—' },
+  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—', release: 'release' },
   // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the
   // experiment's registry builtWith list, joined with dim ' · ' separators.
   builtWithSegments: {

@@ -1,4 +1,4 @@
-import { htmlToMarkdown, stripAriaHidden } from '../../scripts/build-md';
+import { htmlToMarkdown, injectLatestRelease, stripAriaHidden } from '../../scripts/build-md';
 
 describe('htmlToMarkdown', () => {
   it('converts main content with heading and paragraph', () => {
@@ -81,5 +81,26 @@ describe('stripAriaHidden', () => {
   it('terminates on unbalanced markup instead of looping', () => {
     const out = stripAriaHidden('<div aria-hidden="true"><p>orphan</p>');
     expect(out).not.toContain('aria-hidden');
+  });
+});
+
+describe('injectLatestRelease', () => {
+  const page = (plateAttrs: string) =>
+    `<!DOCTYPE html><html><head><title>T</title></head><body><main><p class="lab-plate" ${plateAttrs}>plate</p><p>Body</p></main></body></html>`;
+
+  it('injects the release line as its own paragraph', () => {
+    const md = htmlToMarkdown(page('data-release="v0.9.0" data-release-date="2026-09-20"'));
+    expect(md).toContain('Latest release: v0.9.0 (2026-09-20)');
+    expect(md.split('\n\n')).toContainEqual(expect.stringContaining('Latest release: v0.9.0 (2026-09-20)'));
+  });
+
+  it('omits the line when attributes are absent (incl. astro scope attr)', () => {
+    const md = htmlToMarkdown(page('data-exp-id="texforge" data-astro-cid-abc="x"'));
+    expect(md).not.toContain('Latest release');
+    expect(md).toContain('plate');
+  });
+
+  it('drops a value carrying an HTML entity instead of corrupting the twin', () => {
+    expect(injectLatestRelease('<p class="lab-plate" data-release="v1.0&amp;x" data-release-date="2026-09-20">p</p>')).not.toContain('Latest release');
   });
 });
