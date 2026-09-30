@@ -30,7 +30,7 @@
  * the check, clear the cache, and it should pass.
  */
 import type { HastPluginDefinition } from 'satteri';
-import { DOCS_BASES } from '../data/docs-bases';
+import { DOCS_BASES, docsGithubUrl, isDocsExcluded } from '../data/docs-bases';
 
 /** Prefixes that make an href something other than a relative docs link. */
 const EXTERNAL_PREFIX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -102,6 +102,13 @@ export function rewriteMdHref(href: string, id: string, docDir = ''): HrefRewrit
     .replace(/\/+$/, '')
     .replace(/(^|\/)index$/i, '$1')
     .replace(/\/+$/, '');
+  // Excluded design records never build to site routes, so a link into one
+  // points at the file on the repo's default branch instead of a 404 route.
+  // The anchor is preserved: it names a heading of the file that does exist.
+  const rel = `${docDir ? `${docDir}/` : ''}${path.replace(/^\.\//, '')}`;
+  if (isDocsExcluded(slug) || isDocsExcluded(`${slug}.md`) || isDocsExcluded(rel)) {
+    return { href: docsGithubUrl(id, `${slug}.md`, anchor), rewritten: true };
+  }
   return { href: `/${id}/docs/${slug ? `${slug}/` : ''}${anchor}`, rewritten: true };
 }
 

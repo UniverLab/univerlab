@@ -38,7 +38,7 @@
  */
 import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { DOCS_BASES, ROOT, STATIC_RULES, docsRoute, readDocsRedirects } from './build-redirects.ts';
+import { DOCS_BASES, DOCS_EXCLUDED_REDIRECTS, ROOT, STATIC_RULES, docsRoute, isDocsExcluded, readDocsRedirects } from './build-redirects.ts';
 import { NOINDEX } from './build-md.ts';
 import { MAX_FULL_BYTES } from './build-llms.ts';
 import { experiments, type Experiment } from '../src/lib/experiments.ts';
@@ -146,6 +146,9 @@ export function checkRedirects(dist = DIST): Failure[] {
   for (const rule of STATIC_RULES) {
     if (!lines.includes(rule)) failures.push(`_redirects: missing static rule "${rule}"`);
   }
+  for (const rule of DOCS_EXCLUDED_REDIRECTS) {
+    if (!lines.includes(rule)) failures.push(`_redirects: missing excluded-docs rule "${rule}"`);
+  }
   for (const [id, slugs] of Object.entries(readDocsRedirects())) {
     for (const [from, to] of Object.entries(slugs)) {
       const rule = `${docsRoute(id, from)} ${docsRoute(id, to)} 301`;
@@ -156,6 +159,7 @@ export function checkRedirects(dist = DIST): Failure[] {
     const basePath = resolve(ROOT, base);
     if (!existsSync(basePath)) continue;
     for (const md of globSync('**/*.md', { cwd: basePath })) {
+      if (isDocsExcluded(md)) continue;
       const source = `/${id}/docs/${md.replace(/\.md$/, '')}.md`;
       if (!sources.has(source)) failures.push(`_redirects: ${source} is crawled as a URL but has no rule`);
     }
@@ -791,6 +795,7 @@ export function checkDocsPages(
       continue;
     }
     for (const md of globSync('**/*.md', { cwd: basePath })) {
+      if (isDocsExcluded(md)) continue;
       const route = docsRoute(id, md.replace(/\.md$/, ''));
       if (!existsSync(resolve(dist, route.replace(/^\//, ''), 'index.html'))) {
         failures.push(`docs: ${id} source ${md} has no built page at ${route}`);
@@ -800,11 +805,27 @@ export function checkDocsPages(
   return failures;
 }
 
+/**
+ * No built page under a tool docs tree may come from an excluded path. Reads
+ * the `dist/` routes — what the build actually emitted — so a stale `.astro`
+ * cache that still renders an excluded page fails loudly.
+ */
+export function checkDocsExcluded(dist = DIST): Failure[] {
+  const failures: Failure[] = [];
+  for (const file of globSync('*/docs/**/index.html', { cwd: dist })) {
+    const route = `/${file.replace(/index\.html$/, '')}`;
+    const rel = route.replace(/^\/[^/]+\/docs\//, '');
+    if (isDocsExcluded(rel)) failures.push(`${route}: built from excluded path ${rel}`);
+  }
+  return failures;
+}
+
 export function checkAll(dist = DIST): Failure[] {
   return [
     ...checkSitemap(dist),
     ...checkRedirects(dist),
     ...checkDocsLinks(dist),
+    ...checkDocsExcluded(dist),
     ...checkLlmsTxt(dist),
     ...checkLlmsLinks(dist),
     ...checkLlmsFull(dist),

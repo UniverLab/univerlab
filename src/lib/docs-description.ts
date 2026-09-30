@@ -10,8 +10,7 @@
  *   - a longer one is cut at a word boundary to ≤ 160;
  *   - a shorter one is extended as `<description> <ExpName> documentation — <tagline>`
  *     and then cut at a word boundary to ≤ 160;
- *   - a page with no frontmatter description (e.g. canopy's adr/0001-recipes)
- *     uses its title in place of the description.
+ *   - a page with no frontmatter description uses its title in place of the description.
  *
  * Docs are English-only, so callers always pass the en tagline.
  */
