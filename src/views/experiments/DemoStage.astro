@@ -13,8 +13,10 @@ const spectrumBars = [21, 31, 44, 61, 77, 89, 79, 64, 48, 34, 22];
   <a slot="cta" class="btn ghost" href="#demo-player">{t.common.demo}</a>
   <p slot="hero-mark" class="ascii-motif mono" aria-hidden="true">{exp.motif}</p>
 
-  <!-- The real terminal/export sequence is the Altius thermal-spectrum hero. -->
-  <Fragment slot="hero-visual">
+  <!-- Below the hero (before genesis) is the Altius thermal-spectrum figure:
+       the text hero with CTAs, install bar and banner reads first; the fake
+       player + thermal bars close the stage. -->
+  <Fragment slot="before-genesis">
     <div class="stage">
       <figure class="player" id="demo-player">
         <div class="bar mono">
@@ -131,6 +133,14 @@ $ demo export gif,mp4
      (17.0:1) — the light-section body ink. */
   .band-light .sig { color: #190501; }
   :global(html[data-surface='studio'] .band-light .demo-cap) { color: #190501; }
+  /* …but the caption's own "Fig. 1" tag escaped both rules above: it renders in
+     DemoFigure's cid, so the cid-scoped `.band-light .label` (Signal Red) never
+     matches it, and it inherits nothing because it sets its own colour — the
+     registry coral (#ef8354) on Vapor Peach, 1.7:1. altius.md puts labels in
+     Signal Red on light and Flare on dark; this is the same #951c04 every other
+     label on this band wears (5.7:1 even with the takes trail at its brightest
+     behind the 88% veil — FR3). */
+  :global(html[data-surface='studio'] .band-light .demo-cap .label) { color: #951c04; }
 
   /* The signature line at the foot of the light section — the koan reused
      verbatim, small and quiet, hidden from assistive tech (it repeats the
@@ -164,15 +174,16 @@ $ demo export gif,mp4
   :global(html[data-surface='studio'] .exp .band-dark .features li) { color: var(--ink-dim); border-bottom-color: var(--line); }
   :global(html[data-surface='studio'] .exp .band-dark .features code) { color: #f7f6ff; }
 
-  /* The origin story is layout-owned and sits between the dark hero and the
+  /* The origin story is layout-owned and sits between the hero figure and the
      peach slots band. surfaces.css (preserved block) washes it peach, which
      collapses altius.md's section rhythm — dark hero → dark band → light peach
      → dark solutions — into dark → peach → peach, and leaves the page with no
      dark/dark/peach beat anywhere. Put the row back on the obsidian canvas:
      two dark bands now precede the first Vapor Peach break, and its inks
      invert back with the background (Flare eyebrow, Linen body — the row's
-     previous obsidian-on-peach values would sit at 1:1 on this canvas). */
-  :global(html[data-surface='studio'] .exp .genesis-row) { color: var(--ink); background: var(--bg); }
+     previous obsidian-on-peach values would sit at 1:1 on this canvas).
+     The 82% veil lets the takes trail show through. */
+  :global(html[data-surface='studio'] .exp .genesis-row) { color: var(--ink); background: color-mix(in srgb, var(--bg) 82%, transparent); }
   :global(html[data-surface='studio'] .genesis-row .genesis .label) { color: var(--flare); }
   :global(html[data-surface='studio'] .genesis-row .genesis .prose) { color: var(--ink-dim); }
 
@@ -182,11 +193,12 @@ $ demo export gif,mp4
      `max-width: none` makes it full-bleed like .band-light/.band-dark while
      the inner cap keeps the 52rem measure. Local token inversion re-dresses
      the whole section: Obsidian body, Warm Ash hairlines, Signal Red emphasis
-     (7.41:1 on peach). Resulting rhythm:
-     hero(D) · origin(D) · slots(P) · commands(D) · faq(P) · prev/next+footer(D) */
+     (7.41:1 on peach). The 88% veil lets the takes trail show through.
+     Resulting rhythm:
+     hero(D) · stage · origin(D) · slots(P) · commands(D) · faq(P) · prev/next+footer(D) */
   :global(html[data-surface='studio'] .exp .faq-section) {
     max-width: none;
-    background: var(--peach);
+    background: color-mix(in srgb, var(--peach) 88%, transparent);
     color: #190501;
     padding-block: 3.5rem;
     padding-inline: max(var(--space), calc(50% - 26rem));
@@ -208,6 +220,14 @@ $ demo export gif,mp4
      above; the hero install label is the remaining dark eyebrow (layout-owned
      → full :global). The origin label is already Flare two rules up. */
   :global(html[data-surface='studio'] .exp .install-head .label) { color: var(--flare); }
+
+  /* FR3 — AA with the takes trail at its brightest behind the hero: the studio
+     lede runs at opacity .75, and that drags its Flare inline code
+     (`demo.toml`) down to 3.6:1 over the 82% veil. Band opacity cannot rescue
+     it (an opaque hero still only reaches 3.9:1), so the code takes Warm
+     Blush — this surface's warm tint on dark (koan, motif) — which clears
+     5.9:1 at its worst. */
+  :global(html[data-surface='studio'] .exp .lede code) { color: #fcac9c; }
 </style>
 
 <script>

@@ -7,9 +7,9 @@ export const en = {
     // query "univerlab". Its title still names what the lab makes, so a reader
     // arriving from anywhere learns it in the tab, and so title and description
     // agree instead of describing two different things.
-    title: 'Open-source CLI tools for LaTeX, git, CAD and AI agents — UniverLab',
+    title: 'Open-source CLI tools for LaTeX, git, CAD — UniverLab',
     description:
-      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, no runtime dependencies.',
+      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, installable today, reproducible, with docs that ship alongside the code.',
   },
   nav: {
     experiments: 'Experiments',
@@ -22,6 +22,14 @@ export const en = {
   footer: {
     quote:
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
+    // The site's own built-with line (relations verified 2026-09-29; see the registry's
+    // builtWith evidence comment). Only tool names link.
+    built: {
+      label: 'This site:',
+      canopy: 'built with',
+      ghscaff: 'repository set up with',
+      gitkit: 'commits checked by',
+    },
   },
   common: {
     repo: 'Star on GitHub ↗',
@@ -52,7 +60,7 @@ export const en = {
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
-      systemCaption: 'The lab as a system — every experiment orbits the same question.',
+      systemAria: 'UniverLab and its experiments',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
       // small catalog; the hero shuffles each catalog and shows every gloss once
@@ -70,7 +78,11 @@ export const en = {
       body:
         'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy/">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
-    experiments: { kicker: '00 — Experiments' },
+    experiments: {
+      kicker: '00 — Experiments',
+      method:
+        'Different problems, one method: take work that lives in fragile, manual procedures and make it explicit, reproducible and automatable — by a person or by an agent.',
+    },
     philosophy: {
       kicker: '02 — Philosophy',
       title: 'Technology is not the goal.',
@@ -88,6 +100,8 @@ export const en = {
     directions: {
       kicker: '03 — Research directions',
       title: 'Where the lab is looking.',
+      axis:
+        'The axis: explicit systems · reproducible work · human–AI collaboration. The fields below are where it is being tested.',
       now: 'Now',
       next: 'Next',
       nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows', 'CAD'],
@@ -112,6 +126,11 @@ export const en = {
       need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
       tagline:
         'The runtime layer for AI agents that need memory, scheduling, and each other.',
+      thread: {
+        problem: 'AI agents',
+        method: 'a persistent runtime above every harness',
+        artifact: 'coordinated multi-agent work',
+      },
       title:
         'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
       description:
@@ -177,8 +196,13 @@ export const en = {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
+      thread: {
+        problem: 'LaTeX',
+        method: 'one self-contained toolchain',
+        artifact: 'reproducible documents',
+      },
       title:
-        'LaTeX with Mermaid diagrams — TeXForge',
+        'LaTeX with Mermaid, Graphviz and D2 diagrams — TeXForge',
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
@@ -225,6 +249,11 @@ export const en = {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
+      thread: {
+        problem: 'repository setup',
+        method: 'saved, idempotent builds',
+        artifact: 'the same ritual everywhere',
+      },
       title:
         'Git hooks are underused. GitKit puts them to work.',
       description:
@@ -281,10 +310,15 @@ export const en = {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
+      thread: {
+        problem: 'GitHub repositories',
+        method: 'an idempotent wizard',
+        artifact: 'conventions enforced',
+      },
       title:
         'Create GitHub repos with conventions enforced — ghScaff',
       description:
-        'An interactive wizard that scaffolds a repository and applies labels, branch protection and status checks from the start.',
+        'An interactive wizard that scaffolds a repository and applies labels, branch protection and status checks from the start — idempotent and safe to re-run.',
       koan: 'A building is only as straight as its scaffold.',
       lede:
         'ghScaff raises the whole structure in one interactive <strong>wizard</strong> — and because every operation is <strong>idempotent</strong>, it can re-level any existing repository without tearing it down.',
@@ -336,6 +370,11 @@ export const en = {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
+      thread: {
+        problem: 'CAD',
+        method: 'declarative geometry',
+        artifact: 'drawings an agent can verify',
+      },
       title:
         'CAD as code: from declaration to model — cadSpec',
       description:
@@ -378,10 +417,15 @@ export const en = {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
         'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
+      thread: {
+        problem: 'image denoising',
+        method: 'a benchmark scored by the science',
+        artifact: 'comparable methods',
+      },
       title:
         'Benchmarking astronomical denoising — Astro Denoise',
       description:
-        'A research proposal evaluated on the science it recovers, not on how clean the image looks.',
+        'A research proposal for a reproducible benchmark of denoising methods on simulated Rubin Observatory images — scored on the science it recovers, not the look.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
         'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
@@ -414,8 +458,13 @@ export const en = {
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
+      thread: {
+        problem: 'estimation',
+        method: 'a peer-to-peer room',
+        artifact: 'disagreement you can see',
+      },
       title:
-        'Planning poker where your votes never reach a server — Quorum',
+        'Planning poker where your votes reach no server — Quorum',
       description:
         'Peers talk directly to each other over WebRTC. Nothing is stored, nothing is collected, no account exists to create. Share a room link and estimate together.',
       koan: '// the estimate is already in the room',
@@ -453,10 +502,15 @@ export const en = {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
+      thread: {
+        problem: 'terminal demos',
+        method: 'an event score',
+        artifact: 'demos you re-run',
+      },
       title:
         'Reproducible terminal demos as code — DemoStage',
       description:
-        'An asciinema alternative where the demo is a file, not a take. Re-record it after every change; export gif or mp4.',
+        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif or mp4 — version-controlled and diffable.',
       koan: '// the demo is the source',
       lede:
         'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',
@@ -494,7 +548,11 @@ export const en = {
   manifesto: {
     kicker: 'Manifesto',
     title: 'Pensamiento Cósmico',
+    // `<title>`/og:title only — `title` above is the visible <h1> and must stay.
+    metaTitle: 'Pensamiento Cósmico — the UniverLab manifesto',
     sub: 'A philosophy of the continuity of consciousness',
+    description:
+      'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
     epigraph:
       '«Wonder at the existence of consciousness is the root of all motivation for continuity.»',
     purposeTitle: 'What we value',
@@ -611,7 +669,7 @@ export const en = {
     kicker: 'Archived ideas',
     title: 'The Archive',
     description:
-      'Ideas that lived and were abandoned — each recorded with what it was and why it died. Not a roadmap, a record.',
+      'Ideas that lived and were abandoned — each recorded with what it was and the honest reason it died. Kept because what dies here may live elsewhere.',
     intro:
       'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a record.',
     what: 'What it was',
@@ -670,8 +728,10 @@ export const en = {
   people: {
     kicker: 'The laboratory',
     title: 'Collaborators',
+    // Meta only — `title` above renders the visible <h1> on /contributors/.
+    metaTitle: 'Collaborators — the people and models behind UniverLab',
     description:
-      'The people and AI models behind UniverLab — founder, contributors, and the language models that work alongside us.',
+      'The founder, contributors and language models behind UniverLab — every experiment takes issues and focused pull requests. Your help is genuinely welcome.',
     founder: {
       role: 'Founder',
       name: 'Jheison Martinez',
@@ -685,7 +745,7 @@ export const en = {
       name: 'Language models',
       body:
         'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy/">Canopy</a>. Their role is acknowledged, not hidden.',
-      models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
+      models: ['Muse Spark', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Composer', 'GLM', 'Kimi', 'Mistral'],
     },
     contributors: {
       role: 'Contributors',
@@ -711,7 +771,15 @@ export const en = {
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
   },
-  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—' },
+  plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—', release: 'release' },
+  // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the
+  // experiment's registry builtWith list, joined with dim ' · ' separators.
+  builtWithSegments: {
+    canopy: 'Built with',
+    ghscaff: 'Repository set up with',
+    demostage: 'Demo recorded with',
+    gitkit: 'Commits checked by',
+  },
   notes: {
     heading: 'Field notes',
     empty: 'No field notes yet — this is where the log will speak.',
@@ -719,8 +787,8 @@ export const en = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'RSS — UniverLab',
-    description: 'Follow the UniverLab Mission Log via RSS.',
+    title: 'Follow the Mission Log in your RSS reader — UniverLab',
+    description: 'The UniverLab Mission Log is published as an RSS feed you can follow from your own reader — any reader works, just paste the URL and stay current.',
     heading: 'RSS',
     intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
     copy: 'Copy',

@@ -1,7 +1,9 @@
 ---
+import { resolve } from 'node:path';
 import { getCollection, render } from 'astro:content';
 import DocsLayout from '../../../layouts/DocsLayout.astro';
 import { experiments } from '../../../lib/experiments';
+import { DOCS_BASES } from '../../../data/docs-bases';
 
 export async function getStaticPaths() {
   const ids = experiments.filter((e) => e.hasDocs).map((e) => e.id);
@@ -15,16 +17,22 @@ export async function getStaticPaths() {
     }));
     for (const entry of sorted as any[]) {
       const slug = entry.id === 'index' ? undefined : entry.id;
+      // Rebuilt from the collection base + the entry id rather than taken from
+      // `entry.filePath`: this is the exact absolute path the markdown
+      // plugin sees as its `ctx.fileURL`, so both date call sites resolve to
+      // the same string, hit the same memo, and cannot disagree (see
+      // src/lib/doc-last-modified.ts).
+      const sourceFile = resolve(process.cwd(), DOCS_BASES[id], `${entry.id}.md`);
       paths.push({
         params: { id, slug },
-        props: { id, entry, links, current: entry.id === 'index' ? '' : entry.id },
+        props: { id, entry, links, current: entry.id === 'index' ? '' : entry.id, sourceFile },
       });
     }
   }
   return paths;
 }
 
-const { id, entry, links, current } = Astro.props as any;
+const { id, entry, links, current, sourceFile } = Astro.props as any;
 const { Content } = await render(entry);
 ---
 <DocsLayout
@@ -33,6 +41,7 @@ const { Content } = await render(entry);
   description={entry.data.description}
   links={links}
   current={current}
+  sourceFile={sourceFile}
 >
   <Content />
 </DocsLayout>

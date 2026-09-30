@@ -1,15 +1,19 @@
-// Paper — the quiet motif for the cream `paper` surface (texforge): a sparse
-// scatter of drifting typographic ink marks — short LaTeX tokens set in the
-// mono font, cross-fading in and out like a proof being set — plus the
-// product's own act as the cursor's language. A sweep lays LaTeX SOURCE
-// fragments along its path (mono, grey, at most one per 220 ms) and ~550 ms
+// Paper — the quiet motif for the cream `paper` surface (texforge): a sparse,
+// slow scatter of drifting typographic ink marks — short LaTeX tokens set in
+// the mono font, cross-fading in and out like a proof being set (N = min(9,
+// max(6, area/136000)) marks, each alive 14–24 s, cross-fading in and out
+// over 2.5 s) — plus the product's own act as the cursor's language. A sweep
+// lays LaTeX SOURCE fragments along its path (mono, grey, at most one per
+// ≥450 ms of travel and only after ≥12 px since the last spawn) and ~550 ms
 // later each one compiles: a 250 ms cross-fade into its typeset form in the
 // page's serif, bistre ink, while its y eases onto the nearest line of an
 // invisible 28 px baseline grid over 180 ms. The set line then holds ~1.5 s
-// and bleeds out over 1 s. At most 14 fragments live at once (the oldest drops
-// first); an untouched sheet — no pointer for 6 s, or a touch device, which
-// never gets a cursor — keeps its ambient marks and compiles one lone fragment
-// every ~5 s. The marks themselves no longer stir at the pointer: the compile
+// and bleeds out over 1 s. At most 5 pointer-born fragments live at once (the
+// oldest drops first when a sixth would spawn), and a parked pointer spawns
+// nothing at all — the sheet keeps only its ambient marks, which respawn on
+// their own slow 14–24 s clock. The lone idle compile runs only when no
+// pointer is present: an untouched sheet or a touch device, which never gets
+// a cursor. The marks themselves no longer stir at the pointer: the compile
 // is the reaction. It is picked in startBackground() by `data-surface="paper"`
 // rather than keyed on BgTheme, whose type the experiment registry owns (and
 // which is out of scope to extend). The ~30fps cap, the resize handling and
@@ -60,11 +64,12 @@ export const HOLD_MS = 1500;       // the set line holds
 const BLEED_MS = 1000;      // …and bleeds out
 export const LIFE_MS = SOURCE_MS + FADE_MS + HOLD_MS + BLEED_MS; // 3300
 
-export const GRID_PX = 28;         // the invisible baseline grid
-export const MAX_FRAGS = 14;       // live fragments, oldest dropped first
-export const SPAWN_EVERY = 220;    // ms between spawns along the pointer path
-export const IDLE_AFTER = 6000;    // ms of stillness before the lone compiler
-export const IDLE_EVERY = 5000;    // ms between lone idle compiles
+export const GRID_PX = 28;          // the invisible baseline grid
+export const MAX_POINTER_FRAGS = 5; // pointer-born fragments, oldest dropped first
+export const SPAWN_EVERY = 450;     // ms between spawns along the pointer path
+export const MOVE_PX = 12;          // min pointer travel since the last spawn to seed one
+export const IDLE_AFTER = 6000;     // ms of stillness before the lone compiler
+export const IDLE_EVERY = 5000;     // ms between lone idle compiles
 export const SOURCE_ALPHA = 0.35;  // grey source
 export const COMPILED_ALPHA = 0.8; // bistre typeset
 
@@ -75,7 +80,7 @@ const SOURCE_COLOR = '#66635f';
 
 export function paper(ctx: PaperCtx): (t: number) => void {
   const { c } = ctx;
-  const N = Math.min(18, Math.max(12, Math.floor((ctx.w * ctx.h) / 68000)));
+  const N = Math.min(9, Math.max(6, Math.floor((ctx.w * ctx.h) / 136000)));
   const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   type Mark = {
     tok: string;
@@ -95,7 +100,7 @@ export function paper(ctx: PaperCtx): (t: number) => void {
   };
   const pick = () => TOKENS[Math.floor(Math.random() * TOKENS.length)];
   const marks: Mark[] = Array.from({ length: N }, (_, i) => {
-    const life = rand(7000, 14000);
+    const life = rand(14000, 24000);
     return {
       tok: pick(),
       x: rand(0, ctx.w),
@@ -127,6 +132,7 @@ export function paper(ctx: PaperCtx): (t: number) => void {
     y1: number;
     size: number;
     born: number;
+    pointer: boolean; // born from a sweep (capped) vs the idle compiler
   };
   const frags: Frag[] = [];
   let srcIdx = 0; // walks COMPILE_MAP in order
@@ -135,9 +141,19 @@ export function paper(ctx: PaperCtx): (t: number) => void {
     const last = Math.floor(ctx.h / GRID_PX) * GRID_PX; // stay on the sheet after a resize
     return Math.max(0, Math.min(line, last));
   };
-  const addFrag = (x: number, y: number, t: number) => {
+  const addFrag = (x: number, y: number, t: number, pointer: boolean) => {
     const [src, set] = COMPILE_MAP[srcIdx++ % COMPILE_MAP.length];
-    if (frags.length >= MAX_FRAGS) frags.shift(); // oldest source drops first
+    if (pointer) {
+      // The sweep's cap counts pointer-born fragments only; the idle compiler
+      // is unaffected. `frags` is oldest→newest, so the first pointer-born
+      // entry is the oldest one to drop.
+      let live = 0;
+      for (const f of frags) if (f.pointer) live++;
+      if (live >= MAX_POINTER_FRAGS) {
+        const oldest = frags.findIndex((f) => f.pointer);
+        if (oldest >= 0) frags.splice(oldest, 1); // oldest pointer-born drops first
+      }
+    }
     frags.push({
       src,
       set,
@@ -147,17 +163,20 @@ export function paper(ctx: PaperCtx): (t: number) => void {
       y1: snapY(y),
       size: rem * rand(0.9, 1.3),
       born: t,
+      pointer,
     });
   };
 
   /* The pointer is the input: every path point is a candidate source fragment,
-     rate-limited in tick time (an uncapped sweep would spray a wall of source)
-     and only while the pointer actually travelled — a cursor parked on the page
-     compiles nothing, and past 6 s of stillness the sheet falls back to the
-     idle compiler below. Touch has no cursor to compile with, so its listener
-     is never attached: its sheet is ambient marks plus the lone idle compile.
-     document-level (not window) so an Astro view transition cannot leave a
-     ghost listener behind. */
+     throttled in tick time to one per ≥450 ms of travel and only once the
+     cursor has moved ≥12 px since the last spawn (an uncapped sweep would
+     spray a wall of source). A parked cursor compiles nothing at all — no
+     fallback to the idle compiler either: the sheet is left to its ambient
+     marks, which respawn on their own slow 14–24 s clock. The idle compiler
+     below only runs for a sheet with no pointer whatsoever (an untouched
+     page, or a touch device, which never gets a cursor): its sheet is ambient
+     marks plus the lone idle compile. document-level (not window) so an Astro
+     view transition cannot leave a ghost listener behind. */
   const isTouch = 'ontouchstart' in window && navigator.maxTouchPoints > 0;
   let nowT = 0;      // last tick time — the clock every listener reads
   let lastMoveT = -1; // last pointer travel (−1 until the first frame lands)
@@ -209,20 +228,27 @@ export function paper(ctx: PaperCtx): (t: number) => void {
     nowT = t;
     if (lastMoveT < 0) lastMoveT = t;
 
-    // Spawn along the path: one fragment per throttle window, only where the
-    // pointer has travelled since the last one.
-    if (hasPointer && t - lastSpawnT >= SPAWN_EVERY && (nx !== lastSx || ny !== lastSy)) {
-      addFrag(nx, ny, t);
+    // Spawn along the path: one fragment per 450 ms window, only where the
+    // pointer has travelled ≥12 px since the last spawn. A parked pointer
+    // never satisfies the travel test, so it spawns nothing.
+    if (
+      hasPointer &&
+      t - lastSpawnT >= SPAWN_EVERY &&
+      (nx - lastSx) * (nx - lastSx) + (ny - lastSy) * (ny - lastSy) >= MOVE_PX * MOVE_PX
+    ) {
+      addFrag(nx, ny, t, true);
       lastSpawnT = t;
       lastSx = nx;
       lastSy = ny;
     }
-    // Idle compiler: stillness (or touch, which never gets a cursor) leaves the
-    // sheet to its marks plus a lone fragment that compiles on the same clock.
-    if (t - lastMoveT > IDLE_AFTER) {
+    // Idle compiler: only when no pointer is present — an untouched sheet, or
+    // a touch device, which never gets a listener. A parked mouse leaves the
+    // sheet to its ambient marks alone (they respawn on their own 14–24 s
+    // clock), so a still cursor compiles nothing at all.
+    if (!hasPointer && t - lastMoveT > IDLE_AFTER) {
       if (nextIdleT < 0) nextIdleT = t + IDLE_EVERY;
       else if (t >= nextIdleT) {
-        addFrag(rand(40, Math.max(40, ctx.w - 40)), rand(40, Math.max(40, ctx.h - 40)), t);
+        addFrag(rand(40, Math.max(40, ctx.w - 40)), rand(40, Math.max(40, ctx.h - 40)), t, false);
         nextIdleT = t + IDLE_EVERY;
       }
     } else {
@@ -235,19 +261,19 @@ export function paper(ctx: PaperCtx): (t: number) => void {
     for (const m of marks) {
       // Cross-fade clock — the proof being set. The increment is clamped so a
       // huge dt after a hidden-tab pause cannot mass-respawn every mark (which
-      // would blank the sheet for the 1.5 s fade-in).
+      // would blank the sheet for the 2.5 s fade-in).
       m.age += Math.min(dt, 250);
       if (m.age >= m.life) {
         m.tok = pick();
         m.x = rand(0, ctx.w);
         m.y = rand(0, ctx.h);
-        m.life = rand(7000, 14000);
+        m.life = rand(14000, 24000);
         m.age = 0;
         m.vx = m.ix;
         m.vy = m.iy;
         m.va = m.ia;
       }
-      const env = Math.min(1, m.age / 1500) * Math.min(1, (m.life - m.age) / 1500);
+      const env = Math.min(1, m.age / 2500) * Math.min(1, (m.life - m.age) / 2500);
       // Excess velocity damps back to the idle drift (bg-bubbles ease-back).
       m.vx = m.ix + (m.vx - m.ix) * 0.9;
       m.vy = m.iy + (m.vy - m.iy) * 0.9;

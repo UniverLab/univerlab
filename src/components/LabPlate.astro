@@ -2,6 +2,7 @@
 import { byId, type ExperimentId } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
+import { latestRelease, releaseAgeLabel } from '../lib/releases';
 
 interface Props { id: ExperimentId; }
 const { id } = Astro.props;
@@ -10,15 +11,22 @@ const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const statusLabel = t.status[exp.status];
 const solLabel = exp.startDate ? startSolLabel(exp.startDate) : null;
+const release = await latestRelease(exp.github);
+const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
 ---
 <p class="lab-plate" translate="no"
    data-exp-id={exp.id} data-exp-name={exp.name}
    data-roadmap-label={t.plate.roadmap} data-lastlog-label={t.plate.lastLog}
    data-dash={t.plate.none} data-lanes={JSON.stringify(t.roadmap.lanes)}
-   data-status-label={statusLabel} data-start-sol={solLabel ?? ''}>
+   data-status-label={statusLabel} data-start-sol={solLabel ?? ''}
+   data-release={release?.version}
+   data-release-date={release ? release.publishedAt.slice(0, 10) : undefined}>
   <span class="lp-num">{exp.number}</span>
   <span class="lp-sep"> · </span><span class="lp-status">{statusLabel}</span>
   {solLabel && (<><span class="lp-sep"> · </span><span class="lp-sol">{solLabel}</span></>)}
+  {release && (
+    <><span class="lp-sep"> · </span><a class="lp-release" href={release.url} target="_blank" rel="noopener noreferrer">{t.plate.release} {release.version}{releaseAge && <> · {releaseAge}</>}</a></>
+  )}
   <span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap>—</span></span>
   <span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog>{t.plate.lastLog}: —</span>
 </p>
@@ -35,6 +43,16 @@ const solLabel = exp.startDate ? startSolLabel(exp.startDate) : null;
   .lab-plate .lp-num, .lab-plate .lp-status { color: var(--essence); }
   .lab-plate .lp-sep { color: var(--ink-faint); }
   .lab-plate .lp-lastlog { overflow: hidden; text-overflow: ellipsis; }
+  /* One link now lives in the plate (the release segment, spec
+     lexp-release-signal supersedes R7's "no links"): underline off so it keeps
+     the plate's mono register, essence on hover, never shrinkable so the
+     version stays intact when the line runs long. */
+  .lab-plate .lp-release { flex: 0 0 auto; text-decoration: none; }
+  .lab-plate .lp-release:hover { color: var(--essence); }
+  /* The plate is nowrap + overflow:hidden, so the segment pushes roadmap/last
+     log off the right edge on phones; let whole spans wrap instead of silently
+     clipping them. */
+  @media (max-width: 50rem) { .lab-plate { flex-wrap: wrap; row-gap: 0.2rem; } }
 </style>
 
 <script>

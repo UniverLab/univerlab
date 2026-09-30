@@ -7,7 +7,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
 );
 const rmStrings = en.roadmap;
 ---
-<BaseLayout title="Mission Log — UniverLab" description="Real-time activity from UniverLab experiments." bg="cosmic" circadian>
+<BaseLayout title="Mission Log — live status of every UniverLab experiment" description="Real-time Mission Log entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg="cosmic" circadian>
   <section class="wrap board" id="status-board">
     <header class="board-head">
       <div class="board-titles">
@@ -202,6 +202,25 @@ const rmStrings = en.roadmap;
       .board-col { max-width: 100%; margin-inline: 0; }
       .board-roadmap #roadmap,
       .board-log .log-scroller { max-height: calc(100dvh - 26rem); min-height: 24rem; overflow-y: auto; overscroll-behavior: contain; }
+      /* Quiet scroll: the two wide-split scrollers only. Page tokens via
+         color-mix, no new colours, no arrow buttons; the lower edge dissolves
+         instead of cutting a hard line. Inert below the breakpoint. */
+      .board-roadmap #roadmap,
+      .board-log .log-scroller {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--ink-faint) 45%, transparent) transparent;
+        mask-image: linear-gradient(to bottom, #000 calc(100% - 1.2rem), transparent);
+      }
+      .board-roadmap #roadmap::-webkit-scrollbar,
+      .board-log .log-scroller::-webkit-scrollbar { width: 6px; }
+      .board-roadmap #roadmap::-webkit-scrollbar-track,
+      .board-log .log-scroller::-webkit-scrollbar-track { background: transparent; }
+      .board-roadmap #roadmap::-webkit-scrollbar-thumb,
+      .board-log .log-scroller::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink-faint) 45%, transparent); border-radius: 999px; }
+      .board-roadmap #roadmap::-webkit-scrollbar-thumb:hover,
+      .board-log .log-scroller::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+      .board-roadmap #roadmap::-webkit-scrollbar-button,
+      .board-log .log-scroller::-webkit-scrollbar-button { display: none; }
     }
     /* Mobile overrides last: media queries add no specificity, so these must
        follow the base `.rm-dot` / `#roadmap.rm-flight` rules above or they are

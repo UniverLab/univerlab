@@ -24,9 +24,9 @@
  */
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { DOCS_BASES } from '../src/data/docs-bases.ts';
+import { DOCS_BASES, DOCS_EXCLUDED_REDIRECTS, isDocsExcluded } from '../src/data/docs-bases.ts';
 
-export { DOCS_BASES };
+export { DOCS_BASES, DOCS_EXCLUDED_REDIRECTS, isDocsExcluded };
 
 /** Repo root — npm scripts and jest both run from here (see build-md.ts). */
 export const ROOT = process.cwd();
@@ -105,13 +105,14 @@ export function docsRenameRules(redirects: DocsRedirects): string[] {
   return rules;
 }
 
-/** Every `.md` page of every collection, as `/<id>/docs/<slug>.md` sources. */
+/** Every published `.md` page of every collection, as `/<id>/docs/<slug>.md` sources. */
 export function docsMdRules(bases: Record<string, string> = DOCS_BASES, root = ROOT): string[] {
   const rules: string[] = [];
   for (const [id, base] of Object.entries(bases)) {
     const basePath = resolve(root, base);
     if (!existsSync(basePath)) continue;
     for (const file of globSync('**/*.md', { cwd: basePath })) {
+      if (isDocsExcluded(file)) continue;
       const slug = relative('.', file).replace(/\.md$/, '');
       rules.push(`/${id}/docs/${slug}.md ${docsRoute(id, slug)} 301`);
     }
@@ -121,7 +122,7 @@ export function docsMdRules(bases: Record<string, string> = DOCS_BASES, root = R
 
 /** The generated block, sorted so a rebuild is byte-identical. */
 export function generatedBlock(bases: Record<string, string> = DOCS_BASES, root = ROOT): string {
-  const lines = [...docsRenameRules(readDocsRedirects()), ...docsMdRules(bases, root)].sort();
+  const lines = [...docsRenameRules(readDocsRedirects()), ...docsMdRules(bases, root), ...DOCS_EXCLUDED_REDIRECTS].sort();
   return [BEGIN, ...lines, END].join('\n');
 }
 

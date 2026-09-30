@@ -5,6 +5,7 @@ import ThemeBackground from '../components/ThemeBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme } from '../lib/experiments';
 import { getLang, useTranslations } from '../i18n';
+import { organizationNode } from '../lib/structured-data';
 import '../styles/global.css';
 import '../styles/surfaces.css';
 
@@ -26,8 +27,22 @@ interface Props {
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
    *  alongside the site-wide Organization graph. */
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  /** A ready-made `@graph` that *replaces* the standalone Organization
+   *  script. Docs pages use it: their graph already defines Organization (plus
+   *  the founder and the experiment app), and emitting the site-wide script
+   *  too would make the page carry two definitions of the same node. */
+  jsonLdGraph?: Record<string, unknown>[];
+  /** Open Graph content type. Pages that read as a document — the docs — ask
+   *  for `article`; everything else keeps the default `website`. */
+  ogType?: 'website' | 'article';
+  /** `article:modified_time`, emitted only when the page has a real date
+   *  (the source file's last commit, never the build time). */
+  articleModifiedTime?: string;
   /** Hidden pages: prevent indexing by search engines. */
   noindex?: boolean;
+  /** The page builds an `index.html` and therefore has a markdown twin.
+   *  `false` only for pages whose output is not `index.html` (404). */
+  markdownTwin?: boolean;
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
@@ -44,8 +59,12 @@ const {
   mutedCanvas = false,
   surface,
   structuredData,
+  jsonLdGraph,
+  ogType = 'website',
+  articleModifiedTime,
   circadianPalette,
   noindex = false,
+  markdownTwin = true,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
@@ -83,15 +102,14 @@ const stripped = path.replace(/^\/es(?=\/|$)/, '') || '/';
 const enHref = new URL(stripped, site).href;
 const esHref = new URL('/es' + (stripped === '/' ? '' : stripped), site).href;
 
-const orgJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'UniverLab',
-  url: site.href,
-  logo: new URL('/favicon.svg', site).href,
-  description: t.meta.description,
-  sameAs: ['https://github.com/UniverLab'],
-};
+const orgJsonLd = organizationNode(site, t.meta.description);
+
+// JSON-LD lives in `<script>`, where a literal `<` followed by `/script>`
+// inside any string would end the tag early and leave the rest of the payload
+// as page markup. Replacing every `<` with its JSON escape sequence is still
+// valid JSON — `JSON.parse` reads the original character back — so the emitted
+// block is both safe and parseable.
+const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined} style={bgColor ? `--accent: ${bgColor}` : undefined}>
@@ -106,6 +124,9 @@ const orgJsonLd = {
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
+    {!noindex && markdownTwin && (
+      <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
+    )}
     <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
     <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
          labels); Inter is the default body. Per-surface display voices:
@@ -131,7 +152,8 @@ const orgJsonLd = {
       </>
     )}
     <!-- Open Graph / Twitter -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    {articleModifiedTime && <meta property="article:modified_time" content={articleModifiedTime} />}
     <meta property="og:site_name" content="UniverLab" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -148,10 +170,17 @@ const orgJsonLd = {
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={title} />
     <script is:inline>window.scrubTime = null; window.resetScrub = null; window.calc = null;</script>
-    <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+    {/* A caller-supplied `@graph` already defines the Organization node, so it
+        replaces the site-wide script rather than sitting beside it — otherwise
+        the page would define the same node twice. */}
+    {jsonLdGraph ? (
+      <script type="application/ld+json" set:html={serialize({ '@context': 'https://schema.org', '@graph': jsonLdGraph })} />
+    ) : (
+      <script type="application/ld+json" set:html={serialize(orgJsonLd)} />
+    )}
     {structuredData &&
       (Array.isArray(structuredData) ? structuredData : [structuredData]).map((d) => (
-        <script type="application/ld+json" set:html={JSON.stringify(d)} />
+        <script type="application/ld+json" set:html={serialize(d)} />
       ))}
     <!-- Pre-paint language detection: first-time visitors whose system is in
          Spanish are sent to /es once; an explicit choice is always respected. -->

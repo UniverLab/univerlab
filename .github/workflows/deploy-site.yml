@@ -9,6 +9,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      indexnow:
+        description: 'Submit sitemap to IndexNow after deploy'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -68,42 +74,62 @@ jobs:
 
       # Sibling repos — ONLY their docs/ folder (sparse checkout, cone mode).
       # These org repos are public, so the default token can read them.
+      #
+      # `fetch-depth: 0` is load-bearing: a docs page's `dateModified` is the
+      # last commit of its source file, read with `git log -1` in this checkout
+      # (see src/lib/doc-last-modified.ts). The default shallow clone would make
+      # every file look freshly committed at checkout time, so the helper
+      # refuses to date a shallow repo — which is the correct fallback, but it
+      # would silently cost every page its freshness signal. Full history is
+      # what makes the dates real.
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/harness-canopy
           path: harness-canopy
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/texforge
           path: texforge
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/gitkit
           path: gitkit
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/ghscaff
           path: ghscaff
           sparse-checkout: docs
+          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/cadspec
           path: cadspec
           sparse-checkout: docs
+          fetch-depth: 0
+      # The repository is `demostage` (the old `demo-stage` name 302s to it)
+      # and the path has to be `demostage` because DOCS_BASES in
+      # src/data/docs-bases.ts reads `../demostage/docs`. Under `demo-stage`
+      # the collection resolved to nothing, `getCollection` returned `[]` with
+      # a warning, and the eight DemoStage docs never built.
       - uses: actions/checkout@v4
         with:
-          repository: UniverLab/demo-stage
-          path: demo-stage
+          repository: UniverLab/demostage
+          path: demostage
           sparse-checkout: docs
+          fetch-depth: 0
       # Canopy registry — platforms/ directory for platform badges
       - uses: actions/checkout@v4
         with:
           repository: UniverLab/canopy-registry
           path: canopy-registry
           sparse-checkout: platforms
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -114,7 +140,8 @@ jobs:
       - name: Build
         working-directory: univerlab
         env:
-          # Lifts the GitHub API rate limit when fetching the contributors wall.
+          # Lifts the GitHub API rate limit for the build-time fetches: the
+          # contributors wall and each experiment's latest release plate segment.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm ci
@@ -186,3 +213,64 @@ jobs:
           # whatever the index actually advertises.
           skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//')
           expect_content_type "$skill" 'text/markdown; charset=utf-8'
+
+      # IndexNow notifies Bing (and through it Copilot) plus the other
+      # participating engines about changed pages on each release deploy.
+      # Runs after the verify step so a failed verify blocks notification.
+      # Warn-only by design: any non-200/202 status or network error is
+      # reported as a workflow warning and never fails the deploy.
+      - name: Notify IndexNow
+        if: github.event_name != 'workflow_dispatch' || inputs.indexnow == true
+        working-directory: univerlab
+        env:
+          # IndexNow keys are public by design (served at the keyLocation URL).
+          INDEXNOW_KEY: 3af77270f75a7a2e2f2c55b12e13bba7
+        run: |
+          set -euo pipefail
+          HOST="univerlab.org"
+          KEY="${INDEXNOW_KEY}"
+          KEY_LOCATION="https://${HOST}/${KEY}.txt"
+
+          test -f "dist/${KEY}.txt" || { echo "::warning::IndexNow key file dist/${KEY}.txt missing — skipping"; exit 0; }
+
+          # All sitemap page URLs from the BUILD OUTPUT (never the live site).
+          # sitemap-*.xml also matches sitemap-index.xml whose <loc> points at
+          # the child sitemap file itself, so drop any loc ending in .xml.
+          # `|| true` is load-bearing: with no match grep exits nonzero, and
+          # `set -e`/pipefail would abort this warn-only step after a
+          # successful deploy. An empty URLS lands in the COUNT guard below.
+          URLS=$(grep -ho '<loc>[^<]*</loc>' dist/sitemap-*.xml \
+            | sed -e 's/<[^>]*>//g' \
+            | grep "^https://${HOST}/" \
+            | grep -v '\.xml$' \
+            | sort -u || true)
+          COUNT=$(printf '%s\n' "$URLS" | grep -c . || true)
+          [ "$COUNT" -gt 0 ] || { echo "::warning::IndexNow: no sitemap URLs found — skipping"; exit 0; }
+
+          # `|| true` + empty guard: a failed builder must not abort the
+          # warn-only step with an unset PAYLOAD (set -e / set -u).
+          PAYLOAD=$(printf '%s\n' "$URLS" | HOST="$HOST" KEY="$KEY" KEY_LOCATION="$KEY_LOCATION" node -e '
+            let data = "";
+            process.stdin.on("data", (c) => { data += c; }).on("end", () => {
+              const urlList = data.split("\n").map((s) => s.trim()).filter(Boolean);
+              process.stdout.write(JSON.stringify({
+                host: process.env.HOST,
+                key: process.env.KEY,
+                keyLocation: process.env.KEY_LOCATION,
+                urlList,
+              }));
+            });
+          ' || true)
+          [ -n "$PAYLOAD" ] || { echo "::warning::IndexNow: payload build failed — skipping"; exit 0; }
+
+          if [ "${INDEXNOW_DRY_RUN:-0}" = "1" ]; then printf '%s\n' "$PAYLOAD"; exit 0; fi
+
+          BODY=$(mktemp)
+          # `|| true` is load-bearing: curl's nonzero exit on network error must
+          # not fail the deploy under `set -e`; every path below exits 0.
+          STATUS=$(curl -sS -o "$BODY" -w '%{http_code}' -X POST 'https://api.indexnow.org/indexnow' \
+            -H 'Content-Type: application/json; charset=utf-8' --data "$PAYLOAD" || true)
+          echo "IndexNow submission: HTTP ${STATUS:-000}, ${COUNT} URLs"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "202" ]; then exit 0; fi
+          echo "::warning::IndexNow returned HTTP ${STATUS:-000}: $(cat "$BODY")"
+          exit 0

@@ -5,6 +5,7 @@ import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, experiments, type ExperimentId } from '../lib/experiments';
+import { experimentAppNode } from '../lib/structured-data';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 
@@ -31,36 +32,23 @@ const genesisDate = exp.startDate
 
 // Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
 // apps. Research experiments without an installer or URL get none —
-// Organization + page meta still apply.
+// Organization + page meta still apply. The node carries an `@id` derived from
+// the landing page, which is what lets a docs page reference it as `isPartOf`
+// instead of restating it (see src/lib/structured-data.ts).
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
-const baseSchema = exp.install
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: exp.name,
-      description: e.tagline,
-      applicationCategory: 'DeveloperApplication',
-      operatingSystem: exp.install.windows ? 'macOS, Linux, Windows' : 'macOS, Linux',
-      url: pageUrl,
-      downloadUrl: exp.github,
-      isAccessibleForFree: true,
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-      author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
-    }
-  : exp.url
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'WebApplication',
-        name: exp.name,
-        description: e.tagline,
-        applicationCategory: 'DeveloperApplication',
-        url: exp.url,
-        isAccessibleForFree: true,
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-        author: { '@type': 'Organization', name: 'UniverLab', url: site.href },
-      }
-    : undefined;
+const baseSchema = experimentAppNode({ site, exp, tagline: e.tagline, pageUrl });
+
+// A landing page is a place in the site, not just a document: UniverLab ›
+// <Experiment>, with the same trailing-slash URLs the canonical link uses.
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'UniverLab', item: new URL(localizePath('/', lang), site).href },
+    { '@type': 'ListItem', position: 2, name: exp.name, item: pageUrl },
+  ],
+};
 
 // FAQPage schema for rich snippets when experiments have FAQs.
 const faqSchema = e.faq && e.faq.length > 0
@@ -78,9 +66,12 @@ const faqSchema = e.faq && e.faq.length > 0
     }
   : undefined;
 
-const structuredData = faqSchema
-  ? (baseSchema ? [baseSchema, faqSchema] : faqSchema)
-  : baseSchema;
+// FAQPage stays its own block — its shape is out of scope here — but the array
+// is now always an array: the crumb exists on every experiment page, including
+// the ones with no application schema at all.
+const structuredData: Record<string, unknown>[] = [baseSchema, breadcrumbSchema, faqSchema].filter(
+  (s): s is Record<string, unknown> => Boolean(s),
+);
 
 // Per-experiment Open Graph card — generated at build time into public/og/.
 const ogImage = `/og/${id}.png`;
@@ -88,6 +79,16 @@ const ogImage = `/og/${id}.png`;
 <BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <LabPlate id={id} />
+    {exp.builtWith.length > 0 && (
+      <p class="built-with">
+        {exp.builtWith.map((tool, i) => (
+          <>
+            {i > 0 && <span class="bw-sep"> · </span>}
+            {t.builtWithSegments[tool]}{' '}<a href={localizePath(`/${tool}`, lang)} translate="no">{byId(tool).name}</a>
+          </>
+        ))}
+      </p>
+    )}
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
@@ -98,6 +99,7 @@ const ogImage = `/og/${id}.png`;
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
+      <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
       <div class="actions">
           <slot name="cta-first" />
@@ -263,6 +265,19 @@ const ogImage = `/og/${id}.png`;
     margin-inline: 0;
   }
   .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
+  /* The thread — one line under the hero lede, plate register, dim ink, tokens only. */
+  .thread { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-dim); margin: 0; }
+  /* Built-with line — the plate area's second line: same mono register as .lab-plate,
+     own paragraph (the plate is one nowrap translate="no" line; this one translates). */
+  .built-with {
+    max-width: var(--max-w, 70rem); margin: 0.35rem auto 0;
+    padding-inline: var(--page-gutter);
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    color: var(--ink-dim);
+  }
+  .built-with .bw-sep { color: var(--ink-faint); }
+  .built-with a { color: var(--ink-dim); text-decoration-color: var(--line); }
+  .built-with a:hover { color: var(--essence); }
   :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .lede code) { color: var(--essence); font-size: 0.9em; }
 
