@@ -938,7 +938,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);
-  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'actions visual' 'install install' 'banner banner';
+  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'thread visual' 'actions visual' 'install install' 'banner banner';
   align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
 }
 :root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
@@ -946,6 +946,10 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .exp-name { grid-area: title; position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 400 clamp(2.8rem,5vw,3.375rem)/1.1 var(--font-serif); letter-spacing: -.037em; color: #1a1614; }
 :root[data-surface='paper'] .koan { grid-area: koan; border: 0; padding: 0; margin: 0; font: 400 1.25rem/1.5 var(--font-serif); font-style: normal; color: #66635f; opacity: 1; }
 :root[data-surface='paper'] .lede { grid-area: lede; color: #66635f; }
+/* The lab thread sits directly under the lede and shares the lede's row of
+   the visual span — without its own area the paper grid auto-places it after
+   the banner, at the very bottom of the hero. */
+:root[data-surface='paper'] .hero > .thread { grid-area: thread; }
 :root[data-surface='paper'] .hero-visual { grid-area: visual; }
 :root[data-surface='paper'] .actions { grid-area: actions; gap: 1rem; }
 :root[data-surface='paper'] .install { grid-area: install; max-width: none; margin-top: 1.5rem; }
@@ -1092,7 +1096,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='observatory'] .ascii-motif { color: var(--astro-denoise); }
 
 @media (max-width: 52rem) {
-  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install' 'banner'; text-align: center; }
+  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'thread' 'visual' 'actions' 'install' 'banner'; text-align: center; }
   :root[data-surface='paper'] .hero > * { min-width: 0; }
   :root[data-surface='paper'] .galley-proof { width: min(100%, 18rem); overflow: hidden; }
   :root[data-surface='paper'] .hero > .lede { margin-inline: auto; }
