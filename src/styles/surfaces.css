@@ -420,6 +420,17 @@ html[data-surface='quorum'] .koan {
   letter-spacing: 0.02em;
   opacity: 1;
 }
+/* Quorum — the golden figure is back at its old centred anchor (ctx.w × 0.64), so
+   the lede keeps its contrast on a soft backdrop in the page's own bg: a 78 % plate
+   with a feathered spread, rather than moving the spiral off the copy. var(--bg)
+   resolves to the active circadian token (day sand / night espresso), so the plate
+   follows the page substrate in both modes. */
+html[data-surface='quorum'] .exp .lede {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  padding: 1.2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 0 1.5rem 0.75rem color-mix(in srgb, var(--bg) 78%, transparent);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────
    astro-denoise · `observatory` — the night sky.
@@ -478,12 +489,12 @@ html[data-surface='studio'] .koan {
    default and `.wrap` carries the measure. Everything else on the page stays
    light: two dark bands would tip the page dark-heavy. ───────────────────── */
 html[data-surface='studio'] .band-light {
-  background: #f7ece1;
+  background: color-mix(in srgb, #f7ece1 88%, transparent);
   color: #221d18;
   padding-block: 3rem 3.25rem;
 }
 html[data-surface='studio'] .band-dark {
-  background: #14110d;
+  background: color-mix(in srgb, #14110d 82%, transparent);
   color: #ece7dd;
   padding-block: 2.5rem 2.75rem;
 }
@@ -497,7 +508,7 @@ html[data-surface='studio'] .genesis-row {
   margin-inline: 0;
   padding-inline: 0;
   grid-template-columns: 1fr;
-  background: #f7ece1;
+  background: color-mix(in srgb, #f7ece1 88%, transparent);
 }
 /* `.genesis` is a .wrap grid item with auto margins, so it shrink-wraps to its
    prose measure and centres itself. Give it the row's full width to optically
@@ -927,7 +938,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);
-  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'actions visual' 'install install' 'banner banner';
+  grid-template-areas: 'eyebrow eyebrow' 'mark visual' 'title visual' 'koan visual' 'lede visual' 'thread visual' 'actions visual' 'install install' 'banner banner';
   align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
 }
 :root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
@@ -935,6 +946,10 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='paper'] .exp-name { grid-area: title; position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 400 clamp(2.8rem,5vw,3.375rem)/1.1 var(--font-serif); letter-spacing: -.037em; color: #1a1614; }
 :root[data-surface='paper'] .koan { grid-area: koan; border: 0; padding: 0; margin: 0; font: 400 1.25rem/1.5 var(--font-serif); font-style: normal; color: #66635f; opacity: 1; }
 :root[data-surface='paper'] .lede { grid-area: lede; color: #66635f; }
+/* The lab thread sits directly under the lede and shares the lede's row of
+   the visual span — without its own area the paper grid auto-places it after
+   the banner, at the very bottom of the hero. */
+:root[data-surface='paper'] .hero > .thread { grid-area: thread; }
 :root[data-surface='paper'] .hero-visual { grid-area: visual; }
 :root[data-surface='paper'] .actions { grid-area: actions; gap: 1rem; }
 :root[data-surface='paper'] .install { grid-area: install; max-width: none; margin-top: 1.5rem; }
@@ -961,7 +976,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --accent: #fa5838 !important;
 }
 :root[data-surface='studio'] .exp { --essence: #fa5838 !important; --accent: #fa5838 !important; }
-:root[data-surface='studio'] .hero { width: 100%; max-width: none; margin: 0; background: #190501; color: #f7f6ff; border: 0 !important; border-radius: 0; align-items: center; text-align: center; padding: 2rem max(var(--space),calc((100vw - 70rem)/2)) 1.5rem; }
+:root[data-surface='studio'] .hero { width: 100%; max-width: none; margin: 0; background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; border: 0 !important; border-radius: 0; align-items: center; text-align: center; padding: 2rem max(var(--space),calc((100vw - 70rem)/2)) 1.5rem; }
 :root[data-surface='studio'] .hero::before,
 :root[data-surface='studio'] .hero::after { content: none; }
 :root[data-surface='studio'] .hero.js-rec::before { content: none !important; }
@@ -977,10 +992,13 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='studio'] .install { margin-inline: auto; }
 :root[data-surface='studio'] .cmd { background: #340a01; border-color: #951c04; }
 :root[data-surface='studio'] .player { width: min(100%,56rem); }
-:root[data-surface='studio'] .band-light { background: #feeae6; color: #190501; }
+/* The stage figure sits below the hero now (before genesis): give it the
+   hero's own gutter so the player never touches the viewport edge. */
+:root[data-surface='studio'] .exp > .stage { padding-inline: max(var(--space),calc((100vw - 70rem)/2)); }
+:root[data-surface='studio'] .band-light { background: color-mix(in srgb, #feeae6 88%, transparent); color: #190501; }
 :root[data-surface='studio'] .band-light .lede,
 :root[data-surface='studio'] .band-light .label { color: #190501; }
-:root[data-surface='studio'] .band-dark { background: #190501; color: #f7f6ff; }
+:root[data-surface='studio'] .band-dark { background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; }
 :root[data-surface='studio'] .spectrum { gap: clamp(.3rem,1vw,.8rem); }
 :root[data-surface='studio'] .spectrum span { background: #fa5838; }
 
@@ -1054,7 +1072,11 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
-:root[data-surface='pastel'] canvas.bg { opacity: .12; }
+/* The runner caps its own node fills at 0.35 and ring strokes at 0.5 (see
+   bg-bubbles.ts), so the page's saturation is bounded at the source; .6 stays
+   the link-legibility floor lgitkit-one-background FR4 measured (at .5 the
+   ambient links fall to 0.14 × .5 = 0.07, under that floor). */
+:root[data-surface='pastel'] canvas.bg { opacity: .6; }
 
 :root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 /* Preserve single-name heroes on the two pages without a supplied style file. */
@@ -1074,7 +1096,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='observatory'] .ascii-motif { color: var(--astro-denoise); }
 
 @media (max-width: 52rem) {
-  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'visual' 'actions' 'install' 'banner'; text-align: center; }
+  :root[data-surface='paper'] .hero { width: min(100% - 2 * var(--space), 76rem); grid-template-columns: minmax(0,1fr); grid-template-areas: 'eyebrow' 'mark' 'title' 'koan' 'lede' 'thread' 'visual' 'actions' 'install' 'banner'; text-align: center; }
   :root[data-surface='paper'] .hero > * { min-width: 0; }
   :root[data-surface='paper'] .galley-proof { width: min(100%, 18rem); overflow: hidden; }
   :root[data-surface='paper'] .hero > .lede { margin-inline: auto; }

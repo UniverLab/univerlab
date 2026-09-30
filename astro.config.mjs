@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
 import docsMdLinks from './src/plugins/docs-md-links.ts';
+import docsLastUpdated from './src/plugins/docs-last-updated.ts';
 
 /**
  * Pages that must not be advertised to crawlers. Both spellings of each path:
@@ -27,8 +28,10 @@ export default defineConfig({
     },
     // Sätteri is Astro 7's default processor, but it has to be named here to
     // take a plugin. The docs collections render sibling repos' markdown
-    // verbatim, so their relative `foo.md` links would 404 on the site.
-    processor: satteri({ hastPlugins: [docsMdLinks] }),
+    // verbatim, so their relative `foo.md` links would 404 on the site; the
+    // second plugin adds the git-dated "Last updated" line under each docs
+    // `<h1>` (see src/plugins/docs-last-updated.ts).
+    processor: satteri({ hastPlugins: [docsMdLinks, docsLastUpdated] }),
   },
   i18n: {
     locales: ['en', 'es'],

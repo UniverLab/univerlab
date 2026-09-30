@@ -28,7 +28,9 @@
 /cadspec/docs/installation.md /cadspec/docs/installation/ 301
 /cadspec/docs/live-preview.md /cadspec/docs/live-preview/ 301
 /cadspec/docs/quickstart.md /cadspec/docs/quickstart/ 301
-/canopy/docs/adr/0001-recipes.md /canopy/docs/adr/0001-recipes/ 301
+/canopy/docs/adr/0001-recipes.md /canopy/docs/ 301
+/canopy/docs/adr/0001-recipes/ /canopy/docs/ 301
+/canopy/docs/adr/0001-recipes/index.md /canopy/docs/ 301
 /canopy/docs/agents.md /canopy/docs/agents/ 301
 /canopy/docs/cli-reference.md /canopy/docs/cli-reference/ 301
 /canopy/docs/graphs.md /canopy/docs/graphs/ 301
@@ -44,7 +46,9 @@
 /canopy/docs/usage-patterns.md /canopy/docs/usage-patterns/ 301
 /canopy/docs/workflows/ /canopy/docs/graphs/ 301
 /demostage/docs/commands.md /demostage/docs/commands/ 301
-/demostage/docs/decisions/browser-events.md /demostage/docs/decisions/browser-events/ 301
+/demostage/docs/decisions/browser-events.md /demostage/docs/ 301
+/demostage/docs/decisions/browser-events/ /demostage/docs/ 301
+/demostage/docs/decisions/browser-events/index.md /demostage/docs/ 301
 /demostage/docs/demo-toml.md /demostage/docs/demo-toml/ 301
 /demostage/docs/export-targets.md /demostage/docs/export-targets/ 301
 /demostage/docs/index.md /demostage/docs/ 301

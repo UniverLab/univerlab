@@ -95,14 +95,26 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
     { passive: true, signal: ac.signal }
   );
 
+  /* The /quorum lede keeps its WCAG AA contrast on a soft backdrop in the
+     page's own background (surfaces.css: `html[data-surface='quorum'] .exp
+     .lede`), so this runner no longer has to dodge the copy column: the
+     figure sits on its old centred anchor (0.64 / 0.5) on the page exactly
+     as it does in the home Quorum card window. */
+
   return (t) => {
     if (!ctx.canvas.isConnected) {
       ac.abort();
       return;
     }
     c.clearRect(0, 0, ctx.w, ctx.h);
-    // Fit the tiling to a tall region on the right, static.
-    const S = (ctx.h * 0.82) / bh;
+    // Fit the tiling to a tall region on the right, static. The third pass's
+    // 15 % growth stays (S feeds every transform): the whole figure — rects,
+    // curve and the sparks riding toX/toY — grows about its centre.
+    const SCALE = 1.15;
+    const S = ((ctx.h * 0.82) / bh) * SCALE;
+    // Anchor: the old centred spot (0.64 / 0.5), restored from the third
+    // pass's copy-reading anchor. The /quorum lede now sits on its own soft
+    // backdrop (surfaces.css), so the figure no longer dodges the copy column.
     const ox = ctx.w * 0.64 - (bx + bw / 2) * S;
     const oy = ctx.h * 0.5 - (by + bh / 2) * S;
     const toX = (u: number) => ox + u * S;
@@ -110,21 +122,22 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
 
     // Whirling squares — quiet but legible structure. The old 0.15 / 0.19
     // washed out on the 0.68 canvas opacity, so the golden geometry read as
-    // nothing at all; raised to a visible-but-quiet level per circadian
-    // surface (day on sand: 0.18 / 0.22, night on espresso: 0.20 / 0.24).
+    // nothing at all; raised again on the third pass so the figure reads on
+    // the cream day palette (day on sand: 0.30 / 0.42, night on espresso:
+    // 0.28 / 0.40).
     // Read every frame so a celestial scrub repaints the right level.
     const isDay = document.documentElement.dataset.celestial === 'sun';
     c.strokeStyle = A;
-    c.lineWidth = 1;
-    c.globalAlpha = isDay ? 0.18 : 0.2;
+    c.lineWidth = 1.2;
+    c.globalAlpha = isDay ? 0.3 : 0.28;
     for (const q of squares) {
       c.strokeRect(toX(q.x), toY(q.y), q.s * S, q.s * S);
     }
 
     // The golden spiral through them.
     c.lineCap = 'round';
-    c.lineWidth = 1.3;
-    c.globalAlpha = isDay ? 0.22 : 0.24;
+    c.lineWidth = 1.8;
+    c.globalAlpha = isDay ? 0.42 : 0.4;
     c.beginPath();
     for (let i = 0; i <= 220; i++) {
       const th = (i / 220) * thMax;

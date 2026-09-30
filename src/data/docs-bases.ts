@@ -21,3 +21,51 @@ export const DOCS_BASES: Readonly<Record<string, string>> = {
   cadspec: '../cadspec/docs',
   demostage: '../demostage/docs',
 };
+
+/**
+ * Repo-relative paths that are design records, not published documentation.
+ * `docs/` is published documentation only (2026-09-29): these directories
+ * never build to site routes. One literal list shared by the content
+ * collections' glob, the link-rewrite plugin, and the redirects generator.
+ */
+export const DOCS_EXCLUDE = ['adr/**', 'decisions/**', 'design/**', 'internal/**'] as const;
+
+/**
+ * True when `rel` (repo-relative, posix, e.g. `adr/0001-recipes.md`) is
+ * excluded. Accepts the path with or without a `.md` extension and matches
+ * case-insensitively; `adr/**` covers bare `adr` plus everything under it.
+ */
+export function isDocsExcluded(rel: string): boolean {
+  const p = rel.replace(/^\.\//, '').toLowerCase();
+  return (DOCS_EXCLUDE as readonly string[]).some((pat) => {
+    const dir = pat.replace(/\/\*\*$/, '');
+    return p === dir || p.startsWith(`${dir}/`);
+  });
+}
+
+/** Site id → `owner/repo`, derived from the DOCS_BASES dir name (the repo). */
+export function docsRepo(id: string): string {
+  const base = DOCS_BASES[id];
+  const repo = base.replace(/^\.\.\//, '').split('/')[0];
+  return `UniverLab/${repo}`;
+}
+
+/** Absolute GitHub URL to a file on the repo's default branch. */
+export function docsGithubUrl(id: string, rel: string, anchor = ''): string {
+  return `https://github.com/${docsRepo(id)}/blob/main/docs/${rel}${anchor}`;
+}
+
+/**
+ * Routes that used to build (and the `.md` sources that used to redirect to
+ * them) but must now 301 to the tool docs index. The `.md` forms were live
+ * rules in `_redirects` before the exclusion; dropping them silently would
+ * turn a 301 into a 404.
+ */
+export const DOCS_EXCLUDED_REDIRECTS: readonly string[] = [
+  '/canopy/docs/adr/0001-recipes/ /canopy/docs/ 301',
+  '/canopy/docs/adr/0001-recipes/index.md /canopy/docs/ 301',
+  '/canopy/docs/adr/0001-recipes.md /canopy/docs/ 301',
+  '/demostage/docs/decisions/browser-events/ /demostage/docs/ 301',
+  '/demostage/docs/decisions/browser-events/index.md /demostage/docs/ 301',
+  '/demostage/docs/decisions/browser-events.md /demostage/docs/ 301',
+];

@@ -138,12 +138,40 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
     for (const exp of experiments) {
       // When: that experiment's card mounts with the pair from the registry
       const { bgCtx } = mount(exp.bg, '#ffffff', '#000000', exp.surface);
-      // Then: only the two surface colour overrides ever rewrite the colour —
+      // Then: only the three surface colour overrides ever rewrite the colour —
       // every other surface keeps the colour the caller handed it
       const expected =
-        exp.surface === 'paper' ? '#6a563e' : exp.surface === 'pastel' ? '#6d28d9' : '#ffffff';
+        exp.surface === 'paper' ? '#6a563e'
+        : exp.surface === 'pastel' ? '#6d28d9'
+        : exp.surface === 'industrial' ? '#8b7cf6' // the scaffold re-tint, via ctx.surface
+        : '#ffffff';
       expect(bgCtx?.color).toBe(expected);
     }
+  });
+
+  it('hands the resolved surface to the runner through ctx', () => {
+    // Given: a home card passing its experiment's own surface
+    const { bgCtx } = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    // Then: the runner sees that exact surface, not the home page's blank one
+    expect(bgCtx?.surface).toBe('industrial');
+    // And: the surface argument wins over the page's own data-surface
+    document.documentElement.dataset.surface = 'observatory';
+    const overridden = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    expect(overridden.bgCtx?.surface).toBe('industrial');
+    // And: with no argument the page's data-surface is what it receives
+    document.documentElement.dataset.surface = 'paper';
+    const paged = mount('forge', '#e0a458', '#fffaf0');
+    expect(paged.bgCtx?.surface).toBe('paper');
+  });
+
+  it('re-tints the scaffold to blueprint violet from the argument with no page surface', () => {
+    // Given: the home page — <html> carries NO data-surface at all
+    expect(document.documentElement.dataset.surface).toBeUndefined();
+    // When: ghScaff's card mounts with its own surface
+    const { bgCtx } = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    // Then: the midnight re-tint fires off ctx.surface, exactly as the
+    // /ghscaff page gets it — the bug it fixes was the window staying copper
+    expect(bgCtx?.color).toBe('#8b7cf6');
   });
 
   it('lets an explicit surface beat the page\'s data-surface', () => {

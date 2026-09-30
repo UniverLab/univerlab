@@ -37,7 +37,12 @@ function makeCtx(w = 800, h = 600) {
   const clearRect = jest.fn();
   const arcs: Array<{ x: number; y: number; r: number }> = [];
   const alphas: number[] = [];
+  /** Every whirling-square rect drawn, in order — geometry checks read these. */
+  const rects: Array<{ x: number; y: number; w: number; h: number }> = [];
+  /** lineWidth at the moment it was assigned, in order (rects → spiral). */
+  const widths: number[] = [];
   let alpha = 1;
+  let width = 1;
   const c = {
     clearRect,
     fill: jest.fn(),
@@ -45,7 +50,7 @@ function makeCtx(w = 800, h = 600) {
     beginPath: jest.fn(),
     moveTo: jest.fn(),
     lineTo: jest.fn(),
-    strokeRect: jest.fn(),
+    strokeRect: jest.fn((x: number, y: number, w: number, h: number) => rects.push({ x, y, w, h })),
     arc: jest.fn((x: number, y: number, r: number) => arcs.push({ x, y, r })),
     createRadialGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
     strokeStyle: '',
@@ -60,10 +65,19 @@ function makeCtx(w = 800, h = 600) {
       alpha = v;
     },
   });
+  Object.defineProperty(c, 'lineWidth', {
+    get: () => width,
+    set: (v: number) => {
+      widths.push(v);
+      width = v;
+    },
+  });
   const ctx: SpiralCtx = { canvas, c, color: '#e6b24a', w, h };
   const reset = () => {
     arcs.length = 0;
     alphas.length = 0;
+    rects.length = 0;
+    widths.length = 0;
     clearRect.mockClear();
   };
   /** Advance the shared clock without stepping a frame. */
@@ -79,7 +93,7 @@ function makeCtx(w = 800, h = 600) {
   const sparks = () => arcs.length / 2;
   /** Centers of the halo arcs — the spark heads, in spawn order. */
   const heads = () => arcs.filter((_, i) => i % 2 === 0).map((p) => ({ x: p.x, y: p.y }));
-  return { ctx, canvas, arcs, alphas, clearRect, reset, setClock, step, sparks, heads, randomSpy };
+  return { ctx, canvas, arcs, alphas, rects, widths, clearRect, reset, setClock, step, sparks, heads, randomSpy };
 }
 
 afterEach(() => {
@@ -144,10 +158,10 @@ describe('spiral', () => {
     step(tick, 900); // spark born at t = 900, life = 12500
     expect(sparks()).toBe(1);
     alphas.length = 0;
-    // Spark alphas only — the static structure strokes (0.18/0.22 by day,
-    // 0.20/0.24 by night) and the trailing reset-to-1 are not part of the
+    // Spark alphas only — the static structure strokes (0.30/0.42 by day,
+    // 0.28/0.40 by night) and the trailing reset-to-1 are not part of the
     // fade-in envelope.
-    const STRUCT = [0.18, 0.2, 0.22, 0.24];
+    const STRUCT = [0.3, 0.28, 0.42, 0.4];
     const envAlphas = () => alphas.filter((v) => v < 1 && !STRUCT.includes(v));
     // When: a frame lands 100 ms after birth (env = u / 0.12 ≈ 0.067)
     step(tick, 1000);
@@ -230,22 +244,68 @@ describe('spiral', () => {
 
   it('raises the structure strokes to a visible-but-quiet level per circadian surface', () => {
     // Given: the day surface (gold on sand)
-    const { ctx, alphas, step } = makeCtx();
+    const { ctx, alphas, widths, step } = makeCtx();
     document.documentElement.dataset.celestial = 'sun';
     const tick = spiral(ctx);
     // When: a frame paints
     step(tick, 100);
-    // Then: whirling squares at 0.18, golden spiral at 0.22
-    expect(alphas[0]).toBeCloseTo(0.18, 6);
-    expect(alphas[1]).toBeCloseTo(0.22, 6);
+    // Then: whirling squares at 0.30 (1.2 px), golden spiral at 0.42 (1.8 px)
+    expect(alphas[0]).toBeCloseTo(0.3, 6);
+    expect(alphas[1]).toBeCloseTo(0.42, 6);
+    expect(widths).toEqual([1.2, 1.8]);
     // When: the surface flips to night (gold on espresso)
     document.documentElement.dataset.celestial = 'moon';
     alphas.length = 0;
+    widths.length = 0;
     step(tick, 200);
-    // Then: whirling squares at 0.20, golden spiral at 0.24
-    expect(alphas[0]).toBeCloseTo(0.2, 6);
-    expect(alphas[1]).toBeCloseTo(0.24, 6);
+    // Then: whirling squares at 0.28, golden spiral at 0.40, same stroke weights
+    expect(alphas[0]).toBeCloseTo(0.28, 6);
+    expect(alphas[1]).toBeCloseTo(0.4, 6);
+    expect(widths).toEqual([1.2, 1.8]);
     delete document.documentElement.dataset.celestial;
+  });
+
+  it('grows the whole figure 15 % about its centre on the restored 0.64 / 0.5 anchor', () => {
+    // Given: one frame on the default 800 × 600 harness canvas
+    const { ctx, rects, step } = makeCtx();
+    const tick = spiral(ctx);
+    step(tick, 100);
+    // When: the whirling-square rects are measured
+    expect(rects.length).toBeGreaterThan(0);
+    const widest = Math.max(...rects.map((r) => r.w));
+    const left = Math.min(...rects.map((r) => r.x));
+    const right = Math.max(...rects.map((r) => r.x + r.w));
+    const top = Math.min(...rects.map((r) => r.y));
+    const bottom = Math.max(...rects.map((r) => r.y + r.h));
+    // Then: the largest square (side 34 of the tiling over bh = 55) sits 15 %
+    // further out than the old fixture — 34 × (600 × 0.82 / 55) = 304.145 px
+    // before the pass, × 1.15 now.
+    expect(widest).toBeCloseTo(34 * ((600 * 0.82) / 55) * 1.15, 6);
+    // …and with the copy-reading anchor gone the bounding box centres on the
+    // old anchor (w × 0.64, h × 0.5), so the growth happens about the figure's
+    // centre, not off-frame.
+    expect((left + right) / 2).toBeCloseTo(800 * 0.64, 6);
+    expect((top + bottom) / 2).toBeCloseTo(600 * 0.5, 6);
+  });
+
+  it('anchors on 0.64 / 0.5 even with a page-shaped hero in the DOM (the copy is ignored)', () => {
+    // Given: header + .exp .lede present — the copy the third pass used to read
+    document.body.innerHTML = '<header></header><div class="exp"><p class="lede">…</p></div>';
+    const { ctx, rects, step } = makeCtx();
+    const tick = spiral(ctx);
+    // When: a frame paints
+    step(tick, 100);
+    // Then: the figure centres on the old anchor, exactly as the card does —
+    // the lede no longer steers the geometry (its contrast comes from the
+    // soft backdrop surfaces.css puts under it)
+    expect(rects.length).toBeGreaterThan(0);
+    const left = Math.min(...rects.map((r) => r.x));
+    const right = Math.max(...rects.map((r) => r.x + r.w));
+    const top = Math.min(...rects.map((r) => r.y));
+    const bottom = Math.max(...rects.map((r) => r.y + r.h));
+    expect((left + right) / 2).toBeCloseTo(800 * 0.64, 6);
+    expect((top + bottom) / 2).toBeCloseTo(600 * 0.5, 6);
+    document.body.innerHTML = '';
   });
 
   it('the spawn bias tracks the cursor: opposite arcs birth opposite heads', () => {

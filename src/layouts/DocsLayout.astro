@@ -1,7 +1,12 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import { byId } from '../lib/experiments';
+import { docLastModified } from '../lib/doc-last-modified';
+import { buildDocsJsonLd } from '../lib/docs-jsonld';
+import { composeDocsDescription } from '../lib/docs-description';
+import { composeDocsTitle } from '../lib/docs-title';
 import { getLang, useTranslations } from '../i18n';
+import { en as enDict } from '../i18n/en';
 
 interface DocLink { slug: string; title: string; }
 interface Props {
@@ -10,16 +15,51 @@ interface Props {
   description?: string;
   links: DocLink[];
   current: string;
+  /** Absolute path of the markdown this page rendered from — the one place
+   *  the freshness date comes from (see src/lib/doc-last-modified.ts). */
+  sourceFile: string;
 }
-const { id, title, description, links, current } = Astro.props;
+const { id, title, description, links, current, sourceFile } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+// Docs are English-only, so the composer always gets the en tagline even
+// though the chrome around it is localized.
+const enTagline = enDict.experiments[id as keyof typeof enDict.experiments]?.tagline ?? '';
+const metaDescription = composeDocsDescription({ description, title, expName: exp.name, tagline: enTagline });
 // Trailing slash is canonical (astro.config.mjs `trailingSlash: 'always'`);
 // without it Cloudflare Pages answers every docs link with a 308.
 const base = `/${id}/docs/`;
+
+// Same formula as BaseLayout uses for <link rel="canonical">, so the JSON-LD
+// `url` and the breadcrumb's last item are byte-identical to it.
+const site = Astro.site ?? new URL('https://univerlab.org');
+const canonical = new URL(Astro.url.pathname, site).href;
+// Null on a shallow checkout or a file with no history — and then the page
+// shows no date, emits no `dateModified` and no `article:modified_time`.
+// Never the build time.
+const lastModified = docLastModified(sourceFile);
+const docsJsonLd = buildDocsJsonLd({
+  site,
+  canonical,
+  expId: id,
+  expName: exp.name,
+  headline: title,
+  description: metaDescription,
+  dateModified: lastModified,
+  isDocsIndex: current === '',
+});
 ---
-<BaseLayout title={`${title} · ${exp.name} docs`} description={description} bg={exp.bg} circadian mutedCanvas>
+<BaseLayout
+  title={composeDocsTitle(title, exp.name)}
+  description={metaDescription}
+  bg={exp.bg}
+  circadian
+  mutedCanvas
+  ogType="article"
+  articleModifiedTime={lastModified ?? undefined}
+  jsonLdGraph={docsJsonLd['@graph']}
+>
   <div class="wrap docs">
     <aside>
       <a class="back label" href={`/${id}/`}>← {exp.name}</a>
@@ -68,6 +108,14 @@ const base = `/${id}/docs/`;
 <style is:global>
   /* Markdown rendering for repo docs */
   .prose-doc h1 { font-size: 1.9rem; margin: 0 0 1rem; letter-spacing: -0.015em; }
+  /* "Last updated …" under the heading — inserted by
+     src/plugins/docs-last-updated.ts only when the file has a git date. The
+     negative top margin tucks it under the h1's own `0 0 1rem`. */
+  .prose-doc .doc-updated {
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.05em;
+    color: var(--ink-faint); margin: -0.55rem 0 1.6rem;
+  }
+  .prose-doc .doc-updated time { font-variant-numeric: tabular-nums; }
   .prose-doc h2 { font-size: 1.35rem; margin: 2.4rem 0 0.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
   .prose-doc h3 { font-size: 1.08rem; margin: 1.8rem 0 0.6rem; }
   .prose-doc p, .prose-doc li { color: var(--ink-dim); line-height: 1.7; }

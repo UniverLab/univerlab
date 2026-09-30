@@ -4,9 +4,13 @@ import type { Dict } from './en';
  *  los repositorios permanece solo en inglés. */
 export const es: Dict = {
   meta: {
-    title: 'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — UniverLab',
+    // 54 chars: "de código abierto" is the site's own term for open-source
+    // (hero h1, description) — "abiertas" alone does not say open-source, and
+    // the literal "Herramientas CLI de código abierto …" is 67 chars, so the
+    // noun goes and the topics stay, mirroring the English title's shape.
+    title: 'CLI de código abierto para LaTeX, git, CAD — UniverLab',
     description:
-      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, sin dependencias de runtime.',
+      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -19,6 +23,12 @@ export const es: Dict = {
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
+    built: {
+      label: 'Este sitio:',
+      canopy: 'construido con',
+      ghscaff: 'repositorio configurado con',
+      gitkit: 'commits revisados por',
+    },
   },
   common: {
     repo: 'Star en GitHub ↗',
@@ -49,7 +59,7 @@ export const es: Dict = {
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
-      systemCaption: 'El laboratorio como sistema — cada experimento orbita la misma pregunta.',
+      systemAria: 'UniverLab y sus experimentos',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
       // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
@@ -68,7 +78,11 @@ export const es: Dict = {
       body:
         'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
-    experiments: { kicker: '00 — Experimentos' },
+    experiments: {
+      kicker: '00 — Experimentos',
+      method:
+        'Problemas distintos, un mismo método: tomar trabajo que vive en procedimientos frágiles y manuales, y volverlo explícito, reproducible y automatizable — por una persona o por un agente.',
+    },
     philosophy: {
       kicker: '02 — Filosofía',
       title: 'La tecnología no es el fin.',
@@ -86,6 +100,8 @@ export const es: Dict = {
     directions: {
       kicker: '03 — Líneas de investigación',
       title: 'Hacia dónde mira el laboratorio.',
+      axis:
+        'El eje: sistemas explícitos · trabajo reproducible · colaboración humano–IA. Los campos de abajo son donde se está poniendo a prueba.',
       now: 'Ahora',
       next: 'Después',
       nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],
@@ -110,6 +126,11 @@ export const es: Dict = {
       need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
       tagline:
         'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
+      thread: {
+        problem: 'agentes de IA',
+        method: 'un runtime persistente sobre cada harness',
+        artifact: 'trabajo multiagente coordinado',
+      },
       title:
         'Memoria persistente: Claude Code, Codex, OpenCode — Canopy',
       description:
@@ -175,10 +196,15 @@ export const es: Dict = {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      thread: {
+        problem: 'LaTeX',
+        method: 'una sola cadena de herramientas autocontenida',
+        artifact: 'documentos reproducibles',
+      },
       title:
-        'LaTeX con diagramas Mermaid — TeXForge',
+        'LaTeX con diagramas Mermaid, Graphviz y D2 — TeXForge',
       description:
-        'Un solo binario, sin instalar una distribución de LaTeX. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para que los lea un agente.',
+        'Un solo binario, sin distribución de LaTeX que instalar. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
       figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
       lede:
@@ -223,10 +249,15 @@ export const es: Dict = {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      thread: {
+        problem: 'configuración de repos',
+        method: 'builds guardados e idempotentes',
+        artifact: 'el mismo ritual en todas partes',
+      },
       title:
-        'Los git hooks están desaprovechados. GitKit los pone a trabajar.',
+        'Git hooks desaprovechados. GitKit los pone a trabajar.',
       description:
-        'Hooks, .gitignore, .gitattributes y config en un solo flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node, sin Python.',
+        'Hooks, .gitignore, .gitattributes y config en un flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node ni Python.',
       koan: '// el ritual, automatizado',
       hero: {
         wizard: {
@@ -279,10 +310,15 @@ export const es: Dict = {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      thread: {
+        problem: 'repositorios de GitHub',
+        method: 'un asistente idempotente',
+        artifact: 'convenciones aplicadas',
+      },
       title:
-        'Crea repos de GitHub con las convenciones ya aplicadas — ghScaff',
+        'Repos de GitHub con convenciones aplicadas — ghScaff',
       description:
-        'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit.',
+        'Un wizard interactivo que arma el repositorio y aplica labels, branch protection y status checks desde el primer commit — idempotente y seguro de reaplicar.',
       koan: 'Un edificio es tan recto como su andamio.',
       lede:
         'Crear un repositorio como se debe son una docena de pasos olvidables. ghScaff levanta toda la estructura en un <strong>wizard interactivo</strong> — y como cada operación es <strong>idempotente</strong>, puede renivelar cualquier repositorio existente sin derribarlo.',
@@ -334,6 +370,11 @@ export const es: Dict = {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      thread: {
+        problem: 'CAD',
+        method: 'geometría declarativa',
+        artifact: 'planos que un agente puede verificar',
+      },
       title:
         'CAD as code: de la declaración al modelo — cadSpec',
       description:
@@ -376,10 +417,15 @@ export const es: Dict = {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
         'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      thread: {
+        problem: 'eliminación de ruido',
+        method: 'un benchmark puntuado por la ciencia',
+        artifact: 'métodos comparables',
+      },
       title:
         'Benchmarking de denoising astronómico — Astro Denoise',
       description:
-        'Una propuesta de investigación evaluada por la ciencia que recupera, no por lo limpia que se ve la imagen.',
+        'Una propuesta de investigación para un benchmark reproducible de métodos de denoising en imágenes simuladas del Observatorio Rubin — evaluada por ciencia.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
       lede:
         'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
@@ -412,8 +458,13 @@ export const es: Dict = {
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      thread: {
+        problem: 'estimación',
+        method: 'una sala peer-to-peer',
+        artifact: 'desacuerdo visible',
+      },
       title:
-        'Planning poker donde tus votos nunca llegan a un servidor — Quorum',
+        'Planning poker donde tus votos no ven un servidor — Quorum',
       description:
         'Los peers hablan directamente entre sí por WebRTC. No se guarda nada, no se recoge nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
@@ -451,10 +502,15 @@ export const es: Dict = {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
+      thread: {
+        problem: 'demos de terminal',
+        method: 'una partitura de eventos',
+        artifact: 'demos que se vuelven a correr',
+      },
       title:
         'Demos de terminal reproducibles, como código — DemoStage',
       description:
-        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo después de cada cambio; exporta gif o mp4.',
+        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif o mp4 — versionado, re-ejecutable y comparable.',
       koan: '// el demo es el código fuente',
       lede:
         'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
@@ -490,7 +546,11 @@ export const es: Dict = {
   manifesto: {
     kicker: 'Manifiesto',
     title: 'Pensamiento Cósmico',
+    // Solo para `<title>`/og:title — `title` de arriba es el <h1> visible.
+    metaTitle: 'Pensamiento Cósmico — el manifiesto de UniverLab',
     sub: 'Una filosofía de la continuidad de la conciencia',
+    description:
+      'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
       '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
     purposeTitle: 'Qué valoramos',
@@ -607,7 +667,7 @@ export const es: Dict = {
     kicker: 'Ideas archivadas',
     title: 'El Archivo',
     description:
-      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y por qué murió. No es un roadmap, es un registro.',
+      'Ideas que vivieron y fueron abandonadas — cada una registrada con qué era y la razón honesta de por qué murió. Lo que muere aquí puede vivir en otro lugar.',
     intro:
       'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
@@ -666,8 +726,10 @@ export const es: Dict = {
   people: {
     kicker: 'El laboratorio',
     title: 'Colaboradores',
+    // Solo meta — `title` de arriba renderiza el <h1> visible.
+    metaTitle: 'Colaboradores — las personas y modelos tras UniverLab',
     description:
-      'Las personas y modelos de IA detrás de UniverLab — fundador, colaboradores y los modelos de lenguaje que trabajan con nosotros.',
+      'El fundador, los colaboradores y los modelos de lenguaje detrás de UniverLab — cada experimento acepta issues y pull requests enfocados. Tú, quizá.',
     founder: {
       role: 'Fundador',
       name: 'Jheison Martinez',
@@ -681,7 +743,7 @@ export const es: Dict = {
       name: 'Modelos de lenguaje',
       body:
         'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy/">Canopy</a>. Su rol se reconoce, no se oculta.',
-      models: ['Claude', 'GPT', 'DeepSeek', 'Mistral', 'Qwen', 'Gemini', 'MiMo', 'Kimi', 'GLM'],
+      models: ['Muse Spark', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Composer', 'GLM', 'Kimi', 'Mistral'],
     },
     contributors: {
       role: 'Colaboradores',
@@ -707,7 +769,13 @@ export const es: Dict = {
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
   },
-  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—' },
+  plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
+  builtWithSegments: {
+    canopy: 'Construido con',
+    ghscaff: 'Repositorio configurado con',
+    demostage: 'Demo grabada con',
+    gitkit: 'Commits revisados por',
+  },
   notes: {
     heading: 'Notas de campo',
     empty: 'Aún no hay notas de campo — aquí hablará la bitácora.',
@@ -715,8 +783,8 @@ export const es: Dict = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'RSS — UniverLab',
-    description: 'Sigue el Mission Log de UniverLab por RSS.',
+    title: 'Sigue el Mission Log en tu lector de RSS — UniverLab',
+    description: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
     heading: 'RSS',
     intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
     copy: 'Copiar',
