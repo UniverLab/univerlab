@@ -70,7 +70,11 @@ export const en = {
       body:
         'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy/">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
-    experiments: { kicker: '00 — Experiments' },
+    experiments: {
+      kicker: '00 — Experiments',
+      method:
+        'Different problems, one method: take work that lives in fragile, manual procedures and make it explicit, reproducible and automatable — by a person or by an agent.',
+    },
     philosophy: {
       kicker: '02 — Philosophy',
       title: 'Technology is not the goal.',
@@ -88,6 +92,8 @@ export const en = {
     directions: {
       kicker: '03 — Research directions',
       title: 'Where the lab is looking.',
+      axis:
+        'The axis: explicit systems · reproducible work · human–AI collaboration. The fields below are where it is being tested.',
       now: 'Now',
       next: 'Next',
       nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows', 'CAD'],

@@ -72,7 +72,11 @@ export const es: Dict = {
       body:
         'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
-    experiments: { kicker: '00 — Experimentos' },
+    experiments: {
+      kicker: '00 — Experimentos',
+      method:
+        'Problemas distintos, un mismo método: tomar trabajo que vive en procedimientos frágiles y manuales, y volverlo explícito, reproducible y automatizable — por una persona o por un agente.',
+    },
     philosophy: {
       kicker: '02 — Filosofía',
       title: 'La tecnología no es el fin.',
@@ -90,6 +94,8 @@ export const es: Dict = {
     directions: {
       kicker: '03 — Líneas de investigación',
       title: 'Hacia dónde mira el laboratorio.',
+      axis:
+        'El eje: sistemas explícitos · trabajo reproducible · colaboración humano–IA. Los campos de abajo son donde se está poniendo a prueba.',
       now: 'Ahora',
       next: 'Después',
       nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],

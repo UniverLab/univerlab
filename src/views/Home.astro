@@ -41,6 +41,7 @@ const webSite = {
     <div class="section-head" id="experiments">
       <h2 class="label">{t.home.experiments.kicker}</h2>
     </div>
+    <p class="lede">{t.home.experiments.method}</p>
     <ul class="grid">
       {experiments.map((exp) => {
         const e = t.experiments[exp.id];
@@ -99,14 +100,17 @@ const webSite = {
   <!-- Research directions -->
   <section class="wrap section two-col">
     <div><span class="label">{t.home.directions.kicker}</span><h2>{t.home.directions.title}</h2></div>
-    <div class="directions">
-      <div class="dir-now">
-        <span class="label">{t.home.directions.now}</span>
-        <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
-      </div>
-      <div class="dir-next">
-        <span class="label">{t.home.directions.next}</span>
-        <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+    <div>
+      <p class="axis">{t.home.directions.axis}</p>
+      <div class="directions">
+        <div class="dir-now">
+          <span class="label">{t.home.directions.now}</span>
+          <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
+        </div>
+        <div class="dir-next">
+          <span class="label">{t.home.directions.next}</span>
+          <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+        </div>
       </div>
     </div>
   </section>
@@ -148,6 +152,9 @@ const webSite = {
   }
   .subtitle { font-family: var(--font-serif); font-style: italic; color: var(--ink-faint); font-size: 1rem; margin: 0; }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
+  /* The experiments lede sits between the section head and the card grid:
+     it inherits the lede type but needs air below (the .lede reset is 0). */
+  .section-head + .lede { margin-bottom: 1.75rem; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
 
   .pitch { margin-top: 0.4rem; }
@@ -395,6 +402,9 @@ const webSite = {
   .dir-next .label { color: var(--ink-faint); }
   .dir-next li { color: var(--ink-faint); border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
   @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
+
+  /* One-line axis statement above the Now/Next grid: colour + air only. */
+  .axis { color: var(--ink-dim); margin: 0 0 1rem; max-width: 60ch; }
 
   .closing { padding-block: clamp(2.75rem, 6vw, 4rem) 5rem; }
   .closing h2 { font-size: 1.8rem; margin-block: 0.7rem 1rem; max-width: 22ch; }
