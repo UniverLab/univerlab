@@ -128,7 +128,7 @@ describe('i18n system', () => {
         const esExp = es.experiments[expId as keyof typeof es.experiments];
         
         // Then: Required fields should exist in both languages
-        ['need', 'tagline', 'koan', 'lede', 'genesis', 'title', 'description'].forEach(field => {
+        ['need', 'tagline', 'thread', 'koan', 'lede', 'genesis', 'title', 'description'].forEach(field => {
           expect(enExp).toHaveProperty(field);
           expect(esExp).toHaveProperty(field);
           

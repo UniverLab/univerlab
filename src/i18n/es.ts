@@ -23,6 +23,12 @@ export const es: Dict = {
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
+    built: {
+      label: 'Este sitio:',
+      canopy: 'construido con',
+      ghscaff: 'repositorio configurado con',
+      gitkit: 'commits revisados por',
+    },
   },
   common: {
     repo: 'Star en GitHub ↗',
@@ -120,6 +126,11 @@ export const es: Dict = {
       need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
       tagline:
         'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
+      thread: {
+        problem: 'agentes de IA',
+        method: 'un runtime persistente sobre cada harness',
+        artifact: 'trabajo multiagente coordinado',
+      },
       title:
         'Memoria persistente: Claude Code, Codex, OpenCode — Canopy',
       description:
@@ -185,6 +196,11 @@ export const es: Dict = {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      thread: {
+        problem: 'LaTeX',
+        method: 'una sola cadena de herramientas autocontenida',
+        artifact: 'documentos reproducibles',
+      },
       title:
         'LaTeX con diagramas Mermaid, Graphviz y D2 — TeXForge',
       description:
@@ -233,6 +249,11 @@ export const es: Dict = {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      thread: {
+        problem: 'configuración de repos',
+        method: 'builds guardados e idempotentes',
+        artifact: 'el mismo ritual en todas partes',
+      },
       title:
         'Git hooks desaprovechados. GitKit los pone a trabajar.',
       description:
@@ -289,6 +310,11 @@ export const es: Dict = {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      thread: {
+        problem: 'repositorios de GitHub',
+        method: 'un asistente idempotente',
+        artifact: 'convenciones aplicadas',
+      },
       title:
         'Repos de GitHub con convenciones aplicadas — ghScaff',
       description:
@@ -344,6 +370,11 @@ export const es: Dict = {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      thread: {
+        problem: 'CAD',
+        method: 'geometría declarativa',
+        artifact: 'planos que un agente puede verificar',
+      },
       title:
         'CAD as code: de la declaración al modelo — cadSpec',
       description:
@@ -386,6 +417,11 @@ export const es: Dict = {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
         'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      thread: {
+        problem: 'eliminación de ruido',
+        method: 'un benchmark puntuado por la ciencia',
+        artifact: 'métodos comparables',
+      },
       title:
         'Benchmarking de denoising astronómico — Astro Denoise',
       description:
@@ -422,6 +458,11 @@ export const es: Dict = {
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      thread: {
+        problem: 'estimación',
+        method: 'una sala peer-to-peer',
+        artifact: 'desacuerdo visible',
+      },
       title:
         'Planning poker donde tus votos no ven un servidor — Quorum',
       description:
@@ -461,6 +502,11 @@ export const es: Dict = {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
+      thread: {
+        problem: 'demos de terminal',
+        method: 'una partitura de eventos',
+        artifact: 'demos que se vuelven a correr',
+      },
       title:
         'Demos de terminal reproducibles, como código — DemoStage',
       description:
@@ -724,6 +770,12 @@ export const es: Dict = {
     unavailable: 'Roadmap no disponible.',
   },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—' },
+  builtWithSegments: {
+    canopy: 'Construido con',
+    ghscaff: 'Repositorio configurado con',
+    demostage: 'Demo grabada con',
+    gitkit: 'Commits revisados por',
+  },
   notes: {
     heading: 'Notas de campo',
     empty: 'Aún no hay notas de campo — aquí hablará la bitácora.',

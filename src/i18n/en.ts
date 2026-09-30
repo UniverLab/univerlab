@@ -22,6 +22,14 @@ export const en = {
   footer: {
     quote:
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
+    // The site's own built-with line (relations verified 2026-09-29; see the registry's
+    // builtWith evidence comment). Only tool names link.
+    built: {
+      label: 'This site:',
+      canopy: 'built with',
+      ghscaff: 'repository set up with',
+      gitkit: 'commits checked by',
+    },
   },
   common: {
     repo: 'Star on GitHub ↗',
@@ -118,6 +126,11 @@ export const en = {
       need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
       tagline:
         'The runtime layer for AI agents that need memory, scheduling, and each other.',
+      thread: {
+        problem: 'AI agents',
+        method: 'a persistent runtime above every harness',
+        artifact: 'coordinated multi-agent work',
+      },
       title:
         'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
       description:
@@ -183,6 +196,11 @@ export const en = {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
+      thread: {
+        problem: 'LaTeX',
+        method: 'one self-contained toolchain',
+        artifact: 'reproducible documents',
+      },
       title:
         'LaTeX with Mermaid, Graphviz and D2 diagrams — TeXForge',
       description:
@@ -231,6 +249,11 @@ export const en = {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
+      thread: {
+        problem: 'repository setup',
+        method: 'saved, idempotent builds',
+        artifact: 'the same ritual everywhere',
+      },
       title:
         'Git hooks are underused. GitKit puts them to work.',
       description:
@@ -287,6 +310,11 @@ export const en = {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
+      thread: {
+        problem: 'GitHub repositories',
+        method: 'an idempotent wizard',
+        artifact: 'conventions enforced',
+      },
       title:
         'Create GitHub repos with conventions enforced — ghScaff',
       description:
@@ -342,6 +370,11 @@ export const en = {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
+      thread: {
+        problem: 'CAD',
+        method: 'declarative geometry',
+        artifact: 'drawings an agent can verify',
+      },
       title:
         'CAD as code: from declaration to model — cadSpec',
       description:
@@ -384,6 +417,11 @@ export const en = {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
         'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
+      thread: {
+        problem: 'image denoising',
+        method: 'a benchmark scored by the science',
+        artifact: 'comparable methods',
+      },
       title:
         'Benchmarking astronomical denoising — Astro Denoise',
       description:
@@ -420,6 +458,11 @@ export const en = {
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
+      thread: {
+        problem: 'estimation',
+        method: 'a peer-to-peer room',
+        artifact: 'disagreement you can see',
+      },
       title:
         'Planning poker where your votes reach no server — Quorum',
       description:
@@ -459,6 +502,11 @@ export const en = {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
+      thread: {
+        problem: 'terminal demos',
+        method: 'an event score',
+        artifact: 'demos you re-run',
+      },
       title:
         'Reproducible terminal demos as code — DemoStage',
       description:
@@ -724,6 +772,14 @@ export const en = {
     unavailable: 'Roadmap unavailable.',
   },
   plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—' },
+  // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the
+  // experiment's registry builtWith list, joined with dim ' · ' separators.
+  builtWithSegments: {
+    canopy: 'Built with',
+    ghscaff: 'Repository set up with',
+    demostage: 'Demo recorded with',
+    gitkit: 'Commits checked by',
+  },
   notes: {
     heading: 'Field notes',
     empty: 'No field notes yet — this is where the log will speak.',

@@ -168,6 +168,8 @@ describe('structured-data', () => {
     github: 'https://github.com/UniverLab/gitkit',
     bg: 'bubbles',
     motif: 'x',
+    thread: '@i18n',
+    builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'],
     ...over,
   });
 

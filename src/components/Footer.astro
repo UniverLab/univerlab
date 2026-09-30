@@ -1,6 +1,7 @@
 ---
 import Mark from './Mark.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
+import { byId } from '../lib/experiments';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 
@@ -41,6 +42,9 @@ const footNav = [
       ))}
     </nav>
   </div>
+  <p class="wrap lab-built">
+    {t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a>
+  </p>
   <div class="wrap base">
     <span class="word" translate="no">UNIVERLAB</span>
     <span class="meta">
@@ -132,6 +136,15 @@ Date:   now
     border-top: 1px solid var(--f-line);
   }
   .word { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.32em; color: var(--f-ink-dim); }
+  /* The site's own built-with — one line above the base rule, footer's dark palette. */
+  .lab-built {
+    margin: 0; padding-block: 0 1.6rem;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    color: var(--f-ink-dim);
+  }
+  .lab-built .sep { color: var(--f-ink-faint); }
+  .lab-built a { color: var(--f-ink-dim); text-decoration-color: var(--f-line); }
+  .lab-built a:hover { color: var(--f-ink); }
   .meta { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
   .tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; color: var(--f-ink-dim); }
   /* A quiet easter egg: the lab's one software-as-cosmos metaphor. Dimmer than

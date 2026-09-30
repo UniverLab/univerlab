@@ -79,6 +79,16 @@ const ogImage = `/og/${id}.png`;
 <BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <LabPlate id={id} />
+    {exp.builtWith.length > 0 && (
+      <p class="built-with">
+        {exp.builtWith.map((tool, i) => (
+          <>
+            {i > 0 && <span class="bw-sep"> · </span>}
+            {t.builtWithSegments[tool]}{' '}<a href={localizePath(`/${tool}`, lang)} translate="no">{byId(tool).name}</a>
+          </>
+        ))}
+      </p>
+    )}
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
@@ -89,6 +99,7 @@ const ogImage = `/og/${id}.png`;
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
       <p class="lede prose" set:html={e.lede} />
+      <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
       <div class="actions">
           <slot name="cta-first" />
@@ -254,6 +265,19 @@ const ogImage = `/og/${id}.png`;
     margin-inline: 0;
   }
   .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
+  /* The thread — one line under the hero lede, plate register, dim ink, tokens only. */
+  .thread { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-dim); margin: 0; }
+  /* Built-with line — the plate area's second line: same mono register as .lab-plate,
+     own paragraph (the plate is one nowrap translate="no" line; this one translates). */
+  .built-with {
+    max-width: var(--max-w, 70rem); margin: 0.35rem auto 0;
+    padding-inline: var(--page-gutter);
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    color: var(--ink-dim);
+  }
+  .built-with .bw-sep { color: var(--ink-faint); }
+  .built-with a { color: var(--ink-dim); text-decoration-color: var(--line); }
+  .built-with a:hover { color: var(--essence); }
   :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .lede code) { color: var(--essence); font-size: 0.9em; }
 
