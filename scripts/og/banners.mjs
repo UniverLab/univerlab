@@ -19,4 +19,7 @@ export const BANNERS = experiments.map((exp) => ({
   number: exp.number,
   accent: exp.essenceHex,
   tagline: getTagline(en, exp.id),
+  status: exp.status,
+  // '@i18n' marks a motif that lives in the locale files, not a literal glyph line.
+  motif: exp.motif && exp.motif !== '@i18n' ? exp.motif : '',
 }));
