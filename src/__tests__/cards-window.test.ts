@@ -82,6 +82,24 @@ describe('Cards window — no hand-kept surfaces map in Home.astro', () => {
     expect(homeSrc).toMatch(/card\.dataset\.flipSurface/);
   });
 
+  it('the cadSpec card starts no runner — the window shows only the page background', () => {
+    // Given: the startCard body, in source order
+    const body = homeSrc.slice(homeSrc.indexOf('const startCard'));
+    const guard = body.indexOf("card.dataset.flipSurface === 'blueprint'");
+    const started = body.indexOf('canvas.dataset.started');
+    const mount = body.indexOf('startBackground(');
+    // Then: the blueprint guard returns before the canvas is marked started …
+    expect(guard).toBeGreaterThan(-1);
+    expect(body).toMatch(/if \(card\.dataset\.flipSurface === 'blueprint'\) return;/);
+    expect(guard).toBeLessThan(started);
+    expect(guard).toBeLessThan(mount);
+    // … the window still reproduces the /cadspec page's own drafting grid …
+    expect(homeSrc).toMatch(/\.card:hover\[data-flip-surface='blueprint'\]/);
+    expect(homeSrc).toMatch(/background-size: 140px 140px, 140px 140px, 28px 28px, 28px 28px/);
+    // … and every other card still mounts its own runner through the 5-arg call
+    expect(homeSrc).toMatch(/startBackground\(canvas, theme, color, bg, surf\)/);
+  });
+
   it('should read the PAGE accent as the runner colour, not the registry hex', () => {
     // Given: a card whose inline --essence is the registry hex (ghScaff copper)
     // When: startCard resolves the colour

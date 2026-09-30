@@ -420,6 +420,17 @@ html[data-surface='quorum'] .koan {
   letter-spacing: 0.02em;
   opacity: 1;
 }
+/* Quorum — the golden figure is back at its old centred anchor (ctx.w × 0.64), so
+   the lede keeps its contrast on a soft backdrop in the page's own bg: a 78 % plate
+   with a feathered spread, rather than moving the spiral off the copy. var(--bg)
+   resolves to the active circadian token (day sand / night espresso), so the plate
+   follows the page substrate in both modes. */
+html[data-surface='quorum'] .exp .lede {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  padding: 1.2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 0 1.5rem 0.75rem color-mix(in srgb, var(--bg) 78%, transparent);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────
    astro-denoise · `observatory` — the night sky.
@@ -1057,6 +1068,10 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
+/* The runner caps its own node fills at 0.35 and ring strokes at 0.5 (see
+   bg-bubbles.ts), so the page's saturation is bounded at the source; .6 stays
+   the link-legibility floor lgitkit-one-background FR4 measured (at .5 the
+   ambient links fall to 0.14 × .5 = 0.07, under that floor). */
 :root[data-surface='pastel'] canvas.bg { opacity: .6; }
 
 :root[data-surface='quorum'] .hero { align-items: center; text-align: center; }

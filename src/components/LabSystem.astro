@@ -7,10 +7,10 @@ const t = useTranslations(lang);
 const bodies = buildLabBodies();
 const rings = labRings(bodies);
 ---
-<figure class="lab-system">
+<figure class="lab-system" aria-label={t.home.hero.systemAria}>
   <div class="lab-canvas">
     <svg class="lab-svg" viewBox={`0 0 ${LAB.vbW} ${LAB.vbH}`} data-orbit-well
-         role="group" aria-label={t.home.hero.systemCaption}
+         role="group" aria-label={t.home.hero.systemAria}
          xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="lab-term" x1="0.15" y1="0" x2="0.85" y2="1">
@@ -66,7 +66,6 @@ const rings = labRings(bodies);
       ))}
     </div>
   </div>
-  <figcaption class="lab-cap">{t.home.hero.systemCaption}</figcaption>
 </figure>
 <style>
   .lab-system { margin: 0; display: flex; flex-direction: column; gap: 0.55rem;

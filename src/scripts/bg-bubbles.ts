@@ -23,7 +23,7 @@ interface BubblesCtx {
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-const STAGE_R = 90; // px — ambient bubble centre this near the pointer gets staged
+const STAGE_R = 112.5; // px — ambient bubble centre this near the pointer gets staged (+25 % reach)
 const MAX_STAGED = 3; // spec cap
 const TRAIL = 30; // px — spring anchor sits this far BEHIND the pointer
 const DWELL = 1200; // ms of pointer stillness that commits
@@ -31,8 +31,14 @@ const MERGE_MS = 600; // ms of coalescing
 const R_CAP = 26; // px — merged radius cap
 const LIFT_K = 0.12; // per-frame glow rise while staged
 const GLOW_TAU = 600; // ms — frame-rate independent decay of the release settle
-const STEP_MAX = 0.6; // px per tick — staged ease cap (tick ≤ 30 fps ⇒ per-frame cap)
+const STEP_MAX = 1.2; // px per tick — staged ease cap (tick ≤ 30 fps ⇒ per-frame cap)
 const JUMP_MAX = 4; // px per tick — hard clamp on EVERY position write (FR3)
+// Saturation caps — no node may paint its runner colour A above these alphas,
+// whatever its state (ambient, staged, committed): the discs used to go fully
+// opaque on dwell and block the page behind them. Strokes are capped looser
+// (0.5) because a 1 px ring reads far lighter than a filled core.
+const FILL_MAX = 0.35; // FR — max globalAlpha for any node FILL (halo, core, label)
+const STROKE_MAX = 0.5; // FR — max globalAlpha for any node STROKE (the ring)
 
 function hash7(): string {
   const digits = '0123456789abcdef';
@@ -51,11 +57,11 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   const dark = lum < 0.4;
   // The pastel page canvas runs at 0.6 element opacity (FR4 — the lowest
-  // ladder value at which the 1 px link strokes read on white). The
-  // largest legal lift is internal alpha → 1.0 plus a stroke mixed 45 %
-  // toward black (same hue, no new colour token). On the dark branch the
-  // ring/core stays white, so shadeA degenerates to #ffffff and no helper
-  // work is wasted.
+  // ladder value at which the 1 px link strokes read on white). The largest
+  // legal lift is now the runner's own cap (FILL_MAX 0.35 / STROKE_MAX 0.5)
+  // plus a stroke mixed 45 % toward black (same hue, no new colour token).
+  // On the dark branch the ring/core stays white, so shadeA degenerates to
+  // #ffffff and no helper work is wasted.
   const shadeA = (() => {
     if (dark) return '#ffffff';
     const ar = parseInt(A.substring(1, 3), 16);
@@ -243,7 +249,7 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
         const dy = ay0 + Math.sin(bb.ao) * d - bb.y;
         const dist = Math.hypot(dx, dy);
         if (dist > 0) {
-          const s = Math.min(STEP_MAX, dist) / dist; // ≤ 0.6 px/tick, no spring
+          const s = Math.min(STEP_MAX, dist) / dist; // ≤ 1.2 px/tick, no spring
           const [sx, sy] = capStep(dx * s, dy * s);
           bb.x += sx;
           bb.y += sy;
@@ -377,9 +383,11 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
       c.stroke();
     }
     // Nodes over the lanes: the halo wash, then the commit core + ring.
-    // ambient (glow = 0) ⇒ every expression collapses to today's bytes:
-    //   opacity = amb, halos use '80'/'50' (light) or '20'/'10' (dark),
-    //   core fill = (dark ? '#ffffff' : A), line width = 1.
+    // Every node write below carries a saturation cap — fills at FILL_MAX,
+    // the ring stroke at STROKE_MAX — so ambient, staged and committed nodes
+    // all top out at the same quiet alpha of the runner colour A: no fully
+    // saturated disc ever lands on the page (halos use '80'/'50' light or
+    // '20'/'10' dark stops; core fill = dark ? '#ffffff' : A).
     for (const bb of bubbles) {
       const opacity = bb.amb + (1 - bb.amb) * bb.glow;
       const fade = bb.commit ? Math.max(0, Math.min(1, bb.y / (0.14 * ctx.h))) : 1;
@@ -387,7 +395,7 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
       g.addColorStop(0, A + lerpStop(dark ? '20' : '80', 'ff', bb.glow));
       g.addColorStop(0.5, A + lerpStop(dark ? '10' : '50', '66', bb.glow));
       g.addColorStop(1, A + '00');
-      c.globalAlpha = opacity * fade;
+      c.globalAlpha = Math.min(FILL_MAX, opacity * fade); // halo fill ≤ FILL_MAX
       c.fillStyle = g;
       c.beginPath();
       c.arc(bb.x, bb.y, bb.r, 0, Math.PI * 2);
@@ -395,12 +403,12 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
       // Ring/core: darker same-hue stroke while glowing; at glow→1 the core
       // fills the ring (0.32→0.52). The dark branch keeps white.
       const ringA = bb.glow > 0 ? shadeA : (dark ? '#ffffff' : A);
-      c.globalAlpha = opacity * lerpNum(dark ? 0.3 : 0.8, 1, bb.glow) * fade;
+      c.globalAlpha = Math.min(FILL_MAX, opacity * lerpNum(dark ? 0.3 : 0.8, 1, bb.glow) * fade); // core fill ≤ FILL_MAX
       c.fillStyle = ringA;
       c.beginPath();
       c.arc(bb.x, bb.y, bb.r * (0.32 + 0.2 * bb.glow), 0, Math.PI * 2);
       c.fill();
-      c.globalAlpha = opacity * fade;
+      c.globalAlpha = Math.min(STROKE_MAX, opacity * fade); // ring stroke ≤ STROKE_MAX
       c.strokeStyle = ringA;
       c.lineWidth = 1 + bb.glow;
       c.beginPath();
@@ -409,7 +417,7 @@ export function bubbles(ctx: BubblesCtx): (t: number) => void {
       if (bb.commit) {
         c.font = '9px ui-monospace, "DejaVu Sans Mono", monospace';
         c.textAlign = 'center';
-        c.globalAlpha = opacity * fade;
+        c.globalAlpha = Math.min(FILL_MAX, opacity * fade); // label fill ≤ FILL_MAX
         c.fillStyle = dark ? '#ffffff' : shadeA;
         c.fillText(bb.commit, bb.x, bb.y + bb.r * 0.52 + 10);
       }

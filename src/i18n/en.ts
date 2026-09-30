@@ -52,7 +52,7 @@ export const en = {
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
-      systemCaption: 'The lab as a system — every experiment orbits the same question.',
+      systemAria: 'UniverLab and its experiments',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
       // small catalog; the hero shuffles each catalog and shows every gloss once

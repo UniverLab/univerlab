@@ -271,9 +271,11 @@ const webSite = {
   }
 
   /* cadSpec: the page's own backdrop is a quiet two-pitch drafting grid, so the
-     window reproduces that grid in the surface's own ink (no hex) and the
-     primitives runner draws its geometry over it — later source at equal
-     specificity wins `background-image` over the `background` shorthand. */
+     window reproduces that grid in the surface's own ink (no hex) and NOTHING
+     else — startCard starts no runner for this surface, so the window shows
+     exactly the page's background (same CSS, same colours, no primitives).
+     Later source at equal specificity wins `background-image` over the
+     `background` shorthand. */
   .card:hover[data-flip-surface='blueprint'],
   .card:focus-visible[data-flip-surface='blueprint'],
   .card.is-tapped[data-flip-surface='blueprint'] {
@@ -410,6 +412,13 @@ const webSite = {
   // unconditionally, so reading computed --essence/--surface-bg here always
   // yields the surface's own current substrate — no duplicated hexes.
   const startCard = (card: HTMLAnchorElement) => {
+    // cadSpec: the page's whole living background is its own CSS drafting grid —
+    // BaseLayout starts no canvas runner for `blueprint`, so the window must
+    // start NONE either: it shows only the page's own background (the grid the
+    // flip rule below paints), never the old primitives geometry. The guard
+    // runs before `dataset.started`, so re-hovering is a cheap no-op and the
+    // canvas stays blank over the grid.
+    if (card.dataset.flipSurface === 'blueprint') return;
     const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
     if (!canvas || canvas.dataset.started) return;
     canvas.dataset.started = '1';

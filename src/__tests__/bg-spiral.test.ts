@@ -265,7 +265,7 @@ describe('spiral', () => {
     delete document.documentElement.dataset.celestial;
   });
 
-  it('grows the whole figure 15 % about its centre when there is no copy to clear', () => {
+  it('grows the whole figure 15 % about its centre on the restored 0.64 / 0.5 anchor', () => {
     // Given: one frame on the default 800 × 600 harness canvas
     const { ctx, rects, step } = makeCtx();
     const tick = spiral(ctx);
@@ -281,40 +281,30 @@ describe('spiral', () => {
     // further out than the old fixture — 34 × (600 × 0.82 / 55) = 304.145 px
     // before the pass, × 1.15 now.
     expect(widest).toBeCloseTo(34 * ((600 * 0.82) / 55) * 1.15, 6);
-    // …and with no copy column to clear (the home card window's case) the
-    // bounding box centres on the old anchor (w × 0.64, h × 0.5), so the
-    // growth still happens about the figure's centre, not off-frame.
+    // …and with the copy-reading anchor gone the bounding box centres on the
+    // old anchor (w × 0.64, h × 0.5), so the growth happens about the figure's
+    // centre, not off-frame.
     expect((left + right) / 2).toBeCloseTo(800 * 0.64, 6);
     expect((top + bottom) / 2).toBeCloseTo(600 * 0.5, 6);
   });
 
-  it('anchors clear of the hero copy: squares right of the lede, curve tail below it', () => {
-    // Given: a page-shaped document — header rule at y 60, lede box right 620 /
-    // bottom 470 on the 800 × 600 harness canvas (jsdom rects are all zero, so
-    // the two reads are stubbed to the values the real /quorum hero reports)
+  it('anchors on 0.64 / 0.5 even with a page-shaped hero in the DOM (the copy is ignored)', () => {
+    // Given: header + .exp .lede present — the copy the third pass used to read
     document.body.innerHTML = '<header></header><div class="exp"><p class="lede">…</p></div>';
-    const rect = (o: Record<string, number>) => () =>
-      ({ ...o, x: 0, y: 0, width: 0, height: 0, toJSON: () => {} }) as DOMRect;
-    Object.assign(document.querySelector('header')!, { getBoundingClientRect: rect({ bottom: 60 }) });
-    Object.assign(document.querySelector('.exp .lede')!, {
-      getBoundingClientRect: rect({ right: 620, bottom: 470, left: 40, top: 320 }),
-    });
     const { ctx, rects, step } = makeCtx();
-    const curve = ctx.c as unknown as { lineTo: jest.Mock; moveTo: jest.Mock };
-    // When: a frame paints
     const tick = spiral(ctx);
+    // When: a frame paints
     step(tick, 100);
-    // Then: the squares start 8 px right of the lede and never above the header
-    expect(Math.min(...rects.map((r) => r.x))).toBeCloseTo(628, 6);
-    expect(Math.min(...rects.map((r) => r.y))).toBeGreaterThanOrEqual(66);
-    // …and every curve point left of that line (the outer tail) sits below the
-    // lede, so no stroke can land behind a glyph
-    const pts = [...curve.moveTo.mock.calls, ...curve.lineTo.mock.calls] as number[][];
-    expect(pts.length).toBeGreaterThan(200);
-    const tail = pts.filter(([x]) => x < 628);
-    expect(tail.length).toBeGreaterThan(0);
-    expect(Math.min(...tail.map(([, y]) => y))).toBeGreaterThanOrEqual(478);
-    // …while the copy-free fallback (above) still draws the figure centred
+    // Then: the figure centres on the old anchor, exactly as the card does —
+    // the lede no longer steers the geometry (its contrast comes from the
+    // soft backdrop surfaces.css puts under it)
+    expect(rects.length).toBeGreaterThan(0);
+    const left = Math.min(...rects.map((r) => r.x));
+    const right = Math.max(...rects.map((r) => r.x + r.w));
+    const top = Math.min(...rects.map((r) => r.y));
+    const bottom = Math.max(...rects.map((r) => r.y + r.h));
+    expect((left + right) / 2).toBeCloseTo(800 * 0.64, 6);
+    expect((top + bottom) / 2).toBeCloseTo(600 * 0.5, 6);
     document.body.innerHTML = '';
   });
 

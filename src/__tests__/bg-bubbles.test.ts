@@ -2,7 +2,9 @@
  * Tests for the bubbles runner (src/scripts/bg-bubbles.ts) — the GitKit
  * background. The cursor stages nearby commit nodes and a >=1200 ms dwell
  * commits them into one labelled hash node; touch never stages; idle float
- * and parent re-linking unchanged. Given-When-Then pattern, like field.test.ts.
+ * and parent re-linking unchanged. Node alphas are capped (fill 0.35, stroke
+ * 0.5) and staging reach is 112.5 px, so no node ever paints saturated.
+ * Given-When-Then pattern, like field.test.ts.
  */
 import { bubbles } from '../scripts/bg-bubbles';
 
@@ -25,6 +27,10 @@ function makeCtx(opts: { w?: number; h?: number; bg?: string; color?: string } =
   const stroke = jest.fn();
   const arcs: Array<{ x: number; y: number; r: number }> = [];
   const alphas: number[] = [];
+  /** globalAlpha at each fill() — the node-fill saturation cap reads these. */
+  const fillAlphas: number[] = [];
+  /** globalAlpha at each stroke() — the node-stroke saturation cap reads these. */
+  const strokeAlphas: number[] = [];
   const stops: string[] = [];
   const fillStyles: string[] = [];
   const strokeStyles: string[] = [];
@@ -39,9 +45,13 @@ function makeCtx(opts: { w?: number; h?: number; bg?: string; color?: string } =
   let penY = 0;
   const c = {
     clearRect,
-    fill: (...a: unknown[]) => (fill as unknown as (...x: unknown[]) => void)(...a),
+    fill: (...a: unknown[]) => {
+      fillAlphas.push(alpha);
+      (fill as unknown as (...x: unknown[]) => void)(...a);
+    },
     stroke: (...a: unknown[]) => {
       strokeLWs.push(curLW);
+      strokeAlphas.push(alpha);
       (stroke as unknown as (...x: unknown[]) => void)(...a);
     },
     beginPath: jest.fn(),
@@ -93,6 +103,8 @@ function makeCtx(opts: { w?: number; h?: number; bg?: string; color?: string } =
   const reset = () => {
     arcs.length = 0;
     alphas.length = 0;
+    fillAlphas.length = 0;
+    strokeAlphas.length = 0;
     stops.length = 0;
     fillStyles.length = 0;
     strokeStyles.length = 0;
@@ -105,7 +117,7 @@ function makeCtx(opts: { w?: number; h?: number; bg?: string; color?: string } =
   };
   return {
     ctx, canvas, clearRect, fill, stroke,
-    arcs, alphas, stops, fillStyles, strokeStyles, texts, segs, strokeLWs,
+    arcs, alphas, fillAlphas, strokeAlphas, stops, fillStyles, strokeStyles, texts, segs, strokeLWs,
     reset,
   };
 }
@@ -157,7 +169,7 @@ describe('bubbles', () => {
     expect(arcs).toHaveLength(3 * N);
     const nodeAlphas = alphas.filter((a) => a !== 1 && a !== 0.14 && a !== 0.22);
     expect(nodeAlphas.length).toBeGreaterThan(0);
-    expect(Math.max(...nodeAlphas)).toBeLessThanOrEqual(0.55);
+    expect(Math.max(...nodeAlphas)).toBeLessThanOrEqual(0.5); // stroke cap; fills are tighter (0.35)
     expect(texts).toHaveLength(0);
     expect(segs.length).toBeLessThanOrEqual(N - 1);
   });
@@ -285,7 +297,7 @@ describe('bubbles', () => {
     expect(touch.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('never jumps more than 4 px per frame during staging (staged ease ≤ 0.6 px)', () => {
+  it('never jumps more than 4 px per frame during staging (staged ease ≤ 1.2 px)', () => {
     // Given: 3 bubbles near the sweep path, rest parked far
     scriptField({ 0: { x: 96, y: 300, r: 12 }, 1: { x: 120, y: 310, r: 12 }, 2: { x: 80, y: 290, r: 12 } });
     const { ctx, arcs, reset } = makeCtx();
@@ -321,13 +333,62 @@ describe('bubbles', () => {
         expect(d).toBeLessThanOrEqual(4);
       }
     }
-    // And: the three staged (scripted) nodes ease at ≤ 0.6 px per frame — even across the teleport
+    // And: the three staged (scripted) nodes ease at ≤ 1.2 px per frame — even across the teleport
     for (let f = 1; f < frames.length; f++) {
       for (let b = 0; b < 3; b++) {
         const d = Math.hypot(frames[f][b].x - frames[f - 1][b].x, frames[f][b].y - frames[f - 1][b].y);
-        expect(d).toBeLessThanOrEqual(0.6 + 1e-9);
+        expect(d).toBeLessThanOrEqual(1.2 + 1e-9);
       }
     }
+  });
+
+  it('caps every node fill at 0.35 and stroke at 0.5, staged/committed included', () => {
+    // Given: three scripted bubbles that merge and commit into one node
+    scriptField({ 0: { x: 96, y: 300, r: 12 }, 1: { x: 120, y: 310, r: 12 }, 2: { x: 80, y: 290, r: 12 } });
+    const { ctx, fillAlphas, strokeAlphas, texts, reset } = makeCtx();
+    const tick = bubbles(ctx);
+    tick(16);
+    // When: one ambient frame paints
+    reset();
+    tick(33);
+    // Then: ambient fills and the ring strokes already sit under the caps
+    expect(fillAlphas.length).toBeGreaterThan(0);
+    expect(strokeAlphas.length).toBeGreaterThan(0);
+    expect(Math.max(...fillAlphas)).toBeLessThanOrEqual(0.35);
+    expect(Math.max(...strokeAlphas)).toBeLessThanOrEqual(0.5);
+    // When: the pointer stages the cluster and the dwell commits it (glow = 1,
+    // the state that used to paint a fully saturated disc)
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 300 });
+    tick(66);
+    tick(1266); // 1200 ms after the move ⇒ merge starts
+    reset();
+    tick(1950); // trigger + 600 ms merge ⇒ the committed node draws at glow 1
+    expect(texts).toHaveLength(1);
+    // Then: the committed node respects the same caps …
+    expect(Math.max(...fillAlphas)).toBeLessThanOrEqual(0.35);
+    expect(Math.max(...strokeAlphas)).toBeLessThanOrEqual(0.5);
+    // … and the caps genuinely engage (the old code drew these at 1.0)
+    expect(Math.max(...fillAlphas)).toBeCloseTo(0.35, 6);
+    expect(Math.max(...strokeAlphas)).toBeCloseTo(0.5, 6);
+  });
+
+  it('stages a bubble 105 px from the pointer — reach grew 90 → 112.5 px (+25 %)', () => {
+    // Given: exactly one bubble near the cursor path, the rest parked far off
+    scriptField({ 0: { x: 100, y: 300, r: 12 } });
+    const { ctx, strokeLWs, reset } = makeCtx();
+    const tick = bubbles(ctx);
+    tick(16);
+    // When: the pointer parks 105 px from bubble 0 — inside the new reach,
+    // outside the old 90 px one
+    firePointer('pointermove', { pointerType: 'mouse', clientX: 205, clientY: 300 });
+    let t = 33;
+    for (let i = 0; i < 8; i++) {
+      reset();
+      tick(t);
+      t += 33;
+    }
+    // Then: exactly that one node lifted (ring > 1.5 px); the field stayed ambient
+    expect(strokeLWs.filter((lw) => lw > 1.5)).toHaveLength(1);
   });
 
   it('links each node to its nearest parent below — the legacy y-chain is gone', () => {
@@ -412,7 +473,7 @@ describe('bubbles', () => {
       tick(t);
     }
     const nodeAlphas = alphas.filter((a) => a !== 1 && a !== 0.14 && a !== 0.22);
-    expect(Math.max(...nodeAlphas)).toBeLessThanOrEqual(0.55);
+    expect(Math.max(...nodeAlphas)).toBeLessThanOrEqual(0.5);
   });
 
   it('ignores touch pointer input — a tap never stages', () => {

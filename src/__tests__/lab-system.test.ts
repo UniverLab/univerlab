@@ -249,15 +249,24 @@ describe('lab-system', () => {
     }
   });
 
-  it('keeps the caption with i18n parity', () => {
+  it('drops the caption and names the figure through aria (i18n parity kept)', () => {
     const fig = figureSrc();
-    expect((fig.match(/<figcaption/g) || []).length).toBe(1);
-    expect(LAB_SRC).toMatch(/t\.home\.hero\.systemCaption/);
-    expect(en.home.hero.systemCaption).toBeTruthy();
-    expect(es.home.hero.systemCaption).toBeTruthy();
-    expect(en.home.hero.systemCaption).toMatch(/—/);
-    expect(es.home.hero.systemCaption).toMatch(/—/);
-    expect(en.home.hero.systemCaption).not.toBe(es.home.hero.systemCaption);
+    // The caption element is gone from the figure and from the component …
+    expect((fig.match(/<figcaption/g) || []).length).toBe(0);
+    expect(LAB_SRC).not.toContain('<figcaption');
+    // … and the figure keeps an accessible name from the spec's aria label
+    expect(fig).toMatch(/<figure class="lab-system" aria-label=\{t\.home\.hero\.systemAria\}/);
+    expect(fig).toMatch(/role="group" aria-label=\{t\.home\.hero\.systemAria\}/);
+    // The removed key is referenced nowhere and absent from both dictionaries
+    expect(LAB_SRC).not.toContain('systemCaption');
+    expect('systemCaption' in en.home.hero).toBe(false);
+    expect('systemCaption' in es.home.hero).toBe(false);
+    // The new key is present in both languages and language-distinct
+    expect(en.home.hero.systemAria).toBeTruthy();
+    expect(es.home.hero.systemAria).toBeTruthy();
+    expect(en.home.hero.systemAria).toBe('UniverLab and its experiments');
+    expect(es.home.hero.systemAria).toBe('UniverLab y sus experimentos');
+    expect(en.home.hero.systemAria).not.toBe(es.home.hero.systemAria);
   });
 
   it('splits the home hero into two columns from 1100 px up', () => {
