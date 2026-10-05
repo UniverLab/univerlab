@@ -213,9 +213,9 @@ export const es: Dict = {
       description:
         'Un solo binario, sin distribución de LaTeX que instalar. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
-      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
+      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build', 'listado de código'],
       lede:
-        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js. Los bloques de código salen resaltados de la misma forma: el resaltador viene compilado en el binario, sin Pygments ni shell-escape.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -230,9 +230,16 @@ export const es: Dict = {
           ['Revisar', 'ortografía y estilo que leen el idioma del documento — Babel, polyglossia o tu configuración por defecto — y revisan el texto contra el diccionario correcto.'],
           ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
           ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Resaltar', 'los bloques de código se vuelven listados con marco, números de línea y leyenda, coloreados en compilación — claro, oscuro o mono para imprimir.'],
           ['Inspeccionar', 'el PDF compilado — texto, fuentes, metadatos, diffs de página y si cada palabra del fuente sobrevivió.'],
           ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
         ],
+      },
+      // El listado impreso: un recorte del ejemplo de capacidades tal como lo
+      // compiló texforge, no una maqueta.
+      listing: {
+        caption: 'listado impreso · python',
+        alt: 'Un bloque de código Python compuesto por texforge: marco claro, números de línea al margen, palabras clave, cadenas y números en color.',
       },
       subproject: {
         kicker: 'Subproyecto',
@@ -517,10 +524,10 @@ export const es: Dict = {
       title:
         'Demos de terminal reproducibles, como código — DemoStage',
       description:
-        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif o mp4 — versionado, re-ejecutable y comparable.',
+        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif, mp4 o svg — versionado y comparable.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif, mp4 o un svg animado: versionado, re-ejecutable y comparable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
@@ -533,12 +540,14 @@ export const es: Dict = {
           '<code>capture</code> — captura en vivo: graba la sesión, la normaliza en una partitura limpia y un <code>.rec</code> fiel.',
           '<code>focus</code> — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost): pantalla completa, dividida o apilada, compuesta en el demo.',
           '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
-          '<code>export</code> — reproducción pura: renderiza a gif o mp4 sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
+          '<code>export</code> — reproducción pura: renderiza a gif, mp4 o svg animado sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
           '<code>edit</code> — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
       },
       demos: {
-        first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
+        first: 'El tour — un score grabado en un PTY real, exportado a gif y svg desde una sola toma',
+        svg: 'La misma toma, exportada a svg — 83 KB, fuente incrustada, sin reproductor de video',
+        svgAlt: 'El tour de DemoStage como SVG animado: un banner impreso en la terminal, el score que lo demuestra, record, export y doctor.',
       },
       faq: [
         ['¿Qué es DemoStage?',
@@ -546,7 +555,7 @@ export const es: Dict = {
         ['¿Puedo re-grabar una demo si algo cambia?',
           'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
         ['¿En qué se diferencia DemoStage de asciinema?',
-          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif, mp4 o svg animado. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
     },
   },

@@ -40,6 +40,12 @@ const tfInitial =
         </ul>
       </div>
     </div>
+    <!-- The printed listing: a crop of examples/texforge-capabilites as
+         texforge compiled it — the real output beside the source plates. -->
+    <figure class="listing-fig">
+      <img src="/demos/texforge-listing.webp" width="1166" height="402" loading="lazy" decoding="async" alt={e.listing.alt} />
+      <figcaption class="fig-cap"><span class="fig-label">Fig. {e.figures.length + 1} · {e.listing.caption}</span></figcaption>
+    </figure>
   </section>
 
   <section class="wrap section trule">
@@ -53,7 +59,7 @@ const tfInitial =
 
 <script>
   // The figure cycles through the custom diagram environments texforge
-  // intercepts — \begin{mermaid|graphviz|d2}…\end — each captioned as a figure,
+  // intercepts — \begin{mermaid|graphviz|d2|code}…\end — each captioned as a figure,
   // the same crossfade idea as the home wordmark. Reduced-motion rests on the
   // first; pauses when scrolled off screen.
   (function () {
@@ -69,8 +75,9 @@ const tfInitial =
       { name: 'mermaid', src: 'flowchart LR\n  tex[.tex] --> lint --> typeset\n  typeset --> pdf[(PDF)]\n  lint -.->|error| log' },
       { name: 'graphviz', src: 'digraph {\n  spec -> figures -> pdf\n  spec -> refs -> pdf\n}' },
       { name: 'd2', src: 'spec -> typeset: lint\ntypeset -> pdf: tectonic\ndiagrams -> typeset\ndiagrams: mermaid | d2' },
+      { name: 'code', open: '[lang=python, numbers=true]', src: 'def gauss(n=1000):\n    x = np.linspace(-10, 10, n)\n    dx = x[1] - x[0]\n    return np.exp(-x**2).sum() * dx' },
     ];
-    const block = (x) => '\\begin{' + x.name + '}\n' + x.src + '\n\\end{' + x.name + '}';
+    const block = (x) => '\\begin{' + x.name + '}' + (x.open || '') + '\n' + x.src + '\n\\end{' + x.name + '}';
     const caption = (n) => 'Fig. ' + (n + 1) + ' · ' + (figures[n] || '') + ' · ' + envs[n].name;
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -148,6 +155,15 @@ const tfInitial =
   }
   .fig-label { transition: opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1); }
   .fig-label.fade { opacity: 0; }
+  /* The printed listing sits under the galley as a plate of real output: the
+     same dashed frame as the source plates, the page crop flat inside it. */
+  .listing-fig { margin: 3rem auto 0; max-width: 46rem; }
+  .listing-fig img {
+    display: block; width: 100%; height: auto;
+    padding: 1.5rem;
+    border: 1px dashed var(--rule-t1);
+    background: #fff;
+  }
   .colophon ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .colophon li { display: flex; align-items: baseline; gap: 0.8rem; padding-block: 0.7rem; border-bottom: 1px dashed var(--rule-t2); color: var(--ink-dim); font-size: 0.97rem; }
   .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); min-width: 1.5rem; }

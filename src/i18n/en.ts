@@ -213,9 +213,9 @@ export const en = {
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
-      figures: ['build pipeline', 'document graph', 'build map'],
+      figures: ['build pipeline', 'document graph', 'build map', 'code listing'],
       lede:
-        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles your document, then lets you inspect what came out — the text a reader sees, the fonts, the metadata, and which section opens each page. The LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
+        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles your document, then lets you inspect what came out — the text a reader sees, the fonts, the metadata, and which section opens each page. The LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js. Code blocks come out highlighted the same way: the highlighter is compiled into the binary, so no Pygments and no shell-escape.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
@@ -230,9 +230,16 @@ export const en = {
           ['Proofread', 'spell-checking that reads the language from the document — Babel, polyglossia, or your configured default — and checks prose against the right dictionary.'],
           ['Set', 'one canonical format, like rustfmt for .tex. Clean diffs forever.'],
           ['Illustrate', 'Mermaid, Graphviz and D2 blocks become figures at build time, rendered in pure Rust.'],
+          ['Highlight', 'code blocks become framed listings with line numbers and captions, coloured at build time — light, dark or mono for print.'],
           ['Inspect', 'the compiled PDF — text, fonts, metadata, page diffs and whether every source word survived.'],
           ['Print', 'Tectonic compiles deterministically; watch mode reprints as you write.'],
         ] as [string, string][],
+      },
+      // The printed listing: a crop of the capabilities example as texforge
+      // compiled it, not a mock-up.
+      listing: {
+        caption: 'listing as printed · python',
+        alt: 'A Python code block typeset by texforge: a light frame, line numbers in the margin, keywords, strings and numbers in colour.',
       },
       subproject: {
         kicker: 'Subproject',
@@ -517,10 +524,10 @@ export const en = {
       title:
         'Reproducible terminal demos as code — DemoStage',
       description:
-        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif or mp4 — version-controlled and diffable.',
+        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif, mp4 or svg — version-controlled, diffable.',
       koan: '// the demo is the source',
       lede:
-        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',
+        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif, mp4 or an animated svg — version-controlled, re-runnable and diffable.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born building this very page.',
@@ -533,14 +540,17 @@ export const en = {
           '<code>capture</code> — live capture: record the session, auto-normalize into a clean score and faithful <code>.rec</code>.',
           '<code>focus</code> — switch the live view to one or two sources (terminal, repo page, docs, localhost) — full screen, split or stacked, composited into the demo.',
           '<code>record</code> — re-execute <code>demo.toml</code> cleanly, producing a humanized recording.',
-          '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
+          '<code>export</code> — pure playback: render to gif, mp4 or animated svg (no re-execution, ffmpeg/chromium auto-provisioned).',
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
-      // The single genuine capture on this page: the caption paraphrases
-      // capture — no feature that the pipeline doesn't already name.
+      // The two genuine figures on this page — the tour as mp4 and the same
+      // take as its own svg export. Captions name no feature the pipeline
+      // doesn't already name.
       demos: {
-        first: 'Capture — terminal session composited with the browser source',
+        first: 'The tour — one score recorded in a real PTY, exported to gif and svg from a single take',
+        svg: 'The same take, exported as svg — 83 KB, font embedded, no video player',
+        svgAlt: 'The DemoStage tour as an animated SVG: a banner printed in the terminal, the score that demos it, record, export and doctor.',
       },
       faq: [
         ['What is DemoStage?',
@@ -548,7 +558,7 @@ export const en = {
         ['Can I re-record a demo if something changes?',
           'Yes. `demostage capture` records events, not video. If the UX changes, re-capture and the demo updates deterministically — no need to manually re-record the whole thing.'],
         ['How is DemoStage different from asciinema?',
-          'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif/mp4. The source is a versionable TOML file.'],
+          'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif, mp4 or animated svg. The source is a versionable TOML file.'],
       ] as [string, string][],
     },
   },
