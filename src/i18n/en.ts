@@ -123,21 +123,28 @@ export const en = {
   },
   experiments: {
     canopy: {
-      need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
+      need: 'One agent on one harness can\'t carry a project. A graph of them can — implement, check, review, commit, and route around every failure.',
       tagline:
-        'The runtime layer for AI agents that need memory, scheduling, and each other.',
+        'A graph engine for AI coding agents — every harness, one workflow.',
       thread: {
         problem: 'AI agents',
-        method: 'a persistent runtime above every harness',
-        artifact: 'coordinated multi-agent work',
+        method: 'a graph engine above every harness',
+        artifact: 'specs carried all the way to a commit',
       },
       title:
-        'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
+        'Canopy — a graph engine for AI coding agents',
       description:
-        'Your agents forget between sessions. Canopy remembers — shared context across Claude Code, Codex, Cursor and OpenCode, plus scheduling and a graph engine.',
+        'Canopy runs AI coding agents as graphs: specs flow through agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
-        'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
+        'A Rust daemon and terminal UI with a <strong>graph engine</strong> at its core. Work enters as a spec and walks a graph you design: <strong>agent</strong> nodes on any harness, <strong>check</strong> nodes that run your real commands, <strong>ensembles</strong> that fan out to several models and keep a quorum, <strong>routers</strong> that pick the branch, and a <strong>resilience</strong> node that turns a quota death into a scheduled wake-up. Underneath: memory, scheduling and sync for every agent.',
+      morph: [
+        ['Gated implement', 'checks run your real commands — red routes the work back, never to you'],
+        ['Ensemble · quorum', 'one spec, three models on three harnesses, two of three must agree'],
+        ['Cascade', 'when the first model fails, the next one takes the same spec'],
+        ['Router', 'one decision node sends each spec down the branch that fits'],
+        ['Full pipeline', 'design, implement, gates, two reviews, commit — and a resilience branch for quota deaths'],
+      ] as [string, string][],
       genesis: {
         kicker: 'Genesis',
         title: 'The one that started it all.',
@@ -145,22 +152,22 @@ export const en = {
           'It started as a folder of <strong>skills</strong> for work. Then I noticed what nobody was talking about: agent harnesses shipped a <strong>headless</strong> mode, just sitting there unused. I wired cron jobs to fire tasks through it — too much for a skill, and the models of the day choked on the instructions. So it became an <strong>MCP</strong>: <em>task-trigger</em>. It worked, but it ran blind in the background; only the agent ever saw what happened. Not enough. I killed it and built a <strong>TUI</strong> — then scheduling, memory, sync, identities, and a new name. <strong>Canopy</strong>. By then the twist was complete: Canopy was building Canopy, and everything else in this lab.',
       },
       layer: {
-        kicker: 'What it does',
+        kicker: 'The graph engine',
         cols: [
-          ['Memory that persists', 'Every session writes facts and patterns to a project-scoped knowledge graph. The next session reads them. Agents stop re-explaining the same codebase to themselves.'],
-          ['Background scheduling', 'Agents run on cron schedules or file-change triggers — not just on demand. A daemon watches the workspace so you don\'t have to babysit.'],
-          ['Multi-agent sync', 'Agents declare their mission, report stability, and broadcast messages. The workspace "vibe" is visible before anyone touches a file. Agents know what each other is doing and don\'t interfere.'],
+          ['Graphs, not prompts', 'Agent, check, gate and router nodes wired with pass, fail and error edges. A spec walks the graph from entry to commit; routing keys on real exit codes and verdicts, not on what a model claims.'],
+          ['Ensembles across harnesses', 'Fan one step out to several models — parallel with a quorum, cascade to the next on failure, or round-robin across a crew — each member on whatever harness and model you pick.'],
+          ['Failure is a route', 'Red gates send the work back with the output attached. A resilience node reads quota errors and schedules the graph to wake at the exact reset. Only a real verdict ever reaches you.'],
         ] as [string, string][],
       },
       platforms: {
         kicker: 'Supported platforms',
       },
       graphs: {
-        kicker: 'Graph engine',
+        kicker: 'The runtime underneath',
         cols: [
-          ['DAG-based automation', 'Define workflows as directed acyclic graphs: specs flow through agent, check, and gate nodes with pass/fail routing. Automate bug fixing, code review, and multi-step tasks.'],
-          ['Background execution', 'Graphs run autonomously in the background — implement, verify, review, commit. Each node has timeouts, retries, and a resilience agent that diagnoses failures.'],
-          ['Human-in-the-loop', 'When automation hits a wall, the resilience agent reports a blocker and pauses. You decide; the graph resumes when you\'re ready.'],
+          ['Memory that persists', 'Every run writes facts, patterns and decisions to a project-scoped knowledge graph. The next session — on any harness — reads them instead of rediscovering the codebase.'],
+          ['Queues and scheduling', 'Specs live in ordered queues a graph works through in the background; graphs and agents also fire on cron schedules or file-change triggers, and hooks chain one graph into the next.'],
+          ['Multi-agent sync', 'Agents declare their mission, report status and message each other, so several sessions can share one workspace without stepping on each other.'],
         ] as [string, string][],
       },
       builder: {
@@ -183,7 +190,7 @@ export const en = {
       },
       faq: [
         ['What does Canopy actually do?',
-          'Canopy orchestrates work across different AI coding harnesses — Claude, Codex, or any agent that runs in a terminal. It lets you use all your free tiers without learning each platform\'s commands, config, or MCP parsing. One daemon, all agents.'],
+          'Canopy runs AI coding work as graphs. A spec enters, agent nodes do the work on the harnesses you choose — Claude, Codex, Gemini, OpenCode or any terminal agent — check nodes run your real tests, ensembles get several models to agree, and failures route back automatically until the spec is committed. One daemon, all your agents, all your free tiers.'],
         ['How do I share work between Claude and Codex?',
           'Canopy gives each agent a shared knowledge graph and sync protocol. When Claude finishes a task, the facts and patterns it discovered are available to Codex in the next session. No manual context copying.'],
         ['Can I run AI agents on a schedule?',
