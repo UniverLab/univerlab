@@ -29,8 +29,8 @@ $ demo focus main docs --scroll
   → terminal | docs — browser source composited in
 $ demo record
   → demo.rec (clean humanized take)
-$ demo export gif,mp4
-  → dist/demo.gif  dist/demo.mp4</code></pre>
+$ demo export gif,mp4,svg
+  → dist/demo.gif  dist/demo.mp4  dist/demo.svg</code></pre>
         <div class="scrubber mono">
           <span class="play" aria-hidden="true">▶</span>
           <div class="track">
@@ -49,13 +49,17 @@ $ demo export gif,mp4
     </div>
   </Fragment>
 
-  <!-- The confident light section: the single genuine capture, with the
-       koan as a signature line at its foot. No second figure exists —
-       one honest figure beats two props. -->
+  <!-- The confident light section: the genuine capture, then the same take
+       as DemoStage's own svg export — real output, not a prop — with the koan
+       as a signature line at its foot. -->
   <section class="band-light">
     <div class="wrap slots-wrap">
       <div class="slots single">
         <DemoFigure src="/demos/demostage.mp4" essence={exp.essenceHex} label="Fig. 1" caption={e.demos.first} />
+        <figure class="svg-fig">
+          <img src="/demos/demostage.svg" width="1200" height="720" loading="lazy" decoding="async" alt={e.demos.svgAlt} />
+          <figcaption><span class="svg-label">Fig. 2</span> {e.demos.svg}</figcaption>
+        </figure>
       </div>
       <p class="sig mono" aria-hidden="true">{e.koan}</p>
     </div>
@@ -141,6 +145,26 @@ $ demo export gif,mp4
      label on this band wears (5.7:1 even with the takes trail at its brightest
      behind the 88% veil — FR3). */
   :global(html[data-surface='studio'] .band-light .demo-cap .label) { color: #951c04; }
+
+  /* Fig. 2 — DemoStage's own svg export, shown as an <img>: it animates by
+     itself, no player. Same frame as Fig. 1 (DemoFigure's .demo-frame), and
+     its caption follows Fig. 1's: serif italic body, Signal Red tag. */
+  .svg-fig { margin: 2.5rem 0 0; }
+  .svg-fig img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0b0f14; /* the score's own background, behind the first frame */
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--flare) 18%, transparent),
+      0 22px 60px rgba(0, 0, 0, 0.3);
+  }
+  .svg-fig figcaption {
+    margin-top: 0.8rem;
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 0.85rem; color: #190501;
+  }
+  .svg-fig .svg-label { font-family: var(--font-mono); font-style: normal; color: #951c04; margin-right: 0.6rem; }
 
   /* The signature line at the foot of the light section — the koan reused
      verbatim, small and quiet, hidden from assistive tech (it repeats the

@@ -31,18 +31,18 @@ Different problems, one method: take work that lives in fragile, manual procedur
 
 ### Canopy
 
-- [Canopy](https://univerlab.org/canopy/docs/index.md): Self-contained MCP server and TUI for orchestrating AI agent sessions, background tasks, and file event triggers. Canopy documentation — The runtime layer for
-- [Installation](https://univerlab.org/canopy/docs/installation/index.md): Install canopy, run the setup wizard, and keep it updated automatically. Canopy documentation — The runtime layer for AI agents that need memory, scheduling
-- [Quick Start](https://univerlab.org/canopy/docs/quickstart/index.md): Start the daemon, run the setup wizard, and launch your first agent. Canopy documentation — The runtime layer for AI agents that need memory, scheduling, and
-- [The TUI — Canopy Hub](https://univerlab.org/canopy/docs/tui/index.md): The full-screen terminal interface — agents, split views, dashboard, transfers. Canopy documentation — The runtime layer for AI agents that need memory
-- [Agents](https://univerlab.org/canopy/docs/agents/index.md): Interactive PTY agents, background cron/watcher agents, terminal sessions and seed identities. Canopy documentation — The runtime layer for AI agents that need
-- [Intelligence & Sync](https://univerlab.org/canopy/docs/intelligence-and-sync/index.md): The project-scoped knowledge graph and multi-agent workspace coordination. Canopy documentation — The runtime layer for AI agents that need memory, scheduling
-- [Graphs](https://univerlab.org/canopy/docs/graphs/index.md): The DAG graph engine — specs, nodes, edges, gates and lifecycle. Canopy documentation — The runtime layer for AI agents that need memory, scheduling, and each
-- [Usage Patterns](https://univerlab.org/canopy/docs/usage-patterns/index.md): The shapes a graph can take, what each one is good at, and where each one breaks. Canopy documentation — The runtime layer for AI agents that need memory
-- [Recipes](https://univerlab.org/canopy/docs/recipes/index.md): Graphs built end to end — the actual calls, the actual prompts, and what breaks. Canopy documentation — The runtime layer for AI agents that need memory
-- [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — The runtime layer for AI agents that need memory, scheduling, and each other.
-- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 96 MCP tools exposed by the canopy daemon, by category. Canopy documentation — The runtime layer for AI agents that need memory, scheduling, and each other.
-- [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — The runtime layer for AI agents that need memory, scheduling, and each other.
+- [Canopy](https://univerlab.org/canopy/docs/index.md): Self-contained MCP server and TUI for orchestrating AI agent sessions, background tasks, and file event triggers. Canopy documentation — A graph engine for AI
+- [Installation](https://univerlab.org/canopy/docs/installation/index.md): Install canopy, run the setup wizard, and keep it updated automatically. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [Quick Start](https://univerlab.org/canopy/docs/quickstart/index.md): Start the daemon, run the setup wizard, and launch your first agent. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [The TUI — Canopy Hub](https://univerlab.org/canopy/docs/tui/index.md): The full-screen terminal interface — agents, split views, dashboard, transfers. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [Agents](https://univerlab.org/canopy/docs/agents/index.md): Interactive PTY agents, background cron/watcher agents, terminal sessions and seed identities. Canopy documentation — A graph engine for AI coding agents
+- [Intelligence & Sync](https://univerlab.org/canopy/docs/intelligence-and-sync/index.md): The project-scoped knowledge graph and multi-agent workspace coordination. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [Graphs](https://univerlab.org/canopy/docs/graphs/index.md): The DAG graph engine — specs, nodes, edges, gates and lifecycle. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Usage Patterns](https://univerlab.org/canopy/docs/usage-patterns/index.md): The shapes a graph can take, what each one is good at, and where each one breaks. Canopy documentation — A graph engine for AI coding agents — every harness
+- [Recipes](https://univerlab.org/canopy/docs/recipes/index.md): Graphs built end to end — the actual calls, the actual prompts, and what breaks. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 96 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 
 ### TeXForge
 
