@@ -123,21 +123,28 @@ export const en = {
   },
   experiments: {
     canopy: {
-      need: 'Your AI agents forget everything between sessions — and they can\'t see what the others are doing.',
+      need: 'One agent on one harness can\'t carry a project. A graph of them can — implement, check, review, commit, and route around every failure.',
       tagline:
-        'The runtime layer for AI agents that need memory, scheduling, and each other.',
+        'A graph engine for AI coding agents — every harness, one workflow.',
       thread: {
         problem: 'AI agents',
-        method: 'a persistent runtime above every harness',
-        artifact: 'coordinated multi-agent work',
+        method: 'a graph engine above every harness',
+        artifact: 'specs carried all the way to a commit',
       },
       title:
-        'Persistent memory for Claude Code, Codex, OpenCode — Canopy',
+        'Canopy — a graph engine for AI coding agents',
       description:
-        'Your agents forget between sessions. Canopy remembers — shared context across Claude Code, Codex, Cursor and OpenCode, plus scheduling and a graph engine.',
+        'Canopy runs AI coding agents as graphs: specs flow through agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
-        'A Rust daemon and terminal UI that runs alongside your AI agents. It gives them <strong>persistent memory</strong> across sessions, <strong>background scheduling</strong> on cron and file events, a <strong>knowledge graph</strong> that learns from every run, and a <strong>sync protocol</strong> so multiple agents stop colliding in the same workspace.',
+        'A Rust daemon and terminal UI with a <strong>graph engine</strong> at its core. Work enters as a spec and walks a graph you design: <strong>agent</strong> nodes on any harness, <strong>check</strong> nodes that run your real commands, <strong>ensembles</strong> that fan out to several models and keep a quorum, <strong>routers</strong> that pick the branch, and a <strong>resilience</strong> node that turns a quota death into a scheduled wake-up. Underneath: memory, scheduling and sync for every agent.',
+      morph: [
+        ['Gated implement', 'checks run your real commands — red routes the work back, never to you'],
+        ['Ensemble · quorum', 'one spec, three models on three harnesses, two of three must agree'],
+        ['Cascade', 'when the first model fails, the next one takes the same spec'],
+        ['Router', 'one decision node sends each spec down the branch that fits'],
+        ['Full pipeline', 'design, implement, gates, two reviews, commit — and a resilience branch for quota deaths'],
+      ] as [string, string][],
       genesis: {
         kicker: 'Genesis',
         title: 'The one that started it all.',
@@ -145,22 +152,22 @@ export const en = {
           'It started as a folder of <strong>skills</strong> for work. Then I noticed what nobody was talking about: agent harnesses shipped a <strong>headless</strong> mode, just sitting there unused. I wired cron jobs to fire tasks through it — too much for a skill, and the models of the day choked on the instructions. So it became an <strong>MCP</strong>: <em>task-trigger</em>. It worked, but it ran blind in the background; only the agent ever saw what happened. Not enough. I killed it and built a <strong>TUI</strong> — then scheduling, memory, sync, identities, and a new name. <strong>Canopy</strong>. By then the twist was complete: Canopy was building Canopy, and everything else in this lab.',
       },
       layer: {
-        kicker: 'What it does',
+        kicker: 'The graph engine',
         cols: [
-          ['Memory that persists', 'Every session writes facts and patterns to a project-scoped knowledge graph. The next session reads them. Agents stop re-explaining the same codebase to themselves.'],
-          ['Background scheduling', 'Agents run on cron schedules or file-change triggers — not just on demand. A daemon watches the workspace so you don\'t have to babysit.'],
-          ['Multi-agent sync', 'Agents declare their mission, report stability, and broadcast messages. The workspace "vibe" is visible before anyone touches a file. Agents know what each other is doing and don\'t interfere.'],
+          ['Graphs, not prompts', 'Agent, check, gate and router nodes wired with pass, fail and error edges. A spec walks the graph from entry to commit; routing keys on real exit codes and verdicts, not on what a model claims.'],
+          ['Ensembles across harnesses', 'Fan one step out to several models — parallel with a quorum, cascade to the next on failure, or round-robin across a crew — each member on whatever harness and model you pick.'],
+          ['Failure is a route', 'Red gates send the work back with the output attached. A resilience node reads quota errors and schedules the graph to wake at the exact reset. Only a real verdict ever reaches you.'],
         ] as [string, string][],
       },
       platforms: {
         kicker: 'Supported platforms',
       },
       graphs: {
-        kicker: 'Graph engine',
+        kicker: 'The runtime underneath',
         cols: [
-          ['DAG-based automation', 'Define workflows as directed acyclic graphs: specs flow through agent, check, and gate nodes with pass/fail routing. Automate bug fixing, code review, and multi-step tasks.'],
-          ['Background execution', 'Graphs run autonomously in the background — implement, verify, review, commit. Each node has timeouts, retries, and a resilience agent that diagnoses failures.'],
-          ['Human-in-the-loop', 'When automation hits a wall, the resilience agent reports a blocker and pauses. You decide; the graph resumes when you\'re ready.'],
+          ['Memory that persists', 'Every run writes facts, patterns and decisions to a project-scoped knowledge graph. The next session — on any harness — reads them instead of rediscovering the codebase.'],
+          ['Queues and scheduling', 'Specs live in ordered queues a graph works through in the background; graphs and agents also fire on cron schedules or file-change triggers, and hooks chain one graph into the next.'],
+          ['Multi-agent sync', 'Agents declare their mission, report status and message each other, so several sessions can share one workspace without stepping on each other.'],
         ] as [string, string][],
       },
       builder: {
@@ -183,7 +190,7 @@ export const en = {
       },
       faq: [
         ['What does Canopy actually do?',
-          'Canopy orchestrates work across different AI coding harnesses — Claude, Codex, or any agent that runs in a terminal. It lets you use all your free tiers without learning each platform\'s commands, config, or MCP parsing. One daemon, all agents.'],
+          'Canopy runs AI coding work as graphs. A spec enters, agent nodes do the work on the harnesses you choose — Claude, Codex, Gemini, OpenCode or any terminal agent — check nodes run your real tests, ensembles get several models to agree, and failures route back automatically until the spec is committed. One daemon, all your agents, all your free tiers.'],
         ['How do I share work between Claude and Codex?',
           'Canopy gives each agent a shared knowledge graph and sync protocol. When Claude finishes a task, the facts and patterns it discovered are available to Codex in the next session. No manual context copying.'],
         ['Can I run AI agents on a schedule?',
@@ -206,9 +213,9 @@ export const en = {
       description:
         'One binary, no LaTeX distribution to install. Mermaid, Graphviz and D2 render straight from your .tex, and the errors are written to be read by agents.',
       koan: 'Movable type once took a workshop. Now it takes one binary.',
-      figures: ['build pipeline', 'document graph', 'build map'],
+      figures: ['build pipeline', 'document graph', 'build map', 'code listing'],
       lede:
-        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles your document, then lets you inspect what came out — the text a reader sees, the fonts, the metadata, and which section opens each page. The LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js.',
+        'A single Rust binary that scaffolds, lints, formats, proofreads and compiles your document, then lets you inspect what came out — the text a reader sees, the fonts, the metadata, and which section opens each page. The LaTeX engine arrives by itself on first build, and Mermaid, Graphviz or D2 diagrams render inside your <code>.tex</code> files with no browser and no Node.js. Code blocks come out highlighted the same way: the highlighter is compiled into the binary, so no Pygments and no shell-escape.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born from a thesis.',
@@ -223,9 +230,16 @@ export const en = {
           ['Proofread', 'spell-checking that reads the language from the document — Babel, polyglossia, or your configured default — and checks prose against the right dictionary.'],
           ['Set', 'one canonical format, like rustfmt for .tex. Clean diffs forever.'],
           ['Illustrate', 'Mermaid, Graphviz and D2 blocks become figures at build time, rendered in pure Rust.'],
+          ['Highlight', 'code blocks become framed listings with line numbers and captions, coloured at build time — light, dark or mono for print.'],
           ['Inspect', 'the compiled PDF — text, fonts, metadata, page diffs and whether every source word survived.'],
           ['Print', 'Tectonic compiles deterministically; watch mode reprints as you write.'],
         ] as [string, string][],
+      },
+      // The printed listing: a crop of the capabilities example as texforge
+      // compiled it, not a mock-up.
+      listing: {
+        caption: 'listing as printed · python',
+        alt: 'A Python code block typeset by texforge: a light frame, line numbers in the margin, keywords, strings and numbers in colour.',
       },
       subproject: {
         kicker: 'Subproject',
@@ -510,10 +524,10 @@ export const en = {
       title:
         'Reproducible terminal demos as code — DemoStage',
       description:
-        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif or mp4 — version-controlled and diffable.',
+        'An asciinema alternative where the demo is a file, not a take. Re-record after every change and export gif, mp4 or svg — version-controlled, diffable.',
       koan: '// the demo is the source',
       lede:
-        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif or mp4 — version-controlled, re-runnable and diffable.',
+        'DemoStage records a session as <strong>events</strong>, normalizes human imperfections into a clean <code>demo.toml</code> <strong>score</strong>, and compiles it to gif, mp4 or an animated svg — version-controlled, re-runnable and diffable.',
       genesis: {
         kicker: 'Genesis',
         title: 'Born building this very page.',
@@ -526,14 +540,17 @@ export const en = {
           '<code>capture</code> — live capture: record the session, auto-normalize into a clean score and faithful <code>.rec</code>.',
           '<code>focus</code> — switch the live view to one or two sources (terminal, repo page, docs, localhost) — full screen, split or stacked, composited into the demo.',
           '<code>record</code> — re-execute <code>demo.toml</code> cleanly, producing a humanized recording.',
-          '<code>export</code> — pure playback: render to gif or mp4 (no re-execution, ffmpeg/chromium auto-provisioned).',
+          '<code>export</code> — pure playback: render to gif, mp4 or animated svg (no re-execution, ffmpeg/chromium auto-provisioned).',
           '<code>edit</code> — edit the timeline interactively; mark several steps and apply bulk changes.',
         ],
       },
-      // The single genuine capture on this page: the caption paraphrases
-      // capture — no feature that the pipeline doesn't already name.
+      // The two genuine figures on this page — the tour as mp4 and the same
+      // take as its own svg export. Captions name no feature the pipeline
+      // doesn't already name.
       demos: {
-        first: 'Capture — terminal session composited with the browser source',
+        first: 'The tour — one score recorded in a real PTY, exported to gif and svg from a single take',
+        svg: 'The same take, exported as svg — 83 KB, font embedded, no video player',
+        svgAlt: 'The DemoStage tour as an animated SVG: a banner printed in the terminal, the score that demos it, record, export and doctor.',
       },
       faq: [
         ['What is DemoStage?',
@@ -541,7 +558,7 @@ export const en = {
         ['Can I re-record a demo if something changes?',
           'Yes. `demostage capture` records events, not video. If the UX changes, re-capture and the demo updates deterministically — no need to manually re-record the whole thing.'],
         ['How is DemoStage different from asciinema?',
-          'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif/mp4. The source is a versionable TOML file.'],
+          'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif, mp4 or animated svg. The source is a versionable TOML file.'],
       ] as [string, string][],
     },
   },

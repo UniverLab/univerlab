@@ -259,8 +259,10 @@ case "${cmd}" in
     shift
     if [ $# -lt 1 ]; then usage; fi
     # The write is guarded by the version the client last saw: read it fresh,
-    # then PUT. On 409 the body (current state) is already printed above.
-    version="$(req GET /roadmap | python3 -c 'import json, sys; print(json.load(sys.stdin).get("version", 0))')"
+    # then PUT. The private (authenticated) read bypasses the public cache,
+    # which can lag one write behind and turn every reorder right after an
+    # add into a 409. On 409 the body (current state) is already printed above.
+    version="$(req GET /roadmap --private | python3 -c 'import json, sys; print(json.load(sys.stdin).get("version", 0))')"
     body="$(python3 - "${version}" "$@" <<'PY'
 import json
 import sys

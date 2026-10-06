@@ -123,21 +123,28 @@ export const es: Dict = {
   },
   experiments: {
     canopy: {
-      need: 'Tus agentes de IA olvidan todo entre sesiones — y no pueden ver lo que hacen los demás.',
+      need: 'Un agente en un solo harness no carga un proyecto. Un grafo de ellos sí — implementa, verifica, revisa, commitea, y esquiva cada fallo.',
       tagline:
-        'La capa de runtime para agentes de IA que necesitan memoria, scheduling y compañeros.',
+        'Un motor de grafos para agentes de IA — todos los harness, un solo flujo.',
       thread: {
         problem: 'agentes de IA',
-        method: 'un runtime persistente sobre cada harness',
-        artifact: 'trabajo multiagente coordinado',
+        method: 'un motor de grafos sobre cada harness',
+        artifact: 'specs llevados hasta el commit',
       },
       title:
-        'Memoria persistente: Claude Code, Codex, OpenCode — Canopy',
+        'Canopy — motor de grafos para agentes de IA',
       description:
-        'Tus agentes olvidan entre sesiones. Canopy recuerda — contexto compartido entre Claude Code, Codex, Cursor y OpenCode, más scheduling y motor de grafos.',
+        'Canopy corre agentes de IA como grafos: los specs pasan por nodos de agente, chequeo y gate, los ensembles votan y los fallos vuelven solos.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
-        'Un daemon en Rust y una interfaz de terminal que corre junto a tus agentes de IA. Les da <strong>memoria persistente</strong> entre sesiones, <strong>programación en segundo plano</strong> por cron y eventos de archivo, un <strong>grafo de conocimiento</strong> que aprende de cada ejecución, y un <strong>protocolo de sincronización</strong> para que múltiples agentes dejen de colisionar en el mismo espacio de trabajo.',
+        'Un daemon en Rust y una interfaz de terminal con un <strong>motor de grafos</strong> en el centro. El trabajo entra como spec y recorre un grafo que tú diseñas: nodos de <strong>agente</strong> en cualquier harness, nodos de <strong>chequeo</strong> que corren tus comandos reales, <strong>ensembles</strong> que reparten un paso entre varios modelos y exigen quórum, <strong>routers</strong> que eligen la rama, y un nodo de <strong>resiliencia</strong> que convierte una cuota agotada en un despertar programado. Por debajo: memoria, scheduling y sync para todos tus agentes.',
+      morph: [
+        ['Implementación con gates', 'los chequeos corren tus comandos reales — el rojo devuelve el trabajo, nunca a ti'],
+        ['Ensemble · quórum', 'un spec, tres modelos en tres harness, dos de tres deben coincidir'],
+        ['Cascada', 'si el primer modelo falla, el siguiente toma el mismo spec'],
+        ['Router', 'un nodo de decisión manda cada spec por la rama que le corresponde'],
+        ['Pipeline completo', 'diseño, implementación, gates, dos revisiones, commit — y una rama de resiliencia para cuando se acaba la cuota'],
+      ] as [string, string][],
       genesis: {
         kicker: 'Génesis',
         title: 'El que empezó todo.',
@@ -145,22 +152,22 @@ export const es: Dict = {
           'Empezó como una carpeta de <strong>skills</strong> para el trabajo. Entonces noté lo que nadie mencionaba: los harness de agentes traían un modo <strong>headless</strong>, ahí, sin que nadie lo usara. Conecté tareas con cron para dispararlas por ese modo — demasiado para un skill, y los modelos de entonces se atragantaban con las instrucciones. Así que se volvió un <strong>MCP</strong>: <em>task-trigger</em>. Funcionaba, pero corría a ciegas en segundo plano; solo el agente veía lo que pasaba. No bastaba. Lo maté y construí una <strong>TUI</strong> — luego scheduling, memoria, sync, identidades, y un nombre nuevo. <strong>Canopy</strong>. Para entonces el giro estaba completo: Canopy construía a Canopy, y a todo lo demás en este laboratorio.',
       },
       layer: {
-        kicker: 'Qué hace',
+        kicker: 'El motor de grafos',
         cols: [
-          ['Memoria que persiste', 'Cada sesión escribe hechos y patrones en un grafo de conocimiento por proyecto. La siguiente sesión los lee. Los agentes dejan de volver a explicar el mismo código.'],
-          ['Programación en segundo plano', 'Los agentes corren por cron o por eventos de cambio de archivo — no solo bajo demanda. Un daemon vigila el espacio de trabajo para que no tengas que hacerlo tú.'],
-          ['Sincronización multi-agente', 'Cada agente declara su misión, reporta estabilidad y emite mensajes. El "ánimo" del workspace se ve antes de que nadie toque un archivo. Los agentes saben qué hace cada uno y no interfieren entre sí.'],
+          ['Grafos, no prompts', 'Nodos de agente, chequeo, gate y router unidos por aristas de pass, fail y error. Un spec recorre el grafo de la entrada al commit; el enrutamiento depende de códigos de salida y veredictos reales, no de lo que un modelo dice haber hecho.'],
+          ['Ensembles entre harness', 'Reparte un paso entre varios modelos — en paralelo con quórum, en cascada al siguiente si falla, o en round-robin por un equipo — cada miembro en el harness y modelo que elijas.'],
+          ['El fallo es una ruta', 'Un gate en rojo devuelve el trabajo con la salida adjunta. Un nodo de resiliencia lee los errores de cuota y programa el grafo para despertar justo al reinicio. Solo un veredicto real llega a ti.'],
         ],
       },
       platforms: {
         kicker: 'Plataformas soportadas',
       },
       graphs: {
-        kicker: 'Motor de grafos',
+        kicker: 'El runtime por debajo',
         cols: [
-          ['Automatización basada en DAG', 'Define flujos de trabajo como grafos acíclicos dirigidos: los specs fluyen a través de nodos de agente, chequeo y gate con enrutamiento pass/fail. Automatiza corrección de bugs, revisión de código y tareas de múltiples pasos.'],
-          ['Ejecución en segundo plano', 'Los grafos corren autónomamente en segundo plano — implementar, verificar, revisar, commitear. Cada nodo tiene timeouts, reintentos y un agente de resiliencia que diagnostica fallos.'],
-          ['Humano en el loop', 'Cuando la automatización se traba, el agente de resiliencia reporta un blocker y pausa. Tú decides; el grafo reanuda cuando estés listo.'],
+          ['Memoria que persiste', 'Cada ejecución escribe hechos, patrones y decisiones en un grafo de conocimiento por proyecto. La siguiente sesión — en cualquier harness — los lee en vez de redescubrir el código.'],
+          ['Colas y scheduling', 'Los specs viven en colas ordenadas que un grafo recorre en segundo plano; grafos y agentes también se disparan por cron o por cambios de archivo, y los hooks encadenan un grafo con el siguiente.'],
+          ['Sincronización multiagente', 'Los agentes declaran su misión, reportan su estado y se mandan mensajes, para que varias sesiones compartan un espacio de trabajo sin pisarse.'],
         ],
       },
       builder: {
@@ -183,7 +190,7 @@ export const es: Dict = {
       },
       faq: [
         ['¿Qué hace Canopy exactamente?',
-          'Canopy orquesta trabajo entre diferentes harnesses de IA — Claude, Codex, o cualquier agente que corra en una terminal. Te permite aprovechar todos tus free tiers sin aprender los comandos, la configuración o el parsing MCP de cada plataforma. Un daemon, todos los agentes.'],
+          'Canopy corre el trabajo de programación con IA como grafos. Entra un spec, los nodos de agente hacen el trabajo en los harness que elijas — Claude, Codex, Gemini, OpenCode o cualquier agente de terminal —, los nodos de chequeo corren tus tests reales, los ensembles ponen de acuerdo a varios modelos, y los fallos vuelven solos hasta que el spec queda commiteado. Un daemon, todos tus agentes, todos tus free tiers.'],
         ['¿Cómo comparto trabajo entre Claude y Codex?',
           'Canopy le da a cada agente un grafo de conocimiento compartido y un protocolo de sincronización. Cuando Claude termina una tarea, los hechos y patrones que descubrió están disponibles para Codex en la siguiente sesión. Sin copia manual de contexto.'],
         ['¿Puedo ejecutar agentes de IA en un horario?',
@@ -206,9 +213,9 @@ export const es: Dict = {
       description:
         'Un solo binario, sin distribución de LaTeX que instalar. Mermaid, Graphviz y D2 se renderizan desde tu .tex, y los errores están escritos para un agente.',
       koan: 'Los tipos móviles antes requerían un taller. Ahora requieren un solo binario.',
-      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build'],
+      figures: ['flujo de compilación', 'grafo del documento', 'mapa de build', 'listado de código'],
       lede:
-        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js.',
+        'Un único binario en Rust que arma, revisa, formatea, corrige y compila tu documento, y después te deja inspeccionar lo que salió — el texto que ve un lector, las fuentes, los metadatos y qué sección abre cada página. El motor LaTeX llega solo en la primera compilación, y los diagramas Mermaid, Graphviz o D2 se renderizan dentro de tus archivos <code>.tex</code> sin navegador ni Node.js. Los bloques de código salen resaltados de la misma forma: el resaltador viene compilado en el binario, sin Pygments ni shell-escape.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació de una tesis.',
@@ -223,9 +230,16 @@ export const es: Dict = {
           ['Revisar', 'ortografía y estilo que leen el idioma del documento — Babel, polyglossia o tu configuración por defecto — y revisan el texto contra el diccionario correcto.'],
           ['Ajustar', 'un formato canónico, como rustfmt para .tex. Diffs limpios para siempre.'],
           ['Ilustrar', 'los bloques Mermaid, Graphviz y D2 se vuelven figuras en compilación, renderizados en Rust puro.'],
+          ['Resaltar', 'los bloques de código se vuelven listados con marco, números de línea y leyenda, coloreados en compilación — claro, oscuro o mono para imprimir.'],
           ['Inspeccionar', 'el PDF compilado — texto, fuentes, metadatos, diffs de página y si cada palabra del fuente sobrevivió.'],
           ['Imprimir', 'Tectonic compila de forma determinista; el modo watch reimprime mientras escribes.'],
         ],
+      },
+      // El listado impreso: un recorte del ejemplo de capacidades tal como lo
+      // compiló texforge, no una maqueta.
+      listing: {
+        caption: 'listado impreso · python',
+        alt: 'Un bloque de código Python compuesto por texforge: marco claro, números de línea al margen, palabras clave, cadenas y números en color.',
       },
       subproject: {
         kicker: 'Subproyecto',
@@ -510,10 +524,10 @@ export const es: Dict = {
       title:
         'Demos de terminal reproducibles, como código — DemoStage',
       description:
-        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif o mp4 — versionado, re-ejecutable y comparable.',
+        'Una alternativa a asciinema donde el demo es un archivo, no una toma. Regrábalo tras cada cambio; exporta gif, mp4 o svg — versionado y comparable.',
       koan: '// el demo es el código fuente',
       lede:
-        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif o mp4: versionado, re-ejecutable y comparable.',
+        'DemoStage graba una sesión como <strong>eventos</strong>, corrige las imperfecciones humanas en un <code>demo.toml</code> limpio — una <strong>partitura</strong> — y lo compila a gif, mp4 o un svg animado: versionado, re-ejecutable y comparable.',
       genesis: {
         kicker: 'Génesis',
         title: 'Nació construyendo esta misma página.',
@@ -526,12 +540,14 @@ export const es: Dict = {
           '<code>capture</code> — captura en vivo: graba la sesión, la normaliza en una partitura limpia y un <code>.rec</code> fiel.',
           '<code>focus</code> — cambia la vista en vivo a una o dos fuentes (terminal, repo, docs, localhost): pantalla completa, dividida o apilada, compuesta en el demo.',
           '<code>record</code> — re-ejecuta <code>demo.toml</code> de forma limpia, produciendo una grabación humanizada.',
-          '<code>export</code> — reproducción pura: renderiza a gif o mp4 sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
+          '<code>export</code> — reproducción pura: renderiza a gif, mp4 o svg animado sin re-ejecución, con ffmpeg y chromium autoprovisionados.',
           '<code>edit</code> — edita la línea de tiempo de forma interactiva: marca varios pasos y aplica cambios en bloque.',
         ],
       },
       demos: {
-        first: 'Capture — sesión de terminal compuesta con la fuente del navegador',
+        first: 'El tour — un score grabado en un PTY real, exportado a gif y svg desde una sola toma',
+        svg: 'La misma toma, exportada a svg — 83 KB, fuente incrustada, sin reproductor de video',
+        svgAlt: 'El tour de DemoStage como SVG animado: un banner impreso en la terminal, el score que lo demuestra, record, export y doctor.',
       },
       faq: [
         ['¿Qué es DemoStage?',
@@ -539,7 +555,7 @@ export const es: Dict = {
         ['¿Puedo re-grabar una demo si algo cambia?',
           'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
         ['¿En qué se diferencia DemoStage de asciinema?',
-          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif/mp4. El fuente es un archivo TOML versionable.'],
+          'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif, mp4 o svg animado. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
     },
   },

@@ -1,0 +1,330 @@
+---
+// The canopy hero: one SVG that morphs between graph shapes the engine really
+// runs — gated implement, ensemble quorum, cascade fallback, router, and the
+// full rq pipeline with its resilience branch. Nodes keep their identity
+// (slot) across shapes and glide to their new position and form; edges cross-
+// fade; a token walks each shape's path (red legs = a failure routed back).
+// prefers-reduced-motion renders the first shape, still.
+interface Props {
+  /** Harness accent colours keyed by platform stem (from canopy-registry). */
+  colors: Record<string, string>;
+  /** Shape captions, in the order of SHAPES below: [name, line]. */
+  captions: [string, string][];
+}
+const { colors, captions } = Astro.props;
+const SLOTS = 9;
+---
+<figure class="gm" data-colors={JSON.stringify(colors)} data-captions={JSON.stringify(captions)}>
+  <svg class="gm-svg" viewBox="0 0 100 62" role="img" aria-label={captions.map((c) => c[0]).join(', ')}>
+    <g class="gm-edges">
+      {Array.from({ length: 12 }, () => <path class="gm-edge" d="M50 31 L50 31" />)}
+    </g>
+    <circle class="gm-token" r="1.1" cx="-10" cy="-10" />
+    <g class="gm-nodes">
+      {Array.from({ length: SLOTS }, (_, i) => (
+        <g class="gm-node" data-slot={i} transform="translate(50 31)">
+          <rect class="gm-shape" x="-3" y="-3" width="6" height="6" rx="3" />
+          <text class="gm-label" dy="6.4" text-anchor="middle"></text>
+          <text class="gm-harness" dy="8.9" text-anchor="middle"></text>
+        </g>
+      ))}
+    </g>
+  </svg>
+  <figcaption class="gm-caption mono">
+    <span class="gm-name">{captions[0][0]}</span>
+    <span class="gm-line">{captions[0][1]}</span>
+  </figcaption>
+</figure>
+
+<script>
+  type Kind = 'chip' | 'agent' | 'check' | 'gate' | 'commit';
+  type N = { s: number; x: number; y: number; k: Kind; l: string; h?: string };
+  type E = [number, number, 'pass' | 'fail'];
+  type Shape = { nodes: N[]; edges: E[]; walk: [number, number, boolean][] };
+
+  // Slots: 0 spec · 1 main agent · 2 gate/check · 3 reviewer/third · 4 commit ·
+  // 5,6 extra members · 7 designer · 8 resilience.
+  const SHAPES: Shape[] = [
+    { // gated implement
+      nodes: [
+        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
+        { s: 1, x: 28, y: 31, k: 'agent', l: 'implement', h: 'claude' },
+        { s: 2, x: 49, y: 31, k: 'check', l: 'gates' },
+        { s: 3, x: 70, y: 31, k: 'agent', l: 'review', h: 'opencode' },
+        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
+      ],
+      edges: [[0, 1, 'pass'], [1, 2, 'pass'], [2, 1, 'fail'], [2, 3, 'pass'], [3, 1, 'fail'], [3, 4, 'pass']],
+      walk: [[0, 1, false], [1, 2, false], [2, 1, true], [1, 2, false], [2, 3, false], [3, 4, false]],
+    },
+    { // ensemble quorum
+      nodes: [
+        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
+        { s: 5, x: 34, y: 11, k: 'agent', l: 'propose', h: 'codex' },
+        { s: 1, x: 34, y: 31, k: 'agent', l: 'propose', h: 'gemini' },
+        { s: 6, x: 34, y: 51, k: 'agent', l: 'propose', h: 'copilot' },
+        { s: 2, x: 62, y: 31, k: 'gate', l: 'quorum 2/3' },
+        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
+      ],
+      edges: [[0, 5, 'pass'], [0, 1, 'pass'], [0, 6, 'pass'], [5, 2, 'pass'], [1, 2, 'pass'], [6, 2, 'pass'], [2, 4, 'pass']],
+      walk: [[0, 5, false], [5, 2, false], [0, 1, false], [1, 2, false], [0, 6, false], [6, 2, true], [2, 4, false]],
+    },
+    { // cascade fallback
+      nodes: [
+        { s: 0, x: 7, y: 16, k: 'chip', l: 'spec' },
+        { s: 1, x: 30, y: 16, k: 'agent', l: 'first', h: 'kiro' },
+        { s: 2, x: 48, y: 33, k: 'agent', l: 'fallback', h: 'mimo' },
+        { s: 3, x: 66, y: 50, k: 'agent', l: 'last resort', h: 'qwen' },
+        { s: 4, x: 91, y: 16, k: 'commit', l: 'commit' },
+      ],
+      edges: [[0, 1, 'pass'], [1, 2, 'fail'], [2, 3, 'fail'], [1, 4, 'pass'], [2, 4, 'pass'], [3, 4, 'pass']],
+      walk: [[0, 1, false], [1, 2, true], [2, 4, false]],
+    },
+    { // router
+      nodes: [
+        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
+        { s: 2, x: 27, y: 31, k: 'gate', l: 'router' },
+        { s: 5, x: 52, y: 11, k: 'agent', l: 'bugfix', h: 'claude' },
+        { s: 1, x: 52, y: 31, k: 'agent', l: 'feature', h: 'codex' },
+        { s: 6, x: 52, y: 51, k: 'agent', l: 'docs', h: 'gemini' },
+        { s: 4, x: 88, y: 31, k: 'commit', l: 'commit' },
+      ],
+      edges: [[0, 2, 'pass'], [2, 5, 'pass'], [2, 1, 'pass'], [2, 6, 'pass'], [5, 4, 'pass'], [1, 4, 'pass'], [6, 4, 'pass']],
+      walk: [[0, 2, false], [2, 5, false], [5, 4, false]],
+    },
+    { // rq pipeline + resilience
+      nodes: [
+        { s: 0, x: 6, y: 24, k: 'chip', l: 'spec' },
+        { s: 7, x: 21, y: 24, k: 'agent', l: 'design', h: 'claude' },
+        { s: 1, x: 37, y: 24, k: 'agent', l: 'implement', h: 'deepseek' },
+        { s: 2, x: 53, y: 24, k: 'check', l: 'gates' },
+        { s: 3, x: 69, y: 24, k: 'agent', l: 'review ×2', h: 'kiro' },
+        { s: 4, x: 90, y: 24, k: 'commit', l: 'commit' },
+        { s: 8, x: 47, y: 52, k: 'agent', l: 'resilience', h: 'muse' },
+      ],
+      edges: [[0, 7, 'pass'], [7, 1, 'pass'], [1, 2, 'pass'], [2, 1, 'fail'], [2, 3, 'pass'], [3, 4, 'pass'], [1, 8, 'fail'], [8, 7, 'pass']],
+      walk: [[0, 7, false], [7, 1, false], [1, 8, true], [8, 7, false], [7, 1, false], [1, 2, false], [2, 3, false], [3, 4, false]],
+    },
+  ];
+
+  // Geometry of each node kind, as an interpolatable rect.
+  const GEOM: Record<Kind, { w: number; h: number; rx: number; rot: number }> = {
+    chip: { w: 10, h: 5.2, rx: 1, rot: 0 },
+    agent: { w: 6, h: 6, rx: 3, rot: 0 },
+    check: { w: 5.6, h: 5.6, rx: 0.7, rot: 0 },
+    gate: { w: 5, h: 5, rx: 0.5, rot: 45 },
+    commit: { w: 6.4, h: 6.4, rx: 3.2, rot: 0 },
+  };
+
+  const HOLD = 5200;
+  const MORPH = 1100;
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  function edgePath(a: { x: number; y: number }, b: { x: number; y: number }, fail: boolean): string {
+    if (!fail) {
+      const mx = (a.x + b.x) / 2;
+      return `M${a.x} ${a.y} C${mx} ${a.y} ${mx} ${b.y} ${b.x} ${b.y}`;
+    }
+    // A failure that drops to another row is a plain curve; one that routes
+    // back along the same row arcs ABOVE the pair — labels sit below nodes.
+    if (Math.abs(b.y - a.y) > 6) {
+      const mx = (a.x + b.x) / 2;
+      return `M${a.x} ${a.y} C${mx} ${a.y} ${mx} ${b.y} ${b.x} ${b.y}`;
+    }
+    const rise = Math.min(a.y, b.y) - 8 - Math.abs(a.x - b.x) * 0.1;
+    return `M${a.x} ${a.y - 3} C${a.x} ${rise} ${b.x} ${rise} ${b.x} ${b.y - 3}`;
+  }
+
+  function mount(fig: HTMLElement) {
+    const colors: Record<string, string> = JSON.parse(fig.dataset.colors || '{}');
+    const captions: [string, string][] = JSON.parse(fig.dataset.captions || '[]');
+    const nodes = Array.from(fig.querySelectorAll<SVGGElement>('.gm-node'));
+    const edges = Array.from(fig.querySelectorAll<SVGPathElement>('.gm-edge'));
+    const token = fig.querySelector<SVGCircleElement>('.gm-token')!;
+    const name = fig.querySelector<HTMLElement>('.gm-name')!;
+    const line = fig.querySelector<HTMLElement>('.gm-line')!;
+
+    // Per-slot animated state.
+    const st = nodes.map(() => ({ x: 50, y: 31, w: 0, h: 0, rx: 0, rot: 0, o: 0 }));
+
+    const target = (shape: Shape) =>
+      nodes.map((_, slot) => {
+        const n = shape.nodes.find((m) => m.s === slot);
+        if (!n) return null;
+        return { ...GEOM[n.k], x: n.x, y: n.y, o: 1, n };
+      });
+
+    function paint() {
+      nodes.forEach((g, i) => {
+        const s = st[i];
+        g.setAttribute('transform', `translate(${s.x.toFixed(2)} ${s.y.toFixed(2)})`);
+        g.style.opacity = s.o.toFixed(3);
+        const r = g.querySelector<SVGRectElement>('.gm-shape')!;
+        r.setAttribute('x', (-s.w / 2).toFixed(2));
+        r.setAttribute('y', (-s.h / 2).toFixed(2));
+        r.setAttribute('width', s.w.toFixed(2));
+        r.setAttribute('height', s.h.toFixed(2));
+        r.setAttribute('rx', s.rx.toFixed(2));
+        r.setAttribute('transform', `rotate(${s.rot.toFixed(1)})`);
+      });
+    }
+
+    function dress(shape: Shape) {
+      nodes.forEach((g, slot) => {
+        const n = shape.nodes.find((m) => m.s === slot);
+        const label = g.querySelector('.gm-label')!;
+        const harness = g.querySelector('.gm-harness')!;
+        label.textContent = n ? n.l : '';
+        harness.textContent = n?.h ?? '';
+        // A chip carries its label inside; every other kind labels below.
+        label.setAttribute('dy', n?.k === 'chip' ? '0.8' : '6.4');
+        g.dataset.kind = n ? n.k : '';
+        g.style.setProperty('--nc', n?.h ? colors[n.h] ?? 'var(--canopy)' : 'var(--ink-dim)');
+      });
+    }
+
+    function drawEdges(shape: Shape) {
+      edges.forEach((p, i) => {
+        const e = shape.edges[i];
+        if (!e) { p.classList.remove('on'); return; }
+        const a = st[e[0]];
+        const b = st[e[1]];
+        p.setAttribute('d', edgePath(a, b, e[2] === 'fail'));
+        p.classList.toggle('fail', e[2] === 'fail');
+        p.classList.add('on');
+      });
+    }
+
+    function hideEdges() { edges.forEach((p) => p.classList.remove('on')); }
+
+    function morph(to: Shape, done: () => void) {
+      const from = st.map((s) => ({ ...s }));
+      const tgt = target(to);
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = ease(Math.min(1, (now - t0) / MORPH));
+        st.forEach((s, i) => {
+          const a = from[i];
+          const b = tgt[i];
+          // Arriving slots grow from their target; leaving slots shrink in place.
+          const bx = b ? b.x : a.x;
+          const by = b ? b.y : a.y;
+          const ax = a.o > 0 ? a.x : bx;
+          const ay = a.o > 0 ? a.y : by;
+          s.x = lerp(ax, bx, t);
+          s.y = lerp(ay, by, t);
+          s.w = lerp(a.w, b ? b.w : 0, t);
+          s.h = lerp(a.h, b ? b.h : 0, t);
+          s.rx = lerp(a.rx, b ? b.rx : 0, t);
+          s.rot = lerp(a.rot, b ? b.rot : a.rot, t);
+          s.o = lerp(a.o, b ? 1 : 0, t);
+        });
+        paint();
+        if (t < 1) requestAnimationFrame(step);
+        else done();
+      };
+      requestAnimationFrame(step);
+    }
+
+    function walk(shape: Shape, done: () => void) {
+      const legs = shape.walk;
+      const per = Math.min(620, (HOLD - 600) / legs.length);
+      let k = 0;
+      const next = () => {
+        if (k >= legs.length) { token.style.opacity = '0'; done(); return; }
+        const [a, b, red] = legs[k++];
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', edgePath(st[a], st[b], red && shape.edges.some((e) => e[0] === a && e[1] === b && e[2] === 'fail')));
+        const len = path.getTotalLength();
+        token.classList.toggle('red', red);
+        token.style.opacity = '1';
+        const t0 = performance.now();
+        const step = (now: number) => {
+          const t = Math.min(1, (now - t0) / per);
+          const p = path.getPointAtLength(len * ease(t));
+          token.setAttribute('cx', p.x.toFixed(2));
+          token.setAttribute('cy', p.y.toFixed(2));
+          if (t < 1) requestAnimationFrame(step);
+          else {
+            const hit = nodes[b];
+            hit.classList.remove('hit', 'hit-red');
+            void hit.getBoundingClientRect();
+            hit.classList.add(red ? 'hit-red' : 'hit');
+            next();
+          }
+        };
+        requestAnimationFrame(step);
+      };
+      next();
+    }
+
+    let i = 0;
+    const show = (idx: number) => {
+      const shape = SHAPES[idx];
+      name.textContent = captions[idx]?.[0] ?? '';
+      line.textContent = captions[idx]?.[1] ?? '';
+      fig.classList.remove('caption-in');
+      void fig.offsetWidth;
+      fig.classList.add('caption-in');
+      dress(shape);
+      hideEdges();
+      morph(shape, () => {
+        drawEdges(shape);
+        setTimeout(() => walk(shape, () => setTimeout(() => show((i = (i + 1) % SHAPES.length)), 500)), 350);
+      });
+    };
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      const tgt = target(SHAPES[0]);
+      st.forEach((s, k) => Object.assign(s, tgt[k] ?? { o: 0, w: 0, h: 0 }));
+      dress(SHAPES[0]);
+      paint();
+      drawEdges(SHAPES[0]);
+      return;
+    }
+    // Start only when visible; pause work entirely while off-screen.
+    let started = false;
+    new IntersectionObserver((entries) => {
+      if (!started && entries.some((en) => en.isIntersecting)) { started = true; show(0); }
+    }).observe(fig);
+  }
+
+  document.querySelectorAll<HTMLElement>('figure.gm').forEach(mount);
+</script>
+
+<style>
+  .gm { margin: 0.25rem auto 0.5rem; width: 100%; }
+  .gm-svg { width: 100%; height: auto; overflow: visible; display: block; }
+  .gm-edge {
+    fill: none; stroke: color-mix(in srgb, var(--canopy) 70%, transparent);
+    stroke-width: 0.45; opacity: 0; transition: opacity 0.35s ease;
+  }
+  .gm-edge.on { opacity: 0.85; }
+  .gm-edge.fail { stroke: #ff6b6b; stroke-dasharray: 1.4 1.1; }
+  .gm-edge.fail.on { opacity: 0.7; }
+  .gm-node .gm-shape {
+    fill: color-mix(in srgb, var(--nc, var(--canopy)) 22%, #04110f);
+    stroke: var(--nc, var(--canopy)); stroke-width: 0.45;
+  }
+  .gm-node[data-kind='chip'] .gm-shape { fill: #0c1416; stroke: var(--ink-dim); }
+  .gm-node[data-kind='check'] .gm-shape,
+  .gm-node[data-kind='gate'] .gm-shape { fill: #0c1416; stroke: #e8f6f1; }
+  .gm-node[data-kind='commit'] .gm-shape { fill: color-mix(in srgb, var(--canopy) 35%, #04110f); stroke: var(--canopy); }
+  .gm-label { font: 2.3px var(--font-mono, monospace); fill: #e8f6f1; letter-spacing: 0.02em; }
+  .gm-harness { font: 1.9px var(--font-mono, monospace); fill: var(--nc); opacity: 0.9; }
+  .gm-token { fill: #cbfffc; filter: drop-shadow(0 0 1.2px #cbfffc); opacity: 0; transition: opacity 0.2s; }
+  .gm-token.red { fill: #ff6b6b; filter: drop-shadow(0 0 1.2px #ff6b6b); }
+  .gm-node.hit .gm-shape { animation: gm-hit 0.6s ease-out; }
+  .gm-node.hit-red .gm-shape { animation: gm-hit-red 0.6s ease-out; }
+  @keyframes gm-hit { 0% { stroke-width: 1.4; filter: drop-shadow(0 0 2px var(--nc, var(--canopy))); } 100% { stroke-width: 0.45; } }
+  @keyframes gm-hit-red { 0% { stroke: #ff6b6b; stroke-width: 1.4; } 100% { stroke-width: 0.45; } }
+  .gm-caption {
+    display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    margin-top: 0.8rem; font-size: 0.82rem; letter-spacing: 0.06em; text-align: center;
+  }
+  .gm-name { color: var(--canopy); text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.86rem; }
+  .gm-line { color: var(--ink-dim); letter-spacing: 0.02em; }
+  .gm.caption-in .gm-caption { animation: gm-cap 0.6s ease-out; }
+  @keyframes gm-cap { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+</style>
