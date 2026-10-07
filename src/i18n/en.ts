@@ -132,16 +132,16 @@ export const en = {
         artifact: 'specs carried all the way to a commit',
       },
       title:
-        'Canopy — a graph engine for AI coding agents',
+        'Multi-agent graph engine for AI coding agents — Canopy',
       description:
-        'Canopy runs AI coding agents as graphs: specs flow through agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
+        'An open-source graph engine for AI coding agents: specs walk agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
         'A Rust daemon and terminal UI with a <strong>graph engine</strong> at its core. Work enters as a spec and walks a graph you design: <strong>agent</strong> nodes on any harness, <strong>check</strong> nodes that run your real commands, <strong>ensembles</strong> that fan out to several models and keep a quorum, <strong>routers</strong> that pick the branch, and a <strong>resilience</strong> node that turns a quota death into a scheduled wake-up. Underneath: memory, scheduling and sync for every agent.',
       morph: [
         ['Gated implement', 'checks run your real commands — red routes the work back, never to you'],
         ['Ensemble · quorum', 'one spec, three models on three harnesses, two of three must agree'],
-        ['Cascade', 'when the first model fails, the next one takes the same spec'],
+        ['Cascade — one runs, the rest wait', 'the first member takes the spec; if it fails, the next takes it cold — the first to pass exits, the rest never run'],
         ['Router', 'one decision node sends each spec down the branch that fits'],
         ['Full pipeline', 'design, implement, gates, two reviews, commit — and a resilience branch for quota deaths'],
       ] as [string, string][],
@@ -154,7 +154,7 @@ export const en = {
       layer: {
         kicker: 'The graph engine',
         cols: [
-          ['Graphs, not prompts', 'Agent, check, gate and router nodes wired with pass, fail and error edges. A spec walks the graph from entry to commit; routing keys on real exit codes and verdicts, not on what a model claims.'],
+          ['Graphs, not prompts', 'Agent, check, gate and router nodes wired with pass, fail and always edges. A spec walks the graph from entry to commit; routing keys on real exit codes and verdicts, not on what a model claims.'],
           ['Ensembles across harnesses', 'Fan one step out to several models — parallel with a quorum, cascade to the next on failure, or round-robin across a crew — each member on whatever harness and model you pick.'],
           ['Failure is a route', 'Red gates send the work back with the output attached. A resilience node reads quota errors and schedules the graph to wake at the exact reset. Only a real verdict ever reaches you.'],
         ] as [string, string][],
@@ -172,18 +172,19 @@ export const en = {
       },
       builder: {
         kicker: 'Autonomous graph',
+        pattern: 'Pattern: Ensemble · quorum + Gated implement',
         title: 'It failed. It didn’t stop.',
         stat: ['0', 'times it stopped'] as [string, string],
         outro: 'Every node runs on the harness you pick, and the loop you just watched is the real engine doing its real job.',
         steps: [
-          ['One spec, top to bottom',
-            'Work enters as a spec — role, what, how. An implementer node picks it up on your harness and starts.'],
+          ['One spec, three drafts',
+            'Work enters as a spec — role, what, how. It fans out to three models on three harnesses, and a quorum keeps the consensus.'],
+          ['Implement from the consensus',
+            'An implementer node picks up the agreed plan on your harness and starts writing.'],
           ['It failed: cargo test, 2 red',
             'The check node runs your real commands. Red routes the token straight back to the implementer — it never comes to you.'],
           ['Green — and a second opinion',
             'The retry passes the gates. A different harness reviews the diff against the spec before anything moves.'],
-          ['Ensemble and resilience',
-            'The same spec fans out to three models; a quorum keeps the consensus. When an agent dies on quota, a clock schedules the graph to wake itself at the exact reset time.'],
           ['Committed. Pushed. Again.',
             'The branch is pushed and the run is remembered — the next spec is already walking the same graph.'],
         ] as [string, string][],
@@ -252,11 +253,11 @@ export const en = {
         ['What problem does TeXForge solve?',
           'Compiling LaTeX normally requires installing TeX Live (4+ GB), then separate tools for Mermaid, Graphviz, and D2 diagrams — each with its own setup. TeXForge is a single ~15 MB binary that handles everything: scaffolding, linting, formatting, diagrams, and compilation.'],
         ['Can AI agents use TeXForge to work with LaTeX?',
-          'Yes. An agent can run `texforge build` without installing anything — the LaTeX engine downloads on first use. Errors are concise (not 1000-line logs), and diagrams render inside `.tex` files without Node.js or external tools.'],
+          'Yes. An agent can run texforge build without installing anything — the LaTeX engine downloads on first use. Errors are concise (not 1000-line logs), and diagrams render inside .tex files without Node.js or external tools.'],
         ['Does TeXForge support Mermaid and D2 diagrams in LaTeX?',
-          'Yes. Write a Mermaid, Graphviz, or D2 block directly in your `.tex` file. TeXForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
+          'Yes. Write a Mermaid, Graphviz, or D2 block directly in your .tex file. TeXForge renders it to a figure at build time, in pure Rust, with no browser or Node.js required.'],
         ['How does spell-checking work in languages other than English?',
-          'The language comes from the document itself — `\\usepackage[spanish]{babel}` or `polyglossia` — and falls back to your configured default when nothing is declared. Spanish is checked against a Hunspell dictionary with affix rules, so `soluciones` is recognised from the stem `solución` without being stored as its own entry. Dictionaries download on first use into `~/.texforge/dicts/`.'],
+          'The language comes from the document itself — \\usepackage[spanish]{babel} or polyglossia — and falls back to your configured default when nothing is declared. Spanish is checked against a Hunspell dictionary with affix rules, so soluciones is recognised from the stem solución without being stored as its own entry. Dictionaries download on first use into ~/.texforge/dicts/.'],
       ] as [string, string][],
     },
     gitkit: {
@@ -269,9 +270,9 @@ export const en = {
         artifact: 'the same ritual everywhere',
       },
       title:
-        'Git hooks are underused. GitKit puts them to work.',
+        'Git hooks setup: conventional commits + secrets — GitKit',
       description:
-        'Hooks, .gitignore, .gitattributes and config in one guided, idempotent flow. Composable hooks that survive being reapplied. One binary, no Node, no Python.',
+        'Git hooks setup in one guided, idempotent flow: conventional commits, secret detection, .gitignore, .gitattributes and config. One binary, no Node, no Python.',
       koan: '// the ritual, automated',
       hero: {
         wizard: {
@@ -317,7 +318,7 @@ export const en = {
         ['What are GitKit "builds"?',
           'A build saves your git configuration (hooks, ignore, attributes, config) as a reusable template. Apply it to any future project with one command — no need to reconfigure hooks for every repo.'],
         ['How do I pause writes to a repository?',
-          'Run <code>gitkit lock</code> to block commits and pushes through the hooks gitkit already installs. The repository stays readable but unwritable until you run <code>gitkit unlock</code>. Useful when an autonomous agent needs to stop writing while you rebase, reinstall, or inspect the tree.'],
+          'Run gitkit lock to block commits and pushes through the hooks gitkit already installs. The repository stays readable but unwritable until you run gitkit unlock. Useful when an autonomous agent needs to stop writing while you rebase, reinstall, or inspect the tree.'],
       ] as [string, string][],
     },
     ghscaff: {
@@ -373,7 +374,7 @@ export const en = {
       },
       faq: [
         ['How does ghScaff set up a GitHub repository?',
-          'Run `ghscaff` — an interactive wizard that creates the repo, commits boilerplate (CI, README, license), sets branch protection, and enforces standard labels. One atomic commit, no manual steps.'],
+          'Run ghscaff — an interactive wizard that creates the repo, commits boilerplate (CI, README, license), sets branch protection, and enforces standard labels. One atomic commit, no manual steps.'],
         ['Why does ghScaff use an encrypted vault for tokens?',
           'Environment variables with tokens are easily exploitable — any process on your machine can read them. ghScaff encrypts tokens with XSalsa20-Poly1305, bound to your OS user and hostname. The vault prevents ghScaff from becoming an attack vector.'],
         ['How does ghScaff know which checks are required for branch protection?',
@@ -422,9 +423,9 @@ export const en = {
       },
       faq: [
         ['What is cadSpec for?',
-          'cadSpec is CAD as code for architects who need AI to help them draw. Declare geometry in TOML files, preview live in the browser, compile to bit-identical DXF. `git diff` works on drawings because the source is text.'],
+          'cadSpec is CAD as code for architects who need AI to help them draw. Declare geometry in TOML files, preview live in the browser, compile to bit-identical DXF. git diff works on drawings because the source is text.'],
         ['Can AI agents read and generate CAD drawings with cadSpec?',
-          'Yes. cadSpec\'s TOML format is plain text that any LLM can read. Run `cadspec schema` to teach the language; previews include bounding boxes so agents can see the drawing.'],
+          'Yes. cadSpec\'s TOML format is plain text that any LLM can read. Run cadspec schema to teach the language; previews include bounding boxes so agents can see the drawing.'],
       ] as [string, string][],
     },
     'astro-denoise': {
@@ -478,9 +479,9 @@ export const en = {
         artifact: 'disagreement you can see',
       },
       title:
-        'Planning poker where your votes reach no server — Quorum',
+        'Free planning poker online — no sign-up, no server — Quorum',
       description:
-        'Peers talk directly to each other over WebRTC. Nothing is stored, nothing is collected, no account exists to create. Share a room link and estimate together.',
+        'Free planning poker over WebRTC — peers talk directly, nothing is stored, no account to create. Share a room link and estimate together.',
       koan: '// the estimate is already in the room',
       lede:
         'Quorum is <strong>serverless planning poker</strong>: each person plays a card, votes reveal with an animation once everyone has voted, and the disagreement is where the useful conversation starts. It runs <strong>peer-to-peer</strong> over WebRTC — a shared room link is the whole app, no cloud, no account.',
@@ -556,7 +557,7 @@ export const en = {
         ['What is DemoStage?',
           'A tool for planning and recording multi-source demos — terminal, browser, and files in one scene. Not just screen recording: you configure typography, aspect ratio, fps, and terminal style. Output is optimized for web.'],
         ['Can I re-record a demo if something changes?',
-          'Yes. `demostage capture` records events, not video. If the UX changes, re-capture and the demo updates deterministically — no need to manually re-record the whole thing.'],
+          'Yes. demostage capture records events, not video. If the UX changes, re-capture and the demo updates deterministically — no need to manually re-record the whole thing.'],
         ['How is DemoStage different from asciinema?',
           'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif, mp4 or animated svg. The source is a versionable TOML file.'],
       ] as [string, string][],
