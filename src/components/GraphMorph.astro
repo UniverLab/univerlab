@@ -19,6 +19,12 @@ const SLOTS = 9;
     <g class="gm-edges">
       {Array.from({ length: 12 }, () => <path class="gm-edge" d="M50 31 L50 31" />)}
     </g>
+    <g class="gm-group">
+      <rect class="gm-group-box" x="0" y="0" width="0" height="0" rx="2" />
+      <text class="gm-group-label" text-anchor="start"></text>
+      <text class="gm-mark" text-anchor="start">✕ quota</text>
+      {Array.from({ length: 3 }, () => <text class="gm-ord" text-anchor="middle"></text>)}
+    </g>
     <circle class="gm-token" r="1.1" cx="-10" cy="-10" />
     <g class="gm-nodes">
       {Array.from({ length: SLOTS }, (_, i) => (
@@ -37,10 +43,16 @@ const SLOTS = 9;
 </figure>
 
 <script>
-  type Kind = 'chip' | 'agent' | 'check' | 'gate' | 'commit';
+  import { GEOM, edgePath, type Kind } from '../lib/canopy-graph';
+
   type N = { s: number; x: number; y: number; k: Kind; l: string; h?: string };
-  type E = [number, number, 'pass' | 'fail'];
-  type Shape = { nodes: N[]; edges: E[]; walk: [number, number, boolean][] };
+  // 'order' = the try-next-member sequence inside an ensemble group (not a route).
+  type E = [number, number, 'pass' | 'fail' | 'order'];
+  // An ensemble group: a labelled outline around its members, tried in `members` order.
+  type Group = { x: number; y: number; w: number; h: number; label: string; members: number[] };
+  type Leg = [number, number, boolean, ('red' | 'ok' | 'none')?];
+  // Edge/leg endpoints >= 100 are the shape's free points (`pts`), e.g. a group's exit.
+  type Shape = { nodes: N[]; edges: E[]; walk: Leg[]; group?: Group; pts?: { x: number; y: number }[] };
 
   // Slots: 0 spec · 1 main agent · 2 gate/check · 3 reviewer/third · 4 commit ·
   // 5,6 extra members · 7 designer · 8 resilience.
@@ -68,16 +80,20 @@ const SLOTS = 9;
       edges: [[0, 5, 'pass'], [0, 1, 'pass'], [0, 6, 'pass'], [5, 2, 'pass'], [1, 2, 'pass'], [6, 2, 'pass'], [2, 4, 'pass']],
       walk: [[0, 5, false], [5, 2, false], [0, 1, false], [1, 2, false], [0, 6, false], [6, 2, true], [2, 4, false]],
     },
-    { // cascade fallback
+    { // cascade: standby alternatives — #1 runs; on failure #2 takes the spec cold; #3 never runs
       nodes: [
-        { s: 0, x: 7, y: 16, k: 'chip', l: 'spec' },
-        { s: 1, x: 30, y: 16, k: 'agent', l: 'first', h: 'kiro' },
-        { s: 2, x: 48, y: 33, k: 'agent', l: 'fallback', h: 'mimo' },
-        { s: 3, x: 66, y: 50, k: 'agent', l: 'last resort', h: 'qwen' },
-        { s: 4, x: 91, y: 16, k: 'commit', l: 'commit' },
+        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
+        { s: 1, x: 47, y: 13, k: 'agent', l: 'first', h: 'kiro' },
+        { s: 2, x: 47, y: 31, k: 'agent', l: 'fallback', h: 'mimo' },
+        { s: 3, x: 47, y: 49, k: 'agent', l: 'last resort', h: 'qwen' },
+        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
       ],
-      edges: [[0, 1, 'pass'], [1, 2, 'fail'], [2, 3, 'fail'], [1, 4, 'pass'], [2, 4, 'pass'], [3, 4, 'pass']],
-      walk: [[0, 1, false], [1, 2, true], [2, 4, false]],
+      // Entry only to #1; a single exit leaves the group (point 100, its right edge).
+      edges: [[0, 1, 'pass'], [1, 2, 'order'], [2, 3, 'order'], [100, 4, 'pass']],
+      // [from, to, red token, impact on arrival]
+      walk: [[0, 1, false, 'red'], [1, 2, false, 'ok'], [2, 100, false, 'none'], [100, 4, false, 'ok']],
+      group: { x: 31, y: 2, w: 32, h: 58, label: 'cascade', members: [1, 2, 3] },
+      pts: [{ x: 63, y: 31 }],
     },
     { // router
       nodes: [
@@ -106,34 +122,10 @@ const SLOTS = 9;
     },
   ];
 
-  // Geometry of each node kind, as an interpolatable rect.
-  const GEOM: Record<Kind, { w: number; h: number; rx: number; rot: number }> = {
-    chip: { w: 10, h: 5.2, rx: 1, rot: 0 },
-    agent: { w: 6, h: 6, rx: 3, rot: 0 },
-    check: { w: 5.6, h: 5.6, rx: 0.7, rot: 0 },
-    gate: { w: 5, h: 5, rx: 0.5, rot: 45 },
-    commit: { w: 6.4, h: 6.4, rx: 3.2, rot: 0 },
-  };
-
   const HOLD = 5200;
   const MORPH = 1100;
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
   const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
-  function edgePath(a: { x: number; y: number }, b: { x: number; y: number }, fail: boolean): string {
-    if (!fail) {
-      const mx = (a.x + b.x) / 2;
-      return `M${a.x} ${a.y} C${mx} ${a.y} ${mx} ${b.y} ${b.x} ${b.y}`;
-    }
-    // A failure that drops to another row is a plain curve; one that routes
-    // back along the same row arcs ABOVE the pair — labels sit below nodes.
-    if (Math.abs(b.y - a.y) > 6) {
-      const mx = (a.x + b.x) / 2;
-      return `M${a.x} ${a.y} C${mx} ${a.y} ${mx} ${b.y} ${b.x} ${b.y}`;
-    }
-    const rise = Math.min(a.y, b.y) - 8 - Math.abs(a.x - b.x) * 0.1;
-    return `M${a.x} ${a.y - 3} C${a.x} ${rise} ${b.x} ${rise} ${b.x} ${b.y - 3}`;
-  }
 
   function mount(fig: HTMLElement) {
     const colors: Record<string, string> = JSON.parse(fig.dataset.colors || '{}');
@@ -143,9 +135,16 @@ const SLOTS = 9;
     const token = fig.querySelector<SVGCircleElement>('.gm-token')!;
     const name = fig.querySelector<HTMLElement>('.gm-name')!;
     const line = fig.querySelector<HTMLElement>('.gm-line')!;
+    const groupEl = fig.querySelector<SVGGElement>('.gm-group')!;
+    const box = groupEl.querySelector<SVGRectElement>('.gm-group-box')!;
+    const glabel = groupEl.querySelector<SVGTextElement>('.gm-group-label')!;
+    const mark = groupEl.querySelector<SVGTextElement>('.gm-mark')!;
+    const ords = Array.from(groupEl.querySelectorAll<SVGTextElement>('.gm-ord'));
 
     // Per-slot animated state.
     const st = nodes.map(() => ({ x: 50, y: 31, w: 0, h: 0, rx: 0, rot: 0, o: 0 }));
+
+    const pos = (shape: Shape, i: number) => (i >= 100 ? shape.pts![i - 100] : st[i]);
 
     const target = (shape: Shape) =>
       nodes.map((_, slot) => {
@@ -179,6 +178,8 @@ const SLOTS = 9;
         // A chip carries its label inside; every other kind labels below.
         label.setAttribute('dy', n?.k === 'chip' ? '0.8' : '6.4');
         g.dataset.kind = n ? n.k : '';
+        // Group members after the first wait on standby: dimmed, never run.
+        g.classList.toggle('standby', !!n && !!shape.group && shape.group.members.indexOf(slot) > 0 && !shape.walk.some((w) => w[1] === slot));
         g.style.setProperty('--nc', n?.h ? colors[n.h] ?? 'var(--canopy)' : 'var(--ink-dim)');
       });
     }
@@ -187,15 +188,46 @@ const SLOTS = 9;
       edges.forEach((p, i) => {
         const e = shape.edges[i];
         if (!e) { p.classList.remove('on'); return; }
-        const a = st[e[0]];
-        const b = st[e[1]];
+        const a = pos(shape, e[0]);
+        const b = pos(shape, e[1]);
         p.setAttribute('d', edgePath(a, b, e[2] === 'fail'));
         p.classList.toggle('fail', e[2] === 'fail');
+        p.classList.toggle('order', e[2] === 'order');
         p.classList.add('on');
       });
     }
 
-    function hideEdges() { edges.forEach((p) => p.classList.remove('on')); }
+    function showMark(shape: Shape, slot: number) {
+      const m = shape.nodes.find((n) => n.s === slot)!;
+      mark.setAttribute('x', String(m.x + 4.6));
+      mark.setAttribute('y', String(m.y + 0.7));
+      mark.classList.add('on');
+    }
+
+    function hideEdges() {
+      mark.classList.remove('on');
+      edges.forEach((p) => p.classList.remove('on'));
+      groupEl.classList.remove('on');
+    }
+
+    // The ensemble outline, its label and the 1→2→3 ordinals over the members.
+    function drawGroup(shape: Shape) {
+      const g = shape.group;
+      if (!g) { groupEl.classList.remove('on'); return; }
+      box.setAttribute('x', String(g.x));
+      box.setAttribute('y', String(g.y));
+      box.setAttribute('width', String(g.w));
+      box.setAttribute('height', String(g.h));
+      glabel.setAttribute('x', String(g.x + 2));
+      glabel.setAttribute('y', String(g.y + 3.6));
+      glabel.textContent = g.label;
+      ords.forEach((t, k) => {
+        const m = g.members[k] === undefined ? undefined : shape.nodes.find((n) => n.s === g.members[k]);
+        t.textContent = m ? String(k + 1) : '';
+        if (m) { t.setAttribute('x', String(m.x - 9)); t.setAttribute('y', String(m.y + 0.8)); }
+      });
+      groupEl.classList.add('on');
+    }
 
     function morph(to: Shape, done: () => void) {
       const from = st.map((s) => ({ ...s }));
@@ -232,9 +264,9 @@ const SLOTS = 9;
       let k = 0;
       const next = () => {
         if (k >= legs.length) { token.style.opacity = '0'; done(); return; }
-        const [a, b, red] = legs[k++];
+        const [a, b, red, impact] = legs[k++];
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', edgePath(st[a], st[b], red && shape.edges.some((e) => e[0] === a && e[1] === b && e[2] === 'fail')));
+        path.setAttribute('d', edgePath(pos(shape, a), pos(shape, b), red && shape.edges.some((e) => e[0] === a && e[1] === b && e[2] === 'fail')));
         const len = path.getTotalLength();
         token.classList.toggle('red', red);
         token.style.opacity = '1';
@@ -247,9 +279,14 @@ const SLOTS = 9;
           if (t < 1) requestAnimationFrame(step);
           else {
             const hit = nodes[b];
-            hit.classList.remove('hit', 'hit-red');
-            void hit.getBoundingClientRect();
-            hit.classList.add(red ? 'hit-red' : 'hit');
+            const kind = impact ?? (red ? 'red' : 'ok');
+            if (hit && kind !== 'none') {
+              hit.classList.remove('hit', 'hit-red');
+              void hit.getBoundingClientRect();
+              hit.classList.add(kind === 'red' ? 'hit-red' : 'hit');
+              // A member that fails on quota says so, briefly.
+              if (kind === 'red' && shape.group?.members.includes(b)) showMark(shape, b);
+            }
             next();
           }
         };
@@ -270,6 +307,7 @@ const SLOTS = 9;
       hideEdges();
       morph(shape, () => {
         drawEdges(shape);
+        drawGroup(shape);
         setTimeout(() => walk(shape, () => setTimeout(() => show((i = (i + 1) % SHAPES.length)), 500)), 350);
       });
     };
@@ -303,6 +341,19 @@ const SLOTS = 9;
   .gm-edge.on { opacity: 0.85; }
   .gm-edge.fail { stroke: #ff6b6b; stroke-dasharray: 1.4 1.1; }
   .gm-edge.fail.on { opacity: 0.7; }
+  .gm-edge.order { stroke: var(--ink-dim); stroke-dasharray: 0.5 1.1; stroke-linecap: round; }
+  .gm-edge.order.on { opacity: 0.9; }
+  .gm-group { opacity: 0; transition: opacity 0.35s ease; }
+  .gm-group.on { opacity: 1; }
+  .gm-group-box {
+    fill: color-mix(in srgb, var(--canopy) 5%, transparent);
+    stroke: var(--canopy); stroke-width: 0.3; stroke-dasharray: 1.2 0.9; opacity: 0.75;
+  }
+  .gm-group-label { font: 1.9px var(--font-mono, monospace); fill: var(--canopy); letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.9; }
+  .gm-mark { font: 1.9px var(--font-mono, monospace); fill: #ff6b6b; opacity: 0; transition: opacity 0.2s; }
+  .gm-mark.on { opacity: 1; }
+  .gm-node.standby > * { opacity: 0.38; }
+  .gm-ord { font: 2.1px var(--font-mono, monospace); fill: var(--ink-dim); }
   .gm-node .gm-shape {
     fill: color-mix(in srgb, var(--nc, var(--canopy)) 22%, #04110f);
     stroke: var(--nc, var(--canopy)); stroke-width: 0.45;

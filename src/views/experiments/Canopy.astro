@@ -5,6 +5,7 @@ import { byId } from '../../lib/experiments';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import GraphMorph from '../../components/GraphMorph.astro';
+import { GEOM, PALETTE, TYPE, edgePath, type Kind } from '../../lib/canopy-graph';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -35,64 +36,91 @@ if (existsSync(platformsDir)) {
   }
 }
 
-// One spec survives the graph: a single 18s autonomous loop — spec →
-// implement → gates RED (bounce back) → implement → gates GREEN (latches) →
-// review → ensemble fan-out (3 proposers + quorum) → resilience (quota death
-// + clock wake) → review → commit (aurora badge) → 2s hold → restart.
-// Harness accents come from the registry read above.
+// One spec survives the graph: a single 18s autonomous loop drawn like the
+// hero's "Full pipeline" — spec → draft ensemble (3 proposers) → quorum →
+// implement → gates RED (fail edge back to implement) → implement → gates GREEN
+// → review → commit (aurora badge) → hold → restart. Harness accents come from
+// the registry read above; geometry, curves and colours from canopy-graph.ts,
+// the same module the hero uses.
 const hue = (id: string, fallback: string) =>
   platformEntries.find((p) => p.name === id || p.stem === id)?.color ?? fallback;
 
 const NEUTRAL = 'var(--ink-dim)';
-const gbNodes = [
-  { id: 'spec', kind: 'chip', x: 6, y: 32, label: 'spec', harness: '', color: NEUTRAL, flash: 0.50 },
-  { id: 'p1', kind: 'agent', x: 17, y: 12, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3'), flash: 0.57 },
-  { id: 'p2', kind: 'agent', x: 17, y: 32, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4'), flash: 0.56 },
-  { id: 'p3', kind: 'agent', x: 17, y: 52, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa'), flash: 0.58 },
-  { id: 'quorum', kind: 'gate', x: 28, y: 32, label: 'quorum', harness: '', color: NEUTRAL, flash: 0.655 },
-  { id: 'implement', kind: 'agent', x: 43, y: 32, label: 'implement', harness: 'claude', color: hue('claude', '#d97757'), flash: 0.07 },
-  { id: 'gates', kind: 'check', x: 57, y: 12, label: 'gates', harness: 'sh', color: NEUTRAL, flash: 0.20 },
-  { id: 'resilience', kind: 'agent', x: 57, y: 52, label: 'resilience', harness: 'mimo', color: hue('mimo', '#fb8147'), flash: 0.80 },
-  { id: 'review', kind: 'agent', x: 72, y: 32, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5'), flash: 0.47 },
-  { id: 'commit', kind: 'commit', x: 89, y: 32, label: '', harness: '', color: NEUTRAL, flash: 0.87 },
+const gbNodes: { id: string; kind: Kind; x: number; y: number; label: string; harness: string; color: string }[] = [
+  { id: 'spec', kind: 'chip', x: 7, y: 31, label: 'spec', harness: '', color: NEUTRAL },
+  { id: 'p1', kind: 'agent', x: 18, y: 11, label: 'propose', harness: 'codex', color: hue('codex', '#57c7c3') },
+  { id: 'p2', kind: 'agent', x: 18, y: 31, label: 'propose', harness: 'gemini', color: hue('gemini', '#c09ee4') },
+  { id: 'p3', kind: 'agent', x: 18, y: 51, label: 'propose', harness: 'copilot', color: hue('copilot', '#aa00aa') },
+  { id: 'quorum', kind: 'gate', x: 33, y: 31, label: 'quorum', harness: '', color: NEUTRAL },
+  { id: 'implement', kind: 'agent', x: 47, y: 31, label: 'implement', harness: 'claude', color: hue('claude', '#d97757') },
+  { id: 'gates', kind: 'check', x: 61, y: 31, label: 'gates', harness: '', color: NEUTRAL },
+  { id: 'review', kind: 'agent', x: 75, y: 31, label: 'review', harness: 'opencode', color: hue('opencode', '#5c9cf5') },
+  { id: 'commit', kind: 'commit', x: 91, y: 31, label: 'commit', harness: '', color: NEUTRAL },
 ];
-const gbEdges = [
-  { from: 'spec', to: 'implement', cond: 'pass' },
-  { from: 'implement', to: 'gates', cond: 'pass' },
-  { from: 'gates', to: 'implement', cond: 'fail' },
-  { from: 'gates', to: 'review', cond: 'pass' },
-  { from: 'review', to: 'implement', cond: 'fail' },
-  { from: 'implement', to: 'resilience', cond: 'fail' },
-  { from: 'resilience', to: 'implement', cond: 'pass' },
-  { from: 'spec', to: 'p1', cond: 'pass' },
-  { from: 'spec', to: 'p2', cond: 'pass' },
-  { from: 'spec', to: 'p3', cond: 'pass' },
-  { from: 'p1', to: 'quorum', cond: 'pass' },
-  { from: 'p2', to: 'quorum', cond: 'pass' },
-  { from: 'p3', to: 'quorum', cond: 'pass' },
-  { from: 'quorum', to: 'implement', cond: 'pass' },
-  { from: 'review', to: 'commit', cond: 'pass' },
+// Edge conditions are the engine's: pass, fail (always exists too, unused here).
+// A node has one outgoing pass; the fan-out from spec is the ensemble's members.
+// `lift` raises a same-row fail arc so the two back-edges into implement stay apart.
+const gbEdges: { from: string; to: string; cond: 'pass' | 'fail'; lift: number }[] = [
+  { from: 'spec', to: 'p1', cond: 'pass', lift: 0 },
+  { from: 'spec', to: 'p2', cond: 'pass', lift: 0 },
+  { from: 'spec', to: 'p3', cond: 'pass', lift: 0 },
+  { from: 'p1', to: 'quorum', cond: 'pass', lift: 0 },
+  { from: 'p2', to: 'quorum', cond: 'pass', lift: 0 },
+  { from: 'p3', to: 'quorum', cond: 'pass', lift: 0 },
+  { from: 'quorum', to: 'implement', cond: 'pass', lift: 0 },
+  { from: 'implement', to: 'gates', cond: 'pass', lift: 0 },
+  { from: 'gates', to: 'review', cond: 'pass', lift: 0 },
+  { from: 'review', to: 'commit', cond: 'pass', lift: 0 },
+  { from: 'gates', to: 'implement', cond: 'fail', lift: 0 },
+  { from: 'review', to: 'implement', cond: 'fail', lift: 7 },
 ];
 const gbNode = (id: string) => gbNodes.find((n) => n.id === id)!;
-// Loop schedule (fractions of the 18s cycle; arrive = depart + 0.06). Red legs:
-// the gates bounce-back and the implement → resilience quota death.
-const gbPulses = [
-  { from: 'spec', to: 'implement', t0: 0.01, red: false },
-  { from: 'implement', to: 'gates', t0: 0.14, red: false },
-  { from: 'gates', to: 'implement', t0: 0.21, red: true },
+const gbPath = (from: string, to: string) => {
+  const e = gbEdges.find((x) => x.from === from && x.to === to)!;
+  return edgePath(gbNode(from), gbNode(to), e.cond === 'fail', e.lift);
+};
+// Loop schedule (fractions of the 18s cycle). A hop takes HOP of the loop
+// (~0.6s, the hero's token). Caption beats: 0-.20 drafts · .20-.38 implement ·
+// .38-.62 red then green · .62-.82 review · .82-1 commit.
+const HOP = 0.034;
+const gbPulses: { from: string; to: string; t0: number; red: boolean }[] = [
+  { from: 'spec', to: 'p1', t0: 0.03, red: false },
+  { from: 'spec', to: 'p2', t0: 0.035, red: false },
+  { from: 'spec', to: 'p3', t0: 0.04, red: false },
+  { from: 'p1', to: 'quorum', t0: 0.11, red: false },
+  { from: 'p2', to: 'quorum', t0: 0.115, red: false },
+  { from: 'p3', to: 'quorum', t0: 0.12, red: false },
+  { from: 'quorum', to: 'implement', t0: 0.22, red: false },
   { from: 'implement', to: 'gates', t0: 0.31, red: false },
-  { from: 'gates', to: 'review', t0: 0.41, red: false },
-  { from: 'spec', to: 'p2', t0: 0.50, red: false },
-  { from: 'spec', to: 'p1', t0: 0.51, red: false },
-  { from: 'spec', to: 'p3', t0: 0.52, red: false },
-  { from: 'p1', to: 'quorum', t0: 0.59, red: false },
-  { from: 'p2', to: 'quorum', t0: 0.595, red: false },
-  { from: 'p3', to: 'quorum', t0: 0.60, red: false },
-  { from: 'quorum', to: 'implement', t0: 0.67, red: false },
-  { from: 'implement', to: 'resilience', t0: 0.74, red: true },
-  { from: 'resilience', to: 'implement', t0: 0.775, red: false },
-  { from: 'review', to: 'commit', t0: 0.84, red: false },
+  { from: 'gates', to: 'implement', t0: 0.4, red: true },
+  { from: 'implement', to: 'gates', t0: 0.52, red: false },
+  { from: 'gates', to: 'review', t0: 0.64, red: false },
+  { from: 'review', to: 'commit', t0: 0.8, red: false },
 ];
+// Impact = the node's own stroke pulses when a token lands (red stroke on a
+// fail), as the hero does. One keyframe set per node, from its arrival times.
+const HIT = 0.033;
+const hitCss = (() => {
+  const pct = (f: number) => +(f * 100).toFixed(2);
+  const rules: string[] = [];
+  const frames: string[] = [];
+  for (const n of gbNodes) {
+    const hits = gbPulses.filter((p) => p.to === n.id).map((p) => ({ at: p.t0 + HOP, red: p.red })).sort((a, b) => a.at - b.at);
+    if (!hits.length) continue;
+    // Every keyframe states stroke, width and filter: a property missing from
+    // a keyframe is interpolated across the gap, which would smear the glow.
+    const base = n.kind === 'chip' ? 'var(--ink-dim)' : n.kind === 'check' || n.kind === 'gate' ? 'var(--c-gate-stroke)' : n.kind === 'commit' ? 'var(--canopy)' : 'var(--nc)';
+    const rest = `stroke:${base};stroke-width:.45;filter:none`;
+    const kf = hits.map((h) =>
+      `${(pct(h.at) - 0.01).toFixed(2)}%{${rest}}` +
+      `${pct(h.at)}%{stroke:${h.red ? PALETTE.red : base};stroke-width:1.4;filter:drop-shadow(0 0 2px ${h.red ? PALETTE.red : 'var(--nc)'})}` +
+      `${pct(h.at + HIT)}%{${rest}}`
+    ).join('');
+    frames.push(`@keyframes ag-hit-${n.id}{${kf}}`);
+    rules.push(`.ag-n-${n.id} .ag-shape{animation:ag-hit-${n.id} var(--loop) ease-out infinite}`);
+  }
+  return `@media (prefers-reduced-motion: no-preference){${frames.join('')}${rules.join('')}}`;
+})();
 // Hero morph accents: harness colours from the registry, plus model families
 // that ride on a harness (deepseek, muse, mimo, qwen) with fixed fallbacks.
 const morphColors: Record<string, string> = {
@@ -151,8 +179,16 @@ const morphColors: Record<string, string> = {
        color from the registry. -->
   <section class="wrap section auto-graph">
     <span class="label">{e.builder.kicker}</span>
+    <span class="label ag-pattern">{e.builder.pattern}</span>
     <div class="ag-stage">
-      <svg class="ag-svg" viewBox="0 0 100 64" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <style is:inline set:html={hitCss}></style>
+      <svg
+        class="ag-svg"
+        viewBox="0 0 100 62"
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+        style={`--c-chip:${PALETTE.chipFill}; --c-gate:${PALETTE.gateFill}; --c-gate-stroke:${PALETTE.gateStroke}; --c-label:${PALETTE.label}; --c-deep:${PALETTE.deep}; --c-red:${PALETTE.red}; --c-token:${PALETTE.token}; --t-label:${TYPE.label}px; --t-harness:${TYPE.harness}px`}
+      >
         <defs>
           <linearGradient id="ag-aurora" x1="0" x2="1">
             <stop offset="0" stop-color="rgb(203,255,252)" />
@@ -161,64 +197,46 @@ const morphColors: Record<string, string> = {
             <stop offset=".8896" stop-color="rgb(250,209,255)" />
           </linearGradient>
         </defs>
-        {gbEdges.map((edge) => {
-          const a = gbNode(edge.from);
-          const b = gbNode(edge.to);
-          return edge.cond === 'fail' ? (
-            <line
-              class="ag-edge ag-edge-fail"
-              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-            />
-          ) : (
-            <line
-              class="ag-edge ag-edge-pass"
-              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-            />
-          );
-        })}
-        {gbPulses.map((p) => {
-          const a = gbNode(p.from);
-          const b = gbNode(p.to);
-          return (
+        {gbEdges.map((edge) => (
+          <path class={`ag-edge ag-edge-${edge.cond}`} d={gbPath(edge.from, edge.to)} />
+        ))}
+        <g class="ag-pulses">
+          {gbPulses.map((p) => (
             <circle
               class={p.red ? 'ag-pulse ag-pulse-red' : 'ag-pulse'}
-              r="0.9"
-              style={`--x1:${a.x}px; --y1:${a.y}px; --x2:${b.x}px; --y2:${b.y}px; --t0:${p.t0}`}
+              r="1.1"
+              cx="0" cy="0"
+              style={`offset-path: path('${gbPath(p.from, p.to)}'); offset-rotate: 0deg; --t0:${p.t0}`}
             />
+          ))}
+        </g>
+        {gbNodes.map((n) => {
+          const g = GEOM[n.kind];
+          return (
+            <g
+              class={`ag-node ag-n-${n.id} ag-${n.kind}`}
+              style={`--nc:${n.color}`}
+              transform={`translate(${n.x}, ${n.y})`}
+            >
+              <rect
+                class="ag-shape"
+                x={-g.w / 2} y={-g.h / 2} width={g.w} height={g.h} rx={g.rx}
+                transform={g.rot ? `rotate(${g.rot})` : undefined}
+              />
+              {n.kind === 'commit' && <path class="ag-commitcheck" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
+              <text class="ag-label" dy={n.kind === 'chip' ? TYPE.chipLabelDy : TYPE.labelDy} text-anchor="middle">{n.label}</text>
+              {n.harness && <text class="ag-harness" dy={TYPE.harnessDy} text-anchor="middle">{n.harness}</text>}
+              {n.kind === 'commit' && (
+                <g class="ag-badge">
+                  <rect x="-8" y="9.6" width="16" height="4.4" rx="1" />
+                  <text dy="12.7" text-anchor="middle">⇡ pushed</text>
+                </g>
+              )}
+            </g>
           );
         })}
-        {gbNodes.map((n) => (
-          <g
-            class={`ag-node ag-${n.kind}`}
-            style={`--nc:${n.color}`}
-            transform={`translate(${n.x}, ${n.y})`}
-          >
-            {n.kind === 'chip' && <rect x="-4.5" y="-2.6" width="9" height="5.2" rx="1" class="ag-shape" />}
-            {n.kind === 'agent' && <circle r="3" class="ag-shape" />}
-            {n.kind === 'check' && <rect x="-2.7" y="-2.7" width="5.4" height="5.4" rx="0.6" class="ag-shape ag-gateshape" />}
-            {n.kind === 'check' && <path class="ag-gatecheck" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
-            {n.kind === 'gate' && <rect x="-2.5" y="-2.5" width="5" height="5" rx="0.5" class="ag-shape ag-diamond" />}
-            {n.kind === 'commit' && <circle r="3" class="ag-shape ag-commitshape" />}
-            {n.kind === 'commit' && <path class="ag-check" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
-            {n.kind === 'commit' && (
-              <g class="ag-badge">
-                <rect x="-8" y="6.6" width="16" height="4.4" rx="1" />
-                <text dy="9.7" text-anchor="middle">⇡ pushed</text>
-              </g>
-            )}
-            {n.kind !== 'commit' && <text class="ag-label" dy={n.kind === 'chip' ? 1 : 5.8} text-anchor="middle">{n.label}</text>}
-            {n.harness && <text class="ag-harness" dy="8.4" text-anchor="middle">{n.harness}</text>}
-            <circle class="ag-hit" r="4.4" style={`--t0:${n.flash}`} />
-          </g>
-        ))}
         <g class="ag-redmark">
-          <text x="57" y="5.5" text-anchor="middle">✕ cargo test</text>
-        </g>
-        <g class="ag-clock">
-          <circle cx="63" cy="47" r="1.6" class="ag-clockface" />
-          <line x1="63" y1="47" x2="63" y2="45.8" class="ag-hand" />
-          <line x1="63" y1="47" x2="63.9" y2="47.4" class="ag-hand" />
-          <text x="60" y="55.8" text-anchor="middle" class="ag-quota">✕</text>
+          <text x="61" y="43" text-anchor="middle">✕ cargo test</text>
         </g>
       </svg>
       <div class="ag-caption">
@@ -361,6 +379,7 @@ const morphColors: Record<string, string> = {
      so prefers-reduced-motion renders a finished run with no animation
      declared. Only opacity/transform/stroke animate — no layout shift. */
   .auto-graph { --loop: 18s; padding-block: 2rem 3rem; }
+  .ag-pattern { display: block; margin-top: 0.35rem; color: var(--canopy); opacity: 0.85; }
   .ag-stage {
     display: flex; align-items: flex-start; justify-content: center; gap: 4rem;
     margin-top: 1.6rem;
@@ -382,126 +401,102 @@ const morphColors: Record<string, string> = {
   .ag-step p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
   .ag-outro { margin: 1.4rem 0 0; color: var(--ink-faint); font-size: 0.88rem; line-height: 1.6; }
 
-  /* Nodes */
+  /* Nodes — the hero's vocabulary (GraphMorph.astro, same palette/sizes from
+     canopy-graph.ts): agents take their harness colour, spec is a dark chip,
+     check and quorum are black with a pale stroke, commit is filled teal. */
   .ag-shape {
-    fill: color-mix(in srgb, var(--nc) 12%, var(--bg));
-    stroke: var(--nc); stroke-width: 0.4;
+    fill: color-mix(in srgb, var(--nc) 22%, var(--c-deep));
+    stroke: var(--nc); stroke-width: 0.45;
   }
-  .ag-diamond { rotate: 45deg; }
-  .ag-label { font-family: var(--font-mono); font-size: 2.7px; fill: var(--ink); }
-  .ag-chip .ag-label { fill: var(--ink-dim); }
-  .ag-harness { font-family: var(--font-mono); font-size: 2.2px; fill: var(--nc); letter-spacing: 0.02em; }
+  .ag-chip .ag-shape { fill: var(--c-chip); stroke: var(--ink-dim); }
+  .ag-check .ag-shape, .ag-gate .ag-shape { fill: var(--c-gate); stroke: var(--c-gate-stroke); }
+  .ag-commit .ag-shape { fill: color-mix(in srgb, var(--canopy) 35%, var(--c-deep)); stroke: var(--canopy); }
+  .ag-label { font-family: var(--font-mono); font-size: var(--t-label); fill: var(--c-label); letter-spacing: 0.02em; }
+  .ag-harness { font-family: var(--font-mono); font-size: var(--t-harness); fill: var(--nc); opacity: 0.9; }
 
-  /* Edges — pass routes in essence, failures in red dashes, both always lit */
-  .ag-edge { stroke-width: 0.35; }
-  .ag-edge-pass { stroke: color-mix(in srgb, var(--canopy) 65%, var(--line)); }
+  /* Edges — the hero's curves: pass routes glow essence, failures in the
+     hero's red dashes. Paths need fill: none. */
+  .ag-edge { fill: none; stroke-width: 0.45; }
+  .ag-edge-pass { stroke: color-mix(in srgb, var(--canopy) 70%, transparent); opacity: 0.85; }
   .ag-edge-fail {
-    stroke: color-mix(in srgb, #e0605a 55%, var(--line));
-    stroke-dasharray: 1.3 1; opacity: 0.55;
+    stroke: var(--c-red);
+    stroke-dasharray: 1.4 1.1;
+    opacity: 0.7;
   }
 
-  /* Arrival flashes (base: hidden) */
-  .ag-hit { fill: none; stroke: var(--canopy); stroke-width: 0.4; opacity: 0; }
-
-  /* Travelling tokens (base: hidden) */
-  .ag-pulse { fill: var(--canopy); opacity: 0; }
-  .ag-pulse-red { fill: #e0605a; }
+  /* Travelling tokens — the hero's pale-cyan token with its halo, riding the
+     same bezier the edge draws (offset-path). Browsers without offset-path
+     support drop the pulses, never misplace them. */
+  .ag-pulse { fill: var(--c-token); filter: drop-shadow(0 0 1.2px var(--c-token)); opacity: 0; }
+  .ag-pulse-red { fill: var(--c-red); filter: drop-shadow(0 0 1.2px var(--c-red)); }
 
   /* Latched END states (base = committed graph) */
-  .ag-gateshape { stroke: var(--canopy); fill: color-mix(in srgb, var(--canopy) 12%, var(--bg)); }
-  .ag-gatecheck { fill: none; stroke: var(--canopy); stroke-width: 0.5; opacity: 1; }
-  .ag-commitshape { stroke: var(--canopy); fill: color-mix(in srgb, var(--canopy) 12%, var(--bg)); }
-  .ag-check { fill: none; stroke: var(--canopy); stroke-width: 0.5; opacity: 1; }
+  .ag-commitcheck { fill: none; stroke: var(--canopy); stroke-width: 0.5; opacity: 1; }
   .ag-badge rect { fill: url(#ag-aurora); }
   .ag-badge text { font-family: var(--font-mono); font-size: 2.2px; fill: #222222; }
   .ag-badge { opacity: 1; }
   .ag-redmark { opacity: 0; }
-  .ag-redmark text { font-family: var(--font-mono); font-size: 2.2px; fill: color-mix(in srgb, #e0605a 75%, var(--ink)); }
-  .ag-clock { opacity: 0; }
-  .ag-clockface { fill: color-mix(in srgb, var(--nc, var(--ink-dim)) 12%, var(--bg)); stroke: var(--ink-dim); stroke-width: 0.3; }
-  .ag-hand { stroke: var(--ink-dim); stroke-width: 0.3; }
-  .ag-quota { font-family: var(--font-mono); font-size: 3px; fill: color-mix(in srgb, #e0605a 75%, var(--ink)); }
+  .ag-redmark text { font-family: var(--font-mono); font-size: 2.2px; fill: var(--c-red); }
 
   /* Beat captions: base = END frame (beat 5 visible, rest hidden) */
   .ag-beat { opacity: 0; }
   .ag-beat-5 { opacity: 1; }
 
+  /* Token hop: the hero's cubic ease over ~0.6s (HOP in the frontmatter). */
   @keyframes ag-leg {
-    0%   { transform: translate(var(--x1), var(--y1)); opacity: 0; }
-    0.8% { opacity: 0.95; }
-    5.2% { transform: translate(var(--x2), var(--y2)); opacity: 0.95; }
-    6%   { transform: translate(var(--x2), var(--y2)); opacity: 0; }
-    100% { transform: translate(var(--x2), var(--y2)); opacity: 0; }
+    0%    { offset-distance: 0%; opacity: 0; }
+    0.2%  { offset-distance: 0%; opacity: 0.95; }
+    3.4%  { offset-distance: 100%; opacity: 0.95; }
+    3.7%  { offset-distance: 100%; opacity: 0; }
+    100%  { offset-distance: 100%; opacity: 0; }
   }
-  @keyframes ag-flash {
-    0%   { opacity: 0.9; }
-    6%   { opacity: 0; }
-    100% { opacity: 0; }
-  }
+  /* "✕ cargo test" shows while the red token is on the way back (.434 landing). */
   @keyframes ag-latch-red {
-    0% { opacity: 0; } 19.5% { opacity: 0; } 20% { opacity: 1; }
-    27.5% { opacity: 1; } 28% { opacity: 0; } 100% { opacity: 0; }
-  }
-  @keyframes ag-latch-gates {
-    0% { stroke: var(--ink-dim); } 36% { stroke: var(--ink-dim); }
-    37% { stroke: var(--canopy); } 100% { stroke: var(--canopy); }
-  }
-  @keyframes ag-latch-gatecheck {
-    0% { opacity: 0; } 36% { opacity: 0; } 37% { opacity: 1; } 100% { opacity: 1; }
-  }
-  @keyframes ag-latch-commitshape {
-    0% { stroke: var(--ink-dim); } 86.5% { stroke: var(--ink-dim); }
-    87% { stroke: var(--canopy); } 100% { stroke: var(--canopy); }
+    0% { opacity: 0; } 40% { opacity: 0; } 40.5% { opacity: 1; }
+    53% { opacity: 1; } 53.5% { opacity: 0; } 100% { opacity: 0; }
   }
   @keyframes ag-latch-commit {
-    0% { opacity: 0; } 86.5% { opacity: 0; } 87.5% { opacity: 1; } 100% { opacity: 1; }
+    0% { opacity: 0; } 83% { opacity: 0; } 84% { opacity: 1; } 100% { opacity: 1; }
   }
   @keyframes ag-latch-badge {
     0% { opacity: 0; transform: translateY(1.5px); }
-    86.5% { opacity: 0; transform: translateY(1.5px); }
-    90% { opacity: 1; transform: translateY(0); }
+    83% { opacity: 0; transform: translateY(1.5px); }
+    87% { opacity: 1; transform: translateY(0); }
     100% { opacity: 1; transform: translateY(0); }
   }
-  @keyframes ag-latch-clock {
-    0% { opacity: 0; } 73% { opacity: 0; } 74% { opacity: 1; }
-    85% { opacity: 1; } 86% { opacity: 0; } 100% { opacity: 0; }
-  }
   @keyframes ag-beat-1 {
-    0% { opacity: 0; } 1% { opacity: 1; } 13% { opacity: 1; }
-    14% { opacity: 0; } 100% { opacity: 0; }
+    0% { opacity: 0; } 1% { opacity: 1; } 19% { opacity: 1; }
+    20% { opacity: 0; } 100% { opacity: 0; }
   }
   @keyframes ag-beat-2 {
-    0% { opacity: 0; } 13% { opacity: 0; } 14% { opacity: 1; }
-    27% { opacity: 1; } 28% { opacity: 0; } 100% { opacity: 0; }
+    0% { opacity: 0; } 19% { opacity: 0; } 20% { opacity: 1; }
+    37% { opacity: 1; } 38% { opacity: 0; } 100% { opacity: 0; }
   }
   @keyframes ag-beat-3 {
-    0% { opacity: 0; } 27.5% { opacity: 0; } 28.5% { opacity: 1; }
-    46% { opacity: 1; } 47% { opacity: 0; } 100% { opacity: 0; }
+    0% { opacity: 0; } 37% { opacity: 0; } 38% { opacity: 1; }
+    61% { opacity: 1; } 62% { opacity: 0; } 100% { opacity: 0; }
   }
   @keyframes ag-beat-4 {
-    0% { opacity: 0; } 47% { opacity: 0; } 48% { opacity: 1; }
-    80% { opacity: 1; } 81% { opacity: 0; } 100% { opacity: 0; }
+    0% { opacity: 0; } 61% { opacity: 0; } 62% { opacity: 1; }
+    81% { opacity: 1; } 82% { opacity: 0; } 100% { opacity: 0; }
   }
   @keyframes ag-beat-5 {
     0% { opacity: 0; } 81% { opacity: 0; } 82% { opacity: 1; } 100% { opacity: 1; }
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .ag-pulse {
-      animation: ag-leg var(--loop) linear infinite;
-      animation-delay: calc((var(--t0) - 1) * var(--loop));
+    @supports (offset-path: path('M0 0 L1 1')) {
+      .ag-pulse {
+        animation: ag-leg var(--loop) cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+        animation-delay: calc((var(--t0) - 1) * var(--loop));
+      }
     }
-    .ag-hit {
-      animation: ag-flash var(--loop) linear infinite;
-      animation-delay: calc((var(--t0) - 1) * var(--loop));
+    @supports not (offset-path: path('M0 0 L1 1')) {
+      .ag-pulses { display: none; }
     }
     .ag-redmark { animation: ag-latch-red var(--loop) linear infinite; }
-    .ag-gateshape { animation: ag-latch-gates var(--loop) linear infinite; }
-    .ag-gatecheck { animation: ag-latch-gatecheck var(--loop) linear infinite; }
-    .ag-commitshape { animation: ag-latch-commitshape var(--loop) linear infinite; }
-    .ag-check { animation: ag-latch-commit var(--loop) linear infinite; }
+    .ag-commitcheck { animation: ag-latch-commit var(--loop) linear infinite; }
     .ag-badge { animation: ag-latch-badge var(--loop) linear infinite; }
-    .ag-clock { animation: ag-latch-clock var(--loop) linear infinite; }
     .ag-beat-1 { animation: ag-beat-1 var(--loop) linear infinite; }
     .ag-beat-2 { animation: ag-beat-2 var(--loop) linear infinite; }
     .ag-beat-3 { animation: ag-beat-3 var(--loop) linear infinite; }
