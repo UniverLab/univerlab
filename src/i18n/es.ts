@@ -132,16 +132,16 @@ export const es: Dict = {
         artifact: 'specs llevados hasta el commit',
       },
       title:
-        'Canopy — motor de grafos para agentes de IA',
+        'Motor de grafos multi-agente para agentes de IA — Canopy',
       description:
-        'Canopy corre agentes de IA como grafos: los specs pasan por nodos de agente, chequeo y gate, los ensembles votan y los fallos vuelven solos.',
+        'Motor de grafos de código abierto para agentes de IA: los specs recorren nodos de agente, chequeo y gate, los ensembles votan y los fallos vuelven solos.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
         'Un daemon en Rust y una interfaz de terminal con un <strong>motor de grafos</strong> en el centro. El trabajo entra como spec y recorre un grafo que tú diseñas: nodos de <strong>agente</strong> en cualquier harness, nodos de <strong>chequeo</strong> que corren tus comandos reales, <strong>ensembles</strong> que reparten un paso entre varios modelos y exigen quórum, <strong>routers</strong> que eligen la rama, y un nodo de <strong>resiliencia</strong> que convierte una cuota agotada en un despertar programado. Por debajo: memoria, scheduling y sync para todos tus agentes.',
       morph: [
         ['Implementación con gates', 'los chequeos corren tus comandos reales — el rojo devuelve el trabajo, nunca a ti'],
         ['Ensemble · quórum', 'un spec, tres modelos en tres harness, dos de tres deben coincidir'],
-        ['Cascada', 'si el primer modelo falla, el siguiente toma el mismo spec'],
+        ['Cascada — corre uno, los demás esperan', 'el primer miembro toma el spec; si falla, el siguiente lo toma en frío — el primero que pasa sale, el resto nunca corre'],
         ['Router', 'un nodo de decisión manda cada spec por la rama que le corresponde'],
         ['Pipeline completo', 'diseño, implementación, gates, dos revisiones, commit — y una rama de resiliencia para cuando se acaba la cuota'],
       ] as [string, string][],
@@ -154,7 +154,7 @@ export const es: Dict = {
       layer: {
         kicker: 'El motor de grafos',
         cols: [
-          ['Grafos, no prompts', 'Nodos de agente, chequeo, gate y router unidos por aristas de pass, fail y error. Un spec recorre el grafo de la entrada al commit; el enrutamiento depende de códigos de salida y veredictos reales, no de lo que un modelo dice haber hecho.'],
+          ['Grafos, no prompts', 'Nodos de agente, chequeo, gate y router unidos por aristas de pass, fail y always. Un spec recorre el grafo de la entrada al commit; el enrutamiento depende de códigos de salida y veredictos reales, no de lo que un modelo dice haber hecho.'],
           ['Ensembles entre harness', 'Reparte un paso entre varios modelos — en paralelo con quórum, en cascada al siguiente si falla, o en round-robin por un equipo — cada miembro en el harness y modelo que elijas.'],
           ['El fallo es una ruta', 'Un gate en rojo devuelve el trabajo con la salida adjunta. Un nodo de resiliencia lee los errores de cuota y programa el grafo para despertar justo al reinicio. Solo un veredicto real llega a ti.'],
         ],
@@ -172,18 +172,19 @@ export const es: Dict = {
       },
       builder: {
         kicker: 'Grafo autónomo',
+        pattern: 'Patrón: Ensemble · quórum + Implementación con gates',
         title: 'Falló. No se detuvo.',
         stat: ['0', 'veces que se detuvo'] as [string, string],
         outro: 'Cada nodo corre en el harness que elijas, y el loop que acabas de ver es el motor real haciendo su trabajo real.',
         steps: [
-          ['Un spec, de punta a punta',
-            'El trabajo entra como spec — rol, qué, cómo. Un nodo implementador lo toma en tu harness y arranca.'],
+          ['Un spec, tres borradores',
+            'El trabajo entra como spec — rol, qué, cómo. Se reparte entre tres modelos en tres harnesses y un quorum se queda con el consenso.'],
+          ['Implementar desde el consenso',
+            'Un nodo implementador toma el plan acordado en tu harness y empieza a escribir.'],
           ['Falló: cargo test, 2 rojos',
             'El nodo de chequeo corre tus comandos reales. El rojo devuelve el token directo al implementador — nunca llega a ti.'],
           ['Verde — y una segunda opinión',
             'El reintento pasa las puertas. Un harness distinto revisa el diff contra el spec antes de que algo avance.'],
-          ['Ensemble y resiliencia',
-            'El mismo spec se reparte entre tres modelos y un quorum se queda con el consenso. Si un agente muere por cuota, un reloj programa el grafo para despertarse a la hora exacta del reset.'],
           ['Commiteado. Pusheado. Otra vez.',
             'La rama se pushea y la corrida queda en memoria — el próximo spec ya está recorriendo el mismo grafo.'],
         ] as [string, string][],
@@ -252,11 +253,11 @@ export const es: Dict = {
         ['¿Qué problema resuelve TeXForge?',
           'Compilar LaTeX normalmente requiere instalar TeX Live (4+ GB), luego herramientas separadas para Mermaid, Graphviz y D2 — cada una con su propia configuración. TeXForge es un solo binario de ~15 MB que hace todo: scaffolding, linting, formateo, diagramas y compilación.'],
         ['¿Pueden los agentes de IA usar TeXForge para trabajar con LaTeX?',
-          'Sí. Un agente puede ejecutar `texforge build` sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos `.tex` sin Node.js ni herramientas externas.'],
+          'Sí. Un agente puede ejecutar texforge build sin instalar nada — el motor de LaTeX se descarga en el primer uso. Los errores son concisos (no logs de 1000 líneas), y los diagramas se renderizan dentro de archivos .tex sin Node.js ni herramientas externas.'],
         ['¿TeXForge soporta diagramas Mermaid y D2 en LaTeX?',
-          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo `.tex`. TeXForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
+          'Sí. Escribe un bloque de Mermaid, Graphviz o D2 directamente en tu archivo .tex. TeXForge lo renderiza como figura en el build, en Rust puro, sin navegador ni Node.js.'],
         ['¿Cómo funciona la corrección ortográfica en idiomas distintos del inglés?',
-          'El idioma sale del propio documento — `\\usepackage[spanish]{babel}` o `polyglossia` — y recurre a tu configuración por defecto cuando no se declara ninguno. El español se revisa con un diccionario Hunspell y reglas de afijos, de modo que `soluciones` se reconoce a partir de la raíz `solución` sin necesidad de almacenarlo como entrada propia. Los diccionarios se descargan en el primer uso en `~/.texforge/dicts/`.'],
+          'El idioma sale del propio documento — \\usepackage[spanish]{babel} o polyglossia — y recurre a tu configuración por defecto cuando no se declara ninguno. El español se revisa con un diccionario Hunspell y reglas de afijos, de modo que soluciones se reconoce a partir de la raíz solución sin necesidad de almacenarlo como entrada propia. Los diccionarios se descargan en el primer uso en ~/.texforge/dicts/.'],
       ] as [string, string][],
     },
     gitkit: {
@@ -269,9 +270,9 @@ export const es: Dict = {
         artifact: 'el mismo ritual en todas partes',
       },
       title:
-        'Git hooks desaprovechados. GitKit los pone a trabajar.',
+        'Setup de git hooks: commits y secretos — GitKit',
       description:
-        'Hooks, .gitignore, .gitattributes y config en un flujo guiado e idempotente. Hooks que componen y sobreviven a reaplicarse. Un binario, sin Node ni Python.',
+        'Setup de git hooks guiado e idempotente: commits convencionales, detección de secretos, .gitignore, .gitattributes y config. Un binario, sin Node ni Python.',
       koan: '// el ritual, automatizado',
       hero: {
         wizard: {
@@ -317,7 +318,7 @@ export const es: Dict = {
         ['¿Qué son los "builds" de GitKit?',
           'Un build guarda tu configuración de git (hooks, ignore, attributes, config) como una plantilla reutilizable. Aplícala a cualquier proyecto futuro con un solo comando — sin reconfigurar hooks en cada repo.'],
         ['¿Cómo pauso la escritura en un repositorio?',
-          'Ejecuta <code>gitkit lock</code> para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio se puede leer, pero no escribir, hasta que ejecutes <code>gitkit unlock</code>. Útil cuando un agente autónomo tiene que dejar de escribir mientras haces un rebase, reinstalas o inspeccionas el árbol.'],
+          'Ejecuta gitkit lock para bloquear commits y pushes a través de los hooks que gitkit ya instaló. El repositorio se puede leer, pero no escribir, hasta que ejecutes gitkit unlock. Útil cuando un agente autónomo tiene que dejar de escribir mientras haces un rebase, reinstalas o inspeccionas el árbol.'],
       ] as [string, string][],
     },
     ghscaff: {
@@ -373,7 +374,7 @@ export const es: Dict = {
       },
       faq: [
         ['¿Cómo configura ghScaff un repositorio de GitHub?',
-          'Ejecuta `ghscaff` — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
+          'Ejecuta ghscaff — un asistente interactivo que crea el repo, commitea el boilerplate (CI, README, licencia), configura branch protection y aplica etiquetas estándar. Un commit atómico, sin pasos manuales.'],
         ['¿Por qué ghScaff usa una bóveda encriptada para tokens?',
           'Las variables de entorno con tokens son fácilmente explotables — cualquier proceso en tu máquina puede leerlas. ghScaff encripta tokens con XSalsa20-Poly1305, ligado a tu usuario de OS y hostname. La bóveda evita que ghScaff se convierta en un vector de ataque.'],
         ['¿Cómo sabe ghScaff qué checks son requeridos para la protección de ramas?',
@@ -422,9 +423,9 @@ export const es: Dict = {
       },
       faq: [
         ['¿Para qué sirve cadSpec?',
-          'cadSpec es CAD como código para arquitectos que necesitan IA que les ayude a dibujar. Declara geometría en archivos TOML, previsualiza en vivo en el navegador, compila a DXF idéntico cada vez. `git diff` funciona en dibujos porque el fuente es texto.'],
+          'cadSpec es CAD como código para arquitectos que necesitan IA que les ayude a dibujar. Declara geometría en archivos TOML, previsualiza en vivo en el navegador, compila a DXF idéntico cada vez. git diff funciona en dibujos porque el fuente es texto.'],
         ['¿Pueden los agentes de IA leer y generar dibujos CAD con cadSpec?',
-          'Sí. El formato TOML de cadSpec es texto plano que cualquier LLM puede leer. Ejecuta `cadspec schema` para enseñar el lenguaje; las vistas previas incluyen cajas delimitadoras para que los agentes puedan ver el dibujo.'],
+          'Sí. El formato TOML de cadSpec es texto plano que cualquier LLM puede leer. Ejecuta cadspec schema para enseñar el lenguaje; las vistas previas incluyen cajas delimitadoras para que los agentes puedan ver el dibujo.'],
       ] as [string, string][],
     },
     'astro-denoise': {
@@ -478,9 +479,9 @@ export const es: Dict = {
         artifact: 'desacuerdo visible',
       },
       title:
-        'Planning poker donde tus votos no ven un servidor — Quorum',
+        'Planning poker online gratis, sin registro — Quorum',
       description:
-        'Los peers hablan directamente entre sí por WebRTC. No se guarda nada, no se recoge nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
+        'Planning poker gratis por WebRTC — los peers hablan directamente, no se guarda nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
       lede:
         'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
@@ -553,7 +554,7 @@ export const es: Dict = {
         ['¿Qué es DemoStage?',
           'Una herramienta para planificar y grabar demos multi-fuente — terminal, navegador y archivos en una sola escena. No es solo grabación de pantalla: configuras tipografía, aspect ratio, fps y estilo de terminal. El resultado está optimizado para web.'],
         ['¿Puedo re-grabar una demo si algo cambia?',
-          'Sí. `demostage capture` graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
+          'Sí. demostage capture graba eventos, no video. Si la UX cambia, vuelves a capturar y la demo se actualiza de forma determinista — sin necesidad de re-grabar todo manualmente.'],
         ['¿En qué se diferencia DemoStage de asciinema?',
           'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif, mp4 o svg animado. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
