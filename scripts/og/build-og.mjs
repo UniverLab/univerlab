@@ -3,7 +3,8 @@
 // Generates:
 //   • public/og.png          — site-wide default (home, docs, experiments without a card)
 //   • public/og/<id>.png     — one per experiment: number, status, name, tagline,
-//                              motif line, in the experiment's accent colour
+//                              motif line, in the palette of the experiment's own
+//                              page (its surface group in src/styles/global.css)
 //
 // Every glyph is outlined to an SVG path (fonts in ./fonts, see FONTS.md), so
 // headless Chrome rasterises the cards without any installed font. The SVGs and
@@ -27,11 +28,8 @@ import { BANNERS } from './banners.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-const BG = '#0a0b0e';
-const INK = '#e8e6e1';
-const INK_DIM = '#8b8a86';
-const INK_FAINT = '#55544f';
-const ACCENT = '#e6c84a';
+// The lab's own palette: the home card. Experiment cards bring their surface's.
+const LAB = { bg: '#0a0b0e', ink: '#e8e6e1', inkDim: '#8b8a86', inkFaint: '#55544f', accent: '#e6c84a' };
 
 const W = 1200;
 const H = 630;
@@ -88,7 +86,7 @@ function text(font, str, x, y, size, fill, { track = 0, anchor = 'start', opacit
 }
 
 /** Greedy word wrap to `maxWidth`. */
-function wrapText(font, str, size, maxWidth) {
+function greedyWrap(font, str, size, maxWidth) {
   const lines = [];
   let line = '';
   for (const word of str.split(' ')) {
@@ -104,6 +102,33 @@ function wrapText(font, str, size, maxWidth) {
   return lines;
 }
 
+/**
+ * Balanced wrap: as many lines as the greedy wrap needs, but at the narrowest
+ * width that still fits in that many, so the last line is never an orphan.
+ */
+function wrapText(font, str, size, maxWidth) {
+  // A dash belongs to the clause it closes: never let it open a line.
+  str = str.replace(/ (—|–) /g, '\u00a0$1 ');
+  const target = greedyWrap(font, str, size, maxWidth).length;
+  let lo = 0;
+  let hi = maxWidth;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) / 2;
+    if (greedyWrap(font, str, size, mid).length <= target) hi = mid;
+    else lo = mid;
+  }
+  return greedyWrap(font, str, size, hi).map((l) => l.replace(/\u00a0/g, ' '));
+}
+
+/** Relative luminance of a #rrggbb colour (WCAG). */
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 function wavePath(yMid, amp, wl, xEnd) {
   const step = wl / 24;
   let d = `M 0 ${yMid.toFixed(1)}`;
@@ -117,7 +142,9 @@ const mark = (x, y, size, fill) =>
   `<g transform="translate(${x} ${y}) scale(${size / 500})" fill="${fill}">${MARK_FACES.map((d) => `<path d="${d}"/>`).join('')}</g>`;
 
 /** Background, accent glow and the wave band shared by every card. */
-function frame(accent, body, glow) {
+function frame({ bg, accent }, body, glow) {
+  // On a light sheet the accent glow reads as a smudge; keep it a whisper there.
+  const glowOpacity = luminance(bg) > 0.5 ? 0.06 : 0.13;
   const waves = [
     { amp: 18, wl: 380, sw: 2.4, op: 0.55 },
     { amp: 28, wl: 560, sw: 1.4, op: 0.22 },
@@ -128,8 +155,8 @@ function frame(accent, body, glow) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <radialGradient id="glow" cx="${glow.cx}" cy="${glow.cy}" r="75%">
-      <stop offset="0%" stop-color="${accent}" stop-opacity="0.13"/>
-      <stop offset="60%" stop-color="${BG}" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${accent}" stop-opacity="${glowOpacity}"/>
+      <stop offset="60%" stop-color="${bg}" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="waveFadeGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#000"/>
@@ -139,7 +166,7 @@ function frame(accent, body, glow) {
     </linearGradient>
     <mask id="waveFade"><rect width="${W}" height="${H}" fill="url(#waveFadeGrad)"/></mask>
   </defs>
-  <rect width="${W}" height="${H}" fill="${BG}"/>
+  <rect width="${W}" height="${H}" fill="${bg}"/>
   <rect width="${W}" height="${H}" fill="url(#glow)"/>
   <g mask="url(#waveFade)">
     ${waves}
@@ -153,44 +180,46 @@ function frame(accent, body, glow) {
 function homeSvg() {
   const markSize = 176;
   const textX = MARGIN + markSize + 52;
-  const body = `${mark(MARGIN, 150, markSize, INK)}
-  ${text(plex, 'UNIVERLAB', textX, 232, 76, INK, { track: 0.2 })}
-  <rect x="${textX}" y="254" width="64" height="4" rx="2" fill="${ACCENT}"/>
-  ${text(plex, 'SCI · CLI · BIO', textX, 300, 24, ACCENT, { track: 0.2 })}
-  ${text(grotesk, 'An independent computational laboratory', textX, 350, 30, INK_DIM)}
-  ${text(grotesk, 'of open experiments.', textX, 390, 30, INK_DIM)}
-  ${text(plex, 'univerlab.org', W - MARGIN, 56, 18, INK_FAINT, { track: 0.08, anchor: 'end' })}`;
-  return frame(ACCENT, body, { cx: '22%', cy: '30%' });
+  const { ink, inkDim, inkFaint, accent } = LAB;
+  const body = `${mark(MARGIN, 150, markSize, ink)}
+  ${text(plex, 'UNIVERLAB', textX, 232, 76, ink, { track: 0.2 })}
+  <rect x="${textX}" y="254" width="64" height="4" rx="2" fill="${accent}"/>
+  ${text(plex, 'SCI · CLI · BIO', textX, 300, 24, accent, { track: 0.2 })}
+  ${text(grotesk, 'An independent computational laboratory', textX, 350, 30, inkDim)}
+  ${text(grotesk, 'of open experiments.', textX, 390, 30, inkDim)}
+  ${text(plex, 'univerlab.org', W - MARGIN, 56, 18, inkFaint, { track: 0.08, anchor: 'end' })}`;
+  return frame(LAB, body, { cx: '22%', cy: '30%' });
 }
 
 /** Per-experiment card: lab header, name, tagline, motif, canonical URL. */
-function experimentSvg({ id, name, number, accent, tagline, status, motif }) {
+function experimentSvg({ id, name, number, palette, tagline, status, motif }) {
+  const { ink, inkFaint, accent } = palette;
   const statusLabel = status.toUpperCase();
   const pillW = measure(plex, statusLabel, 14, 0.18) + 28;
   const pillX = W - MARGIN - pillW;
   const nameSize = name.length > 11 ? 84 : 96;
   const lines = wrapText(grotesk, tagline ?? '', 32, W - 2 * MARGIN).slice(0, 3);
   const motifY = 336 + lines.length * 44 + 26;
-  const body = `${mark(MARGIN, 38, 34, INK)}
-  ${text(plex, 'UNIVERLAB', MARGIN + 48, 63, 19, INK, { track: 0.26 })}
+  const body = `${mark(MARGIN, 38, 34, ink)}
+  ${text(plex, 'UNIVERLAB', MARGIN + 48, 63, 19, ink, { track: 0.26 })}
   ${text(plex, number, pillX - 18, 63, 17, accent, { track: 0.16, anchor: 'end' })}
   <rect x="${pillX}" y="43" width="${pillW}" height="28" rx="14" fill="none" stroke="${accent}" stroke-opacity="0.55"/>
   ${text(plex, statusLabel, pillX + pillW / 2, 62, 14, accent, { track: 0.18, anchor: 'middle' })}
-  ${text(grotesk, name, MARGIN, 250, nameSize, INK)}
+  ${text(grotesk, name, MARGIN, 250, nameSize, ink)}
   <rect x="${MARGIN + 2}" y="276" width="64" height="4" rx="2" fill="${accent}"/>
-  ${lines.map((l, i) => text(grotesk, l, MARGIN, 336 + i * 44, 32, INK, { opacity: 0.72 })).join('\n  ')}
+  ${lines.map((l, i) => text(grotesk, l, MARGIN, 336 + i * 44, 32, ink, { opacity: 0.72 })).join('\n  ')}
   ${motif ? text(plex, motif, MARGIN, motifY, 20, accent, { track: 0.04, opacity: 0.75, fallback: true }) : ''}
-  ${text(plex, `univerlab.org/${id}`, W - MARGIN, H - 26, 16, INK_FAINT, { track: 0.08, anchor: 'end' })}`;
-  return frame(accent, body, { cx: '78%', cy: '22%' });
+  ${text(plex, `univerlab.org/${id}`, W - MARGIN, H - 26, 16, inkFaint, { track: 0.08, anchor: 'end' })}`;
+  return frame(palette, body, { cx: '78%', cy: '22%' });
 }
 
-const page = (svg) =>
-  `<!doctype html><html><head><style>*{margin:0;padding:0}html,body{width:${W}px;height:${H}px;background:${BG}}</style></head><body>${svg}</body></html>\n`;
+const page = (svg, bg) =>
+  `<!doctype html><html><head><style>*{margin:0;padding:0}html,body{width:${W}px;height:${H}px;background:${bg}}</style></head><body>${svg}</body></html>\n`;
 
 // ── Default home card ───────────────────────────────────────────────────────
 const defaultSvg = homeSvg();
 writeFileSync(join(HERE, 'og.svg'), defaultSvg);
-writeFileSync(join(HERE, 'render.html'), page(defaultSvg));
+writeFileSync(join(HERE, 'render.html'), page(defaultSvg, LAB.bg));
 console.log('✓ og.svg + render.html  (home card)');
 
 // ── Per-experiment cards ────────────────────────────────────────────────────
@@ -199,6 +228,6 @@ mkdirSync(join(HERE, '..', '..', 'public', 'og'), { recursive: true });
 for (const banner of BANNERS) {
   const svg = experimentSvg(banner);
   writeFileSync(join(HERE, `og-${banner.id}.svg`), svg);
-  writeFileSync(join(HERE, `render-${banner.id}.html`), page(svg));
+  writeFileSync(join(HERE, `render-${banner.id}.html`), page(svg, banner.palette.bg));
   console.log(`✓ og-${banner.id}.svg + render-${banner.id}.html  (${banner.name})`);
 }
