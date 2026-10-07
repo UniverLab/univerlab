@@ -59,7 +59,8 @@
    Each group also carries `--surface-essence`: the accent the experiment PAGE
    paints with today (the runner's final re-tint, or the surface accent the page
    pins on `.exp`) — never the registry `essenceHex`, which stays on the collapsed
-   card and the OG images. Read by the home card flip only; no page reads it. */
+   card. Read by the home card flip and by scripts/og (each experiment's social
+   card is drawn in its surface group); no page reads it. */
 
 /* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
    Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,
