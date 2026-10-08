@@ -752,9 +752,9 @@ export const en = {
       'The founder, contributors and language models behind UniverLab — every experiment takes issues and focused pull requests. Your help is genuinely welcome.',
     founder: {
       role: 'Founder',
-      name: 'Jheison Martinez',
+      name: 'Jheison Martinez Bolivar',
       body:
-        'Electronic engineer and software-development specialist, now a master’s student in Artificial Intelligence. Reflective by nature — stoicism and positive nihilism, astronomy and biology — with his family as his greatest joy and the hope of teaching one day. For now he builds UniverLab’s open experiments and tools.',
+        'Electronic engineer and software-development specialist, now a master’s student in Artificial Intelligence. Reflective by nature — stoicism and positive nihilism, astronomy and biology — with his family as his greatest joy and the hope of teaching one day. For now he builds UniverLab’s open experiments and tools. If you read this far and feel like talking, write to him: the address below reaches him directly.',
       link: 'github.com/JheisonMB ↗',
       email: 'jheison.mb@univerlab.org',
     },
