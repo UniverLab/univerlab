@@ -28,7 +28,7 @@ function makeCtx(w = 280, h = 240) {
     font: '',
     globalAlpha: 1,
   } as unknown as CanvasRenderingContext2D;
-  const ctx: BrainCtx = { canvas, c, color: '#5dd39e', w, h };
+  const ctx: BrainCtx = { canvas, c, color: '#00a9a0', w, h };
   return { ctx, canvas, clearRect, fillText };
 }
 
