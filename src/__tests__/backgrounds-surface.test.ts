@@ -124,9 +124,9 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
     // Given: the home page (no surface of its own) while the card says `paper`
     document.documentElement.dataset.surface = 'studio';
     // When: texforge's card mounts its own surface
-    const { bgCtx, c, step } = mount('forge', '#e0a458', '#fffaf0', 'paper');
-    // Then: bistre ink — the paper override, not the forge amber
-    expect(bgCtx?.color).toBe('#6a563e');
+    const { bgCtx, c, step } = mount('forge', '#d34e5b', '#fffaf0', 'paper');
+    // Then: garnet ink — the paper override, not the forge embers
+    expect(bgCtx?.color).toBe('#87222c');
     // And: the runner that paints is paper's, not the ember field
     step(0);
     step(40);
@@ -141,9 +141,9 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
       // Then: only the three surface colour overrides ever rewrite the colour —
       // every other surface keeps the colour the caller handed it
       const expected =
-        exp.surface === 'paper' ? '#6a563e'
-        : exp.surface === 'pastel' ? '#6d28d9'
-        : exp.surface === 'industrial' ? '#8b7cf6' // the scaffold re-tint, via ctx.surface
+        exp.surface === 'paper' ? '#87222c'
+        : exp.surface === 'pastel' ? '#e06fc0'
+        : exp.surface === 'industrial' ? '#62c4ec' // the scaffold re-tint, via ctx.surface
         : '#ffffff';
       expect(bgCtx?.color).toBe(expected);
     }
@@ -151,36 +151,36 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
 
   it('hands the resolved surface to the runner through ctx', () => {
     // Given: a home card passing its experiment's own surface
-    const { bgCtx } = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    const { bgCtx } = mount('scaffold', '#62c4ec', '#05060f', 'industrial');
     // Then: the runner sees that exact surface, not the home page's blank one
     expect(bgCtx?.surface).toBe('industrial');
     // And: the surface argument wins over the page's own data-surface
     document.documentElement.dataset.surface = 'observatory';
-    const overridden = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    const overridden = mount('scaffold', '#62c4ec', '#05060f', 'industrial');
     expect(overridden.bgCtx?.surface).toBe('industrial');
     // And: with no argument the page's data-surface is what it receives
     document.documentElement.dataset.surface = 'paper';
-    const paged = mount('forge', '#e0a458', '#fffaf0');
+    const paged = mount('forge', '#d34e5b', '#fffaf0');
     expect(paged.bgCtx?.surface).toBe('paper');
   });
 
-  it('re-tints the scaffold to blueprint violet from the argument with no page surface', () => {
+  it('re-tints the scaffold to the registry sky from the argument with no page surface', () => {
     // Given: the home page — <html> carries NO data-surface at all
     expect(document.documentElement.dataset.surface).toBeUndefined();
     // When: ghScaff's card mounts with its own surface
-    const { bgCtx } = mount('scaffold', '#b87333', '#05060f', 'industrial');
+    const { bgCtx } = mount('scaffold', '#62c4ec', '#05060f', 'industrial');
     // Then: the midnight re-tint fires off ctx.surface, exactly as the
-    // /ghscaff page gets it — the bug it fixes was the window staying copper
-    expect(bgCtx?.color).toBe('#8b7cf6');
+    // /ghscaff page gets it — the bug it fixes was the window missing the re-tint
+    expect(bgCtx?.color).toBe('#62c4ec');
   });
 
   it('lets an explicit surface beat the page\'s data-surface', () => {
     // Given: a page that runs the paper surface…
     document.documentElement.dataset.surface = 'paper';
     // When: a card for another experiment mounts with its own surface
-    const { bgCtx, c, step } = mount('forge', '#e0a458', '#0a0b0e', 'observatory');
-    // Then: no bistre rewrite — the argument won
-    expect(bgCtx?.color).toBe('#e0a458');
+    const { bgCtx, c, step } = mount('forge', '#d34e5b', '#0a0b0e', 'observatory');
+    // Then: no garnet rewrite — the argument won
+    expect(bgCtx?.color).toBe('#d34e5b');
     // And: the forge embers mount, not the parchment motif
     step(0);
     step(40);
@@ -192,18 +192,18 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
     // Given: an experiment page whose <html> carries the surface
     document.documentElement.dataset.surface = 'paper';
     // When: ThemeBackground calls the unchanged 4-arg page path
-    const { bgCtx } = mount('forge', '#e0a458', '#fffaf0');
-    // Then: the page's own surface decides — paper wins, bistre ink
-    expect(bgCtx?.color).toBe('#6a563e');
+    const { bgCtx } = mount('forge', '#d34e5b', '#fffaf0');
+    // Then: the page's own surface decides — paper wins, garnet ink
+    expect(bgCtx?.color).toBe('#87222c');
   });
 
-  it('paints voltage violet on the pastel surface and keeps registry pink elsewhere', () => {
+  it('paints the registry orchid on the pastel surface and keeps the caller colour elsewhere', () => {
     // Given/When: gitkit's card (pastel) and a card with no surface at all
-    const pastel = mount('bubbles', '#e8a4c8', '#120b14', 'pastel');
-    const plain = mount('bubbles', '#e8a4c8', '#120b14', 'quorum');
+    const pastel = mount('bubbles', '#e06fc0', '#120b14', 'pastel');
+    const plain = mount('bubbles', '#e06fc0', '#120b14', 'quorum');
     // Then: the surface override only fires for its own surface
-    expect(pastel.bgCtx?.color).toBe('#6d28d9');
-    expect(plain.bgCtx?.color).toBe('#e8a4c8');
+    expect(pastel.bgCtx?.color).toBe('#e06fc0');
+    expect(plain.bgCtx?.color).toBe('#e06fc0');
   });
 
   it('returns without mounting when the canvas has no 2D context', () => {
@@ -211,14 +211,14 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
     const canvas = document.createElement('canvas');
     canvas.getContext = (() => null) as typeof canvas.getContext;
     // When/Then: nothing is mounted and no loop is scheduled
-    startBackground(canvas, 'forge', '#e0a458', '#0a0b0e', 'paper');
+    startBackground(canvas, 'forge', '#d34e5b', '#0a0b0e', 'paper');
     expect((canvas as unknown as { __bgCtx?: BgCtx }).__bgCtx).toBeUndefined();
     expect(raf).not.toHaveBeenCalled();
   });
 
   it('caps the loop near 30 fps and pauses it while the tab is hidden', () => {
     // Given: a mounted forge background
-    const { c, step } = mount('forge', '#e0a458', '#0a0b0e', 'observatory');
+    const { c, step } = mount('forge', '#d34e5b', '#0a0b0e', 'observatory');
     // When: frames land inside the 33 ms budget, then outside it
     step(0); // first frame: 0 − 0 → skipped
     expect(count(c, 'clearRect')).toBe(0);
@@ -241,7 +241,7 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
 
   it('re-measures the canvas once per burst of resize events', async () => {
     // Given: a freshly mounted background (one setTransform from the mount)
-    const { c } = mount('forge', '#e0a458', '#0a0b0e', 'observatory');
+    const { c } = mount('forge', '#d34e5b', '#0a0b0e', 'observatory');
     const before = count(c, 'setTransform');
     expect(before).toBe(1);
     // When: two resizes land inside the debounce window
@@ -390,7 +390,7 @@ describe('forge (texforge) — embers rise, flicker and respawn', () => {
   it('paints every ember and respawns the ones that leave the sheet', () => {
     // Given: slow, late embers on a short sheet
     jest.spyOn(Math, 'random').mockReturnValue(0.9);
-    const ctx = sheet(280, 120, '#e0a458', '#0a0b0e');
+    const ctx = sheet(280, 120, '#d34e5b', '#0a0b0e');
     const tick = pickRunner('forge', 'observatory')(ctx);
     // When: enough frames pass for the top embers to cycle past −10
     for (let i = 1; i <= 300; i++) tick(i * 16);

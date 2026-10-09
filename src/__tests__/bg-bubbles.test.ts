@@ -19,7 +19,7 @@ function firePointer(type: string, props: Record<string, unknown>) {
 
 /** A recording 2D stub. */
 function makeCtx(opts: { w?: number; h?: number; bg?: string; color?: string } = {}) {
-  const { w = 800, h = 600, bg = '#f5eef5', color = '#e8a4c8' } = opts;
+  const { w = 800, h = 600, bg = '#f5eef5', color = '#e06fc0' } = opts;
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
   const clearRect = jest.fn();
@@ -539,14 +539,14 @@ describe('bubbles', () => {
     expect(texts).toHaveLength(1);
   });
 
-  it('the non-hex color falls back to the GitKit pink (A guard)', () => {
+  it('the non-hex color falls back to the GitKit orchid (A guard)', () => {
     // Given: a field whose essence is not a 7-char hex
     const { ctx, stops, arcs } = makeCtx({ color: 'pink' });
     // When: one frame paints
     const tick = bubbles(ctx);
     tick(0);
     // Then: halos are built from the fallback pink
-    expect(stops.some((s) => s.startsWith('#e8a4c8'))).toBe(true);
+    expect(stops.some((s) => s.startsWith('#e06fc0'))).toBe(true);
     expect(arcs).toHaveLength(3 * N);
   });
 

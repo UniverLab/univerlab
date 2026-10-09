@@ -140,8 +140,9 @@ $ demo export gif,mp4,svg
   /* …but the caption's own "Fig. 1" tag escaped both rules above: it renders in
      DemoFigure's cid, so the cid-scoped `.band-light .label` (Signal Red) never
      matches it, and it inherits nothing because it sets its own colour — the
-     registry coral (#ef8354) on Vapor Peach, 1.7:1. altius.md puts labels in
-     Signal Red on light and Flare on dark; this is the same #951c04 every other
+     registry flare (#fa5838) on Vapor Peach, 1.7:1. altius.md puts labels in
+     Signal Red on light and Flare on dark; Signal Red stays here (7.4:1 on peach;
+     the fill token sits at ~2.8:1 on peach and is not readable as label text) — the same #951c04 every other
      label on this band wears (5.7:1 even with the takes trail at its brightest
      behind the 88% veil — FR3). */
   :global(html[data-surface='studio'] .band-light .demo-cap .label) { color: #951c04; }

@@ -18,6 +18,7 @@ import { en } from '../i18n/en';
 const HOME = resolve(__dirname, '..', 'views', 'Home.astro');
 const EXP_LAYOUT = resolve(__dirname, '..', 'layouts', 'ExperimentLayout.astro');
 const GLOBAL_CSS = resolve(__dirname, '..', 'styles', 'global.css');
+const ESSENCE_TOKENS = resolve(__dirname, '..', 'components', 'EssenceTokens.astro');
 const BACKGROUNDS = resolve(__dirname, '..', 'scripts', 'backgrounds.ts');
 const THEME_BG = resolve(__dirname, '..', 'components', 'ThemeBackground.astro');
 const EXPERIMENTS_TS = resolve(__dirname, '..', 'lib', 'experiments.ts');
@@ -25,6 +26,7 @@ const EXPERIMENTS_TS = resolve(__dirname, '..', 'lib', 'experiments.ts');
 const homeSrc = readFileSync(HOME, 'utf8');
 const expLayoutSrc = readFileSync(EXP_LAYOUT, 'utf8');
 const globalCss = readFileSync(GLOBAL_CSS, 'utf8');
+const essenceTokensSrc = readFileSync(ESSENCE_TOKENS, 'utf8');
 const backgroundsSrc = readFileSync(BACKGROUNDS, 'utf8');
 const themeBgSrc = readFileSync(THEME_BG, 'utf8');
 const experimentsSrc = readFileSync(EXPERIMENTS_TS, 'utf8');
@@ -116,18 +118,17 @@ describe('Cards window — no hand-kept surfaces map in Home.astro', () => {
     expect(homeSrc).toMatch(/\.card-motif[^}]*color: var\(--essence\)/);
   });
 
-  it('should declare a --surface-essence in every flip-surface group, in global.css', () => {
-    // One token per surface, declared in the reusable group — never in Home.
-    for (const surface of [
-      'paper', 'tui', 'pastel', 'industrial',
-      'blueprint', 'observatory', 'quorum', 'studio',
-    ]) {
-      const group = globalCss.match(
-        new RegExp(`\\[data-flip-surface='${surface}'\\][^{]*\\{[^}]*\\}`)
-      );
-      expect(group).not.toBeNull();
-      expect(group![0]).toMatch(/--surface-essence:\s*#[0-9a-f]{3,8};/);
-    }
+  it('should declare a --surface-essence per surface from the registry, never in global.css', () => {
+    // The tokens are emitted by EssenceTokens.astro from experiments.ts —
+    // global.css holds substrates only, never an essence literal.
+    expect(globalCss).not.toMatch(/--surface-essence:/);
+    expect(globalCss).not.toMatch(/--surface-essence-text:/);
+    expect(essenceTokensSrc).toMatch(/from '\.\.\/lib\/experiments'/);
+    expect(essenceTokensSrc).toMatch(/\[data-surface='/);
+    expect(essenceTokensSrc).toMatch(/\[data-flip-surface='/);
+    expect(essenceTokensSrc).toMatch(/--surface-essence:/);
+    expect(essenceTokensSrc).toMatch(/--surface-essence-text:/);
+    expect(essenceTokensSrc).toMatch(/essenceTextHex \?\? exp\.essenceHex/);
     // …and Home holds no hex of its own for it.
     expect(homeSrc).not.toMatch(/--surface-essence:\s*#/);
   });

@@ -41,7 +41,7 @@ const isFrag = (text: string) => !TOKENS.includes(text);
 const AMBIENT = 0.05 + 0.5 * (0.12 - 0.05);
 /** Paper's own greys — the source pass never borrows an accent colour. */
 const SOURCE_GREY = '#66635f';
-const BISTRE = '#6a563e';
+const BISTRE = '#87222c';
 
 /** Dispatch a pointer-like event; jsdom has no PointerEvent constructor. */
 function firePointer(type: string, props: Record<string, unknown>) {
@@ -226,7 +226,7 @@ describe('paper', () => {
     expect(h.beginPath).not.toHaveBeenCalled();
     expect(h.lineTo).not.toHaveBeenCalled();
     expect(h.stroke).not.toHaveBeenCalled();
-    // And: the shared canvas never leaks alpha, bistre comes from the caller
+    // And: the shared canvas never leaks alpha, garnet comes from the caller
     expect(h.ctx.c.globalAlpha).toBe(1);
     expect(h.ctx.c.fillStyle).toBe(BISTRE);
     expect(h.ctx.c.textBaseline).toBe('top');
@@ -302,7 +302,7 @@ describe('paper', () => {
     // When: the compile window closes (550 + 250 ms)
     h.reset();
     tick(66 + SOURCE_MS + FADE_MS);
-    // Then: the source is gone and the typeset form stands in bistre serif
+    // Then: the source is gone and the typeset form stands in garnet serif
     const set = h.fragDraws;
     expect(set).toHaveLength(1);
     expect(set[0].text).toBe('a⁄b');
@@ -566,7 +566,7 @@ describe('paper', () => {
     expect(raw[0].font).toMatch(/ui-monospace/);
     h.reset();
     tick(emphBorn + SOURCE_MS + FADE_MS);
-    // Then: it sets in the page's serif, italic, bistre ink
+    // Then: it sets in the page's serif, italic, garnet ink
     const ink = h.fragDraws.filter((d) => d.text === 'ink');
     expect(ink).toHaveLength(1);
     expect(ink[0].font).toMatch(/^italic /);

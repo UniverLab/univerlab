@@ -249,7 +249,7 @@ html[data-surface='pastel'] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: linear-gradient(180deg, #fff 10%, rgba(109,40,217,.035) 24%, #fff 36%, rgba(100,116,139,.05) 50%, #fff 62%, rgba(109,40,217,.028) 76%, #fff 90%);
+  background: linear-gradient(180deg, #fff 10%, color-mix(in srgb, var(--surface-essence-text) 3.5%, transparent) 24%, #fff 36%, rgba(100,116,139,.05) 50%, #fff 62%, color-mix(in srgb, var(--surface-essence-text) 2.8%, transparent) 76%, #fff 90%);
 }
 /* Centered hero stack. */
 html[data-surface='pastel'] .hero {
@@ -263,7 +263,7 @@ html[data-surface='pastel'] .lede { margin-inline: auto; }
 html[data-surface='pastel'] .install { margin-inline: auto; }
 html[data-surface='pastel'] .actions { justify-content: center; }
 html[data-surface='pastel'] .num { color: var(--ink-faint); }
-html[data-surface='pastel'] .dot { background: var(--voltage); box-shadow: 0 0 0 2px rgba(109,40,217,.18); }
+html[data-surface='pastel'] .dot { background: var(--surface-essence); box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface-essence-text) 18%, transparent); }
 html[data-surface='pastel'] .dot[data-status='beta'],
 html[data-surface='pastel'] .dot[data-status='research'] { background: var(--ink-dim); box-shadow: none; }
 html[data-surface='pastel'] .exp .lede strong,
@@ -278,13 +278,13 @@ html[data-surface='pastel'] .btn {
   letter-spacing: 0.01em;
 }
 html[data-surface='pastel'] .btn-violet {
-  background: var(--voltage);
-  border-color: var(--voltage);
+  background: var(--surface-essence);
+  border-color: var(--surface-essence);
   color: #fff;
 }
 html[data-surface='pastel'] .btn-violet:hover {
   filter: brightness(1.08);
-  background: var(--voltage);
+  background: var(--surface-essence);
   color: #fff;
 }
 html[data-surface='pastel'] .btn:focus-visible {
@@ -329,7 +329,7 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
 html[data-surface='industrial'] {
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --glass-v: #8b7cf6;
+  --glass-v: var(--surface-essence);
   --bg: #0b0a14;
   --bg-raise: #12101e;
   --ink: #e8e6f2;
@@ -361,7 +361,7 @@ html[data-surface='blueprint'] {
 }
 html[data-surface='blueprint'] .exp {
   /* The light brand cyan has no contrast on white — accents use a darker teal. */
-  --essence: #156c80 !important;
+  --essence: var(--surface-essence-text) !important;
 }
 /* Two faint axes cross the sheet — a clean geometric plan motif, not a grid
    (a full grid was too heavy and hurt legibility). */
@@ -372,8 +372,8 @@ html[data-surface='blueprint'] body::before {
   z-index: -2;
   pointer-events: none;
   background-image:
-    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px)),
-    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px));
+    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, var(--surface-essence-text) 13%, transparent) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, var(--surface-essence-text) 13%, transparent) 50%, transparent calc(50% + 0.5px));
 }
 html[data-surface='blueprint'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -697,7 +697,7 @@ html[data-surface='studio'] .hero .rec {
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · industrial — midnight steel, not frosted glass.
    Single violet hue (--glass-v) throughout; copper is suppressed on this
-   surface only (registry keeps #b87333 for OG/home). Cards and the hero
+   surface only (the registry essence for OG/home). Cards and the hero
    are flat plates so the scaffold canvas reads behind them, unblurred.
    ───────────────────────────────────────────────────────────────────────── */
 
@@ -834,7 +834,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #777b86;
   --ink-faint: #979799;
   --line: #ececec;
-  --essence: #5d2a1a;
+  --essence: var(--surface-essence-text);
   --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
@@ -846,7 +846,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
    is the page's own grid (surfaces.css still draws the faint axes at
    `html[data-surface='blueprint'] body::before`, (0,1,3) — outranked by the
    page rule on specificity, never on order). */
-:root[data-surface='blueprint'] .exp { --essence: #5d2a1a !important; }
+:root[data-surface='blueprint'] .exp { --essence: var(--surface-essence-text) !important; }
 :root[data-surface='blueprint'] { --accent: #17191c !important; }
 :root[data-surface='blueprint'] .hero {
   background: transparent;
@@ -867,7 +867,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='blueprint'] .koan {
   border: 0; padding: 0; margin: 0;
   font: italic 400 1.25rem/1.4 var(--font-serif);
-  letter-spacing: 0; color: #5d2a1a; opacity: 1;
+  letter-spacing: 0; color: var(--surface-essence-text); opacity: 1;
 }
 :root[data-surface='blueprint'] .lede { max-width: 58ch; margin-inline: auto; }
 :root[data-surface='blueprint'] .actions { justify-content: center; gap: .75rem; margin-top: .4rem; }
@@ -929,7 +929,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #66635f;
   --ink-faint: #a8a7a1;
   --line: #e3e3de;
-  --essence: #53504c;
+  --essence: var(--surface-essence-text);
   --accent: #1a1614;
   --font-serif: 'Noto Serif', 'Iowan Old Style', Georgia, serif;
   --font-body: Inter, system-ui, sans-serif;
@@ -942,7 +942,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
 }
 :root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
-:root[data-surface='paper'] .hero > .ascii-motif { grid-area: mark; color: #53504c; }
+:root[data-surface='paper'] .hero > .ascii-motif { grid-area: mark; color: var(--surface-essence-text); }
 :root[data-surface='paper'] .exp-name { grid-area: title; position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 400 clamp(2.8rem,5vw,3.375rem)/1.1 var(--font-serif); letter-spacing: -.037em; color: #1a1614; }
 :root[data-surface='paper'] .koan { grid-area: koan; border: 0; padding: 0; margin: 0; font: 400 1.25rem/1.5 var(--font-serif); font-style: normal; color: #66635f; opacity: 1; }
 :root[data-surface='paper'] .lede { grid-area: lede; color: #66635f; }
@@ -973,9 +973,9 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --line: #951c04;
   --font-serif: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #fa5838 !important;
+  --accent: var(--surface-essence) !important;
 }
-:root[data-surface='studio'] .exp { --essence: #fa5838 !important; --accent: #fa5838 !important; }
+:root[data-surface='studio'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
 :root[data-surface='studio'] .hero { width: 100%; max-width: none; margin: 0; background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; border: 0 !important; border-radius: 0; align-items: center; text-align: center; padding: 2rem max(var(--space),calc((100vw - 70rem)/2)) 1.5rem; }
 :root[data-surface='studio'] .hero::before,
 :root[data-surface='studio'] .hero::after { content: none; }
@@ -1000,7 +1000,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='studio'] .band-light .label { color: #190501; }
 :root[data-surface='studio'] .band-dark { background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; }
 :root[data-surface='studio'] .spectrum { gap: clamp(.3rem,1vw,.8rem); }
-:root[data-surface='studio'] .spectrum span { background: #fa5838; }
+:root[data-surface='studio'] .spectrum span { background: var(--surface-essence); }
 
 /* AuthKit → ghScaff: midnight steel — flat plates, hairlines, canvas grid. */
 :root[data-surface='industrial'] {
@@ -1009,14 +1009,14 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #c7d3ea;
   --ink-faint: #9da7ba;
   --line: rgba(186,215,247,.12);
-  --glass-v: #b6d9fc;
-  --canvas-color: #b6d9fc;
+  --glass-v: var(--surface-essence);
+  --canvas-color: var(--surface-essence);
   --canvas-mute: #3f4959;
   --font-serif: 'Space Grotesk', sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #b6d9fc !important;
+  --accent: var(--surface-essence) !important;
 }
-:root[data-surface='industrial'] .exp { --essence: #b6d9fc !important; --accent: #b6d9fc !important; }
+:root[data-surface='industrial'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
 /* ghScaff steel contract (2026-09-28 audit) — the hero plate and the seven
    lift cards must stay OPAQUE. Without this line the unified surface mapper
    in global.css rebinds --bg-raise at `html[data-surface]:root` (specificity
@@ -1031,7 +1031,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
 :root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
 :root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: var(--ink); }
-:root[data-surface='industrial'] .ascii-motif { color: #b6d9fc; }
+:root[data-surface='industrial'] .ascii-motif { color: var(--surface-essence); }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 :root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
 :root[data-surface='industrial'] .actions .btn.ghost { background: transparent; color: #d1e4fa; }
@@ -1048,23 +1048,23 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
   --ink-dim: #3f4654;
   --ink-faint: #6b7589;
   --line: #d8e0ea;
-  --voltage: #862fe7;
-  --canvas-color: #862fe7;
+  --voltage: var(--surface-essence-text);
+  --canvas-color: var(--surface-essence);
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #862fe7 !important;
+  --accent: var(--surface-essence-text) !important;
 }
-:root[data-surface='pastel'] .exp { --essence: #862fe7 !important; --accent: #862fe7 !important; }
+:root[data-surface='pastel'] .exp { --essence: var(--surface-essence-text) !important; --accent: var(--surface-essence-text) !important; }
 :root[data-surface='pastel'] .hero { align-items: center; text-align: center; background: #fff; border: 0; padding: 1.4rem 1rem .5rem; gap: .8rem; }
 :root[data-surface='pastel'] .hero::before,
 :root[data-surface='pastel'] .hero::after { content: none; }
 :root[data-surface='pastel'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 600 clamp(3rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif; letter-spacing: -.025em; color: #111827; }
 :root[data-surface='pastel'] .koan { font-family: var(--font-body); font-style: normal; color: #3f4654; opacity: 1; }
 :root[data-surface='pastel'] .lede { color: #6b7589; max-width: 58ch; text-align: center; }
-:root[data-surface='pastel'] .ascii-motif { color: #862fe7; }
+:root[data-surface='pastel'] .ascii-motif { color: var(--surface-essence-text); }
 :root[data-surface='pastel'] .hero-visual { width: 100%; }
 :root[data-surface='pastel'] .actions { justify-content: center; }
-:root[data-surface='pastel'] .actions .btn { background: #862fe7; color: #fff; border: 1px solid #862fe7; border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+:root[data-surface='pastel'] .actions .btn { background: var(--surface-essence); color: #fff; border: 1px solid var(--surface-essence); border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
 :root[data-surface='pastel'] .actions .btn.ghost { color: #111827; background: transparent; border-color: #111827; font-weight: 500; }
 :root[data-surface='pastel'] .install { margin: .45rem auto 0; }
 :root[data-surface='pastel'] .hero-stage { margin-block: .3rem 0; }

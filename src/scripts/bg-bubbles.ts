@@ -9,6 +9,8 @@
 // float and parent re-linking unchanged; touch never stages.
 // Extracted from backgrounds.ts.
 
+import { byId } from '../lib/experiments';
+
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    (the same move brain.ts and spotlight.ts made) so the module needs no
    runtime dependency on backgrounds.ts — keep the field names in sync. */
@@ -49,7 +51,7 @@ function hash7(): string {
 
 export function bubbles(ctx: BubblesCtx): (t: number) => void {
   const { c } = ctx;
-  const A = ctx.color.length === 7 ? ctx.color : '#e8a4c8';
+  const A = ctx.color.length === 7 ? ctx.color : byId('gitkit').essenceHex;
   const hex = ctx.bg.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);

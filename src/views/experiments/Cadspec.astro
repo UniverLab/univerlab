@@ -26,7 +26,7 @@ const exp = byId('cadspec');
       <svg viewBox="0 0 160 34" aria-hidden="true">
         <!-- the same dimension the plan draws: extension lines, the measure
              line with its 45° ticks, and the value it reports -->
-        <g stroke="var(--essence)" stroke-width="1" fill="none">
+        <g stroke="var(--surface-essence-text)" stroke-width="1" fill="none">
           <line x1="14" y1="6" x2="14" y2="28" />
           <line x1="146" y1="6" x2="146" y2="28" />
           <line x1="14" y1="24" x2="146" y2="24" />
@@ -51,14 +51,14 @@ const exp = byId('cadspec');
                window gap on top and a door gap on the bottom stay put -->
           <path class="walls" d="M50 146 V34 H70 M110 34 H280 V146 H145 M110 146 H50"
             stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="square" />
-          <g class="window" stroke="var(--essence)" stroke-width="1.3">
+          <g class="window" stroke="var(--surface-essence-text)" stroke-width="1.3">
             <line x1="70" y1="32" x2="110" y2="32" />
             <line x1="70" y1="36" x2="110" y2="36" />
           </g>
-          <path class="swing" d="M145 146 A 35 35 0 0 0 110 111" stroke="var(--essence)" stroke-width="1.2" stroke-dasharray="4 4" fill="none" />
-          <line x1="110" y1="146" x2="110" y2="111" stroke="var(--essence)" stroke-width="2" />
+          <path class="swing" d="M145 146 A 35 35 0 0 0 110 111" stroke="var(--surface-essence-text)" stroke-width="1.2" stroke-dasharray="4 4" fill="none" />
+          <line x1="110" y1="146" x2="110" y2="111" stroke="var(--surface-essence-text)" stroke-width="2" />
           <!-- width dimension: line, end ticks and value, all driven by the spec -->
-          <g class="dims" stroke="var(--essence)" stroke-width="1" opacity="0.85">
+          <g class="dims" stroke="var(--surface-essence-text)" stroke-width="1" opacity="0.85">
             <line class="dim-line" x1="50" y1="168" x2="280" y2="168" />
             <line x1="50" y1="164" x2="50" y2="174" />
             <line class="dim-tick-r" x1="280" y1="164" x2="280" y2="174" />
@@ -243,7 +243,7 @@ offset = 0.5</code></pre>
   :global(:root[data-surface='blueprint'] .hero::after) { content: none; }
   :global(:root[data-surface='blueprint'] .hero::before) {
     /* registration tick stays; its fill goes (there is no plate anymore) */
-    border-color: var(--essence);
+    border-color: var(--surface-essence-text);
     background: transparent;
   }
   :global(:root[data-surface='blueprint'] .koan) {
@@ -253,7 +253,7 @@ offset = 0.5</code></pre>
     font-weight: 400;
     font-size: clamp(1.05rem, 1.6vw, 1.3rem);
     letter-spacing: 0;
-    color: var(--essence);
+    color: var(--surface-essence-text);
     opacity: 1;
   }
   :global(:root[data-surface='blueprint'] .lede) {
@@ -314,7 +314,7 @@ offset = 0.5</code></pre>
   }
   :global(:root[data-surface='blueprint'] .copy) { border-left: 1px solid var(--line); }
   :global(:root[data-surface='blueprint'] .os-tab[aria-selected='true']) {
-    color: var(--essence);
+    color: var(--surface-essence-text);
   }
 
   /* (f) The floating product artifacts — view-local, so they stay scoped.
@@ -338,7 +338,7 @@ offset = 0.5</code></pre>
   .art-dim    { right: 1rem; top: 8rem; width: 13rem; transform: rotate(1deg); }
   .art-dim svg { display: block; width: 100%; height: auto; }
   .art-val {
-    fill: var(--essence);
+    fill: var(--surface-essence-text);
     font-family: var(--font-mono);
     font-size: 11px;
   }
@@ -346,7 +346,7 @@ offset = 0.5</code></pre>
     margin: 0;
     font-size: 0.78rem;
     line-height: 1.6;
-    color: var(--essence);
+    color: var(--surface-essence-text);
     white-space: pre;
   }
   /* The one blush-peach card on the page (the compile status chip). */
@@ -366,16 +366,16 @@ offset = 0.5</code></pre>
     width: 0.45rem;
     height: 0.45rem;
     border-radius: 50%;
-    background: var(--essence);
+    background: var(--surface-essence);
   }
   .chip-label {
     font-family: var(--font-mono);
     font-size: 0.68rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #5d2a1a;
+    color: var(--surface-essence-text);
   }
-  .chip-status { font-size: 0.78rem; color: #5d2a1a; }
+  .chip-status { font-size: 0.78rem; color: var(--surface-essence-text); }
   .ascii-motif {
     margin: 0;
     max-width: 42rem;
@@ -437,7 +437,7 @@ offset = 0.5</code></pre>
   /* (g) Below the hero — the plan sheet and its notes. The old cyan hairline
      plate goes; the drawing and the code become two mist cards. Every
      cyan hairline (#6ec6e6, ~1.9:1 on paper) in this file is replaced by
-     var(--essence) (#156c80, 5.3:1 on mist). */
+     var(--surface-essence-text) (#3f6de9, 4.6:1 on white). */
   .section { padding-block: 1.5rem 2rem; }
   .sheet {
     display: grid;
@@ -461,7 +461,7 @@ offset = 0.5</code></pre>
     justify-content: center;
   }
   .drawing svg { display: block; width: 100%; }
-  .dim-t { fill: var(--essence); }
+  .dim-t { fill: var(--surface-essence-text); }
   .code {
     margin: 0;
     background: var(--bg-raise);
@@ -471,7 +471,7 @@ offset = 0.5</code></pre>
     padding: 1.2rem;
     font-size: 0.8rem;
     line-height: 1.65;
-    color: var(--essence);
+    color: var(--surface-essence-text);
   }
   .notes { list-style: none; padding: 0; margin: 2rem auto 0; max-width: 46rem; }
   .notes li {
@@ -482,9 +482,9 @@ offset = 0.5</code></pre>
     color: var(--ink-dim);
     font-size: 0.97rem;
   }
-  .note-num { color: var(--essence); font-size: 0.8rem; padding-top: 0.15rem; }
-  .notes :global(code) { color: var(--essence); font-size: 0.88em; }
-  .notes :global(em) { color: var(--essence); font-style: italic; }
+  .note-num { color: var(--surface-essence-text); font-size: 0.8rem; padding-top: 0.15rem; }
+  .notes :global(code) { color: var(--surface-essence-text); font-size: 0.88em; }
+  .notes :global(em) { color: var(--surface-essence-text); font-style: italic; }
 
   /* (h) Layout-owned sections, re-dressed for this surface. */
   :global(:root[data-surface='blueprint'] .genesis h2),
@@ -505,7 +505,7 @@ offset = 0.5</code></pre>
   :global(:root[data-surface='blueprint'] .exp-nav-link:hover),
   :global(:root[data-surface='blueprint'] .exp-nav-link:hover .n),
   :global(:root[data-surface='blueprint'] .exp-nav-link:hover .arrow) {
-    color: var(--essence);
+    color: var(--surface-essence-text);
   }
 
   /* (i) Backdrop — the LIVING background of this page: a quiet drafting grid,
@@ -518,7 +518,7 @@ offset = 0.5</code></pre>
   :global(:root[data-surface='blueprint'] body::before) {
     background-image:
       radial-gradient(420px circle at var(--stir-x, 50%) var(--stir-y, 40%),
-        color-mix(in srgb, var(--essence, #156c80) 7%, transparent), transparent 72%),
+        color-mix(in srgb, var(--surface-essence-text, #3f6de9) 7%, transparent), transparent 72%),
       linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
       linear-gradient(0deg,  color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
       linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
