@@ -73,7 +73,7 @@ html[data-surface='paper'] h3 {
   letter-spacing: 0;
 }
 
-/* Emphasis stays in bistre: the experiment's terracotta essence has ~2:1 on
+/* Emphasis stays in bistre: the experiment's garnet essence has ~2.9:1 on
    cream and isn't this surface's voice — essence is left to the install sigil
    and the status dot. No weight jump either: 400 only. */
 html[data-surface='paper'] strong {
@@ -126,7 +126,7 @@ html[data-surface='paper'] .genesis .prose {
    is 400 like every other heading here (see the h2 rule above). */
 
 /* The demo figure sits inside the cream page: its frame joins the wide dash
-   (T1) and its "Fig. 1" marker is bistre-faint, not the amber essence. The
+   (T1) and its "Fig. 1" marker is bistre-faint, not the garnet essence. The
    component's box-shadow goes too — its first layer is a solid 1px essence
    ring (a solid rule inside content) and its second a dark-surface card
    shadow that reads as chrome, not a sheet on the desk. */
@@ -186,10 +186,11 @@ html[data-surface='tui'] .koan::before {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   gitkit · `pastel` — sunlit SaaS with violet confidence.
+   gitkit · `pastel` — sunlit SaaS with orchid confidence.
 
-   White canvas with fog bands and a single voltage violet. The hero is a
-   centered stack (copy · violet CTA · install bar · ascii motif · two flat
+   White canvas with fog bands and a single orchid ink (the registry
+   orchid's text pair). The hero is a
+   centered stack (copy · orchid CTA · install bar · ascii motif · two flat
    mockup cards); the gitgraph/commit motif is pushed through the
    bubbles canvas runner and the wizard git-rail below. (Key name kept for
    stability.)
@@ -214,12 +215,14 @@ html[data-surface='pastel'] .koan {
   opacity: 1;
 }
 /* Essence pin (the industrial mechanism, verbatim precedent). The inline
-   registry pink loses to author `!important` on `.exp`; DemoFigure
+   registry fill orchid loses to author `!important` on `.exp`; DemoFigure
    re-declares `--essence` inline on the figure itself, so it needs its own
-   pin or the demo frame ring/"Fig." label stays pink. */
+   pin or the demo frame ring/"Fig." label stays in the fill orchid — which
+   holds only 2.91:1 on the white canvas. The pin takes the text tone, the
+   same re-point every other --voltage use made, keeping the label at 4.56:1. */
 html[data-surface='pastel'] .exp,
 html[data-surface='pastel'] .demo-fig {
-  --essence: var(--voltage) !important;
+  --essence: var(--orchid-text) !important;
 }
 /* Product name: one unhidden masthead; the view supplies a small Git motif. */
 html[data-surface='pastel'] .exp-name {
@@ -242,14 +245,14 @@ html[data-surface='pastel'] .banner {
   opacity: 0.55;
 }
 /* Fog bands (replaces the old pink wash). Soft stops only — no discrete
-   tinted section boxes anywhere, so violet never sits on tint here. */
+   tinted section boxes anywhere, so the accent never sits on tint here. */
 html[data-surface='pastel'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: linear-gradient(180deg, #fff 10%, rgba(109,40,217,.035) 24%, #fff 36%, rgba(100,116,139,.05) 50%, #fff 62%, rgba(109,40,217,.028) 76%, #fff 90%);
+  background: linear-gradient(180deg, #fff 10%, color-mix(in srgb, var(--surface-essence-text) 3.5%, transparent) 24%, #fff 36%, rgba(100,116,139,.05) 50%, #fff 62%, color-mix(in srgb, var(--surface-essence-text) 2.8%, transparent) 76%, #fff 90%);
 }
 /* Centered hero stack. */
 html[data-surface='pastel'] .hero {
@@ -263,28 +266,32 @@ html[data-surface='pastel'] .lede { margin-inline: auto; }
 html[data-surface='pastel'] .install { margin-inline: auto; }
 html[data-surface='pastel'] .actions { justify-content: center; }
 html[data-surface='pastel'] .num { color: var(--ink-faint); }
-html[data-surface='pastel'] .dot { background: var(--voltage); box-shadow: 0 0 0 2px rgba(109,40,217,.18); }
+html[data-surface='pastel'] .dot { background: var(--surface-essence); box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface-essence-text) 18%, transparent); }
 html[data-surface='pastel'] .dot[data-status='beta'],
 html[data-surface='pastel'] .dot[data-status='research'] { background: var(--ink-dim); box-shadow: none; }
 html[data-surface='pastel'] .exp .lede strong,
 html[data-surface='pastel'] .exp .genesis .prose strong { color: var(--ink); }
 html[data-surface='pastel'] .exp .lede code,
-html[data-surface='pastel'] .exp .genesis .prose code { color: var(--voltage); }
-/* 12px buttons + the one violet CTA. */
+html[data-surface='pastel'] .exp .genesis .prose code { color: var(--orchid-text); }
+/* 12px buttons + the one orchid CTA. */
 html[data-surface='pastel'] .btn {
   font-size: 12px;
   padding: 0.55rem 1.15rem;
   border-radius: 10px;
   letter-spacing: 0.01em;
 }
+/* The orchid CTA: the soft white → orchid-soft → white gradient. The
+   resting label is --ink (it holds >= 4.5:1 over the soft mid-stop; --orchid-deep
+   there was only 2.06:1). Hover/pressed fills --orchid-deep with white (5.27:1). */
 html[data-surface='pastel'] .btn-violet {
-  background: var(--voltage);
-  border-color: var(--voltage);
-  color: #fff;
+  background: var(--cta-gradient);
+  border-color: var(--orchid-soft);
+  color: var(--ink);
 }
-html[data-surface='pastel'] .btn-violet:hover {
-  filter: brightness(1.08);
-  background: var(--voltage);
+html[data-surface='pastel'] .btn-violet:hover,
+html[data-surface='pastel'] .btn-violet:active {
+  background: var(--orchid-deep);
+  border-color: var(--orchid-deep);
   color: #fff;
 }
 html[data-surface='pastel'] .btn:focus-visible {
@@ -301,7 +308,7 @@ html[data-surface='pastel'] .exp .tag {
   letter-spacing: 0.04em;
   color: var(--ink-faint);
 }
-/* Install bar (layout-owned markup; style only). No violet fill here. */
+/* Install bar (layout-owned markup; style only). No accent fill here. */
 html[data-surface='pastel'] .cmd {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -309,11 +316,11 @@ html[data-surface='pastel'] .cmd {
   box-shadow: 0 1px 0 rgba(23,20,31,.03);
 }
 html[data-surface='pastel'] .copy { border-left: 1px solid var(--line); }
-html[data-surface='pastel'] .os-tab[aria-selected='true'] { color: var(--voltage); }
+html[data-surface='pastel'] .os-tab[aria-selected='true'] { color: var(--orchid-deep); }
 html[data-surface='pastel'] .cmd-line[data-os='unix']::before,
-html[data-surface='pastel'] .cmd-line[data-os='windows']::before { color: var(--voltage); }
+html[data-surface='pastel'] .cmd-line[data-os='windows']::before { color: var(--orchid-deep); }
 html[data-surface='pastel'] .copy:hover,
-html[data-surface='pastel'] .copy.done .copy-done { color: var(--voltage); }
+html[data-surface='pastel'] .copy.done .copy-done { color: var(--orchid-deep); }
 /* Hero stage. No orbs behind the cards and no float loop: the two mockup
    cards are flat plates on the pastel surface (the view owns their geometry). */
 html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; }
@@ -321,7 +328,7 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · `industrial` — midnight steel: an aligned scaffold grid.
 
-   Violet-black midnight substrate with a single violet accent; the hero
+   Sky-black midnight substrate with a single sky accent; the hero
    reads as a flat steel plate with one hairline frame. Type is a sturdy
    grotesque; the koan is set in ink. The canvas paints the scaffold grid
    with a cursor-anchored spotlight.
@@ -329,7 +336,7 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
 html[data-surface='industrial'] {
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --glass-v: #8b7cf6;
+  --glass-v: var(--surface-essence);
   --bg: #0b0a14;
   --bg-raise: #12101e;
   --ink: #e8e6f2;
@@ -360,8 +367,9 @@ html[data-surface='blueprint'] {
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 html[data-surface='blueprint'] .exp {
-  /* The light brand cyan has no contrast on white — accents use a darker teal. */
-  --essence: #156c80 !important;
+  /* The registry fill blue sits just under 4.5:1 on white — accents read
+     the registry's text ink instead (PAL1's `essenceTextHex`). */
+  --essence: var(--surface-essence-text) !important;
 }
 /* Two faint axes cross the sheet — a clean geometric plan motif, not a grid
    (a full grid was too heavy and hurt legibility). */
@@ -372,8 +380,8 @@ html[data-surface='blueprint'] body::before {
   z-index: -2;
   pointer-events: none;
   background-image:
-    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px)),
-    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, #156c80 13%, transparent) 50%, transparent calc(50% + 0.5px));
+    linear-gradient(90deg, transparent calc(50% - 0.5px), color-mix(in srgb, var(--surface-essence-text) 13%, transparent) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, var(--surface-essence-text) 13%, transparent) 50%, transparent calc(50% + 0.5px));
 }
 html[data-surface='blueprint'] .genesis h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -696,20 +704,20 @@ html[data-surface='studio'] .hero .rec {
 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · industrial — midnight steel, not frosted glass.
-   Single violet hue (--glass-v) throughout; copper is suppressed on this
-   surface only (registry keeps #b87333 for OG/home). Cards and the hero
-   are flat plates so the scaffold canvas reads behind them, unblurred.
+   Single sky hue (--glass-v = the registry essence) throughout — the page,
+   OG and the home card all paint the same registry colour. Cards and the
+   hero are flat plates so the scaffold canvas reads behind them, unblurred.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Visually suppress copper on this surface only — the inline --essence
-   (copper) loses to this scoped override; the surface block above already
-   paints the whole surface violet via --glass-v. */
+/* Keep the page accent flowing from --glass-v: the inline registry essence
+   on `.exp` loses to this scoped pin, so the page can never drift from the
+   surface hue (today both sides resolve to the same registry sky). */
 html[data-surface='industrial'] .exp {
   --essence: var(--glass-v) !important;
 }
-/* The demo figure re-declares --essence INLINE (the registry copper), which
+/* The demo figure re-declares --essence INLINE (the registry fill), which
    inherits nothing from the block above — its frame ring, progress fill and
-   "Fig." label would put copper back next to the violet. Pin it here. */
+   "Fig." label would drift from the page hue. Pin it here. */
 html[data-surface='industrial'] .demo-fig {
   --essence: var(--glass-v) !important;
 }
@@ -737,7 +745,7 @@ html[data-surface='industrial'] .banner {
   text-shadow: none;
 }
 
-/* Status + koan + emphasis in the single violet voice. */
+/* Status + koan + emphasis in the single glass voice. */
 html[data-surface='industrial'] .num {
   color: var(--glass-v);
 }
@@ -764,19 +772,27 @@ html[data-surface='industrial'] .exp .genesis .prose em {
   color: var(--glass-v);
 }
 
-/* Exactly ONE violet CTA — the primary action. All other buttons stay ink. */
+/* Exactly ONE accent CTA — the primary action. All other buttons stay ink. */
 html[data-surface='industrial'] .btn-violet {
   background: var(--glass-v);
   border-color: var(--glass-v);
   color: #0b0a14;
 }
+/* Hover/pressed are tones of the cyan, not white. Both keep the dark
+   label >= 4.5:1: hover 85% glass-v + white = ~11.1:1; active 78% glass-v +
+   the midnight bg = ~6.2:1. */
 html[data-surface='industrial'] .btn-violet:hover {
-  filter: brightness(1.08);
-  background: var(--glass-v);
+  background: color-mix(in srgb, var(--glass-v) 85%, #ffffff);
+  border-color: color-mix(in srgb, var(--glass-v) 85%, #ffffff);
+  color: #0b0a14;
+}
+html[data-surface='industrial'] .btn-violet:active {
+  background: color-mix(in srgb, var(--glass-v) 78%, #05060f);
+  border-color: color-mix(in srgb, var(--glass-v) 78%, #05060f);
   color: #0b0a14;
 }
 html[data-surface='industrial'] .btn-violet:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--glass-v);
   outline-offset: 2px;
 }
 
@@ -806,7 +822,7 @@ html[data-surface='industrial'] .copy.done .copy-done {
    (flat fill + hairline from the later `:root[...] .fan li / .glass` rule). */
 
 /* Luminous text progression: numerals/titles brighten along the flow in the
-   single violet hue — 01 dim, 07 near-white. No second accent. */
+   single glass hue — 01 dim, 07 near-white. No second accent. */
 html[data-surface='industrial'] .fan li:nth-child(1) .idx { color: color-mix(in srgb, var(--glass-v) 35%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(2) .idx { color: color-mix(in srgb, var(--glass-v) 45%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(3) .idx { color: color-mix(in srgb, var(--glass-v) 55%, var(--ink)); }
@@ -815,7 +831,7 @@ html[data-surface='industrial'] .fan li:nth-child(5) .idx { color: color-mix(in 
 html[data-surface='industrial'] .fan li:nth-child(6) .idx { color: color-mix(in srgb, var(--glass-v) 85%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(7) .idx { color: color-mix(in srgb, var(--glass-v) 95%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(1) .step-name { color: var(--ink-dim); }
-html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff; }
+html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-mix(in srgb, var(--glass-v) 20%, var(--ink)); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    2026-09-26 preserved POC styles. Each target has a full style reference in
@@ -834,7 +850,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #777b86;
   --ink-faint: #979799;
   --line: #ececec;
-  --essence: #5d2a1a;
+  --essence: var(--surface-essence-text);
   --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
@@ -846,7 +862,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
    is the page's own grid (surfaces.css still draws the faint axes at
    `html[data-surface='blueprint'] body::before`, (0,1,3) — outranked by the
    page rule on specificity, never on order). */
-:root[data-surface='blueprint'] .exp { --essence: #5d2a1a !important; }
+:root[data-surface='blueprint'] .exp { --essence: var(--surface-essence-text) !important; }
 :root[data-surface='blueprint'] { --accent: #17191c !important; }
 :root[data-surface='blueprint'] .hero {
   background: transparent;
@@ -867,7 +883,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='blueprint'] .koan {
   border: 0; padding: 0; margin: 0;
   font: italic 400 1.25rem/1.4 var(--font-serif);
-  letter-spacing: 0; color: #5d2a1a; opacity: 1;
+  letter-spacing: 0; color: var(--surface-essence-text); opacity: 1;
 }
 :root[data-surface='blueprint'] .lede { max-width: 58ch; margin-inline: auto; }
 :root[data-surface='blueprint'] .actions { justify-content: center; gap: .75rem; margin-top: .4rem; }
@@ -892,7 +908,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --accent: #00827c !important;
 }
-:root[data-surface='tui'] .exp { --essence: #00a9a0 !important; --accent: #00827c !important; }
+:root[data-surface='tui'] .exp { --essence: var(--surface-essence) !important; --accent: #00827c !important; }
 :root[data-surface='tui'] .hero {
   width: min(100% - 2 * var(--space), 76rem);
   margin: 1rem auto 0;
@@ -929,12 +945,18 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #66635f;
   --ink-faint: #a8a7a1;
   --line: #e3e3de;
-  --essence: #53504c;
+  --essence: var(--surface-essence-text);
   --accent: #1a1614;
   --font-serif: 'Noto Serif', 'Iowan Old Style', Georgia, serif;
   --font-body: Inter, system-ui, sans-serif;
   --accent: #1a1614 !important;
 }
+/* ExperimentLayout sets `--essence` inline on `.exp` from `essenceHex` — the
+   FILL token. On this light sheet that lands at 2.9:1 on parchment, so the
+   text/1px-stroke rules that read `--essence` (.num, .koan, .lede code, the
+   .btn outline…) must see the text ink instead. `!important` is what beats the
+   inline declaration; the same line exists for blueprint and pastel. */
+:root[data-surface='paper'] .exp { --essence: var(--surface-essence-text) !important; }
 :root[data-surface='paper'] .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);
@@ -942,7 +964,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   align-items: center; gap: .8rem 2rem; padding-block: 2rem 3rem; text-align: left;
 }
 :root[data-surface='paper'] .hero > .num { grid-area: eyebrow; }
-:root[data-surface='paper'] .hero > .ascii-motif { grid-area: mark; color: #53504c; }
+:root[data-surface='paper'] .hero > .ascii-motif { grid-area: mark; color: var(--surface-essence-text); }
 :root[data-surface='paper'] .exp-name { grid-area: title; position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 400 clamp(2.8rem,5vw,3.375rem)/1.1 var(--font-serif); letter-spacing: -.037em; color: #1a1614; }
 :root[data-surface='paper'] .koan { grid-area: koan; border: 0; padding: 0; margin: 0; font: 400 1.25rem/1.5 var(--font-serif); font-style: normal; color: #66635f; opacity: 1; }
 :root[data-surface='paper'] .lede { grid-area: lede; color: #66635f; }
@@ -973,9 +995,9 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --line: #951c04;
   --font-serif: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #fa5838 !important;
+  --accent: var(--surface-essence) !important;
 }
-:root[data-surface='studio'] .exp { --essence: #fa5838 !important; --accent: #fa5838 !important; }
+:root[data-surface='studio'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
 :root[data-surface='studio'] .hero { width: 100%; max-width: none; margin: 0; background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; border: 0 !important; border-radius: 0; align-items: center; text-align: center; padding: 2rem max(var(--space),calc((100vw - 70rem)/2)) 1.5rem; }
 :root[data-surface='studio'] .hero::before,
 :root[data-surface='studio'] .hero::after { content: none; }
@@ -1000,7 +1022,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
 :root[data-surface='studio'] .band-light .label { color: #190501; }
 :root[data-surface='studio'] .band-dark { background: color-mix(in srgb, #190501 82%, transparent); color: #f7f6ff; }
 :root[data-surface='studio'] .spectrum { gap: clamp(.3rem,1vw,.8rem); }
-:root[data-surface='studio'] .spectrum span { background: #fa5838; }
+:root[data-surface='studio'] .spectrum span { background: var(--surface-essence); }
 
 /* AuthKit → ghScaff: midnight steel — flat plates, hairlines, canvas grid. */
 :root[data-surface='industrial'] {
@@ -1009,14 +1031,14 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --ink-dim: #c7d3ea;
   --ink-faint: #9da7ba;
   --line: rgba(186,215,247,.12);
-  --glass-v: #b6d9fc;
-  --canvas-color: #b6d9fc;
+  --glass-v: var(--surface-essence);
+  --canvas-color: var(--surface-essence);
   --canvas-mute: #3f4959;
   --font-serif: 'Space Grotesk', sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #b6d9fc !important;
+  --accent: var(--surface-essence) !important;
 }
-:root[data-surface='industrial'] .exp { --essence: #b6d9fc !important; --accent: #b6d9fc !important; }
+:root[data-surface='industrial'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
 /* ghScaff steel contract (2026-09-28 audit) — the hero plate and the seven
    lift cards must stay OPAQUE. Without this line the unified surface mapper
    in global.css rebinds --bg-raise at `html[data-surface]:root` (specificity
@@ -1031,16 +1053,26 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
 :root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
 :root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: var(--ink); }
-:root[data-surface='industrial'] .ascii-motif { color: #b6d9fc; }
+:root[data-surface='industrial'] .ascii-motif { color: var(--surface-essence); }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 :root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
 :root[data-surface='industrial'] .actions .btn.ghost { background: transparent; color: #d1e4fa; }
+/* PAL3: the ONE accent CTA keeps its cyan fill at this rank too. The
+   `html[...]` .btn-violet rule (0,2,1) loses to this block's `.actions .btn`
+   (0,4,0), so without its own :root pin the CTA renders steel, never cyan.
+   Fill is #62c4ec (ghscaff essence) via the token; hover 85% cyan + white and
+   active 78% cyan + midnight are tones of the cyan, never white. */
+:root[data-surface='industrial'] .actions .btn-violet { background: var(--surface-essence); border-color: var(--surface-essence); color: #0b0a14; }
+:root[data-surface='industrial'] .actions .btn-violet:hover { background: color-mix(in srgb, var(--surface-essence) 85%, #ffffff); border-color: color-mix(in srgb, var(--surface-essence) 85%, #ffffff); color: #0b0a14; }
+:root[data-surface='industrial'] .actions .btn-violet:active { background: color-mix(in srgb, var(--surface-essence) 78%, #05060f); border-color: color-mix(in srgb, var(--surface-essence) 78%, #05060f); color: #0b0a14; }
 :root[data-surface='industrial'] .install { margin-inline: auto; }
-:root[data-surface='industrial'] .cmd { background: rgba(186,214,247,.05); border-color: rgba(186,215,247,.12); }
+/* PAL3: the install slip reads the same cyan hairline as the `html[...]` rule
+   above — the steel rgba here shadowed it (0,3,0 beats 0,2,1). #62c4ec via token. */
+:root[data-surface='industrial'] .cmd { background: color-mix(in srgb, var(--surface-essence) 10%, rgba(18, 16, 30, 0.55)); border-color: color-mix(in srgb, var(--surface-essence) 22%, transparent); }
 :root[data-surface='industrial'] .fan li,
 :root[data-surface='industrial'] .glass { background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; }
 
-/* Supahub → GitKit: violet sun, real product previews. */
+/* Supahub → GitKit: orchid sun, real product previews. */
 :root[data-surface='pastel'] {
   --bg: #ffffff;
   --bg-raise: #f1f5f9;
@@ -1048,23 +1080,27 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
   --ink-dim: #3f4654;
   --ink-faint: #6b7589;
   --line: #d8e0ea;
-  --voltage: #862fe7;
-  --canvas-color: #862fe7;
+  --orchid-text: var(--surface-essence-text);
+  --orchid-fill: var(--surface-essence);
+  --canvas-color: var(--surface-essence);
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
-  --accent: #862fe7 !important;
+  --accent: var(--surface-essence-text) !important;
 }
-:root[data-surface='pastel'] .exp { --essence: #862fe7 !important; --accent: #862fe7 !important; }
+:root[data-surface='pastel'] .exp { --essence: var(--surface-essence-text) !important; --accent: var(--surface-essence-text) !important; }
 :root[data-surface='pastel'] .hero { align-items: center; text-align: center; background: #fff; border: 0; padding: 1.4rem 1rem .5rem; gap: .8rem; }
 :root[data-surface='pastel'] .hero::before,
 :root[data-surface='pastel'] .hero::after { content: none; }
 :root[data-surface='pastel'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 600 clamp(3rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif; letter-spacing: -.025em; color: #111827; }
 :root[data-surface='pastel'] .koan { font-family: var(--font-body); font-style: normal; color: #3f4654; opacity: 1; }
 :root[data-surface='pastel'] .lede { color: #6b7589; max-width: 58ch; text-align: center; }
-:root[data-surface='pastel'] .ascii-motif { color: #862fe7; }
+:root[data-surface='pastel'] .ascii-motif { color: var(--surface-essence-text); }
 :root[data-surface='pastel'] .hero-visual { width: 100%; }
 :root[data-surface='pastel'] .actions { justify-content: center; }
-:root[data-surface='pastel'] .actions .btn { background: #862fe7; color: #fff; border: 1px solid #862fe7; border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+:root[data-surface='pastel'] .actions .btn { background: var(--cta-gradient); color: var(--ink); border: 1px solid var(--orchid-soft); border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+/* :not(.ghost) — the docs button keeps its ink outline hover. */
+:root[data-surface='pastel'] .actions .btn:not(.ghost):hover,
+:root[data-surface='pastel'] .actions .btn:not(.ghost):active { background: var(--orchid-deep); border-color: var(--orchid-deep); color: #fff; }
 :root[data-surface='pastel'] .actions .btn.ghost { color: #111827; background: transparent; border-color: #111827; font-weight: 500; }
 :root[data-surface='pastel'] .install { margin: .45rem auto 0; }
 :root[data-surface='pastel'] .hero-stage { margin-block: .3rem 0; }

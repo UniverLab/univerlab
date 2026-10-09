@@ -164,7 +164,7 @@ describe('structured-data', () => {
     name: 'GitKit',
     number: 'EXP-003',
     status: 'active',
-    essenceHex: '#e8a4c8',
+    essenceHex: '#e06fc0',
     github: 'https://github.com/UniverLab/gitkit',
     bg: 'bubbles',
     motif: 'x',

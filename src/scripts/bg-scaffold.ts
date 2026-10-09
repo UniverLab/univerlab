@@ -13,6 +13,7 @@
 // machine can be unit-tested (brain/orbit/takes/bg-bubbles/bg-spiral pattern).
 
 import { createSpotlight } from './spotlight';
+import { byId } from '../lib/experiments';
 
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    so the module needs no runtime dependency on backgrounds.ts — keep the field
@@ -33,14 +34,13 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 export function scaffold(ctx: ScaffoldCtx): (t: number) => void {
   const { c } = ctx;
-  // Midnight re-tint on the industrial surface: the registry still carries
-  // copper for OG/home, but the live lattice reads blueprint-violet behind the
-  // glass. c.strokeStyle keeps using ctx.color — the caller value is swapped
+  // Midnight re-tint on the industrial surface: the runner paints the
+  // registry ghscaff essence. c.strokeStyle keeps using ctx.color — the caller value is swapped
   // here, no second hue is introduced. The surface arrives through ctx (the
   // argument startBackground was given, else the page's own data-surface), so
   // the home card's window and the /ghscaff page take the same branch.
   if (ctx.surface === 'industrial') {
-    ctx.color = '#8b7cf6';
+    ctx.color = byId('ghscaff').essenceHex;
   }
 
   const G = 84; // grid cell, px — fixed by the design (do not change)

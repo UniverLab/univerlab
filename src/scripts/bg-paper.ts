@@ -75,7 +75,7 @@ export const COMPILED_ALPHA = 0.8; // bistre typeset
 
 /* Source grey: the paper surface's own --ink-dim, never an accent colour.
    (The typeset pass is never hardcoded either — it reads ctx.color, which
-   backgrounds.ts forces to bistre #6a563e on this surface.) */
+   backgrounds.ts forces to the texforge essenceTextHex on this surface.) */
 const SOURCE_COLOR = '#66635f';
 
 export function paper(ctx: PaperCtx): (t: number) => void {

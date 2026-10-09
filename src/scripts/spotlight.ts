@@ -1,5 +1,5 @@
 /** Cursor-anchored spotlight for the scaffold lattice (ghscaff · midnight).
- *  One radial violet-white wash that lerps toward the pointer and parks at
+ *  One radial sky wash that lerps toward the pointer and parks at
  *  50%/30% otherwise — at half intensity (0.05, was 0.10) so the cells the
  *  cursor raises stay the protagonist of this page. Split out of
  *  backgrounds.ts to keep that module within its size budget. Reduced motion
@@ -61,15 +61,15 @@ export function createSpotlight(ctx: SpotCtx) {
       sy += (ty - sy) * 0.08;
       return { x: sx, y: sy };
     },
-    /** ONE violet-white wash over the grid, under content: single radial
+    /** ONE sky wash over the grid, under content: single radial
      *  gradient, composited additively on the dark. */
     paint(c: CanvasRenderingContext2D, x: number, y: number) {
       const R = 420;
       c.globalCompositeOperation = 'lighter';
       c.globalAlpha = 1;
       const grad = c.createRadialGradient(x, y, 0, x, y, R);
-      grad.addColorStop(0, 'rgba(167,139,250,0.05)');
-      grad.addColorStop(1, 'rgba(167,139,250,0)');
+      grad.addColorStop(0, 'rgba(98,196,236,0.05)'); /* #62c4ec — ghscaff essence (PAL1) */
+      grad.addColorStop(1, 'rgba(98,196,236,0)');
       c.fillStyle = grad;
       c.fillRect(x - R, y - R, R * 2, R * 2);
       c.globalCompositeOperation = 'source-over';
