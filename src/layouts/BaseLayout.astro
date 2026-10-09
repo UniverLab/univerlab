@@ -6,6 +6,7 @@ import ThemeBackground from '../components/ThemeBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
+import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
 import { getLang, useTranslations } from '../i18n';
 import { organizationNode } from '../lib/structured-data';
 import '../styles/global.css';
@@ -124,6 +125,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="origin-trial" content={WEBMCP_ORIGIN_TRIAL_TOKEN} />
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
