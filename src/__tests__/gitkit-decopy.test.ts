@@ -63,7 +63,7 @@ describe('GitKit de-copy — pastel identity, no SaaS chrome', () => {
     expect(VIEW).toMatch(/git commit -m/);
     expect(VIEW).toMatch(/step \{i \+ 1\}/); // step labels stay, only the pill goes
     const tokens = ruleBody(SURFACES, `:root[data-surface='pastel'] {`);
-    expect(tokens).toMatch(/--voltage:/);
+    expect(tokens).toMatch(/--orchid-text:/);
     expect(tokens).toMatch(/--bg:\s*#ffffff/);
   });
 });

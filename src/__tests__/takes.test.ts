@@ -48,7 +48,7 @@ function makeCtx(w = 1440, h = 900) {
       alpha = v;
     },
   });
-  const ctx: TakesCtx = { canvas, c, color: '#ef8354', w, h };
+  const ctx: TakesCtx = { canvas, c, color: '#fa5838', w, h };
   const reset = () => {
     moves.length = 0;
     arcs.length = 0;

@@ -1,9 +1,12 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import EssenceTokens from '../components/EssenceTokens.astro';
 import ThemeBackground from '../components/ThemeBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme } from '../lib/experiments';
+import { buildSiteAbout } from '../lib/site-about';
+import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
 import { getLang, useTranslations } from '../i18n';
 import { organizationNode } from '../lib/structured-data';
 import '../styles/global.css';
@@ -104,6 +107,12 @@ const esHref = new URL('/es' + (stripped === '/' ? '' : stripped), site).href;
 
 const orgJsonLd = organizationNode(site, t.meta.description);
 
+// WebMCP (AGR2): the text an in-page agent gets from `about_univerlab`,
+// composed at build time from llms.txt, the registry and the dictionary and
+// inlined as JSON, so the module script needs no second request and no i18n in
+// the browser bundle.
+const aboutMarkdown = buildSiteAbout(site);
+
 // JSON-LD lives in `<script>`, where a literal `<` followed by `/script>`
 // inside any string would end the tag early and leave the rest of the payload
 // as page markup. Replacing every `<` with its JSON escape sequence is still
@@ -116,6 +125,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="origin-trial" content={WEBMCP_ORIGIN_TRIAL_TOKEN} />
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
@@ -140,6 +150,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
          `display=swap` shows fallback text immediately. -->
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
+    <EssenceTokens />
     {/* Experiment banners are block ASCII tuned to DejaVu Sans Mono (see Banner.astro). */}
     {surface && (
       <link rel="preload" href="/fonts/DejaVuSansMono.ttf" as="font" type="font/ttf" crossorigin />
@@ -182,6 +193,9 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       (Array.isArray(structuredData) ? structuredData : [structuredData]).map((d) => (
         <script type="application/ld+json" set:html={serialize(d)} />
       ))}
+    {/* The pre-built `about_univerlab` text. Read by src/lib/webmcp.ts when (and
+        only when) a browser agent asks for it — no request is made at load. */}
+    <script type="application/json" id="webmcp-about" set:html={serialize({ about: aboutMarkdown })} />
     <!-- Pre-paint language detection: first-time visitors whose system is in
          Spanish are sent to /es once; an explicit choice is always respected. -->
     <script is:inline>
@@ -1075,6 +1089,12 @@ https://github.com/UniverLab
       })();
     </script>
 
+    {/* WebMCP (AGR2): registers the lab's three read-only tools on browsers that
+        ship `modelContext`. On every other browser this module finds no API and
+        returns before doing anything — no registration, no request. */}
+    <script>
+      import '../lib/webmcp';
+    </script>
     <script is:inline>
       (function () {
         if (document.documentElement.hasAttribute('data-dev')) return;

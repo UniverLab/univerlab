@@ -5,7 +5,7 @@
 // in bistre hairlines on the cream surface, with three ochre proofreader's
 // marks in the right margin that resolve one at a time on an autonomous
 // ~15 s CSS loop — the way `texforge check` lints a document before it is
-// typeset. Ink via page tokens, marks via var(--essence) (#e0a458 on this
+// typeset. Ink via page tokens, marks via var(--surface-essence-text) (garnet ink on this
 // page). Text lines are hairline strokes; only the running head, abstract
 // label, display equation, figure caption and footnote marker are real text.
 // Caret and checks are stroke paths (U+2041/U+2713 have patchy coverage);
@@ -88,15 +88,16 @@
   .gp-figcap { font: 400 6.5px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; fill: var(--ink-faint); text-anchor: middle; }
   .gp-fn { font: italic 400 7px var(--font-serif); fill: var(--ink-dim); }
 
-  /* Proof marks, leaders, highlights and checks: ochre only. */
-  .gp-caret, .gp-loop { fill: none; stroke: var(--essence); stroke-width: 1; opacity: 0; }
-  .gp-pil { font: 400 12px var(--font-serif); fill: var(--essence); text-anchor: middle; opacity: 0; }
-  .gp-lead-1, .gp-lead-2, .gp-lead-3 { fill: none; stroke: var(--essence); stroke-width: 0.6; opacity: 0; }
+  /* Proof marks, leaders, highlights and checks: garnet only. Text and thin
+     strokes use the text token; highlight fills keep the fill token. */
+  .gp-caret, .gp-loop { fill: none; stroke: var(--surface-essence-text); stroke-width: 1; opacity: 0; }
+  .gp-pil { font: 400 12px var(--font-serif); fill: var(--surface-essence-text); text-anchor: middle; opacity: 0; }
+  .gp-lead-1, .gp-lead-2, .gp-lead-3 { fill: none; stroke: var(--surface-essence-text); stroke-width: 0.6; opacity: 0; }
   .gp-lead-1 { stroke-dasharray: 25; }
   .gp-lead-2 { stroke-dasharray: 185; }
   .gp-lead-3 { stroke-dasharray: 48; }
-  .gp-hl-1, .gp-hl-2, .gp-hl-3 { fill: var(--essence); stroke: none; opacity: 0; }
-  .gp-ok-1, .gp-ok-2, .gp-ok-3 { fill: none; stroke: var(--essence); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
+  .gp-hl-1, .gp-hl-2, .gp-hl-3 { fill: var(--surface-essence); stroke: none; opacity: 0; }
+  .gp-ok-1, .gp-ok-2, .gp-ok-3 { fill: none; stroke: var(--surface-essence-text); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
 
   /* Adjustable lines: full-length paths revealed by dasharray (base = resolved). */
   .gp-line-b { stroke-dasharray: 155 400; }

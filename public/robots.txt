@@ -4,6 +4,8 @@
 
 User-agent: *
 Allow: /
+# Restates this file's existing stance: everything here is meant to be read, indexed and cited; training crawlers are already allowed below.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
 # Generative engines (GEO) — explicitly welcome to crawl and cite.
 User-agent: GPTBot

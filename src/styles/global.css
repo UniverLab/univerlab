@@ -56,18 +56,17 @@
    now-redundant POC substrate lines in surfaces.css — one edit then moves a
    whole surface everywhere: page + card window. Do not do that edit here:
    surfaces.css is out of this spec's scope.)
-   Each group also carries `--surface-essence`: the accent the experiment PAGE
-   paints with today (the runner's final re-tint, or the surface accent the page
-   pins on `.exp`) — never the registry `essenceHex`, which stays on the collapsed
-   card. Read by the home card flip and by scripts/og (each experiment's social
-   card is drawn in its surface group); no page reads it. */
+   Each experiment's essence accent lives in `src/lib/experiments.ts` and is
+   emitted by `src/components/EssenceTokens.astro` as `--surface-essence` /
+   `--surface-essence-text` — never here. Read by the home card flip and by
+   each experiment page's own text/fill rules; scripts/og takes the accent
+   from the registry directly. */
 
 /* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
    Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,
    Quill hairline. Dash vocabulary (--rule-t1…t3) and fonts stay html-only below. */
 [data-surface='paper'],
 [data-flip-surface='paper'] {
-  --surface-essence: #6a563e; /* bistre ink — the ink the parchment motif draws */
   --surface-bg: #d7d7d0;
   --surface-bg-raise: #f7f6f3;
   --surface-ink: #1a1614;
@@ -83,7 +82,6 @@
    edge highlight (Home) uses an ink-mix so it stays whisper-light here. */
 [data-surface='tui'],
 [data-flip-surface='tui'] {
-  --surface-essence: #00a9a0; /* Auros accent — the teal the page pins on .exp */
   --surface-bg: #012624;
   --surface-bg-raise: #003734;
   --surface-ink: #edfffe;
@@ -93,10 +91,9 @@
 }
 
 /* gitkit — Supahub sunlit canvas (docs/landing-poc/styles/supahub.md).
-   Voltage violet + fonts are page-only extras below. */
+   The orchid pair (re-pointed at the essence tokens) + fonts are page-only extras below. */
 [data-surface='pastel'],
 [data-flip-surface='pastel'] {
-  --surface-essence: #6d28d9; /* voltage violet — what the bubbles runner draws */
   --surface-bg: #ffffff;
   --surface-bg-raise: #f1f5f9;
   --surface-ink: #111827;
@@ -110,7 +107,6 @@
    in this file were never rendered (the POC block out-ranked them). */
 [data-surface='industrial'],
 [data-flip-surface='industrial'] {
-  --surface-essence: #8b7cf6; /* blueprint violet — what the scaffold runner draws */
   --surface-bg: #05060f;
   --surface-bg-raise: rgba(186,214,247,.05);
   /* Header menu plate only — NOT --bg-raise: the glass cards, .cmd and hero
@@ -124,11 +120,11 @@
 }
 
 /* cadspec — Steep plan (docs/landing-poc/styles/steep.md): pure white sheet,
-   near-black ink, terracotta essence is page-pinned by surfaces.css (a page
-   token, not substrate — the landing card keeps the registry essence). */
+   near-black ink; the accent is the registry blue, and the page reads its
+   text ink (pinned by surfaces.css) — the landing card keeps the registry
+   essence. */
 [data-surface='blueprint'],
 [data-flip-surface='blueprint'] {
-  --surface-essence: #5d2a1a; /* sienna — the page-pinned Steep essence (.exp) */
   --surface-bg: #ffffff;
   --surface-bg-raise: #f2f2f3;
   --surface-ink: #17191c;
@@ -140,7 +136,6 @@
 /* astro-denoise — observatory: deep space, violet-black night sky. */
 [data-surface='observatory'],
 [data-flip-surface='observatory'] {
-  --surface-essence: #a78bfa; /* no re-tint: the page colour IS the registry violet */
   --surface-bg: #0a0911;
   --surface-bg-raise: #110f1b;
   --surface-ink: #ddd9e8;
@@ -154,7 +149,6 @@
    the reference the landing's circadian flip cards are tuned against. */
 [data-surface='quorum'],
 [data-flip-surface='quorum'] {
-  --surface-essence: #e6b24a; /* both circadian palettes carry this accent */
   --surface-bg: #241a12;
   --surface-bg-raise: #2f2318;
   --surface-ink: #f2e7d3;
@@ -170,7 +164,6 @@
    radii, color-scheme) are page-only extras below. */
 [data-surface='studio'],
 [data-flip-surface='studio'] {
-  --surface-essence: #fa5838; /* Altius Flare — the page-pinned Altius accent */
   --surface-bg: #190501;
   --surface-bg-raise: #340a01;
   --surface-ink: #f7f6ff;
@@ -226,11 +219,21 @@ html[data-surface='tui'] {
   --radius-ctl: 6px;
 }
 
-/* gitkit — voltage pair. (The POC re-pins --voltage #862fe7 at 0,2,0 and wins on
-   the page — pre-existing, not substrate, untouched.) */
+/* gitkit — the orchid scale, derived from PAL1's essence tokens.
+   --orchid-text is the dark-on-light text tone; --orchid-fill is the fill;
+   --orchid-soft is the tint (essence at 12% over white) behind tinted panels
+   and the CTA gradient's middle stop; --orchid-deep is the CTA's
+   hover/pressed fill and a text tone on raised plates (darker than
+   --orchid-text, >= 4.5:1 for white text). --orchid-lt stays dark-plate-only. */
 html[data-surface='pastel'] {
-  --voltage: #6d28d9;
-  --voltage-lt: #c4b5fd; /* violet-400 — only on DARK plates */
+  --orchid-text: var(--surface-essence-text);
+  --orchid-fill: var(--surface-essence);
+  --orchid-soft: color-mix(in srgb, var(--surface-essence) 12%, #ffffff);
+  --orchid-deep: #c22594;
+  --orchid-lt: #f3c8e1; /* orchid 200 — only on DARK plates */
+  /* The one CTA gradient: soft white → orchid-soft → white, horizontal like
+     the codebase's other --cta-gradient (Canopy's Aurora). */
+  --cta-gradient: linear-gradient(90deg, #ffffff 0%, var(--orchid-soft) 50%, #ffffff 100%);
 }
 
 /* demostage — Altius extras. BaseLayout's colorScheme list still calls `studio`

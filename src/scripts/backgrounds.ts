@@ -4,6 +4,7 @@
  *  counts, capped DPR, and animation paused while the tab is hidden. */
 
 import type { BgTheme as Theme } from '../lib/experiments';
+import { byId } from '../lib/experiments';
 import { brain } from './brain';
 import { orbit } from './orbit';
 import { bubbles } from './bg-bubbles';
@@ -75,9 +76,9 @@ export function startBackground(
   // runner receives it here instead of re-reading the DOM, so a card window
   // gets the same branch a page would take.
   const isPaper = surf === 'paper';
-  if (isPaper) ctx.color = '#6a563e'; // bistre ink marks, never amber embers
+  if (isPaper) ctx.color = byId('texforge').essenceTextHex ?? byId('texforge').essenceHex; // garnet ink marks, never amber embers
   const isPastel = surf === 'pastel';
-  if (isPastel) ctx.color = '#6d28d9'; // voltage violet, not registry pink
+  if (isPastel) ctx.color = byId('gitkit').essenceTextHex ?? byId('gitkit').essenceHex; // deep magenta ink, never the light orchid fill
   const runner = pickRunner(theme, surf);
   const tick = runner(ctx);
 

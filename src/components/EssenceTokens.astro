@@ -1,0 +1,14 @@
+---
+import { experiments } from '../lib/experiments';
+// Single emitter for the essence tokens: one rule per experiment, bare
+// [data-surface]/[data-flip-surface] selectors (0,1,0) — the same rank the
+// removed `--surface-essence` declarations had, so every page's other tokens
+// keep winning exactly as today.
+const css = experiments
+  .map(
+    (exp) =>
+      `[data-surface='${exp.surface}'], [data-flip-surface='${exp.surface}'] { --surface-essence: ${exp.essenceHex}; --surface-essence-text: ${exp.essenceTextHex ?? exp.essenceHex}; }`,
+  )
+  .join('\n');
+---
+<style set:html={css}></style>
