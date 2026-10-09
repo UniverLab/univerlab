@@ -103,7 +103,7 @@ describe('Cards window — no hand-kept surfaces map in Home.astro', () => {
   });
 
   it('should read the PAGE accent as the runner colour, not the registry hex', () => {
-    // Given: a card whose inline --essence is the registry hex (ghScaff copper)
+    // Given: a card whose inline --essence is the registry hex (ghScaff sky)
     // When: startCard resolves the colour
     // Then: --surface-essence wins, with the registry hex as the fallback
     expect(homeSrc).toMatch(

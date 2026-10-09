@@ -10,7 +10,7 @@ const exp = byId('cadspec');
 <ExperimentLayout id="cadspec">
   <!-- No canvas on this page: the decided register is that the living
        background is the CSS drifting grid alone (the two-pitch sheet below,
-       the teal bloom and the --stir-* parallax driven by the pointermove/rAF
+       the cobalt bloom and the --stir-* parallax driven by the pointermove/rAF
        script). Nothing mounts a runner here — BaseLayout already skips its
        own canvas for stillSurfaces (blueprint included) — so no strokes,
        arcs or cotas ever paint over the paper. -->
@@ -160,7 +160,7 @@ offset = 0.5</code></pre>
     io.observe(svg);
   })();
 
-  // The drafting grid is quiet and cursor-stirred: a faint teal bloom follows
+  // The drafting grid is quiet and cursor-stirred: a faint cobalt bloom follows
   // the pointer and the grid drifts a few pixels behind it (lerped, so it
   // reads as paper being nudged, not as a cursor effect). This is the page's whole
   // living background: it paints body::before (z-index -2) directly — no canvas
@@ -515,7 +515,7 @@ offset = 0.5</code></pre>
   /* (i) Backdrop — the LIVING background of this page: a quiet drafting grid,
      cursor-stirred, painting straight onto body::before (z-index -2) with no
      canvas above it any more, so the paper drifts on its own: two grid pitches
-     (140px / 28px) in warm ink, a teal bloom under the cursor, and a few pixels
+      (140px / 28px) in warm ink, a cobalt bloom under the cursor, and a few pixels
      of parallax the script feeds through --stir-*. Under reduced motion the
      variables stay unset and the grid renders static. body::before's
      position/inset/z-index come from surfaces.css. */

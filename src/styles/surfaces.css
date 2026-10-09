@@ -328,7 +328,7 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · `industrial` — midnight steel: an aligned scaffold grid.
 
-   Violet-black midnight substrate with a single sky accent; the hero
+   Sky-black midnight substrate with a single sky accent; the hero
    reads as a flat steel plate with one hairline frame. Type is a sturdy
    grotesque; the koan is set in ink. The canvas paints the scaffold grid
    with a cursor-anchored spotlight.
@@ -1057,8 +1057,18 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 :root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
 :root[data-surface='industrial'] .actions .btn.ghost { background: transparent; color: #d1e4fa; }
+/* PAL3: the ONE accent CTA keeps its cyan fill at this rank too. The
+   `html[...]` .btn-violet rule (0,2,1) loses to this block's `.actions .btn`
+   (0,4,0), so without its own :root pin the CTA renders steel, never cyan.
+   Fill is #62c4ec (ghscaff essence) via the token; hover 85% cyan + white and
+   active 78% cyan + midnight are tones of the cyan, never white. */
+:root[data-surface='industrial'] .actions .btn-violet { background: var(--surface-essence); border-color: var(--surface-essence); color: #0b0a14; }
+:root[data-surface='industrial'] .actions .btn-violet:hover { background: color-mix(in srgb, var(--surface-essence) 85%, #ffffff); border-color: color-mix(in srgb, var(--surface-essence) 85%, #ffffff); color: #0b0a14; }
+:root[data-surface='industrial'] .actions .btn-violet:active { background: color-mix(in srgb, var(--surface-essence) 78%, #05060f); border-color: color-mix(in srgb, var(--surface-essence) 78%, #05060f); color: #0b0a14; }
 :root[data-surface='industrial'] .install { margin-inline: auto; }
-:root[data-surface='industrial'] .cmd { background: rgba(186,214,247,.05); border-color: rgba(186,215,247,.12); }
+/* PAL3: the install slip reads the same cyan hairline as the `html[...]` rule
+   above — the steel rgba here shadowed it (0,3,0 beats 0,2,1). #62c4ec via token. */
+:root[data-surface='industrial'] .cmd { background: color-mix(in srgb, var(--surface-essence) 10%, rgba(18, 16, 30, 0.55)); border-color: color-mix(in srgb, var(--surface-essence) 22%, transparent); }
 :root[data-surface='industrial'] .fan li,
 :root[data-surface='industrial'] .glass { background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; }
 
