@@ -74,8 +74,10 @@ html[data-surface='paper'] h3 {
 }
 
 /* Emphasis stays in bistre: the experiment's garnet essence has ~2.9:1 on
-   cream and isn't this surface's voice — essence is left to the install sigil
-   and the status dot. No weight jump either: 400 only. */
+   cream and isn't this surface's voice. Its darker text tone rubricates the
+   page's marks instead (initial, section numerals, quote mark, press numbers —
+   Texforge.astro), plus the install sigil and the status dot. No weight jump
+   either: 400 only. */
 html[data-surface='paper'] strong {
   color: var(--ink);
   font-weight: 400;
