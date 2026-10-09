@@ -217,10 +217,12 @@ html[data-surface='pastel'] .koan {
 /* Essence pin (the industrial mechanism, verbatim precedent). The inline
    registry fill orchid loses to author `!important` on `.exp`; DemoFigure
    re-declares `--essence` inline on the figure itself, so it needs its own
-   pin or the demo frame ring/"Fig." label stays in the fill orchid. */
+   pin or the demo frame ring/"Fig." label stays in the fill orchid — which
+   holds only 2.91:1 on the white canvas. The pin takes the text tone, the
+   same re-point every other --voltage use made, keeping the label at 4.56:1. */
 html[data-surface='pastel'] .exp,
 html[data-surface='pastel'] .demo-fig {
-  --essence: var(--orchid-fill) !important;
+  --essence: var(--orchid-text) !important;
 }
 /* Product name: one unhidden masthead; the view supplies a small Git motif. */
 html[data-surface='pastel'] .exp-name {

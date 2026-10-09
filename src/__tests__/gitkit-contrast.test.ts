@@ -129,4 +129,14 @@ describe('GitKit pastel orchid scale', () => {
     expect(ruleBody(view, '.hooks .ok')).not.toMatch(/--orchid-text/);
     expect(ruleBody(view, '.hooks code')).not.toMatch(/--orchid-text/);
   });
+
+  // The page renders a DemoFigure (registry demo), and its "Fig. 1" label is
+  // 0.85rem var(--essence) text on the white canvas. The essence pin must hold
+  // the text tone; the component's own inline carries the fill orchid, which
+  // is only 2.91:1 there.
+  it('pins the demo figure essence to the text tone, never the fill', () => {
+    const pin = ruleBody(surfCss, "html[data-surface='pastel'] .demo-fig");
+    expect(pin).toMatch(/--orchid-text/);
+    expect(pin).not.toMatch(/--orchid-fill/);
+  });
 });
