@@ -87,7 +87,7 @@ describe('createSpotlight', () => {
     expect(spot.step()).toBeNull();
   });
 
-  it('paints one additive violet wash and restores the composite state', () => {
+  it('paints one additive sky wash and restores the composite state', () => {
     // Given: a mock 2D context with a gradient stub
     const stops: Array<[number, string]> = [];
     const grad = { addColorStop: jest.fn((o: number, c: string) => stops.push([o, c])) };
@@ -104,8 +104,8 @@ describe('createSpotlight', () => {
     spot.paint(c, 10, 20);
     // Then: a single radial gradient is filled with 'lighter' and reset after
     expect(c.createRadialGradient).toHaveBeenCalledWith(10, 20, 0, 10, 20, 420);
-    expect(stops[0]).toEqual([0, 'rgba(167,139,250,0.05)']);
-    expect(stops[1]).toEqual([1, 'rgba(167,139,250,0)']);
+    expect(stops[0]).toEqual([0, 'rgba(98,196,236,0.05)']);
+    expect(stops[1]).toEqual([1, 'rgba(98,196,236,0)']);
     expect(c.fillRect).toHaveBeenCalledWith(10 - 420, 20 - 420, 840, 840);
     expect(c.globalCompositeOperation).toBe('source-over');
     expect(c.globalAlpha).toBe(1);

@@ -778,13 +778,21 @@ html[data-surface='industrial'] .btn-violet {
   border-color: var(--glass-v);
   color: #0b0a14;
 }
+/* Hover/pressed are tones of the cyan, not white. Both keep the dark
+   label >= 4.5:1: hover 85% glass-v + white = ~11.1:1; active 78% glass-v +
+   the midnight bg = ~6.2:1. */
 html[data-surface='industrial'] .btn-violet:hover {
-  filter: brightness(1.08);
-  background: var(--glass-v);
+  background: color-mix(in srgb, var(--glass-v) 85%, #ffffff);
+  border-color: color-mix(in srgb, var(--glass-v) 85%, #ffffff);
+  color: #0b0a14;
+}
+html[data-surface='industrial'] .btn-violet:active {
+  background: color-mix(in srgb, var(--glass-v) 78%, #05060f);
+  border-color: color-mix(in srgb, var(--glass-v) 78%, #05060f);
   color: #0b0a14;
 }
 html[data-surface='industrial'] .btn-violet:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--glass-v);
   outline-offset: 2px;
 }
 
@@ -823,7 +831,7 @@ html[data-surface='industrial'] .fan li:nth-child(5) .idx { color: color-mix(in 
 html[data-surface='industrial'] .fan li:nth-child(6) .idx { color: color-mix(in srgb, var(--glass-v) 85%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(7) .idx { color: color-mix(in srgb, var(--glass-v) 95%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(1) .step-name { color: var(--ink-dim); }
-html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff; }
+html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-mix(in srgb, var(--glass-v) 20%, var(--ink)); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    2026-09-26 preserved POC styles. Each target has a full style reference in

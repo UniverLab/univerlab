@@ -208,6 +208,10 @@ offset = 0.5</code></pre>
     --ink-faint: #979799;
     --line: #ececec;
     --blush: #fbe1d1;
+    /* #3f6de9 (PAL1 essence-text, cobalt) darkened ×0.85 toward black — text and
+       1px strokes on tinted plates, where the page cobalt only holds 4.10:1
+       (mist cards) / 3.67:1 (blush chip). */
+    --essence-deep: #365dc6;
     --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
@@ -314,7 +318,7 @@ offset = 0.5</code></pre>
   }
   :global(:root[data-surface='blueprint'] .copy) { border-left: 1px solid var(--line); }
   :global(:root[data-surface='blueprint'] .os-tab[aria-selected='true']) {
-    color: var(--surface-essence-text);
+    color: var(--essence-deep);
   }
 
   /* (f) The floating product artifacts — view-local, so they stay scoped.
@@ -373,9 +377,9 @@ offset = 0.5</code></pre>
     font-size: 0.68rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--surface-essence-text);
+    color: var(--essence-deep);
   }
-  .chip-status { font-size: 0.78rem; color: var(--surface-essence-text); }
+  .chip-status { font-size: 0.78rem; color: var(--essence-deep); }
   .ascii-motif {
     margin: 0;
     max-width: 42rem;
@@ -461,7 +465,7 @@ offset = 0.5</code></pre>
     justify-content: center;
   }
   .drawing svg { display: block; width: 100%; }
-  .dim-t { fill: var(--surface-essence-text); }
+  .dim-t { fill: var(--essence-deep); }
   .code {
     margin: 0;
     background: var(--bg-raise);
@@ -471,7 +475,7 @@ offset = 0.5</code></pre>
     padding: 1.2rem;
     font-size: 0.8rem;
     line-height: 1.65;
-    color: var(--surface-essence-text);
+    color: var(--essence-deep);
   }
   .notes { list-style: none; padding: 0; margin: 2rem auto 0; max-width: 46rem; }
   .notes li {

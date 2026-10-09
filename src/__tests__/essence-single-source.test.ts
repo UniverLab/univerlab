@@ -14,10 +14,12 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { experiments } from '../lib/experiments';
+import { experiments, byId } from '../lib/experiments';
 
 const ROOT = resolve(__dirname, '..', '..');
 const GLOBAL_CSS = resolve(__dirname, '..', 'styles', 'global.css');
+const SURFACES_CSS = resolve(__dirname, '..', 'styles', 'surfaces.css');
+const VIEW_CADSPEC = resolve(__dirname, '..', 'views', 'experiments', 'Cadspec.astro');
 
 /** Walk a directory, yielding every file path (skipping node_modules). */
 function walk(dir: string, out: string[] = []): string[] {
@@ -43,6 +45,21 @@ function contrast(a: string, b: string): number {
   const la = luminance(a);
   const lb = luminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** sRGB channel lerp, matching CSS `color-mix(in srgb, A t%, B)` (t / 100 = weight of A). */
+function mixHex(a: string, b: string, t: number): string {
+  const [ra, ga, ba] = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const [rb, gb, bb] = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  const hx = (v: number) => Math.round(v).toString(16).padStart(2, '0');
+  return '#' + hx(ra * t + rb * (1 - t)) + hx(ga * t + gb * (1 - t)) + hx(ba * t + bb * (1 - t));
+}
+
+/** Body of one CSS rule, from its selector through the matching close brace. */
+function ruleBody(css: string, selector: string): string {
+  const start = css.indexOf(selector);
+  if (start === -1) return '';
+  return css.slice(start, css.indexOf('}', start));
 }
 
 /** `--surface-*` tokens per `[data-surface='X']` group — the same regex and
@@ -128,5 +145,69 @@ describe('essence single source', () => {
       expect(exp.surface).toBeTruthy();
       expect(exp.essenceHex).toMatch(/^#[0-9a-f]{6}$/i);
     }
+  });
+});
+
+/**
+ * PAL3 guard — the ghScaff / cadSpec recolor's contrast and wiring.
+ *
+ * Pins the derived tone pairs the old lavender/copper/brown accents were
+ * replaced with, plus the wiring that carries `--essence-deep` onto the
+ * tinted plates and the retirement of the lavender-white fan highlight.
+ */
+describe('PAL3 accent-tone contrast', () => {
+  const surfaces = readSurfaces();
+  // ghScaff (industrial, midnight) and cadSpec (blueprint, paper) from the registry.
+  const ghscaff = byId('ghscaff');
+  const cadspec = byId('cadspec');
+
+  const CYAN = ghscaff.essenceHex!;            // #62c4ec — ghScaff fill
+  const INDUSTRIAL_BG = surfaces['industrial']?.['bg']; // #05060f
+  const CTA_LABEL = '#0b0a14';               // near-black CTA label (surfaces.css)
+
+  const WHITE = '#ffffff';
+  const MIST = '#f2f2f3';                    // cadSpec --bg-raise (mist cards)
+  const BLUSH = '#fbe1d1';                   // cadSpec --blush (compile chip)
+  const COBALT_TEXT = cadspec.essenceTextHex!;  // #3f6de9 — page text tone
+  const COBALT_FILL = cadspec.essenceHex!;      // #4874ea — fill/dot
+  const COBALT_DEEP = '#365dc6';             // --essence-deep (darkened tone)
+
+  beforeEach(() => {
+    expect(INDUSTRIAL_BG).toBeTruthy();
+  });
+
+  it('holds every recolorized text/background pair at >= 4.5:1', () => {
+    // ghScaff: cyan fill on the industrial midnight field.
+    expect(contrast(CYAN, INDUSTRIAL_BG!)).toBeGreaterThanOrEqual(4.5); // ~10.2
+    // CTA label (near-black) on the cyan fill.
+    expect(contrast(CTA_LABEL, CYAN)).toBeGreaterThanOrEqual(4.5);      // ~9.95
+    // CTA hover: 85% cyan + 15% white (color-mix 85% glass-v, #fff).
+    expect(contrast(CTA_LABEL, mixHex(CYAN, WHITE, 0.85))).toBeGreaterThanOrEqual(4.5); // ~11.1
+    // CTA active: 78% cyan + 22% midnight (color-mix 78% glass-v, #05060f).
+    expect(contrast(CTA_LABEL, mixHex(CYAN, INDUSTRIAL_BG!, 0.78))).toBeGreaterThanOrEqual(4.5); // ~6.2
+
+    // cadSpec: page cobalt text tone on pure white.
+    expect(contrast(COBALT_TEXT, WHITE)).toBeGreaterThanOrEqual(4.5);   // ~4.59
+    // cadSpec: deepened cobalt text on the two tinted plates.
+    expect(contrast(COBALT_DEEP, MIST)).toBeGreaterThanOrEqual(4.5);    // ~5.31
+    expect(contrast(COBALT_DEEP, BLUSH)).toBeGreaterThanOrEqual(4.5);    // ~4.75
+  });
+
+  it('holds the cadSpec fill dot on white at >= 3:1 (large graphic)', () => {
+    // cobalt fill on white — a dot, not body text (>= 3:1).
+    expect(contrast(COBALT_FILL, WHITE)).toBeGreaterThanOrEqual(3);     // ~4.23
+  });
+
+  it('wires --essence-deep from Cadspec.astro into the tinted-plate rules', () => {
+    const view = readFileSync(VIEW_CADSPEC, 'utf8');
+    expect(view).toContain('--essence-deep: #365dc6');
+    for (const sel of ['.dim-t {', '.code {', '.chip-label {', '.chip-status {']) {
+      expect(ruleBody(view, sel)).toMatch(/--essence-deep/);
+    }
+  });
+
+  it('retires the lavender-white fan highlight from surfaces.css', () => {
+    const surf = readFileSync(SURFACES_CSS, 'utf8');
+    expect(surf).not.toContain('#f4f1ff');
   });
 });
