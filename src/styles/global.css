@@ -91,7 +91,7 @@
 }
 
 /* gitkit — Supahub sunlit canvas (docs/landing-poc/styles/supahub.md).
-   Voltage violet + fonts are page-only extras below. */
+   The orchid pair (re-pointed at the essence tokens) + fonts are page-only extras below. */
 [data-surface='pastel'],
 [data-flip-surface='pastel'] {
   --surface-bg: #ffffff;
@@ -120,8 +120,9 @@
 }
 
 /* cadspec — Steep plan (docs/landing-poc/styles/steep.md): pure white sheet,
-   near-black ink, terracotta essence is page-pinned by surfaces.css (a page
-   token, not substrate — the landing card keeps the registry essence). */
+   near-black ink; the accent is the registry blue, and the page reads its
+   text ink (pinned by surfaces.css) — the landing card keeps the registry
+   essence. */
 [data-surface='blueprint'],
 [data-flip-surface='blueprint'] {
   --surface-bg: #ffffff;
@@ -218,11 +219,21 @@ html[data-surface='tui'] {
   --radius-ctl: 6px;
 }
 
-/* gitkit — voltage pair, re-pointed at the essence tokens (PAL1); PAL2
-   restyles the page around the orchid. */
+/* gitkit — the orchid scale, derived from PAL1's essence tokens.
+   --orchid-text is the dark-on-light text tone; --orchid-fill is the fill;
+   --orchid-soft is the tint (essence at 12% over white) behind tinted panels
+   and the CTA gradient's middle stop; --orchid-deep is the CTA's
+   hover/pressed fill and a text tone on raised plates (darker than
+   --orchid-text, >= 4.5:1 for white text). --orchid-lt stays dark-plate-only. */
 html[data-surface='pastel'] {
-  --voltage: var(--surface-essence-text);
-  --voltage-lt: #c4b5fd; /* violet-400 — only on DARK plates */
+  --orchid-text: var(--surface-essence-text);
+  --orchid-fill: var(--surface-essence);
+  --orchid-soft: color-mix(in srgb, var(--surface-essence) 12%, #ffffff);
+  --orchid-deep: #c22594;
+  --orchid-lt: #f3c8e1; /* orchid 200 — only on DARK plates */
+  /* The one CTA gradient: soft white → orchid-soft → white, horizontal like
+     the codebase's other --cta-gradient (Canopy's Aurora). */
+  --cta-gradient: linear-gradient(90deg, #ffffff 0%, var(--orchid-soft) 50%, #ffffff 100%);
 }
 
 /* demostage — Altius extras. BaseLayout's colorScheme list still calls `studio`

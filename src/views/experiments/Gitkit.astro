@@ -62,7 +62,7 @@ $ git push
     font-family: var(--font-mono);
     font-size: 0.78rem;
     letter-spacing: 0.04em;
-    color: var(--voltage, var(--surface-essence-text));
+    color: var(--orchid-text, var(--surface-essence-text));
     opacity: 0.65;
     margin: 0 0 1.6rem;
     text-align: center;
@@ -95,7 +95,7 @@ $ git push
     left: 0.25rem;
     top: 0;
     bottom: 0;
-    border-left: 1px solid var(--voltage, var(--surface-essence-text));
+    border-left: 1px solid var(--orchid-text, var(--surface-essence-text));
     opacity: 0.35;
   }
   .git-rail li:first-child::before { top: 50%; }
@@ -107,26 +107,26 @@ $ git push
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    border: 1px solid var(--voltage, var(--surface-essence-text));
+    border: 1px solid var(--orchid-text, var(--surface-essence-text));
     background: #fff;
     transform: translate(-50%, -50%);
   }
-  .git-rail .done .node { background: var(--voltage, var(--surface-essence-text)); border-color: var(--voltage, var(--surface-essence-text)); }
+  .git-rail .done .node { background: var(--orchid-text, var(--surface-essence-text)); border-color: var(--orchid-text, var(--surface-essence-text)); }
   .git-rail .active .node { box-shadow: 0 0 0 3px color-mix(in srgb, var(--surface-essence-text) 18%, transparent); }
   .git-rail .tag { margin-left: auto; }
   .hooks .row { display: flex; gap: 0.6rem; align-items: baseline; margin: 0; padding-block: 0.5rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
   .hooks .row:last-child { border-bottom: 0; }
-  .hooks .ok { color: var(--voltage, var(--surface-essence-text)); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
-  .hooks code { color: var(--voltage, var(--surface-essence-text)); font-size: 0.85rem; }
+  .hooks .ok { color: var(--orchid-deep, #c22594); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
+  .hooks code { color: var(--orchid-deep, #c22594); font-size: 0.85rem; }
   .hooks .tag { margin-left: auto; }
   .term { background: #17141f; border: 1px solid #2c2740; border-radius: 12px; overflow: hidden; }
   .term-bar { padding: 0.5rem 0.9rem; border-bottom: 1px solid #2c2740; color: #8f8aa3; font-size: 0.75rem; }
   /* min-height reserves the full session so the typewriter doesn't shift layout. */
-  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--voltage-lt, #c4b5fd); min-height: 9rem; }
+  .term-body { margin: 0; padding: 1.2rem; font-size: 0.85rem; line-height: 1.8; color: var(--orchid-lt, #f3c8e1); min-height: 9rem; }
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }
   .features li { display: flex; gap: 0.7rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid var(--line); color: var(--ink-dim); font-size: 0.97rem; }
-  .chk { color: var(--voltage, var(--surface-essence-text)); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
-  .features :global(code) { color: var(--voltage, var(--surface-essence-text)); font-size: 0.88em; }
+  .chk { color: var(--orchid-text, var(--surface-essence-text)); font-family: var(--font-mono); font-size: 0.85rem; flex: none; }
+  .features :global(code) { color: var(--orchid-text, var(--surface-essence-text)); font-size: 0.88em; }
 </style>
 
 <script>

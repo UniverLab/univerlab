@@ -73,7 +73,7 @@ html[data-surface='paper'] h3 {
   letter-spacing: 0;
 }
 
-/* Emphasis stays in bistre: the experiment's terracotta essence has ~2:1 on
+/* Emphasis stays in bistre: the experiment's garnet essence has ~2.9:1 on
    cream and isn't this surface's voice — essence is left to the install sigil
    and the status dot. No weight jump either: 400 only. */
 html[data-surface='paper'] strong {
@@ -126,7 +126,7 @@ html[data-surface='paper'] .genesis .prose {
    is 400 like every other heading here (see the h2 rule above). */
 
 /* The demo figure sits inside the cream page: its frame joins the wide dash
-   (T1) and its "Fig. 1" marker is bistre-faint, not the amber essence. The
+   (T1) and its "Fig. 1" marker is bistre-faint, not the garnet essence. The
    component's box-shadow goes too — its first layer is a solid 1px essence
    ring (a solid rule inside content) and its second a dark-surface card
    shadow that reads as chrome, not a sheet on the desk. */
@@ -186,10 +186,11 @@ html[data-surface='tui'] .koan::before {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   gitkit · `pastel` — sunlit SaaS with violet confidence.
+   gitkit · `pastel` — sunlit SaaS with orchid confidence.
 
-   White canvas with fog bands and a single voltage violet. The hero is a
-   centered stack (copy · violet CTA · install bar · ascii motif · two flat
+   White canvas with fog bands and a single orchid ink (the registry
+   orchid's text pair). The hero is a
+   centered stack (copy · orchid CTA · install bar · ascii motif · two flat
    mockup cards); the gitgraph/commit motif is pushed through the
    bubbles canvas runner and the wizard git-rail below. (Key name kept for
    stability.)
@@ -214,12 +215,12 @@ html[data-surface='pastel'] .koan {
   opacity: 1;
 }
 /* Essence pin (the industrial mechanism, verbatim precedent). The inline
-   registry pink loses to author `!important` on `.exp`; DemoFigure
+   registry fill orchid loses to author `!important` on `.exp`; DemoFigure
    re-declares `--essence` inline on the figure itself, so it needs its own
-   pin or the demo frame ring/"Fig." label stays pink. */
+   pin or the demo frame ring/"Fig." label stays in the fill orchid. */
 html[data-surface='pastel'] .exp,
 html[data-surface='pastel'] .demo-fig {
-  --essence: var(--voltage) !important;
+  --essence: var(--orchid-fill) !important;
 }
 /* Product name: one unhidden masthead; the view supplies a small Git motif. */
 html[data-surface='pastel'] .exp-name {
@@ -242,7 +243,7 @@ html[data-surface='pastel'] .banner {
   opacity: 0.55;
 }
 /* Fog bands (replaces the old pink wash). Soft stops only — no discrete
-   tinted section boxes anywhere, so violet never sits on tint here. */
+   tinted section boxes anywhere, so the accent never sits on tint here. */
 html[data-surface='pastel'] body::before {
   content: '';
   position: fixed;
@@ -269,22 +270,26 @@ html[data-surface='pastel'] .dot[data-status='research'] { background: var(--ink
 html[data-surface='pastel'] .exp .lede strong,
 html[data-surface='pastel'] .exp .genesis .prose strong { color: var(--ink); }
 html[data-surface='pastel'] .exp .lede code,
-html[data-surface='pastel'] .exp .genesis .prose code { color: var(--voltage); }
-/* 12px buttons + the one violet CTA. */
+html[data-surface='pastel'] .exp .genesis .prose code { color: var(--orchid-text); }
+/* 12px buttons + the one orchid CTA. */
 html[data-surface='pastel'] .btn {
   font-size: 12px;
   padding: 0.55rem 1.15rem;
   border-radius: 10px;
   letter-spacing: 0.01em;
 }
+/* The orchid CTA: the soft white → orchid-soft → white gradient. The
+   resting label is --ink (it holds >= 4.5:1 over the soft mid-stop; --orchid-deep
+   there was only 2.06:1). Hover/pressed fills --orchid-deep with white (5.27:1). */
 html[data-surface='pastel'] .btn-violet {
-  background: var(--surface-essence);
-  border-color: var(--surface-essence);
-  color: #fff;
+  background: var(--cta-gradient);
+  border-color: var(--orchid-soft);
+  color: var(--ink);
 }
-html[data-surface='pastel'] .btn-violet:hover {
-  filter: brightness(1.08);
-  background: var(--surface-essence);
+html[data-surface='pastel'] .btn-violet:hover,
+html[data-surface='pastel'] .btn-violet:active {
+  background: var(--orchid-deep);
+  border-color: var(--orchid-deep);
   color: #fff;
 }
 html[data-surface='pastel'] .btn:focus-visible {
@@ -301,7 +306,7 @@ html[data-surface='pastel'] .exp .tag {
   letter-spacing: 0.04em;
   color: var(--ink-faint);
 }
-/* Install bar (layout-owned markup; style only). No violet fill here. */
+/* Install bar (layout-owned markup; style only). No accent fill here. */
 html[data-surface='pastel'] .cmd {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -309,11 +314,11 @@ html[data-surface='pastel'] .cmd {
   box-shadow: 0 1px 0 rgba(23,20,31,.03);
 }
 html[data-surface='pastel'] .copy { border-left: 1px solid var(--line); }
-html[data-surface='pastel'] .os-tab[aria-selected='true'] { color: var(--voltage); }
+html[data-surface='pastel'] .os-tab[aria-selected='true'] { color: var(--orchid-deep); }
 html[data-surface='pastel'] .cmd-line[data-os='unix']::before,
-html[data-surface='pastel'] .cmd-line[data-os='windows']::before { color: var(--voltage); }
+html[data-surface='pastel'] .cmd-line[data-os='windows']::before { color: var(--orchid-deep); }
 html[data-surface='pastel'] .copy:hover,
-html[data-surface='pastel'] .copy.done .copy-done { color: var(--voltage); }
+html[data-surface='pastel'] .copy.done .copy-done { color: var(--orchid-deep); }
 /* Hero stage. No orbs behind the cards and no float loop: the two mockup
    cards are flat plates on the pastel surface (the view owns their geometry). */
 html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; }
@@ -321,7 +326,7 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · `industrial` — midnight steel: an aligned scaffold grid.
 
-   Violet-black midnight substrate with a single violet accent; the hero
+   Violet-black midnight substrate with a single sky accent; the hero
    reads as a flat steel plate with one hairline frame. Type is a sturdy
    grotesque; the koan is set in ink. The canvas paints the scaffold grid
    with a cursor-anchored spotlight.
@@ -360,7 +365,8 @@ html[data-surface='blueprint'] {
   --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 html[data-surface='blueprint'] .exp {
-  /* The light brand cyan has no contrast on white — accents use a darker teal. */
+  /* The registry fill blue sits just under 4.5:1 on white — accents read
+     the registry's text ink instead (PAL1's `essenceTextHex`). */
   --essence: var(--surface-essence-text) !important;
 }
 /* Two faint axes cross the sheet — a clean geometric plan motif, not a grid
@@ -696,20 +702,20 @@ html[data-surface='studio'] .hero .rec {
 
 /* ─────────────────────────────────────────────────────────────────────────
    ghscaff · industrial — midnight steel, not frosted glass.
-   Single violet hue (--glass-v) throughout; copper is suppressed on this
-   surface only (the registry essence for OG/home). Cards and the hero
-   are flat plates so the scaffold canvas reads behind them, unblurred.
+   Single sky hue (--glass-v = the registry essence) throughout — the page,
+   OG and the home card all paint the same registry colour. Cards and the
+   hero are flat plates so the scaffold canvas reads behind them, unblurred.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Visually suppress copper on this surface only — the inline --essence
-   (copper) loses to this scoped override; the surface block above already
-   paints the whole surface violet via --glass-v. */
+/* Keep the page accent flowing from --glass-v: the inline registry essence
+   on `.exp` loses to this scoped pin, so the page can never drift from the
+   surface hue (today both sides resolve to the same registry sky). */
 html[data-surface='industrial'] .exp {
   --essence: var(--glass-v) !important;
 }
-/* The demo figure re-declares --essence INLINE (the registry copper), which
+/* The demo figure re-declares --essence INLINE (the registry fill), which
    inherits nothing from the block above — its frame ring, progress fill and
-   "Fig." label would put copper back next to the violet. Pin it here. */
+   "Fig." label would drift from the page hue. Pin it here. */
 html[data-surface='industrial'] .demo-fig {
   --essence: var(--glass-v) !important;
 }
@@ -737,7 +743,7 @@ html[data-surface='industrial'] .banner {
   text-shadow: none;
 }
 
-/* Status + koan + emphasis in the single violet voice. */
+/* Status + koan + emphasis in the single glass voice. */
 html[data-surface='industrial'] .num {
   color: var(--glass-v);
 }
@@ -764,7 +770,7 @@ html[data-surface='industrial'] .exp .genesis .prose em {
   color: var(--glass-v);
 }
 
-/* Exactly ONE violet CTA — the primary action. All other buttons stay ink. */
+/* Exactly ONE accent CTA — the primary action. All other buttons stay ink. */
 html[data-surface='industrial'] .btn-violet {
   background: var(--glass-v);
   border-color: var(--glass-v);
@@ -806,7 +812,7 @@ html[data-surface='industrial'] .copy.done .copy-done {
    (flat fill + hairline from the later `:root[...] .fan li / .glass` rule). */
 
 /* Luminous text progression: numerals/titles brighten along the flow in the
-   single violet hue — 01 dim, 07 near-white. No second accent. */
+   single glass hue — 01 dim, 07 near-white. No second accent. */
 html[data-surface='industrial'] .fan li:nth-child(1) .idx { color: color-mix(in srgb, var(--glass-v) 35%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(2) .idx { color: color-mix(in srgb, var(--glass-v) 45%, var(--ink)); }
 html[data-surface='industrial'] .fan li:nth-child(3) .idx { color: color-mix(in srgb, var(--glass-v) 55%, var(--ink)); }
@@ -1046,7 +1052,7 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] .fan li,
 :root[data-surface='industrial'] .glass { background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; }
 
-/* Supahub → GitKit: violet sun, real product previews. */
+/* Supahub → GitKit: orchid sun, real product previews. */
 :root[data-surface='pastel'] {
   --bg: #ffffff;
   --bg-raise: #f1f5f9;
@@ -1054,7 +1060,8 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
   --ink-dim: #3f4654;
   --ink-faint: #6b7589;
   --line: #d8e0ea;
-  --voltage: var(--surface-essence-text);
+  --orchid-text: var(--surface-essence-text);
+  --orchid-fill: var(--surface-essence);
   --canvas-color: var(--surface-essence);
   --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -1070,7 +1077,10 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .ascii-motif { color: var(--surface-essence-text); }
 :root[data-surface='pastel'] .hero-visual { width: 100%; }
 :root[data-surface='pastel'] .actions { justify-content: center; }
-:root[data-surface='pastel'] .actions .btn { background: var(--surface-essence); color: #fff; border: 1px solid var(--surface-essence); border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+:root[data-surface='pastel'] .actions .btn { background: var(--cta-gradient); color: var(--ink); border: 1px solid var(--orchid-soft); border-radius: 12px; font: 600 1rem/1.4 var(--font-body); padding: .8rem 1.5rem; }
+/* :not(.ghost) — the docs button keeps its ink outline hover. */
+:root[data-surface='pastel'] .actions .btn:not(.ghost):hover,
+:root[data-surface='pastel'] .actions .btn:not(.ghost):active { background: var(--orchid-deep); border-color: var(--orchid-deep); color: #fff; }
 :root[data-surface='pastel'] .actions .btn.ghost { color: #111827; background: transparent; border-color: #111827; font-weight: 500; }
 :root[data-surface='pastel'] .install { margin: .45rem auto 0; }
 :root[data-surface='pastel'] .hero-stage { margin-block: .3rem 0; }
