@@ -134,6 +134,22 @@ describe('manifesto cosmos scene', () => {
     });
   });
 
+  // The address stack is the one text the CSS cannot size: the script writes
+  // `font-size` per entry, and a presentation attribute would beat any rule.
+  // Its taper must therefore respect the 32-unit floor the scene CSS documents
+  // (32 units ≈ 12.5 px at the 390 px mobile drawing scale), so the faded
+  // echoes stay readable instead of collapsing into hairlines.
+  it('keeps every script-driven label at or above the 32-unit legibility floor', () => {
+    const taper = astroSrc.match(/'font-size':\s*(Math\.max\(.+?\))\s*,/);
+    expect(taper).not.toBeNull();
+    const sizeAt = (age: number) => new Function('age', `return (${taper![1]});`)(age) as number;
+    for (let age = 0; age < 4; age++) {
+      expect(sizeAt(age)).toBeGreaterThanOrEqual(32);
+    }
+    // …and it has to shrink, or the stack stops reading as a stack.
+    expect(sizeAt(0)).toBeGreaterThan(sizeAt(3));
+  });
+
   it('check-i18n parity holds', () => {
     expect(() =>
       execFileSync('node', ['scripts/check-i18n.ts'], { cwd: ROOT, stdio: 'pipe' }),

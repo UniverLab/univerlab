@@ -117,7 +117,14 @@ const obs = t.observatory;
                 [884, 346, 'end'],
                 [884, 386, 'end'],
               ];
-              return <text key={i} class="poster-tl-span" x={positions[i][0]} y={positions[i][1]} text-anchor={positions[i][2] as 'start' | 'end' | 'middle'}>{span}</text>;
+              // The table is hand-tuned for the six steps. A seventh span has
+              // no row, so it falls back to its own tick instead of reading
+              // `positions[i][0]` of `undefined` and failing the build.
+              const tick = c.timescalesSpans[i] ?? 0;
+              const px = positions[i]?.[0] ?? (tick > 0 ? 900 - 800 * (tick / c.timescalesSpans[0]) : 900);
+              const py = positions[i]?.[1] ?? (i % 2 === 0 ? 346 : 386);
+              const anchor = positions[i]?.[2] ?? 'end';
+              return <text key={i} class="poster-tl-span" x={px} y={py} text-anchor={anchor as 'start' | 'end' | 'middle'}>{span}</text>;
             })}
             <text class="dot-you" x="884" y="252" text-anchor="end">{c.you}</text>
             <text class="dot-detail" x="884" y="430" text-anchor="end">{c.youDetail}</text>
@@ -595,8 +602,6 @@ const obs = t.observatory;
     const svg = scrolly.querySelector<SVGSVGElement>('.cosmos-svg');
     const raw = scrolly.dataset.cosmosData;
     if (svg && raw) {
-      scrolly.dataset.cosmosReady = '1';
-
       // All copy and the numeric spans come from the dictionary, serialized by
       // the template — nothing is hard-coded in one language.
       const data = JSON.parse(raw) as {
@@ -611,233 +616,267 @@ const obs = t.observatory;
       const N = spans.length;
       const M = sizes.length;
 
-      const one = (sel: string) => svg.querySelector(sel);
-      const many = (sel: string) => Array.from(svg.querySelectorAll(sel));
+      // Only now does the track go live: a malformed payload or drifted array
+      // lengths must fall back to the static poster, never a 500vh track with
+      // a half-painted scene.
+      if (N >= 2 && M >= 2 && N === times.length && M === data.places.length) {
+        scrolly.dataset.cosmosReady = '1';
 
-      const actTime = one('.act-time');
-      const actSpace = one('.act-space');
-      const tlPrev = one('.tl-prev');
-      const tlLine = one('.tl-dyn .tl-line');
-      const tlTick = one('.tl-tick');
-      const tlSpan = one('.tl-span');
-      const tlName = one('.tl-name');
-      const tlFactor = one('.tl-factor');
-      const dot = one('.dot');
-      const dotYou = one('.dot-you');
-      const dotUs = one('.dot-us');
-      const dotDetail = one('.dot-detail');
-      const rings = many('.ring');
-      const ringScales = many('.ring-scale');
-      const dim = one('.dim');
-      const dimRatio = one('.dim-ratio');
-      const addrItems = many('.addr-item');
-      const coda = one('.coda');
+        const one = (sel: string) => svg.querySelector(sel);
+        const many = (sel: string) => Array.from(svg.querySelectorAll(sel));
 
-      const X0 = 100, XN = 900, W = XN - X0, CX = 500, CY = 500, RF = 400;
-      const STEP_T = 0.72;          // the six steps occupy this share of Act I
-      const ACT1 = 0.42, TRANS = 0.47, ACT2 = 0.90;
+        const actTime = one('.act-time');
+        const actSpace = one('.act-space');
+        const tlPrev = one('.tl-prev');
+        const tlLine = one('.tl-dyn .tl-line');
+        const tlTick = one('.tl-tick');
+        const tlSpan = one('.tl-span');
+        const tlName = one('.tl-name');
+        const tlFactor = one('.tl-factor');
+        const dot = one('.dot');
+        const dotYou = one('.dot-you');
+        const dotUs = one('.dot-us');
+        const dotDetail = one('.dot-detail');
+        const rings = many('.ring');
+        const ringScales = many('.ring-scale');
+        const dim = one('.dim');
+        const dimRatio = one('.dim-ratio');
+        const addrItems = many('.addr-item');
+        const coda = one('.coda');
 
-      const set = (el: Element | null, attrs: Record<string, string | number>) => {
-        if (!el) return;
-        for (const k in attrs) el.setAttribute(k, String(attrs[k]));
-      };
-      const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
-      const smooth = (t: number) => t * t * (3 - 2 * t);
-      const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
-      // Unitless multipliers derived from the numeric spans — never parsed out
-      // of the localized label strings. Grouped with thin spaces.
-      const fmt = (n: number) => {
-        const r = n < 10 ? Math.round(n * 100) / 100 : Math.round(n);
-        return r.toLocaleString('en-US').replace(/,/g, '\u00a0');
-      };
+        const X0 = 100, XN = 900, W = XN - X0, CX = 500, CY = 500, RF = 400;
+        const STEP_T = 0.72;          // the six steps occupy this share of Act I
+        const ACT1 = 0.42, TRANS = 0.47, ACT2 = 0.90;
 
-      // The address accumulates as a short stack under the top-left title. `cur`
-      // is the horizon now in focus (Earth = 0, or -1 for the bare `Us` of the
-      // morph); the newest entry is the largest at the top, and only its three
-      // older neighbours stay — the rest dissolve toward the bottom.
-      const paintStack = (cur: number) => {
-        addrItems.forEach((el, j) => {
-          const age = cur - (j - 1);
-          if (age < 0 || age >= 4) { set(el, { opacity: 0 }); return; }
-          set(el, {
-            x: 60,
-            'text-anchor': 'start',
-            y: 160 + age * 48,
-            'font-size': Math.round(34 * Math.pow(0.8, age)),
-            'data-age': age,
-            opacity: clamp01(1 - 0.32 * age).toFixed(2),
+        const set = (el: Element | null, attrs: Record<string, string | number>) => {
+          if (!el) return;
+          for (const k in attrs) el.setAttribute(k, String(attrs[k]));
+        };
+        // Label text changes only at step boundaries, but the loop runs every
+        // frame; assigning `textContent` unconditionally would rebuild the text
+        // node each frame, so the write is guarded — per frame the loop only
+        // writes attributes, never nodes.
+        const setText = (el: Element | null, text: string) => {
+          if (el && el.textContent !== text) el.textContent = text;
+        };
+        const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+        const smooth = (t: number) => t * t * (3 - 2 * t);
+        const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
+        // Unitless multipliers derived from the numeric spans — never parsed out
+        // of the localized label strings. Grouped with thin spaces.
+        const fmt = (n: number) => {
+          const r = n < 10 ? Math.round(n * 100) / 100 : Math.round(n);
+          return r.toLocaleString('en-US').replace(/,/g, '\u00a0');
+        };
+
+        // The address accumulates as a short stack under the top-left title. `cur`
+        // is the horizon now in focus (Earth = 0, or -1 for the bare `Us` of the
+        // morph); the newest entry is the largest at the top, and only its three
+        // older neighbours stay — the rest dissolve toward the bottom.
+        const paintStack = (cur: number) => {
+          addrItems.forEach((el, j) => {
+            const age = cur - (j - 1);
+            if (age < 0 || age >= 4) { set(el, { opacity: 0 }); return; }
+            set(el, {
+              x: 60,
+              'text-anchor': 'start',
+              y: 160 + age * 48,
+              // The taper stops at the 32-unit legibility floor the CSS below
+              // documents (12 px at the 390 px drawing scale), so no echo ever
+              // renders smaller than the labels can be read at.
+              'font-size': Math.max(32, 42 - age * 4),
+              'data-age': age,
+              opacity: clamp01(1 - 0.32 * age).toFixed(2),
+            });
           });
-        });
-      };
+        };
 
-      // ---- Act I: deep time ------------------------------------------------
-      const paintTime = (t: number) => {
-        set(actSpace, { opacity: 0 });
-        // The stack lives outside `.act-space`, so hide it explicitly — needed
-        // when scrolling back up out of Act II.
-        addrItems.forEach((el) => set(el, { opacity: 0 }));
-        let step: number, frac: number, contract = 0;
-        if (t < STEP_T) {
-          const sf = (N - 1) * (t / STEP_T) * (t / STEP_T);  // ease-in: the vast linger
-          step = Math.min(N - 2, Math.floor(sf));
-          frac = sf - step;
-        } else {
-          step = N - 1;
-          frac = 1;
-          contract = clamp01((t - STEP_T) / (1 - STEP_T));
-        }
-        const d = frac < 0.5 ? step : Math.min(step + 1, N - 1);
-        const ra = step > 0 ? spans[step - 1] / spans[step] : 1;
-        const rb = step < N - 1 ? spans[step] / spans[step + 1] : ra;
-        // Only ever blend between two adjacent ratios, never across the whole
-        // range, so the float stays precise.
-        const fac = frac < 1 ? ra * Math.pow(rb / ra, frac) : rb;
+        // ---- Act I: deep time ------------------------------------------------
+        const paintTime = (t: number) => {
+          set(actSpace, { opacity: 0 });
+          // The stack lives outside `.act-space`, so hide it explicitly — needed
+          // when scrolling back up out of Act II.
+          addrItems.forEach((el) => set(el, { opacity: 0 }));
+          let step: number, frac: number, contract = 0;
+          if (t < STEP_T) {
+            const sf = (N - 1) * (t / STEP_T) * (t / STEP_T);  // ease-in: the vast linger
+            step = Math.min(N - 2, Math.floor(sf));
+            frac = sf - step;
+          } else {
+            step = N - 1;
+            frac = 1;
+            contract = clamp01((t - STEP_T) / (1 - STEP_T));
+          }
+          const d = frac < 0.5 ? step : Math.min(step + 1, N - 1);
+          const ra = step > 0 ? spans[step - 1] / spans[step] : 1;
+          const rb = step < N - 1 ? spans[step] / spans[step + 1] : ra;
+          // Only ever blend between two adjacent ratios, never across the whole
+          // range, so the float stays precise.
+          const fac = frac < 1 ? ra * Math.pow(rb / ra, frac) : rb;
 
-        set(actTime, { opacity: 1 });
-        set(tlLine, { x1: X0 + W * contract, x2: XN, y1: CY, y2: CY });
-        // The previous span, in the same true proportion, runs far off the left
-        // edge; the coordinate is bounded because anything past the edge reads
-        // identically.
-        const px = Math.max(-1600, XN - W * fac);
-        set(tlPrev, { x1: px, x2: XN, y1: CY - 18, y2: CY - 18, opacity: clamp01((fac - 1) * 2) * (1 - contract) });
-        set(tlTick, { opacity: 1 - contract });
-        // The factor belongs to the step being read: the first has no previous
-        // span, so it carries no factor.
-        const facOfStep = d > 0 ? spans[d - 1] / spans[d] : 0;
-        set(tlSpan, { opacity: 1 - clamp01(contract * 1.6) });
-        set(tlName, { opacity: 1 - clamp01(contract * 1.6) });
-        set(tlFactor, { opacity: facOfStep > 1 ? 1 - clamp01(contract * 1.6) : 0 });
-        if (tlSpan) tlSpan.textContent = times[d][0];
-        if (tlName) tlName.textContent = times[d][1];
-        if (tlFactor) tlFactor.textContent = facOfStep > 1 ? '×' + fmt(facOfStep) : '';
+          set(actTime, { opacity: 1 });
+          set(tlLine, { x1: X0 + W * contract, x2: XN, y1: CY, y2: CY });
+          // The previous span, in the same true proportion, runs far off the left
+          // edge; the coordinate is bounded because anything past the edge reads
+          // identically.
+          const px = Math.max(-1600, XN - W * fac);
+          set(tlPrev, { x1: px, x2: XN, y1: CY - 18, y2: CY - 18, opacity: clamp01((fac - 1) * 2) * (1 - contract) });
+          set(tlTick, { opacity: 1 - contract });
+          // The factor belongs to the step being read: the first has no previous
+          // span, so it carries no factor.
+          const facOfStep = d > 0 ? spans[d - 1] / spans[d] : 0;
+          set(tlSpan, { opacity: 1 - clamp01(contract * 1.6) });
+          set(tlName, { opacity: 1 - clamp01(contract * 1.6) });
+          set(tlFactor, { opacity: facOfStep > 1 ? 1 - clamp01(contract * 1.6) : 0 });
+          if (tlSpan) setText(tlSpan, times[d][0]);
+          if (tlName) setText(tlName, times[d][1]);
+          setText(tlFactor, facOfStep > 1 ? '×' + fmt(facOfStep) : '');
 
-        // Labels sit at the right edge, so they anchor there rather than
-        // centring past the SVG box.
-        set(dot, { cx: XN, cy: CY, r: 3 + 7 * contract, opacity: clamp01(contract / 0.2) });
-        set(dotYou, { x: XN - 10, y: CY - 38, 'text-anchor': 'end', opacity: clamp01((contract - 0.3) / 0.3) });
-        set(dotDetail, { x: XN - 10, y: CY + 52, 'text-anchor': 'end', opacity: clamp01((contract - 0.55) / 0.3) });
-        set(dotUs, { opacity: 0 });
-        set(coda, { opacity: 0 });
-      };
+          // Labels sit at the right edge, so they anchor there rather than
+          // centring past the SVG box.
+          set(dot, { cx: XN, cy: CY, r: 3 + 7 * contract, opacity: clamp01(contract / 0.2) });
+          set(dotYou, { x: XN - 10, y: CY - 38, 'text-anchor': 'end', opacity: clamp01((contract - 0.3) / 0.3) });
+          set(dotDetail, { x: XN - 10, y: CY + 52, 'text-anchor': 'end', opacity: clamp01((contract - 0.55) / 0.3) });
+          set(dotUs, { opacity: 0 });
+          set(coda, { opacity: 0 });
+        };
 
-      // ---- Act II: the cosmic address --------------------------------------
-      const paintAddress = (g: number) => {
-        let i = Math.floor(g);
-        if (i < 0) i = 0;
-        if (i > M - 2) i = M - 2;
-        const frac = clamp01(g - i);
-        const uw = smooth(frac);
-        const ratio = sizes[i + 1] / sizes[i];
-        const rOut = RF * Math.pow(ratio, -uw);          // the horizon collapsing
-        const enter = clamp01((uw - 0.3) / 0.7);
-        const rIn = RF * (1.25 - 0.25 * smooth(enter));  // the next one entering at the edge
+        // ---- Act II: the cosmic address --------------------------------------
+        // `g` runs 0 (Earth in focus) to M−1 (Observable Universe in focus);
+        // the coda pushes it past M−1 so the last horizon keeps collapsing there
+        // too, dropping below one pixel instead of lingering by the point.
+        const paintAddress = (g: number) => {
+          let i = Math.floor(g);
+          if (i < 0) i = 0;
+          if (i > M - 2) i = M - 2;
+          const frac = clamp01(g - i);
+          const tail = Math.max(0, g - (M - 1));            // the coda's extra collapse
+          const uw = smooth(frac);
+          const ratio = sizes[i + 1] / sizes[i];
+          const rOut = RF * Math.pow(ratio, -(uw + tail));   // the horizon collapsing
+          const enter = clamp01((uw - 0.3) / 0.7);
+          const rIn = RF * (1.25 - 0.25 * smooth(enter));  // the next one entering at the edge
 
-        rings.forEach((ring, j) => {
-          if (j === i) set(ring, { cx: CX, cy: CY, r: rOut.toFixed(2), opacity: rOut > 1 ? 1 : 0 });
-          else if (j === i + 1) set(ring, { cx: CX, cy: CY, r: rIn.toFixed(2), opacity: enter });
-          else set(ring, { r: 0, opacity: 0 });
-        });
+          rings.forEach((ring, j) => {
+            if (j === i) set(ring, { cx: CX, cy: CY, r: rOut.toFixed(2), opacity: rOut > 1 ? 1 : 0 });
+            else if (j === i + 1) set(ring, { cx: CX, cy: CY, r: rIn.toFixed(2), opacity: enter });
+            // The horizon that was in focus keeps collapsing on the same clock —
+            // always in true ratio to the one now entering — until it drops
+            // below one pixel; only then is it removed, never left as a stray
+            // ring and never popped out while still visible.
+            else if (j === i - 1 && i > 0) {
+              const pr = ((RF * sizes[i - 1]) / sizes[i]) * Math.pow(ratio, -(uw + tail));
+              set(ring, { cx: CX, cy: CY, r: pr.toFixed(2), opacity: pr > 1 ? 1 : 0 });
+            }
+            else set(ring, { r: 0, opacity: 0 });
+          });
 
-        const focus = uw < 0.5 ? i : i + 1;
-        const fR = focus === i ? rOut : rIn;
-        const dimOp = clamp01(1 - Math.abs(fR - RF) / (RF * 0.35));
-        set(dim, { x1: CX - fR, x2: CX + fR, y1: CY, y2: CY, opacity: fR > 1 ? dimOp : 0 });
-        set(dimRatio, { y: CY + fR + 30, opacity: dimOp > 0.05 && focus > 0 ? 1 : 0 });
-        if (dimRatio) dimRatio.textContent = focus > 0 ? '×' + fmt(sizes[focus] / sizes[focus - 1]) : '';
+          const focus = uw < 0.5 ? i : i + 1;
+          const fR = focus === i ? rOut : rIn;
+          const dimOp = clamp01(1 - Math.abs(fR - RF) / (RF * 0.35));
+          set(dim, { x1: CX - fR, x2: CX + fR, y1: CY, y2: CY, opacity: fR > 1 ? dimOp : 0 });
+          set(dimRatio, { y: CY + fR + 30, opacity: dimOp > 0.05 && focus > 0 ? 1 : 0 });
+          setText(dimRatio, focus > 0 ? '×' + fmt(sizes[focus] / sizes[focus - 1]) : '');
 
-        // The focus ring's scale label sits above it, but never high enough to
-        // run into the top-left act title, and it fades out before the ring
-        // collapses into the `Us` label at the centre.
-        ringScales.forEach((el, j) => {
-          if (j === focus && fR >= 60) set(el, { x: CX, y: Math.max(130, CY - fR - 12), opacity: 1 });
-          else set(el, { opacity: 0 });
-        });
+          // The focus ring's scale label sits above it, but never high enough to
+          // run into the top-left act title, and it fades out before the ring
+          // collapses into the `Us` label at the centre.
+          ringScales.forEach((el, j) => {
+            if (j === focus && fR >= 60) set(el, { x: CX, y: Math.max(130, CY - fR - 12), opacity: 1 });
+            else set(el, { opacity: 0 });
+          });
 
-        paintStack(Math.max(0, Math.min(M - 1, Math.round(g))));
-      };
+          paintStack(Math.max(0, Math.min(M - 1, Math.round(g))));
+        };
 
-      // The point slides from "now" to the centre and "You" becomes "Us". Earth's
-      // horizon only enters at the stage edge (r 500 -> 400) in the second half,
-      // so the address never starts already in focus.
-      const paintMorph = (u: number) => {
-        set(actTime, { opacity: 1 - clamp01(u / 0.6) });
-        set(actSpace, { opacity: clamp01(u / 0.5) });
-        const x = XN - (XN - CX) * u;
-        set(dot, { cx: x, cy: CY, r: 7, opacity: 1 });
-        // Anchor the labels to the left of the moving point (as at "now"), so
-        // they never run off the right edge while the point is still far right.
-        set(dotYou, { x: x - 10, y: CY - 38, 'text-anchor': 'end', opacity: 1 - clamp01(u / 0.3) });
-        set(dotDetail, { x: x - 10, y: CY + 52, 'text-anchor': 'end', opacity: 1 - clamp01(u / 0.3) });
-        set(dotUs, { x: CX, y: CY - 40, 'text-anchor': 'middle', opacity: clamp01((u - 0.4) / 0.4) });
+        // The point slides from "now" to the centre and "You" becomes "Us". Earth's
+        // horizon only enters at the stage edge (r 500 -> 400) in the second half,
+        // so the address never starts already in focus.
+        const paintMorph = (u: number) => {
+          set(actTime, { opacity: 1 - clamp01(u / 0.6) });
+          set(actSpace, { opacity: clamp01(u / 0.5) });
+          const x = XN - (XN - CX) * u;
+          // Act I leaves the point at r 10 (3 + 7 · contract) and Act II wants it
+          // at 7 — glide between the two so the glow never blinks at the seam.
+          set(dot, { cx: x, cy: CY, r: 10 - 3 * smooth(u), opacity: 1 });
+          // Anchor the labels to the left of the moving point (as at "now"), so
+          // they never run off the right edge while the point is still far right.
+          set(dotYou, { x: x - 10, y: CY - 38, 'text-anchor': 'end', opacity: 1 - clamp01(u / 0.3) });
+          set(dotDetail, { x: x - 10, y: CY + 52, 'text-anchor': 'end', opacity: 1 - clamp01(u / 0.3) });
+          set(dotUs, { x: CX, y: CY - 40, 'text-anchor': 'middle', opacity: clamp01((u - 0.4) / 0.4) });
 
-        const e = clamp01((u - 0.45) / 0.55);            // Earth enters at the edge
-        const rIn = 500 - 100 * smooth(e);               // 500 -> 400
-        rings.forEach((ring, j) =>
-          set(ring, { cx: CX, cy: CY, r: j === 0 ? rIn.toFixed(2) : 0, opacity: j === 0 && e > 0 ? 1 : 0 }),
-        );
-        const dimOp = e > 0 ? clamp01((u - 0.85) / 0.15) : 0;
-        set(dim, { x1: CX - rIn, x2: CX + rIn, y1: CY, y2: CY, opacity: dimOp });
-        // Earth is the first horizon: there is no previous one, so no ratio.
-        set(dimRatio, { opacity: 0 });
-        if (dimRatio) dimRatio.textContent = '';
-        ringScales.forEach((el, j) =>
-          set(el, { x: CX, y: Math.max(130, CY - rIn - 12), opacity: j === 0 ? dimOp : 0 }),
-        );
-        paintStack(u < 0.45 ? -1 : 0);
-        set(coda, { opacity: 0 });
-      };
+          const e = clamp01((u - 0.45) / 0.55);            // Earth enters at the edge
+          const rIn = 500 - 100 * smooth(e);               // 500 -> 400
+          rings.forEach((ring, j) =>
+            set(ring, { cx: CX, cy: CY, r: j === 0 ? rIn.toFixed(2) : 0, opacity: j === 0 && e > 0 ? 1 : 0 }),
+          );
+          const dimOp = e > 0 ? clamp01((u - 0.85) / 0.15) : 0;
+          set(dim, { x1: CX - rIn, x2: CX + rIn, y1: CY, y2: CY, opacity: dimOp });
+          // Earth is the first horizon: there is no previous one, so no ratio.
+          set(dimRatio, { opacity: 0 });
+          setText(dimRatio, '');
+          ringScales.forEach((el, j) =>
+            set(el, { x: CX, y: Math.max(130, CY - rIn - 12), opacity: j === 0 ? dimOp : 0 }),
+          );
+          paintStack(u < 0.45 ? -1 : 0);
+          set(coda, { opacity: 0 });
+        };
 
-      const paintSpace = (u: number) => {
-        set(actTime, { opacity: 0 });
-        set(actSpace, { opacity: 1 });
-        const g = (M - 1) * easeOut(u);
-        paintAddress(g);
-        // The observer shrinks with the zoom and is gone well before the
-        // observable universe is in focus.
-        const fade = clamp01(1 - g / 2.5);
-        set(dot, { cx: CX, cy: CY, r: Math.max(0.05, 7 * Math.pow(0.5, g)), opacity: fade });
-        set(dotUs, { x: CX, y: CY - 40, opacity: fade });
-        set(dotYou, { opacity: 0 });
-        set(dotDetail, { opacity: 0 });
-        set(coda, { opacity: 0 });
-      };
+        const paintSpace = (u: number) => {
+          set(actTime, { opacity: 0 });
+          set(actSpace, { opacity: 1 });
+          const g = (M - 1) * easeOut(u);
+          paintAddress(g);
+          // The observer shrinks with the zoom and is gone well before the
+          // observable universe is in focus.
+          const fade = clamp01(1 - g / 2.5);
+          set(dot, { cx: CX, cy: CY, r: Math.max(0.05, 7 * Math.pow(0.5, g)), opacity: fade });
+          set(dotUs, { x: CX, y: CY - 40, opacity: fade });
+          set(dotYou, { opacity: 0 });
+          set(dotDetail, { opacity: 0 });
+          set(coda, { opacity: 0 });
+        };
 
-      const paintCoda = (c: number) => {
-        set(actTime, { opacity: 0 });
-        set(actSpace, { opacity: 1 });
-        paintAddress(M - 1);
-        set(dot, { cx: CX, cy: CY, r: 7, opacity: clamp01((c - 0.5) / 0.25) });
-        set(dotYou, { opacity: 0 });
-        set(dotUs, { opacity: 0 });
-        set(dotDetail, { opacity: 0 });
-        set(coda, { opacity: clamp01((c - 0.5) / 0.3) });
-      };
+        const paintCoda = (c: number) => {
+          set(actTime, { opacity: 0 });
+          set(actSpace, { opacity: 1 });
+          // Past M−1: the Observable Universe stays in focus while the last
+          // inner horizon finishes collapsing below one pixel, then the point
+          // reappears at the centre with its glow.
+          paintAddress(M - 1 + c);
+          set(dot, { cx: CX, cy: CY, r: 7, opacity: clamp01((c - 0.5) / 0.25) });
+          set(dotYou, { opacity: 0 });
+          set(dotUs, { opacity: 0 });
+          set(dotDetail, { opacity: 0 });
+          set(coda, { opacity: clamp01((c - 0.5) / 0.3) });
+        };
 
-      // ---- The single scroll-driven loop -----------------------------------
-      const paint = () => {
-        const rect = scrolly.getBoundingClientRect();  // the only layout read
-        const track = rect.height - window.innerHeight;
-        const p = track > 0 ? clamp01(-rect.top / track) : 0;
-        if (p < ACT1) paintTime(p / ACT1);
-        else if (p < TRANS) paintMorph((p - ACT1) / (TRANS - ACT1));
-        else if (p < ACT2) paintSpace((p - TRANS) / (ACT2 - TRANS));
-        else paintCoda(clamp01((p - ACT2) / (1 - ACT2)));
-      };
+        // ---- The single scroll-driven loop -----------------------------------
+        const paint = () => {
+          const rect = scrolly.getBoundingClientRect();  // the only layout read
+          const track = rect.height - window.innerHeight;
+          const p = track > 0 ? clamp01(-rect.top / track) : 0;
+          if (p < ACT1) paintTime(p / ACT1);
+          else if (p < TRANS) paintMorph((p - ACT1) / (TRANS - ACT1));
+          else if (p < ACT2) paintSpace((p - TRANS) / (ACT2 - TRANS));
+          else paintCoda(clamp01((p - ACT2) / (1 - ACT2)));
+        };
 
-      let raf = 0;
-      const frame = () => {
-        paint();
-        raf = requestAnimationFrame(frame);
-      };
-      // Run only while the section is on screen; stop entirely when it is not.
-      new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          if (!raf) raf = requestAnimationFrame(frame);
-        } else if (raf) {
-          cancelAnimationFrame(raf);
-          raf = 0;
-        }
-      }, { threshold: 0 }).observe(scrolly);
+        let raf = 0;
+        const frame = () => {
+          paint();
+          raf = requestAnimationFrame(frame);
+        };
+        // Run only while the section is on screen; stop entirely when it is not.
+        new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            if (!raf) raf = requestAnimationFrame(frame);
+          } else if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+        }, { threshold: 0 }).observe(scrolly);
+      }
     }
   }
 </script>
