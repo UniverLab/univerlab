@@ -1057,7 +1057,9 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: var(--ink); }
 :root[data-surface='industrial'] .ascii-motif { color: var(--surface-essence); }
 :root[data-surface='industrial'] .actions { justify-content: center; }
-:root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; }
+/* Padding is set here, not left to ExperimentLayout's scoped .btn: the
+   page's slotted cta-first link is outside that scope and rendered unpadded. */
+:root[data-surface='industrial'] .actions .btn { background: rgba(186,214,247,.06); color: #fff; border: 1px solid rgba(186,215,247,.12); border-radius: 999px; font: 500 .875rem/1.4 var(--font-body); text-decoration: none; padding: .65rem 1.35rem; }
 :root[data-surface='industrial'] .actions .btn.ghost { background: transparent; color: #d1e4fa; }
 /* PAL3: the ONE accent CTA keeps its cyan fill at this rank too. The
    `html[...]` .btn-violet rule (0,2,1) loses to this block's `.actions .btn`
