@@ -227,6 +227,24 @@ describe('renderStatusTwin — mission log entries', () => {
     expect(md).not.toContain('Second paragraph');
   });
 
+  it('prints the log in the order the API served it, never re-sorted', () => {
+    // Same date, so only an id-desc sort could move them — the twin mirrors the
+    // endpoint, it does not second-guess it. A WebMCP tool sorts; this must not.
+    const md = renderStatusTwin({
+      lang: 'en',
+      roadmap: [],
+      entries: [
+        entry({ id: 'a', title: 'Served first' }),
+        entry({ id: 'z', title: 'Served second' }),
+      ],
+    });
+    const lines = md.split('\n').filter((l) => l.startsWith('- '));
+    expect(lines.map((l) => l.slice(l.indexOf('— **') + 4, l.indexOf('**:')))).toEqual([
+      'Served first',
+      'Served second',
+    ]);
+  });
+
   it('flattens a body whose first paragraph spans lines', () => {
     const md = renderStatusTwin({
       lang: 'en',

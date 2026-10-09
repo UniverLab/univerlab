@@ -1,19 +1,5 @@
-import {
-  renderStatusTwin,
-  statusTwinRoute,
-  type Entry,
-  type Lang,
-  type RoadmapItem,
-} from './status-twin';
-
-/** Payloads the two public endpoints return. The arrays are optional: a body
- *  with an unexpected shape renders as an empty section, never a 500. */
-interface RoadmapPayload {
-  items?: RoadmapItem[];
-}
-interface EntriesPayload {
-  entries?: Entry[];
-}
+import { renderStatusTwin, statusTwinRoute, type Lang } from './status-twin';
+import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
 
 const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4']);
 
@@ -21,9 +7,6 @@ const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4'])
 // hashed assets under /_astro/, and a hashed filename carries no extension we
 // can enumerate, so the prefix is the reliable guard.
 const ASSET_PREFIXES = ['/_astro/'];
-
-/** Public announcements API: reads only — no Authorization, never `state=all`. */
-const API = 'https://announcements.univerlab.org';
 
 /** Edge-cache the API reads: the roadmap and the log move at most hourly, and
  *  a cached read is what keeps the twin cheap enough to render per request. */
@@ -41,6 +24,12 @@ const MARKDOWN_HEADERS: Record<string, string> = {
 
 /** `cf` is a Workers-only fetch option the DOM's RequestInit does not declare. */
 type CfFetchInit = RequestInit & { cf?: { cacheTtl: number; cacheEverything: boolean } };
+
+/** Every API read is edge-cached and read-only — no Authorization header, and
+ *  never `state=all`, so no private roadmap column can leave the worker. */
+const apiInit = (): CfFetchInit => ({
+  cf: { cacheTtl: API_CACHE_TTL, cacheEverything: true },
+});
 
 export function wantsMarkdown(accept: string | null | undefined): boolean {
   if (!accept) return false;
@@ -83,34 +72,20 @@ function timeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
   return { signal: ctrl.signal, clear: () => clearTimeout(timer) };
 }
 
-/** One public GET: edge-cached for 5 minutes, aborted after 3 s, `!ok` throws.
- *  Throwing is the contract — the caller falls back to the static twin. */
-async function apiJson<T>(path: string): Promise<T> {
+/** Both public endpoints, in parallel, rendered for `lang`. Rejects on any
+ *  failure — the caller's catch is what degrades to the static twin. The two
+ *  reads share one 3 s deadline and one edge-cache policy. */
+async function liveStatusTwin(lang: Lang): Promise<string> {
   const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
   try {
-    const res = await fetch(`${API}${path}`, {
-      signal,
-      cf: { cacheTtl: API_CACHE_TTL, cacheEverything: true },
-    } as CfFetchInit);
-    if (!res.ok) throw new Error(`announcements ${path} → ${res.status}`);
-    return (await res.json()) as T;
+    const [roadmap, log] = await Promise.all([
+      loadRoadmap({ init: apiInit(), signal }),
+      loadEntries({ init: apiInit(), signal, limit: 20 }),
+    ]);
+    return renderStatusTwin({ lang, roadmap, entries: log });
   } finally {
     clear();
   }
-}
-
-/** Both public endpoints, in parallel, rendered for `lang`. Rejects on any
- *  failure — the caller's catch is what degrades to the static twin. */
-async function liveStatusTwin(lang: Lang): Promise<string> {
-  const [roadmap, log] = await Promise.all([
-    apiJson<RoadmapPayload>('/roadmap?limit=100'),
-    apiJson<EntriesPayload>('/?limit=20'),
-  ]);
-  return renderStatusTwin({
-    lang,
-    roadmap: Array.isArray(roadmap.items) ? roadmap.items : [],
-    entries: Array.isArray(log.entries) ? log.entries : [],
-  });
 }
 
 export async function onRequest(context: {

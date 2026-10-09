@@ -6,36 +6,29 @@
  * deadline, static twin on failure); everything about the twin's *shape* lives
  * here, where it is unit tested without a network.
  *
- * Types are the public API's own shapes, reused where the Functions build can
- * reach them: `Entry` is `src/lib/field-notes.ts`'s (a type-only import, so the
- * only `src/` code this bundles is the two i18n dictionaries the lane headings
- * come from). `RoadmapItem` extends the field-notes shape with
- * `blocked_reason`, which it does not carry but `GET /roadmap` returns — see
- * `ROADMAP_PUBLIC_COLS` in `workers/announcements/src/index.ts`.
+ * The feed, the filtering and the row/entry formats are AGR2's shared layer,
+ * `src/lib/lab-feed.ts`, so a WebMCP tool and this twin can never drift apart.
+ * What stays here is the twin itself: its two languages, its front matter and
+ * the live-data sentence — plus the re-exports its callers import.
  */
-import type { Entry as FieldNotesEntry, RoadmapItem as FieldNotesRoadmapItem } from '../src/lib/field-notes';
+import {
+  entryLine,
+  FEED_URL,
+  roadmapMarkdown,
+  type Entry,
+  type Lane,
+  type RoadmapItem,
+} from '../src/lib/lab-feed';
 import { en } from '../src/i18n/en';
 import { es } from '../src/i18n/es';
 
-/** The same feed every page advertises — the twin names it in its first line. */
-export const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
+// `status-twin.test.ts` imports these three from this module; re-exported so
+// the move of the shared layer is invisible to it.
+export { DONE_CAP, FEED_URL, LANE_ORDER } from '../src/lib/lab-feed';
+export type { Entry, Lane, RoadmapItem } from '../src/lib/lab-feed';
 
 /** Canonical source of the page this twin mirrors (build-md's `source:`). */
 export const SOURCE_URL = 'https://univerlab.org/status/';
-
-/** Lane order as the board renders it: work in flight first, shipped last. */
-export const LANE_ORDER = ['now', 'next', 'later', 'idea', 'done'] as const;
-export type Lane = (typeof LANE_ORDER)[number];
-
-/** The `done` lane lists at most this many of the most recently shipped items. */
-export const DONE_CAP = 10;
-
-/** A public `GET /roadmap` item, plus the field this twin prints. */
-export interface RoadmapItem extends FieldNotesRoadmapItem {
-  blocked_reason?: string | null;
-}
-
-export type Entry = FieldNotesEntry;
 
 export type Lang = 'en' | 'es';
 
@@ -96,38 +89,21 @@ const HEADINGS: Record<Lang, Headings> = {
   },
 };
 
-/** ISO instants (`2026-10-06T01:09:26.735Z`) to their date part. */
-const isoDate = (v: string): string => (v ?? '').slice(0, 10);
-
-/** The API's `body` is plain text with blank-line paragraphs — first one only,
- *  flattened, so one entry stays one line in the twin. */
-const firstParagraph = (body: string): string =>
-  (body ?? '').split(/\n\s*\n/)[0].replace(/\s+/g, ' ').trim();
-
-/** `topic` may be null or empty; the board calls that `general`. */
-const topicOf = (topic?: string | null): string => (topic && topic.trim() ? topic.trim() : 'general');
-
 /**
- * One lane's rows, in order: by `pos` everywhere except `done`, which reads
- * newest-first by `shipped_at` and stops at `DONE_CAP` (items never shipped
- * sort last rather than first).
+ * Render the twin: front matter, the live-data sentence, roadmap, mission log.
+ *
+ * Both sections come from the shared layer, so the twin and a WebMCP tool can
+ * never print the same data differently. The log keeps the order the API
+ * returned it in — the twin's job is to mirror the endpoint, not to re-order
+ * it — while a tool that promises "newest first" asks `entriesMarkdown` to sort.
  */
-function laneRows(items: RoadmapItem[], lane: Lane): RoadmapItem[] {
-  const rows = items.filter((i) => i.state === lane);
-  if (lane !== 'done') return rows.sort((a, b) => a.pos - b.pos);
-  return rows
-    .sort((a, b) => {
-      const sa = a.shipped_at ?? '';
-      const sb = b.shipped_at ?? '';
-      if (sa === sb) return a.pos - b.pos;
-      return sa < sb ? 1 : -1;
-    })
-    .slice(0, DONE_CAP);
-}
-
-/** Render the twin: front matter, the live-data sentence, roadmap, mission log. */
 export function renderStatusTwin({ lang, roadmap, entries }: StatusTwinInput): string {
   const H = HEADINGS[lang];
+  // The twin prints nothing when a section is empty, so it opts out of the
+  // shared layer's "nothing here" line with `empty: ''`.
+  const board = roadmapMarkdown(roadmap, {
+    labels: { lanes: H.lanes, hold: H.hold, empty: '' },
+  });
   const out: string[] = [
     '---',
     `title: "${H.title}"`,
@@ -140,30 +116,9 @@ export function renderStatusTwin({ lang, roadmap, entries }: StatusTwinInput): s
     '',
   ];
 
-  // The API already serves active items only; filtering here keeps the twin
-  // correct against an archived row that slipped into a mirror.
-  const active = roadmap.filter((i) => i.archived_at == null);
-  for (const lane of LANE_ORDER) {
-    const rows = laneRows(active, lane);
-    if (!rows.length) continue;
-    out.push(`### ${H.lanes[lane]}`, '');
-    for (const item of rows) {
-      let line = `- **${item.title}** · ${topicOf(item.topic)}`;
-      if (item.blocked_reason) line += ` — ${H.hold}: ${item.blocked_reason}`;
-      out.push(line);
-    }
-    out.push('');
-  }
-
+  if (board) out.push(board, '');
   out.push(`## ${H.missionLog}`, '');
-  for (const entry of entries) {
-    const bits = [`**${isoDate(entry.date)}**`];
-    if (entry.type) bits.push(entry.type);
-    bits.push(topicOf(entry.topic));
-    let line = `- ${bits.join(' · ')} — **${entry.title}**: ${firstParagraph(entry.body)}`;
-    if (entry.link) line += ` [link](${entry.link})`;
-    out.push(line);
-  }
+  for (const entry of entries) out.push(entryLine(entry));
   out.push('');
 
   return out.join('\n');
