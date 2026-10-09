@@ -142,7 +142,7 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
       // every other surface keeps the colour the caller handed it
       const expected =
         exp.surface === 'paper' ? '#87222c'
-        : exp.surface === 'pastel' ? '#e06fc0'
+        : exp.surface === 'pastel' ? '#d12da2'
         : exp.surface === 'industrial' ? '#62c4ec' // the scaffold re-tint, via ctx.surface
         : '#ffffff';
       expect(bgCtx?.color).toBe(expected);
@@ -197,12 +197,13 @@ describe('startBackground — an explicit surface picks that surface\'s runner',
     expect(bgCtx?.color).toBe('#87222c');
   });
 
-  it('paints the registry orchid on the pastel surface and keeps the caller colour elsewhere', () => {
+  it('paints the registry text ink on the pastel surface and keeps the caller colour elsewhere', () => {
     // Given/When: gitkit's card (pastel) and a card with no surface at all
     const pastel = mount('bubbles', '#e06fc0', '#120b14', 'pastel');
     const plain = mount('bubbles', '#e06fc0', '#120b14', 'quorum');
-    // Then: the surface override only fires for its own surface
-    expect(pastel.bgCtx?.color).toBe('#e06fc0');
+    // Then: the surface override only fires for its own surface, and on the
+    // light pastel sheet it draws the text ink (#d12da2), not the fill orchid
+    expect(pastel.bgCtx?.color).toBe('#d12da2');
     expect(plain.bgCtx?.color).toBe('#e06fc0');
   });
 

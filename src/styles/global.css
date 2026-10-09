@@ -59,8 +59,8 @@
    Each experiment's essence accent lives in `src/lib/experiments.ts` and is
    emitted by `src/components/EssenceTokens.astro` as `--surface-essence` /
    `--surface-essence-text` — never here. Read by the home card flip and by
-   scripts/og (each experiment's social card is drawn in its surface group);
-   no page reads it directly. */
+   each experiment page's own text/fill rules; scripts/og takes the accent
+   from the registry directly. */
 
 /* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
    Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,

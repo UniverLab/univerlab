@@ -892,7 +892,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --accent: #00827c !important;
 }
-:root[data-surface='tui'] .exp { --essence: #00a9a0 !important; --accent: #00827c !important; }
+:root[data-surface='tui'] .exp { --essence: var(--surface-essence) !important; --accent: #00827c !important; }
 :root[data-surface='tui'] .hero {
   width: min(100% - 2 * var(--space), 76rem);
   margin: 1rem auto 0;
@@ -935,6 +935,12 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: #f4f1ff
   --font-body: Inter, system-ui, sans-serif;
   --accent: #1a1614 !important;
 }
+/* ExperimentLayout sets `--essence` inline on `.exp` from `essenceHex` — the
+   FILL token. On this light sheet that lands at 2.9:1 on parchment, so the
+   text/1px-stroke rules that read `--essence` (.num, .koan, .lede code, the
+   .btn outline…) must see the text ink instead. `!important` is what beats the
+   inline declaration; the same line exists for blueprint and pastel. */
+:root[data-surface='paper'] .exp { --essence: var(--surface-essence-text) !important; }
 :root[data-surface='paper'] .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, .85fr);

@@ -78,7 +78,7 @@ export function startBackground(
   const isPaper = surf === 'paper';
   if (isPaper) ctx.color = byId('texforge').essenceTextHex ?? byId('texforge').essenceHex; // garnet ink marks, never amber embers
   const isPastel = surf === 'pastel';
-  if (isPastel) ctx.color = byId('gitkit').essenceHex; // orchid, not registry pink
+  if (isPastel) ctx.color = byId('gitkit').essenceTextHex ?? byId('gitkit').essenceHex; // deep magenta ink, never the light orchid fill
   const runner = pickRunner(theme, surf);
   const tick = runner(ctx);
 

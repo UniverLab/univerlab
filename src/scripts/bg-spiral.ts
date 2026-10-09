@@ -13,6 +13,8 @@
 /* The subset of backgrounds.ts `Ctx` that this runner reads, declared locally
    (the same move brain.ts and spotlight.ts made) so the module needs no
    runtime dependency on backgrounds.ts — keep the field names in sync. */
+import { byId } from '../lib/experiments';
+
 interface SpiralCtx {
   canvas: HTMLCanvasElement;
   c: CanvasRenderingContext2D;
@@ -47,7 +49,7 @@ export function spiral(ctx: SpiralCtx): (t: number) => void {
   const rMin = 0.28;
   const rMax = Math.max(bw, bh) * 0.5;
   const thMax = Math.log(rMax / rMin) / K;
-  const A = ctx.color.length === 7 ? ctx.color : '#e6b24a';
+  const A = ctx.color.length === 7 ? ctx.color : byId('quorum').essenceHex;
 
   // A handful of sparks wander the spiral at once — a new one spawns every
   // few seconds and lives ~10–15 s, so several drift about at any moment,
