@@ -57,7 +57,7 @@
 # statement of what the public API is, and whoever fetches it — a registry, an agent —
 # is usually on another origin. The media type is pinned because Pages has no mapping for
 # an extension-less file and would guess application/octet-stream, and CORS is opened for
-# the same reason as the skills index below: a document meant to be read cross-origin.
+# the same reason as the skills index above: a document meant to be read cross-origin.
 /.well-known/api-catalog
   Content-Type: application/linkset+json
   Access-Control-Allow-Origin: *
