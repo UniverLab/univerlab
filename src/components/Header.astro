@@ -357,7 +357,7 @@ const signals = [
       if (data.link) html += '<a class="otd-link" href="' + data.link + '" target="_blank" rel="noopener noreferrer">' + data.linkLabel + '</a>';
       // The observer's place in time \u2014 ties the historical fact to the visitor's
       // own present, the same instant seen at two scales.
-      if (data.observer) html += '<div class="otd-observer">' + data.observer + '</div>';
+      if (data.observer) html += '<div class="otd-observer"><time datetime="' + data.observerIso + '" data-mission>' + data.observer + '</time></div>';
 
       popup.innerHTML = html;
 
@@ -509,6 +509,11 @@ const signals = [
       return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
     }
 
+    function observerIso() {
+      var now = new Date();
+      return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    }
+
     // Show order: events first (real history), each in a random order with no
     // repeat, and only once every event is exhausted do births and deaths
     // appear. When the whole queue drains it is rebuilt, restarting the cycle.
@@ -533,6 +538,7 @@ const signals = [
         link: it.link,
         linkLabel: i.link,
         observer: observerLine(),
+        observerIso: observerIso(),
       });
     }
 
@@ -547,6 +553,7 @@ const signals = [
         link: '',
         linkLabel: '',
         observer: observerLine(),
+        observerIso: observerIso(),
       });
     }
 

@@ -109,6 +109,19 @@ export function htmlToMarkdown(html: string): string {
   cleaned = injectLatestRelease(cleaned);
 
   const td = new TurndownService({ headingStyle: 'atx' });
+  // Mission-date <time> labels: append the ISO in parentheses so an agent
+  // reading the twin never has to convert. Matched on text shape (TERRA/Sol)
+  // since Astro strips the data-mission attribute from the built HTML.
+  const MISSION_RE = /^(TERRA \d{4} · Sol \d+ · \d{2}:\d{2} UTC|Sol \d+)/;
+  td.addRule('missionDate', {
+    filter: (node) => node.nodeName === 'TIME' && MISSION_RE.test(node.textContent?.trim() ?? ''),
+    replacement: (content, node) => {
+      const iso = node.getAttribute('datetime');
+      if (!iso) return content;
+      const short = iso.length > 10 ? iso.replace(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/, '$1Z') : iso;
+      return `${content} (${short})`;
+    },
+  });
   const markdown = td.turndown(cleaned);
 
   let frontMatter = '---\n';

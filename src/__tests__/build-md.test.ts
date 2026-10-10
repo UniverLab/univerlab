@@ -104,3 +104,27 @@ describe('injectLatestRelease', () => {
     expect(injectLatestRelease('<p class="lab-plate" data-release="v1.0&amp;x" data-release-date="2026-09-20">p</p>')).not.toContain('Latest release');
   });
 });
+
+describe('mission-date ISO suffix in markdown twin', () => {
+  it('appends the ISO date in parentheses after a mission-date label', () => {
+    const html = [
+      '<main>',
+      '<p class="doc-updated">Last updated ' +
+        '<time datetime="2026-10-09T14:00:00Z" data-mission="">TERRA 2026 · Sol 282 · 14:00 UTC</time>' +
+        '</p>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('TERRA 2026 · Sol 282 · 14:00 UTC (2026-10-09T14:00Z)');
+  });
+
+  it('appends the date-only ISO when no time is present', () => {
+    const html = [
+      '<main>',
+      '<time datetime="2026-10-09" data-mission="">Sol 282</time>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('Sol 282 (2026-10-09)');
+  });
+});

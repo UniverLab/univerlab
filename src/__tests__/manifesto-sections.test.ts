@@ -121,7 +121,7 @@ describe('MAN2 manifesto sections', () => {
   it('computes the living-document header from docDate and keeps it out of aria-hidden', () => {
     expect(src).toMatch(/startSolLabel\(m\.docDate\)/);
     expect(src).not.toMatch(/Sol 168/);
-    expect(src).toMatch(/<p class="doc-header">\{docHeader\}<\/p>/);
+    expect(src).toMatch(/<p class="doc-header"><time[^>]*>\{docHeader\}<\/time><\/p>/);
     expect(src).not.toMatch(/doc-header[^>]*aria-hidden/);
   });
 

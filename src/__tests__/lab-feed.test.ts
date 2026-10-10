@@ -45,6 +45,16 @@ function entry(over: Partial<Entry> & { id: string; title: string }): Entry {
   };
 }
 
+// The entry-line head depends on the local TZ (local-midnight Sol epoch), so it
+// is computed from the same primitives entryLine uses rather than hardcoded.
+function entryHead(date: string): string {
+  const d = new Date(date);
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+  return `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
+}
+
 /** A `fetch` that answers one URL and records what it was called with. */
 function api(handler: (url: string) => unknown) {
   const calls: { url: string; init: RequestInit }[] = [];
@@ -114,10 +124,10 @@ describe('row helpers', () => {
 
   it('prints an entry as one line, with and without a link', () => {
     expect(entryLine(entry({ id: 'e1', title: 'Launched', link: 'https://example.com/x' }))).toBe(
-      '- **2026-10-06** · launch · general — **Launched**: First paragraph. [link](https://example.com/x)',
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · general — **Launched**: First paragraph. [link](https://example.com/x)`,
     );
     expect(entryLine(entry({ id: 'e2', title: 'Note', type: 'note', topic: null, link: null }))).toBe(
-      '- **2026-10-06** · note · general — **Note**: First paragraph.',
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · note · general — **Note**: First paragraph.`,
     );
   });
 });
@@ -239,7 +249,7 @@ describe('entry ordering and filtering', () => {
   it('renders one line per entry and says so when empty', () => {
     const md = entriesMarkdown(log, { limit: 2 });
     expect(md.split('\n')).toHaveLength(2);
-    expect(md.startsWith('- **2026-09-03** · launch · general — **Same day, later id**')).toBe(true);
+    expect(md.startsWith(`- ${entryHead('2026-09-03T10:00:00Z')} · launch · general — **Same day, later id**`)).toBe(true);
     expect(entriesMarkdown(log, { topic: 'quorum' })).toBe('Nothing in the Mission Log.');
     expect(entriesMarkdown(log, { topic: 'quorum', labels: { empty: '' } })).toBe('');
   });

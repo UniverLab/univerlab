@@ -365,6 +365,7 @@ https://github.com/UniverLab
       { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
     ]} />
     <script>
+      import { openDateTranslator } from '../lib/mission-date-ui';
       // Command palette — terminal-style / command with Tab autocomplete.
       // Commands are derived from experiment IDs + static routes.
       // To add a new experiment: add its ID to the experiments array in
@@ -611,6 +612,7 @@ https://github.com/UniverLab
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
           { cmd: '/status', label: 'Mission Log', href: '/status/' },
+          { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 
         // Experiment IDs — auto-generated from the registry.
@@ -1094,6 +1096,9 @@ https://github.com/UniverLab
         returns before doing anything — no registration, no request. */}
     <script>
       import '../lib/webmcp';
+    </script>
+    <script>
+      import '../lib/mission-date-ui';
     </script>
     <script is:inline>
       (function () {

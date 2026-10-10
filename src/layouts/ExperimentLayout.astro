@@ -144,7 +144,7 @@ const ogImage = `/og/${id}.png`;
          after the hero, before the feature sections, not buried at the end. -->
     <div class="genesis-row" class:list={[{ 'has-demo': !!exp.demo && !hideDemo }]}>
       <section class="wrap genesis">
-        <span class="label">{e.genesis.kicker}{genesisDate ? ` · ${genesisDate}` : ''}</span>
+        <span class="label">{e.genesis.kicker}{genesisDate ? <> · <time datetime={exp.startDate} data-mission>{genesisDate}</time></> : ''}</span>
         <h2>{e.genesis.title}</h2>
         <p class="prose" set:html={e.genesis.body} />
       </section>

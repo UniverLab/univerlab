@@ -153,9 +153,17 @@ export function roadmapLine(item: RoadmapItem, hold: string = DEFAULT_LABELS.hol
   return line;
 }
 
-/** One Mission Log entry — one line, first paragraph, optional link. */
+/** One Mission Log entry — one line, first paragraph, optional link.
+ *  The mission-date label carries its ISO in parentheses so an agent reading
+ *  the twin never has to convert. */
 export function entryLine(e: Entry): string {
-  const bits = [`**${isoDate(e.date)}**`];
+  const d = new Date(e.date);
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const iso = `${isoDate(e.date)}T${hh}:${mm}Z`;
+  const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+  const head = `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${iso})`;
+  const bits = [head];
   if (e.type) bits.push(e.type);
   bits.push(topicOf(e.topic));
   let line = `- ${bits.join(' · ')} — **${e.title}**: ${firstParagraph(e.body)}`;

@@ -45,7 +45,7 @@ const roman = (n: number): string => {
          Sol are computed from m.docDate in the frontmatter; only `docStatus` is
          localised. NOT aria-hidden: build-md's stripAriaHidden would delete the
          line from the markdown twin, which §5 requires it to keep. -->
-    <p class="doc-header">{docHeader}</p>
+    <p class="doc-header"><time datetime={m.docDate} data-mission>{docHeader}</time></p>
     <blockquote class="prose">{m.epigraph}</blockquote>
   </section>
 

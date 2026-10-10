@@ -95,6 +95,8 @@ const statusHref = `/status/?topic=${exp.id}`;
         article.className = 'fn-item';
         const time = document.createElement('time');
         time.className = 'fn-date';
+        time.setAttribute('datetime', d.date);
+        time.setAttribute('data-mission', '');
         time.textContent = formatMissionDate(d.date);
         const h = document.createElement('h3');
         h.textContent = d.title;
