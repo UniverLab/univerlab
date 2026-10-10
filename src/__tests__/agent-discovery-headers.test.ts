@@ -2,11 +2,11 @@
  * Tests for agent discovery Link headers in public/_headers.
  *
  * Verifies that the homepage and Spanish homepage advertise the plain-text
- * site summary, and — the point of the last two cases — that they advertise
- * nothing else. A Link header is a promise that a resource exists; pointing
- * one at a 404 is worse than omitting it, and that is exactly what happened
- * when the api-catalog and agent-card specs were dropped after this file's
- * first version shipped.
+ * site summary and the RFC 9727 api-catalog, and — the point of the last
+ * cases — that they advertise no resource this site does not serve. A Link
+ * header is a promise that a resource exists; pointing one at a 404 is worse
+ * than omitting it. The api-catalog was dropped for that reason before the
+ * announcements API existed, and came back with it.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -15,7 +15,7 @@ const HEADERS = resolve(__dirname, '..', '..', 'public', '_headers');
 const src = readFileSync(HEADERS, 'utf8');
 
 describe('Agent discovery Link headers', () => {
-  const validRels = ['describedby'] as const;
+  const validRels = ['describedby', 'api-catalog'] as const;
 
   it('should have a / block advertising the site summary', () => {
     expect(src).toMatch(
@@ -29,9 +29,12 @@ describe('Agent discovery Link headers', () => {
     );
   });
 
-  it('should not advertise resources this site does not serve', () => {
-    // public/ holds no .well-known directory, so these would be 404s.
-    expect(src).not.toContain('/.well-known/api-catalog');
+  it('should advertise the api-catalog now that it is served, and never an agent card', () => {
+    // The announcements API made the api-catalog real: the file exists under
+    // public/, so the homepage may point at it — and must, per RFC 9727.
+    expect(src).toContain('/.well-known/api-catalog');
+    expect(existsSync(resolve(__dirname, '..', '..', 'public', '.well-known', 'api-catalog'))).toBe(true);
+    // No agent card exists, so nothing advertises one.
     expect(src).not.toContain('/.well-known/agent-card.json');
   });
 

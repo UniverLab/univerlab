@@ -1,0 +1,608 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "UniverLab announcements API",
+    "version": "1.0.0",
+    "summary": "The public, read-only half of the UniverLab announcements API.",
+    "description": "The public, read-only half of the UniverLab announcements API — the Mission Log and the roadmap that https://univerlab.org/status/ renders. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: https://univerlab.org`, so a page on univerlab.org can call them straight from the browser. Writing to the Mission Log or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
+    "contact": {
+      "name": "Jheison Martinez Bolivar",
+      "email": "jheison.mb@univerlab.org"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://announcements.univerlab.org"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Mission Log",
+      "description": "The announcements themselves."
+    },
+    {
+      "name": "Roadmap",
+      "description": "What the laboratory is working on, and what shipped."
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "listEntries",
+        "tags": [
+          "Mission Log"
+        ],
+        "summary": "List Mission Log entries",
+        "description": "The most recent announcements, newest first, read from the mirror the API keeps at the edge. `offset` and `limit` page through the newest 100 entries that mirror holds.",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "How many entries to skip before reading.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "How many entries to return.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of entries and the pagination totals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed.atom": {
+      "get": {
+        "operationId": "getAtomFeed",
+        "tags": [
+          "Mission Log"
+        ],
+        "summary": "Atom feed of the Mission Log",
+        "description": "The same entries as an Atom feed, for a feed reader. The response carries an `ETag`; a conditional request that returns it saves the whole body.",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "The `ETag` from an earlier fetch of this feed. When it still matches, the answer is `304 Not Modified` with no body.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The feed, as Atom XML.",
+            "headers": {
+              "ETag": {
+                "description": "A digest of the serialized feed. Send it back as `If-None-Match` on the next request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nothing changed since the `ETag` you sent. The body is empty."
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "streamEvents",
+        "tags": [
+          "Mission Log"
+        ],
+        "summary": "Server-sent events stream",
+        "description": "A long-lived `text/event-stream`. It opens with a `:ok` comment, sends a `:ping` comment every 30 seconds, and pushes an `entry`, `update` or `roadmap` event whose data is the changed object as JSON. It exists for one live view at a time: hold the connection instead of reconnecting, and close it when the view closes. It answers `503` once 200 listeners are already attached.",
+        "responses": {
+          "200": {
+            "description": "The stream. Each frame is either a comment (`:ok`, `:ping`) or an `event:`/`data:` pair.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "entry": {
+                    "summary": "A new announcement",
+                    "value": "event: entry\ndata: {\"id\":\"bcfe0207-ed19-4fde-9de1-1dc1c409aa36\",\"date\":\"2026-10-06T01:09:26.735Z\",\"title\":\"TeXForge 0.10.0: code that comes out highlighted\",\"type\":\"launch\",\"topic\":\"texforge\"}"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Too many listeners are already attached. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roadmap": {
+      "get": {
+        "operationId": "listRoadmapItems",
+        "tags": [
+          "Roadmap"
+        ],
+        "summary": "List roadmap items",
+        "description": "The public roadmap. `state=active` (the default) returns the items the laboratory is working on or has shipped; a single lane (`idea`, `now`, `next`, `later`, `done`) narrows to it. Items carry public fields only — the private ones are never in this answer. The two query shapes that would expose them (`state=all` and `private=1`) are reader-authenticated and answer `401` without a token, so they are not described here.",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "description": "Which items to return.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "idea",
+                "now",
+                "next",
+                "later",
+                "done"
+              ],
+              "default": "active"
+            },
+            "example": "active"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "description": "How many items to skip before reading.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "How many items to return.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of roadmap items, the pagination totals, and the mirror's version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoadmapList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`state` was not one of the accepted values.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roadmap/{id}": {
+      "get": {
+        "operationId": "getRoadmapItem",
+        "tags": [
+          "Roadmap"
+        ],
+        "summary": "One roadmap item and its announcements",
+        "description": "A single public roadmap item, plus the announcements that report on it — newest first, id breaking ties. `{id}` is the `id` of an item returned by `GET /roadmap`. An archived item is a `404` on this public route.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The item's `id`, exactly as `GET /roadmap` returned it.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The item and the announcements linked to it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoadmapDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The `id` segment is empty or malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No public roadmap item carries that `id` — it may have been archived.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "What the API refused, in one line."
+          }
+        }
+      },
+      "Entry": {
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "title",
+          "body",
+          "type",
+          "topic"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The announcement's own id."
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it was published."
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "The announcement as markdown."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "update",
+              "launch",
+              "incident",
+              "note"
+            ]
+          },
+          "topic": {
+            "type": "string",
+            "enum": [
+              "general",
+              "canopy",
+              "astro-denoise",
+              "texforge",
+              "gitkit",
+              "ghscaff",
+              "cadspec",
+              "demostage",
+              "quorum"
+            ]
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "maxLength": 500,
+            "description": "An external link — a release, a paper, a pull request."
+          },
+          "roadmap_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The roadmap item this announcement reports on; absent when it is unlinked."
+          }
+        }
+      },
+      "EntryList": {
+        "type": "object",
+        "required": [
+          "entries",
+          "total",
+          "hasMore"
+        ],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "How many entries the mirror holds in total."
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether another page is available after this one."
+          }
+        }
+      },
+      "EntriesSummary": {
+        "type": "object",
+        "required": [
+          "count",
+          "last_date",
+          "last_id"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "How many announcements report on the item."
+          },
+          "last_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "RoadmapItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "state",
+          "topic",
+          "essence_hex",
+          "blocked_reason",
+          "pos",
+          "archived_at",
+          "updatedAt",
+          "summary",
+          "shipped_at",
+          "entries"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "idea",
+              "now",
+              "next",
+              "later",
+              "done"
+            ]
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "general",
+              "canopy",
+              "astro-denoise",
+              "texforge",
+              "gitkit",
+              "ghscaff",
+              "cadspec",
+              "demostage",
+              "quorum",
+              null
+            ]
+          },
+          "essence_hex": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^#[0-9a-fA-F]{6}$",
+            "description": "The item's accent colour, as `#rrggbb`."
+          },
+          "blocked_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "pos": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The item's position among the non-archived rows."
+          },
+          "archived_at": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Milliseconds since the epoch while archived, `null` while active."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 280,
+            "description": "The item in one line."
+          },
+          "shipped_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When `state` became `done`, server-managed."
+          },
+          "entries": {
+            "$ref": "#/components/schemas/EntriesSummary",
+            "description": "The announcements that report on this item."
+          }
+        }
+      },
+      "RoadmapList": {
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "hasMore",
+          "version"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoadmapItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "How many items match the request in total."
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "description": "The mirror's version, bumped by every write."
+          }
+        }
+      },
+      "LinkedAnnouncement": {
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "title",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "update",
+              "launch",
+              "incident",
+              "note"
+            ]
+          }
+        }
+      },
+      "RoadmapDetail": {
+        "type": "object",
+        "required": [
+          "item",
+          "announcements"
+        ],
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/RoadmapItem"
+          },
+          "announcements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedAnnouncement"
+            }
+          }
+        }
+      }
+    }
+  }
+}

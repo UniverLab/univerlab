@@ -1,0 +1,45 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "UniverLab",
+    "identifier": "did:web:univerlab.org"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:univerlab.org:catalog:api",
+      "displayName": "UniverLab announcements API catalog",
+      "description": "The RFC 9727 linkset for the public announcements API — the Mission Log and the roadmap — pointing at its OpenAPI description and its human documentation.",
+      "type": "application/linkset+json",
+      "url": "https://univerlab.org/.well-known/api-catalog",
+      "representativeQueries": [
+        "what is the latest UniverLab announcement",
+        "is there a public API for the UniverLab mission log",
+        "where can I read the UniverLab roadmap"
+      ]
+    },
+    {
+      "identifier": "urn:air:univerlab.org:skills:index",
+      "displayName": "UniverLab Agent Skills index",
+      "description": "The Agent Skills Discovery index (RFC v0.2.0): every skill UniverLab publishes, with its URL and a SHA-256 digest of the bytes actually served.",
+      "type": "application/json",
+      "url": "https://univerlab.org/.well-known/agent-skills/index.json",
+      "representativeQueries": [
+        "which agent skills does UniverLab publish",
+        "how do I get the canopy skill",
+        "what can an agent do with UniverLab skills"
+      ]
+    },
+    {
+      "identifier": "urn:air:univerlab.org:docs:llms",
+      "displayName": "UniverLab llms.txt",
+      "description": "The plain-language index of the whole site: what UniverLab is, every experiment, and every documentation page in markdown.",
+      "type": "text/plain",
+      "url": "https://univerlab.org/llms.txt",
+      "representativeQueries": [
+        "what is UniverLab",
+        "which experiments does UniverLab have",
+        "where is the UniverLab documentation"
+      ]
+    }
+  ]
+}

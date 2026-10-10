@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../i18n';
+import { loadApiDocument } from '../../lib/api-docs';
+
+const t = useTranslations('es');
+const a = t.api;
+const doc = loadApiDocument();
+---
+<BaseLayout title={a.title} description={a.description} bg="cosmic" circadian>
+  <section class="wrap api">
+    <span class="label">{a.kicker}</span>
+    <h1>{a.heading}</h1>
+    <p class="intro">{a.intro}</p>
+    <p class="base"><strong>{a.baseLabel}</strong> <code>{doc.baseUrl}</code> — {a.baseNote}</p>
+
+    <h2>{a.endpointsLabel}</h2>
+    {doc.operations.map((op) => (
+      <article class="op">
+        <h3><span class="m">GET</span> <code>{op.path}</code></h3>
+        <p class="sum">{op.summary}</p>
+        <p class="desc">{op.description}</p>
+        <p class="plabel">{a.parametersLabel}</p>
+        {op.parameters.length > 0 ? (
+          <ul class="params">
+            {op.parameters.map((p) => (
+              <li><code>{p.name}</code> — {p.location} · {p.type} · {p.required ? a.requiredLabel : a.optionalLabel}. {p.description}</li>
+            ))}
+          </ul>
+        ) : (
+          <p class="none">{a.noneLabel}</p>
+        )}
+        <p class="plabel">{a.exampleLabel}</p>
+        <pre><code>{op.curl}</code></pre>
+        <p class="resp">{a.responseLabel}: <code>{op.contentTypes.join(', ')}</code></p>
+      </article>
+    ))}
+
+    <ul class="refs">
+      <li><strong>{a.specLabel}</strong> — {a.specNote} <a href="/openapi/announcements.json">/openapi/announcements.json</a></li>
+      <li><strong>{a.catalogLabel}</strong> — {a.catalogNote} <a href="/.well-known/api-catalog">/.well-known/api-catalog</a></li>
+      <li><strong>{a.authLabel}</strong> — {a.authNote} <a href="/auth.md">/auth.md</a></li>
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .api {
+    max-width: 46rem;
+    padding-block: 4rem 6rem;
+  }
+  .api .label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 1.2rem;
+  }
+  .api h1 {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  .api h2 {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 2.6rem 0 1.2rem;
+  }
+  .api .intro,
+  .api .base,
+  .api .sum,
+  .api .desc,
+  .api .none,
+  .api .resp {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .api .intro { margin: 0; }
+  .api .base { margin-top: 1.4rem; }
+  .api .base strong { color: var(--ink); font-weight: 600; }
+  .api .op {
+    border-top: 1px solid var(--line);
+    padding-top: 1.4rem;
+    margin-top: 1.6rem;
+  }
+  .api .op h3 {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    margin: 0 0 0.6rem;
+  }
+  .api .op h3 .m {
+    color: var(--accent);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+  .api .sum { color: var(--ink); margin: 0 0 0.4rem; }
+  .api .desc { margin: 0; }
+  .api .plabel {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 1.2rem 0 0.5rem;
+  }
+  .api .params,
+  .api .refs {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  .api .params code { color: var(--ink); }
+  .api pre {
+    margin: 0;
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+    overflow-x: auto;
+  }
+  .api pre code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink);
+    white-space: pre;
+  }
+  .api .resp { margin: 0.7rem 0 0; font-size: 0.85rem; }
+  .api .refs { margin-top: 2.6rem; border-top: 1px solid var(--line); padding-top: 1.4rem; }
+  .api .refs a { color: var(--accent); }
+</style>

@@ -138,6 +138,8 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
     )}
     <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
+    {/* ARD / AI Catalog (specVersion 1.0) — advertised three ways: this head link, robots.txt's Agentmap, llms.txt's head. */}
+    <link rel="ai-catalog" href={new URL('/.well-known/ai-catalog.json', site).href} />
     <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
          labels); Inter is the default body. Per-surface display voices:
          the system serif stack (paper/texforge — no webfont pushed), Space

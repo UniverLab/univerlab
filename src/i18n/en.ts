@@ -18,6 +18,7 @@ export const en = {
     github: 'GitHub',
     sponsors: 'sponsor',
     log: 'Status',
+    api: 'API',
   },
   footer: {
     quote:
@@ -895,6 +896,35 @@ export const en = {
     copy: 'Copy',
     copied: 'Copied',
     hint: 'Any RSS reader works — no specific app needed, just paste the URL.',
+  },
+  api: {
+    title: 'UniverLab announcements API — endpoints and examples',
+    description:
+      'Every route of the public announcements API — the Mission Log and the roadmap — with its parameters, its response shape and a curl example you can run today.',
+    kicker: 'API',
+    heading: 'Announcements API',
+    intro:
+      'The public API behind the Mission Log and the roadmap on this site. Every route listed here is an unauthenticated, read-only GET: there is no account, no key and nothing to arrange before calling it. Read what you like, as often as you like.',
+    baseLabel: 'Base URL',
+    baseNote: 'Anonymous, read-only GET. Every response carries the CORS origin this site runs on.',
+    endpointsLabel: 'Endpoints',
+    parametersLabel: 'Parameters',
+    noneLabel: 'This route takes no parameters.',
+    exampleLabel: 'Example',
+    responseLabel: 'Response',
+    optionalLabel: 'optional',
+    requiredLabel: 'required',
+    yesLabel: 'yes',
+    noLabel: 'no',
+    specLabel: 'OpenAPI document',
+    specNote:
+      'This page is generated at build time from the OpenAPI 3.1 description of the same API, so the page and the description cannot drift. Fetch it for the machine-readable version of everything above.',
+    catalogLabel: 'API catalog',
+    catalogNote:
+      'The RFC 9727 catalog that advertises this API to agents.',
+    authLabel: 'auth.md',
+    authNote:
+      'The file that states plainly that there is nothing to register for here, and what is asked of a client that reads this API.',
   },
 };
 

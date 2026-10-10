@@ -18,15 +18,17 @@
 # fetches the homepage learns where the plain-text site summary lives without
 # probing well-known paths.
 #
-# Only resources that actually exist are advertised. An api-catalog and an A2A
-# agent card were considered and dropped: UniverLab is a static site plus local
-# CLIs, not an invocable service, and a Link header pointing at a 404 is worse
-# than no header at all.
+# Only resources that actually exist are advertised. An api-catalog and an A2A agent card
+# were considered and dropped once: UniverLab was then a static site plus local CLIs, not
+# an invocable service, and a Link header pointing at a 404 is worse than no header at
+# all. The api-catalog came back the moment the announcements API did — it is a real
+# read-only API, so the catalog below describes it. The A2A card stays out: there is still
+# no agent to invoke.
 /
-  Link: </llms.txt>; rel="describedby"; type="text/plain"
+  Link: </llms.txt>; rel="describedby"; type="text/plain", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
 
 /es/
-  Link: </llms.txt>; rel="describedby"; type="text/plain"
+  Link: </llms.txt>; rel="describedby"; type="text/plain", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
 
 # The Agent Skills Discovery index and the skills it lists (RFC v0.2.0).
 # Served cross-origin on purpose: a registry or an agent running in a browser
@@ -50,6 +52,33 @@
   Content-Type: text/markdown; charset=utf-8
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
+
+# RFC 9727 API catalog for the announcements API. The linkset is the only machine-readable
+# statement of what the public API is, and whoever fetches it — a registry, an agent —
+# is usually on another origin. The media type is pinned because Pages has no mapping for
+# an extension-less file and would guess application/octet-stream, and CORS is opened for
+# the same reason as the skills index below: a document meant to be read cross-origin.
+/.well-known/api-catalog
+  Content-Type: application/linkset+json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300
+
+# ARD / AI Catalog capability manifest (specVersion 1.0) — what an agent can use here.
+# Same reasoning as the api-catalog above: pinned media type, open CORS, short TTL so a
+# renamed document cannot sit in a cache. The path must not overlap the agent-skills
+# rules — Pages applies every matching rule and concatenates their values, so a shared
+# Content-Type would emit two of them and be unparseable next to nosniff.
+/.well-known/ai-catalog.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300
+
+# auth.md — the one file an agent reads before assuming an API needs a key. The media type
+# is pinned because Pages has no mapping for `.md` and would serve it as a download, which
+# is the exact opposite of what this file is for. No CORS: an agent fetches auth.md from
+# the origin it is inspecting, and it is only ever useful there.
+/auth.md
+  Content-Type: text/markdown; charset=utf-8
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

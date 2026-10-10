@@ -19,6 +19,7 @@ export const es: Dict = {
     github: 'GitHub',
     sponsors: 'sponsor',
     log: 'Estado',
+    api: 'API',
   },
   footer: {
     quote:
@@ -888,5 +889,34 @@ export const es: Dict = {
     copy: 'Copiar',
     copied: 'Copiado',
     hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',
+  },
+  api: {
+    title: 'API de anuncios de UniverLab — endpoints y ejemplos',
+    description:
+      'Todas las rutas de la API pública de anuncios — el Mission Log y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
+    kicker: 'API',
+    heading: 'API de anuncios',
+    intro:
+      'La API pública que está detrás del Mission Log y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
+    baseLabel: 'URL base',
+    baseNote: 'GET anónimo y de solo lectura. Cada respuesta lleva el origen CORS de este sitio.',
+    endpointsLabel: 'Endpoints',
+    parametersLabel: 'Parámetros',
+    noneLabel: 'Esta ruta no recibe parámetros.',
+    exampleLabel: 'Ejemplo',
+    responseLabel: 'Respuesta',
+    optionalLabel: 'opcional',
+    requiredLabel: 'obligatorio',
+    yesLabel: 'sí',
+    noLabel: 'no',
+    specLabel: 'Documento OpenAPI',
+    specNote:
+      'Esta página se genera al construir el sitio a partir de la descripción OpenAPI 3.1 de la misma API, así que la página y la descripción no pueden divergir. Descárgala para tener la versión legible por máquina de todo lo anterior.',
+    catalogLabel: 'Catálogo de API',
+    catalogNote:
+      'El catálogo RFC 9727 que anuncia esta API a los agentes.',
+    authLabel: 'auth.md',
+    authNote:
+      'El archivo que dice sin rodeos que aquí no hay nada que registrar, y lo que se le pide a un cliente que lee esta API.',
   },
 };
