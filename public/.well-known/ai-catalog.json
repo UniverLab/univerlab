@@ -40,6 +40,19 @@
         "which experiments does UniverLab have",
         "where is the UniverLab documentation"
       ]
+    },
+    {
+      "identifier": "urn:air:univerlab.org:mcp:server-card",
+      "displayName": "UniverLab MCP server",
+      "description": "The MCP Server Card for the UniverLab remote MCP server (Streamable HTTP at https://univerlab.org/mcp): four read-only tools over the lab's roadmap, Mission Log, about text and mission-date translator.",
+      "type": "application/mcp-server-card+json",
+      "url": "https://univerlab.org/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "what is on the UniverLab roadmap",
+        "what has UniverLab announced recently",
+        "how do I convert a UniverLab mission date",
+        "connect to the UniverLab MCP server"
+      ]
     }
   ]
 }

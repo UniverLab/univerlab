@@ -61,6 +61,10 @@ const ABSOLUTE_HREF = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 /** A `https://univerlab.org/...` URL written without a trailing slash. */
 const SITE_URL = /https:\/\/univerlab\.org(\/[^)\s]*)?/g;
 
+/** Real resources served at an extensionless path by Pages Functions (not
+ *  pages): llms.txt may name them, and no dist/ file backs them. */
+export const ENDPOINTS = new Set(['/mcp']);
+
 /** A generated documentation line: `- [<title>](<canonical>index.md): <desc>`.
  *  Core/optional lines link trailing-slash routes, so the `index.md` tail
  *  matches only the generated `## Documentation` section. */
@@ -213,6 +217,7 @@ export function checkLlmsTxt(dist = DIST): Failure[] {
   const text = readFileSync(file, 'utf-8');
   for (const m of text.matchAll(SITE_URL)) {
     const path = m[1] ?? '/';
+    if (ENDPOINTS.has(path)) continue;
     if (path === '/' || path.endsWith('/') || /\/[^/]+\.[a-z0-9]+$/i.test(path)) continue;
     failures.push(`llms.txt: "${m[0]}" is not the canonical trailing-slash form`);
   }
@@ -250,6 +255,7 @@ export function checkLlmsLinks(dist = DIST): Failure[] {
   for (const m of readFileSync(file, 'utf-8').matchAll(SITE_URL)) {
     // A prose URL followed by sentence punctuation still names the page.
     const path = (m[1] ?? '/').replace(/[.,;:!?'"’”)\]]+$/, '') || '/';
+    if (ENDPOINTS.has(path)) continue;
     if (!existsSync(distFileForLlmsUrl(path, dist))) {
       failures.push(`llms.txt: "${m[0]}" has no built file`);
     }

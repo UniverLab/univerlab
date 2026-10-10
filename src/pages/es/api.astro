@@ -6,6 +6,11 @@ import { loadApiDocument } from '../../lib/api-docs';
 const t = useTranslations('es');
 const a = t.api;
 const doc = loadApiDocument();
+const MCP_CONFIG = `{
+  "mcpServers": {
+    "univerlab": { "type": "http", "url": "https://univerlab.org/mcp" }
+  }
+}`;
 ---
 <BaseLayout title={a.title} description={a.description} bg="cosmic" circadian>
   <section class="wrap api">
@@ -35,6 +40,15 @@ const doc = loadApiDocument();
         <p class="resp">{a.responseLabel}: <code>{op.contentTypes.join(', ')}</code></p>
       </article>
     ))}
+
+    <h2>{a.mcpHeading}</h2>
+    <p class="intro">{a.mcpIntro}</p>
+    <p class="base"><strong>{a.mcpEndpointLabel}</strong> <code>https://univerlab.org/mcp</code></p>
+    <p class="plabel">{a.mcpClientLabel}</p>
+    <pre><code>claude mcp add --transport http univerlab https://univerlab.org/mcp</code></pre>
+    <p class="plabel">{a.mcpConfigLabel}</p>
+    <pre><code>{MCP_CONFIG}</code></pre>
+    <p class="resp">{a.mcpCardLabel}: <a href="/.well-known/mcp/server-card.json">/.well-known/mcp/server-card.json</a> — {a.mcpCardNote}</p>
 
     <ul class="refs">
       <li><strong>{a.specLabel}</strong> — {a.specNote} <a href="/openapi/announcements.json">/openapi/announcements.json</a></li>

@@ -73,6 +73,13 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
 
+# MCP Server Card (SEP-2127). Pinned media type + open CORS for the same reason as the
+# ai-catalog above, and no-store because the card carries the site version.
+/.well-known/mcp/server-card.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+  Cache-Control: no-store
+
 # auth.md — the one file an agent reads before assuming an API needs a key. The media type
 # is pinned because Pages has no mapping for `.md` and would serve it as a download, which
 # is the exact opposite of what this file is for. No CORS: an agent fetches auth.md from

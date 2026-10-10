@@ -918,5 +918,13 @@ export const es: Dict = {
     authLabel: 'auth.md',
     authNote:
       'El archivo que dice sin rodeos que aquí no hay nada que registrar, y lo que se le pide a un cliente que lee esta API.',
+    mcpHeading: 'Servidor MCP',
+    mcpIntro:
+      'Las mismas cuatro herramientas de solo lectura que este sitio expone a un agente del navegador también se sirven desde un servidor MCP remoto real — Streamable HTTP sin estado. Apunta cualquier cliente MCP al endpoint:',
+    mcpEndpointLabel: 'Endpoint',
+    mcpClientLabel: 'Añádelo con la CLI de Claude Code',
+    mcpConfigLabel: 'O en la configuración JSON de cualquier cliente MCP',
+    mcpCardLabel: 'Server Card',
+    mcpCardNote: 'La Server Card de MCP (SEP-2127) que anuncia este servidor a los agentes.',
   },
 };

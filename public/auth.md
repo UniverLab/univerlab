@@ -26,8 +26,9 @@ Every public resource is anonymous and read-only:
 - the announcements API at `https://announcements.univerlab.org` — every unauthenticated `GET`
   route listed in `https://univerlab.org/.well-known/api-catalog`;
 - the WebMCP tools every page of this site exposes to a browser agent;
-- the UniverLab MCP server, once it ships. It is not published yet; when it is, it will be
-  listed in the AI catalog and in this file.
+- the UniverLab MCP server at `https://univerlab.org/mcp` — four read-only tools (roadmap, Mission
+  Log, about, mission-date translator) over stateless Streamable HTTP, no session and no credential;
+  its Server Card is at `https://univerlab.org/.well-known/mcp/server-card.json`.
 
 ## What is not open
 

@@ -925,6 +925,14 @@ export const en = {
     authLabel: 'auth.md',
     authNote:
       'The file that states plainly that there is nothing to register for here, and what is asked of a client that reads this API.',
+    mcpHeading: 'MCP server',
+    mcpIntro:
+      'The same four read-only tools this site exposes to a browser agent are also served from a real remote MCP server — stateless Streamable HTTP. Point any MCP client at the endpoint:',
+    mcpEndpointLabel: 'Endpoint',
+    mcpClientLabel: 'Add it with the Claude Code CLI',
+    mcpConfigLabel: 'Or in any MCP client’s JSON config',
+    mcpCardLabel: 'Server Card',
+    mcpCardNote: 'The MCP Server Card (SEP-2127) that advertises this server to agents.',
   },
 };
 
