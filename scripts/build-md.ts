@@ -69,6 +69,23 @@ const VOID_ELEMENTS = new Set([
  *  cannot drift on what "indexable" means. */
 export const NOINDEX = /<meta\s+name=["']robots["']\s+content=["'][^"']*\bnoindex\b/i;
 
+/** The ISO a markdown twin prints in parentheses after a mission-date label:
+ *  the label's own instant, normalized to UTC. A date-only `datetime` has no
+ *  time segment to keep. Parsing (rather than trimming the string) matters:
+ *  git's `%cI` stamps carry an offset (`2026-09-27T04:45:34-05:00`), and
+ *  re-labeling those digits `Z` would print an instant five hours off from
+ *  the "… · 09:45 UTC" right next to it. */
+export function missionIso(iso: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return (
+    `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}` +
+    `T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}Z`
+  );
+}
+
 export function injectLatestRelease(html: string): string {
   const openTag = html.match(/<p[^>]*class="[^"]*lab-plate[^"]*"[^>]*>/);
   if (!openTag || openTag.index == null) return html;
@@ -109,6 +126,22 @@ export function htmlToMarkdown(html: string): string {
   cleaned = injectLatestRelease(cleaned);
 
   const td = new TurndownService({ headingStyle: 'atx' });
+  // Mission-date <time> labels: append the ISO in parentheses so an agent
+  // reading the twin never has to convert. Every renderer marks its label
+  // with data-mission (Astro keeps the attribute in the built HTML); the
+  // text-shape match is the backstop for a <time> that carries the label
+  // but not the marker, and for the pre-marker shape of older fixtures.
+  const MISSION_RE = /^(TERRA \d{4} · Sol \d+ · \d{2}:\d{2} UTC|Sol \d+)/;
+  td.addRule('missionDate', {
+    filter: (node) =>
+      node.nodeName === 'TIME' &&
+      (node.getAttribute('data-mission') !== null || MISSION_RE.test(node.textContent?.trim() ?? '')),
+    replacement: (content, node) => {
+      const iso = node.getAttribute('datetime');
+      if (!iso) return content;
+      return `${content} (${missionIso(iso)})`;
+    },
+  });
   const markdown = td.turndown(cleaned);
 
   let frontMatter = '---\n';

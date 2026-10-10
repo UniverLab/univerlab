@@ -1,0 +1,21 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://announcements.univerlab.org/",
+      "service-desc": [
+        {
+          "href": "https://univerlab.org/openapi/announcements.json",
+          "type": "application/openapi+json",
+          "title": "OpenAPI 3.1 description of the public announcements API"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://univerlab.org/api/",
+          "type": "text/html",
+          "title": "Announcements API — endpoints, parameters and curl examples"
+        }
+      ]
+    }
+  ]
+}

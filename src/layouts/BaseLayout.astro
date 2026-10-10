@@ -138,6 +138,8 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
     )}
     <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
+    {/* ARD / AI Catalog (specVersion 1.0) — advertised three ways: this head link, robots.txt's Agentmap, llms.txt's head. */}
+    <link rel="ai-catalog" href={new URL('/.well-known/ai-catalog.json', site).href} />
     <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
          labels); Inter is the default body. Per-surface display voices:
          the system serif stack (paper/texforge — no webfont pushed), Space
@@ -365,6 +367,7 @@ https://github.com/UniverLab
       { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
     ]} />
     <script>
+      import { openDateTranslator } from '../lib/mission-date-ui';
       // Command palette — terminal-style / command with Tab autocomplete.
       // Commands are derived from experiment IDs + static routes.
       // To add a new experiment: add its ID to the experiments array in
@@ -611,6 +614,7 @@ https://github.com/UniverLab
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
           { cmd: '/status', label: 'Mission Log', href: '/status/' },
+          { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 
         // Experiment IDs — auto-generated from the registry.
@@ -1089,11 +1093,14 @@ https://github.com/UniverLab
       })();
     </script>
 
-    {/* WebMCP (AGR2): registers the lab's three read-only tools on browsers that
+    {/* WebMCP (AGR2): registers the lab's four read-only tools on browsers that
         ship `modelContext`. On every other browser this module finds no API and
         returns before doing anything — no registration, no request. */}
     <script>
       import '../lib/webmcp';
+    </script>
+    <script>
+      import '../lib/mission-date-ui';
     </script>
     <script is:inline>
       (function () {

@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { onRequest } from '../../functions/_middleware';
+import { isoDate } from '../../src/lib/lab-feed';
 import {
   DONE_CAP,
   FEED_URL,
@@ -45,6 +46,15 @@ function entry(over: Partial<Entry> & { id: string; title: string }): Entry {
     link: null,
     ...over,
   };
+}
+
+// The entry-line head depends on the local TZ (local-midnight Sol epoch).
+function entryHead(date: string): string {
+  const d = new Date(date);
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+  return `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
 }
 
 /** Every `##`/`###` heading in order — lane order is asserted on this. */
@@ -197,7 +207,7 @@ describe('renderStatusTwin — Spanish', () => {
 
   it('keeps the entry content exactly as the API returned it', () => {
     expect(md).toContain(
-      '- **2026-10-06** · launch · texforge — **Lanzamiento**: First paragraph. [link](https://example.com/x)',
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · texforge — **Lanzamiento**: First paragraph. [link](https://example.com/x)`,
     );
   });
 
@@ -216,7 +226,7 @@ describe('renderStatusTwin — mission log entries', () => {
       entries: [entry({ id: 'e2', title: 'No link here', link: null, type: 'note', topic: null })],
     });
     expect(md.split('\n')).toContain(
-      '- **2026-10-06** · note · general — **No link here**: First paragraph.',
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · note · general — **No link here**: First paragraph.`,
     );
     expect(md).not.toContain('[link](');
   });

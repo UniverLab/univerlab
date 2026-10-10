@@ -48,3 +48,8 @@ User-agent: Bingbot
 Allow: /
 
 Sitemap: https://univerlab.org/sitemap-index.xml
+
+# Agentic Resource Discovery (ARD / AI Catalog). The manifest lists what an agent can
+# actually use here — the API catalog, the Agent Skills index and llms.txt — so a crawler
+# that reads this file finds it without probing well-known paths.
+Agentmap: https://univerlab.org/.well-known/ai-catalog.json

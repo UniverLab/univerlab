@@ -574,3 +574,79 @@ body > header { view-transition-name: site-header; }
   margin-top: 0.8rem;
   text-align: center;
 }
+
+/* /date command palette: live mission-date ↔ calendar translator. */
+.date-translator {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18vh;
+  background: rgba(0, 0, 0, 0.3);
+}
+.date-translator-inner {
+  width: min(36rem, 92vw);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.date-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+.date-t-input { flex: 1; }
+.date-t-close {
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+.date-t-close:hover { color: var(--ink); }
+.date-t-results { padding: 0.7rem 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.date-t-row { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-mono); font-size: 0.78rem; }
+.date-t-label { color: var(--ink-faint); min-width: 5rem; text-align: right; }
+.date-t-val { color: var(--ink); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.date-t-copy {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.date-t-copy:hover { color: var(--accent); border-color: var(--accent); }
+.date-t-error { color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.78rem; }
+
+/* Mission-date tooltip: one shared element, positioned above the date. */
+.mission-date-tooltip {
+  position: absolute;
+  z-index: 400;
+  padding: 0.4rem 0.7rem;
+  background: var(--bg-raise);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+time[data-mission]:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

@@ -95,6 +95,13 @@ export async function onRequest(context: {
 }): Promise<Response> {
   const { request, env, next } = context;
 
+  // `/mcp` (and `/mcp/server-card`) speak MCP Streamable HTTP, not markdown:
+  // an MCP client's Accept can carry `text/event-stream` or `*/*`, and without
+  // this guard `/mcp` would be rewritten to `/mcp/index.md`. Pass through
+  // before anything else looks at the request.
+  const { pathname } = new URL(request.url);
+  if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
+
   if (!wantsMarkdown(request.headers.get('Accept'))) {
     return next();
   }
