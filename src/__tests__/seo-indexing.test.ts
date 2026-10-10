@@ -24,6 +24,7 @@ import {
   spliceGeneratedBlock,
 } from '../../scripts/build-redirects';
 import {
+  ENDPOINTS,
   checkDocsLinks,
   checkDocsPages,
   checkJsonLd,
@@ -361,6 +362,9 @@ describe('public/llms.txt', () => {
   it('links only canonical trailing-slash routes', () => {
     for (const m of read('public/llms.txt').matchAll(/https:\/\/univerlab\.org(\/[^)\s]*)?/g)) {
       const path = m[1] ?? '/';
+      // Pages Functions serve real resources at extensionless paths — the
+      // check script's own ENDPOINTS allowance, one source for both.
+      if (ENDPOINTS.has(path)) continue;
       expect(path === '/' || path.endsWith('/') || /\/[^/]+\.[a-z0-9]+$/i.test(path)).toBe(true);
     }
   });

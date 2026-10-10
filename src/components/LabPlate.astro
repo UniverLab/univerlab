@@ -23,7 +23,7 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
    data-release-date={release ? release.publishedAt.slice(0, 10) : undefined}>
   <span class="lp-num">{exp.number}</span>
   <span class="lp-sep"> · </span><span class="lp-status">{statusLabel}</span>
-  {solLabel && (<><span class="lp-sep"> · </span><span class="lp-sol">{solLabel}</span></>)}
+  {solLabel && (<><span class="lp-sep"> · </span><time class="lp-sol" datetime={exp.startDate} data-mission>{solLabel}</time></>)}
   {release && (
     <><span class="lp-sep"> · </span><a class="lp-release" href={release.url} target="_blank" rel="noopener noreferrer">{t.plate.release} {release.version}{releaseAge && <> · {releaseAge}</>}</a></>
   )}
@@ -90,7 +90,13 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
     const ll = el.querySelector('[data-plate-lastlog]');
     if (newest && ll) {
       const lastLogLabel = el.dataset.lastlogLabel ?? 'last log';
-      ll.textContent = `${lastLogLabel}: ${formatSolLabel(newest.date)} \u201c${newest.title}\u201d`;
+      const time = document.createElement('time');
+      time.setAttribute('datetime', newest.date);
+      time.setAttribute('data-mission', '');
+      time.textContent = formatSolLabel(newest.date);
+      ll.textContent = `${lastLogLabel}: `;
+      ll.appendChild(time);
+      ll.appendChild(document.createTextNode(` \u201c${newest.title}\u201d`));
     }
   })();
 </script>

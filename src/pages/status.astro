@@ -472,6 +472,7 @@ const rmStrings = en.roadmap;
 
         var time = document.createElement('time');
         time.setAttribute('datetime', entry.date);
+        time.setAttribute('data-mission', '');
         time.textContent = formatDate(entry.date);
         article.appendChild(time);
 
@@ -754,8 +755,10 @@ const rmStrings = en.roadmap;
           meta.appendChild(link);
         }
         if (item.state === 'done' && item.shipped_at) {
-          var landed = document.createElement('span');
+          var landed = document.createElement('time');
           landed.className = 'rm-landed';
+          landed.setAttribute('datetime', item.shipped_at);
+          landed.setAttribute('data-mission', '');
           landed.textContent = fillTpl(RM_STR.landed || 'landed Sol {sol}', { sol: solOf(item.shipped_at) });
           meta.appendChild(landed);
         }

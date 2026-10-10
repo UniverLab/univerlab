@@ -1,0 +1,204 @@
+---
+import { getLang, useTranslations } from '../i18n';
+import { NODES, ROWS, ORDER } from '../data/fundamentos';
+import { reject } from '../lib/refutation';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const f = t.fundamentos;
+const byId = new Map(NODES.map((n) => [n.id, n]));
+const nodeName = (id: string) => f.nodes[id]?.name ?? id;
+const nodeStatement = (id: string) => f.nodes[id]?.statement ?? '';
+// Layout: four rows top to bottom, positions from row + index only — no
+// layout library, per the spec constraint.
+const VB_W = 1000;
+const ROW_Y: Record<string, number> = { definition: 60, axiom: 190, proposition: 320, corollary: 450 };
+const pos = new Map<string, { x: number; y: number }>();
+(Object.keys(ROWS) as (keyof typeof ROWS)[]).forEach((kind) => {
+  const ids = ROWS[kind];
+  const step = ids.length > 1 ? Math.min(150, 880 / (ids.length - 1)) : 0;
+  ids.forEach((id, i) => pos.set(id, { x: 500 + (i - (ids.length - 1) / 2) * step, y: ROW_Y[kind] }));
+});
+const edges: [string, string][] = [];
+for (const n of NODES) for (const d of n.deps) edges.push([d, n.id]);
+const edgePath = (a: string, b: string) => {
+  const p = pos.get(a)!; const q = pos.get(b)!;
+  const my = (p.y + q.y) / 2;
+  return `M ${p.x} ${p.y} C ${p.x} ${my}, ${q.x} ${my}, ${q.x} ${q.y}`;
+};
+const rows: (keyof typeof ROWS)[] = ['definition', 'axiom', 'proposition', 'corollary'];
+---
+<!-- MAN3 "Where to attack it". Each SVG node is a keyboard-operable button
+     (<g role="button" tabindex="0">, Enter/Space to select), so sighted
+     keyboard users can work the map directly. The SVG stays aria-hidden so
+     the markdown twin keeps one clean copy of the node text; the semantic
+     list below remains the content source assistive tech and the twin read,
+     and every state change announces through the aria-live region outside
+     the hidden subtree. -->
+<section id="attack" class="wrap section attack-section">
+  <h2 class="label">{f.label}</h2>
+  <p class="attack-intro">{f.intro}</p>
+  <div class="attack-grid" data-attack data-and={f.andWord} data-fall={f.fallSentence} data-rewrite={f.rewriteSentence}>
+    <svg class="attack-svg" viewBox={`0 0 ${VB_W} 520`} aria-hidden="true" focusable="false">
+      {edges.map(([a, b]) => (
+        <path class="edge" d={edgePath(a, b)} data-from={a} data-to={b} fill="none" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" />
+      ))}
+      {ORDER.map((id) => {
+        const p = pos.get(id)!;
+        const n = byId.get(id)!;
+        return (
+          <g class="attack-node" data-id={id} data-kind={n.kind} transform={`translate(${p.x} ${p.y})`}
+             role="button" tabindex="0" aria-label={`${id} ${nodeName(id)}`} data-node={id}>
+            <circle class="mark" r="16" />
+            {n.empirical && <circle class="emp-dot" cx="11" cy="-11" r="4" />}
+            <text class="node-id" y="52" text-anchor="middle">{id}</text>
+          </g>
+        );
+      })}
+    </svg>
+    <aside class="attack-panel" data-panel>
+      <p class="attack-prompt" data-prompt>{f.selectPrompt}</p>
+      <h3 class="attack-name" data-name hidden></h3>
+      <p class="attack-statement" data-statement hidden></p>
+      {/* Method note per the source: A4 revisable, A0–A3 value positions.
+          Stored as data attrs so the runtime can pick it without new
+          dictionary keys. */}
+      <p class="attack-kind-note" data-kind-note data-revisable={f.revisableNote} data-value={f.valueNote} hidden></p>
+      <div class="attack-deps" data-deps hidden>
+        <p><span class="mono attack-deps-label">{f.restsOn}</span> <span data-rests></span></p>
+        <p><span class="mono attack-deps-label">{f.supports}</span> <span data-supports></span></p>
+      </div>
+      <button type="button" class="attack-reject" data-reject data-label={f.rejectLabel} data-restore={f.restoreLabel} hidden></button>
+      <p class="attack-result" data-result></p>
+    </aside>
+  </div>
+  {/* The list is always in the DOM and never aria-hidden: below 720px it is
+      the only version; above 720px CSS hides it visually only, so AT and the
+      markdown twin keep reading it. Each item carries its dependency line as
+      text ("P4 ← P3, A4"). */}
+  <div class="attack-list" data-attack-list>
+    {rows.map((kind) => (
+      <>
+        <h3 class="label attack-row-title">{f.rows[kind]}</h3>
+        <ul class="attack-items">
+          {ROWS[kind].map((id) => {
+            const n = byId.get(id)!;
+            return (
+              <li data-id={id}>
+                <button type="button" class="attack-item-btn" data-select={id} aria-describedby={`dep-${id}`}>
+                  <span class="mono attack-item-id">{id}</span>
+                  <span class="attack-item-name">{nodeName(id)}</span>
+                  {n.empirical && <span class="mono attack-emp">· {f.empirical}</span>}
+                </button>
+                <p class="attack-item-statement">{nodeStatement(id)}</p>
+                <p class="attack-item-deps" id={`dep-${id}`}>
+                  {n.deps.length > 0 ? `${id} ← ${n.deps.join(', ')}` : `${id} · ${f.rows[kind]}`}
+                </p>
+                {n.kind === 'axiom' && (
+                  <button type="button" class="attack-reject" data-reject-item={id}>
+                    {f.rejectLabel} {id}
+                  </button>
+                )}
+                <p class="attack-item-result" data-item-result={id}></p>
+              </li>
+            );
+          })}
+        </ul>
+      </>
+    ))}
+  </div>
+  <div class="visually-hidden" aria-live="polite" data-live></div>
+  <blockquote class="prose">{f.closingQuote}</blockquote>
+  {/* Drift guard, read by the refutation tests: the rendered graph must match
+      src/data/fundamentos.ts exactly. */}
+  <script type="application/json" data-attack-graph>{JSON.stringify(NODES.map((n) => ({ id: n.id, deps: n.deps })))}</script>
+</section>
+
+<script>
+  // Selection + axiom rejection over the Fundamentos graph. The graph and the
+  // pure logic are imported from their canonical modules — the template above
+  // serialized only copy — so the map and the unit tests can never drift
+  // apart. Lives in the component (not the view) so Manifesto.astro stays
+  // under the reviewer's 1200-line ceiling.
+  import { startAttackMap } from '../scripts/attack-map';
+  const attackSection = document.querySelector<HTMLElement>('#attack');
+  if (attackSection) startAttackMap(attackSection);
+</script>
+
+<style>
+  /* MAN3 refutation map — hairline edges, mono ids, serif-italic names, one
+     accent for selection. Page tokens only, so the circadian palettes keep
+     working. Opacity transitions only, ≤150ms, none under reduced motion. */
+  .attack-intro { max-width: 52rem; margin: 1.2rem 0 0; color: var(--ink-dim); font-size: 1.02rem; line-height: 1.7; }
+  .attack-grid { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 2rem; align-items: start; margin-top: 1.6rem; }
+  @media (max-width: 60rem) { .attack-grid { grid-template-columns: 1fr; } }
+  .attack-svg { width: 100%; height: auto; display: block; }
+  /* The spec's boundary: the map owns 720px and wider, the list owns below.
+     719.98px (not 720px) avoids the max/min pair both matching at exactly
+       720px, where the SVG would be hidden AND the list visually hidden —
+       the same convention as MAN2's rail pair at 1199.98px/1200px. */
+  @media (max-width: 719.98px) { .attack-svg { display: none; } }
+  /* Above 720px the list stays in the DOM for AT and the markdown twin but is
+      visually hidden (never display:none, never aria-hidden). */
+  @media (min-width: 720px) {
+    .attack-list {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  }
+  /* The aria-live region must stay in the accessibility tree but invisible.
+     `.visually-hidden` is scoped per component (Manifesto.astro carries its own
+     copy for the cosmos caption) — without this rule the announcement would
+     render as visible body text under the map. */
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .attack-node { transition: opacity 0.15s ease; cursor: pointer; }
+  .attack-node:focus { outline: none; }
+  .attack-node:focus-visible .mark { stroke: var(--accent); stroke-width: 2; }
+  .attack-node .mark { fill: none; stroke: var(--ink-dim); stroke-width: 1; vector-effect: non-scaling-stroke; transition: opacity 0.15s ease; }
+  .attack-node .node-id { font-family: var(--font-mono); font-size: 34px; fill: var(--ink-dim); transition: opacity 0.15s ease; }
+  .attack-node .emp-dot { fill: var(--accent); }
+  .attack-svg .edge { transition: opacity 0.15s ease; }
+  .attack-grid[data-selected] .attack-node { opacity: 0.25; }
+  .attack-grid[data-selected] .attack-node[data-lit="true"] { opacity: 1; }
+  .attack-grid[data-selected] .attack-svg .edge { opacity: 0.12; }
+  .attack-grid[data-selected] .attack-svg .edge[data-lit="true"] { opacity: 1; stroke: var(--accent); }
+  /* A lit node wears the accent — but a fallen or rewritten node owns its own
+     outline (the spec's struck-through dashed --ink-faint / dashed accent), so
+     the highlight must not repaint it. Without :not() the highlight's higher
+     specificity silently wins and fallen nodes never show as fallen. */
+  .attack-grid[data-selected] .attack-node[data-lit="true"]:not([data-fallen="true"]):not([data-rewritten="true"]) .mark { stroke: var(--accent); }
+  .attack-node[data-fallen="true"] .node-id { text-decoration: line-through; fill: var(--ink-faint); }
+  .attack-node[data-fallen="true"] .mark { stroke: var(--ink-faint); stroke-dasharray: 3 2; }
+  .attack-node[data-rewritten="true"] .mark { stroke: var(--accent); stroke-dasharray: 4 2; }
+  .attack-panel { border-left: 1px solid var(--line); padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; min-height: 12rem; }
+  .attack-prompt { margin: 0; color: var(--ink-faint); font-size: 0.92rem; line-height: 1.6; }
+  .attack-name { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.15rem; margin: 0; color: var(--ink); }
+  .attack-statement { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; }
+  .attack-kind-note { margin: 0; color: var(--ink-faint); font-size: 0.82rem; line-height: 1.55; }
+  .attack-deps p { margin: 0.3rem 0; color: var(--ink-dim); font-size: 0.85rem; }
+  .attack-deps-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .attack-reject { align-self: flex-start; font-family: var(--font-mono); font-size: 0.75rem; background: none; border: 1px solid var(--ink-faint); color: var(--ink-dim); padding: 0.35rem 0.8rem; cursor: pointer; transition: opacity 0.15s ease; }
+  .attack-reject:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .attack-reject[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+  .attack-result { margin: 0; color: var(--ink); font-size: 0.92rem; line-height: 1.6; }
+  .attack-row-title { margin: 2rem 0 0.6rem; }
+  .attack-items { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 1.2rem; }
+  .attack-item-btn { display: flex; align-items: baseline; gap: 0.6rem; background: none; border: none; padding: 0; cursor: pointer; text-align: left; color: var(--ink); }
+  .attack-item-id { font-size: 0.8rem; color: var(--ink-dim); }
+  .attack-item-name { font-family: var(--font-serif); font-style: italic; font-size: 1.02rem; }
+  .attack-emp { font-size: 0.7rem; color: var(--accent); }
+  .attack-item-statement { margin: 0.3rem 0 0; color: var(--ink-dim); font-size: 0.92rem; line-height: 1.6; }
+  .attack-item-deps { margin: 0.3rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-faint); }
+  .attack-item-result { margin: 0.3rem 0 0; color: var(--ink); font-size: 0.88rem; }
+  .attack-items li[data-fallen="true"] .attack-item-id { text-decoration: line-through; }
+  /* The manifesto's scroll-rise must skip this section: its nodes are dimmed
+     and lit by selection state, which a scroll animation would fight. The
+     :global() escape is required — without it Astro scopes the selector to
+     this component and the page-level animation wins. */
+  :global(.attack-section > *) { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .attack-node .mark, .attack-node .node-id, .attack-svg .edge, .attack-reject { transition: none; }
+  }
+</style>

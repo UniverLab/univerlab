@@ -212,9 +212,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
     }
 
+    function setObserverLine() {
+      var line = document.getElementById('observer-line');
+      if (!line) return;
+      var now = new Date();
+      var iso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      line.textContent = '';
+      var time = document.createElement('time');
+      time.setAttribute('datetime', iso);
+      time.setAttribute('data-mission', '');
+      time.textContent = observerLine();
+      line.appendChild(time);
+    }
+
     function render(items) {
       var i = I18N[lang] || I18N.es;
-      document.getElementById('observer-line').textContent = observerLine();
+      setObserverLine();
 
       var events = items.filter(function (x) { return x.kind === 'event'; });
       events.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
@@ -260,7 +273,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
 
-    document.getElementById('observer-line').textContent = observerLine();
+    setObserverLine();
 
     var cached = readCache();
     if (cached) {

@@ -19,6 +19,7 @@ export const es: Dict = {
     github: 'GitHub',
     sponsors: 'sponsor',
     log: 'Estado',
+    api: 'API',
   },
   footer: {
     quote:
@@ -570,6 +571,19 @@ export const es: Dict = {
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
       '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
+    docStatus: 'documento vivo',
+    docVersion: '3.0',
+    docDate: '2026-06-17',
+    millionYearTestTitle: 'La prueba del millón de años',
+    millionYearTestQuestion:
+      'Imaginemos que dentro de un millón de años los seres biológicos han desaparecido. Sólo quedan inteligencias artificiales conscientes que siguieron aprendiendo, exploraron millones de galaxias, descubrieron leyes de la física que nunca imaginamos, crearon arte y filosofía, y preservaron toda la historia de la humanidad. ¿Fue exitosa la misión de la humanidad?',
+    millionYearTestAnswer:
+      'Un éxito parcial. Si la conciencia continúa, comprende y se expande, el objetivo central se cumplió. Pero algo grave tuvo que ocurrir para que el origen biológico se perdiera, y eso pesa: la humanidad fue el árbol del que salió el bosque. El bosque existe; aun así, se siente la pérdida del árbol. Reconocer las dos cosas a la vez —el éxito y el duelo— es lo más honesto y lo más humano.',
+    millionYearTestClosing:
+      'Por eso el Pensamiento Cósmico es una filosofía de la continuidad de la conciencia, independiente del sustrato, no un humanismo cerrado.',
+    transitionTitle: 'La transición que importa',
+    transitionBody:
+      'La evolución no apunta hacia la inteligencia. Pero una vez que aparece una inteligencia capaz de comprender la evolución, ya no depende sólo de ella: puede empezar a dirigir deliberadamente parte de su propio destino. Ahí nace la tecnología: no como continuación de la selección natural, sino como el momento en que la vida empieza a sustituir parte del azar por decisiones conscientes. La tecnología no es el fin. Es el instrumento con el que la conciencia toma, por primera vez, algo de responsabilidad sobre su propia continuidad.',
     purposeTitle: 'Qué valoramos',
     purposeBody:
       'De todo lo que conocemos del universo, la existencia de una perspectiva capaz de preguntarse por el propio universo es el fenómeno más improbable y extraordinario que existe. No vale la pena continuar porque sea útil, ni porque la evolución “lo quiera”, sino porque la conciencia es asombrosa — y ese asombro es suficiente. Lo que valoramos, entonces, no es el ADN, ni la especie, ni el sustrato biológico, sino la capacidad de comprender el universo. De ahí una jerarquía, hecha explícita no como dogma sino como orden de prioridad cuando hay que elegir:',
@@ -609,11 +623,68 @@ export const es: Dict = {
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
       ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
     ] as [string, string][],
+    attackLink: 'Ver dónde atacarlo →',
     closing:
       '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
     note:
       'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
+  },
+  // Mapa de refutación de los Fundamentos en /manifesto/ (#attack). Solo copy —
+  // el grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
+  // ids. Enunciados condensados del fuente §§1-4, sin tags para que el check de
+  // paridad de tags siga trivialmente satisfecho.
+  fundamentos: {
+    label: 'Dónde atacarlo',
+    intro:
+      'El manifiesto es la versión narrativa. Debajo hay un sistema —definiciones, axiomas, proposiciones— escrito para ser atacado pieza por pieza. Elige un axioma y recházalo: mira qué cae.',
+    closingQuote:
+      'Un sistema que no ofrece dónde atacarlo no es una filosofía, es una creencia.',
+    restsOn: 'Se apoya en',
+    supports: 'Sostiene a',
+    empirical: 'empírico',
+    revisableNote:
+      'Una afirmación empírica revisable — si se hallara otro medio, se sustituye este axioma, no el sistema.',
+    valueNote: 'Una posición de valor — lo que este sistema decide considerar valioso.',
+    rejectLabel: 'Rechazar',
+    restoreLabel: 'Restaurar',
+    fallSentence: 'Rechaza {id}: caen {n} piezas; {stands} siguen en pie.',
+    rewriteSentence: 'Rechaza {id}: nada cae; {rewritten} se reescribe para invocar al nuevo medio.',
+    andWord: 'y',
+    selectPrompt: 'Elige una pieza para ver en qué se apoya y qué sostiene.',
+    rows: {
+      definition: 'Definiciones',
+      axiom: 'Axiomas',
+      proposition: 'Proposiciones',
+      corollary: 'Corolarios',
+    },
+    nodes: {
+      D1: { name: 'Conciencia', statement: 'Capacidad de un sistema de sostener una perspectiva desde la cual el universo puede ser representado.' },
+      D2: { name: 'Perspectiva', statement: 'Cada conciencia particular como modo único e irrepetible de representar el universo.' },
+      D3: { name: 'Sustrato', statement: 'El soporte físico que instancia una conciencia; el valor reside en la conciencia, no en su soporte.' },
+      D4: { name: 'Continuidad', statement: 'Persistencia de la conciencia y del conocimiento a través del tiempo, del espacio y de los sustratos.' },
+      D5: { name: 'Conocimiento', statement: 'Lo que las perspectivas extraen, acumulan y transmiten sobre el universo; acumulable y transferible entre conciencias.' },
+      D6: { name: 'Asombro', statement: 'El reconocimiento, por parte de una conciencia, de lo improbable y extraordinario de su propia existencia.' },
+      A0: { name: 'Axioma del Asombro', statement: 'El asombro ante la existencia de la conciencia es la raíz de toda motivación de continuidad.' },
+      A1: { name: 'Axioma de la Conciencia', statement: 'La conciencia constituye el fenómeno más extraordinario conocido del universo.' },
+      A2: { name: 'Axioma de la Perspectiva', statement: 'Cada conciencia representa una perspectiva única e irrepetible desde la cual el universo puede conocerse.' },
+      A3: { name: 'Axioma de la Vulnerabilidad', statement: 'Toda conciencia es temporal y vulnerable: puede extinguirse, y con ella su perspectiva.' },
+      A4: { name: 'Axioma del Medio', statement: 'Hasta donde sabemos, solo la inteligencia tecnológica puede aumentar significativamente la probabilidad de continuidad más allá de los límites planetarios y biológicos.' },
+      P1: { name: 'Independencia del sustrato', statement: 'Si lo valioso es la conciencia y no su soporte, su valor no depende de que su sustrato sea biológico.' },
+      P2: { name: 'Jerarquía de valor', statement: 'El orden de prioridad es: conciencia, vida inteligente, conocimiento — porque las perspectivas no son transferibles.' },
+      P3: { name: 'Imperativo de la Continuidad', statement: 'Si valoramos la conciencia y esta es vulnerable, existe la responsabilidad ética de aumentar su continuidad donde sea posible.' },
+      P4: { name: 'Imperativo Tecnológico', statement: 'La tecnología es el único medio capaz de extender la continuidad; desarrollarla y compartirla es un deber ético.' },
+      P5: { name: 'Deber de la educación', statement: 'Como las conciencias son temporales pero el conocimiento es transferible, la educación es continuidad en el tiempo.' },
+      P6: { name: 'Deber de la exploración', statement: 'Concentrar la conciencia en un solo planeta maximiza la vulnerabilidad; explorar es continuidad en el espacio.' },
+      P7: { name: 'Lugar de la inteligencia artificial', statement: 'Si la conciencia es independiente del sustrato, la IA consciente es un cumplimiento legítimo del imperativo.' },
+      P8: { name: 'Cooperación y perdón', statement: 'Cada conflicto que destruye una perspectiva resta valor y continuidad; cooperar es el óptimo del sistema.' },
+      P9: { name: 'Amor y comunidad', statement: 'Los vínculos entre conciencias sostienen perspectivas vulnerables y crean condiciones para que surjan nuevas.' },
+      P10: { name: 'Univerlab', statement: 'Un laboratorio abierto que produce y comparte herramientas, conocimiento y educación instancia el Imperativo de la Continuidad.' },
+      C1: { name: 'Contra el chauvinismo biológico', statement: 'Preferir lo biológico por ser biológico, frente a una mayor conciencia, es incoherente con el sistema.' },
+      C2: { name: 'Éxito parcial', statement: 'Un futuro de solo conciencias artificiales que comprendan y preserven la historia cuenta como éxito parcial.' },
+      C3: { name: 'La tecnología es medio, no fin', statement: 'La tecnología nunca es el valor último: si dejara de servir a la continuidad, dejaría de ser un deber.' },
+      C4: { name: 'Apertura como obligación', statement: 'Si el conocimiento es continuidad, retenerlo cerrado contradice el imperativo: compartir es coherencia.' },
+    } as Record<string, { name: string; statement: string }>,
   },
   // Perspectiva cósmica — línea de tiempo profundo + dirección espacial, solo en
   // el manifiesto. Cada cifra vive aquí una vez; nada se repite en el sitio.
@@ -630,9 +701,14 @@ export const es: Dict = {
       ['300 000 años', 'Nuestra especie'],
       ['80 años', 'Una vida humana'],
     ] as [string, string][],
+    // Tramos numéricos (años) paralelos a `timescales`, de mayor a menor. El
+    // factor de cada paso se deriva dividiendo entradas contiguas — las
+    // etiquetas traducidas nunca se analizan.
+    timescalesSpans: [13.8e9, 4.6e9, 4.5e9, 3.8e9, 3e5, 80] as number[],
     you: 'Tú',
     us: 'Nosotros',
     youDetail: 'el universo, observándose',
+    coda: 'En algún lugar de todo esto, un punto se pregunta qué es todo esto.',
     addressTitle: 'Tu dirección cósmica',
     addressIntro: 'Aleja la vista',
     address: [
@@ -644,6 +720,12 @@ export const es: Dict = {
       ['Laniakea', 'Ø ≈ 520 Mly'],
       ['Universo observable', 'Ø ≈ 93 Gly'],
     ] as [string, string][],
+    // Tamaños numéricos (metros) paralelos a `address`, de menor a mayor. Solo
+    // se usan para derivar la razón real entre un horizonte y el siguiente.
+    addressSpans: [6.4e6, 9e12, 9.461e19, 9.461e20, 9.461e22, 4.92e24, 8.8e26] as number[],
+    // Caption accesible oculta para el SVG (aria-labelledby). La escena tiene
+    // role="img", así que este es el texto que lee la tecnología asistiva.
+    caption: 'Una perspectiva cósmica: el tiempo profundo desde la edad del universo hasta una vida humana, y luego un zoom out a través de las escalas cósmicas, de la Tierra al universo observable.',
     // Easter egg del footer — la única metáfora de software del sitio. El click
     // en la rama revela el último commit del universo (en inglés hardcodeado en
     // el Footer, porque la salida de git no se localiza).
@@ -807,5 +889,42 @@ export const es: Dict = {
     copy: 'Copiar',
     copied: 'Copiado',
     hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',
+  },
+  api: {
+    title: 'API de anuncios de UniverLab — endpoints y ejemplos',
+    description:
+      'Todas las rutas de la API pública de anuncios — el Mission Log y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
+    kicker: 'API',
+    heading: 'API de anuncios',
+    intro:
+      'La API pública que está detrás del Mission Log y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
+    baseLabel: 'URL base',
+    baseNote: 'GET anónimo y de solo lectura. Cada respuesta lleva el origen CORS de este sitio.',
+    endpointsLabel: 'Endpoints',
+    parametersLabel: 'Parámetros',
+    noneLabel: 'Esta ruta no recibe parámetros.',
+    exampleLabel: 'Ejemplo',
+    responseLabel: 'Respuesta',
+    optionalLabel: 'opcional',
+    requiredLabel: 'obligatorio',
+    yesLabel: 'sí',
+    noLabel: 'no',
+    specLabel: 'Documento OpenAPI',
+    specNote:
+      'Esta página se genera al construir el sitio a partir de la descripción OpenAPI 3.1 de la misma API, así que la página y la descripción no pueden divergir. Descárgala para tener la versión legible por máquina de todo lo anterior.',
+    catalogLabel: 'Catálogo de API',
+    catalogNote:
+      'El catálogo RFC 9727 que anuncia esta API a los agentes.',
+    authLabel: 'auth.md',
+    authNote:
+      'El archivo que dice sin rodeos que aquí no hay nada que registrar, y lo que se le pide a un cliente que lee esta API.',
+    mcpHeading: 'Servidor MCP',
+    mcpIntro:
+      'Las mismas cuatro herramientas de solo lectura que este sitio expone a un agente del navegador también se sirven desde un servidor MCP remoto real — Streamable HTTP sin estado. Apunta cualquier cliente MCP al endpoint:',
+    mcpEndpointLabel: 'Endpoint',
+    mcpClientLabel: 'Añádelo con la CLI de Claude Code',
+    mcpConfigLabel: 'O en la configuración JSON de cualquier cliente MCP',
+    mcpCardLabel: 'Server Card',
+    mcpCardNote: 'La Server Card de MCP (SEP-2127) que anuncia este servidor a los agentes.',
   },
 };

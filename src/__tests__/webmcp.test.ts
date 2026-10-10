@@ -126,10 +126,10 @@ describe('registration with a fake modelContext', () => {
     return { mc, registerTool };
   }
 
-  it('registers exactly three tools', async () => {
+  it('registers exactly four tools', async () => {
     const { mc, registerTool } = fakeMc();
     await registerUniverLabTools(mc, { about, fetchImpl: fixtureFetch().fetchImpl });
-    expect(registerTool).toHaveBeenCalledTimes(3);
+    expect(registerTool).toHaveBeenCalledTimes(4);
   });
 
   it('registers them through the API the browser exposes', async () => {
@@ -141,7 +141,7 @@ describe('registration with a fake modelContext', () => {
       initWebMcp({ about, fetchImpl: fixtureFetch().fetchImpl });
       // `schedule` defers; jsdom has no requestIdleCallback, so it is a setTimeout(0).
       await new Promise((r) => setTimeout(r, 0));
-      expect(registerTool).toHaveBeenCalledTimes(3);
+      expect(registerTool).toHaveBeenCalledTimes(4);
     } finally {
       delete (document as unknown as { modelContext?: ModelContextLike }).modelContext;
     }
@@ -161,7 +161,7 @@ describe('registration with a fake modelContext', () => {
     try {
       initWebMcp();
       await new Promise((r) => setTimeout(r, 0));
-      expect(registerTool).toHaveBeenCalledTimes(3);
+      expect(registerTool).toHaveBeenCalledTimes(4);
       const aboutTool = registerTool.mock.calls
         .map(([tool]) => tool as unknown as McpTool)
         .find((t) => t.name === 'about_univerlab')!;
@@ -181,6 +181,7 @@ describe('registration with a fake modelContext', () => {
       'about_univerlab',
       'get_roadmap',
       'list_announcements',
+      'translate_mission_date',
     ]);
     for (const tool of tools) {
       expect(tool.name).toMatch(/^[a-z][a-z0-9_]*$/);
@@ -406,5 +407,37 @@ describe('schedule', () => {
 describe('TOPICS', () => {
   it('is general plus every experiment slug', () => {
     expect(TOPICS).toEqual(['general', ...experiments.map((e) => e.id)]);
+  });
+});
+
+// --------------------------------------------------- translate_mission_date
+
+describe('translate_mission_date', () => {
+  const tool = () => byName(buildTools({ about, fetchImpl: fixtureFetch().fetchImpl }), 'translate_mission_date');
+
+  it('converts a mission date to a calendar date', async () => {
+    const result = JSON.parse(await tool().execute({ input: 'TERRA 2026 · Sol 282 · 14:00 UTC' }));
+    expect(result.direction).toBe('to-calendar');
+    expect(result.mission).toContain('TERRA 2026 · Sol 282');
+    expect(result.iso).toBe('2026-10-09T14:00Z');
+    expect(result.calendar).toContain('2026');
+  });
+
+  it('converts an ISO date to a mission date', async () => {
+    const result = JSON.parse(await tool().execute({ input: '2026-10-09' }));
+    expect(result.direction).toBe('to-mission');
+    expect(result.mission).toContain('Sol 282');
+    expect(result.iso).toBe('2026-10-09');
+  });
+
+  it('returns an error for unrecognised input', async () => {
+    const result = JSON.parse(await tool().execute({ input: 'not a date' }));
+    expect(result.error).toBeDefined();
+  });
+
+  it('makes no network calls', async () => {
+    const { fetchImpl, calls } = fixtureFetch();
+    await byName(buildTools({ about, fetchImpl }), 'translate_mission_date').execute({ input: 'Sol 282' });
+    expect(calls).toEqual([]);
   });
 });
