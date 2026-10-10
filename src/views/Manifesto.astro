@@ -1,11 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AttackMap from '../components/AttackMap.astro';
 import { getLang, useTranslations } from '../i18n';
 import { series, toSvgCoords, toSvgPoints, SVG_W, SVG_H, SVG_LPAD, SVG_TPAD, SVG_RPAD, SVG_BPAD } from '../data/observatory';
 import { startSolLabel } from '../lib/mission-time';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const m = t.manifesto;
+const f = t.fundamentos;
 const c = t.cosmos;
 const obs = t.observatory;
 // Living-document header (§4). `docVersion`/`docDate` are facts in the dict;
@@ -25,11 +27,12 @@ const railSections = [
   { id: 'imperatives', label: m.imperativesTitle },
   { id: 'pillars', label: m.pillarsTitle },
   { id: 'what-changes', label: m.pathTitle },
+  { id: 'attack', label: f.label },
   { id: 'in-development', label: m.worksTitle },
   { id: 'observatory', label: obs.kicker },
 ] as const;
 const roman = (n: number): string => {
-  const d = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+  const d = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   return d[n] ?? String(n);
 };
 ---
@@ -47,7 +50,7 @@ const roman = (n: number): string => {
   </section>
 
   <!-- §3 Section rail. <nav> is deliberate: build-md strips <nav> from the
-       markdown twin, so the nine labels never duplicate the section headings
+       markdown twin, so the labels never duplicate the section headings
        the twin already carries. aria-label reuses m.kicker — no new dictionary
        key. Numerals come from roman() in the frontmatter. -->
   <nav class="rail" aria-label={m.kicker}>
@@ -286,15 +289,21 @@ const roman = (n: number): string => {
 
   <hr class="rule" />
 
+  <AttackMap />
+
+  <hr class="rule" />
+
   <section id="in-development" class="wrap section works-section">
     <h2 class="label">{m.worksTitle}</h2>
     <p class="works-body">{m.worksBody}</p>
     <ul class="works">
-      {m.works.map(([name, desc]) => (
+      {m.works.map(([name, desc], i) => (
         <li>
           <span class="badge label">{m.worksBadge}</span>
           <h3>{name}</h3>
           <p>{desc}</p>
+          {/* Fundamentos card (index 1) gains a link to the map; copy unchanged. */}
+          {i === 1 && <a class="works-attack" href="#attack">{m.attackLink}</a>}
         </li>
       ))}
     </ul>
@@ -466,6 +475,8 @@ const roman = (n: number): string => {
   }
   .works h3 { font-family: var(--font-serif); font-style: italic; font-weight: 500; font-size: 1.1rem; margin: 0; color: var(--ink); }
   .works p { color: var(--ink-dim); font-size: 0.92rem; margin: 0; line-height: 1.6; }
+  .works-attack { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); margin-top: 0.4rem; }
+  /* MAN3 map section + styles live in AttackMap.astro. */
 
   /* Continuity Observatory — four interactive mini line-charts. Always 2×2
      grid, responsive to 1 column on mobile. SVG has baked-in Y/X axis labels
@@ -1151,10 +1162,7 @@ const roman = (n: number): string => {
 </script>
 
 <script>
-  // §3 Section rail: one observer tracks the nine rail sections and marks the
-  // current link with aria-current="true" + the accent colour. Cheap (9
-  // targets), so it runs whenever the page has a rail; CSS hides the rail below
-  // 1200px. Reduced motion only removes the CSS transition, never the marker.
+  // §3 rail: one observer marks the current link (10 targets).
   (function () {
     const rail = document.querySelector<HTMLElement>('.rail');
     if (!rail) return;
@@ -1170,8 +1178,8 @@ const roman = (n: number): string => {
     };
 
     // The band across the middle of the viewport: the section crossing it is
-    // "current". Ratios are accumulated so the marker only moves when a section
-    // really enters the band — it never flickers to empty between two sections.
+    // "current". Ratios accumulate so the marker only moves when a section
+    // really enters the band — it never flickers to empty between sections.
     const ratios = new Map<Element, number>();
     const observer = new IntersectionObserver((entries) => {
       for (const e of entries) ratios.set(e.target, e.isIntersecting ? e.intersectionRatio : 0);
@@ -1185,7 +1193,7 @@ const roman = (n: number): string => {
 
     document.querySelectorAll<HTMLElement>(
       '[id="what-we-value"],[id="perspective"],[id="million-year-test"],[id="transition"],' +
-      '[id="imperatives"],[id="pillars"],[id="what-changes"],[id="in-development"],[id="observatory"]',
+      '[id="imperatives"],[id="pillars"],[id="what-changes"],[id="attack"],[id="in-development"],[id="observatory"]',
     ).forEach((s) => observer.observe(s));
   })();
 </script>

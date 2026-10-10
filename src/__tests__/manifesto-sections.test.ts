@@ -45,8 +45,11 @@ describe('MAN2 manifesto sections', () => {
     expect(es.manifesto.transitionBody).toContain('La tecnología no es el fin.');
   });
 
-  // §3 section order matches the rail exactly.
-  it('renders the nine rail sections in the spec order with stable ids', () => {
+  // §3 section order matches the rail exactly. The attack section lives in
+  // AttackMap.astro (rendered via <AttackMap />), so its markup id is asserted
+  // in refutation.test.ts; here the rail entry and the component position are
+  // asserted against the view source.
+  it('renders the ten rail sections in the spec order with stable ids', () => {
     const order = [
       'what-we-value', 'perspective', 'million-year-test', 'transition',
       'imperatives', 'pillars', 'what-changes', 'in-development', 'observatory',
@@ -58,6 +61,17 @@ describe('MAN2 manifesto sections', () => {
       expect(idx).toBeGreaterThan(cursor);
       cursor = idx;
     }
+    // The rail carries ten entries: the nine section ids above plus attack,
+    // whose markup lives in AttackMap.astro. The rail entry and the component
+    // tag both sit between what-changes and in-development.
+    expect(src).toMatch(/\{ id: 'attack', label: f\.label \}/);
+    const railAt = src.indexOf("{ id: 'attack'");
+    const wcAt = src.indexOf('id="what-changes"');
+    const tagAt = src.indexOf('<AttackMap />');
+    const devAt = src.indexOf('id="in-development"');
+    expect(railAt).toBeGreaterThan(-1);
+    expect(tagAt).toBeGreaterThan(wcAt);
+    expect(devAt).toBeGreaterThan(tagAt);
   });
 
   // §1 layout voices.
@@ -84,7 +98,9 @@ describe('MAN2 manifesto sections', () => {
   });
 
   it('tracks the current section with IntersectionObservers (cosmos + rail)', () => {
-    // MAN1 left exactly one (the cosmos scene); MAN2 adds the rail's — two total.
+    // MAN1 left exactly one (the cosmos scene); MAN2 added the rail's — two
+    // total. MAN3 reuses the rail observer (attack joins its target list), so
+    // the count stays at two.
     expect((src.match(/IntersectionObserver/g) ?? []).length).toBe(2);
   });
 

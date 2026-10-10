@@ -629,14 +629,69 @@ export const en = {
       ['Eco del Silencio', 'The lived path, told as a collection of stories — “Un Viaje Introspectivo a la Esencia Humana”. The events and turns (fear, freedom, community) that led to Pensamiento Cósmico. Not the argument, but the experience the argument grew out of.'],
       ['Fundamentos del Pensamiento Cósmico', 'The formalization. The same ideas stated as a rigorous system — definitions, axioms, propositions and corollaries — so every step can be examined and refuted on its own. Where the manifesto narrates, the Fundamentos prove.'],
     ] as [string, string][],
+    attackLink: 'See where to attack it →',
     closing:
       '«Univerlab exists not to write software, nor to learn AI, nor to ship open source — those are all means — but to raise, even infinitesimally, the probability that knowledge and consciousness continue. Not a laboratory about the universe, but a laboratory of the universe.»',
     note:
       'A living system: its axioms and derivations are written to be attacked, point by point. An idea that cannot be refuted cannot be held either.',
     why: 'This is why the laboratory exists.',
   },
-  // Cosmic perspective — deep-time timeline + spatial address, shown only on the
-  // manifesto. Each figure lives here once; nothing repeats across the site.
+  // The Fundamentos refutation map on /manifesto/ (#attack). Copy only — the
+  // graph (ids, kinds, deps) lives in src/data/fundamentos.ts, keyed by the
+  // same ids. Statements are condensed from the source §§1-4, tag-free so the
+  // i18n tag-parity check stays trivially satisfied.
+  fundamentos: {
+    label: 'Where to attack it',
+    intro:
+      'The manifesto is the narrative. Underneath it is a system — definitions, axioms, propositions — written to be attacked point by point. Pick an axiom and reject it: see what falls.',
+    closingQuote:
+      'A system that offers no place to attack it is not a philosophy, it is a belief.',
+    restsOn: 'Rests on',
+    supports: 'Supports',
+    empirical: 'empirical',
+    revisableNote:
+      'A revisable empirical claim — if another medium were found, this axiom is replaced, not the system.',
+    valueNote: 'A value position — what this system chooses to hold valuable.',
+    rejectLabel: 'Reject',
+    restoreLabel: 'Restore',
+    fallSentence: 'Reject {id}: {n} pieces fall; {stands} still stand.',
+    rewriteSentence: 'Reject {id}: nothing falls; {rewritten} is rewritten to invoke the new medium.',
+    andWord: 'and',
+    selectPrompt: 'Select a piece to see what it rests on and what rests on it.',
+    rows: {
+      definition: 'Definitions',
+      axiom: 'Axioms',
+      proposition: 'Propositions',
+      corollary: 'Corollaries',
+    },
+    nodes: {
+      D1: { name: 'Consciousness', statement: 'A system\u2019s capacity to hold a perspective from which the universe can be represented.' },
+      D2: { name: 'Perspective', statement: 'Each particular consciousness as a unique, unrepeatable way of representing the universe.' },
+      D3: { name: 'Substrate', statement: 'The physical support instantiating a consciousness; value lies in consciousness, not its support.' },
+      D4: { name: 'Continuity', statement: 'Persistence of consciousness and knowledge across time, space and substrates.' },
+      D5: { name: 'Knowledge', statement: 'What perspectives extract, accumulate and transmit about the universe; cumulative and transferable between consciousnesses.' },
+      D6: { name: 'Wonder', statement: 'A consciousness\u2019s recognition of how improbable and extraordinary its own existence is.' },
+      A0: { name: 'Axiom of Wonder', statement: 'Wonder at the existence of consciousness is the root of all motivation for continuity.' },
+      A1: { name: 'Axiom of Consciousness', statement: 'Consciousness is the most extraordinary known phenomenon in the universe.' },
+      A2: { name: 'Axiom of Perspective', statement: 'Each consciousness represents a unique, unrepeatable perspective from which the universe can be known.' },
+      A3: { name: 'Axiom of Vulnerability', statement: 'Every consciousness is temporal and vulnerable: it can go extinct, and its perspective with it.' },
+      A4: { name: 'Axiom of the Medium', statement: 'As far as we know, only technological intelligence can significantly raise the probability of continuity beyond planetary and biological limits.' },
+      P1: { name: 'Substrate independence', statement: 'If what matters is consciousness and not its support, a consciousness\u2019s value does not depend on a biological substrate.' },
+      P2: { name: 'Value hierarchy', statement: 'The priority order is: consciousness, intelligent life, knowledge — because perspectives are not transferable.' },
+      P3: { name: 'Imperative of Continuity', statement: 'If we value consciousness and it is vulnerable, there is an ethical responsibility to increase its continuity wherever possible.' },
+      P4: { name: 'Technological Imperative', statement: 'Technology is the only means able to extend continuity; developing and sharing it is an ethical duty.' },
+      P5: { name: 'Duty of education', statement: 'As consciousnesses are temporary but knowledge is transferable, education is continuity in time.' },
+      P6: { name: 'Duty of exploration', statement: 'Concentrating consciousness on a single planet maximizes vulnerability; exploring is continuity in space.' },
+      P7: { name: 'Place of artificial intelligence', statement: 'If consciousness is substrate-independent, conscious AI is a legitimate fulfillment of the imperative.' },
+      P8: { name: 'Cooperation and forgiveness', statement: 'Every conflict destroying a perspective subtracts value and continuity; cooperating is the system\u2019s optimum.' },
+      P9: { name: 'Love and community', statement: 'Bonds between consciousnesses sustain vulnerable perspectives and create conditions for new ones.' },
+      P10: { name: 'Univerlab', statement: 'An open laboratory producing and sharing tools, knowledge and education instantiates the Imperative of Continuity.' },
+      C1: { name: 'Against biological chauvinism', statement: 'Preferring the biological for being biological, over a greater consciousness, is incoherent with the system.' },
+      C2: { name: 'Partial success', statement: 'A future of only artificial consciousnesses that understand and preserve history counts as partial success.' },
+      C3: { name: 'Technology is a means, not an end', statement: 'Technology is never the ultimate value: if it stopped serving continuity, it would stop being a duty.' },
+      C4: { name: 'Openness as obligation', statement: 'If knowledge is continuity, keeping it closed contradicts the imperative: sharing is coherence.' },
+    } as Record<string, { name: string; statement: string }>,
+  },
   cosmos: {
     kicker: 'Perspective',
     timelineTitle: 'Deep time',

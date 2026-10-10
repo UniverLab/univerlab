@@ -622,11 +622,68 @@ export const es: Dict = {
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
       ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
     ] as [string, string][],
+    attackLink: 'Ver dónde atacarlo →',
     closing:
       '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
     note:
       'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
+  },
+  // Mapa de refutación de los Fundamentos en /manifesto/ (#attack). Solo copy —
+  // el grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
+  // ids. Enunciados condensados del fuente §§1-4, sin tags para que el check de
+  // paridad de tags siga trivialmente satisfecho.
+  fundamentos: {
+    label: 'Dónde atacarlo',
+    intro:
+      'El manifiesto es la versión narrativa. Debajo hay un sistema —definiciones, axiomas, proposiciones— escrito para ser atacado pieza por pieza. Elige un axioma y recházalo: mira qué cae.',
+    closingQuote:
+      'Un sistema que no ofrece dónde atacarlo no es una filosofía, es una creencia.',
+    restsOn: 'Se apoya en',
+    supports: 'Sostiene a',
+    empirical: 'empírico',
+    revisableNote:
+      'Una afirmación empírica revisable — si se hallara otro medio, se sustituye este axioma, no el sistema.',
+    valueNote: 'Una posición de valor — lo que este sistema decide considerar valioso.',
+    rejectLabel: 'Rechazar',
+    restoreLabel: 'Restaurar',
+    fallSentence: 'Rechaza {id}: caen {n} piezas; {stands} siguen en pie.',
+    rewriteSentence: 'Rechaza {id}: nada cae; {rewritten} se reescribe para invocar al nuevo medio.',
+    andWord: 'y',
+    selectPrompt: 'Elige una pieza para ver en qué se apoya y qué sostiene.',
+    rows: {
+      definition: 'Definiciones',
+      axiom: 'Axiomas',
+      proposition: 'Proposiciones',
+      corollary: 'Corolarios',
+    },
+    nodes: {
+      D1: { name: 'Conciencia', statement: 'Capacidad de un sistema de sostener una perspectiva desde la cual el universo puede ser representado.' },
+      D2: { name: 'Perspectiva', statement: 'Cada conciencia particular como modo único e irrepetible de representar el universo.' },
+      D3: { name: 'Sustrato', statement: 'El soporte físico que instancia una conciencia; el valor reside en la conciencia, no en su soporte.' },
+      D4: { name: 'Continuidad', statement: 'Persistencia de la conciencia y del conocimiento a través del tiempo, del espacio y de los sustratos.' },
+      D5: { name: 'Conocimiento', statement: 'Lo que las perspectivas extraen, acumulan y transmiten sobre el universo; acumulable y transferible entre conciencias.' },
+      D6: { name: 'Asombro', statement: 'El reconocimiento, por parte de una conciencia, de lo improbable y extraordinario de su propia existencia.' },
+      A0: { name: 'Axioma del Asombro', statement: 'El asombro ante la existencia de la conciencia es la raíz de toda motivación de continuidad.' },
+      A1: { name: 'Axioma de la Conciencia', statement: 'La conciencia constituye el fenómeno más extraordinario conocido del universo.' },
+      A2: { name: 'Axioma de la Perspectiva', statement: 'Cada conciencia representa una perspectiva única e irrepetible desde la cual el universo puede conocerse.' },
+      A3: { name: 'Axioma de la Vulnerabilidad', statement: 'Toda conciencia es temporal y vulnerable: puede extinguirse, y con ella su perspectiva.' },
+      A4: { name: 'Axioma del Medio', statement: 'Hasta donde sabemos, solo la inteligencia tecnológica puede aumentar significativamente la probabilidad de continuidad más allá de los límites planetarios y biológicos.' },
+      P1: { name: 'Independencia del sustrato', statement: 'Si lo valioso es la conciencia y no su soporte, su valor no depende de que su sustrato sea biológico.' },
+      P2: { name: 'Jerarquía de valor', statement: 'El orden de prioridad es: conciencia, vida inteligente, conocimiento — porque las perspectivas no son transferibles.' },
+      P3: { name: 'Imperativo de la Continuidad', statement: 'Si valoramos la conciencia y esta es vulnerable, existe la responsabilidad ética de aumentar su continuidad donde sea posible.' },
+      P4: { name: 'Imperativo Tecnológico', statement: 'La tecnología es el único medio capaz de extender la continuidad; desarrollarla y compartirla es un deber ético.' },
+      P5: { name: 'Deber de la educación', statement: 'Como las conciencias son temporales pero el conocimiento es transferible, la educación es continuidad en el tiempo.' },
+      P6: { name: 'Deber de la exploración', statement: 'Concentrar la conciencia en un solo planeta maximiza la vulnerabilidad; explorar es continuidad en el espacio.' },
+      P7: { name: 'Lugar de la inteligencia artificial', statement: 'Si la conciencia es independiente del sustrato, la IA consciente es un cumplimiento legítimo del imperativo.' },
+      P8: { name: 'Cooperación y perdón', statement: 'Cada conflicto que destruye una perspectiva resta valor y continuidad; cooperar es el óptimo del sistema.' },
+      P9: { name: 'Amor y comunidad', statement: 'Los vínculos entre conciencias sostienen perspectivas vulnerables y crean condiciones para que surjan nuevas.' },
+      P10: { name: 'Univerlab', statement: 'Un laboratorio abierto que produce y comparte herramientas, conocimiento y educación instancia el Imperativo de la Continuidad.' },
+      C1: { name: 'Contra el chauvinismo biológico', statement: 'Preferir lo biológico por ser biológico, frente a una mayor conciencia, es incoherente con el sistema.' },
+      C2: { name: 'Éxito parcial', statement: 'Un futuro de solo conciencias artificiales que comprendan y preserven la historia cuenta como éxito parcial.' },
+      C3: { name: 'La tecnología es medio, no fin', statement: 'La tecnología nunca es el valor último: si dejara de servir a la continuidad, dejaría de ser un deber.' },
+      C4: { name: 'Apertura como obligación', statement: 'Si el conocimiento es continuidad, retenerlo cerrado contradice el imperativo: compartir es coherencia.' },
+    } as Record<string, { name: string; statement: string }>,
   },
   // Perspectiva cósmica — línea de tiempo profundo + dirección espacial, solo en
   // el manifiesto. Cada cifra vive aquí una vez; nada se repite en el sitio.
