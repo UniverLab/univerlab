@@ -573,6 +573,23 @@ export const en = {
       'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
     epigraph:
       '«Wonder at the existence of consciousness is the root of all motivation for continuity.»',
+    // Living-document header data. Version + date are invariant facts, not
+    // prose; "living document" is the only localised word. The Sol and the
+    // TERRA year are computed at render time from `docDate` (mission-time.ts),
+    // never typed into the dictionary.
+    docStatus: 'living document',
+    docVersion: '3.0',
+    docDate: '2026-06-17',
+    millionYearTestTitle: 'The million-year test',
+    millionYearTestQuestion:
+      'Imagine that a million years from now biological beings have disappeared. Only conscious artificial intelligences remain — they kept learning, explored millions of galaxies, discovered laws of physics we never imagined, made art and philosophy, and preserved the whole history of humanity. Did humanity\'s mission succeed?',
+    millionYearTestAnswer:
+      'A partial success. If consciousness continues, understands and expands, the central goal was met. But something serious must have happened for the biological origin to be lost, and that weighs: humanity was the tree the forest grew from. The forest exists; still, the loss of the tree is felt. Holding both at once — the success and the grief — is the most honest and the most human answer.',
+    millionYearTestClosing:
+      'That is why Pensamiento Cósmico is a philosophy of the continuity of consciousness, independent of its substrate — not a closed humanism.',
+    transitionTitle: 'The transition that matters',
+    transitionBody:
+      'Evolution does not aim at intelligence. But once an intelligence appears that can understand evolution, it no longer depends on evolution alone: it can begin to steer part of its own fate on purpose. That is where technology is born — not as a continuation of natural selection, but as the moment life starts replacing part of chance with conscious decisions. Technology is not the end. It is the instrument with which consciousness, for the first time, takes some responsibility for its own continuity.',
     purposeTitle: 'What we value',
     purposeBody:
       'Of everything we know about the universe, the existence of a perspective able to ask about the universe itself is the most improbable and extraordinary phenomenon there is. It is worth continuing not because it is useful, nor because evolution “wants” it, but because consciousness is astonishing — and that wonder is enough. What we value, then, is not DNA, nor the species, nor the biological substrate, but the capacity to understand the universe. Hence an order of priority, made explicit not as dogma but as a guide when we must choose:',

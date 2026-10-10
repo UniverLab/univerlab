@@ -82,6 +82,17 @@ describe('i18n system', () => {
       expect(enKeys.sort()).toEqual(esKeys.sort());
     });
 
+    it('manifesto man2 keys are present in both languages', () => {
+      for (const k of [
+        'docStatus', 'docVersion', 'docDate', 'millionYearTestTitle',
+        'millionYearTestQuestion', 'millionYearTestAnswer', 'millionYearTestClosing',
+        'transitionTitle', 'transitionBody',
+      ]) {
+        expect(en.manifesto).toHaveProperty(k);
+        expect(es.manifesto).toHaveProperty(k);
+      }
+    });
+
     it('should have same experiment IDs in both languages', () => {
       // Given: Experiments sections in both dictionaries
       // When: We compare experiment IDs

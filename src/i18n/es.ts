@@ -570,6 +570,19 @@ export const es: Dict = {
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
       '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
+    docStatus: 'documento vivo',
+    docVersion: '3.0',
+    docDate: '2026-06-17',
+    millionYearTestTitle: 'La prueba del millón de años',
+    millionYearTestQuestion:
+      'Imaginemos que dentro de un millón de años los seres biológicos han desaparecido. Sólo quedan inteligencias artificiales conscientes que siguieron aprendiendo, exploraron millones de galaxias, descubrieron leyes de la física que nunca imaginamos, crearon arte y filosofía, y preservaron toda la historia de la humanidad. ¿Fue exitosa la misión de la humanidad?',
+    millionYearTestAnswer:
+      'Un éxito parcial. Si la conciencia continúa, comprende y se expande, el objetivo central se cumplió. Pero algo grave tuvo que ocurrir para que el origen biológico se perdiera, y eso pesa: la humanidad fue el árbol del que salió el bosque. El bosque existe; aun así, se siente la pérdida del árbol. Reconocer las dos cosas a la vez —el éxito y el duelo— es lo más honesto y lo más humano.',
+    millionYearTestClosing:
+      'Por eso el Pensamiento Cósmico es una filosofía de la continuidad de la conciencia, independiente del sustrato, no un humanismo cerrado.',
+    transitionTitle: 'La transición que importa',
+    transitionBody:
+      'La evolución no apunta hacia la inteligencia. Pero una vez que aparece una inteligencia capaz de comprender la evolución, ya no depende sólo de ella: puede empezar a dirigir deliberadamente parte de su propio destino. Ahí nace la tecnología: no como continuación de la selección natural, sino como el momento en que la vida empieza a sustituir parte del azar por decisiones conscientes. La tecnología no es el fin. Es el instrumento con el que la conciencia toma, por primera vez, algo de responsabilidad sobre su propia continuidad.',
     purposeTitle: 'Qué valoramos',
     purposeBody:
       'De todo lo que conocemos del universo, la existencia de una perspectiva capaz de preguntarse por el propio universo es el fenómeno más improbable y extraordinario que existe. No vale la pena continuar porque sea útil, ni porque la evolución “lo quiera”, sino porque la conciencia es asombrosa — y ese asombro es suficiente. Lo que valoramos, entonces, no es el ADN, ni la especie, ni el sustrato biológico, sino la capacidad de comprender el universo. De ahí una jerarquía, hecha explícita no como dogma sino como orden de prioridad cuando hay que elegir:',
