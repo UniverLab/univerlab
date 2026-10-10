@@ -132,14 +132,26 @@ const rows: (keyof typeof ROWS)[] = ['definition', 'axiom', 'proposition', 'coro
   .attack-grid { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 2rem; align-items: start; margin-top: 1.6rem; }
   @media (max-width: 60rem) { .attack-grid { grid-template-columns: 1fr; } }
   .attack-svg { width: 100%; height: auto; display: block; }
-  @media (max-width: 720px) { .attack-svg { display: none; } }
+  /* The spec's boundary: the map owns 720px and wider, the list owns below.
+     719.98px (not 720px) avoids the max/min pair both matching at exactly
+       720px, where the SVG would be hidden AND the list visually hidden —
+       the same convention as MAN2's rail pair at 1199.98px/1200px. */
+  @media (max-width: 719.98px) { .attack-svg { display: none; } }
   /* Above 720px the list stays in the DOM for AT and the markdown twin but is
-     visually hidden (never display:none, never aria-hidden). */
+      visually hidden (never display:none, never aria-hidden). */
   @media (min-width: 720px) {
     .attack-list {
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
       overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }
+  }
+  /* The aria-live region must stay in the accessibility tree but invisible.
+     `.visually-hidden` is scoped per component (Manifesto.astro carries its own
+     copy for the cosmos caption) — without this rule the announcement would
+     render as visible body text under the map. */
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
   .attack-node { transition: opacity 0.15s ease; cursor: pointer; }
   .attack-node:focus { outline: none; }
@@ -152,7 +164,11 @@ const rows: (keyof typeof ROWS)[] = ['definition', 'axiom', 'proposition', 'coro
   .attack-grid[data-selected] .attack-node[data-lit="true"] { opacity: 1; }
   .attack-grid[data-selected] .attack-svg .edge { opacity: 0.12; }
   .attack-grid[data-selected] .attack-svg .edge[data-lit="true"] { opacity: 1; stroke: var(--accent); }
-  .attack-grid[data-selected] .attack-node[data-lit="true"] .mark { stroke: var(--accent); }
+  /* A lit node wears the accent — but a fallen or rewritten node owns its own
+     outline (the spec's struck-through dashed --ink-faint / dashed accent), so
+     the highlight must not repaint it. Without :not() the highlight's higher
+     specificity silently wins and fallen nodes never show as fallen. */
+  .attack-grid[data-selected] .attack-node[data-lit="true"]:not([data-fallen="true"]):not([data-rewritten="true"]) .mark { stroke: var(--accent); }
   .attack-node[data-fallen="true"] .node-id { text-decoration: line-through; fill: var(--ink-faint); }
   .attack-node[data-fallen="true"] .mark { stroke: var(--ink-faint); stroke-dasharray: 3 2; }
   .attack-node[data-rewritten="true"] .mark { stroke: var(--accent); stroke-dasharray: 4 2; }

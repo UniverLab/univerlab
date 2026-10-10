@@ -9,6 +9,15 @@ import { premisesOf, dependentsOf, reject } from '../lib/refutation';
 
 const byId = new Map(NODES.map((n) => [n.id, n]));
 
+/** Boolean state flags the template's CSS keys on (`[data-lit="true"]`,
+ *  `[data-fallen="true"]`, `[data-rewritten="true"]`). `toggleAttribute`
+ *  leaves an empty value when forcing true, which those selectors never
+ *  match — so set the literal string "true" or remove the attribute. */
+const flag = (el: Element, name: string, on: boolean): void => {
+  if (on) el.setAttribute(name, 'true');
+  else el.removeAttribute(name);
+};
+
 export function startAttackMap(root: HTMLElement): void {
   const grid = root.querySelector<HTMLElement>('[data-attack]');
   const list = root.querySelector<HTMLElement>('[data-attack-list]');
@@ -31,10 +40,6 @@ export function startAttackMap(root: HTMLElement): void {
       axiom: byId.get(id)?.kind === 'axiom',
     });
   });
-  const restsOn = grid.querySelector('[data-deps] .attack-deps-label')?.textContent ?? '';
-  const supportsEl = grid.querySelectorAll('[data-deps] .attack-deps-label')[1];
-  const supports = supportsEl?.textContent ?? '';
-
   const panel = grid.querySelector<HTMLElement>('[data-panel]');
   const promptEl = panel?.querySelector<HTMLElement>('[data-prompt]');
   const nameEl = panel?.querySelector<HTMLElement>('[data-name]');
@@ -77,9 +82,9 @@ export function startAttackMap(root: HTMLElement): void {
 
     grid.querySelectorAll<SVGGElement>('.attack-node').forEach((g) => {
       const id = g.dataset.id as string;
-      g.toggleAttribute('data-lit', !!selected && lit.has(id));
-      g.toggleAttribute('data-fallen', fallen.has(id));
-      g.toggleAttribute('data-rewritten', rewritten.has(id));
+      flag(g, 'data-lit', !!selected && lit.has(id));
+      flag(g, 'data-fallen', fallen.has(id));
+      flag(g, 'data-rewritten', rewritten.has(id));
     });
     // `data-selected` must vanish entirely when nothing is selected, or the
     // dimming rules keep applying.
@@ -88,7 +93,7 @@ export function startAttackMap(root: HTMLElement): void {
     grid.querySelectorAll<SVGPathElement>('.edge').forEach((e) => {
       const a = e.dataset.from as string;
       const b = e.dataset.to as string;
-      e.toggleAttribute('data-lit', !!selected && lit.has(a) && lit.has(b));
+      flag(e, 'data-lit', !!selected && lit.has(a) && lit.has(b));
     });
 
     // Panel.
@@ -120,8 +125,6 @@ export function startAttackMap(root: HTMLElement): void {
           rejectBtn.textContent = `${rejectBtn.dataset[on ? 'restore' : 'label'] ?? ''} ${selected}`.trim();
         } else rejectBtn.hidden = true;
       }
-      void restsOn;
-      void supports;
     } else if (panel) {
       if (promptEl) promptEl.hidden = false;
       for (const el of [nameEl, stmtEl, kindNoteEl, depsEl, rejectBtn]) if (el) el.hidden = true;
@@ -145,8 +148,8 @@ export function startAttackMap(root: HTMLElement): void {
     }
     list.querySelectorAll<HTMLElement>('.attack-items li[data-id]').forEach((li) => {
       const id = li.dataset.id as string;
-      li.toggleAttribute('data-fallen', fallen.has(id));
-      li.toggleAttribute('data-rewritten', rewritten.has(id));
+      flag(li, 'data-fallen', fallen.has(id));
+      flag(li, 'data-rewritten', rewritten.has(id));
     });
   };
 
@@ -170,7 +173,12 @@ export function startAttackMap(root: HTMLElement): void {
       }
     });
   });
-  grid.querySelector<SVGSVGElement>('.attack-svg')?.addEventListener('pointerleave', () => select(null));
+  // Leaving the map clears a hover selection — but a touch tap fires
+  // pointerleave right after its click, which would drop the selection the
+  // tap just made. Only hover pointers (mouse/pen) clear.
+  grid.querySelector<SVGSVGElement>('.attack-svg')?.addEventListener('pointerleave', (e) => {
+    if (e.pointerType !== 'touch') select(null);
+  });
 
   // List: focus/click selects; reject toggles run `reject()`.
   list.querySelectorAll<HTMLButtonElement>('[data-select]').forEach((b) => {
