@@ -12,7 +12,9 @@ export function initMissionDateTooltip(): void {
 
   var tipId = 'mission-date-tip';
   function ensureTooltip(): HTMLDivElement {
-    if (tooltip) return tooltip;
+    // Reconnect if something removed the shared node from the DOM, so the
+    // cache never writes text into a detached element.
+    if (tooltip && tooltip.isConnected) return tooltip;
     tooltip = document.createElement('div');
     tooltip.id = tipId;
     tooltip.className = 'mission-date-tooltip';
@@ -45,7 +47,11 @@ export function initMissionDateTooltip(): void {
     var tipRect = tip.getBoundingClientRect();
     var left = rect.left + (rect.width - tipRect.width) / 2;
     tip.style.left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8)) + 'px';
-    tip.style.top = (rect.top - tipRect.height - 8 + window.scrollY) + 'px';
+    // Above the date by default; flip below only when it would leave the
+    // viewport — either way the date itself is never covered.
+    var top = rect.top - tipRect.height - 8;
+    if (top < 8) top = rect.bottom + 8;
+    tip.style.top = (top + window.scrollY) + 'px';
     el.setAttribute('aria-describedby', tipId);
     activeEl = el;
   }
@@ -65,6 +71,9 @@ export function initMissionDateTooltip(): void {
   }
 
   function scan(): void {
+    // The observer can fire after the document is gone (unload / test
+    // teardown); touching `document` then would throw inside the callback.
+    if (typeof document === 'undefined' || !document.body) return;
     document.querySelectorAll<HTMLElement>('time[data-mission]').forEach(function (el) {
       if (!el.dataset.mdtEnhanced) {
         el.dataset.mdtEnhanced = '1';
@@ -101,9 +110,13 @@ export function openDateTranslator(closePalette: () => void, lang: string): void
       '<div class="date-t-results"></div>' +
     '</div>';
   document.body.appendChild(overlay);
-  var inp = overlay.querySelector<HTMLInputElement>('.date-t-input');
-  var results = overlay.querySelector<HTMLDivElement>('.date-t-results');
-  if (!inp || !results) return;
+  const inpFound = overlay.querySelector<HTMLInputElement>('.date-t-input');
+  const resultsFound = overlay.querySelector<HTMLDivElement>('.date-t-results');
+  if (!inpFound || !resultsFound) return;
+  // Closures below capture these — TypeScript does not carry a null-narrowing
+  // into a closure, so bind the narrowed types to fresh constants here.
+  const inp: HTMLInputElement = inpFound;
+  const results: HTMLDivElement = resultsFound;
 
   function copyBtn(text: string): HTMLButtonElement {
     var b = document.createElement('button');
@@ -118,11 +131,11 @@ export function openDateTranslator(closePalette: () => void, lang: string): void
     });
     return b;
   }
-  function render(value: string): void {
+  const render = (value: string): void => {
     results.innerHTML = '';
     if (!value.trim()) return;
     var t = translateMissionDate(value, es ? 'es' : 'en');
-    if (t.error) {
+    if ('error' in t) {
       results.innerHTML = '<div class="date-t-error">' + t.error + '</div>';
       return;
     }
@@ -131,7 +144,7 @@ export function openDateTranslator(closePalette: () => void, lang: string): void
       '<div class="date-t-row"><span class="date-t-label">ISO</span><span class="date-t-val">' + t.iso + '</span></div>' +
       '<div class="date-t-row"><span class="date-t-label">' + (es ? 'Calendario' : 'Calendar') + '</span><span class="date-t-val">' + t.calendar + '</span></div>';
     results.querySelectorAll('.date-t-val').forEach(function (el) { el.appendChild(copyBtn(el.textContent)); });
-  }
+  };
   inp.addEventListener('input', function () { render(inp.value); });
   overlay.querySelector('.date-t-close')?.addEventListener('click', function () { overlay.remove(); });
   overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });

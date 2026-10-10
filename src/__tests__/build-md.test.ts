@@ -127,4 +127,50 @@ describe('mission-date ISO suffix in markdown twin', () => {
     const md = htmlToMarkdown(html);
     expect(md).toContain('Sol 282 (2026-10-09)');
   });
+
+  it('marks the suffix on the genesis line — TERRA year + Sol, no time', () => {
+    const html = [
+      '<main>',
+      '<span class="label">Genesis · <time datetime="2026-04-03" data-mission>TERRA 2026 · Sol 93</time></span>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('TERRA 2026 · Sol 93 (2026-04-03)');
+  });
+
+  it('marks the suffix on the living-document header, whose label carries a prefix', () => {
+    const html = [
+      '<main>',
+      '<p class="doc-header"><time datetime="2026-06-17" data-mission>living document · v3.0 · TERRA 2026 · Sol 168</time></p>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('living document · v3.0 · TERRA 2026 · Sol 168 (2026-06-17)');
+  });
+
+  it('normalizes an offset datetime to the true UTC instant, matching its label', () => {
+    // The docs "last updated" datetime is git's %cI — an offset timestamp.
+    // The suffix must carry the instant the label names (09:45 UTC), not the
+    // offset clock re-labelled Z (04:45Z, five hours off).
+    const html = [
+      '<main>',
+      '<p class="doc-updated">Last updated ' +
+        '<time datetime="2026-09-27T04:45:34-05:00" data-mission="">TERRA 2026 · Sol 270 · 09:45 UTC</time>' +
+        '</p>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('TERRA 2026 · Sol 270 · 09:45 UTC (2026-09-27T09:45Z)');
+    expect(md).not.toContain('04:45Z');
+  });
+
+  it('still suffixes a label-shaped <time> that lost its data-mission marker', () => {
+    const html = [
+      '<main>',
+      '<time datetime="2026-10-09T14:00:00Z">TERRA 2026 · Sol 282 · 14:00 UTC</time>',
+      '</main>',
+    ].join('');
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('TERRA 2026 · Sol 282 · 14:00 UTC (2026-10-09T14:00Z)');
+  });
 });

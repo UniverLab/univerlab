@@ -13,14 +13,17 @@ import {
 } from '../lib/mission-time';
 
 // Literal expected strings — not computed from the code under test — so a
-// refactor that drifts formatMissionDate/startSolLabel fails them. These are
-// pinned for the CI timezone (America/Bogota, UTC-5) where the local-midnight
-// Sol epoch places 2026-01-01T00:00Z on 2025-Dec-31 (Sol 365).
+// refactor that drifts formatMissionDate/startSolLabel fails them. The pinned
+// instants sit mid-day UTC (12:00Z/10:00Z) so every runner from UTC-5 (Bogotá)
+// to UTC+13 lands them on the same local day: the pins hold under CI's UTC
+// and the local Bogotá machine alike. The local-midnight epoch quirk — where
+// 2026-01-01T00:00Z is Sol 365 of 2025 in Bogotá but Sol 1 of 2026 in UTC —
+// is pinned per timezone in mission-date-tz.test.ts.
 describe('formatMissionDate / formatSolLabel / startSolLabel pins', () => {
   it('formatMissionDate pins three known dates', () => {
     expect(formatMissionDate('2026-09-16T10:00:00Z')).toBe('TERRA 2026 · Sol 259 · 10:00 UTC');
-    expect(formatMissionDate('2026-01-01T00:00:00Z')).toBe('TERRA 2025 · Sol 365 · 00:00 UTC');
-    expect(formatMissionDate('2024-02-29T23:30:00Z')).toBe('TERRA 2024 · Sol 60 · 23:30 UTC');
+    expect(formatMissionDate('2026-01-01T12:00:00Z')).toBe('TERRA 2026 · Sol 1 · 12:00 UTC');
+    expect(formatMissionDate('2024-02-29T12:00:00Z')).toBe('TERRA 2024 · Sol 60 · 12:00 UTC');
   });
 
   it('startSolLabel pins three known dates', () => {
@@ -191,7 +194,11 @@ describe('translateMissionDate', () => {
   it('to-calendar from Sol N without time has no time in calendar', () => {
     const r = translateMissionDate('Sol 282', 'en') as any;
     expect(r.direction).toBe('to-calendar');
-    expect(r.iso).toBe('2026-10-09');
+    // "Sol 282" pins the current year — compute the expected day for it,
+    // never hardcode one year's calendar.
+    const d = solToDate(new Date().getFullYear(), 282);
+    const p = (n: number): string => String(n).padStart(2, '0');
+    expect(r.iso).toBe(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
     expect(r.calendar).not.toContain('(your time)');
   });
 
@@ -211,7 +218,7 @@ describe('translateMissionDate', () => {
 
   it('localizes to Spanish', () => {
     const r = translateMissionDate('Sol 282', 'es') as any;
-    expect(r.calendar).toContain('2026');
+    expect(r.calendar).toContain(String(new Date().getFullYear()));
   });
 
   it('returns an error for unrecognised input', () => {
