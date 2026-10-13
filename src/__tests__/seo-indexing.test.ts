@@ -1084,7 +1084,7 @@ describe('deploy-site.yml checkout depth', () => {
     .filter((s) => s.includes('actions/checkout@v4') && s.includes('repository:'));
 
   it('checks out every sibling repo with full history', () => {
-    expect(checkouts.length).toBe(7); // 6 docs repos + canopy-registry
+    expect(checkouts.length).toBe(6); // 5 docs repos + canopy-registry
     for (const block of checkouts) {
       const repo = /repository:\s*(\S+)/.exec(block)?.[1];
       expect(block).toContain('fetch-depth: 0');
