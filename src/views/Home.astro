@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LabSystem from '../components/LabSystem.astro';
-import { experiments } from '../lib/experiments';
+import { archivedExperiments, liveExperiments } from '../lib/experiments';
 import { getLang, useTranslations, localizePath, motifOf } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -43,7 +43,7 @@ const webSite = {
     </div>
     <p class="lede">{t.home.experiments.method}</p>
     <ul class="grid">
-      {experiments.map((exp) => {
+      {liveExperiments.map((exp) => {
         const e = t.experiments[exp.id];
         const motif = motifOf(exp, t);
         const circVars = exp.circadianPalette
@@ -73,6 +73,9 @@ const webSite = {
         );
       })}
     </ul>
+    {archivedExperiments.length > 0 && (
+      <p class="archive-link"><a href={localizePath('/archive', lang)}>{archivedExperiments.length === 1 ? t.home.experiments.archivedOne : t.home.experiments.archivedMany.replace('{n}', String(archivedExperiments.length))}</a></p>
+    )}
   </section>
 
   <hr class="rule" />
@@ -190,6 +193,10 @@ const webSite = {
   .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
   .more { text-decoration: none; }
   .more:hover { color: var(--ink); }
+
+  .archive-link { margin: 1.4rem 0 0; text-align: right; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.06em; }
+  .archive-link a { color: var(--ink-dim); text-decoration: none; }
+  .archive-link a:hover { color: var(--ink); text-decoration: underline; }
 
   .grid {
     list-style: none; margin: 0; padding: 0;

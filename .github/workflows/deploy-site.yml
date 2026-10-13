@@ -106,12 +106,6 @@ jobs:
           path: ghscaff
           sparse-checkout: docs
           fetch-depth: 0
-      - uses: actions/checkout@v4
-        with:
-          repository: UniverLab/cadspec
-          path: cadspec
-          sparse-checkout: docs
-          fetch-depth: 0
       # The repository is `demostage` (the old `demo-stage` name 302s to it)
       # and the path has to be `demostage` because DOCS_BASES in
       # src/data/docs-bases.ts reads `../demostage/docs`. Under `demo-stage`

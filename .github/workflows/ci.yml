@@ -42,11 +42,6 @@ jobs:
           repository: UniverLab/ghscaff
           path: ghscaff
           sparse-checkout: docs
-      - uses: actions/checkout@v4
-        with:
-          repository: UniverLab/cadspec
-          path: cadspec
-          sparse-checkout: docs
       # The repo is `demostage` and the path must be `demostage`: DOCS_BASES
       # reads `../demostage/docs`, and under `demo-stage` the collection
       # resolved to nothing — getCollection warns and returns [], so eight

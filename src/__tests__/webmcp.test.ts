@@ -25,7 +25,7 @@ import {
   type ModelContextLike,
 } from '../lib/webmcp';
 import { composeAbout } from '../lib/lab-about';
-import { experiments } from '../lib/experiments';
+import { experiments, liveExperiments } from '../lib/experiments';
 import { en } from '../i18n/en';
 import { ENTRIES_URL, FEED_URL, ROADMAP_URL, type Entry, type RoadmapItem } from '../lib/lab-feed';
 
@@ -406,7 +406,7 @@ describe('schedule', () => {
 
 describe('TOPICS', () => {
   it('is general plus every experiment slug', () => {
-    expect(TOPICS).toEqual(['general', ...experiments.map((e) => e.id)]);
+    expect(TOPICS).toEqual(['general', ...liveExperiments.map((e) => e.id)]);
   });
 });
 

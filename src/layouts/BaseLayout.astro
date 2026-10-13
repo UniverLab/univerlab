@@ -504,7 +504,7 @@ https://github.com/UniverLab
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors/' },
           { cmd: '/random', label: 'Surprise me', action: function () {
             if (window.missionLog) window.missionLog.discover('random');
-            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
+            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
             var pages = ['/', '/manifesto/', '/contributors/', '/archive/'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
             var history = [];
@@ -619,13 +619,12 @@ https://github.com/UniverLab
 
         // Experiment IDs — auto-generated from the registry.
         // Keep this list in sync with experiments.ts (add new IDs here).
-        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
+        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
         var experimentGithub = {
           canopy: 'https://github.com/UniverLab/harness-canopy',
           texforge: 'https://github.com/UniverLab/texforge',
           gitkit: 'https://github.com/UniverLab/gitkit',
           ghscaff: 'https://github.com/UniverLab/ghscaff',
-          cadspec: 'https://github.com/UniverLab/cadspec',
           'astro-denoise': 'https://github.com/UniverLab',
           demostage: 'https://github.com/UniverLab/demostage',
           quorum: 'https://github.com/UniverLab/quorum',
@@ -931,7 +930,6 @@ https://github.com/UniverLab
           'exp-texforge':     'Visited TeXForge',
           'exp-gitkit':       'Visited GitKit',
           'exp-ghscaff':      'Visited ghScaff',
-          'exp-cadspec':      'Visited cadSpec',
           'exp-astro-denoise':'Visited Astro Denoise',
           'exp-demostage':    'Visited DemoStage',
           'exp-quorum':       'Visited Quorum',
@@ -940,14 +938,12 @@ https://github.com/UniverLab
           'copy-texforge':     'Copied TeXForge install command',
           'copy-gitkit':       'Copied GitKit install command',
           'copy-ghscaff':      'Copied ghScaff install command',
-          'copy-cadspec':      'Copied cadSpec install command',
           'copy-demostage':    'Copied DemoStage install command',
           // Per-experiment docs
           'docs-canopy':       'Opened Canopy docs',
           'docs-texforge':     'Opened TeXForge docs',
           'docs-gitkit':       'Opened GitKit docs',
           'docs-ghscaff':      'Opened ghScaff docs',
-          'docs-cadspec':      'Opened cadSpec docs',
           'docs-demostage':    'Opened DemoStage docs',
           'docs-quorum':       'Opened Quorum docs',
           // Special interactions
@@ -1081,7 +1077,7 @@ https://github.com/UniverLab
         if (p === '/contributors/' || p === '/es/contributors/') window.flightLog.record('contributors');
 
         // Per-experiment page visits
-        var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum'];
+        var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
         expIds.forEach(function (id) {
           if (p === '/' + id + '/' || p === '/es/' + id + '/') window.flightLog.record('exp-' + id);
         });

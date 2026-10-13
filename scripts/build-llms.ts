@@ -15,7 +15,7 @@
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { NOINDEX } from './build-md.ts';
-import { experiments } from '../src/lib/experiments.ts';
+import { liveExperiments } from '../src/lib/experiments.ts';
 
 export { NOINDEX };
 
@@ -106,7 +106,7 @@ export function twinTitle(twin: string): string {
  * (sorted) so the count always matches the built tree — the guard against a
  * silently dropped page.
  */
-export function docsPages(dist: string, exps = experiments): DocsGroup[] {
+export function docsPages(dist: string, exps = liveExperiments): DocsGroup[] {
   const groups: DocsGroup[] = [];
   for (const exp of exps) {
     const indexFile = resolve(dist, exp.id, 'docs/index.html');

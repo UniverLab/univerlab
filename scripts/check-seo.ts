@@ -41,7 +41,7 @@ import { resolve } from 'node:path';
 import { DOCS_BASES, DOCS_EXCLUDED_REDIRECTS, ROOT, STATIC_RULES, docsRoute, isDocsExcluded, readDocsRedirects } from './build-redirects.ts';
 import { NOINDEX } from './build-md.ts';
 import { MAX_FULL_BYTES } from './build-llms.ts';
-import { experiments, type Experiment } from '../src/lib/experiments.ts';
+import { experiments, liveExperiments, type Experiment } from '../src/lib/experiments.ts';
 
 const DIST = resolve(ROOT, 'dist');
 
@@ -758,7 +758,7 @@ export function checkJsonLd(dist = DIST): Failure[] {
     if (DOCS_FILE.test(page.file)) failures.push(...checkDocsJsonLd(page));
   }
 
-  for (const exp of experiments) {
+  for (const exp of liveExperiments) {
     for (const prefix of ['', 'es/']) {
       const page = byFile.get(`${prefix}${exp.id}/index.html`);
       if (page) failures.push(...checkExperimentJsonLd(page, exp, prefix));

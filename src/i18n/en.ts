@@ -19,6 +19,7 @@ export const en = {
     sponsors: 'sponsor',
     log: 'Status',
     api: 'API',
+    archive: 'Archive',
   },
   footer: {
     quote:
@@ -49,6 +50,7 @@ export const en = {
     active: 'active',
     beta: 'beta',
     research: 'research',
+    archived: 'archived',
   },
   home: {
     hero: {
@@ -83,6 +85,8 @@ export const en = {
       kicker: '00 — Experiments',
       method:
         'Different problems, one method: take work that lives in fragile, manual procedures and make it explicit, reproducible and automatable — by a person or by an agent.',
+      archivedOne: '1 archived experiment →',
+      archivedMany: '{n} archived experiments →',
     },
     philosophy: {
       kicker: '02 — Philosophy',
@@ -395,39 +399,6 @@ export const en = {
         'CAD as code: from declaration to model — cadSpec',
       description:
         'Declarative geometry in TOML you can diff and review, with live browser preview. Compiled deterministically — the same source always yields the same model.',
-      koan: 'The drawing is not drawn. It is declared.',
-      lede:
-        'cadSpec treats a CAD drawing like source code: geometry declared in <strong>TOML</strong>, previewed live in the browser, compiled to a <strong>bit-identical</strong> DXF every time. <code>git diff</code> works on drawings now.',
-      hero: {
-        motif: '├─ 8.50 ─┤ · plan 1:1 · sheet 01 · declared, not drawn',
-        artifacts: {
-          coords: {
-            label: 'Coordinates',
-            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
-          },
-          dim: { label: 'Dimension' },
-          compile: { label: 'Compile', status: '✓ bit-identical DXF' },
-        },
-      },
-      genesis: {
-        kicker: 'Genesis',
-        title: 'For the architect in the house.',
-        body:
-          'My wife is an architect. Mid-specialization, she went looking for what I had — an AI that could actually help her draw — and found nothing. The vibe-coding equivalent for CAD simply didn’t exist: no AI-assisted drawing that behaved like real engineering. The whole internet is drunk on image generation, but images lie, and the real work lives in the drawings. cadSpec is the counter-bet: declarative, deterministic, AI-assisted CAD where the drawing is source code you can diff.',
-      },
-      notes: {
-        items: [
-          'Live preview server: edit a <code>.cf</code> file, the browser updates on save. Errors overlay instead of crashing.',
-          'Built for AI agents: <code>cadspec schema</code> teaches the language in one command; previews ship per-entity bounding boxes so agents can <em>see</em> the drawing.',
-          'Deterministic DXF out, legacy DXF in — existing drawings migrate into the declarative workflow.',
-        ],
-      },
-      faq: [
-        ['What is cadSpec for?',
-          'cadSpec is CAD as code for architects who need AI to help them draw. Declare geometry in TOML files, preview live in the browser, compile to bit-identical DXF. git diff works on drawings because the source is text.'],
-        ['Can AI agents read and generate CAD drawings with cadSpec?',
-          'Yes. cadSpec\'s TOML format is plain text that any LLM can read. Run cadspec schema to teach the language; previews include bounding boxes so agents can see the drawing.'],
-      ] as [string, string][],
     },
     'astro-denoise': {
       need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
@@ -776,6 +747,24 @@ export const en = {
       'Ideas that lived, then didn\'t. Each one is recorded: what it was, and the honest reason it was abandoned. Not a roadmap — a record.',
     what: 'What it was',
     why: 'Why it died',
+    archive: {
+      heading: 'Built and archived',
+      neverHeading: 'Never built',
+      wasBeta: 'was beta',
+      repo: 'Archived repository',
+      labels: {
+        built: 'What was built',
+        learned: 'What we learned',
+        closed: 'Why it closed',
+        instead: 'Use instead',
+      },
+      cadspec: {
+        built: 'A CAD-as-code CLI and Rust library. Two-dimensional geometry is declared in <code>.cf</code> TOML files (layers, arrays and mirrors, dimensions). <code>cadspec serve</code> previews it live in the browser; the tool validates and formats the source and compiles it to DXF, with PNG and SVG previews for AI agents. Shipped as 0.1.0 betas.',
+        learned: 'Declared sources diff and review cleanly, and the same source always compiles to the same DXF. The hard part was not the format. It was everything around the drawing: the viewer, the validation, and the interop with the tools people already use.',
+        closed: 'Existing tools already cover this better. ezdxf does 2D DXF from code, CadQuery does 3D, OpenSCAD has its own scripts and libraries, and FreeCAD has an MCP server. cadSpec could not compete with them, so no more tokens go into it.',
+        instead: 'ezdxf for 2D DXF. CadQuery for 3D parametric models. OpenSCAD for scripted solids. FreeCAD with its MCP server for agent-driven CAD.',
+      },
+    },
     epitaph: 'The record is kept because what dies here may live elsewhere.',
     ideas: [
       {

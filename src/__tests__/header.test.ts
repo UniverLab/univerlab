@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { experiments } from '../lib/experiments';
+import { experiments, liveExperiments } from '../lib/experiments';
 
 const HEADER = resolve(__dirname, '..', 'components', 'Header.astro');
 const src = readFileSync(HEADER, 'utf8');
@@ -47,7 +47,7 @@ describe('Header experiments dropdown', () => {
 
   it('panel lists every experiment in order, using localizePath and e.name, without filtering by status', () => {
     // Panel must map over experiments array exactly (no filter)
-    expect(src).toMatch(/experiments\.map\(/);
+    expect(src).toMatch(/[Ee]xperiments\.map\(/);
     expect(src).not.toMatch(/filter.*status/);
     // Each link must use localizePath('/' + e.id, lang) and show e.name
     expect(src).toMatch(/localizePath\('\/' \+ e\.id, lang\)/);
@@ -168,7 +168,7 @@ describe('Header experiments dropdown', () => {
     }
     // No filtered status: ensure every experiment appears, not a subset
     // Count entries in experiments.ts is the expected link count
-    expect(experiments.length).toBe(8);
+    expect(liveExperiments.length).toBe(experiments.length - 1);
   });
 
   it('trigger and every panel link carry the label class', () => {

@@ -40,11 +40,10 @@ export function localizePath(path: string, lang: Lang): string {
   return ensureSlash(pathname) + suffix;
 }
 
-/** Resolve an experiment's hero motif for rendering. Language-dependent
- *  motifs (registry value '@i18n') live in the translations dictionary; every
- *  other experiment carries its motif literally in src/lib/experiments.ts. */
-export function motifOf(exp: { motif: string }, t: Dict): string {
-  return exp.motif === '@i18n' ? t.experiments.cadspec.hero.motif : exp.motif;
+/** Resolve an experiment's hero motif for rendering. Every motif is carried
+ *  literally in src/lib/experiments.ts; `t` is kept so callers stay the same. */
+export function motifOf(exp: { motif: string }, _t: Dict): string {
+  return exp.motif;
 }
 
 /** Given the current URL and a target language, return the equivalent path. */
