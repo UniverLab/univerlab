@@ -1,4 +1,4 @@
-import { experiments, type Experiment, type Status, type ExperimentId } from './experiments';
+import { liveExperiments, type Experiment, type Status, type ExperimentId } from './experiments';
 
 export const LAB = {
   vbW: 460, vbH: 420,
@@ -18,7 +18,8 @@ export const LAB = {
 } as const;
 
 /** Satellite disc radii by experiment status, plus the pointer hit area. */
-export const SAT = { active: 6, beta: 5, research: 4, hit: 15 } as const;
+/** Archived bodies never reach the orbit diagram; the entry only keeps the map total over `Status`. */
+export const SAT = { active: 6, beta: 5, research: 4, archived: 4, hit: 15 } as const;
 /** Minimum allowed satellite centre distance, px (spec §3). */
 export const MIN_GAP = 26;
 /** Label box used by the solver; mirrors the <text> offsets in LabSystem.astro. */
@@ -46,7 +47,7 @@ export interface LabBody {
   pts: { x: number; y: number }[];
 }
 
-export function buildLabBodies(list: Experiment[] = experiments): LabBody[] {
+export function buildLabBodies(list: Experiment[] = liveExperiments): LabBody[] {
   const ranked = list
     .map((e, i) => ({ e, i }))
     .sort((a, z) => {

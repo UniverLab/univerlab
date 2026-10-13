@@ -19,7 +19,6 @@ import { experiments, byId } from '../lib/experiments';
 const ROOT = resolve(__dirname, '..', '..');
 const GLOBAL_CSS = resolve(__dirname, '..', 'styles', 'global.css');
 const SURFACES_CSS = resolve(__dirname, '..', 'styles', 'surfaces.css');
-const VIEW_CADSPEC = resolve(__dirname, '..', 'views', 'experiments', 'Cadspec.astro');
 
 /** Walk a directory, yielding every file path (skipping node_modules). */
 function walk(dir: string, out: string[] = []): string[] {
@@ -196,14 +195,6 @@ describe('PAL3 accent-tone contrast', () => {
   it('holds the cadSpec fill dot on white at >= 3:1 (large graphic)', () => {
     // cobalt fill on white — a dot, not body text (>= 3:1).
     expect(contrast(COBALT_FILL, WHITE)).toBeGreaterThanOrEqual(3);     // ~4.23
-  });
-
-  it('wires --essence-deep from Cadspec.astro into the tinted-plate rules', () => {
-    const view = readFileSync(VIEW_CADSPEC, 'utf8');
-    expect(view).toContain('--essence-deep: #365dc6');
-    for (const sel of ['.dim-t {', '.code {', '.chip-label {', '.chip-status {']) {
-      expect(ruleBody(view, sel)).toMatch(/--essence-deep/);
-    }
   });
 
   it('retires the lavender-white fan highlight from surfaces.css', () => {

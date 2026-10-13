@@ -13,14 +13,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { composeAbout } from './lab-about';
-import { experiments } from './experiments';
+import { liveExperiments } from './experiments';
 import { en } from '../i18n/en';
 
 export function buildSiteAbout(site: URL): string {
   return composeAbout({
     llmsText: readFileSync(resolve(process.cwd(), 'public/llms.txt'), 'utf8'),
-    experiments,
-    taglines: Object.fromEntries(experiments.map((e) => [e.id, en.experiments[e.id].tagline])),
+    experiments: liveExperiments,
+    taglines: Object.fromEntries(liveExperiments.map((e) => [e.id, en.experiments[e.id].tagline])),
     founder: {
       name: en.people.founder.name,
       role: en.people.founder.role,

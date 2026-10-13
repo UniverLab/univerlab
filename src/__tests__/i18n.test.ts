@@ -2,6 +2,7 @@
  * Tests for i18n system
  * Using Given-When-Then (GWT) pattern for clear test documentation
  */
+import { experiments as registry } from '../lib/experiments';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
@@ -131,7 +132,9 @@ describe('i18n system', () => {
   describe('Experiment data validation', () => {
     it('should have required fields for each experiment in both languages', () => {
       // Given: Experiment IDs from English dictionary
-      const enExpKeys = Object.keys(en.experiments);
+      // Archived experiments keep only their registry copy, so the page fields are live-only.
+      const archivedIds = new Set<string>(registry.filter((e) => e.status === 'archived').map((e) => e.id));
+      const enExpKeys = Object.keys(en.experiments).filter((id) => !archivedIds.has(id));
       
       // When: We check required fields for each experiment
       enExpKeys.forEach(expId => {
@@ -154,13 +157,13 @@ describe('i18n system', () => {
         });
         
         // And: Genesis should have required subfields
-        expect(enExp.genesis).toHaveProperty('kicker');
-        expect(enExp.genesis).toHaveProperty('title');
-        expect(enExp.genesis).toHaveProperty('body');
+        expect((enExp as { genesis: object }).genesis).toHaveProperty('kicker');
+        expect((enExp as { genesis: object }).genesis).toHaveProperty('title');
+        expect((enExp as { genesis: object }).genesis).toHaveProperty('body');
         
-        expect(esExp.genesis).toHaveProperty('kicker');
-        expect(esExp.genesis).toHaveProperty('title');
-        expect(esExp.genesis).toHaveProperty('body');
+        expect((esExp as { genesis: object }).genesis).toHaveProperty('kicker');
+        expect((esExp as { genesis: object }).genesis).toHaveProperty('title');
+        expect((esExp as { genesis: object }).genesis).toHaveProperty('body');
       });
     });
 

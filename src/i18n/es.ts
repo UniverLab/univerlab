@@ -20,6 +20,7 @@ export const es: Dict = {
     sponsors: 'sponsor',
     log: 'Estado',
     api: 'API',
+    archive: 'Archivo',
   },
   footer: {
     quote:
@@ -48,6 +49,7 @@ export const es: Dict = {
     active: 'activo',
     beta: 'beta',
     research: 'investigación',
+    archived: 'archivado',
   },
   home: {
     hero: {
@@ -83,6 +85,8 @@ export const es: Dict = {
       kicker: '00 — Experimentos',
       method:
         'Problemas distintos, un mismo método: tomar trabajo que vive en procedimientos frágiles y manuales, y volverlo explícito, reproducible y automatizable — por una persona o por un agente.',
+      archivedOne: '1 experimento archivado →',
+      archivedMany: '{n} experimentos archivados →',
     },
     philosophy: {
       kicker: '02 — Filosofía',
@@ -395,39 +399,6 @@ export const es: Dict = {
         'CAD as code: de la declaración al modelo — cadSpec',
       description:
         'Geometría declarativa en TOML que puedes revisar en un diff, con preview en el navegador. Compilación determinista: el mismo fuente siempre da el mismo modelo.',
-      koan: 'El dibujo no se dibuja. Se declara.',
-      lede:
-        'cadSpec trata un dibujo CAD como código fuente: la geometría se declara en <strong>TOML</strong>, se previsualiza en vivo en el navegador y se compila a un DXF <strong>idéntico</strong> bit a bit cada vez. Ahora <code>git diff</code> funciona sobre dibujos.',
-      hero: {
-        motif: '├─ 8.50 ─┤ · plano 1:1 · hoja 01 · declarado, no dibujado',
-        artifacts: {
-          coords: {
-            label: 'Coordenadas',
-            code: '[[line]]\nto = [8.50, 0.0]\nweight = 0.50',
-          },
-          dim: { label: 'Cota' },
-          compile: { label: 'Compilación', status: '✓ DXF idéntico bit a bit' },
-        },
-      },
-      genesis: {
-        kicker: 'Génesis',
-        title: 'Para la arquitecta de la casa.',
-        body:
-          'Mi esposa es arquitecta. En plena especialización, salió a buscar lo que yo tenía — una IA que de verdad la ayudara a dibujar — y no encontró nada. El equivalente del vibe-coding para CAD simplemente no existía: ningún dibujo asistido por IA que se comportara como ingeniería de verdad. La generación de imágenes domina el panorama, pero un dibujo técnico no es una imagen — es ingeniería. cadSpec es la apuesta contraria: CAD declarativo, determinista y asistido por IA, donde el dibujo es código fuente que puedes diferenciar con git.',
-      },
-      notes: {
-        items: [
-          'Servidor de vista previa en vivo: edita un archivo <code>.cf</code> y el navegador se actualiza al guardar. Los errores se superponen en vez de romper.',
-          'Hecho para agentes de IA: <code>cadspec schema</code> enseña el lenguaje en un comando; las vistas previas incluyen cajas delimitadoras por entidad para que los agentes puedan <em>ver</em> el dibujo.',
-          'DXF determinista a la salida, DXF heredado a la entrada — los dibujos existentes migran al flujo declarativo.',
-        ],
-      },
-      faq: [
-        ['¿Para qué sirve cadSpec?',
-          'cadSpec es CAD como código para arquitectos que necesitan IA que les ayude a dibujar. Declara geometría en archivos TOML, previsualiza en vivo en el navegador, compila a DXF idéntico cada vez. git diff funciona en dibujos porque el fuente es texto.'],
-        ['¿Pueden los agentes de IA leer y generar dibujos CAD con cadSpec?',
-          'Sí. El formato TOML de cadSpec es texto plano que cualquier LLM puede leer. Ejecuta cadspec schema para enseñar el lenguaje; las vistas previas incluyen cajas delimitadoras para que los agentes puedan ver el dibujo.'],
-      ] as [string, string][],
     },
     'astro-denoise': {
       need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
@@ -771,6 +742,24 @@ export const es: Dict = {
       'Ideas que vivieron y luego no. Cada una está registrada: qué era, y la razón honesta por la que fue abandonada. No es un roadmap — es un registro.',
     what: 'Qué era',
     why: 'Por qué murió',
+    archive: {
+      heading: 'Construidos y archivados',
+      neverHeading: 'Nunca construidos',
+      wasBeta: 'fue beta',
+      repo: 'Repositorio archivado',
+      labels: {
+        built: 'Qué se construyó',
+        learned: 'Qué aprendimos',
+        closed: 'Por qué se cerró',
+        instead: 'Usar en su lugar',
+      },
+      cadspec: {
+        built: 'Una CLI de CAD como código y una biblioteca en Rust. La geometría bidimensional se declara en archivos TOML <code>.cf</code> (capas, arreglos y espejos, cotas). <code>cadspec serve</code> la previsualiza en vivo en el navegador; la herramienta valida y formatea la fuente y la compila a DXF, con vistas previas PNG y SVG para agentes de IA. Se publicó como betas 0.1.0.',
+        learned: 'Las fuentes declarativas se comparan y revisan bien, y la misma fuente siempre compila al mismo DXF. Lo difícil no fue el formato. Fue todo lo que rodea al dibujo: el visor, la validación y la interoperabilidad con las herramientas que la gente ya usa.',
+        closed: 'Las herramientas existentes ya lo cubren mejor. ezdxf genera DXF 2D desde código, CadQuery hace 3D, OpenSCAD tiene sus propios scripts y bibliotecas, y FreeCAD tiene un servidor MCP. cadSpec no podía competir con ellas, así que no se le dedicarán más tokens.',
+        instead: 'ezdxf para DXF 2D. CadQuery para modelos 3D paramétricos. OpenSCAD para sólidos scripteados. FreeCAD con su servidor MCP para CAD dirigido por agentes.',
+      },
+    },
     epitaph: 'El registro existe porque lo que aquí muere puede vivir en otro lugar.',
     ideas: [
       {

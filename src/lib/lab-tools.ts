@@ -11,7 +11,7 @@
  * `list_announcements` fetch the public announcements API; `about_univerlab`
  * and `translate_mission_date` are pure and make no network calls.
  */
-import { experiments } from './experiments';
+import { liveExperiments } from './experiments';
 import {
   ENTRIES_DEFAULT_LIMIT,
   ENTRIES_MAX_LIMIT,
@@ -28,7 +28,7 @@ import {
 import { translateMissionDate } from './mission-time';
 
 /** The topics a tool accepts: the registry's experiment slugs plus `general`. */
-export const TOPICS: readonly string[] = ['general', ...experiments.map((e) => e.id)];
+export const TOPICS: readonly string[] = ['general', ...liveExperiments.map((e) => e.id)];
 
 /** What `registerTool` needs. Only the members the draft defines are declared. */
 export interface McpTool {

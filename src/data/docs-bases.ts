@@ -18,7 +18,6 @@ export const DOCS_BASES: Readonly<Record<string, string>> = {
   texforge: '../texforge/docs',
   gitkit: '../gitkit/docs',
   ghscaff: '../ghscaff/docs',
-  cadspec: '../cadspec/docs',
   demostage: '../demostage/docs',
 };
 

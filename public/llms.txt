@@ -16,7 +16,6 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [TexForge](https://univerlab.org/texforge/): EXP-002 (active) — a unified workspace and CLI for LaTeX that compiles documents to PDF, renders diagrams, and manages templates without installing a multi-gigabyte TeX distribution.
 - [GitKit](https://univerlab.org/gitkit/): EXP-003 (active) — git tooling that wires up `.gitattributes` and git hooks automatically the moment a repository lands on disk, so every repo starts configured.
 - [ghScaff](https://univerlab.org/ghscaff/): EXP-004 (active) — scaffolds a complete GitHub repository (manifests, entry points, CI/release workflows) in one step; Rust today, more languages on the way.
-- [cadSpec](https://univerlab.org/cadspec/): EXP-005 (beta) — declarative CAD as code in TOML: semantic, diffable, reviewable drawings that compile to DXF, built so AI agents can read and generate them.
 - [Astro Denoise](https://univerlab.org/astro-denoise/): EXP-006 (research) — a reproducible benchmarking platform for denoising methods on astronomical images (a master's thesis project).
 - [DemoStage](https://univerlab.org/demostage/): EXP-007 (active) — records terminal and app demos as editable event files you can prune, pace, and replay, exporting to cast, html, or gif.
 - [Quorum](https://univerlab.org/quorum/): EXP-008 (active) — serverless planning poker that runs peer-to-peer over WebRTC: share a link, estimate together, no sign-up required.
@@ -24,6 +23,7 @@ Different problems, one method: take work that lives in fragile, manual procedur
 ## Optional
 
 - [GitHub organization](https://github.com/UniverLab): Source code for every experiment.
+- [Archive](https://univerlab.org/archive/): Experiments that were built and discontinued, and ideas that were never built, each recorded with the reason.
 - [Spanish site](https://univerlab.org/es/): The full site in Spanish.
 
 ## Live
@@ -48,7 +48,7 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Usage Patterns](https://univerlab.org/canopy/docs/usage-patterns/index.md): The shapes a graph can take, what each one is good at, and where each one breaks. Canopy documentation — A graph engine for AI coding agents — every harness
 - [Recipes](https://univerlab.org/canopy/docs/recipes/index.md): Graphs built end to end — the actual calls, the actual prompts, and what breaks. Canopy documentation — A graph engine for AI coding agents — every harness, one
 - [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
-- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 96 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 98 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 
 ### TeXForge
@@ -86,17 +86,6 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Apply Mode](https://univerlab.org/ghscaff/docs/apply-mode/index.md): Idempotently bring an existing repository up to your conventions. ghScaff documentation — An interactive wizard that scaffolds and enforces conventions on
 - [Templates & Conventions](https://univerlab.org/ghscaff/docs/templates-and-conventions/index.md): Boilerplate templates, the standard label set, branch protection rules and template secrets. ghScaff documentation — An interactive wizard that scaffolds and
 - [CLI Reference](https://univerlab.org/ghscaff/docs/cli-reference/index.md): Every ghscaff command and flag. ghScaff documentation — An interactive wizard that scaffolds and enforces conventions on GitHub repositories.
-
-### cadSpec
-
-- [Cadspec](https://univerlab.org/cadspec/docs/index.md): CAD as code — declarative CAD in TOML, live browser preview, deterministic DXF output. cadSpec documentation — CAD as code: declarative geometry compiled
-- [Installation](https://univerlab.org/cadspec/docs/installation/index.md): Install cadspec with the quick installer, cargo, or from source. cadSpec documentation — CAD as code: declarative geometry compiled deterministically to DXF.
-- [Quick Start](https://univerlab.org/cadspec/docs/quickstart/index.md): Scaffold a project, preview it live, and compile to DXF. cadSpec documentation — CAD as code: declarative geometry compiled deterministically to DXF.
-- [The .cf Format](https://univerlab.org/cadspec/docs/cf-format/index.md): Layers, primitives, styled dimensions, construction tools and constraints. cadSpec documentation — CAD as code: declarative geometry compiled deterministically
-- [Live Preview](https://univerlab.org/cadspec/docs/live-preview/index.md): The cadspec serve loop — pan/zoom, inspector, layer states, 3D view, error overlay. cadSpec documentation — CAD as code: declarative geometry compiled
-- [Building & Export](https://univerlab.org/cadspec/docs/building-and-export/index.md): Deterministic DXF compilation, watch mode, validation, and DXF import. cadSpec documentation — CAD as code: declarative geometry compiled deterministically to
-- [Working with Agents](https://univerlab.org/cadspec/docs/agents/index.md): The agent-facing toolchain — schema discovery, JSON reports, visual previews with metadata. cadSpec documentation — CAD as code: declarative geometry compiled
-- [CLI Reference](https://univerlab.org/cadspec/docs/cli-reference/index.md): Every cadspec command and flag. cadSpec documentation — CAD as code: declarative geometry compiled deterministically to DXF.
 
 ### DemoStage
 

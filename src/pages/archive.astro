@@ -1,8 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { useTranslations } from '../i18n';
+import { archivedExperiments } from '../lib/experiments';
 const t = useTranslations('en');
 const s = t.secret;
+const a = s.archive;
+const copyOf = (id: string) =>
+  (a as unknown as Record<string, Record<string, string>>)[id] ?? {};
+const monthYear = (d?: string) =>
+  d ? new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : '';
 ---
 <BaseLayout
   title="The Archive — abandoned UniverLab ideas, recorded"
@@ -18,7 +24,40 @@ const s = t.secret;
 
   <hr class="rule" />
 
+  <section class="wrap built">
+    <h2 class="built-heading label">{a.heading}</h2>
+    {archivedExperiments.map((exp) => {
+      const c = copyOf(exp.id);
+      return (
+        <article class="built-entry" id={exp.number.toLowerCase()} style={`--essence: ${exp.essenceHex}`}>
+          <div class="b-head">
+            <span class="b-num mono">{exp.number}</span>
+            <h3 class="b-name">{exp.name}</h3>
+          </div>
+          <p class="b-meta mono">
+            {monthYear(exp.startDate)} – {monthYear(exp.endDate)} · {a.wasBeta}
+          </p>
+          <dl class="t-dl">
+            <dt class="t-dt label">{a.labels.built}</dt>
+            <dd class="t-dd" set:html={c.built} />
+            <dt class="t-dt label">{a.labels.learned}</dt>
+            <dd class="t-dd" set:html={c.learned} />
+            <dt class="t-dt label">{a.labels.closed}</dt>
+            <dd class="t-dd" set:html={c.closed} />
+            <dt class="t-dt label">{a.labels.instead}</dt>
+            <dd class="t-dd" set:html={c.instead} />
+            <dt class="t-dt label">{a.repo}</dt>
+            <dd class="t-dd"><a class="b-repo mono" href={exp.github} target="_blank" rel="noopener noreferrer">{exp.github.replace('https://', '')}</a></dd>
+          </dl>
+        </article>
+      );
+    })}
+  </section>
+
+  <hr class="rule" />
+
   <section class="wrap ideas">
+    <h2 class="built-heading label">{a.neverHeading}</h2>
     {s.ideas.map((idea, i) => (
       <article class="tombstone">
         <div class="t-num mono">{String(i + 1).padStart(2, '0')}</div>
@@ -64,6 +103,24 @@ const s = t.secret;
   .t-dt { display: block; color: var(--ink-faint); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.2rem; }
   .t-dd { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; max-width: 46rem; }
   .t-why { color: var(--ink-faint); }
+
+  /* Built and archived: the essence colour is mixed mostly back to grey, so a
+     discontinued experiment reads as closed rather than active. */
+  .built { padding-block: 2.5rem 1rem; display: flex; flex-direction: column; }
+  .built-heading { margin: 0 0 1.2rem; color: var(--ink-faint); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
+  .built-entry {
+    display: grid; gap: 0.9rem;
+    padding: 1.8rem 0 1.8rem 1.4rem;
+    border-left: 2px solid color-mix(in srgb, var(--essence) 28%, var(--ink-faint));
+    margin-bottom: 1.5rem;
+  }
+  .b-head { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .b-num { color: var(--ink-faint); font-size: 0.78rem; }
+  .b-name { margin: 0; font-family: var(--font-serif); font-style: italic; font-size: 1.18rem; font-weight: 500; color: var(--ink-dim); }
+  .b-meta { margin: 0; color: var(--ink-faint); font-size: 0.74rem; letter-spacing: 0.04em; }
+  .b-repo { color: var(--ink-dim); font-size: 0.8rem; text-decoration-color: var(--ink-faint); }
+  .built-entry .t-dl { margin-top: 0.2rem; }
+  .built-entry .t-dd :global(code) { font-family: var(--font-mono); font-size: 0.88em; }
 
   .epitaph-section { padding-block: 2.5rem 5rem; }
   .epitaph {

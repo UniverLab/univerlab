@@ -8,7 +8,7 @@ import {
   switchLangPath,
   languages,
 } from '../i18n';
-import { experiments } from '../lib/experiments';
+import { experiments, liveExperiments } from '../lib/experiments';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -89,7 +89,7 @@ const signals = [
               aria-controls="exp-panel"
             >{item.label}<span class="exp-caret" aria-hidden="true"></span></button>
             <div id="exp-panel" class="exp-panel" role="group" aria-label={t.nav.experiments}>
-              {experiments.map((e) => (
+              {liveExperiments.map((e) => (
                 <a href={localizePath('/' + e.id, lang)} class="exp-link label">{e.name}</a>
               ))}
             </div>

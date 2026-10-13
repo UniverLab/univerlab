@@ -6,7 +6,7 @@
 //
 // Runs on plain Node (24+) via native type-stripping.
 // Usage: npm run apply:github
-import { experiments } from '../src/lib/experiments.ts';
+import { liveExperiments as experiments } from '../src/lib/experiments.ts';
 import { en } from '../src/i18n/en.ts';
 import { parseGitHubUrl } from '../src/lib/github-sync.ts';
 
