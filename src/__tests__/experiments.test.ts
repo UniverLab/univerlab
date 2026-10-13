@@ -54,7 +54,7 @@ describe('experiments.ts', () => {
           // Given: An experiment with a status field
           // When: We validate the status value
           // Then: It should be one of the allowed values
-          expect(['active', 'beta', 'research']).toContain(exp.status);
+          expect(['active', 'beta', 'research', 'archived']).toContain(exp.status);
         });
 
         it(`should have valid essence color hex for experiment ${exp.id}`, () => {

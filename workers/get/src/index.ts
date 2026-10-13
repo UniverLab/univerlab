@@ -24,7 +24,6 @@ const TOOLS: Record<string, { repo: string; win: boolean }> = {
   texforge: { repo: 'texforge', win: true },
   gitkit: { repo: 'gitkit', win: true },
   ghscaff: { repo: 'ghscaff', win: true },
-  cadspec: { repo: 'cadspec', win: true },
 
   demostage: { repo: 'demostage', win: true },
 };

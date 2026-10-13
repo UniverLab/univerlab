@@ -193,7 +193,7 @@ const THEMES: Record<Theme, Runner> = {
     // "Recent pointer, inside the sheet" — one expression, used both by the
     // spawn gate and by `add`, so the two can never disagree. The in-bounds
     // test keeps a pointer parked outside the canvas from piling elements on
-    // the edge (on /cadspec the canvas is the viewport, so it is always true;
+    // the edge (on a full-page surface the canvas is the viewport, so it is always true;
     // on the home card it is false whenever the pointer is off-card).
     const recentAt = (t: number) =>
       hasPointer && t - lastMove < RECENT_MS &&

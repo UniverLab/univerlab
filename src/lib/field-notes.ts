@@ -1,5 +1,5 @@
 /** Field-notes selection logic — pure, unit-tested. Components only render. */
-import { experiments, type Experiment } from './experiments';
+import { liveExperiments, type Experiment } from './experiments';
 import { startSolLabel } from './mission-time';
 
 export interface Entry {
@@ -26,7 +26,7 @@ export interface RoadmapItem {
 /** Known topics derived from the registry + 'general' — never a hardcoded list. */
 export const KNOWN_TOPICS: ReadonlySet<string> = new Set([
   'general',
-  ...experiments.map((e) => e.id),
+  ...liveExperiments.map((e) => e.id),
 ]);
 
 /** Unknown / null / non-string → 'general' (mirrors the worker + status page). */

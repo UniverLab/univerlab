@@ -3,7 +3,7 @@
 import type { ExperimentId } from '../i18n/en';
 export type { ExperimentId };
 
-export type Status = 'active' | 'beta' | 'research';
+export type Status = 'active' | 'beta' | 'research' | 'archived';
 /** The lab tools that made an experiment — ids of experiments whose tools built this one.
  *  Only the four with verified evidence (see `builtWith` below) exist here. */
 export type BuiltWith = 'canopy' | 'ghscaff' | 'demostage' | 'gitkit';
@@ -41,6 +41,9 @@ export interface Experiment {
   motif: string;
   /** First commit date (YYYY-MM-DD). Shown in genesis section as "TERRA YYYY · Mon DD". */
   startDate?: string;
+  /** Date the experiment was archived (YYYY-MM-DD). Archived experiments leave every
+   *  live listing and appear on /archive under "Built and archived". */
+  endDate?: string;
   /** Fixed visual surface (data-surface on <html>) for the page + its docs.
    *  Omitted → the default dark lab theme. */
   surface?: string;
@@ -106,7 +109,7 @@ export const experiments: Experiment[] = [
   { id: 'texforge', name: 'TeXForge', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', bg: 'forge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
-  { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'beta', essenceHex: '#4874ea', essenceTextHex: '#3f6de9', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', motif: '@i18n', surface: 'blueprint', startDate: '2026-04-10', install: both('cadspec'), hasDocs: true, thread: '@i18n', builtWith: ['ghscaff', 'gitkit'] },
+  { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'archived', essenceHex: '#4874ea', essenceTextHex: '#3f6de9', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', motif: '├─ 8.50 ─┤ · plan 1:1 · declared, not drawn', surface: 'blueprint', startDate: '2026-04-10', endDate: '2026-10-13', thread: '@i18n', builtWith: ['ghscaff', 'gitkit'] },
   { id: 'astro-denoise', name: 'Astro Denoise', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab', bg: 'starfield', motif: '⁘∴⁙∵ ──∿──→ · ✦ ·', surface: 'observatory', startDate: '2026-04-10', thread: '@i18n', builtWith: [] },
   { id: 'demostage', name: 'DemoStage', number: 'EXP-007', status: 'active', essenceHex: '#fa5838', github: 'https://github.com/UniverLab/demostage', bg: 'takes', motif: '▶──●────●───□', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'quorum', name: 'Quorum', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', motif: '○──◇──○', surface: 'quorum', startDate: '2026-06-30', url: 'https://quorum.univerlab.org', circadian: true, thread: '@i18n', builtWith: ['ghscaff', 'gitkit'],
@@ -116,6 +119,18 @@ export const experiments: Experiment[] = [
     },
   },
 ];
+
+/** True for experiments that were built, shipped and then discontinued. */
+export function isArchived(e: Pick<Experiment, 'status'>): boolean {
+  return e.status === 'archived';
+}
+
+/** Experiments that are still live — every listing (home grid, nav, status,
+ *  banners, backgrounds rotation, lab feed, sitemap, llms.txt, webmcp) uses this. */
+export const liveExperiments: Experiment[] = experiments.filter((e) => !isArchived(e));
+
+/** Discontinued experiments, shown on /archive under "Built and archived". */
+export const archivedExperiments: Experiment[] = experiments.filter(isArchived);
 
 /** Look up an experiment by id, failing fast if the id is unknown. */
 export function byId(id: string): Experiment {

@@ -115,9 +115,10 @@ describe('topics', () => {
   it('normalizes unknown/null to general and covers every registry id', () => {
     expect(normalizeTopic(null)).toBe('general');
     expect(normalizeTopic('nonsense')).toBe('general');
-    for (const e of ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'astro-denoise', 'demostage', 'quorum']) {
+    for (const e of ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum']) {
       expect(KNOWN_TOPICS.has(e)).toBe(true);
     }
+    expect(KNOWN_TOPICS.has('cadspec')).toBe(false);
     expect(KNOWN_TOPICS.has('general')).toBe(true);
   });
 });

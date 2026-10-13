@@ -37,7 +37,6 @@ for (const id of [
   'Texforge',
   'Gitkit',
   'Ghscaff',
-  'Cadspec',
   'AstroDenoise',
   'DemoStage',
   'Quorum',
@@ -204,21 +203,13 @@ describe('Cards window — registry is the single source of truth', () => {
     }
   });
 
-  it('should point exactly cadspec at the i18n motif', () => {
-    const i18n = experiments.filter((e) => e.motif === '@i18n');
-    expect(i18n.map((e) => e.id)).toEqual(['cadspec']);
+  it('should carry every motif literally in the registry (no @i18n motifs left)', () => {
+    expect(experiments.filter((e) => e.motif === '@i18n')).toEqual([]);
   });
 
-  it('should resolve motifs through motifOf — i18n for cadspec, literal elsewhere', () => {
-    // Given: both kinds of registry entry and a dictionary
-    const t = en;
-    // When/Then: the i18n pointer resolves to the dictionary's own motif…
-    expect(motifOf({ motif: '@i18n' }, t)).toBe(t.experiments.cadspec.hero.motif);
-    // …and every literal motif passes through untouched
+  it('should resolve every motif through motifOf to the registry literal', () => {
     for (const exp of experiments) {
-      expect(motifOf(exp, t)).toBe(
-        exp.motif === '@i18n' ? t.experiments.cadspec.hero.motif : exp.motif
-      );
+      expect(motifOf(exp, en)).toBe(exp.motif);
     }
   });
 
@@ -242,11 +233,6 @@ describe('Cards window — experiment views render the registry motif', () => {
     });
   }
 
-  it('Cadspec hero-mark should render {motifOf(exp, t)} (i18n motif stays)', () => {
-    expect(VIEWS.Cadspec).toMatch(
-      /<p slot="hero-mark"[^>]*>\{motifOf\(exp, t\)\}<\/p>/
-    );
-  });
 });
 
 describe('Cards window — ExperimentLayout is the zoom target', () => {

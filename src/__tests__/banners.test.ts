@@ -10,7 +10,7 @@ describe('banners.ts', () => {
   });
 
   it('should have banners for all experiments', () => {
-    const expectedIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'cadspec', 'demostage', 'quorum'];
+    const expectedIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'demostage', 'quorum'];
     expectedIds.forEach(id => {
       expect(banners).toHaveProperty(id);
     });

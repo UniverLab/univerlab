@@ -4,7 +4,7 @@ import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
 import FieldNotes from '../components/FieldNotes.astro';
-import { byId, experiments, type ExperimentId } from '../lib/experiments';
+import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
@@ -21,9 +21,9 @@ const statusLabel = t.status[exp.status];
 const surface = exp.surface;
 
 // Cyclical prev/next so you can browse experiments without going back home.
-const idx = experiments.findIndex((x) => x.id === id);
-const prevExp = experiments[(idx - 1 + experiments.length) % experiments.length];
-const nextExp = experiments[(idx + 1) % experiments.length];
+const idx = liveExperiments.findIndex((x) => x.id === id);
+const prevExp = liveExperiments[(idx - 1 + liveExperiments.length) % liveExperiments.length];
+const nextExp = liveExperiments[(idx + 1) % liveExperiments.length];
 
 // Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
 const genesisDate = exp.startDate

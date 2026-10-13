@@ -15,7 +15,7 @@
  * Requires Node ≥ 24 with --experimental-strip-types (see build-og.mjs).
  */
 import { readFileSync } from 'node:fs';
-import { experiments } from '../../src/lib/experiments.ts';
+import { liveExperiments as experiments } from '../../src/lib/experiments.ts';
 import { en } from '../../src/i18n/en.ts';
 import { getTagline } from '../../src/lib/github-sync.ts';
 
