@@ -4,7 +4,14 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  ci:
+    name: CI on main
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
