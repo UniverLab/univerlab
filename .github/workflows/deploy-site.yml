@@ -138,6 +138,7 @@ jobs:
       # missing Function is not an error. That is how markdown negotiation was
       # unit-tested, merged, released and still absent in production.
       - name: Publish to Cloudflare Pages
+        id: pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -150,7 +151,17 @@ jobs:
       # origin rather than against the source. A unit test proves the routing
       # logic; only this proves the routing logic was deployed.
       - name: Verify the agent-facing surface is live
+        env:
+          DEPLOYMENT_URL: ${{ steps.pages.outputs.deployment-url }}
         run: |
+          # Checked against this deployment's own *.pages.dev URL, not
+          # univerlab.org: the zone's bot protection answers requests from
+          # datacenter IPs (GitHub runners included) with a 403 challenge
+          # (server-timing: chlray), which looked like a missing middleware
+          # for two releases. The deployment URL serves exactly what was
+          # just uploaded, Functions included.
+          BASE="${DEPLOYMENT_URL%/}"
+          [ -n "$BASE" ] || { echo "::error::wrangler returned no deployment URL"; exit 1; }
           # `wrangler pages deploy` returns before Pages promotes the new
           # deployment onto the production domain, so every assertion here has
           # to be able to wait. Without that, a green check means "the previous
@@ -188,19 +199,20 @@ jobs:
           # Content negotiation: the middleware has to be bundled and running.
           # A missing Functions bundle is not a deploy error, which is how this
           # shipped broken and stayed green for a week.
-          expect_content_type https://univerlab.org/ \
+          expect_content_type "$BASE/" \
             'text/markdown; charset=utf-8' 'Accept: text/markdown'
 
           # Exact match, never a prefix: Pages applies every matching _headers
           # rule and joins their values, so an overlapping rule produces
           # 'application/json; charset=utf-8, text/markdown; charset=utf-8' —
           # right prefix, unparseable value.
-          index=https://univerlab.org/.well-known/agent-skills/index.json
+          index="$BASE/.well-known/agent-skills/index.json"
           expect_content_type "$index" 'application/json; charset=utf-8'
 
           # And a skill taken from the index itself, so the assertion follows
           # whatever the index actually advertises.
-          skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//')
+          # The index advertises univerlab.org URLs; fetch the same path here.
+          skill=$(curl -sS "$index" | grep -m1 '"url"' | sed 's/.*: "//; s/",*$//; s#^https://univerlab.org#'"$BASE"'#')
           expect_content_type "$skill" 'text/markdown; charset=utf-8'
 
       # IndexNow notifies Bing (and through it Copilot) plus the other
