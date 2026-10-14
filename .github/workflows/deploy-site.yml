@@ -175,6 +175,13 @@ jobs:
               sleep 20
             done
             echo "::error::$url served Content-Type '$ct'; expected exactly '$expected'"
+            # What the runner actually got: the POP (cf-ray), cache status and
+            # Vary tell an edge or routing problem from a missing middleware.
+            if [ -n "$header" ]; then
+              curl -sS -D - -o /dev/null -H "$header" "$url" || true
+            else
+              curl -sS -D - -o /dev/null "$url" || true
+            fi
             return 1
           }
 
