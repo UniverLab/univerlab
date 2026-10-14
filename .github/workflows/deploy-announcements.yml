@@ -1,11 +1,6 @@
 name: Deploy announcements worker
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'workers/announcements/**'
-      - '.github/workflows/deploy-announcements.yml'
   workflow_dispatch: {}
 
 jobs:

@@ -1,14 +1,8 @@
 name: Deploy get worker
 
-# Deploys workers/get (get.univerlab.org) to Cloudflare, but only when that
-# folder changes. The Astro site itself is built/deployed by Cloudflare Pages'
-# Git integration, not here.
+# Deploys workers/get (get.univerlab.org) to Cloudflare. Run by hand: in the
+# trunk-based flow nothing deploys on merge. The site is deploy-site.yml.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'workers/get/**'
-      - '.github/workflows/deploy-worker.yml'
   workflow_dispatch: {}
 
 jobs:
