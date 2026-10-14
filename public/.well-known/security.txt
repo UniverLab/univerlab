@@ -1,0 +1,5 @@
+Contact: https://github.com/UniverLab/univerlab/security/advisories/new
+Expires: 2027-10-14T00:00:00.000Z
+Preferred-Languages: en, es
+Canonical: https://univerlab.org/.well-known/security.txt
+Policy: https://github.com/UniverLab/.github/security/policy
