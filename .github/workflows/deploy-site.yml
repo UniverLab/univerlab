@@ -4,10 +4,10 @@ name: Deploy site (Cloudflare Pages)
 # Cloudflare Pages' own Git build only checks out THIS repo, so the docs would
 # be missing. Instead we build here in CI: check out this repo plus a
 # sparse-checkout of just the docs/ folder of each sibling, then publish dist
-# with Wrangler. Fires on push to main (after demos land) or manually.
+# with Wrangler. Trunk-based flow: changes land on main without deploying;
+# a release is this workflow run by hand, and it refuses to run unless
+# package.json carries a version that has no tag yet.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       indexnow:
@@ -40,23 +40,16 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
-      - name: Check if tag already exists
-        id: check_tag
+      - name: Check the version was bumped
         run: |
           if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::error::${{ steps.version.outputs.tag }} is already released. Bump the version in package.json (and npm install --package-lock-only) before releasing."
+            exit 1
           fi
 
       - name: Create and push tag
         id: create
         run: |
-          if [ "${{ steps.check_tag.outputs.exists }}" = "true" ]; then
-            echo "created=false" >> $GITHUB_OUTPUT
-            echo "Tag ${{ steps.version.outputs.tag }} already exists — skipping"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
