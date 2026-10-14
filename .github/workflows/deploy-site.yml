@@ -161,7 +161,7 @@ jobs:
             url=$1
             expected=$2
             header=${3:-}
-            for attempt in 1 2 3 4 5 6; do
+            for attempt in $(seq 1 15); do
               if [ -n "$header" ]; then
                 ct=$(curl -sS -o /dev/null -w '%{content_type}' -H "$header" "$url" || true)
               else
