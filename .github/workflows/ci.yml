@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
   workflow_dispatch:
+  # The deploy workflows call it to run CI again on main, where merged PRs meet.
+  workflow_call:
 
 permissions:
   contents: read

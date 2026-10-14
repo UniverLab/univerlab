@@ -20,13 +20,11 @@ permissions:
   contents: write
 
 jobs:
-  create-tag:
-    name: Create Release Tag
+  version:
+    name: Check Version Bump
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.version.outputs.tag }}
-      version: ${{ steps.version.outputs.version }}
-      created: ${{ steps.create.outputs.created }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,9 +34,7 @@ jobs:
         id: version
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Check the version was bumped
         run: |
@@ -47,17 +43,16 @@ jobs:
             exit 1
           fi
 
-      - name: Create and push tag
-        id: create
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
-          git push origin "${{ steps.version.outputs.tag }}"
-          echo "created=true" >> $GITHUB_OUTPUT
+  # Every PR passed CI on its own; this runs it on main, where they meet.
+  ci:
+    name: CI on main
+    uses: ./.github/workflows/ci.yml
 
   deploy:
-    needs: create-tag
+    needs: [version, ci]
+    if: github.ref == 'refs/heads/main'
+    # Waits for an admin's approval; the environment only accepts main.
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout landing
@@ -261,3 +256,17 @@ jobs:
           if [ "$STATUS" = "200" ] || [ "$STATUS" = "202" ]; then exit 0; fi
           echo "::warning::IndexNow returned HTTP ${STATUS:-000}: $(cat "$BODY")"
           exit 0
+
+  tag:
+    name: Create Release Tag
+    needs: [version, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.version.outputs.tag }}" -m "Release ${{ needs.version.outputs.tag }}"
+          git push origin "${{ needs.version.outputs.tag }}"
