@@ -35,7 +35,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
     "@types/turndown": "^5.0.6",
-    "astro": "^7.1.6",
+    "astro": "^7.2.8",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "ts-jest": "^29.4.11",
