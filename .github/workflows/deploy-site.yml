@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.version.outputs.tag }}
+      announcements: ${{ steps.changes.outputs.announcements }}
+      get: ${{ steps.changes.outputs.get }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +44,24 @@ jobs:
             echo "::error::${{ steps.version.outputs.tag }} is already released. Bump the version in package.json (and npm install --package-lock-only) before releasing."
             exit 1
           fi
+
+      # The workers ride with the site's release, but deploy only when their
+      # folder changed since the last release tag, so one approval covers the
+      # repo and nobody has to remember a second or third deploy.
+      # deploy-announcements.yml and deploy-worker.yml stay for hotfixes.
+      - name: Detect worker changes since the last release
+        id: changes
+        run: |
+          last=$(git describe --tags --abbrev=0 --match 'v*' HEAD 2>/dev/null || true)
+          for w in announcements get; do
+            if [ -z "$last" ] || ! git diff --quiet "$last" HEAD -- "workers/$w"; then
+              echo "$w=true" >> $GITHUB_OUTPUT
+              echo "workers/$w changed since ${last:-the beginning}: deploying"
+            else
+              echo "$w=false" >> $GITHUB_OUTPUT
+              echo "workers/$w unchanged since $last: skipping"
+            fi
+          done
 
   # Every PR passed CI on its own; this runs it on main, where they meet.
   ci:
@@ -275,6 +295,34 @@ jobs:
           if [ "$STATUS" = "200" ] || [ "$STATUS" = "202" ]; then exit 0; fi
           echo "::warning::IndexNow returned HTTP ${STATUS:-000}: $(cat "$BODY")"
           exit 0
+
+      - name: Set up the announcements worker
+        if: needs.version.outputs.announcements == 'true'
+        working-directory: univerlab/workers/announcements
+        run: |
+          npm ci
+          npm run typecheck
+
+      # No wranglerVersion pin: the action reuses the wrangler from the
+      # worker's package-lock, so CI and local deploy the same version.
+      - name: Deploy the announcements worker
+        if: needs.version.outputs.announcements == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: univerlab/workers/announcements
+          command: deploy
+
+      - name: Deploy the get worker
+        if: needs.version.outputs.get == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: univerlab/workers/get
+          wranglerVersion: '4.111.0'
+          command: deploy
 
   tag:
     name: Create Release Tag
