@@ -834,10 +834,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "day",
-      "width": 350,
+      "width": 372,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the cream parchment); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -846,10 +846,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "day",
-      "width": 350,
+      "width": 372,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the cream parchment); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -858,10 +858,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "day",
-      "width": 700,
+      "width": 743,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the cream parchment); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -870,10 +870,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "day",
-      "width": 700,
+      "width": 743,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the cream parchment); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -882,10 +882,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "night",
-      "width": 350,
+      "width": 370,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum-noche.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the dark warm-black paper); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -894,10 +894,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "night",
-      "width": 350,
+      "width": 370,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum-noche.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the dark warm-black paper); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -906,10 +906,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "night",
-      "width": 699,
+      "width": 741,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum-noche.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the dark warm-black paper); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
@@ -918,10 +918,10 @@
       "kind": "machine",
       "experiment": "quorum",
       "variant": "night",
-      "width": 699,
+      "width": 741,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/quorum-noche.png",
-      "alt": "Isometric engraving of a parliamentary ball counter with a glass column of ochre balls and a tally dial, on a square wooden pedestal.",
+      "alt": "Isometric engraving of a parliamentary ballot counter: a funnel feeding two rails into aye and no tubes of ochre balls, with a tally dial, on a square wooden pedestal.",
       "notes": "Plates v2 (Intelligence 6d07dd49). Transparent background (ink keyed from the dark warm-black paper); every plate shares the same height so a row lines up. Regenerate with laminas.toml / laminas-noche.toml and tools/lamina_web.py."
     },
     {
