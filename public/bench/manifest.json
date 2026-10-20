@@ -1,0 +1,148 @@
+{
+  "assets": [
+    {
+      "name": "canon-sample-day-1600-avif",
+      "file": "canon/sample-day.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-day.png",
+      "alt": "Etched scientific instrument with a round glass window, on a brass plinth, on cream parchment.",
+      "notes": "Grand Test Bench canon sample (day). Generated with flux2-klein-4b from canon.toml entry sample-day-s1101 (seed 1101), finished by finish.py --lens 828,522,200 --mirror (mirrored so the contact shadow falls to the lower right; paper mapped to #f4f0ea; lens snapped to the canon window). Viewer: circle inscribed in the viewer box; clip the live canvas with border-radius: 50%. Plate ground equals --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-day-1600-webp",
+      "file": "canon/sample-day.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-day.png",
+      "alt": "Etched scientific instrument with a round glass window, on a brass plinth, on cream parchment.",
+      "notes": "Grand Test Bench canon sample (day). Generated with flux2-klein-4b from canon.toml entry sample-day-s1101 (seed 1101), finished by finish.py --lens 828,522,200 --mirror (mirrored so the contact shadow falls to the lower right; paper mapped to #f4f0ea; lens snapped to the canon window). Viewer: circle inscribed in the viewer box; clip the live canvas with border-radius: 50%. Plate ground equals --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-day-800-avif",
+      "file": "canon/sample-day-800.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-day.png",
+      "alt": "Etched scientific instrument with a round glass window, on a brass plinth, on cream parchment.",
+      "notes": "Grand Test Bench canon sample (day). Generated with flux2-klein-4b from canon.toml entry sample-day-s1101 (seed 1101), finished by finish.py --lens 828,522,200 --mirror (mirrored so the contact shadow falls to the lower right; paper mapped to #f4f0ea; lens snapped to the canon window). Viewer: circle inscribed in the viewer box; clip the live canvas with border-radius: 50%. Plate ground equals --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-day-800-webp",
+      "file": "canon/sample-day-800.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-day.png",
+      "alt": "Etched scientific instrument with a round glass window, on a brass plinth, on cream parchment.",
+      "notes": "Grand Test Bench canon sample (day). Generated with flux2-klein-4b from canon.toml entry sample-day-s1101 (seed 1101), finished by finish.py --lens 828,522,200 --mirror (mirrored so the contact shadow falls to the lower right; paper mapped to #f4f0ea; lens snapped to the canon window). Viewer: circle inscribed in the viewer box; clip the live canvas with border-radius: 50%. Plate ground equals --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-night-1600-avif",
+      "file": "canon/sample-night.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-night.png",
+      "alt": "The same instrument as a cyanotype: chalk lines on Prussian blue, amber filaments glowing.",
+      "notes": "Grand Test Bench canon sample (night). img2img (flux2-klein-img2img, night-img2img.toml entry night-img2img-raw-2, seed 2202) of the same generated day plate, finished by finish.py --variant night --lens 828,522,200 --mirror (ground mapped to #0b2450). Same geometry, mirror and viewer as the day plate. Plate ground equals --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-night-1600-webp",
+      "file": "canon/sample-night.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-night.png",
+      "alt": "The same instrument as a cyanotype: chalk lines on Prussian blue, amber filaments glowing.",
+      "notes": "Grand Test Bench canon sample (night). img2img (flux2-klein-img2img, night-img2img.toml entry night-img2img-raw-2, seed 2202) of the same generated day plate, finished by finish.py --variant night --lens 828,522,200 --mirror (ground mapped to #0b2450). Same geometry, mirror and viewer as the day plate. Plate ground equals --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-night-800-avif",
+      "file": "canon/sample-night-800.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-night.png",
+      "alt": "The same instrument as a cyanotype: chalk lines on Prussian blue, amber filaments glowing.",
+      "notes": "Grand Test Bench canon sample (night). img2img (flux2-klein-img2img, night-img2img.toml entry night-img2img-raw-2, seed 2202) of the same generated day plate, finished by finish.py --variant night --lens 828,522,200 --mirror (ground mapped to #0b2450). Same geometry, mirror and viewer as the day plate. Plate ground equals --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canon-sample-night-800-webp",
+      "file": "canon/sample-night-800.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/canon/sample-night.png",
+      "alt": "The same instrument as a cyanotype: chalk lines on Prussian blue, amber filaments glowing.",
+      "notes": "Grand Test Bench canon sample (night). img2img (flux2-klein-img2img, night-img2img.toml entry night-img2img-raw-2, seed 2202) of the same generated day plate, finished by finish.py --variant night --lens 828,522,200 --mirror (ground mapped to #0b2450). Same geometry, mirror and viewer as the day plate. Plate ground equals --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    }
+  ]
+}

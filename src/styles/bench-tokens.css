@@ -1,0 +1,124 @@
+/* Grand Test Bench design tokens (home redesign, phase A).
+
+   The palette comes from the canon plates: day is a 19th-century etching on
+   parchment, night is a cyanotype (Prussian-blue negative) of the same plate.
+   The canon itself (prompt template, viewer window, night method) is the
+   Intelligence decision "Grand Test Bench canon" (project b61054a3).
+
+   Two layers:
+   1. Palette (`--bench-c-*`): fixed colours, identical day and night.
+   2. Roles (`--bench-*`): what components use. Day values live on :root; the
+      night set replaces them under [data-bench-theme="night"] and under
+      prefers-color-scheme: dark (unless the page forces [data-bench-theme="day"]).
+
+   Contrast (WCAG) on the role's own ground: text roles >= 4.5:1, stroke-only
+   roles >= 3:1; each figure is noted next to the token.
+
+   Not imported anywhere yet: the phase B build wires it in. */
+
+:root {
+  /* ── 1. Palette ─────────────────────────────────────────────────────── */
+
+  /* Parchment: the day ground. Every day plate's paper is mapped to this exact
+     value by finish.py, so plates sit on the page without a visible edge. */
+  --bench-c-parchment: #f4f0ea;
+  /* Deeper parchment: second paper for panels, the vernier ruler body, cards. */
+  --bench-c-parchment-deep: #eee7dc;
+  /* Paper grain tint: the colour of the fibres/specks in a grain overlay
+     drawn over parchment (SVG noise or texture), never a flat fill. */
+  --bench-c-grain: #e2d6c3;
+  /* Ink: the etching's sepia-black line, measured from the canon day plate. */
+  --bench-c-ink: #1d1510;
+  /* Sepia: hatching mid-tone; captions and secondary text on parchment (5.8:1). */
+  --bench-c-sepia: #6b5a43;
+  /* Graphite: cool grey for rules, ticks of the vernier, table borders, meta
+     text on parchment (6.2:1). */
+  --bench-c-graphite: #5d5852;
+  /* Brass (stroke): brass lines and small accents on parchment (4.4:1, strokes
+     and large text only). Brass is an accent, never a large fill. */
+  --bench-c-brass: #8a6a2c;
+  /* Brass wash: the pale gold wash the plates use on brass parts; fills of
+     small elements only (knobs, ruler notches), never behind text (1.75:1). */
+  --bench-c-brass-wash: #ccb58f;
+  /* Copper (day): copper strokes and the active notch of the ruler on
+     parchment (5.0:1). */
+  --bench-c-copper: #9a5530;
+  /* Copper (night): copper lines of the cyanotype plate, on the blue (6.0:1). */
+  --bench-c-copper-bright: #d6955b;
+  /* Cyanotype blue: the night ground. Every night plate's ground is mapped to
+     this exact value by finish.py. Also blueprint watermark lines by day. */
+  --bench-c-cyanotype: #0b2450;
+  /* Deeper cyanotype: second night surface (panels, the ruler body at night). */
+  --bench-c-cyanotype-deep: #071a3b;
+  /* Chalk: the white line of the cyanotype; main text at night (13.6:1). */
+  --bench-c-chalk: #ecf3fb;
+  /* Dim chalk: secondary text at night (8.5:1). */
+  --bench-c-chalk-dim: #b4c3d8;
+  /* Night rule: rules, ticks and borders at night (3.5:1, strokes only). */
+  --bench-c-rule-night: #5f79a6;
+  /* Filament glow: the default incandescent amber of the plates' filaments
+     (7.4:1 on cyanotype). Per experiment, the glow is its essenceHex instead;
+     this value is the fallback and the colour of the canon sample. */
+  --bench-c-filament: #f2a541;
+
+  /* ── 2. Roles, day ──────────────────────────────────────────────────── */
+
+  /* Page and stage ground behind the plates. */
+  --bench-ground: var(--bench-c-parchment);
+  /* Raised surfaces: ruler body, panels, the spec table. */
+  --bench-ground-alt: var(--bench-c-parchment-deep);
+  /* Grain overlay colour (mix at 30–50 % opacity over the ground). */
+  --bench-grain: var(--bench-c-grain);
+  /* Main text and main line (headings, labels laid over plates, icons). */
+  --bench-line: var(--bench-c-ink);
+  /* Secondary text (captions, EXP numbers, notes). */
+  --bench-line-soft: var(--bench-c-sepia);
+  /* Rules, borders, vernier ticks. */
+  --bench-rule: var(--bench-c-graphite);
+  /* Brass accent (strokes, focus rings, the ruler's index mark). */
+  --bench-brass: var(--bench-c-brass);
+  /* Brass fill for small parts (knobs, notches). */
+  --bench-brass-fill: var(--bench-c-brass-wash);
+  /* Copper accent (active/selected state on the ruler, links on hover). */
+  --bench-copper: var(--bench-c-copper);
+  /* Glow behind the live viewer and on energy points; set per experiment to
+     its essenceHex (style="--bench-glow: #00a9a0"); this is the fallback. */
+  --bench-glow: var(--bench-c-filament);
+  /* Which plate variant to load: components read this to choose
+     public/bench/<...>-day.* or -night.* (value is a string, not a colour). */
+  --bench-plate-variant: 'day';
+}
+
+/* ── 2. Roles, night ────────────────────────────────────────────────── */
+
+[data-bench-theme='night'] {
+  --bench-ground: var(--bench-c-cyanotype);
+  --bench-ground-alt: var(--bench-c-cyanotype-deep);
+  /* Grain at night: faint chalk specks (mix at 6–10 % opacity). */
+  --bench-grain: var(--bench-c-chalk);
+  --bench-line: var(--bench-c-chalk);
+  --bench-line-soft: var(--bench-c-chalk-dim);
+  --bench-rule: var(--bench-c-rule-night);
+  /* Brass reads as pale gold line at night (8.0:1). */
+  --bench-brass: #d9b878;
+  --bench-brass-fill: #d9b878;
+  --bench-copper: var(--bench-c-copper-bright);
+  --bench-glow: var(--bench-c-filament);
+  --bench-plate-variant: 'night';
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-bench-theme='day']) {
+    --bench-ground: var(--bench-c-cyanotype);
+    --bench-ground-alt: var(--bench-c-cyanotype-deep);
+    --bench-grain: var(--bench-c-chalk);
+    --bench-line: var(--bench-c-chalk);
+    --bench-line-soft: var(--bench-c-chalk-dim);
+    --bench-rule: var(--bench-c-rule-night);
+    --bench-brass: #d9b878;
+    --bench-brass-fill: #d9b878;
+    --bench-copper: var(--bench-c-copper-bright);
+    --bench-glow: var(--bench-c-filament);
+    --bench-plate-variant: 'night';
+  }
+}
