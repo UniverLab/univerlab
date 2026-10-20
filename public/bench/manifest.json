@@ -1535,6 +1535,798 @@
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-footer.png",
       "alt": "Top of DemoStage's toy theatre in chalk lines on dark ink, the proscenium and the upper curtains.",
       "notes": "DemoStage footer negative: canon/footer.py --top 0.06 --accent #fa5838 on demostage-night.png (band y 60-460: proscenium, curtains, top of the window; the footlights sit lower and fade out), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "cadspec-day-mobile-webp",
+      "file": "plates/cadspec-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day-mobile.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-day-mobile-avif",
+      "file": "plates/cadspec-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day-mobile.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-day-1600-webp",
+      "file": "plates/cadspec-day-1600.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-day-1600-avif",
+      "file": "plates/cadspec-day-1600.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-day-800-webp",
+      "file": "plates/cadspec-day-800.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-day-800-avif",
+      "file": "plates/cadspec-day-800.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-day.png",
+      "alt": "cadSpec's machine, etched on parchment: a retired drafting board shrouded in a dust sheet, a brass-ringed round window in the sheet and two dark unlit lamps on top.",
+      "notes": "cadSpec (EXP-005, ARCHIVED) day plate, Grand Test Bench canon. Concept: a retired drafting instrument under a dust sheet; cadSpec declared CAD plans as code and was archived 2026-10-13, so the machine is covered and its lamps are dark. flux2-klein-4b, cadspec.toml entry cadspec-day-s1101, finished by canon/finish.py --lens 818,465,205 --mirror (shadow fell lower-left; scale 0.976). NO accent colour on this plate: the lamps are unlit by design (essenceHex #4874ea unused). The plinth front edge sits at 0.97 (canon 0.90-0.93) because the sheet covers the base. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-mobile-webp",
+      "file": "plates/cadspec-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night-mobile.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-mobile-avif",
+      "file": "plates/cadspec-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night-mobile.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-1600-webp",
+      "file": "plates/cadspec-night-1600.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-1600-avif",
+      "file": "plates/cadspec-night-1600.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-800-webp",
+      "file": "plates/cadspec-night-800.webp",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-night-800-avif",
+      "file": "plates/cadspec-night-800.avif",
+      "kind": "plate",
+      "experiment": "cadspec",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-night.png",
+      "alt": "cadSpec's covered drafting board as a cyanotype: chalk folds of the dust sheet on Prussian blue, a copper ring, two unlit lamps.",
+      "notes": "cadSpec (EXP-005, archived) night plate: cadspec-night.toml entry cadspec-night-s3303, with the accent clause replaced by unlit lamps (chalk outlines, no glow), finished with --lens 818,465,205 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "cadspec-footer-1600-webp",
+      "file": "footer/cadspec-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "cadspec",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-footer.png",
+      "alt": "Top of cadSpec's dust-sheeted drafting board in chalk lines on dark ink, two unlit lamps above it.",
+      "notes": "cadSpec footer negative (brief section 6): canon/footer.py --top 0.0 --accent #4874ea on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here. Lamps are unlit, so no accent appears."
+    },
+    {
+      "name": "cadspec-footer-1600-avif",
+      "file": "footer/cadspec-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "cadspec",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-footer.png",
+      "alt": "Top of cadSpec's dust-sheeted drafting board in chalk lines on dark ink, two unlit lamps above it.",
+      "notes": "cadSpec footer negative (brief section 6): canon/footer.py --top 0.0 --accent #4874ea on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here. Lamps are unlit, so no accent appears."
+    },
+    {
+      "name": "cadspec-footer-800-webp",
+      "file": "footer/cadspec-footer-800.webp",
+      "kind": "footer",
+      "experiment": "cadspec",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-footer.png",
+      "alt": "Top of cadSpec's dust-sheeted drafting board in chalk lines on dark ink, two unlit lamps above it.",
+      "notes": "cadSpec footer negative (brief section 6): canon/footer.py --top 0.0 --accent #4874ea on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here. Lamps are unlit, so no accent appears."
+    },
+    {
+      "name": "cadspec-footer-800-avif",
+      "file": "footer/cadspec-footer-800.avif",
+      "kind": "footer",
+      "experiment": "cadspec",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/cadspec/cadspec-footer.png",
+      "alt": "Top of cadSpec's dust-sheeted drafting board in chalk lines on dark ink, two unlit lamps above it.",
+      "notes": "cadSpec footer negative (brief section 6): canon/footer.py --top 0.0 --accent #4874ea on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here. Lamps are unlit, so no accent appears."
+    },
+    {
+      "name": "astro-denoise-day-mobile-webp",
+      "file": "plates/astro-denoise-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day-mobile.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-day-mobile-avif",
+      "file": "plates/astro-denoise-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day-mobile.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-day-1600-webp",
+      "file": "plates/astro-denoise-day-1600.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-day-1600-avif",
+      "file": "plates/astro-denoise-day-1600.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-day-800-webp",
+      "file": "plates/astro-denoise-day-800.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-day-800-avif",
+      "file": "plates/astro-denoise-day-800.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-day.png",
+      "alt": "Astro Denoise's machine, etched on parchment: a plate-measuring engine with two iron pillars and a crossbar holding a brass gimbal ring with the round window, and a small micrometer above.",
+      "notes": "Astro Denoise (EXP-006, research) day plate, Grand Test Bench canon. Concept: an 1890s astronomical plate-measuring engine; the plate holder (the window) hangs in a gimbal between two iron pillars under a micrometer, as sky plates were measured for noise and position. flux2-klein-4b, astro-denoise.toml entry astro-denoise-day-s2202, finished by canon/finish.py --lens 825,534,210 (no mirror: shadow lower right; scale 0.952). Accent violet #a78bfa only as the two lamp filaments. The viewer circle sits inside the inner ring; an outer gimbal ring surrounds it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-mobile-webp",
+      "file": "plates/astro-denoise-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night-mobile.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-mobile-avif",
+      "file": "plates/astro-denoise-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night-mobile.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-1600-webp",
+      "file": "plates/astro-denoise-night-1600.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-1600-avif",
+      "file": "plates/astro-denoise-night-1600.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-800-webp",
+      "file": "plates/astro-denoise-night-800.webp",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-night-800-avif",
+      "file": "plates/astro-denoise-night-800.avif",
+      "kind": "plate",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-night.png",
+      "alt": "Astro Denoise's plate-measuring engine as a cyanotype: chalk pillars on Prussian blue, copper gimbal rings, thin violet filaments in the two lamps.",
+      "notes": "Astro Denoise (EXP-006) night plate: astro-denoise-night.toml entry astro-denoise-night-s3303, finished with --lens 825,534,210. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "astro-denoise-footer-1600-webp",
+      "file": "footer/astro-denoise-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "astro-denoise",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-footer.png",
+      "alt": "Top of Astro Denoise's measuring engine in chalk lines on dark ink, the crossbar, micrometer and two lamps with violet filaments.",
+      "notes": "Astro Denoise footer negative (brief section 6): canon/footer.py --top 0.0 --accent #a78bfa on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "astro-denoise-footer-1600-avif",
+      "file": "footer/astro-denoise-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "astro-denoise",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-footer.png",
+      "alt": "Top of Astro Denoise's measuring engine in chalk lines on dark ink, the crossbar, micrometer and two lamps with violet filaments.",
+      "notes": "Astro Denoise footer negative (brief section 6): canon/footer.py --top 0.0 --accent #a78bfa on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "astro-denoise-footer-800-webp",
+      "file": "footer/astro-denoise-footer-800.webp",
+      "kind": "footer",
+      "experiment": "astro-denoise",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-footer.png",
+      "alt": "Top of Astro Denoise's measuring engine in chalk lines on dark ink, the crossbar, micrometer and two lamps with violet filaments.",
+      "notes": "Astro Denoise footer negative (brief section 6): canon/footer.py --top 0.0 --accent #a78bfa on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "astro-denoise-footer-800-avif",
+      "file": "footer/astro-denoise-footer-800.avif",
+      "kind": "footer",
+      "experiment": "astro-denoise",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/astro-denoise/astro-denoise-footer.png",
+      "alt": "Top of Astro Denoise's measuring engine in chalk lines on dark ink, the crossbar, micrometer and two lamps with violet filaments.",
+      "notes": "Astro Denoise footer negative (brief section 6): canon/footer.py --top 0.0 --accent #a78bfa on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "quorum-day-mobile-webp",
+      "file": "plates/quorum-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day-mobile.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-day-mobile-avif",
+      "file": "plates/quorum-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day-mobile.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-day-1600-webp",
+      "file": "plates/quorum-day-1600.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-day-1600-avif",
+      "file": "plates/quorum-day-1600.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-day-800-webp",
+      "file": "plates/quorum-day-800.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-day-800-avif",
+      "file": "plates/quorum-day-800.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-day.png",
+      "alt": "Quorum's machine, etched on parchment: a brass balance scale with a level beam, two pans of plain tokens on chains, a brass-ringed round window hanging at the centre, and two lamps on the beam.",
+      "notes": "Quorum (EXP-008) day plate, Grand Test Bench canon. Concept: an 1860s balance scale, the instrument of weighing both sides; the beam is level and the pans hold plain tokens (votes), the window hangs at the fulcrum as the shared view. flux2-klein-4b, quorum.toml entry quorum-day-s2202, finished by canon/finish.py --lens 826,560,211 (no mirror: shadow lower right; scale 0.948). Accent golden amber #e6b24a only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-mobile-webp",
+      "file": "plates/quorum-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night-mobile.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-mobile-avif",
+      "file": "plates/quorum-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night-mobile.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-1600-webp",
+      "file": "plates/quorum-night-1600.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-1600-avif",
+      "file": "plates/quorum-night-1600.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-800-webp",
+      "file": "plates/quorum-night-800.webp",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-night-800-avif",
+      "file": "plates/quorum-night-800.avif",
+      "kind": "plate",
+      "experiment": "quorum",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-night.png",
+      "alt": "Quorum's balance as a cyanotype: chalk beam and chains on Prussian blue, copper edges, thin amber filaments in the two lamps.",
+      "notes": "Quorum (EXP-008) night plate: quorum-night.toml entry quorum-night-s4404, finished with --lens 826,560,211. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "quorum-footer-1600-webp",
+      "file": "footer/quorum-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "quorum",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-footer.png",
+      "alt": "Top of Quorum's balance in chalk lines on dark ink, the level beam, two lamps with amber filaments and the pans.",
+      "notes": "Quorum footer negative (brief section 6): canon/footer.py --top 0.0 --accent #e6b24a on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "quorum-footer-1600-avif",
+      "file": "footer/quorum-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "quorum",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-footer.png",
+      "alt": "Top of Quorum's balance in chalk lines on dark ink, the level beam, two lamps with amber filaments and the pans.",
+      "notes": "Quorum footer negative (brief section 6): canon/footer.py --top 0.0 --accent #e6b24a on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "quorum-footer-800-webp",
+      "file": "footer/quorum-footer-800.webp",
+      "kind": "footer",
+      "experiment": "quorum",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-footer.png",
+      "alt": "Top of Quorum's balance in chalk lines on dark ink, the level beam, two lamps with amber filaments and the pans.",
+      "notes": "Quorum footer negative (brief section 6): canon/footer.py --top 0.0 --accent #e6b24a on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "quorum-footer-800-avif",
+      "file": "footer/quorum-footer-800.avif",
+      "kind": "footer",
+      "experiment": "quorum",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/quorum/quorum-footer.png",
+      "alt": "Top of Quorum's balance in chalk lines on dark ink, the level beam, two lamps with amber filaments and the pans.",
+      "notes": "Quorum footer negative (brief section 6): canon/footer.py --top 0.0 --accent #e6b24a on the night plate, ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
     }
   ]
 }
