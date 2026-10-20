@@ -335,6 +335,1206 @@
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-footer.png",
       "alt": "Top of Canopy's telegraph exchange in chalk lines on dark ink, thin teal filaments in three bell jars.",
       "notes": "Canopy footer negative (brief section 6). canon/footer.py --top 0.12 on canopy-night.png: band y 120-520 of the 1600x1000 night plate, ground = --bench-c-ink #1d1510 exactly, chalk lines, teal filaments and copper kept. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width. The viewer window is cut by the band's bottom edge, so it gets no live canvas here."
+    },
+    {
+      "name": "sample-day-mobile-webp",
+      "file": "canon/sample-day-mobile.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/../canon/sample-day-mobile.png",
+      "alt": "Canon sample plate: a generic scientific instrument drawn as a 19th-century etching on cream parchment, with a round empty glass window, on a square brass plinth.",
+      "notes": "Grand Test Bench canon sample (day), from canon/sample-day.png (seed 1101, finish.py --lens 828,522,200 --mirror). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "sample-day-mobile-avif",
+      "file": "canon/sample-day-mobile.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/../canon/sample-day-mobile.png",
+      "alt": "Canon sample plate: a generic scientific instrument drawn as a 19th-century etching on cream parchment, with a round empty glass window, on a square brass plinth.",
+      "notes": "Grand Test Bench canon sample (day), from canon/sample-day.png (seed 1101, finish.py --lens 828,522,200 --mirror). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "sample-night-mobile-webp",
+      "file": "canon/sample-night-mobile.webp",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/../canon/sample-night-mobile.png",
+      "alt": "Canon sample plate at night: the same instrument as a cyanotype, chalk-white lines on Prussian blue, filaments glowing amber.",
+      "notes": "Grand Test Bench canon sample (night), from canon/sample-night.png (img2img seed 2202, same lens and mirror). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "sample-night-mobile-avif",
+      "file": "canon/sample-night-mobile.avif",
+      "kind": "plate",
+      "experiment": null,
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/../canon/sample-night-mobile.png",
+      "alt": "Canon sample plate at night: the same instrument as a cyanotype, chalk-white lines on Prussian blue, filaments glowing amber.",
+      "notes": "Grand Test Bench canon sample (night), from canon/sample-night.png (img2img seed 2202, same lens and mirror). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-day-mobile-webp",
+      "file": "plates/canopy-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day-mobile.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, from plates/canopy/canopy-day.png (seed 2202, finish.py --lens 830,494,232). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-day-mobile-avif",
+      "file": "plates/canopy-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day-mobile.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, from plates/canopy/canopy-day.png (seed 2202, finish.py --lens 830,494,232). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-mobile-webp",
+      "file": "plates/canopy-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night-mobile.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate, from plates/canopy/canopy-night.png (img2img seed 3303, same lens). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-mobile-avif",
+      "file": "plates/canopy-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night-mobile.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate, from plates/canopy/canopy-night.png (img2img seed 3303, same lens). Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-mobile-webp",
+      "file": "plates/texforge-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day-mobile.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-mobile-avif",
+      "file": "plates/texforge-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day-mobile.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-1600-webp",
+      "file": "plates/texforge-day-1600.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-1600-avif",
+      "file": "plates/texforge-day-1600.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-800-webp",
+      "file": "plates/texforge-day-800.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-day-800-avif",
+      "file": "plates/texforge-day-800.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-day.png",
+      "alt": "TeXForge's machine, etched on parchment: an end-on cylinder printing press on cast-iron A-frames, blank paper feeding in and out, a round glass window in the drum and a small oil lamp.",
+      "notes": "TeXForge (EXP-002) day plate, Grand Test Bench canon. Concept: an 1850s cylinder press seen end-on; the impression cylinder's end face is the viewer, paper feeds in on one side and leaves on the other, .tex in, typeset sheets out. flux2-klein-4b, texforge.toml entry texforge-day-s1101 (built by build_machines.py from the canon TEMPLATE), finished by canon/finish.py --lens 826,493,230 --mirror (shadow fell lower-left; scale 0.870). Accent crimson #d34e5b only as the lamp filament. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-mobile-webp",
+      "file": "plates/texforge-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night-mobile.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-mobile-avif",
+      "file": "plates/texforge-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night-mobile.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-1600-webp",
+      "file": "plates/texforge-night-1600.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-1600-avif",
+      "file": "plates/texforge-night-1600.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-800-webp",
+      "file": "plates/texforge-night-800.webp",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-night-800-avif",
+      "file": "plates/texforge-night-800.avif",
+      "kind": "plate",
+      "experiment": "texforge",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-night.png",
+      "alt": "TeXForge's printing press as a cyanotype: chalk lines on Prussian blue, copper rings, a thin crimson filament in the lamp.",
+      "notes": "TeXForge (EXP-002) night plate: texforge-night.toml entry texforge-night-s3303, finished with --lens 826,493,230 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "texforge-footer-1600-webp",
+      "file": "footer/texforge-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "texforge",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-footer.png",
+      "alt": "Upper part of TeXForge's cylinder press in chalk lines on dark ink, the lamp's crimson filament glowing.",
+      "notes": "TeXForge footer negative: canon/footer.py --top 0.15 --accent #d34e5b on texforge-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "texforge-footer-1600-avif",
+      "file": "footer/texforge-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "texforge",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-footer.png",
+      "alt": "Upper part of TeXForge's cylinder press in chalk lines on dark ink, the lamp's crimson filament glowing.",
+      "notes": "TeXForge footer negative: canon/footer.py --top 0.15 --accent #d34e5b on texforge-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "texforge-footer-800-webp",
+      "file": "footer/texforge-footer-800.webp",
+      "kind": "footer",
+      "experiment": "texforge",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-footer.png",
+      "alt": "Upper part of TeXForge's cylinder press in chalk lines on dark ink, the lamp's crimson filament glowing.",
+      "notes": "TeXForge footer negative: canon/footer.py --top 0.15 --accent #d34e5b on texforge-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "texforge-footer-800-avif",
+      "file": "footer/texforge-footer-800.avif",
+      "kind": "footer",
+      "experiment": "texforge",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/texforge/texforge-footer.png",
+      "alt": "Upper part of TeXForge's cylinder press in chalk lines on dark ink, the lamp's crimson filament glowing.",
+      "notes": "TeXForge footer negative: canon/footer.py --top 0.15 --accent #d34e5b on texforge-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "gitkit-day-mobile-webp",
+      "file": "plates/gitkit-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day-mobile.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-day-mobile-avif",
+      "file": "plates/gitkit-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day-mobile.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-day-1600-webp",
+      "file": "plates/gitkit-day-1600.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-day-1600-avif",
+      "file": "plates/gitkit-day-1600.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-day-800-webp",
+      "file": "plates/gitkit-day-800.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-day-800-avif",
+      "file": "plates/gitkit-day-800.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-day.png",
+      "alt": "GitKit's machine, etched on parchment: a small wooden tapestry loom with fine warp threads strung from brass hooks, parting around a brass-ringed round window, two glass lamps hanging from the top bar.",
+      "notes": "GitKit (EXP-003) day plate, Grand Test Bench canon. Concept: an 1860s tabletop tapestry loom; the warp threads hung on hooks are a repository's threads, set up once and tied off, the hooks are git hooks, the loom is the preset that makes every weave consistent. flux2-klein-4b, gitkit.toml entry gitkit-day-s1101; the model let pink drift into the plinth wash, so canon/rehue.py --from-y 420 set that band to the brass hue (gitkit-day-s1101-cleaned.png); finished by canon/finish.py --lens 820,478,213 --mirror (shadow fell lower-left; scale 0.939). Accent rose #e06fc0 only as the two lamp filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-mobile-webp",
+      "file": "plates/gitkit-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night-mobile.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-mobile-avif",
+      "file": "plates/gitkit-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night-mobile.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-1600-webp",
+      "file": "plates/gitkit-night-1600.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-1600-avif",
+      "file": "plates/gitkit-night-1600.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-800-webp",
+      "file": "plates/gitkit-night-800.webp",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-night-800-avif",
+      "file": "plates/gitkit-night-800.avif",
+      "kind": "plate",
+      "experiment": "gitkit",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-night.png",
+      "alt": "GitKit's loom as a cyanotype: chalk threads on Prussian blue, a copper ring, thin rose-pink filaments in the two lamps.",
+      "notes": "GitKit (EXP-003) night plate: gitkit-night.toml entry gitkit-night-s2202 (from gitkit-day-s1101-cleaned.png), finished with --lens 820,478,213 --mirror. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "gitkit-footer-1600-webp",
+      "file": "footer/gitkit-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "gitkit",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-footer.png",
+      "alt": "Top of GitKit's loom in chalk lines on dark ink, warp threads on brass hooks and two lamps with rose-pink filaments.",
+      "notes": "GitKit footer negative: canon/footer.py --top 0.15 --accent #e06fc0 on gitkit-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "gitkit-footer-1600-avif",
+      "file": "footer/gitkit-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "gitkit",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-footer.png",
+      "alt": "Top of GitKit's loom in chalk lines on dark ink, warp threads on brass hooks and two lamps with rose-pink filaments.",
+      "notes": "GitKit footer negative: canon/footer.py --top 0.15 --accent #e06fc0 on gitkit-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "gitkit-footer-800-webp",
+      "file": "footer/gitkit-footer-800.webp",
+      "kind": "footer",
+      "experiment": "gitkit",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-footer.png",
+      "alt": "Top of GitKit's loom in chalk lines on dark ink, warp threads on brass hooks and two lamps with rose-pink filaments.",
+      "notes": "GitKit footer negative: canon/footer.py --top 0.15 --accent #e06fc0 on gitkit-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "gitkit-footer-800-avif",
+      "file": "footer/gitkit-footer-800.avif",
+      "kind": "footer",
+      "experiment": "gitkit",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/gitkit/gitkit-footer.png",
+      "alt": "Top of GitKit's loom in chalk lines on dark ink, warp threads on brass hooks and two lamps with rose-pink filaments.",
+      "notes": "GitKit footer negative: canon/footer.py --top 0.15 --accent #e06fc0 on gitkit-night.png (band y 150-550), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "ghscaff-day-mobile-webp",
+      "file": "plates/ghscaff-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day-mobile.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-day-mobile-avif",
+      "file": "plates/ghscaff-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day-mobile.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-day-1600-webp",
+      "file": "plates/ghscaff-day-1600.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-day-1600-avif",
+      "file": "plates/ghscaff-day-1600.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-day-800-webp",
+      "file": "plates/ghscaff-day-800.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-day-800-avif",
+      "file": "plates/ghscaff-day-800.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-day.png",
+      "alt": "ghScaff's machine, etched on parchment: a single-storey model of a riveted iron builder's scaffold with cross-bracing, a plank walkway and a ladder, a brass-ringed round window hung in the middle bay, two signal lamps on top.",
+      "notes": "ghScaff (EXP-004) day plate, Grand Test Bench canon. Concept: an 1880s engineer's model of a builder's scaffold; ghScaff raises the scaffolding of a GitHub repository (structure, settings, CI) before anything is built in it. flux2-klein-4b, ghscaff.toml entry ghscaff-day-s2202, finished by canon/finish.py --lens 826,537,197 --mirror (shadow fell lower-left; scale 1.015). Accent sky blue #62c4ec only as the two lamp filaments (faint by day, glowing at night). The window glass carries a faint blue sheen inside the viewer circle; the live canvas covers it. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-mobile-webp",
+      "file": "plates/ghscaff-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night-mobile.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-mobile-avif",
+      "file": "plates/ghscaff-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night-mobile.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-1600-webp",
+      "file": "plates/ghscaff-night-1600.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-1600-avif",
+      "file": "plates/ghscaff-night-1600.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-800-webp",
+      "file": "plates/ghscaff-night-800.webp",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-night-800-avif",
+      "file": "plates/ghscaff-night-800.avif",
+      "kind": "plate",
+      "experiment": "ghscaff",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-night.png",
+      "alt": "ghScaff's scaffold as a cyanotype: chalk girders on Prussian blue, a copper ring, thin sky-blue filaments in the two signal lamps.",
+      "notes": "ghScaff (EXP-004) night plate: ghscaff-night.toml entry ghscaff-night-s3303, finished with --lens 826,537,197 --mirror. The img2img drew the ring slightly wider than by day; the viewer circle still sits inside the glass. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "ghscaff-footer-1600-webp",
+      "file": "footer/ghscaff-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "ghscaff",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-footer.png",
+      "alt": "Top of ghScaff's scaffold in chalk lines on dark ink, the walkway and two signal lamps with sky-blue filaments.",
+      "notes": "ghScaff footer negative: canon/footer.py --top 0.0 --accent #62c4ec on ghscaff-night.png (band y 0-400, the lamps sit at the plate top), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "ghscaff-footer-1600-avif",
+      "file": "footer/ghscaff-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "ghscaff",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-footer.png",
+      "alt": "Top of ghScaff's scaffold in chalk lines on dark ink, the walkway and two signal lamps with sky-blue filaments.",
+      "notes": "ghScaff footer negative: canon/footer.py --top 0.0 --accent #62c4ec on ghscaff-night.png (band y 0-400, the lamps sit at the plate top), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "ghscaff-footer-800-webp",
+      "file": "footer/ghscaff-footer-800.webp",
+      "kind": "footer",
+      "experiment": "ghscaff",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-footer.png",
+      "alt": "Top of ghScaff's scaffold in chalk lines on dark ink, the walkway and two signal lamps with sky-blue filaments.",
+      "notes": "ghScaff footer negative: canon/footer.py --top 0.0 --accent #62c4ec on ghscaff-night.png (band y 0-400, the lamps sit at the plate top), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "ghscaff-footer-800-avif",
+      "file": "footer/ghscaff-footer-800.avif",
+      "kind": "footer",
+      "experiment": "ghscaff",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/ghscaff/ghscaff-footer.png",
+      "alt": "Top of ghScaff's scaffold in chalk lines on dark ink, the walkway and two signal lamps with sky-blue filaments.",
+      "notes": "ghScaff footer negative: canon/footer.py --top 0.0 --accent #62c4ec on ghscaff-night.png (band y 0-400, the lamps sit at the plate top), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "demostage-day-mobile-webp",
+      "file": "plates/demostage-day-mobile.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day-mobile.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-day-mobile-avif",
+      "file": "plates/demostage-day-mobile.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day-mobile.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-day-1600-webp",
+      "file": "plates/demostage-day-1600.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-day-1600-avif",
+      "file": "plates/demostage-day-1600.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-day-800-webp",
+      "file": "plates/demostage-day-800.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-day-800-avif",
+      "file": "plates/demostage-day-800.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-day.png",
+      "alt": "DemoStage's machine, etched on parchment: a Victorian toy theatre with a proscenium, curtains drawn aside around a brass-ringed round window, and a row of small glass footlights on the stage.",
+      "notes": "DemoStage (EXP-007) day plate, Grand Test Bench canon. Concept: an 1870s miniature toy theatre; DemoStage stages and records demos, so the live surface plays on the stage opening while the footlights light it. flux2-klein-4b, demostage.toml entry demostage-day-s2202, finished by canon/finish.py --lens 820,439,222 (no mirror: shadow lower right; scale 0.901). The plinth front edge lands at 0.95 (canon range 0.90-0.93): the stage base is deep. Accent vermilion #fa5838 on the footlights; one footlight glass is tinted, the rest carry thin filaments. Viewer: circle inscribed in the viewer box. Ground = --bench-c-parchment.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-mobile-webp",
+      "file": "plates/demostage-night-mobile.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night-mobile.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-mobile-avif",
+      "file": "plates/demostage-night-mobile.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 720,
+      "height": 900,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night-mobile.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype. Portrait mobile crop (canon amendment 2026-10-20): canon/mobile.py, plate x 400-1200 full height scaled 0.9 to 720x900, centred on the machine axis; viewer 180 px wide. Wide machines lose their outer edges in this crop by design.",
+      "viewer": {
+        "x": 0.375,
+        "y": 0.4,
+        "w": 0.25,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-1600-webp",
+      "file": "plates/demostage-night-1600.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-1600-avif",
+      "file": "plates/demostage-night-1600.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-800-webp",
+      "file": "plates/demostage-night-800.webp",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-night-800-avif",
+      "file": "plates/demostage-night-800.avif",
+      "kind": "plate",
+      "experiment": "demostage",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-night.png",
+      "alt": "DemoStage's toy theatre as a cyanotype: chalk curtains on Prussian blue, a copper ring, footlights with thin vermilion filaments.",
+      "notes": "DemoStage (EXP-007) night plate: demostage-night.toml entry demostage-night-s3303, finished with --lens 820,439,222. The viewer circle touches the inner copper rim of the ring; the canvas covers that rim. Night: canon night method (flux2-klein-img2img of the generated day PNG, canon night prompt with the lamp noun, the accent filament clause and the keep-hatching/shadow clause), finished with the same lens. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "demostage-footer-1600-webp",
+      "file": "footer/demostage-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "demostage",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-footer.png",
+      "alt": "Top of DemoStage's toy theatre in chalk lines on dark ink, the proscenium and the upper curtains.",
+      "notes": "DemoStage footer negative: canon/footer.py --top 0.06 --accent #fa5838 on demostage-night.png (band y 60-460: proscenium, curtains, top of the window; the footlights sit lower and fade out), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "demostage-footer-1600-avif",
+      "file": "footer/demostage-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "demostage",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-footer.png",
+      "alt": "Top of DemoStage's toy theatre in chalk lines on dark ink, the proscenium and the upper curtains.",
+      "notes": "DemoStage footer negative: canon/footer.py --top 0.06 --accent #fa5838 on demostage-night.png (band y 60-460: proscenium, curtains, top of the window; the footlights sit lower and fade out), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "demostage-footer-800-webp",
+      "file": "footer/demostage-footer-800.webp",
+      "kind": "footer",
+      "experiment": "demostage",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-footer.png",
+      "alt": "Top of DemoStage's toy theatre in chalk lines on dark ink, the proscenium and the upper curtains.",
+      "notes": "DemoStage footer negative: canon/footer.py --top 0.06 --accent #fa5838 on demostage-night.png (band y 60-460: proscenium, curtains, top of the window; the footlights sit lower and fade out), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
+    },
+    {
+      "name": "demostage-footer-800-avif",
+      "file": "footer/demostage-footer-800.avif",
+      "kind": "footer",
+      "experiment": "demostage",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/demostage/demostage-footer.png",
+      "alt": "Top of DemoStage's toy theatre in chalk lines on dark ink, the proscenium and the upper curtains.",
+      "notes": "DemoStage footer negative: canon/footer.py --top 0.06 --accent #fa5838 on demostage-night.png (band y 60-460: proscenium, curtains, top of the window; the footlights sit lower and fade out), ground = --bench-c-ink #1d1510. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width; no live canvas here."
     }
   ]
 }
