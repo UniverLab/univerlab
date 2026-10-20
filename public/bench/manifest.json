@@ -143,6 +143,198 @@
         "w": 0.125,
         "h": 0.2
       }
+    },
+    {
+      "name": "canopy-day-1600-webp",
+      "file": "plates/canopy-day-1600.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, Grand Test Bench canon. flux2-klein-4b, canopy.toml entry canopy-day-s2202 (seed 2202, built by build.py from the canon TEMPLATE), finished by canon/finish.py --lens 830,494,232 (no mirror: shadow lower right, 1552 vs 112 dark px; scale 0.862; plinth front edge 0.90). Teal only as hair-thin filaments. Viewer: circle inscribed in the viewer box, inside the clean glass; Canopy's 'brain' canvas goes there with border-radius: 50%. Ground = --bench-c-parchment. The 800 px file is the same framing scaled (no separate mobile crop; the viewer fractions hold at every size).",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-day-1600-avif",
+      "file": "plates/canopy-day-1600.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, Grand Test Bench canon. flux2-klein-4b, canopy.toml entry canopy-day-s2202 (seed 2202, built by build.py from the canon TEMPLATE), finished by canon/finish.py --lens 830,494,232 (no mirror: shadow lower right, 1552 vs 112 dark px; scale 0.862; plinth front edge 0.90). Teal only as hair-thin filaments. Viewer: circle inscribed in the viewer box, inside the clean glass; Canopy's 'brain' canvas goes there with border-radius: 50%. Ground = --bench-c-parchment. The 800 px file is the same framing scaled (no separate mobile crop; the viewer fractions hold at every size).",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-day-800-webp",
+      "file": "plates/canopy-day-800.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, Grand Test Bench canon. flux2-klein-4b, canopy.toml entry canopy-day-s2202 (seed 2202, built by build.py from the canon TEMPLATE), finished by canon/finish.py --lens 830,494,232 (no mirror: shadow lower right, 1552 vs 112 dark px; scale 0.862; plinth front edge 0.90). Teal only as hair-thin filaments. Viewer: circle inscribed in the viewer box, inside the clean glass; Canopy's 'brain' canvas goes there with border-radius: 50%. Ground = --bench-c-parchment. The 800 px file is the same framing scaled (no separate mobile crop; the viewer fractions hold at every size).",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-day-800-avif",
+      "file": "plates/canopy-day-800.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "day",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-day.png",
+      "alt": "Canopy's machine, etched on parchment: a Victorian telegraph exchange case with a brass porthole, patch cords and three glass bell-jar relays.",
+      "notes": "Canopy (EXP-001) day plate, Grand Test Bench canon. flux2-klein-4b, canopy.toml entry canopy-day-s2202 (seed 2202, built by build.py from the canon TEMPLATE), finished by canon/finish.py --lens 830,494,232 (no mirror: shadow lower right, 1552 vs 112 dark px; scale 0.862; plinth front edge 0.90). Teal only as hair-thin filaments. Viewer: circle inscribed in the viewer box, inside the clean glass; Canopy's 'brain' canvas goes there with border-radius: 50%. Ground = --bench-c-parchment. The 800 px file is the same framing scaled (no separate mobile crop; the viewer fractions hold at every size).",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-1600-webp",
+      "file": "plates/canopy-night-1600.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate. Canon night method: flux2-klein-img2img of canopy-day-s2202.png (canopy-night.toml entry canopy-night-shadow-s3303, seed 3303, accent teal #00a9a0; prompt keeps the body hatching and the lower-right contact shadow as chalk hatching, jars as chalk outlines with untinted glass), finished by finish.py --variant night --lens 830,494,232. Shadow lower right (1150 vs 73 chalk px), same geometry and viewer as the day plate, window glass flat and empty. Teal 0.07% of pixels, filaments only. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-1600-avif",
+      "file": "plates/canopy-night-1600.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 1600,
+      "height": 1000,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate. Canon night method: flux2-klein-img2img of canopy-day-s2202.png (canopy-night.toml entry canopy-night-shadow-s3303, seed 3303, accent teal #00a9a0; prompt keeps the body hatching and the lower-right contact shadow as chalk hatching, jars as chalk outlines with untinted glass), finished by finish.py --variant night --lens 830,494,232. Shadow lower right (1150 vs 73 chalk px), same geometry and viewer as the day plate, window glass flat and empty. Teal 0.07% of pixels, filaments only. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-800-webp",
+      "file": "plates/canopy-night-800.webp",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate. Canon night method: flux2-klein-img2img of canopy-day-s2202.png (canopy-night.toml entry canopy-night-shadow-s3303, seed 3303, accent teal #00a9a0; prompt keeps the body hatching and the lower-right contact shadow as chalk hatching, jars as chalk outlines with untinted glass), finished by finish.py --variant night --lens 830,494,232. Shadow lower right (1150 vs 73 chalk px), same geometry and viewer as the day plate, window glass flat and empty. Teal 0.07% of pixels, filaments only. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-night-800-avif",
+      "file": "plates/canopy-night-800.avif",
+      "kind": "plate",
+      "experiment": "canopy",
+      "variant": "night",
+      "width": 800,
+      "height": 500,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-night.png",
+      "alt": "Canopy's machine as a cyanotype: chalk lines on Prussian blue, copper trim, thin teal filaments in the bell jars.",
+      "notes": "Canopy (EXP-001) night plate. Canon night method: flux2-klein-img2img of canopy-day-s2202.png (canopy-night.toml entry canopy-night-shadow-s3303, seed 3303, accent teal #00a9a0; prompt keeps the body hatching and the lower-right contact shadow as chalk hatching, jars as chalk outlines with untinted glass), finished by finish.py --variant night --lens 830,494,232. Shadow lower right (1150 vs 73 chalk px), same geometry and viewer as the day plate, window glass flat and empty. Teal 0.07% of pixels, filaments only. Ground = --bench-c-cyanotype.",
+      "viewer": {
+        "x": 0.4375,
+        "y": 0.4,
+        "w": 0.125,
+        "h": 0.2
+      }
+    },
+    {
+      "name": "canopy-footer-1600-webp",
+      "file": "footer/canopy-footer-1600.webp",
+      "kind": "footer",
+      "experiment": "canopy",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-footer.png",
+      "alt": "Top of Canopy's telegraph exchange in chalk lines on dark ink, thin teal filaments in three bell jars.",
+      "notes": "Canopy footer negative (brief section 6). canon/footer.py --top 0.12 on canopy-night.png: band y 120-520 of the 1600x1000 night plate, ground = --bench-c-ink #1d1510 exactly, chalk lines, teal filaments and copper kept. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width. The viewer window is cut by the band's bottom edge, so it gets no live canvas here."
+    },
+    {
+      "name": "canopy-footer-1600-avif",
+      "file": "footer/canopy-footer-1600.avif",
+      "kind": "footer",
+      "experiment": "canopy",
+      "variant": null,
+      "width": 1600,
+      "height": 400,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-footer.png",
+      "alt": "Top of Canopy's telegraph exchange in chalk lines on dark ink, thin teal filaments in three bell jars.",
+      "notes": "Canopy footer negative (brief section 6). canon/footer.py --top 0.12 on canopy-night.png: band y 120-520 of the 1600x1000 night plate, ground = --bench-c-ink #1d1510 exactly, chalk lines, teal filaments and copper kept. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width. The viewer window is cut by the band's bottom edge, so it gets no live canvas here."
+    },
+    {
+      "name": "canopy-footer-800-webp",
+      "file": "footer/canopy-footer-800.webp",
+      "kind": "footer",
+      "experiment": "canopy",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-footer.png",
+      "alt": "Top of Canopy's telegraph exchange in chalk lines on dark ink, thin teal filaments in three bell jars.",
+      "notes": "Canopy footer negative (brief section 6). canon/footer.py --top 0.12 on canopy-night.png: band y 120-520 of the 1600x1000 night plate, ground = --bench-c-ink #1d1510 exactly, chalk lines, teal filaments and copper kept. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width. The viewer window is cut by the band's bottom edge, so it gets no live canvas here."
+    },
+    {
+      "name": "canopy-footer-800-avif",
+      "file": "footer/canopy-footer-800.avif",
+      "kind": "footer",
+      "experiment": "canopy",
+      "variant": null,
+      "width": 800,
+      "height": 200,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/plates/canopy/canopy-footer.png",
+      "alt": "Top of Canopy's telegraph exchange in chalk lines on dark ink, thin teal filaments in three bell jars.",
+      "notes": "Canopy footer negative (brief section 6). canon/footer.py --top 0.12 on canopy-night.png: band y 120-520 of the 1600x1000 night plate, ground = --bench-c-ink #1d1510 exactly, chalk lines, teal filaments and copper kept. Use on a footer with background var(--bench-c-ink) and mask-image: linear-gradient(180deg, #000 10%, transparent 78%); top-aligned, full width. The viewer window is cut by the band's bottom edge, so it gets no live canvas here."
     }
   ]
 }
