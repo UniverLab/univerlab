@@ -2,10 +2,12 @@
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
+import { readBoilerplates } from '../../lib/catalogs';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.ghscaff;
 const exp = byId('ghscaff');
+const boilerplates = readBoilerplates();
 ---
 <ExperimentLayout id="ghscaff" hideGithub>
   <a slot="cta-first" class="btn btn-violet" href={exp.github} target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
@@ -31,11 +33,39 @@ const exp = byId('ghscaff');
   </section>
 
   <section class="wrap section single">
-    <div class="sub">
-      <span class="label">{e.subproject.kicker}</span>
-      <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
-      <p set:html={e.subproject.body} />
-    </div>
+    {boilerplates.length > 0 ? (
+      <div class="sub">
+        <span class="label">{e.boilerplates.kicker}</span>
+        <h3>{e.boilerplates.title.replace('{n}', String(boilerplates.length))}</h3>
+        <table class="catalog">
+          <thead>
+            <tr>
+              <th>name</th>
+              <th>language</th>
+              <th>description</th>
+              <th>version</th>
+            </tr>
+          </thead>
+          <tbody>
+            {boilerplates.map((bp) => (
+              <tr>
+                <td class="name" translate="no">{bp.name}</td>
+                <td>{bp.language}</td>
+                <td>{bp.description}</td>
+                <td class="version">{bp.version}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="use">{e.boilerplates.use} <code>ghscaff new</code></p>
+        <p class="repo"><a href={e.subproject.link}>{e.subproject.name} ↗</a></p>
+      </div>
+    ) : (
+      <div class="sub">
+        <span class="label">{e.subproject.kicker}</span>
+        <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
+      </div>
+    )}
   </section>
 </ExperimentLayout>
 
@@ -80,7 +110,13 @@ const exp = byId('ghscaff');
   .specsheet :global(strong) { color: var(--ink); font-weight: 500; }
   .specsheet :global(code) { color: var(--surface-essence); font-size: 0.88em; }
   .sub { max-width: 46rem; }
+  .catalog { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+  .catalog th, .catalog td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .catalog thead th { color: var(--ink-dim); font-weight: 500; }
+  .catalog td.name { font-family: var(--font-mono); color: var(--ink); }
+  .catalog td.version { font-family: var(--font-mono); color: var(--ink-dim); font-size: 0.85em; }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+  .sub .use { margin: 0.8rem 0 0; color: var(--ink-dim); font-size: 0.97rem; }
   .sub h3 a { color: var(--surface-essence); text-decoration: none; }
   .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
 </style>

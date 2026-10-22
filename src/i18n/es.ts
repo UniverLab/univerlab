@@ -254,8 +254,13 @@ export const es: Dict = {
         kicker: 'Subproyecto',
         name: 'texforge-templates',
         body:
-          'Un registro abierto de plantillas LaTeX con placeholders — APA, IEEE, informes, cartas y más. La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
+          'La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
         link: 'https://github.com/UniverLab/texforge-templates',
+      },
+      templates: {
+        kicker: 'Plantillas',
+        title: '{n} plantillas en el registro abierto',
+        use: 'Empieza un documento con cualquiera:',
       },
       faq: [
         ['¿Qué problema resuelve TeXForge?',
@@ -376,9 +381,12 @@ export const es: Dict = {
       subproject: {
         kicker: 'Subproyecto',
         name: 'ghscaff-boilerplate',
-        body:
-          'Los boilerplates por lenguaje que ghscaff deposita — manifiestos, puntos de entrada, workflows de CI/release. Rust hoy; Python y más en camino.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
+      },
+      boilerplates: {
+        kicker: 'Boilerplates',
+        title: '{n} boilerplates que el asistente puede crear',
+        use: 'Elige uno en el paso de lenguaje del asistente:',
       },
       faq: [
         ['¿Cómo configura ghScaff un repositorio de GitHub?',

@@ -254,8 +254,13 @@ export const en = {
         kicker: 'Subproject',
         name: 'texforge-templates',
         body:
-          'An open registry of LaTeX templates with placeholders — APA, IEEE, reports, letters and more. The <code>general</code> template ships embedded in the binary so creating a document works even offline.',
+          'The <code>general</code> template ships embedded in the binary so creating a document works even offline.',
         link: 'https://github.com/UniverLab/texforge-templates',
+      },
+      templates: {
+        kicker: 'Templates',
+        title: '{n} templates in the open registry',
+        use: 'Start a document from any of them:',
       },
       faq: [
         ['What problem does TeXForge solve?',
@@ -376,9 +381,12 @@ export const en = {
       subproject: {
         kicker: 'Subproject',
         name: 'ghscaff-boilerplate',
-        body:
-          'The language boilerplates ghscaff lays down — manifests, entry points, CI/release workflows. Rust today; Python and more on the way.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
+      },
+      boilerplates: {
+        kicker: 'Boilerplates',
+        title: '{n} boilerplates the wizard can lay down',
+        use: 'Pick one at the wizard\'s language step:',
       },
       faq: [
         ['How does ghScaff set up a GitHub repository?',
