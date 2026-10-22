@@ -2702,6 +2702,218 @@
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/texturas-v2/texturas.py",
       "alt": "",
       "notes": "Seamless chalkboard slate tile for the circadian home and general pages (Intelligence 6d07dd49): background-size 341px. Day ground #f4f0ea, night slate #222928 with chalk ink #ecebe4."
+    },
+    {
+      "name": "identity-sol",
+      "file": "identidad/sol.svg",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/sol.svg",
+      "notes": "The header's sun by day, approved 2026-10-22: engraved, sepia line with a cream wash, 44 px in the header.",
+      "alt": ""
+    },
+    {
+      "name": "identity-sol",
+      "file": "identidad/sol.js",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/sol.js",
+      "notes": "sunSVG(id): the same sun as an SVG string, for inline use (the mail stamps)."
+    },
+    {
+      "name": "identity-luna",
+      "file": "identidad/luna.js",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/luna.js",
+      "notes": "moonSVG(phase, id): the engraved moon at any phase, chalk with a cross-hatched shadow; the header's body by night."
+    },
+    {
+      "name": "identity-lupa",
+      "file": "identidad/lupa.svg",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/lupa.svg",
+      "notes": "The brass loupe over the demo videos (DemoFigure); its lens is 220/330 of the box width.",
+      "alt": ""
+    },
+    {
+      "name": "identity-logo-grabado",
+      "file": "identidad/logo-grabado.svg",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/logo-grabado.svg",
+      "notes": "The engraved mark (same as the .github banners), in currentColor; the frontispiece and the lantern's title slide.",
+      "alt": "UniverLab"
+    },
+    {
+      "name": "identity-sello-lacre",
+      "file": "identidad/sello-lacre.svg",
+      "kind": "identity",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/identidad/sello-lacre.svg",
+      "notes": "Garnet wax seal with the mark pressed in, no text: the mail letters and the footer's privacy line.",
+      "alt": ""
+    },
+    {
+      "name": "colophon-frieze-1920-avif",
+      "file": "colophon/frieze-1920.avif",
+      "kind": "colophon",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Projects/UniverLab/quorum/public/colophon/frieze-1920.avif",
+      "alt": "",
+      "notes": "Footer of every page (Intelligence 5fa69a2c): the frieze sinks into the dark footer under a mask; the seal sits before the privacy line.",
+      "width": 1920,
+      "height": 608
+    },
+    {
+      "name": "colophon-frieze-1920-webp",
+      "file": "colophon/frieze-1920.webp",
+      "kind": "colophon",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Projects/UniverLab/quorum/public/colophon/frieze-1920.webp",
+      "alt": "",
+      "notes": "Footer of every page (Intelligence 5fa69a2c): the frieze sinks into the dark footer under a mask; the seal sits before the privacy line.",
+      "width": 1920,
+      "height": 608
+    },
+    {
+      "name": "colophon-frieze-960-avif",
+      "file": "colophon/frieze-960.avif",
+      "kind": "colophon",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Projects/UniverLab/quorum/public/colophon/frieze-960.avif",
+      "alt": "",
+      "notes": "Footer of every page (Intelligence 5fa69a2c): the frieze sinks into the dark footer under a mask; the seal sits before the privacy line.",
+      "width": 960,
+      "height": 304
+    },
+    {
+      "name": "colophon-frieze-960-webp",
+      "file": "colophon/frieze-960.webp",
+      "kind": "colophon",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Projects/UniverLab/quorum/public/colophon/frieze-960.webp",
+      "alt": "",
+      "notes": "Footer of every page (Intelligence 5fa69a2c): the frieze sinks into the dark footer under a mask; the seal sits before the privacy line.",
+      "width": 960,
+      "height": 304
+    },
+    {
+      "name": "colophon-sello-lacre-svg",
+      "file": "colophon/sello-lacre.svg",
+      "kind": "colophon",
+      "experiment": null,
+      "variant": null,
+      "source": "/home/jheisonmblivecom/Projects/UniverLab/quorum/public/colophon/sello-lacre.svg",
+      "alt": "",
+      "notes": "Footer of every page (Intelligence 5fa69a2c): the frieze sinks into the dark footer under a mask; the seal sits before the privacy line."
+    },
+    {
+      "name": "notfound-kraken-day-800-webp",
+      "file": "mapa/kraken-day-800.webp",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "day",
+      "width": 800,
+      "height": 457,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-day-800-avif",
+      "file": "mapa/kraken-day-800.avif",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "day",
+      "width": 800,
+      "height": 457,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-day-1600-webp",
+      "file": "mapa/kraken-day-1600.webp",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "day",
+      "width": 1600,
+      "height": 914,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-day-1600-avif",
+      "file": "mapa/kraken-day-1600.avif",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "day",
+      "width": 1600,
+      "height": 914,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-night-800-webp",
+      "file": "mapa/kraken-night-800.webp",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "night",
+      "width": 800,
+      "height": 457,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123-noche2-s42.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-night-800-avif",
+      "file": "mapa/kraken-night-800.avif",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "night",
+      "width": 800,
+      "height": 457,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123-noche2-s42.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-night-1600-webp",
+      "file": "mapa/kraken-night-1600.webp",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "night",
+      "width": 1600,
+      "height": 914,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123-noche2-s42.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
+    },
+    {
+      "name": "notfound-kraken-night-1600-avif",
+      "file": "mapa/kraken-night-1600.avif",
+      "kind": "notfound",
+      "experiment": null,
+      "variant": "night",
+      "width": 1600,
+      "height": 914,
+      "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/mapa-404/b-kraken-s123-noche2-s42.png",
+      "alt": "An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves",
+      "notes": "The 404 page (user's pick 2026-10-22, Intelligence eeeb58a6): Hic sunt dracones. Day blends with multiply on parchment; night is chalk on slate."
     }
   ]
 }
