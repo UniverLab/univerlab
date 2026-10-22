@@ -97,6 +97,10 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
   .ostate.done { color: var(--astro-denoise); }
   .rname { font-family: var(--font-mono); font-size: 0.85rem; color: var(--astro-denoise); text-decoration: none; flex: none; min-width: 16rem; }
   .rname:hover { text-decoration: underline; }
+  @media (max-width: 40rem) {
+    .objectives .qs li, .repos .qs li { flex-direction: column; gap: 0.25rem; }
+    .ostate, .rname { min-width: 0; }
+  }
 
   /* Affiliation / data-source logos — a slow band, shown as they ship (the
      brand-manual versions are already made for a dark background). */
