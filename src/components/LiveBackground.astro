@@ -1,0 +1,59 @@
+---
+import type { ExperimentId } from '../lib/experiments';
+
+interface Props {
+  id: ExperimentId;
+}
+const { id } = Astro.props;
+---
+<div class="fondo" data-fondo={id} aria-hidden="true"></div>
+<div class="fondo-veil" aria-hidden="true"></div>
+
+<script>
+  const run = async () => {
+    const host = document.querySelector<HTMLElement>('.fondo[data-fondo]');
+    if (!host) return;
+    const id = host.dataset.fondo;
+    if (!id) return;
+    const loaders: Record<string, () => Promise<any>> = {
+      texforge: () => import('../scripts/fondos/texforge'),
+    };
+    const load = loaders[id];
+    if (!load) return;
+    const mod = await load();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const night =
+      document.documentElement.dataset.benchTheme === 'night' ||
+      document.documentElement.dataset.celestial === 'moon';
+    const fondo = mod.mount(host, { night, reduced, base: `/bench/fondos/${id}/` });
+    const onTheme = () => {
+      const n =
+        document.documentElement.dataset.benchTheme === 'night' ||
+        document.documentElement.dataset.celestial === 'moon';
+      fondo.setNight(n);
+    };
+    window.addEventListener('univerlab:themechange', onTheme);
+  };
+  if (document.readyState === 'complete') run();
+  else window.addEventListener('load', run, { once: true });
+</script>
+
+<style>
+  .fondo {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .fondo-veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 60% 80% at 50% 50%,
+      color-mix(in srgb, var(--bg) 90%, transparent) 0%,
+      transparent 75%
+    );
+  }
+</style>

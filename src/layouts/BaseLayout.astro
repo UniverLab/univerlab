@@ -3,6 +3,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import EssenceTokens from '../components/EssenceTokens.astro';
 import ThemeBackground from '../components/ThemeBackground.astro';
+import LiveBackground from '../components/LiveBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme, ExperimentId } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
@@ -50,6 +51,8 @@ interface Props {
   /** Experiment pages: the footer opens its forged colophon line with this
    *  experiment's name. Omitted everywhere else. */
   expId?: ExperimentId;
+  /** Opt into the cursor-driven engraved background runtime. */
+  fondo?: ExperimentId;
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
@@ -73,6 +76,7 @@ const {
   noindex = false,
   markdownTwin = true,
   expId,
+  fondo,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
@@ -354,7 +358,7 @@ https://github.com/UniverLab
    </head>
   <body>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
-    {!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />}
+    {fondo ? <LiveBackground id={fondo} /> : (!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />)}
     <Header />
     <main id="main">
       <slot />

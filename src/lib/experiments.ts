@@ -47,6 +47,8 @@ export interface Experiment {
   /** Fixed visual surface (data-surface on <html>) for the page + its docs.
    *  Omitted → the default dark lab theme. */
   surface?: string;
+  /** Opt into the cursor-driven engraved background runtime (LiveBackground). */
+  fondo?: true;
   /** One-line install commands per platform, if the experiment ships a binary.
    *  `windows` is only set when the repo also provides a PowerShell installer. */
   install?: { unix: string; windows?: string };
@@ -106,7 +108,7 @@ const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
   { id: 'canopy', name: 'Canopy', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
-  { id: 'texforge', name: 'TeXForge', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', bg: 'forge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
+  { id: 'texforge', name: 'TeXForge', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', bg: 'forge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, fondo: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'cadspec', name: 'cadSpec', number: 'EXP-005', status: 'archived', essenceHex: '#4874ea', essenceTextHex: '#3f6de9', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', motif: '├─ 8.50 ─┤ · plan 1:1 · declared, not drawn', surface: 'blueprint', startDate: '2026-04-10', endDate: '2026-10-13', thread: '@i18n', builtWith: ['ghscaff', 'gitkit'] },
