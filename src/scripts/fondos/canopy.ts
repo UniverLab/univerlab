@@ -3,16 +3,13 @@ import type { Fondo, FondoOpts, MountFondo } from './runtime';
 
 const TEAL = '#3fb8b0';
 const STEP_MS = 120;
-const ON = 1;
-const DYING = 2;
-const OFF = 0;
+export const ON = 1;
+export const DYING = 2;
 const BIRTH = 0.8;
 const HALO = 0.5;
 const COMB_ALPHA = 0.035;
 const REVIVE_IDLE = 4000;
 const REVIVE_GAP = 3000;
-
-export { ON, DYING, OFF, BIRTH, HALO, STEP_MS, COMB_ALPHA, REVIVE_IDLE, REVIVE_GAP };
 
 export interface CanopyCell {
   x: number;
@@ -23,28 +20,27 @@ export interface CanopyCell {
 }
 
 export function stepCells(
-  state: ArrayLike<number>,
-  next: { [index: number]: number },
+  state: Uint8Array,
+  next: Uint8Array,
   cells: Array<{ n: number[] } | null>,
   rand: () => number = Math.random
-): { [index: number]: number } {
-  const len = state.length;
-  for (let k = 0; k < len; k++) {
+): Uint8Array {
+  for (let k = 0; k < state.length; k++) {
     const cell = cells[k];
     if (!cell) {
-      (next as any)[k] = 0;
+      next[k] = 0;
       continue;
     }
     if (state[k] === ON) {
-      (next as any)[k] = DYING;
+      next[k] = DYING;
     } else if (state[k] === DYING) {
-      (next as any)[k] = 0;
+      next[k] = 0;
     } else {
       let on = 0;
       for (const j of cell.n) {
         if (state[j] === ON) on++;
       }
-      (next as any)[k] = on === 2 && rand() < BIRTH ? ON : 0;
+      next[k] = on === 2 && rand() < BIRTH ? ON : 0;
     }
   }
   return next;
@@ -56,26 +52,33 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   const { canvas, ctx: c, size } = hostCanvas(host);
 
   if (reduced) {
-    loadImage(base + 'panal.webp').then((img) => {
+    let still: HTMLImageElement | null = null;
+    // A resize clears the canvas (hostCanvas reassigns its size), so the still is repainted on every resize.
+    const paintStill = () => {
+      if (!still) return;
       const sz = size();
-      const dpr = sz.dpr;
-      const w = sz.w;
-      const h = sz.h;
-      const mapW = img.naturalWidth || 1;
-      const mapH = img.naturalHeight || 1;
-      const s = Math.max(w / mapW, h / mapH);
-      const ox = (w - mapW * s) / 2;
-      const oy = (h - mapH * s) / 2;
+      const mapW = still.naturalWidth || 1;
+      const mapH = still.naturalHeight || 1;
+      const s = Math.max(sz.w / mapW, sz.h / mapH);
+      const ox = (sz.w - mapW * s) / 2;
+      const oy = (sz.h - mapH * s) / 2;
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.clearRect(0, 0, canvas.width, canvas.height);
-      c.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+      c.setTransform(sz.dpr * s, 0, 0, sz.dpr * s, sz.dpr * ox, sz.dpr * oy);
       c.globalAlpha = COMB_ALPHA;
-      c.drawImage(img, 0, 0);
+      c.drawImage(still, 0, 0);
       c.globalAlpha = 1;
+    };
+    loadImage(base + 'panal.webp').then((img) => {
+      still = img;
+      paintStill();
     });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(paintStill) : null;
+    ro?.observe(host);
     return {
       setNight() {},
       destroy() {
+        ro?.disconnect();
         (canvas as any).__ro?.disconnect?.();
         canvas.remove();
       },
