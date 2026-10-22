@@ -29,9 +29,9 @@
   --canopy: #00a9a0;
   --astro-denoise: #a78bfa;
 
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
-  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'Sometype Mono', ui-monospace, Menlo, monospace;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-serif: 'Old Standard TT', Georgia, serif;
 
   --measure: 64ch;
   --space: clamp(1rem, 2.5vw, 1.75rem);
@@ -200,8 +200,8 @@ html[data-surface]:root {
    (pre-existing; typography is not a substrate token — leave that war to a
    future spec). Kept here verbatim from the old block. */
 html[data-surface='paper'] {
-  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-serif: 'Old Standard TT', Georgia, serif;
   --rule-t1: color-mix(in srgb, var(--line) 85%, transparent);
   --rule-t2: color-mix(in srgb, var(--line) 70%, transparent);
   --rule-t3: color-mix(in srgb, var(--line) 60%, transparent);
@@ -269,16 +269,24 @@ html {
 
 body { margin: 0; min-height: 100vh; }
 
+/* The default ground: parchment by day, slate by night (bench-tokens.css). Experiment
+   pages keep their own surface ground. */
+html:not([data-surface]) body {
+  background-color: var(--bench-ground);
+  background-image: var(--bench-ground-tile);
+  background-size: 341px;
+}
+
 ::selection { background: var(--ink); color: var(--bg); }
 
 h1, h2, h3 {
-  font-weight: 500;
+  font-family: var(--font-serif);
+  font-weight: 400;
   line-height: 1.15;
   margin: 0;
 }
 
 h1, h2 {
-  font-family: var(--font-serif);
   letter-spacing: 0;
 }
 
@@ -346,6 +354,14 @@ button, a, summary, [role='button'] { touch-action: manipulation; }
 
 .prose { max-width: var(--measure); }
 .prose p { margin: 0 0 1.1em; }
+
+/* Long text: EB Garamond at reading size; whole paragraphs are never italic. */
+.prose, main p {
+  font-size: clamp(1.06rem, 1rem + 0.25vw, 1.19rem);
+  line-height: 1.6;
+  max-width: 65ch;
+  font-style: normal;
+}
 /* Emphasis: a few important words carry the page's colour — the UniverLab
    yellow on the core pages, the experiment's own essence on its page. */
 strong { color: var(--essence, var(--accent)); font-weight: 500; }
@@ -413,7 +429,7 @@ body > header { view-transition-name: site-header; }
   border-radius: 10px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   overflow: hidden;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 .cmd-input-row {
   display: flex;
@@ -487,7 +503,7 @@ body > header { view-transition-name: site-header; }
   padding: 0.4rem 0.6rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 .find-input {
   background: none;

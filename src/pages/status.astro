@@ -112,7 +112,7 @@ const rmStrings = en.roadmap;
       transform: translate(-50%, -50%);
       background: rgba(18, 18, 22, 0.95);
       color: #fff;
-      font-family: "IBM Plex Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.88rem;
       padding: 0.9rem 2.4rem 0.9rem 1.4rem;
       border-radius: 8px;
@@ -136,7 +136,7 @@ const rmStrings = en.roadmap;
     .gl-toast-body { margin-top: 0.5rem; text-align: left; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
     .gl-toast-body-inner { color: #ccc; font-size: 0.82rem; line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s ease; white-space: pre-line; }
     .gl-toast-body-inner.expanded { max-height: none; overflow-y: auto; }
-    .gl-toast-expand { background: none; border: 0; color: #d4a843; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; text-align: left; opacity: 0.8; }
+    .gl-toast-expand { background: none; border: 0; color: #d4a843; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; text-align: left; opacity: 0.8; }
     .gl-toast-expand:hover { opacity: 1; text-decoration: underline; }
     @keyframes gl-toast-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     @keyframes gl-toast-out { from { opacity: 1; } to { opacity: 0; transform: scale(0.95); } }
