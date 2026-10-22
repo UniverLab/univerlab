@@ -260,6 +260,7 @@ export const en = {
       templates: {
         kicker: 'Templates',
         title: '{n} templates in the open registry',
+        cols: { name: 'name', description: 'description', version: 'version' },
         use: 'Start a document from any of them:',
       },
       faq: [
@@ -386,6 +387,7 @@ export const en = {
       boilerplates: {
         kicker: 'Boilerplates',
         title: '{n} boilerplates the wizard can lay down',
+        cols: { name: 'name', language: 'language', description: 'description', version: 'version' },
         use: 'Pick one at the wizard\'s language step:',
       },
       faq: [

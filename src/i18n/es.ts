@@ -260,6 +260,7 @@ export const es: Dict = {
       templates: {
         kicker: 'Plantillas',
         title: '{n} plantillas en el registro abierto',
+        cols: { name: 'nombre', description: 'descripción', version: 'versión' },
         use: 'Empieza un documento con cualquiera:',
       },
       faq: [
@@ -386,6 +387,7 @@ export const es: Dict = {
       boilerplates: {
         kicker: 'Boilerplates',
         title: '{n} boilerplates que el asistente puede crear',
+        cols: { name: 'nombre', language: 'lenguaje', description: 'descripción', version: 'versión' },
         use: 'Elige uno en el paso de lenguaje del asistente:',
       },
       faq: [

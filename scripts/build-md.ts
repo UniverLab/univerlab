@@ -142,6 +142,25 @@ export function htmlToMarkdown(html: string): string {
       return `${content} (${missionIso(iso)})`;
     },
   });
+  // Tables: Turndown's default flattens each cell onto its own line, which
+  // loses the row structure an agent needs. Emit a GFM pipe table instead;
+  // the first row is the header, as in the site's own catalogue tables.
+  td.addRule('table', {
+    filter: 'table',
+    replacement: (_content, node) => {
+      const rows = Array.from((node as HTMLElement).querySelectorAll('tr')).map((tr) =>
+        Array.from(tr.children).map((cell) =>
+          (cell.textContent ?? '').replace(/\s+/g, ' ').trim().replace(/\|/g, '\\|'),
+        ),
+      );
+      if (rows.length === 0) return '';
+      const width = Math.max(...rows.map((r) => r.length));
+      const line = (cells: string[]) => `| ${Array.from({ length: width }, (_, i) => cells[i] ?? '').join(' | ')} |`;
+      const divider = `| ${Array(width).fill('---').join(' | ')} |`;
+      const [header, ...body] = rows;
+      return `\n\n${[line(header), divider, ...body.map(line)].join('\n')}\n\n`;
+    },
+  });
   const markdown = td.turndown(cleaned);
 
   let frontMatter = '---\n';
