@@ -17,6 +17,7 @@ const { id } = Astro.props;
     if (!id) return;
     const loaders: Record<string, () => Promise<any>> = {
       texforge: () => import('../scripts/fondos/texforge'),
+      canopy: () => import('../scripts/fondos/canopy'),
     };
     const load = loaders[id];
     if (!load) return;
