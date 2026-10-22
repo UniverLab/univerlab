@@ -414,26 +414,74 @@ export const es: Dict = {
         'Geometría declarativa en TOML que puedes revisar en un diff, con preview en el navegador. Compilación determinista: el mismo fuente siempre da el mismo modelo.',
     },
     'astro-denoise': {
-      need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
+      need: 'Aplicar una reducción de ruido a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
-        'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+        'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
       thread: {
-        problem: 'eliminación de ruido',
+        problem: 'reducción de ruido',
         method: 'un benchmark puntuado por la ciencia',
         artifact: 'métodos comparables',
       },
-      title:
-        'Benchmarking de denoising astronómico — Astro Denoise',
+      title: 'Astro Denoise — benchmark de reducción de ruido en DC2',
       description:
-        'Una propuesta de investigación para un benchmark reproducible de métodos de denoising en imágenes simuladas del Observatorio Rubin — evaluada por ciencia.',
+        'Benchmark reproducible de métodos de reducción de ruido en imágenes DC2 del Vera Rubin Observatory, por recuperación de fuentes débiles, calidad y coste.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
       lede:
-        'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
+        'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de reducción de ruido sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
       genesis: {
         kicker: 'Génesis',
         title: 'Una tesis de maestría en curso.',
         body:
-          'Esto empezó como tesis de maestría y aún está tomando forma. La primera versión funcional está en su lugar: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo preparado para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y comparaciones iniciales BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo — pero queda trabajo por delante antes de que esto sea un benchmark terminado.',
+          'Esto empezó como tesis de maestría y aún está tomando forma. El ecosistema funciona desde julio de 2026: un orquestador con un protocolo común de línea de comandos (imagen FITS de entrada y de salida, metadatos en JSON), una condición de control sin procesamiento y dos métodos empaquetados por separado, BM3D como representante de los métodos clásicos y una U-Net como representante del aprendizaje profundo. Los experimentos corren en abierto, aquí mismo, pero queda trabajo antes de que esto sea un benchmark terminado.',
+      },
+      objectives: {
+        kicker: 'Objetivos',
+        thesisTitle:
+          'Benchmarking de métodos de reducción de ruido en imágenes simuladas DC2 del Vera Rubin Observatory',
+        general:
+          'Desarrollar una plataforma de benchmarking reproducible que compare métodos de reducción de ruido en imágenes simuladas DC2 del Vera Rubin Observatory, evaluando en cada método la recuperación de fuentes débiles, la calidad de imagen resultante y su coste computacional.',
+        items: [
+          {
+            state: 'completo',
+            text: 'Un ecosistema modular y extensible con un protocolo común de línea de comandos, en el que cada método se empaqueta por separado con su propio entorno y un método nuevo se incorpora sin modificar el orquestador.',
+          },
+          {
+            state: 'en curso',
+            text: 'Métricas confiables de recuperación de fuentes (completitud, pureza, completitud por magnitud y precisión fotométrica, por cruce uno a uno con el catálogo de verdad de DC2) y de calidad de imagen (PSNR, SSIM y ruido de fondo), cada una verificada contra al menos dos fuentes independientes de la literatura.',
+          },
+          {
+            state: 'en curso',
+            text: 'Herramientas que miden el coste computacional de cada método (tiempo por región, memoria máxima y regiones por unidad de tiempo) desde fuera de su proceso, reportadas con la descripción del equipo.',
+          },
+          {
+            state: 'en curso',
+            text: 'Los métodos evaluados: BM3D y una U-Net entrenada solo con regiones de DC2 que no están en el conjunto de evaluación, con su receta de entrenamiento y sus pesos publicados.',
+          },
+          {
+            state: 'pendiente',
+            text: 'Un benchmark reproducible sobre un conjunto de datos curado y versionado de DESC DC2, con regiones multibanda de varias zonas del cielo; cada versión se identifica por checksums y declara sus regiones, y todo resultado se reporta contra una versión concreta.',
+          },
+        ],
+      },
+      repos: {
+        kicker: 'Repositorios',
+        items: [
+          {
+            name: 'UniverLab/astro-denoise',
+            description: 'El banco: orquestador, métricas científicas y la condición de control.',
+            url: 'https://github.com/UniverLab/astro-denoise',
+          },
+          {
+            name: 'UniverLab/astro-denoise-bm3d',
+            description: 'BM3D, la referencia clásica.',
+            url: 'https://github.com/UniverLab/astro-denoise-bm3d',
+          },
+          {
+            name: 'UniverLab/astro-denoise-unet',
+            description: 'La U-Net, la referencia de aprendizaje profundo.',
+            url: 'https://github.com/UniverLab/astro-denoise-unet',
+          },
+        ],
       },
       proposalCta: 'Leer la propuesta (PDF) ↗',
       questions: {
@@ -441,14 +489,14 @@ export const es: Dict = {
         items: [
           '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
           '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — tiene más probabilidad de ayudar a la profundidad de LSST DC2, y cuánto?',
-          '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
+          '¿Puede el benchmark completo repetirse con los mismos resultados científicos sobre la misma versión de datos y de código?',
         ],
       },
       faq: [
         ['¿Qué es astro-denoise?',
-          'Un proyecto de investigación que evalúa métodos de denoising en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
-        ['¿Qué es el denoising en astronomía?',
-          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. El denoising busca reducir ese ruido preservando las fuentes reales. El riesgo: un denoiser puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
+          'Un proyecto de investigación que evalúa métodos de reducción de ruido en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). Compara tres condiciones: un control sin procesamiento, BM3D como referencia clásica y una U-Net como referencia de aprendizaje profundo. El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
+        ['¿Qué es la reducción de ruido en astronomía?',
+          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. La reducción de ruido busca bajar ese ruido preservando las fuentes reales. El riesgo: un método puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
         ['¿Qué es LSST?',
           'El Legacy Survey of Space and Time — un relevamiento astronómico de 10 años que realizará el Observatorio Vera Rubin en Chile. Fotografiará todo el cielo visible repetidamente, produciendo el catálogo profundo de campo amplio más grande jamás hecho.'],
         ['¿Qué es DC2?',

@@ -414,26 +414,74 @@ export const en = {
         'Declarative geometry in TOML you can diff and review, with live browser preview. Compiled deterministically — the same source always yields the same model.',
     },
     'astro-denoise': {
-      need: 'Denoising an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
+      need: 'Noise reduction on an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
-        'A research proposal for benchmarking astronomical denoising — evaluated on the science it recovers, not how clean it looks.',
+        'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
       thread: {
-        problem: 'image denoising',
+        problem: 'noise reduction',
         method: 'a benchmark scored by the science',
         artifact: 'comparable methods',
       },
-      title:
-        'Benchmarking astronomical denoising — Astro Denoise',
+      title: 'Astro Denoise — a noise-reduction benchmark on DC2 images',
       description:
-        'A research proposal for a reproducible benchmark of denoising methods on simulated Rubin Observatory images — scored on the science it recovers, not the look.',
+        'A reproducible benchmark of noise-reduction methods on simulated Vera Rubin Observatory DC2 images, scored by faint-source recovery, image quality and cost.',
       koan: 'Frontier knowledge hides behind the noise…',
       lede:
-        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of denoising methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
+        'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of noise-reduction methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
       genesis: {
         kicker: 'Genesis',
         title: "A master's thesis in progress.",
         body:
-          "This started as a master's thesis and is still taking shape. The first working version is in place: four open modules (metrics engine, BM3D and U-Net baselines, and an orchestrator with a terminal dashboard), a curated multi-band block of sky regions prepared for distribution on Hugging Face, a one-command scaffold so any researcher can plug in a new method, and initial BM3D-vs-U-Net comparisons with a proper train/eval split. The experiments are running — in the open, right here — but there is more work ahead before this becomes a finished benchmark.",
+          "This began as a master's thesis and is still taking shape. The ecosystem has worked since July 2026: an orchestrator with a common command-line protocol (FITS image in and out, metadata in JSON), a no-processing control condition, and two separately packaged methods, BM3D for the classical family and a U-Net for deep learning. The experiments run in the open, right here, but there is work ahead before this is a finished benchmark.",
+      },
+      objectives: {
+        kicker: 'Objectives',
+        thesisTitle:
+          'Benchmarking noise-reduction methods on simulated DC2 images of the Vera Rubin Observatory',
+        general:
+          'Develop a reproducible benchmarking platform that compares noise-reduction methods on simulated DC2 images of the Vera Rubin Observatory, evaluating for each method the recovery of faint sources, the resulting image quality and its computational cost.',
+        items: [
+          {
+            state: 'complete',
+            text: 'A modular, extensible ecosystem with a common command-line protocol, where each method is packaged separately with its own environment and a new method joins without changing the orchestrator.',
+          },
+          {
+            state: 'in progress',
+            text: 'Reliable source-recovery metrics (completeness, purity, completeness by magnitude and photometric accuracy, by one-to-one matching against the DC2 truth catalogue) and image-quality metrics (PSNR, SSIM and background noise), each checked against at least two independent sources in the literature.',
+          },
+          {
+            state: 'in progress',
+            text: "Tools that measure each method's computational cost (time per region, peak memory and regions per unit of time) from outside its process, reported with a description of the hardware.",
+          },
+          {
+            state: 'in progress',
+            text: 'The methods under test: BM3D, and a U-Net trained only on DC2 regions outside the evaluation set, with its training recipe and weights published.',
+          },
+          {
+            state: 'pending',
+            text: 'A reproducible benchmark on a curated, versioned DESC DC2 dataset of multiband regions from several sky areas; each version is identified by checksums and declares its regions, and every result is reported against one version.',
+          },
+        ],
+      },
+      repos: {
+        kicker: 'Repositories',
+        items: [
+          {
+            name: 'UniverLab/astro-denoise',
+            description: 'The bench: orchestrator, science metrics and the control condition.',
+            url: 'https://github.com/UniverLab/astro-denoise',
+          },
+          {
+            name: 'UniverLab/astro-denoise-bm3d',
+            description: 'BM3D, the classical baseline.',
+            url: 'https://github.com/UniverLab/astro-denoise-bm3d',
+          },
+          {
+            name: 'UniverLab/astro-denoise-unet',
+            description: 'The U-Net, the deep-learning baseline.',
+            url: 'https://github.com/UniverLab/astro-denoise-unet',
+          },
+        ],
       },
       proposalCta: 'Read the proposal (PDF) ↗',
       questions: {
@@ -441,14 +489,14 @@ export const en = {
         items: [
           'Can a denoiser raise completeness without hurting purity — or does it invent sources that were never there?',
           'Which family of methods — classical filters or learned models — is more likely to help at LSST DC2 depth, and by how much?',
-          'Can the whole benchmark run reproducibly end to end — versioned data, methods, metrics and bibliography?',
+          'Can the whole benchmark be repeated with the same scientific results on the same version of data and code?',
         ],
       },
       faq: [
         ['What is astro-denoise?',
-          'A research project benchmarking denoising methods on simulated Vera Rubin Observatory (LSST DC2) images. The goal is to recover faint galaxies without inventing ones that were never there — scored by science recovery (completeness + purity), not visual quality.'],
-        ['What is denoising in astronomy?',
-          'Astronomical images contain unavoidable noise from the detector and sky. Denoising aims to reduce this noise while preserving real sources. The risk: a denoiser can smooth out real faint galaxies or invent fake ones that were never there.'],
+          'A research project benchmarking noise-reduction methods on simulated Vera Rubin Observatory (LSST DC2) images. It compares three conditions: a no-processing control, BM3D as the classical baseline and a U-Net as the deep-learning baseline. The goal is to recover faint galaxies without inventing ones that were never there — scored by science recovery (completeness + purity), not visual quality.'],
+        ['What is noise reduction in astronomy?',
+          'Astronomical images contain unavoidable noise from the detector and sky. Noise reduction aims to lower this noise while preserving real sources. The risk: a method can smooth out real faint galaxies or invent fake ones that were never there.'],
         ['What is LSST?',
           'The Legacy Survey of Space and Time — a 10-year astronomical survey conducted by the Vera Rubin Observatory in Chile. It will image the entire visible sky repeatedly, producing the deepest wide-field catalog of galaxies, stars, and transient events ever made.'],
         ['What is DC2?',
