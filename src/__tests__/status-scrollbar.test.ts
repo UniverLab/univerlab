@@ -28,7 +28,7 @@ describe('status.astro quiet scrollbars (>=78rem only)', () => {
   const wide = wideBlock();
 
   it('keeps the scroll behaviour rule intact (FR1)', () => {
-    expect(wide).toContain('max-height: calc(100dvh - 26rem);');
+    expect(wide).toContain('max-height: calc(100dvh - 16rem);');
     expect(wide).toContain('min-height: 24rem;');
     expect(wide).toContain('overflow-y: auto;');
     expect(wide).toContain('overscroll-behavior: contain;');
@@ -36,13 +36,13 @@ describe('status.astro quiet scrollbars (>=78rem only)', () => {
 
   it('themes both scrollers with page tokens only (FR2)', () => {
     expect(wide).toContain(
-      '.board-roadmap #roadmap, .board-log .log-scroller { scrollbar-width: thin; ' +
+      '.board-log .log-scroller { scrollbar-width: thin; ' +
         'scrollbar-color: color-mix(in srgb, var(--ink-faint) 45%, transparent) transparent;',
     );
     // no literal colours in the new declarations: token + color-mix only.
     // The selector pair appears twice in the block (behaviour rule first,
     // styling rule second) — slice from the second occurrence.
-    const sel = '.board-roadmap #roadmap, .board-log .log-scroller {';
+    const sel = '.board-log .log-scroller {';
     const first = wide.indexOf(sel);
     const second = wide.indexOf(sel, first + sel.length);
     expect(second).toBeGreaterThan(first);
@@ -54,19 +54,19 @@ describe('status.astro quiet scrollbars (>=78rem only)', () => {
 
   it('carries the webkit family: 6px, transparent track, token thumb, hover, no buttons (FR2)', () => {
     expect(wide).toContain(
-      '.board-roadmap #roadmap::-webkit-scrollbar, .board-log .log-scroller::-webkit-scrollbar { width: 6px; }',
+      '.board-log .log-scroller::-webkit-scrollbar { width: 6px; }',
     );
     expect(wide).toContain(
-      '.board-roadmap #roadmap::-webkit-scrollbar-track, .board-log .log-scroller::-webkit-scrollbar-track { background: transparent; }',
+      '.board-log .log-scroller::-webkit-scrollbar-track { background: transparent; }',
     );
     expect(wide).toContain(
-      '.board-roadmap #roadmap::-webkit-scrollbar-thumb, .board-log .log-scroller::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink-faint) 45%, transparent); border-radius: 999px; }',
+      '.board-log .log-scroller::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink-faint) 45%, transparent); border-radius: 999px; }',
     );
     expect(wide).toContain(
-      '.board-roadmap #roadmap::-webkit-scrollbar-thumb:hover, .board-log .log-scroller::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }',
+      '.board-log .log-scroller::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }',
     );
     expect(wide).toContain(
-      '.board-roadmap #roadmap::-webkit-scrollbar-button, .board-log .log-scroller::-webkit-scrollbar-button { display: none; }',
+      '.board-log .log-scroller::-webkit-scrollbar-button { display: none; }',
     );
   });
 

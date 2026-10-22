@@ -21,6 +21,7 @@ export const es: Dict = {
     log: 'Estado',
     api: 'API',
     archive: 'Archivo',
+    roadmap: 'Hoja de ruta',
   },
   footer: {
     quote:
@@ -858,6 +859,9 @@ export const es: Dict = {
     empty: 'Aún no hay nada en el roadmap.',
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
+    pageTitle: 'Roadmap — what UniverLab is building now, next and later',
+    missionLogLink: 'Mission Log →',
+    roadmapLink: 'Roadmap →',
   },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
   builtWithSegments: {

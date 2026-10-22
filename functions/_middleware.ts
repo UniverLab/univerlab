@@ -1,5 +1,8 @@
 import { renderStatusTwin, statusTwinRoute, type Lang } from './status-twin';
+import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
+import { roadmapLanesHtml } from '../src/lib/roadmap-board';
+import { en } from '../src/i18n/en';
 
 const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4']);
 
@@ -102,7 +105,38 @@ export async function onRequest(context: {
   const { pathname } = new URL(request.url);
   if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
 
-  if (!wantsMarkdown(request.headers.get('Accept'))) {
+  const accept = request.headers.get('Accept');
+
+  // Roadmap HTML: fetch the static page, then swap the lanes for a live render.
+  if (!wantsMarkdown(accept) && (pathname === '/roadmap' || pathname === '/roadmap/')) {
+    const staticRes = await next();
+    if (!staticRes.ok) return staticRes;
+    try {
+      const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+      let items: Awaited<ReturnType<typeof loadRoadmap>>;
+      try {
+        items = await loadRoadmap({ init: apiInit(), signal });
+      } finally {
+        clear();
+      }
+      const html = roadmapLanesHtml(items, en.roadmap);
+      const RW = (globalThis as any).HTMLRewriter;
+      if (typeof RW === 'function') {
+        const rewriter = new RW();
+        rewriter.on('#roadmap-lanes', {
+          element(el: any) {
+            el.setInnerContent(html, { html: true });
+          },
+        });
+        return rewriter.transform(staticRes);
+      }
+      return staticRes;
+    } catch {
+      return staticRes;
+    }
+  }
+
+  if (!wantsMarkdown(accept)) {
     return next();
   }
 
@@ -118,6 +152,20 @@ export async function onRequest(context: {
       } catch {
         // API down, non-OK or past 3 s: fall through to the static twin below,
         // so an outage degrades to today's behaviour and never to an error page.
+      }
+    }
+
+    if (roadmapTwinRoute(url.pathname)) {
+      try {
+        const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+        try {
+          const items = await loadRoadmap({ init: apiInit(), signal });
+          return new Response(renderRoadmapTwin(items), { headers: MARKDOWN_HEADERS });
+        } finally {
+          clear();
+        }
+      } catch {
+        // fall through to static twin
       }
     }
 

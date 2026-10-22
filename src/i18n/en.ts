@@ -20,6 +20,7 @@ export const en = {
     log: 'Status',
     api: 'API',
     archive: 'Archive',
+    roadmap: 'Roadmap',
   },
   footer: {
     quote:
@@ -863,6 +864,9 @@ export const en = {
     empty: 'Nothing on the roadmap yet.',
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
+    pageTitle: 'Roadmap — what UniverLab is building now, next and later',
+    missionLogLink: 'Mission Log →',
+    roadmapLink: 'Roadmap →',
   },
   plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—', release: 'release' },
   // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the

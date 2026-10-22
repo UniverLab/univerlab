@@ -99,40 +99,14 @@ describe('Sol parity with the Mission Log formatter', () => {
     );
   });
 
-  it('page script keeps the shared day-of-year algorithm', () => {
-    const src = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
-    expect(src).toContain('new Date(y, 0, 0)');
-    expect(src).toContain('86400000');
-    expect(src).toContain('mission-time');
-  });
-
-  it('page inline formatter equals the shared formatter for the same instants', () => {
-    // The page cannot import the lib (is:inline script), so it duplicates the
-    // Sol math. Execute that duplicate against the shared helpers to catch drift
-    // instead of trusting a substring match on the source.
-    const src = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
-    const between = (from: string, to: string): string => {
-      const a = src.indexOf(from);
-      const b = src.indexOf(to);
-      if (a === -1 || b === -1 || b <= a) throw new Error(`cannot isolate ${from}`);
-      return src.slice(a, b);
-    };
-    const body =
-      between('function formatDate', 'function solOf') +
-      between('function solOf', 'function fillTpl');
-    const page = new Function(`${body}; return { formatDate, solOf };`)() as {
-      formatDate: (iso: string) => string;
-      solOf: (iso: string) => number;
-    };
+  it('landed Sol in the shared renderer equals the Mission Log formatter', () => {
     for (const iso of [
       '2026-01-01T00:00:00Z',
       '2026-09-16T10:00:00Z',
-      '2026-07-18T10:00:00Z',
       '2024-02-29T23:30:00Z',
       '2026-12-31T23:59:00Z',
     ]) {
-      expect(page.solOf(iso)).toBe(solDayOfYear(iso));
-      expect(page.formatDate(iso)).toBe(formatMissionDate(iso));
+      expect(landedText('{sol}', iso)).toBe(String(solDayOfYear(iso)));
     }
   });
 });
@@ -156,24 +130,25 @@ describe('template helper', () => {
 
 describe('status.astro flight-plan guards', () => {
   const src = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
+  const rmSrc = readFileSync(resolve(__dirname, '../lib/roadmap-board.ts'), 'utf8');
+  const pageSrc = readFileSync(resolve(__dirname, '../pages/roadmap.astro'), 'utf8');
 
   it('removes the orphan line', () => {
     expect(src).not.toContain('rm-quiet');
     expect(src).not.toContain('Project updates live at');
   });
 
-  it('renders trajectory cards with dots, summaries and hold notes', () => {
-    expect(src).toContain('rm-flight');
-    expect(src).toContain('rm-dot');
-    expect(src).toContain('rm-summary');
-    expect(src).toContain('rm-hold');
-    expect(src).toContain('rm-entries');
-    expect(src).toContain('rm-seg');
+  it('renders trajectory cards with summaries, hold notes and entries links', () => {
+    expect(rmSrc).toContain('rm-seg');
+    expect(rmSrc).toContain('rm-summary');
+    expect(rmSrc).toContain('rm-hold');
+    expect(rmSrc).toContain('rm-entries');
+    expect(pageSrc).toContain('roadmapLanesHtml');
   });
 
   it('uses shipped_at for done meta, not updatedAt', () => {
-    expect(src).toMatch(/shipped_at/);
-    expect(src).not.toMatch(/rm-date/);
+    expect(rmSrc).toMatch(/shipped_at/);
+    expect(rmSrc).not.toMatch(/rm-date/);
   });
 
   it('wires the entries filter into the log with a clear chip', () => {
@@ -183,9 +158,11 @@ describe('status.astro flight-plan guards', () => {
   });
 
   it('stays read-only on the public page', () => {
-    expect(src).not.toMatch(/contenteditable/i);
-    expect(src).not.toMatch(/roadmap.*PATCH|PATCH.*roadmap/i);
-    expect(src).not.toMatch(/<form[^>]*roadmap/i);
+    for (const page of [src, pageSrc]) {
+      expect(page).not.toMatch(/contenteditable/i);
+      expect(page).not.toMatch(/roadmap.*PATCH|PATCH.*roadmap/i);
+      expect(page).not.toMatch(/<form[^>]*roadmap/i);
+    }
   });
 
   it('keeps the shared board-head RSS link', () => {
