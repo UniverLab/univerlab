@@ -127,6 +127,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       window.removeEventListener('pointerdown', resetLast);
       unsubPointer();
       stopLoop();
+      (canvas as any).__ro?.disconnect?.();
       canvas.remove();
       caseEl.remove();
     },

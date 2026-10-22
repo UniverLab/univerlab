@@ -30,7 +30,13 @@ export function hostCanvas(host: HTMLElement): {
   };
 
   if (typeof ResizeObserver !== 'undefined') {
-    const ro = new ResizeObserver(() => resize());
+    const ro = new ResizeObserver(() => {
+      if (!canvas.isConnected) {
+        ro.disconnect();
+        return;
+      }
+      resize();
+    });
     ro.observe(host);
     (canvas as any).__ro = ro;
   }
