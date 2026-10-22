@@ -1,6 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import { byId } from '../lib/experiments';
+import { byId, type ExperimentId } from '../lib/experiments';
 import { docLastModified } from '../lib/doc-last-modified';
 import { buildDocsJsonLd } from '../lib/docs-jsonld';
 import { composeDocsDescription } from '../lib/docs-description';
@@ -59,6 +59,7 @@ const docsJsonLd = buildDocsJsonLd({
   ogType="article"
   articleModifiedTime={lastModified ?? undefined}
   jsonLdGraph={docsJsonLd['@graph']}
+  expId={id as ExperimentId}
 >
   <div class="wrap docs">
     <aside>

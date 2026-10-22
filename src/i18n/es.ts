@@ -31,6 +31,8 @@ export const es: Dict = {
       ghscaff: 'repositorio configurado con',
       gitkit: 'commits revisados por',
     },
+    // Solo en páginas de experimento: la línea de créditos sobre el sello.
+    forged: 'Artefacto concebido y forjado en UniverLab',
   },
   common: {
     repo: 'Star en GitHub ↗',

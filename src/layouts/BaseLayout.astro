@@ -4,7 +4,7 @@ import Footer from '../components/Footer.astro';
 import EssenceTokens from '../components/EssenceTokens.astro';
 import ThemeBackground from '../components/ThemeBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
-import type { BgTheme } from '../lib/experiments';
+import type { BgTheme, ExperimentId } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
 import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
 import { getLang, useTranslations } from '../i18n';
@@ -47,6 +47,9 @@ interface Props {
   /** The page builds an `index.html` and therefore has a markdown twin.
    *  `false` only for pages whose output is not `index.html` (404). */
   markdownTwin?: boolean;
+  /** Experiment pages: the footer opens its forged colophon line with this
+   *  experiment's name. Omitted everywhere else. */
+  expId?: ExperimentId;
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
@@ -69,6 +72,7 @@ const {
   circadianPalette,
   noindex = false,
   markdownTwin = true,
+  expId,
 } = Astro.props;
 const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
 // Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
@@ -355,7 +359,7 @@ https://github.com/UniverLab
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer expId={expId} />
     <GhostHint hints={[
       { id: 'cmd-palette', msg: 'Press <kbd>/</kbd> for commands', first: true },
       { id: 'today-science', msg: 'The celestial marker hides a fact from today in science', prob: 0.16 },

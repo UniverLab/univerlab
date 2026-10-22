@@ -32,6 +32,8 @@ export const en = {
       ghscaff: 'repository set up with',
       gitkit: 'commits checked by',
     },
+    // Experiment pages only: the colophon credits line above the seal.
+    forged: 'Artifact conceived and forged at UniverLab',
   },
   common: {
     repo: 'Star on GitHub ↗',
