@@ -7,11 +7,22 @@
  *  itself is decorative; every string it shows also exists in the page.
  */
 import { formatSolLabel } from '../lib/mission-time';
+import { liveExperiments } from '../lib/experiments';
+import { fondoLoaders } from './fondos/index';
+import type { Fondo } from './fondos/runtime';
 
 type Phase = 'day' | 'night';
 
 const CYCLE_MS = 7000;
 const FLASH_MS = 240;
+/** One character every 28 ms when the freed corner types the experiment out. */
+const TYPE_MS = 28;
+/** A touched world falls back to its machine after 12 s without further touches. */
+const WORLD_TOUCH_MS = 12000;
+/** Worlds that sit on a light ground (the `paper` and `pastel` surfaces);
+ *  every other experiment page is a dark surface, and Quorum follows the
+ *  phase. The world host carries that ground (see Home.astro `.world-host`). */
+const LIGHT_WORLDS = new Set(['texforge', 'gitkit']);
 
 export function startLantern(): void {
   const root = document.documentElement;
@@ -25,6 +36,152 @@ export function startLantern(): void {
   const lanternImg = document.getElementById('lantern-img') as HTMLImageElement | null;
   const pauseBtn = document.getElementById('lantern-pause') as HTMLButtonElement | null;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── World mode: the screen becomes the experiment's live background ──────
+  //  The world's module mounts into #world-host under the clip; the module
+  //  listens through the runtime's pointerIn(host), which already reports
+  //  coordinates relative to the host, so the cursor drives it exactly as on
+  //  the experiment's own page. No iframes; the module loads lazily, only on
+  //  the first hover that needs it.
+  const worldHost = document.getElementById('world-host');
+  const catcher = document.getElementById('catch');
+  const typed = document.getElementById('typed');
+  const typedK = typed?.querySelector('[data-typed="k"]');
+  const typedCmd = typed?.querySelector('[data-typed="cmd"]');
+  const typedLine = typed?.querySelector('[data-typed="line"]');
+  const hint = document.querySelector('.hint');
+  const hintText = hint?.textContent ?? '';
+  const expById = new Map(liveExperiments.map((exp) => [exp.id, exp]));
+  let inWorld = false;
+  let world: Fondo | null = null;
+  let worldId: string | null = null;
+  let typeTimer = 0;
+  let lastTouch = 0;
+
+  /** Quorum follows the circadian phase; every other world keeps its colours. */
+  const isDarkWorld = (id: string): boolean =>
+    id === 'quorum' ? root.dataset.benchTheme === 'night' : !LIGHT_WORLDS.has(id);
+
+  /** The typed block and the bench hint follow the world, not the phase. */
+  const paintWorld = (): void => {
+    const id = slides[current]?.dataset.exp;
+    const dark = inWorld && id ? isDarkWorld(id) : phase === 'night';
+    screen.classList.toggle('on-dark', dark);
+    screen.classList.toggle('on-light', !dark);
+    // The world sits on the experiment's own ground, not on the lantern's
+    // parchment: `data-surface` hands the host that page's `--surface-bg`.
+    if (worldHost) {
+      const surface = slides[current]?.dataset.surface;
+      if (surface) worldHost.dataset.surface = surface;
+      else delete worldHost.dataset.surface;
+    }
+    if (world && worldId === 'quorum') {
+      world.setNight(root.dataset.benchTheme === 'night');
+    }
+  };
+
+  const unmountWorld = (): void => {
+    worldId = null;
+    if (world) {
+      world.destroy();
+      world = null;
+    }
+    if (worldHost) worldHost.innerHTML = '';
+  };
+
+  const mountWorld = (id: string): void => {
+    unmountWorld();
+    worldId = id;
+    const load = fondoLoaders[id];
+    if (!load || !worldHost) return;
+    const host = worldHost;
+    const night = id === 'quorum' ? root.dataset.benchTheme === 'night' : false;
+    void (load() as Promise<{ mount: (host: HTMLElement, opts: object) => Fondo }>).then((mod) => {
+      // The cursor may have left (or the bench moved on) while loading.
+      if (worldId !== id || !inWorld) return;
+      world = mod.mount(host, { night, reduced: reduce, base: `/bench/fondos/${id}/` });
+      paintWorld();
+    });
+  };
+
+  const clearType = (): void => {
+    window.clearInterval(typeTimer);
+    if (typedK) typedK.textContent = '';
+    if (typedCmd) typedCmd.textContent = '';
+    if (typedLine) {
+      typedLine.textContent = '';
+      typedLine.classList.remove('is-on');
+    }
+    if (hint) hint.textContent = hintText;
+  };
+
+  const typeOut = (id: string): void => {
+    if (!typedK || !typedCmd || !typedLine) return;
+    window.clearInterval(typeTimer);
+    const exp = expById.get(id);
+    const slide = slides[current];
+    const tagline = slide?.dataset.tagline ?? '';
+    // Experiments with a binary type their install command; the two without
+    // one (Quorum, Astro Denoise) type their bench line instead.
+    const cmd = exp?.install?.unix ?? slide?.dataset.bench ?? '';
+    typedK.textContent = `${exp?.number ?? id} · ${exp?.name ?? id}`;
+    typedLine.textContent = tagline;
+    typedLine.classList.remove('is-on');
+    if (hint) hint.textContent = slide?.dataset.worldHint ?? hintText;
+    if (reduce || cmd.length === 0) {
+      // Reduced motion (or nothing to type): the still frame and every line
+      // appear at once, with no typing effect.
+      typedCmd.textContent = cmd;
+      typedLine.classList.add('is-on');
+      return;
+    }
+    let i = 0;
+    typedCmd.textContent = '';
+    typeTimer = window.setInterval(() => {
+      i += 1;
+      typedCmd.textContent = cmd.slice(0, i);
+      if (i >= cmd.length) {
+        window.clearInterval(typeTimer);
+        typedLine.classList.add('is-on');
+      }
+    }, TYPE_MS);
+  };
+
+  const setWorld = (on: boolean): void => {
+    if (on === inWorld) return;
+    const id = slides[current]?.dataset.exp;
+    // The title slide is not an experiment: it has no world to open onto.
+    if (on && !id) return;
+    inWorld = on;
+    cutAt = performance.now();
+    lastTurn = performance.now();
+    screen.classList.toggle('is-world', on);
+    if (on && id) {
+      mountWorld(id);
+      typeOut(id);
+    } else {
+      unmountWorld();
+      clearType();
+    }
+    paintWorld();
+  };
+
+  catcher?.addEventListener('pointerenter', (ev) => {
+    if ((ev as PointerEvent).pointerType === 'mouse') setWorld(true);
+  });
+  catcher?.addEventListener('pointermove', (ev) => {
+    // A scroll can park the cursor over the screen without a fresh entry;
+    // the first move inside still opens the world.
+    if (!inWorld && (ev as PointerEvent).pointerType === 'mouse') setWorld(true);
+  });
+  catcher?.addEventListener('pointerleave', (ev) => {
+    if ((ev as PointerEvent).pointerType === 'mouse') setWorld(false);
+  });
+  catcher?.addEventListener('pointerdown', (ev) => {
+    if ((ev as PointerEvent).pointerType === 'mouse') return;
+    lastTouch = performance.now();
+    if (!inWorld) setWorld(true);
+  });
 
   // ── Circadian phase ──────────────────────────────────────────────────────
   let phase: Phase | null = null;
@@ -62,9 +219,13 @@ export function startLantern(): void {
       screen.style.height = `${h * 100}%`;
     }
     screen.dataset.phase = phase;
+    // A phase change repaints the world: Quorum follows it live.
+    paintWorld();
   };
 
-  applyPhase();
+  // applyPhase() itself runs at the end of startLantern, once every section
+  // it positions (slides, the world painter) is declared: the world painter
+  // reads the current slide, which lives below.
   new MutationObserver(applyPhase).observe(root, {
     attributes: true,
     attributeFilter: ['data-bench-theme'],
@@ -136,6 +297,20 @@ export function startLantern(): void {
     playCurrent();
     plates.forEach((plate, i) => plate.setAttribute('aria-current', String(i === index - 1)));
     syncPreload();
+
+    // The bench steers the projection even inside a world: the current world
+    // unmounts and the new experiment's mounts in its place.
+    if (inWorld) {
+      const id = slides[current]?.dataset.exp;
+      if (id) {
+        mountWorld(id);
+        typeOut(id);
+      } else {
+        setWorld(false);
+        return;
+      }
+    }
+    paintWorld();
   };
 
   // Pointing at (or focusing) a machine projects it and holds it.
@@ -202,7 +377,8 @@ export function startLantern(): void {
     const h = (film.height = film.clientHeight);
     if (w === 0 || h === 0) return;
     const t = now / 1000;
-    const lightScreen = phase !== 'night';
+    const worldIdNow = inWorld ? (slides[current]?.dataset.exp ?? '') : '';
+    const lightScreen = inWorld ? !isDarkWorld(worldIdNow) : phase !== 'night';
 
     ctx.clearRect(0, 0, w, h);
     if (!reduce) {
@@ -249,7 +425,14 @@ export function startLantern(): void {
   };
 
   const loop = (now: number): void => {
-    if (!reduce && !paused && held < 0 && !document.hidden && now - lastTurn > CYCLE_MS) {
+    // A touched world falls back to its machine after a quiet while; the
+    // slides only turn on machines, never inside a world. (No `:hover` test:
+    // a tap leaves the catcher hovered on touch screens.)
+    if (inWorld && lastTouch && now - lastTouch > WORLD_TOUCH_MS) {
+      setWorld(false);
+      lastTouch = 0;
+    }
+    if (!reduce && !paused && held < 0 && !inWorld && !document.hidden && now - lastTurn > CYCLE_MS) {
       show((current + 1) % slides.length);
     }
     drawFilm(now);
@@ -257,5 +440,8 @@ export function startLantern(): void {
   };
 
   syncPreload();
+  // Positions the screen on the viewer rectangle, picks the frame and paints
+  // the world's light/dark classes (which ends in paintWorld()).
+  applyPhase();
   requestAnimationFrame(loop);
 }

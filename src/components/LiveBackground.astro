@@ -10,20 +10,16 @@ const { id } = Astro.props;
 {id !== 'astro-denoise' && <div class="fondo-veil" aria-hidden="true"></div>}
 
 <script>
+  // Astro compiles this block as its own module, so the shared map has to be
+  // imported here; a frontmatter import never reaches this scope.
+  import { fondoLoaders } from '../scripts/fondos/index';
+
   const run = async () => {
     const host = document.querySelector<HTMLElement>('.fondo[data-fondo]');
     if (!host) return;
     const id = host.dataset.fondo;
     if (!id) return;
-    const loaders: Record<string, () => Promise<any>> = {
-      texforge: () => import('../scripts/fondos/texforge'),
-      canopy: () => import('../scripts/fondos/canopy'),
-      gitkit: () => import('../scripts/fondos/gitkit'),
-      ghscaff: () => import('../scripts/fondos/ghscaff'),
-      demostage: () => import('../scripts/fondos/demostage'),
-      'astro-denoise': () => import('../scripts/fondos/astro-denoise'),
-      quorum: () => import('../scripts/fondos/quorum'),
-    };
+    const loaders: Record<string, () => Promise<any>> = fondoLoaders;
     const load = loaders[id];
     if (!load) return;
     const mod = await load();

@@ -97,8 +97,8 @@ describe('demostage fondo', () => {
   });
 
   it('is wired into LiveBackground under the demostage id', () => {
-    const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/demostage:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/demostage['"]\)/);
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(src).toMatch(/demostage:\s*\(\)\s*=>\s*import\(['"]\.\/demostage['"]\)/);
   });
 
   it('keeps the approved constants: 11 frames, 70 px per frame, vermilion accent', () => {

@@ -78,8 +78,8 @@ describe('ghscaff fondo', () => {
   });
 
   it('exposes a ghscaff loader in LiveBackground', () => {
-    const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/ghscaff:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/ghscaff['"]\)/);
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(src).toMatch(/ghscaff:\s*\(\)\s*=>\s*import\(['"]\.\/ghscaff['"]\)/);
   });
 
   it('requests the andamio asset at opts.base + andamio.webp', async () => {

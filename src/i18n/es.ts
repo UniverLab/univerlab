@@ -94,6 +94,15 @@ export const es: Dict = {
       resume: 'Reanudar la linterna',
       benchLabel: 'El banco: apunta a una máquina para proyectarla, haz clic para abrir su página.',
       alt: 'Una linterna mágica grabada que proyecta sobre una pantalla de tela',
+      worldHint: {
+        canopy: 'siembra el autómata del panal',
+        texforge: 'el cursor es el rodillo de tinta',
+        gitkit: 'detente sobre la caña y espiga en rosa',
+        ghscaff: 'la linterna dibuja el andamio',
+        'astro-denoise': 'el cielo gira; el cursor lo desplaza',
+        demostage: 'el cursor es la manivela del galope',
+        quorum: 'el cursor revela la lámina del dibujante',
+      },
     },
     lineage: {
       kicker: '01 — Origen',

@@ -19,6 +19,8 @@ const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const LANTERN = readFileSync(resolve(SRC, 'scripts', 'lantern.ts'), 'utf8');
 const CRT = readFileSync(resolve(SRC, 'scripts', 'crt.ts'), 'utf8');
 const CRT_RESTORE = readFileSync(resolve(SRC, 'scripts', 'crt-restore.ts'), 'utf8');
+const FONDOS_INDEX = readFileSync(resolve(SRC, 'scripts', 'fondos', 'index.ts'), 'utf8');
+const LIVE_BG = readFileSync(resolve(SRC, 'components', 'LiveBackground.astro'), 'utf8');
 
 interface ManifestAsset {
   kind: string;
@@ -307,8 +309,110 @@ describe('Home — separators', () => {
   });
 });
 
-describe('Home — copy in both dictionaries', () => {
-  it('adds every new key to en and es', () => {
+describe('Home — Plate I world mode', () => {
+  it('shares one lazy fondo map between the experiment pages and the lantern', () => {
+    for (const id of ['texforge', 'canopy', 'gitkit', 'ghscaff', 'demostage', 'astro-denoise', 'quorum']) {
+      expect(FONDOS_INDEX).toContain(id);
+      expect(FONDOS_INDEX).toMatch(
+        new RegExp(`['"]?${id.replace(/-/g, '-')}['"]?:\\s*\\(\\)\\s*=>\\s*import\\(`),
+      );
+    }
+    // Both entry points use the shared map — neither inlines its own copy …
+    expect(LIVE_BG).toContain('fondoLoaders');
+    expect(LIVE_BG).toContain("from '../scripts/fondos/index'");
+    expect(LANTERN).toContain('fondoLoaders');
+    expect(LANTERN).toContain("from './fondos/index'");
+    expect(LIVE_BG).not.toMatch(/=>\s*import\(['"]\.\.\/scripts\/fondos\//);
+    // … and the lantern never embeds a world eagerly: no static fondo import,
+    // no iframe — the module downloads only on the first hover over the screen.
+    expect(LANTERN).not.toMatch(/import\(['"]\.\/fondos\//);
+    expect(LANTERN).not.toContain('<iframe');
+    expect(HOME).not.toContain('<iframe');
+    expect(LANTERN).toMatch(/base:\s*`\/bench\/fondos\/\$\{id\}\/`/);
+  });
+
+  it('opens the screen with a world host, a typed block and a catcher', () => {
+    expect(HOME).toMatch(/class="world-host" id="world-host"[^>]*aria-hidden="true"/);
+    expect(HOME).toMatch(/<div class="typed" id="typed" aria-hidden="true">/);
+    expect(HOME).toMatch(/data-typed="k".*data-typed="cmd".*data-typed="line"/s);
+    expect(HOME).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
+    // The typed block is aria-hidden: each slide's caption keeps the
+    // accessible text.
+    expect(HOME).toMatch(/<p class="caption"><b>\{exp\.name\}<\/b>/);
+    // Every experiment slide carries what the typing needs: tagline, bench
+    // fallback and the localized world hint.
+    expect(HOME).toContain('data-tagline={e.tagline}');
+    expect(HOME).toContain('data-bench={bench}');
+    expect(HOME).toMatch(/data-world-hint=\{t\.home\.lantern\.worldHint\[exp\.id\]\}/);
+    // Each slide names the surface its world paints on: the modules draw over
+    // their page's ground, so the host must carry it, not the lantern's paper.
+    expect(HOME).toContain('data-surface={exp.surface}');
+    expect(HOME).toMatch(/\.world-host \{[^}]*background:\s*var\(--surface-bg, var\(--bench-c-parchment\)\)/);
+    expect(LANTERN).toMatch(/worldHost\.dataset\.surface = surface/);
+  });
+
+  it('shrinks the clip to the lower right with the world blend modes', () => {
+    expect(HOME).toMatch(/\.screen\.is-world \.slide\.is-on \{[^}]*transform:\s*translate\(27%, 20%\) scale\(\.48\)/);
+    expect(HOME).toMatch(/mask-image:\s*radial-gradient\(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%\)/);
+    expect(HOME).toMatch(/\.screen\.is-world\.on-light \.slide\.is-on \{[^}]*mix-blend-mode:\s*multiply/);
+    expect(HOME).toMatch(/\.screen\.is-world\.on-dark \.slide\.is-on \{[^}]*filter:\s*invert\(1\) hue-rotate\(180deg\)[^}]*mix-blend-mode:\s*screen/);
+    expect(HOME).toMatch(/transition:[^;]*transform 0?\.6s/);
+    // Stacking: the world host under the clip, the film over it, the typed
+    // block above the film, the catcher on top.
+    expect(HOME).toMatch(/\.world-host \{[^}]*z-index:\s*1/);
+    expect(HOME).toMatch(/\.slide \{[^}]*z-index:\s*2/);
+    expect(HOME).toMatch(/\.film \{[^}]*z-index:\s*3/);
+    expect(HOME).toMatch(/\.typed \{[^}]*z-index:\s*4/);
+    expect(HOME).toMatch(/\.catch \{[^}]*z-index:\s*5[^}]*cursor:\s*crosshair/);
+  });
+
+  it('types the freed corner in Sometype Mono with world ink', () => {
+    expect(HOME).toMatch(/\.typed \{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(HOME).toMatch(/\.typed \{[^}]*left:\s*4%[^}]*top:\s*6%[^}]*max-width:\s*74%/);
+    expect(HOME).toMatch(/\.screen\.on-light \.typed \{[^}]*color:\s*#2a2118[^}]*radial-gradient/);
+    expect(HOME).toMatch(/\.screen\.on-dark \.typed \{[^}]*color:\s*#ece4d4[^}]*radial-gradient/);
+  });
+
+  it('mounts on hover, types at 28 ms, and returns touch worlds after 12 s', () => {
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerenter'");
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerleave'");
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerdown'");
+    expect(LANTERN).toMatch(/pointerType === 'mouse'/);
+    expect(LANTERN).toMatch(/TYPE_MS = 28/);
+    expect(LANTERN).toMatch(/WORLD_TOUCH_MS = 12000/);
+    expect(LANTERN).toMatch(/now - lastTouch > WORLD_TOUCH_MS/);
+    // The tap that opened the world leaves the catcher hovered on touch
+    // screens, so the 12 s return must not wait for the hover to end.
+    expect(LANTERN).not.toMatch(/WORLD_TOUCH_MS[^;]*matches\(':hover'\)/);
+    // While a world is open the lantern does not cycle …
+    expect(LANTERN).toMatch(/!inWorld && !document\.hidden/);
+    // … leaving the screen destroys the world and clears the typing …
+    expect(LANTERN).toContain('world.destroy()');
+    expect(LANTERN).toMatch(/worldHost\.innerHTML = ''/);
+    // A scroll can leave the cursor parked over the screen with no fresh
+    // entry: the first move inside still opens the world.
+    expect(LANTERN).toMatch(/catcher\?\.addEventListener\('pointermove'[\s\S]*?if \(!inWorld/);
+    // … and the bench swaps worlds instead of stacking them.
+    expect(LANTERN).toMatch(/mountWorld\(id\);\s*typeOut\(id\)/);
+    // Quorum follows the phase; every other world keeps its site colours,
+    // and a live Quorum follows the phase without remounting.
+    expect(LANTERN).toMatch(/id === 'quorum' \? root\.dataset\.benchTheme === 'night' : false/);
+    expect(LANTERN).toMatch(/worldId === 'quorum'[\s\S]*?world\.setNight/);
+    expect(LANTERN).toContain('LIGHT_WORLDS');
+  });
+
+  it('adds one world hint per experiment to both dictionaries', () => {
+    for (const id of ['texforge', 'canopy', 'gitkit', 'ghscaff', 'demostage', 'astro-denoise', 'quorum'] as const) {
+      expect(en.home.lantern.worldHint[id]).toBeTruthy();
+      expect(es.home.lantern.worldHint[id]).toBeTruthy();
+      expect(en.home.lantern.worldHint[id]).not.toBe(es.home.lantern.worldHint[id]);
+    }
+    expect(en.home.lantern.worldHint.texforge).toContain('ink roller');
+    expect(es.home.lantern.worldHint.texforge).toContain('rodillo');
+  });
+});
+
+describe('Home — copy in both dictionaries', () => {  it('adds every new key to en and es', () => {
     expect(en.home.frontis.sub).toBe('Open computational laboratory');
     expect(es.home.frontis.sub).toBe('Laboratorio computacional abierto');
     expect(en.home.plate.lead).toBe('Plate I');

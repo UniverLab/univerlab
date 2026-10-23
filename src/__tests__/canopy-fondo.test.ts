@@ -59,7 +59,7 @@ describe('canopy fondo', () => {
   });
 
   it('LiveBackground exposes a canopy loader', () => {
-    const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/canopy:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/canopy['"]\)/);
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(src).toMatch(/canopy:\s*\(\)\s*=>\s*import\(['"]\.\/canopy['"]\)/);
   });
 });

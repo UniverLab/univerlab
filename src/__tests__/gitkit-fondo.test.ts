@@ -71,8 +71,8 @@ describe('gitkit fondo', () => {
   });
 
   it('exposes a gitkit loader in LiveBackground', () => {
-    const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/gitkit:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/gitkit['"]\)/);
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(src).toMatch(/gitkit:\s*\(\)\s*=>\s*import\(['"]\.\/gitkit['"]\)/);
   });
 
   it('requests the cana asset at opts.base + cana.webp', async () => {

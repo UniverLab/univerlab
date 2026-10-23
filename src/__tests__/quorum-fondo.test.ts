@@ -227,8 +227,9 @@ describe('quorum fondo', () => {
   });
 
   it('is wired into LiveBackground under the quorum id, with a theme observer and pagehide cleanup', () => {
+    const map = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(map).toMatch(/quorum:\s*\(\)\s*=>\s*import\(['"]\.\/quorum['"]\)/);
     const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/quorum:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/quorum['"]\)/);
     expect(src).toMatch(/new MutationObserver\(/);
     expect(src).toMatch(/attributeFilter:\s*\['data-bench-theme'\]/);
     expect(src).toMatch(/window\.addEventListener\('pagehide', onPageHide\)/);

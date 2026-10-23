@@ -78,8 +78,8 @@ describe('astro-denoise fondo', () => {
   });
 
   it('is wired into LiveBackground under the astro-denoise id', () => {
-    const src = readFileSync(resolve(__dirname, '..', 'components', 'LiveBackground.astro'), 'utf8');
-    expect(src).toMatch(/['"]astro-denoise['"]:\s*\(\)\s*=>\s*import\(['"]\.\.\/scripts\/fondos\/astro-denoise['"]\)/);
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
+    expect(src).toMatch(/['"]astro-denoise['"]:\s*\(\)\s*=>\s*import\(['"]\.\/astro-denoise['"]\)/);
   });
 
   it('opts into the live fondo in the registry', () => {

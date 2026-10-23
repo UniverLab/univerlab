@@ -94,6 +94,15 @@ export const en = {
       resume: 'Resume the lantern',
       benchLabel: 'The bench: point at a machine to project it, click it to open its page.',
       alt: 'An engraved magic lantern projecting onto a cloth screen',
+      worldHint: {
+        canopy: 'seeds the hive automaton',
+        texforge: 'the cursor is the ink roller',
+        gitkit: 'linger on the reed and it ears in pink',
+        ghscaff: 'the lantern draws the scaffold',
+        'astro-denoise': 'the sky turns; the cursor shifts it',
+        demostage: 'the cursor is the gallop crank',
+        quorum: 'the cursor reveals the draughtsman’s plate',
+      },
     },
     lineage: {
       kicker: '01 — Origin',
