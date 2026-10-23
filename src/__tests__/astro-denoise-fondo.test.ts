@@ -109,10 +109,13 @@ describe('astro-denoise fondo', () => {
     expect(loop).toHaveBeenCalledTimes(1);
   });
 
-  it('reduced mount registers no pointerIn/loop', () => {
+  it('reduced mount registers no pointerIn/loop', async () => {
     mountFondo(true);
+    await flush();
     expect(pointerIn).not.toHaveBeenCalled();
     expect(loop).not.toHaveBeenCalled();
+    // paints the still engraving once
+    expect(ctx.drawImage).toHaveBeenCalled();
   });
 
   describe('credit line', () => {
