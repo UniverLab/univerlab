@@ -591,6 +591,7 @@ export const es: Dict = {
         ['¿En qué se diferencia DemoStage de asciinema?',
           'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif, mp4 o svg animado. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
+      bgCredit: 'Fondo: Eadweard Muybridge, The Horse in Motion, 1878 (dominio público).',
     },
   },
   manifesto: {

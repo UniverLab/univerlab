@@ -20,6 +20,7 @@ const { id } = Astro.props;
       canopy: () => import('../scripts/fondos/canopy'),
       gitkit: () => import('../scripts/fondos/gitkit'),
       ghscaff: () => import('../scripts/fondos/ghscaff'),
+      demostage: () => import('../scripts/fondos/demostage'),
     };
     const load = loaders[id];
     if (!load) return;

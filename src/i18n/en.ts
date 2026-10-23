@@ -594,6 +594,7 @@ export const en = {
         ['How is DemoStage different from asciinema?',
           'asciinema records raw terminal output. DemoStage records events, supports multiple sources (terminal + browser + files), normalizes imperfections, and compiles to gif, mp4 or animated svg. The source is a versionable TOML file.'],
       ] as [string, string][],
+      bgCredit: 'Background: Eadweard Muybridge, The Horse in Motion, 1878 (public domain).',
     },
   },
   manifesto: {

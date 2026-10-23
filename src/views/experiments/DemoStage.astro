@@ -47,6 +47,7 @@ $ demo export gif,mp4,svg
         {spectrumBars.map((height) => <span style={`--bar-height:${height}px; --bar-opacity:${(height / 114).toFixed(2)}`} />)}
       </div>
     </div>
+    <p class="bg-credit mono">{e.bgCredit}</p>
   </Fragment>
 
   <!-- The confident light section: the genuine capture, then the same take
@@ -177,6 +178,12 @@ $ demo export gif,mp4,svg
     font-size: 0.72rem;
     letter-spacing: 0.06em;
     color: var(--ink-dim);
+  }
+
+  .bg-credit {
+    margin: 0.6rem 0 0;
+    color: var(--ink-dim);
+    font-size: 0.72rem;
   }
 
   .features ul { list-style: none; padding: 0; margin: 1.2rem 0 0; }

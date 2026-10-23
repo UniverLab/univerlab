@@ -129,6 +129,12 @@ describe('experiments.ts', () => {
     });
   });
 
+  describe('fondo opt-in', () => {
+    it('demostage opts into the live fondo', () => {
+      expect(byId('demostage').fondo).toBe(true);
+    });
+  });
+
   describe('background themes', () => {
     const validThemes: BgTheme[] = [
       'cosmic', 'brain', 'primitives', 'starfield',
