@@ -89,6 +89,19 @@ describe('experiment frame: floating machine', () => {
     expect(layout).toContain("html[data-surface='quorum'][data-bench-theme='day'] .hero-machine");
     expect(layout).not.toContain(":root[data-bench-theme='day'] .hero-machine");
   });
+
+  it('sits beside the hero, not inside it, so the blend sees the live background', () => {
+    // A view-transition-name makes the hero an isolated group: a child blend
+    // would mix with the hero's transparent backdrop and show as a tile.
+    const frame = layout.indexOf('<div class="hero-frame">');
+    const section = layout.indexOf('<section class="wrap hero"');
+    const sectionEnd = layout.indexOf('</section>', section);
+    const machine = layout.indexOf('<video class="hero-machine"');
+    expect(frame).toBeGreaterThan(-1);
+    expect(section).toBeGreaterThan(frame);
+    expect(machine).toBeGreaterThan(sectionEnd);
+    expect(layout).toContain('.hero-frame { position: relative; }');
+  });
 });
 
 describe('DemoStage removals', () => {

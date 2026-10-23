@@ -82,6 +82,7 @@ const ogImage = `/og/${id}.png`;
       <a href={localizePath('/', lang)}>{t.labStrip.lab}</a>
       <span>{exp.number}</span>
     </p>
+    <div class="hero-frame">
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
@@ -99,9 +100,6 @@ const ogImage = `/og/${id}.png`;
           )}
           <slot name="cta" />
       </div>
-      {exp.status !== 'archived' && (
-        <video class="hero-machine" src={`/bench/clips/${id}.mp4`} poster={`/bench/clips/${id}.webp`} muted loop playsinline preload="none" aria-hidden="true"></video>
-      )}
       {(exp.install || id === 'quorum') && (
         <div class={id === 'quorum' ? 'install term' : 'install'} data-install={exp.install ? '' : undefined}>
           {exp.install && (
@@ -138,6 +136,10 @@ const ogImage = `/og/${id}.png`;
         </div>
       )}
     </section>
+    {exp.status !== 'archived' && (
+      <video class="hero-machine" src={`/bench/clips/${id}.mp4`} poster={`/bench/clips/${id}.webp`} muted loop playsinline preload="none" aria-hidden="true"></video>
+    )}
+    </div>
 
     <slot name="before-genesis" />
 
@@ -232,6 +234,10 @@ const ogImage = `/og/${id}.png`;
   .lab-strip a:hover { color: var(--essence); }
 
   /* Hero */
+  /* The machine is a sibling of the hero, not a child: the hero's view
+     transition name makes it an isolated group, and a blend inside it has no
+     page behind it to mix with. The frame is the machine's containing block. */
+  .hero-frame { position: relative; }
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .hero-visual { width: 100%; }
@@ -308,10 +314,13 @@ const ogImage = `/og/${id}.png`;
   .install .cmd-line { color: #ecebe4; }
   .install .bench-link, .install .bench-text { color: #ecebe4; text-decoration: none; }
   .install .bench-link:hover { color: var(--essence); }
+  /* The clip's paper is keyed out before the blend: contrast pushes the cream
+     to black (screen adds nothing) on dark surfaces, and to white (multiply
+     ignores it) on light ones. Without it the cream shows as a tile. */
   .hero-machine {
     height: 110px;
     width: auto;
-    filter: invert(100%) hue-rotate(180deg);
+    filter: invert(100%) hue-rotate(180deg) contrast(2.5);
     mix-blend-mode: screen;
   }
   @media (min-width: 40rem) {
@@ -321,6 +330,9 @@ const ogImage = `/og/${id}.png`;
       bottom: 1.5rem;
       height: 180px;
     }
+    /* The machine floats in the hero's lower right, under the install bench,
+       not over it: the hero keeps the room the machine needs at its foot. */
+    .hero-frame:has(> .hero-machine) { padding-bottom: calc(180px + 2.5rem); }
   }
   @media (max-width: 39.999rem) {
     .hero-machine {
@@ -333,7 +345,7 @@ const ogImage = `/og/${id}.png`;
   :global(html[data-surface='studio'] .hero-machine),
   :global(html[data-surface='pastel'] .hero-machine),
   :global(html[data-surface='quorum'][data-bench-theme='day'] .hero-machine) {
-    filter: none;
+    filter: contrast(1.8);
     mix-blend-mode: multiply;
   }
   .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
@@ -493,7 +505,7 @@ const ogImage = `/og/${id}.png`;
   document.querySelectorAll<HTMLVideoElement>('video.hero-machine').forEach((v) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // Watch the hero, not the clip: the machine plays while its hero is on screen.
-    const hero = v.closest('.hero') ?? v;
+    const hero = v.closest('.hero-frame') ?? v;
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {

@@ -38,22 +38,20 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
 
 <style>
   .lab-plate {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0;
+    /* Inline text, not flex: a wrapped caption follows the hero's text-align
+       (centred on the centred heroes, flush on the paper ones). */
+    display: block; text-align: inherit;
     max-width: var(--max-w, 70rem); margin: 0 auto;
     padding: 0 var(--page-gutter);
-    row-gap: 0.2rem;
     font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em;
     color: var(--ink-dim);
   }
   .lab-plate .lp-num, .lab-plate .lp-status { color: var(--essence); }
-  /* Flex items trim edge whitespace, which would swallow the ' · ' spaces. */
   .lab-plate .lp-sep { color: var(--ink-faint); white-space: pre; }
   /* One link now lives in the caption (the release segment, spec
      lexp-release-signal supersedes R7's "no links"): underline off so it keeps
-     the caption's mono register, essence on hover, never shrinkable so the
-     version stays intact when the line wraps. Built-with links share the
-     caption's mono register and get the same essence hover. */
-  .lab-plate .lp-release { flex: 0 0 auto; text-decoration: none; }
+     the caption's mono register, essence on hover. */
+  .lab-plate .lp-release { text-decoration: none; }
   .lab-plate .lp-release:hover, .lab-plate .lp-built a:hover { color: var(--essence); }
   .lab-plate .lp-built a { color: var(--ink-dim); text-decoration-color: var(--line); }
 </style>
