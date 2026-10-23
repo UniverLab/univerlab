@@ -19,6 +19,7 @@ const { id } = Astro.props;
       texforge: () => import('../scripts/fondos/texforge'),
       canopy: () => import('../scripts/fondos/canopy'),
       gitkit: () => import('../scripts/fondos/gitkit'),
+      ghscaff: () => import('../scripts/fondos/ghscaff'),
     };
     const load = loaders[id];
     if (!load) return;
