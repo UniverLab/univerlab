@@ -55,6 +55,9 @@ export function startLantern(): void {
   let inWorld = false;
   let world: Fondo | null = null;
   let worldId: string | null = null;
+  /** Bumped on every unmount: a module still downloading for a request that
+   *  was already cancelled must not mount into the host (and leak a canvas). */
+  let worldToken = 0;
   let typeTimer = 0;
   let lastTouch = 0;
 
@@ -81,6 +84,7 @@ export function startLantern(): void {
   };
 
   const unmountWorld = (): void => {
+    worldToken += 1;
     worldId = null;
     if (world) {
       world.destroy();
@@ -92,13 +96,16 @@ export function startLantern(): void {
   const mountWorld = (id: string): void => {
     unmountWorld();
     worldId = id;
+    const token = worldToken;
     const load = fondoLoaders[id];
     if (!load || !worldHost) return;
     const host = worldHost;
     const night = id === 'quorum' ? root.dataset.benchTheme === 'night' : false;
     void (load() as Promise<{ mount: (host: HTMLElement, opts: object) => Fondo }>).then((mod) => {
-      // The cursor may have left (or the bench moved on) while loading.
-      if (worldId !== id || !inWorld) return;
+      // The cursor may have left (or the bench moved on) while loading — and
+      // a leave/re-enter for the same id gets a fresh token, so the stale
+      // request cannot mount a second world on top of the live one.
+      if (worldId !== id || !inWorld || token !== worldToken) return;
       world = mod.mount(host, { night, reduced: reduce, base: `/bench/fondos/${id}/` });
       paintWorld();
     });
@@ -167,12 +174,18 @@ export function startLantern(): void {
   };
 
   catcher?.addEventListener('pointerenter', (ev) => {
-    if ((ev as PointerEvent).pointerType === 'mouse') setWorld(true);
+    if ((ev as PointerEvent).pointerType !== 'mouse') return;
+    // A mouse takes over from a tap: the touch return must not close the
+    // world under a cursor that is still on the screen.
+    lastTouch = 0;
+    setWorld(true);
   });
   catcher?.addEventListener('pointermove', (ev) => {
     // A scroll can park the cursor over the screen without a fresh entry;
     // the first move inside still opens the world.
-    if (!inWorld && (ev as PointerEvent).pointerType === 'mouse') setWorld(true);
+    if ((ev as PointerEvent).pointerType !== 'mouse') return;
+    lastTouch = 0;
+    if (!inWorld) setWorld(true);
   });
   catcher?.addEventListener('pointerleave', (ev) => {
     if ((ev as PointerEvent).pointerType === 'mouse') setWorld(false);

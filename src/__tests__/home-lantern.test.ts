@@ -348,6 +348,10 @@ describe('Home — Plate I world mode', () => {
     // their page's ground, so the host must carry it, not the lantern's paper.
     expect(HOME).toContain('data-surface={exp.surface}');
     expect(HOME).toMatch(/\.world-host \{[^}]*background:\s*var\(--surface-bg, var\(--bench-c-parchment\)\)/);
+    // The ground shows the moment world mode opens — even before the module
+    // paints (a dark world would otherwise flash parchment under its chalk
+    // text on the first hover) — and never outside world mode.
+    expect(HOME).toMatch(/\.screen:not\(\.is-world\) \.world-host \{[^}]*display:\s*none/);
     expect(LANTERN).toMatch(/worldHost\.dataset\.surface = surface/);
   });
 
@@ -357,6 +361,10 @@ describe('Home — Plate I world mode', () => {
     expect(HOME).toMatch(/\.screen\.is-world\.on-light \.slide\.is-on \{[^}]*mix-blend-mode:\s*multiply/);
     expect(HOME).toMatch(/\.screen\.is-world\.on-dark \.slide\.is-on \{[^}]*filter:\s*invert\(1\) hue-rotate\(180deg\)[^}]*mix-blend-mode:\s*screen/);
     expect(HOME).toMatch(/transition:[^;]*transform 0?\.6s/);
+    // The caption rides inside the shrinking slide; hide it visually so it
+    // does not print over the machine, but keep it in the tree (opacity, not
+    // visibility/display) because it holds the accessible text.
+    expect(HOME).toMatch(/\.screen\.is-world \.slide\.is-on \.caption \{[^}]*opacity:\s*0/);
     // Stacking: the world host under the clip, the film over it, the typed
     // block above the film, the catcher on top.
     expect(HOME).toMatch(/\.world-host \{[^}]*z-index:\s*1/);
@@ -369,6 +377,11 @@ describe('Home — Plate I world mode', () => {
   it('types the freed corner in Sometype Mono with world ink', () => {
     expect(HOME).toMatch(/\.typed \{[^}]*font-family:\s*var\(--font-mono\)/);
     expect(HOME).toMatch(/\.typed \{[^}]*left:\s*4%[^}]*top:\s*6%[^}]*max-width:\s*74%/);
+    // Phone-sized screens are narrow and short: the clamps shrink the three
+    // lines so the command and tagline stay inside the screen.
+    expect(HOME).toMatch(/\.typed \.k \{[^}]*font-size:\s*clamp\(9px, 1\.1vw, 11px\)/);
+    expect(HOME).toMatch(/\.typed \.cmd \{[^}]*font-size:\s*clamp\(9px, 1\.3vw, 14px\)/);
+    expect(HOME).toMatch(/\.typed \.line \{[^}]*font-size:\s*clamp\(12px, 1\.9vw, 16px\)/);
     expect(HOME).toMatch(/\.screen\.on-light \.typed \{[^}]*color:\s*#2a2118[^}]*radial-gradient/);
     expect(HOME).toMatch(/\.screen\.on-dark \.typed \{[^}]*color:\s*#ece4d4[^}]*radial-gradient/);
   });
@@ -394,6 +407,13 @@ describe('Home — Plate I world mode', () => {
     expect(LANTERN).toMatch(/catcher\?\.addEventListener\('pointermove'[\s\S]*?if \(!inWorld/);
     // … and the bench swaps worlds instead of stacking them.
     expect(LANTERN).toMatch(/mountWorld\(id\);\s*typeOut\(id\)/);
+    // A module that finishes downloading after a leave/re-enter must not
+    // mount a second world over the live one.
+    expect(LANTERN).toContain('token !== worldToken');
+    // A mouse taking over from a tap cancels the 12 s touch return, so the
+    // world cannot close under a cursor still parked on the screen.
+    expect(LANTERN).toMatch(/pointerenter'[\s\S]{0,300}lastTouch = 0/);
+    expect(LANTERN).toMatch(/pointermove'[\s\S]{0,300}lastTouch = 0/);
     // Quorum follows the phase; every other world keeps its site colours,
     // and a live Quorum follows the phase without remounting.
     expect(LANTERN).toMatch(/id === 'quorum' \? root\.dataset\.benchTheme === 'night' : false/);
@@ -412,7 +432,8 @@ describe('Home — Plate I world mode', () => {
   });
 });
 
-describe('Home — copy in both dictionaries', () => {  it('adds every new key to en and es', () => {
+describe('Home — copy in both dictionaries', () => {
+  it('adds every new key to en and es', () => {
     expect(en.home.frontis.sub).toBe('Open computational laboratory');
     expect(es.home.frontis.sub).toBe('Laboratorio computacional abierto');
     expect(en.home.plate.lead).toBe('Plate I');

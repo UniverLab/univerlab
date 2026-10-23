@@ -373,12 +373,19 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
      so a parchment lantern behind them would wash them out. */
   .world-host { position: absolute; inset: 0; z-index: 1; overflow: hidden;
                 background: var(--surface-bg, var(--bench-c-parchment)); }
-  .world-host:empty { display: none; }
+  /* Hidden outside world mode; inside it, the ground shows at once — even
+     before the module has painted — so a dark world never flashes the
+     lantern's parchment under its chalk text on first hover. */
+  .screen:not(.is-world) .world-host { display: none; }
   .screen.is-world .slide.is-on { transform: translate(27%, 20%) scale(.48);
     -webkit-mask-image: radial-gradient(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%);
     mask-image: radial-gradient(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%);
     transition: opacity 0.25s ease, transform 0.6s ease; }
   .screen.is-world .slide.is-on video { filter: none; }
+  /* The slide shrinks with its caption, which would print as an illegible
+     smudge over the machine. Hide it visually in world mode; `opacity: 0`
+     keeps the caption — and its accessible text — in the tree. */
+  .screen.is-world .slide.is-on .caption { opacity: 0; }
   .screen.is-world.on-light .slide.is-on { mix-blend-mode: multiply; }
   .screen.is-world.on-dark .slide.is-on { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
   .typed { position: absolute; left: 4%; top: 6%; z-index: 4; max-width: 74%;
@@ -386,11 +393,14 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
            font-family: var(--font-mono); opacity: 0; pointer-events: none;
            transition: opacity 0.4s ease; }
   .screen.is-world .typed { opacity: 1; }
-  .typed .k { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
-  .typed .cmd { font-size: 14px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* The sizes follow the mockup's clamps: the free corner is narrow on a
+     phone, and the command + tagline must stay inside the screen's height
+     (they are clipped by the screen otherwise). */
+  .typed .k { font-size: clamp(9px, 1.1vw, 11px); letter-spacing: 0.16em; text-transform: uppercase; }
+  .typed .cmd { font-size: clamp(9px, 1.3vw, 14px); line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
   .typed .cmd::after { content: "▌"; animation: typed-blink 1s steps(1) infinite; }
   .typed .line { font-family: var(--font-serif); font-style: italic;
-                 font-size: 16px; line-height: 1.3; text-wrap: balance;
+                 font-size: clamp(12px, 1.9vw, 16px); line-height: 1.3; text-wrap: balance;
                  opacity: 0; transition: opacity 0.6s ease; }
   .typed .line.is-on { opacity: 1; }
   @keyframes typed-blink { 50% { opacity: 0; } }
