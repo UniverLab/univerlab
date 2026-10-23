@@ -150,6 +150,31 @@ describe('ghscaff fondo', () => {
       expect(loop).toHaveBeenCalledTimes(1);
     });
 
+    it('lantern strokes the trail and the frame masks the lit scaffold through it', async () => {
+      const seen: HTMLCanvasElement[] = [];
+      const ctxs = new Map<HTMLCanvasElement, ReturnType<typeof fakeContext>>();
+      jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
+        if (!ctxs.has(this)) {
+          ctxs.set(this, fakeContext());
+          seen.push(this);
+        }
+        return ctxs.get(this) as any;
+      });
+      mount(document.createElement('div'), { night: false, reduced: false, base: '/bench/fondos/ghscaff/' });
+      await flush();
+      const onMove = (pointerIn as jest.Mock).mock.calls[0][1];
+      const frame = (loop as jest.Mock).mock.calls[0][1];
+      onMove(10, 10);
+      onMove(50, 50);
+      frame();
+      const [trail, , mix] = seen;
+      const trailCtx = ctxs.get(trail) as any;
+      expect(trailCtx.stroke).toHaveBeenCalled();
+      expect(trailCtx.lineWidth).toBe(TRAIL_W);
+      expect(trailCtx.fillStyle).toBe(`rgba(0,0,0,${DRY})`);
+      expect(ctx.drawImage).toHaveBeenCalledWith(mix, 0, 0);
+    });
+
     it('destroy unsubscribes pointer, stops loop, disconnects canvas RO, and removes canvases', () => {
       const unsub = jest.fn();
       const stop = jest.fn();
