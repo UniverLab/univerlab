@@ -358,6 +358,7 @@ https://github.com/UniverLab
     )}
    </head>
   <body>
+    <script>import { restoreCrtOn } from '../scripts/crt-restore'; restoreCrtOn();</script>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
     {fondo ? <LiveBackground id={fondo} /> : (!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />)}
     <Header />

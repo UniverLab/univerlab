@@ -78,6 +78,23 @@ export const es: Dict = {
         { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'alcance, no dependencia', 'continuidad, mantenida abierta'] },
       ],
     },
+    // Portada, Lámina I y el banco (rediseño 2026-10-22).
+    frontis: {
+      sub: 'Laboratorio computacional abierto',
+    },
+    plate: {
+      lead: 'Lámina I',
+      title: 'La linterna del laboratorio',
+    },
+    about: {
+      kicker: 'Acerca del laboratorio',
+    },
+    lantern: {
+      pause: 'Pausar la linterna',
+      resume: 'Reanudar la linterna',
+      benchLabel: 'El banco: apunta a una máquina para proyectarla, haz clic para abrir su página.',
+      alt: 'Una linterna mágica grabada que proyecta sobre una pantalla de tela',
+    },
     lineage: {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',

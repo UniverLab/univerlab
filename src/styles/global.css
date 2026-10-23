@@ -666,3 +666,42 @@ time[data-mission]:focus {
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+/* ── CRT power-off / power-on (home → experiment page) ─────────────────────
+   The home view collapses to a line, then a point; a white dot flashes and
+   the browser navigates. BaseLayout adds `crt-on` to <body> when the
+   destination loads with sessionStorage['univerlab-crt'] set. */
+.crt-view { transform-origin: 50% 40%; }
+.crt-view.off { animation: crt-off 0.55s cubic-bezier(0.6, 0, 0.9, 0.4) forwards; }
+.crt-view.on { animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+/* The destination page has no .crt-view wrapper — only the home does — so the
+   power-on plays on <body> itself: every page the bench opens lights up, not
+   just the ones that happen to wrap their content. The origin sits at the
+   viewport's 40% line (fresh load = scroll 0) where .crt-dot flashes. */
+body.crt-on { transform-origin: 50% 40vh;
+              animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+
+@keyframes crt-off {
+  0%   { transform: scale(1, 1); filter: brightness(1); }
+  45%  { transform: scale(1, 0.006); filter: brightness(3); }
+  80%  { transform: scale(0.004, 0.006); filter: brightness(6); }
+  100% { transform: scale(0, 0); filter: brightness(8); opacity: 0; }
+}
+
+@keyframes crt-on {
+  0%   { transform: scale(0, 0.006); filter: brightness(6); opacity: 1; }
+  35%  { transform: scale(1, 0.006); filter: brightness(3); }
+  100% { transform: scale(1, 1); filter: brightness(1); }
+}
+
+.crt-dot {
+  position: fixed; left: 50%; top: 40%; width: 6px; height: 6px; margin: -3px;
+  border-radius: 50%; background: #fff; box-shadow: 0 0 18px 6px #fff8;
+  opacity: 0; pointer-events: none; z-index: 20;
+}
+.crt-dot.flash { animation: crt-dot-flash 0.5s ease-out; }
+
+@keyframes crt-dot-flash {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.2); }
+}

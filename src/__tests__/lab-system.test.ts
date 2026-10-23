@@ -32,7 +32,6 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
 const LAB_SRC = readFileSync(resolve(__dirname, '..', 'components', 'LabSystem.astro'), 'utf8');
-const HOME_SRC = readFileSync(resolve(__dirname, '..', 'views', 'Home.astro'), 'utf8');
 const GLOBAL_SRC = readFileSync(resolve(__dirname, '..', 'styles', 'global.css'), 'utf8');
 
 function figureSrc(): string {
@@ -267,11 +266,5 @@ describe('lab-system', () => {
     expect(en.home.hero.systemAria).toBe('UniverLab and its experiments');
     expect(es.home.hero.systemAria).toBe('UniverLab y sus experimentos');
     expect(en.home.hero.systemAria).not.toBe(es.home.hero.systemAria);
-  });
-
-  it('splits the home hero into two columns from 1100 px up', () => {
-    expect(HOME_SRC).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?grid-template-columns:\s*minmax\(0,\s*3fr\)\s*minmax\(0,\s*2fr\)/);
-    expect(HOME_SRC).toMatch(/\.hero-col\s*\{[^}]*gap:\s*1\.2rem/);
-    expect(HOME_SRC.indexOf('hero-cta')).toBeLessThan(HOME_SRC.lastIndexOf('<LabSystem'));
   });
 });

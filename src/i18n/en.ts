@@ -78,6 +78,23 @@ export const en = {
         { suffix: 'salize', glosses: ['to make knowledge everyone’s', 'reach, not dependency', 'continuity, kept open'] },
       ],
     },
+    // Home frontispiece, Plate I and the bench (redesign 2026-10-22).
+    frontis: {
+      sub: 'Open computational laboratory',
+    },
+    plate: {
+      lead: 'Plate I',
+      title: 'The lab’s lantern',
+    },
+    about: {
+      kicker: 'About the lab',
+    },
+    lantern: {
+      pause: 'Pause the lantern',
+      resume: 'Resume the lantern',
+      benchLabel: 'The bench: point at a machine to project it, click it to open its page.',
+      alt: 'An engraved magic lantern projecting onto a cloth screen',
+    },
     lineage: {
       kicker: '01 — Origin',
       title: 'It began with one experiment that learned to build the others.',

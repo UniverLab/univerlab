@@ -1,8 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import LabSystem from '../components/LabSystem.astro';
-import { archivedExperiments, liveExperiments } from '../lib/experiments';
-import { getLang, useTranslations, localizePath, motifOf } from '../i18n';
+import { liveExperiments } from '../lib/experiments';
+import { getLang, useTranslations, localizePath } from '../i18n';
+import { formatSolLabel } from '../lib/mission-time';
+// The engraved mark is inlined so it takes `currentColor` (and therefore the
+// ground's ink) instead of shipping a second request.
+import logo from '../../public/bench/identidad/logo-grabado.svg?raw';
+
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const site = Astro.site ?? new URL('https://univerlab.org');
@@ -15,524 +19,465 @@ const webSite = {
   inLanguage: lang === 'es' ? 'es' : 'en',
   publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
 };
+
+// The imprint is engraved at build time and refreshed on load by lantern.ts.
+const builtAt = new Date();
+const imprint = `${builtAt.getFullYear()} · ${formatSolLabel(builtAt.toISOString())} · univerlab.org`;
+
+// Intrinsic widths of the 450 px day plates (public/bench/manifest.json) — the
+// row gives every machine the same HEIGHT, so only the ratio needs reserving.
+const plateWidths: Record<string, number> = {
+  canopy: 306,
+  texforge: 421,
+  gitkit: 453,
+  ghscaff: 353,
+  'astro-denoise': 344,
+  demostage: 476,
+  quorum: 392,
+};
+
+// Engraved sea lines for the horizon separator (drawHorizon in the mockup):
+// sixteen closing in on the waterline, five fading above it.
+const seaLines = Array.from({ length: 16 }, (_, i) => ({
+  y: (46 + Math.pow(i / 15, 1.6) * 44).toFixed(1),
+  w: (0.5 + i * 0.04).toFixed(2),
+}));
+const skyLines = Array.from({ length: 5 }, (_, i) => ({
+  y: (46 - (i + 1) * (i + 1) * 1.6).toFixed(1),
+  o: (0.5 - (i + 1) * 0.07).toFixed(2),
+}));
 ---
+
 <BaseLayout title={t.meta.title} bg="cosmic" circadian structuredData={webSite}>
-  <section class="wrap hero">
-    <div class="hero-col">
-      <h1>{t.home.hero.title}</h1>
-      <p class="subtitle">{t.home.hero.subtitle}</p>
-      <p class="lede prose" set:html={t.home.hero.lede} />
-      <div class="pitch">
-        <p class="pitch-domains">{t.home.hero.pitch}</p>
-        <p class="pitch-sub">{t.home.hero.pitchSub}</p>
-      </div>
-      <div class="hero-cta">
-        <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
-        <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
-      </div>
-    </div>
-    <LabSystem />
-  </section>
+  <div class="crt-view" id="home-view">
+    <section class="wrap hall" aria-labelledby="frontis-title">
+      <!-- Frontispiece: the title page of an old encyclopedia. -->
+      <header class="frontis">
+        <span class="fr-rule" aria-hidden="true"></span>
+        <h1 id="frontis-title">UniverLab</h1>
+        <p class="fr-sub">{t.home.frontis.sub}</p>
+        <span class="fr-mark" aria-hidden="true" set:html={logo} />
+        <p class="fr-motto">{t.home.hero.subtitle}</p>
+        <span class="fr-rule thin" aria-hidden="true"></span>
+        <p class="fr-imprint" id="imprint">{imprint}</p>
+      </header>
 
-  <hr class="rule" />
+      <p class="plate-label">{t.home.plate.lead} · <i>{t.home.plate.title}</i></p>
 
-  <!-- Experiments -->
-  <section class="wrap section">
-    <div class="section-head" id="experiments">
-      <h2 class="label">{t.home.experiments.kicker}</h2>
-    </div>
-    <p class="lede">{t.home.experiments.method}</p>
-    <ul class="grid">
-      {liveExperiments.map((exp) => {
-        const e = t.experiments[exp.id];
-        const motif = motifOf(exp, t);
-        const circVars = exp.circadianPalette
-          ? Object.entries(exp.circadianPalette.day)
-              .map(([k, v]) => `--q-day-${k.slice(2)}: ${v}`)
-              .join('; ') + '; ' +
-            Object.entries(exp.circadianPalette.night)
-              .map(([k, v]) => `--q-night-${k.slice(2)}: ${v}`)
-              .join('; ') + '; '
-          : '';
-        return (
-          <li style={`--essence: ${exp.essenceHex}`}>
-            <a class="card" href={localizePath(`/${exp.id}`, lang)} data-exp={exp.id} data-theme={exp.bg} data-flip-surface={exp.surface} style={`view-transition-name: exp-${exp.id}; view-transition-class: exp-zoom; ${circVars}`}>
-              <canvas class="card-bg-canvas" aria-hidden="true"></canvas>
-              <span class="card-motif" aria-hidden="true">{motif}</span>
-              <div class="card-glow" aria-hidden="true"></div>
-              <div class="card-top">
-                <span class="num">{exp.number}</span>
-                <span class="status"><span class="dot" data-status={exp.status}></span>{t.status[exp.status]}</span>
+      <!-- Plate I: the magic lantern and its screen. -->
+      <div class="lantern">
+        <div
+          class="screen"
+          id="screen"
+          data-viewer-day="0.135 0.078 0.8 0.694"
+          data-viewer-night="0.16 0.068 0.69 0.70"
+          style="left: 13.5%; top: 7.8%; width: 80%; height: 69.4%"
+          aria-hidden="true"
+        >
+          <div class="slide title-slide is-on">
+            <span class="title-mark" set:html={logo} />
+            <span class="title-name">UniverLab</span>
+            <p class="title-sub">{t.home.hero.subtitle}</p>
+          </div>
+          {liveExperiments.map((exp) => {
+            const e = t.experiments[exp.id];
+            return (
+              <div class="slide" data-exp={exp.id}>
+                <video
+                  src={`/bench/clips/${exp.id}.mp4`}
+                  poster={`/bench/clips/${exp.id}.webp`}
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"></video>
+                <p class="caption"><b>{exp.name}</b> — {e.tagline}</p>
               </div>
-              <h3>{exp.name}</h3>
-              <p class="need">{e.need}</p>
-              <p class="tagline">{e.tagline}</p>
-              <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-    {archivedExperiments.length > 0 && (
-      <p class="archive-link"><a href={localizePath('/archive', lang)}>{archivedExperiments.length === 1 ? t.home.experiments.archivedOne : t.home.experiments.archivedMany.replace('{n}', String(archivedExperiments.length))}</a></p>
-    )}
-  </section>
-
-  <hr class="rule" />
-
-  <!-- Lineage / origin: the genesis story, now after the experiments it produced -->
-  <section class="wrap section two-col">
-    <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
-    <div class="prose"><p set:html={t.home.lineage.body} /></div>
-  </section>
-
-  <hr class="rule" />
-
-  <!-- Philosophy -->
-  <section class="wrap section two-col">
-    <div><span class="label">{t.home.philosophy.kicker}</span><h2>{t.home.philosophy.title}</h2></div>
-    <div class="prose">
-      <p set:html={t.home.philosophy.body} />
-      <ul class="values label">
-        {t.home.philosophy.values.map((v) => <li>{v}</li>)}
-      </ul>
-    </div>
-  </section>
-
-  <hr class="rule" />
-
-  <!-- Research directions -->
-  <section class="wrap section two-col">
-    <div><span class="label">{t.home.directions.kicker}</span><h2>{t.home.directions.title}</h2></div>
-    <div>
-      <p class="axis">{t.home.directions.axis}</p>
-      <div class="directions">
-        <div class="dir-now">
-          <span class="label">{t.home.directions.now}</span>
-          <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
+            );
+          })}
+          <canvas class="film" id="film" aria-hidden="true"></canvas>
         </div>
-        <div class="dir-next">
-          <span class="label">{t.home.directions.next}</span>
-          <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+
+        <picture class="lantern-pic">
+          <source
+            data-phase="day"
+            type="image/avif"
+            srcset="/bench/live/lantern-day-450.avif 450w, /bench/live/lantern-day-900.avif 900w"
+            sizes="(min-width: 50rem) 760px, 100vw"
+          />
+          <source
+            data-phase="day"
+            type="image/webp"
+            srcset="/bench/live/lantern-day-450.webp 450w, /bench/live/lantern-day-900.webp 900w"
+            sizes="(min-width: 50rem) 760px, 100vw"
+          />
+          <source
+            data-phase="night"
+            type="image/avif"
+            media="not all"
+            srcset="/bench/live/lantern-night-450.avif 450w, /bench/live/lantern-night-900.avif 900w"
+            sizes="(min-width: 50rem) 760px, 100vw"
+          />
+          <source
+            data-phase="night"
+            type="image/webp"
+            media="not all"
+            srcset="/bench/live/lantern-night-450.webp 450w, /bench/live/lantern-night-900.webp 900w"
+            sizes="(min-width: 50rem) 760px, 100vw"
+          />
+          <img
+            id="lantern-img"
+            src="/bench/live/lantern-day-900.webp"
+            width="1068"
+            height="900"
+            alt={t.home.lantern.alt}
+            fetchpriority="high"
+            data-day-src="/bench/live/lantern-day-900.webp"
+            data-night-src="/bench/live/lantern-night-900.webp"
+          />
+        </picture>
+      </div>
+
+      <!-- The bench: the seven machines, all the same height. -->
+      <div class="row-wrap">
+        <div class="row" role="group" aria-label={t.home.lantern.benchLabel}>
+          {liveExperiments.map((exp) => {
+            const e = t.experiments[exp.id];
+            return (
+              <button
+                type="button"
+                class="plate"
+                data-exp={exp.id}
+                data-href={localizePath(`/${exp.id}`, lang)}
+                aria-current="false"
+              >
+                <picture>
+                  <source data-phase="day" type="image/avif" srcset={`/bench/machines/${exp.id}-day-450.avif`} />
+                  <source data-phase="day" type="image/webp" srcset={`/bench/machines/${exp.id}-day-450.webp`} />
+                  <source data-phase="night" type="image/avif" media="not all" srcset={`/bench/machines/${exp.id}-night-450.avif`} />
+                  <source data-phase="night" type="image/webp" media="not all" srcset={`/bench/machines/${exp.id}-night-450.webp`} />
+                  <img
+                    src={`/bench/machines/${exp.id}-day-450.webp`}
+                    width={plateWidths[exp.id] ?? 450}
+                    height="450"
+                    alt=""
+                    fetchpriority="low"
+                    data-day-src={`/bench/machines/${exp.id}-day-450.webp`}
+                    data-night-src={`/bench/machines/${exp.id}-night-450.webp`}
+                  />
+                </picture>
+                <span>{exp.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      <div class="bench-foot">
+        <p class="hint">{t.home.lantern.benchLabel}</p>
+        <button
+          type="button"
+          class="lantern-pause"
+          id="lantern-pause"
+          aria-pressed="false"
+          data-pause-label={t.home.lantern.pause}
+          data-resume-label={t.home.lantern.resume}
+        >
+          {t.home.lantern.pause}
+        </button>
+      </div>
+    </section>
+
+    <!-- About the lab: the former hero, now below the plate. -->
+    <section class="wrap section two-col about">
+      <div>
+        <span class="label">{t.home.about.kicker}</span>
+        <h2>{t.home.hero.title}</h2>
+      </div>
+      <div>
+        <p class="prose lede" set:html={t.home.hero.lede} />
+        <div class="pitch">
+          <p class="pitch-domains">{t.home.hero.pitch}</p>
+          <p class="pitch-sub">{t.home.hero.pitchSub}</p>
+        </div>
+        <div class="hero-cta">
+          <a class="btn" href={localizePath('/experiments', lang)}>{t.home.hero.ctaExperiments}</a>
+          <a class="btn ghost" href={localizePath('/manifesto', lang)}>{t.home.hero.ctaManifesto}</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- The horizon appears once, after the lab's paragraph. -->
+    <div class="wrap sep horizon" aria-hidden="true">
+      <svg viewBox="0 0 1000 92" id="horizon-svg">
+        <defs>
+          <mask id="horizon-mask">
+            <rect width="1000" height="92" fill="white" />
+            <rect id="horizon-gap" x="318" y="24" width="364" height="44" fill="black" />
+          </mask>
+        </defs>
+        <g mask="url(#horizon-mask)">
+          {seaLines.map((l) => (
+            <line x1="0" y1={l.y} x2="1000" y2={l.y} stroke="currentColor" stroke-width={l.w} />
+          ))}
+          {skyLines.map((l) => (
+            <line x1="0" y1={l.y} x2="1000" y2={l.y} stroke="currentColor" stroke-width="0.4" opacity={l.o} />
+          ))}
+          <line x1="0" y1="46" x2="1000" y2="46" stroke="currentColor" stroke-width="1.8" />
+        </g>
+        <text
+          id="horizon-text"
+          x="500"
+          y="57"
+          text-anchor="middle"
+          font-family="Sometype Mono, monospace"
+          font-size="30"
+          letter-spacing="10"
+          fill="currentColor">SCI · CLI · BIO</text>
+      </svg>
     </div>
-  </section>
 
-  <hr class="rule" />
+    <!-- Lineage / origin: the genesis story, now after the experiments it produced -->
+    <section class="wrap section two-col">
+      <div><span class="label">{t.home.lineage.kicker}</span><h2>{t.home.lineage.title}</h2></div>
+      <div class="prose"><p set:html={t.home.lineage.body} /></div>
+    </section>
 
-  <!-- Closing -->
-  <section class="wrap section closing">
-    <span class="label">{t.home.closing.kicker}</span>
-    <h2>{t.home.closing.title}</h2>
-    <p class="prose" set:html={t.home.closing.body} />
-    <div class="closing-cta">
-      <a class="btn" href={localizePath('/manifesto', lang)}>{t.home.closing.manifesto}</a>
-      <a class="btn ghost" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{t.home.closing.contribute}</a>
-    </div>
-  </section>
+    <div class="wrap sep dinkus" aria-hidden="true"><span>⁂</span></div>
 
+    <!-- Philosophy -->
+    <section class="wrap section two-col">
+      <div><span class="label">{t.home.philosophy.kicker}</span><h2>{t.home.philosophy.title}</h2></div>
+      <div class="prose">
+        <p set:html={t.home.philosophy.body} />
+        <ul class="values label">
+          {t.home.philosophy.values.map((v) => <li>{v}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <div class="wrap sep dinkus" aria-hidden="true"><span>⁂</span></div>
+
+    <!-- Research directions -->
+    <section class="wrap section two-col">
+      <div><span class="label">{t.home.directions.kicker}</span><h2>{t.home.directions.title}</h2></div>
+      <div>
+        <p class="axis">{t.home.directions.axis}</p>
+        <div class="directions">
+          <div class="dir-now">
+            <span class="label">{t.home.directions.now}</span>
+            <ul>{t.home.directions.nowItems.map((i) => <li>{i}</li>)}</ul>
+          </div>
+          <div class="dir-next">
+            <span class="label">{t.home.directions.next}</span>
+            <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap sep dinkus" aria-hidden="true"><span>⁂</span></div>
+
+    <!-- Closing -->
+    <section class="wrap section closing">
+      <span class="label">{t.home.closing.kicker}</span>
+      <h2>{t.home.closing.title}</h2>
+      <p class="prose" set:html={t.home.closing.body} />
+      <div class="closing-cta">
+        <a class="btn" href={localizePath('/manifesto', lang)}>{t.home.closing.manifesto}</a>
+        <a class="btn ghost" href="https://github.com/UniverLab" target="_blank" rel="noopener noreferrer">{t.home.closing.contribute}</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="crt-dot" id="crt-dot" aria-hidden="true"></div>
 </BaseLayout>
 
 <style>
-  .hero { padding-block: clamp(2rem, 6vh, 4rem) clamp(1.75rem, 4vh, 2.75rem); display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
-  /* The text column keeps the hero's rhythm verbatim; the figure takes the
-     right 40 % from 1100 px up (spec: two-column hero from 1100 px). */
-  .hero-col { display: flex; flex-direction: column; gap: 1.2rem;
-              align-items: flex-start; min-width: 0; }
-  @media (min-width: 1100px) {
-    .hero { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-            column-gap: clamp(1.5rem, 3vw, 3rem); align-items: start; }
+  /* ── Frontispiece ─────────────────────────────────────────────────────── */
+  .hall { display: grid; justify-items: center; gap: 0.75rem;
+          padding-block: clamp(1.5rem, 4vh, 2.5rem) 2rem; }
+  .frontis { display: grid; justify-items: center; text-align: center; gap: 10px;
+             padding-block: 8px 4px; max-width: 40rem; margin-inline: auto; }
+  .frontis h1 {
+    font-family: var(--font-serif); font-weight: 400;
+    font-size: clamp(44px, 9vw, 84px); letter-spacing: 0.14em;
+    text-transform: uppercase; line-height: 1; margin: 6px 0 0;
+    padding-left: 0.14em;
   }
-  /* Logo anchors the name gloss to its right (wordmark + a shared line that
-     holds the slogan at rest, the sense gloss while open). */
-  .hero h1 { font-size: clamp(2rem, 4.6vw, 3.2rem); max-width: 20ch; line-height: 1.1; text-wrap: balance; }
+  .fr-rule { display: block; width: min(100%, 26rem); height: 7px;
+             border-top: 1.5px solid var(--bench-line);
+             border-bottom: 0.75px solid var(--bench-line); }
+  .fr-rule.thin { width: min(60%, 14rem); height: 0; border-bottom: 0;
+                  border-top: 0.75px solid var(--bench-line-soft); }
+  .fr-sub { margin: 0; font-family: var(--font-serif); font-variant: small-caps;
+            letter-spacing: 0.12em; font-size: clamp(17px, 2.6vw, 22px);
+            color: var(--bench-line); }
+  /* Inlined SVG: it inherits the ground's ink through currentColor, so the
+     night inversion happens in the token, not in a filter. */
+  .fr-mark { display: block; width: 58px; height: 58px; margin-block: 6px 2px;
+             color: var(--bench-line); }
+  .fr-mark :global(svg) { display: block; width: 100%; height: 100%; }
+  .fr-motto { margin: 0; font-family: var(--font-serif); font-style: italic;
+              font-size: clamp(17px, 2.4vw, 21px); color: var(--bench-line-soft); }
+  .fr-imprint { margin: 0; font-family: var(--font-mono); font-size: 12px;
+                letter-spacing: 0.18em; text-transform: uppercase;
+                color: var(--bench-line-soft); }
 
-  /* Short laptop screens (~768px tall and below): the hero must not own the
-     whole first screen — the lede has to be visible without scrolling. */
-  @media (max-height: 48rem) {
-    .hero { padding-block: 1.75rem 1.5rem; }
-    .hero h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
-  }
-  .subtitle { font-family: var(--font-serif); font-style: italic; color: var(--ink-faint); font-size: 1rem; margin: 0; }
+  .plate-label { margin: 18px 0 0; text-align: center; font-family: var(--font-mono);
+                 font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+                 color: var(--bench-line-soft); }
+  .plate-label i { font-family: var(--font-serif); font-style: italic;
+                   text-transform: none; letter-spacing: 0; font-size: 15px;
+                   color: var(--bench-line); }
+
+  /* ── The lantern and its screen ───────────────────────────────────────── */
+  .lantern { position: relative; width: min(100%, 780px); }
+  .lantern-pic { position: relative; z-index: 2; display: block; }
+  .lantern-pic img { display: block; width: 100%; height: auto; pointer-events: none; }
+  .screen { position: absolute; z-index: 1; overflow: hidden;
+            background: var(--bench-c-parchment); }
+  :global(html[data-bench-theme='night']) .screen { background: #15110c; }
+
+  .slide { position: absolute; inset: 0; display: grid;
+           grid-template-rows: minmax(0, 1fr) auto; opacity: 0;
+           transition: opacity 0.25s ease; }
+  .slide.is-on { opacity: 1; }
+  .slide video { display: block; width: 100%; height: 100%; min-height: 0;
+                 object-fit: contain; filter: var(--bench-clip-filter); }
+
+  .title-slide { display: grid; place-content: center; text-align: center;
+                 gap: 6px; padding: 6%; }
+  .title-mark { display: block; width: 44px; height: 44px; margin: 0 auto 4px;
+                color: var(--bench-line); }
+  .title-mark :global(svg) { display: block; width: 100%; height: 100%; }
+  .title-name { font-family: var(--font-serif); font-size: clamp(22px, 4.5vw, 44px);
+                letter-spacing: 0.12em; line-height: 1; color: var(--bench-line); }
+  .title-sub { margin: 0; font-family: var(--font-serif); font-style: italic;
+               font-size: clamp(11px, 1.8vw, 16px); color: var(--bench-line-soft); }
+
+  .caption { margin: 0; font-family: var(--font-serif); font-style: italic;
+             font-size: clamp(10px, 1.5vw, 15px); line-height: 1.3;
+             color: var(--bench-line); text-align: center; padding: 0 6% 3.5%;
+             text-wrap: balance; }
+  .caption b { font-style: normal; font-weight: 400; letter-spacing: 0.05em; }
+
+  .film { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%;
+          pointer-events: none; }
+
+  /* ── The bench ────────────────────────────────────────────────────────── */
+  .row-wrap { overflow-x: auto; width: 100%; margin-top: 0.5rem;
+              -webkit-overflow-scrolling: touch; }
+  .row { display: flex; align-items: flex-end; justify-content: center;
+         gap: clamp(0.75rem, 2vw, 1.5rem); min-width: max-content;
+         padding: 6px 4px; margin-inline: auto; }
+  .plate { background: none; border: 0; padding: 0; cursor: pointer;
+           display: grid; justify-items: center; gap: 6px; font: inherit;
+           color: var(--bench-line); opacity: 0.55;
+           transition: opacity 0.3s ease; }
+  .plate picture { display: block; height: 120px; }
+  .plate img { display: block; height: 100%; width: auto; }
+  .plate span { font-family: var(--font-serif); font-style: italic; font-size: 13px; }
+  .plate[aria-current='true'] { opacity: 1; }
+  .plate:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
+  @media (max-width: 47.999rem) { .plate picture { height: 84px; } }
+
+  .bench-foot { display: flex; flex-wrap: wrap; align-items: center;
+                justify-content: center; gap: 0.5rem 1.25rem; margin-top: 0.25rem; }
+  .hint { margin: 0; font-size: 0.85rem; color: var(--bench-line-soft);
+          text-align: center; max-width: none; }
+  .lantern-pause { font-family: var(--font-mono); font-size: 0.72rem;
+                   letter-spacing: 0.08em; text-transform: uppercase;
+                   color: var(--bench-line); background: transparent;
+                   border: 1px solid var(--bench-line-soft);
+                   padding: 0.35rem 0.7rem; cursor: pointer; }
+  .lantern-pause:hover { border-color: var(--bench-line); }
+  .lantern-pause[aria-pressed='true'] { background: var(--bench-line);
+                                        color: var(--bench-ground); }
+  .lantern-pause:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
+
+  /* ── Separators ───────────────────────────────────────────────────────── */
+  .sep { color: var(--bench-line); margin-block: 2.25rem; }
+  .horizon svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .dinkus { display: grid; grid-template-columns: 1fr auto 1fr;
+            align-items: center; gap: 1.125rem; color: var(--bench-line-soft);
+            margin-block: 2rem; }
+  .dinkus::before, .dinkus::after { content: ''; height: 1px;
+    background: linear-gradient(90deg, transparent, currentColor 30%, currentColor 70%, transparent);
+    opacity: 0.7; }
+  .dinkus > span { font-family: var(--font-serif); font-size: 22px;
+                   line-height: 1; color: var(--bench-line); }
+
+  /* ── About the lab and the lower sections ─────────────────────────────── */
+  .section { padding-block: clamp(2.75rem, 6vw, 4rem); }
   .lede { font-size: 1.12rem; color: var(--ink-dim); margin: 0; }
-  /* The experiments lede sits between the section head and the card grid:
-     it inherits the lede type but needs air below (the .lede reset is 0). */
-  .section-head + .lede { margin-bottom: 1.75rem; }
   :global(.lede strong) { color: var(--accent); font-weight: 500; }
 
-  .pitch { margin-top: 0.4rem; }
-  .pitch-domains {
-    font-family: var(--font-mono);
-    font-size: 0.88rem;
-    letter-spacing: 0.06em;
-    color: var(--ink);
-    margin: 0;
-  }
-  .pitch-sub {
-    font-size: 0.85rem;
-    color: var(--ink-faint);
-    margin: 0.3rem 0 0;
-  }
+  .pitch { margin-top: 0.9rem; }
+  .pitch-domains { font-family: var(--font-mono); font-size: 0.88rem;
+                   letter-spacing: 0.06em; color: var(--ink); margin: 0; }
+  .pitch-sub { font-size: 0.85rem; color: var(--ink-faint); margin: 0.3rem 0 0; }
 
-  .hero-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 0.8rem; }
-  .btn {
-    text-decoration: none;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 0.55rem 1.1rem;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
+  .hero-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap;
+              margin-top: 1.2rem; }
+  .btn { text-decoration: none; border: 1px solid var(--accent);
+         color: var(--accent); padding: 0.55rem 1.1rem;
+         font-family: var(--font-mono); font-size: 0.85rem;
+         transition: background 0.15s ease, color 0.15s ease; }
   .btn:hover { background: var(--accent); color: var(--bg); }
   .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
   .btn.ghost:hover { border-color: var(--ink); color: var(--ink); background: transparent; }
 
-  .section { padding-block: clamp(2.75rem, 6vw, 4rem); }
-  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; }
-  .more { text-decoration: none; }
-  .more:hover { color: var(--ink); }
-
-  .archive-link { margin: 1.4rem 0 0; text-align: right; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.06em; }
-  .archive-link a { color: var(--ink-dim); text-decoration: none; }
-  .archive-link a:hover { color: var(--ink); text-decoration: underline; }
-
-  .grid {
-    list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
-    gap: clamp(0.75rem, 1.5vw, 1.25rem);  /* cards breathe with the viewport */
-  }
-  .card {
-    display: block; height: 100%;
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    border: 1px solid var(--line);
-    border-left: 2px solid color-mix(in srgb, var(--essence) 35%, transparent);
-    padding: 1.6rem;
-    text-decoration: none;
-    transition: border-left-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-    backdrop-filter: blur(2px);
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Background canvas — hidden by default, shown on hover/focus. The canvas
-     paints at full opacity on flip; the [data-flip-surface] rule carries the
-     surface tokens and inset highlight, so the glow retires. */
-  .card-bg-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .card:hover .card-bg-canvas,
-  .card:focus-visible .card-bg-canvas,
-  .card.is-tapped .card-bg-canvas { opacity: 1; }
-
-  /* Content sits above the canvas */
-  .card > *:not(.card-bg-canvas):not(.card-glow):not(.card-motif) { position: relative; z-index: 1; }
-  .card:hover,
-  .card:focus-visible,
-  .card.is-tapped {
-    /* transform + box-shadow removed: the [data-flip-surface] rule carries the
-       flip (surface bg + own inset highlight); no translate on a window. */
-    border-left-color: var(--essence);
-  }
-
-  /* Portal glow — fades out when shared flip surface takes over */
-  .card-glow {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 0.35s ease;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at 20% 80%, color-mix(in srgb, var(--essence) 14%, transparent) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--essence) 8%, transparent) 0%, transparent 50%);
-  }
-  .card:hover .card-glow,
-  .card:focus-visible .card-glow,
-  .card.is-tapped .card-glow { opacity: 0; }
-
-  /* ─ Per-experiment portal: the card window flips to the experiment's REAL
-     surface ── tokens come from the shared groups in global.css via
-     data-flip-surface (the registry's data-surface name) — ONE rule, no
-     per-experiment copies. Quorum is the exception: it flips to its ACTIVE
-     circadian palette (day/night blocks below, which out-rank this rule). */
-
-  .card:hover[data-flip-surface],
-  .card:focus-visible[data-flip-surface],
-  .card.is-tapped[data-flip-surface] {
-    --bg: var(--surface-bg);
-    --bg-raise: var(--surface-bg-raise);
-    --ink: var(--surface-ink);
-    --ink-dim: var(--surface-ink-dim);
-    --ink-faint: var(--surface-ink-faint);
-    --line: var(--surface-line);
-    /* The window's accent is the PAGE's accent (--surface-essence), not the
-       registry hex the collapsed card carries: EXP number, status dot, name and
-       motif on a flipped card must read as that experiment's own surface. */
-    --essence: var(--surface-essence);
-    background: var(--bg);
-    color: var(--ink);
-    /* window edge sheen — derived from the surface's own ink so it reads on
-       light AND dark groups without a per-experiment copy (auros: shadows
-       stay whisper-light on the abyssal surface). */
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent);
-  }
-
-  /* cadSpec: the page's own backdrop is a quiet two-pitch drafting grid, so the
-     window reproduces that grid in the surface's own ink (no hex) and NOTHING
-     else — startCard starts no runner for this surface, so the window shows
-     exactly the page's background (same CSS, same colours, no primitives).
-     Later source at equal specificity wins `background-image` over the
-     `background` shorthand. */
-  .card:hover[data-flip-surface='blueprint'],
-  .card:focus-visible[data-flip-surface='blueprint'],
-  .card.is-tapped[data-flip-surface='blueprint'] {
-    background-image:
-      linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
-      linear-gradient(0deg,  color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
-    background-size: 140px 140px, 140px 140px, 28px 28px, 28px 28px;
-  }
-
-  /* ── Card motif strip: the page's own hero ASCII motif, revealed with the
-     window flip in the page's own accent (--essence, re-pointed at
-     --surface-essence by the flip rule above — mono, page register). ── */
-  .card-motif {
-    position: absolute;
-    top: 0.55rem;
-    right: 0.9rem;
-    z-index: 1;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
-    color: var(--ink-faint);
-    max-width: 58%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .card:hover .card-motif,
-  .card:focus-visible .card-motif,
-  .card.is-tapped .card-motif { opacity: 0.85; color: var(--essence); }
-
-  /* ── Quorum — circadian exception: redirects to the ACTIVE day/night tokens
-     (the inline --q-day-* and --q-night-* vars from the registry's
-     circadianPalette, set on the card anchor). Only --surface-* are reassigned;
-     background, color and box-shadow come from the generic flip rule above, so
-     the card can never drift from the registry again. ──
-     NOTE: keep the glob and the comment's closing delimiter apart — an earlier
-     version spelled the day glob as --q-day- immediately followed by an
-     asterisk and a slash, which closed THIS comment early, glued the leftover
-     prose to the day selector and made the build drop the whole SUN rule. ── */
-  html[data-celestial='sun'] .card[data-exp='quorum']:hover,
-  html[data-celestial='sun'] .card[data-exp='quorum']:focus-visible,
-  html[data-celestial='sun'] .card[data-exp='quorum'].is-tapped {
-    --surface-bg: var(--q-day-bg);
-    --surface-bg-raise: var(--q-day-bg-raise);
-    --surface-ink: var(--q-day-ink);
-    --surface-ink-dim: var(--q-day-ink-dim);
-    --surface-ink-faint: var(--q-day-ink-faint);
-    --surface-line: var(--q-day-line);
-  }
-  html[data-celestial='moon'] .card[data-exp='quorum']:hover,
-  html[data-celestial='moon'] .card[data-exp='quorum']:focus-visible,
-  html[data-celestial='moon'] .card[data-exp='quorum'].is-tapped {
-    --surface-bg: var(--q-night-bg);
-    --surface-bg-raise: var(--q-night-bg-raise);
-    --surface-ink: var(--q-night-ink);
-    --surface-ink-dim: var(--q-night-ink-dim);
-    --surface-ink-faint: var(--q-night-ink-faint);
-    --surface-line: var(--q-night-line);
-  }
-
-  /* ── Essence accent — one generic rule. --essence is the inline registry hex
-     on each card's <li>; h3 inherits the flip ink and .num already reads
-     var(--essence) by default, so only h3 needs the flip accent. ── */
-  .card:hover h3,
-  .card:focus-visible h3,
-  .card.is-tapped h3 { color: var(--essence); }
-
-  /* Focus state for accessibility — generic fallback (no data-exp) */
-  .card:not([data-exp]):focus-visible {
-    outline: 2px solid var(--essence);
-    outline-offset: 2px;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--essence) 12%, transparent);
-  }
-  .card:not([data-exp]):focus-visible .card-glow { opacity: 1; }
-
-  /* Mobile: tap triggers the same effect */
-  @media (hover: none) {
-    .card:active { transform: scale(0.98); }
-    .card:active .card-glow { opacity: 0; }  /* matches the flip: glow retires */
-  }
-  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
-  .card h3 { font-size: 1.25rem; transition: color 0.15s ease; }
-  .num { font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; color: var(--essence); }
-  .status { display: inline-flex; align-items: center; gap: 0.45rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); }
-  .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
-  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
-  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
-  .need { font-family: var(--font-serif); font-style: italic; color: var(--ink-dim); font-size: 0.92rem; margin: 0.5rem 0 0.7rem; }
-  .tagline { font-size: 0.92rem; margin: 0; color: var(--ink-dim); }
-  /* The thread — problem → method → artifact — one mono line under the tagline, plate
-     register. Plain text (this is an anchor: never nest a link here). Ellipsis on narrow
-     cards; tokens only, so the hover flip re-points it with the rest of the card. */
-  .thread { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-dim);
-            margin: 0.55rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
   .two-col { display: grid; grid-template-columns: minmax(14rem, 1fr) 2fr; gap: 2.5rem; }
   .two-col h2 { font-size: 1.7rem; margin-top: 0.7rem; max-width: 16ch; }
-  @media (max-width: 50rem) { .two-col { grid-template-columns: 1fr; } }
+  @media (max-width: 47.999rem) { .two-col { grid-template-columns: 1fr; } }
   :global(.section .prose a) { color: var(--ink); }
 
-  /* Eyebrow consistency — same quiet color and air across variants, all CSS.
-     `.values` is excluded: it shares the .label signature but is the 6-value
-     grid, which must keep its own display/margin. */
   .two-col .label:not(.values) { display: block; margin-bottom: 0.35rem; }
-  .section-head .label { color: var(--ink-dim); }
   .closing .label { display: block; }
 
-  .values { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem 1.5rem; }
+  .values { list-style: none; padding: 0; margin: 1.4rem 0 0;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+            gap: 0.6rem 1.5rem; }
   .values li::before { content: '— '; color: var(--ink-faint); }
 
-  .directions { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 3vw, 2.5rem); }
+  .directions { display: grid; grid-template-columns: 1fr 1fr;
+                gap: clamp(1.5rem, 3vw, 2.5rem); }
   .directions ul { list-style: none; padding: 0; margin: 0.8rem 0 0; }
   .directions li { padding-block: 0.35rem; border-bottom: 1px solid var(--line); }
   .dir-now .label { color: var(--ink); }
   .dir-now li { color: var(--ink-dim); }
   .dir-next .label { color: var(--ink-faint); }
-  .dir-next li { color: var(--ink-faint); border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
+  .dir-next li { color: var(--ink-faint);
+                 border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
   @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
 
-  /* One-line axis statement above the Now/Next grid: colour + air only. */
   .axis { color: var(--ink-dim); margin: 0 0 1rem; max-width: 60ch; }
 
   .closing { padding-block: clamp(2.75rem, 6vw, 4rem) 5rem; }
   .closing h2 { font-size: 1.8rem; margin-block: 0.7rem 1rem; max-width: 22ch; }
   .closing .prose { color: var(--ink-dim); }
-  .closing-cta { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; margin-top: 1.4rem; }
-
+  .closing-cta { display: flex; gap: 1.2rem; align-items: center;
+                 flex-wrap: wrap; margin-top: 1.4rem; }
 </style>
 
 <script>
-  import { startBackground } from '../scripts/backgrounds';
-  import type { BgTheme } from '../lib/experiments';
+  import { startLantern } from '../scripts/lantern';
+  import { crtNavigate } from '../scripts/crt';
 
-  // Card window: start the experiment's OWN runner on hover/focus. The
-  // [data-flip-surface] groups apply their --surface-* tokens to the card
-  // unconditionally, so reading computed --essence/--surface-bg here always
-  // yields the surface's own current substrate — no duplicated hexes.
-  const startCard = (card: HTMLAnchorElement) => {
-    // cadSpec: the page's whole living background is its own CSS drafting grid —
-    // BaseLayout starts no canvas runner for `blueprint`, so the window must
-    // start NONE either: it shows only the page's own background (the grid the
-    // flip rule below paints), never the old primitives geometry. The guard
-    // runs before `dataset.started`, so re-hovering is a cheap no-op and the
-    // canvas stays blank over the grid.
-    if (card.dataset.flipSurface === 'blueprint') return;
-    const canvas = card.querySelector<HTMLCanvasElement>('.card-bg-canvas');
-    if (!canvas || canvas.dataset.started) return;
-    canvas.dataset.started = '1';
-    const theme = (card.dataset.theme ?? 'cosmic') as BgTheme;
-    const surf = card.dataset.flipSurface;
-    const cs = getComputedStyle(card);
-    // The runner's colour is the page's accent: --surface-essence when the
-    // group declares it, the registry hex (--essence) as the fallback. Read at
-    // start time, after the flip rule has applied, so focus and tap agree with
-    // hover.
-    const color =
-      cs.getPropertyValue('--surface-essence').trim() ||
-      cs.getPropertyValue('--essence').trim() ||
-      '#e6c84a';
-    const bg = cs.getPropertyValue('--surface-bg').trim() || '#0a0b0e';
-    startBackground(canvas, theme, color, bg, surf);
-  };
+  startLantern();
 
-  // Start background animation on hover
-  document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
-    card.addEventListener('mouseenter', () => startCard(card));
-    card.addEventListener('focus', () => startCard(card));
-  });
-
-  // Click zoom is native cross-document View Transitions (global.css opts in,
-  // each card and its destination hero share view-transition-name: exp-<id>).
-  // No JS interception: the anchor navigates immediately and the browser
-  // morphs the card into the hero. Browsers without support navigate plainly.
-
-  // Mobile tap: preview the surface, then navigate. A tap only counts as a tap
-  // if the finger stayed put — starting a scroll on a card must scroll, never
-  // open the experiment, so any drift past SLOP (or a long press) cancels it.
-  if ('ontouchstart' in window) {
-    const SLOP = 12;      // px of finger drift that still reads as a tap
-    const TAP_MS = 600;   // longer than this is a press/scroll, not a tap
-
-    document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
-      let startX = 0, startY = 0, startedAt = 0;
-      let candidate = false;
-
-      const cancelTap = () => {
-        if (!candidate) return;
-        candidate = false;
-        card.classList.remove('is-tapped');
-      };
-
-      card.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) { cancelTap(); return; }
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        startedAt = performance.now();
-        candidate = true;
-        card.classList.add('is-tapped');
-        // Start the card window preview on tap too
-        startCard(card);
-      }, { passive: true });
-
-      card.addEventListener('touchmove', (e) => {
-        if (!candidate) return;
-        const touch = e.touches[0];
-        if (!touch) return;
-        if (Math.abs(touch.clientX - startX) > SLOP || Math.abs(touch.clientY - startY) > SLOP) {
-          cancelTap();
-        }
-      }, { passive: true });
-
-      card.addEventListener('touchcancel', cancelTap, { passive: true });
-
-      card.addEventListener('touchend', (e) => {
-        if (!candidate) return;
-        candidate = false;
-        if (performance.now() - startedAt > TAP_MS) { card.classList.remove('is-tapped'); return; }
-        if (card.dataset.navigated === 'true') return;
-        e.preventDefault();
-        card.dataset.navigated = 'true';
-        // Hold the window preview briefly so the tap reads, then run the
-        // native anchor navigation (card.click() → View Transition).
-        setTimeout(() => {
-          card.classList.remove('is-tapped');
-          card.click();
-        }, 350);
-      });
-    });
-  }
-
-  // Clean up stale tap state on back-navigation (BFCache restore)
-  window.addEventListener('pageshow', () => {
-    document.querySelectorAll<HTMLAnchorElement>('.card[data-exp]').forEach((card) => {
-      card.dataset.navigated = 'false';
-      card.classList.remove('is-tapped');
+  // A machine opens its experiment page through the CRT power-off. The key
+  // `sessionStorage['univerlab-crt']` tells BaseLayout to play crt-on once the
+  // destination has loaded; crt.ts owns that handshake.
+  const view = document.getElementById('home-view');
+  const dot = document.getElementById('crt-dot');
+  document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const href = btn.dataset.href;
+      if (!href) return;
+      if (view && dot) crtNavigate(href, view, dot);
+      else window.location.assign(href);
     });
   });
 </script>
