@@ -202,6 +202,15 @@ describe('quorum fondo', () => {
       expect(ctx.fillStyles[0]).toBe(BG_NIGHT);
       expect(ctx.stroke).toHaveBeenCalled();
     });
+
+    it('repaints the still engraving in the new phase when the theme changes', () => {
+      mountFondo(true, true);
+      ctx.fillStyles.length = 0;
+      fondo!.setNight(false);
+      expect(ctx.fillStyles[0]).toBe(BG_DAY);
+      expect(pointerIn).not.toHaveBeenCalled();
+      expect(loop).not.toHaveBeenCalled();
+    });
   });
 
   describe('destroy', () => {

@@ -28,25 +28,15 @@ const { id } = Astro.props;
     if (!load) return;
     const mod = await load();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const night =
+    const isNight = () =>
       document.documentElement.dataset.benchTheme === 'night' ||
       document.documentElement.dataset.celestial === 'moon';
-    const fondo = mod.mount(host, { night, reduced, base: `/bench/fondos/${id}/` });
-    const onTheme = () => {
-      const n =
-        document.documentElement.dataset.benchTheme === 'night' ||
-        document.documentElement.dataset.celestial === 'moon';
-      fondo.setNight(n);
-    };
+    const fondo = mod.mount(host, { night: isNight(), reduced, base: `/bench/fondos/${id}/` });
+    const onTheme = () => fondo.setNight(isNight());
     window.addEventListener('univerlab:themechange', onTheme);
 
     if (id === 'quorum') {
-      const observer = new MutationObserver(() => {
-        const n =
-          document.documentElement.dataset.benchTheme === 'night' ||
-          document.documentElement.dataset.celestial === 'moon';
-        fondo.setNight(n);
-      });
+      const observer = new MutationObserver(onTheme);
       observer.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-bench-theme'],

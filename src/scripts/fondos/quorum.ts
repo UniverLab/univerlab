@@ -307,10 +307,10 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   resize();
 
   if (reduced) {
-    const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-    render(t0);
+    const stillFrame = () => render(typeof performance !== 'undefined' ? performance.now() : Date.now());
+    stillFrame();
     return {
-      setNight(n: boolean) { night = n; },
+      setNight(n: boolean) { night = n; stillFrame(); },
       destroy() {
         (canvas as any).__ro?.disconnect?.();
         canvas.remove();
