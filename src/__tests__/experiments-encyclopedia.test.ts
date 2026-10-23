@@ -25,7 +25,7 @@ describe('experiments encyclopedia entry list', () => {
     expect(anchors).toEqual([...anchors].sort());
   });
 
-  it('links archived entries to /archive#exp-n and live ones to their page', () => {
+  it('links archived entries to the archive anchor and live ones to their page', () => {
     for (const entry of entries) {
       if (isArchived(experiments.find((e) => e.id === entry.id)!)) {
         expect(entry.archived).toBe(true);

@@ -6,9 +6,10 @@
  * advertised: an hreflang to `/es` (308 to `/es/`), hreflang and nav links
  * to `/es/status/` (301 to `/status/`), and a feed alternate to `/status`.
  *
- * This scans every built indexable page in `dist/` and checks each
- * `<link rel="canonical">` href, each `<link rel="alternate" hreflang>`
- * href, and each `<a href>` on univerlab.org (absolute or root-relative):
+ * This scans every built page URL in `dist/` (each `index.html`) minus the
+ * `noindex` ones, and checks each `<link rel="canonical">` href, each
+ * `<link rel="alternate" hreflang>` href, and each `<a href>` on
+ * univerlab.org (absolute or root-relative):
  * the href must end in `/`, must not be the source of a `public/_redirects`
  * rule, and must resolve to a built page (`dist/<path>/index.html`, or
  * `dist/index.html` for `/`). Fragment-only links, query strings (compared
