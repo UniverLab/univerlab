@@ -1,6 +1,6 @@
 ---
 import { byId, type ExperimentId } from '../lib/experiments';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 import { latestRelease, releaseAgeLabel } from '../lib/releases';
 
@@ -29,30 +29,33 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
   )}
   <span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap>—</span></span>
   <span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog>{t.plate.lastLog}: —</span>
+  {exp.builtWith.map((tool) => (
+    <>
+      <span class="lp-sep"> · </span><span class="lp-built">{t.builtWithSegments[tool]}{' '}<a href={localizePath(`/${tool}`, lang)} translate="no">{byId(tool).name}</a></span>
+    </>
+  ))}
 </p>
 
 <style>
   .lab-plate {
-    display: flex; flex-wrap: nowrap; align-items: baseline; gap: 0;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0;
     max-width: var(--max-w, 70rem); margin: 0 auto;
-    padding: 0.9rem var(--page-gutter) 0;
-    min-height: 1.5rem;
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
-    color: var(--ink-dim); white-space: nowrap; overflow: hidden;
+    padding: 0 var(--page-gutter);
+    row-gap: 0.2rem;
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em;
+    color: var(--ink-dim);
   }
   .lab-plate .lp-num, .lab-plate .lp-status { color: var(--essence); }
-  .lab-plate .lp-sep { color: var(--ink-faint); }
-  .lab-plate .lp-lastlog { overflow: hidden; text-overflow: ellipsis; }
-  /* One link now lives in the plate (the release segment, spec
+  /* Flex items trim edge whitespace, which would swallow the ' · ' spaces. */
+  .lab-plate .lp-sep { color: var(--ink-faint); white-space: pre; }
+  /* One link now lives in the caption (the release segment, spec
      lexp-release-signal supersedes R7's "no links"): underline off so it keeps
-     the plate's mono register, essence on hover, never shrinkable so the
-     version stays intact when the line runs long. */
+     the caption's mono register, essence on hover, never shrinkable so the
+     version stays intact when the line wraps. Built-with links share the
+     caption's mono register and get the same essence hover. */
   .lab-plate .lp-release { flex: 0 0 auto; text-decoration: none; }
-  .lab-plate .lp-release:hover { color: var(--essence); }
-  /* The plate is nowrap + overflow:hidden, so the segment pushes roadmap/last
-     log off the right edge on phones; let whole spans wrap instead of silently
-     clipping them. */
-  @media (max-width: 50rem) { .lab-plate { flex-wrap: wrap; row-gap: 0.2rem; } }
+  .lab-plate .lp-release:hover, .lab-plate .lp-built a:hover { color: var(--essence); }
+  .lab-plate .lp-built a { color: var(--ink-dim); text-decoration-color: var(--line); }
 </style>
 
 <script>

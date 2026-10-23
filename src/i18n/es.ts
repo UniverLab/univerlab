@@ -426,6 +426,7 @@ export const es: Dict = {
       description:
         'Benchmark reproducible de métodos de reducción de ruido en imágenes DC2 del Vera Rubin Observatory, por recuperación de fuentes débiles, calidad y coste.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
+      bench: 'estado: investigación · tesis en curso',
       lede:
         'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de reducción de ruido sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
       genesis: {
@@ -517,6 +518,7 @@ export const es: Dict = {
       description:
         'Planning poker gratis por WebRTC — los peers hablan directamente, no se guarda nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
+      bench: 'abre la mesa → quorum.univerlab.org',
       lede:
         'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
       genesis: {
@@ -923,6 +925,7 @@ export const es: Dict = {
     missionLogLink: 'Mission Log →',
     roadmapLink: 'Roadmap →',
   },
+  labStrip: { lab: 'UniverLab · laboratorio abierto' },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
   builtWithSegments: {
     canopy: 'Construido con',

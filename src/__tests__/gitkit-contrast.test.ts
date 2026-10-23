@@ -118,6 +118,12 @@ describe('GitKit pastel orchid scale', () => {
     expect(contrast(orchidLt!, TERM_BG)).toBeGreaterThanOrEqual(4.5);     // 12.25 terminal plate
   });
 
+  // The experiment-frame terminal bench (.install) is a dark panel with its own
+  // ink on every experiment page; its command and banner text must clear 4.5:1.
+  it('holds >= 4.5:1 on the experiment terminal bench panel', () => {
+    expect(contrast('#ecebe4', '#16130f')).toBeGreaterThanOrEqual(4.5);
+  });
+
   // The two contrast defects PAL2 fixes: --orchid-text (4.16:1) on a --bg-raise
   // plate must never be reinstated as accent text.
   it('does not use --orchid-text on the raised install-bar or hook-card accents', () => {
