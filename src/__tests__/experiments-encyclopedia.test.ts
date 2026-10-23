@@ -35,15 +35,16 @@ describe('experiments encyclopedia entry list', () => {
         expect(entry.href).toBe(`/${entry.id}`);
       }
     }
-    expect(entries.find((e) => e.archived)?.href).toBe('/archive#exp-005');
+    // Production localizes with localizePath, which ends routes in `/`.
+    expect(entryModels((path) => `${path}/`).find((e) => e.archived)?.href).toBe('/archive/#exp-005');
   });
 
   it('keeps the archive anchor literal when the page localizer adds a trailing slash', () => {
     const withSlash = entryModels((path) => `${path}/`);
     const archived = withSlash.find((e) => e.archived);
-    expect(archived?.href).toBe('/archive#exp-005');
+    expect(archived?.href).toBe('/archive/#exp-005');
     const esEntries = entryModels((path) => `/es${path}/`);
-    expect(esEntries.find((e) => e.archived)?.href).toBe('/es/archive#exp-005');
+    expect(esEntries.find((e) => e.archived)?.href).toBe('/es/archive/#exp-005');
   });
 
   it('gives every entry an etymology in both languages', () => {

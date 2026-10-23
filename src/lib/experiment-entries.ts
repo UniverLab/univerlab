@@ -24,8 +24,8 @@ export function entryModels(localize: (path: string) => string): EntryModel[] {
       anchor,
       status: exp.status,
       archived,
-      // The spec's literal form is /archive#exp-00n: strip the trailing slash localize adds.
-      href: archived ? `${localize('/archive').replace(/\/$/, '')}#${anchor}` : localize(`/${exp.id}`),
+      // The spec's literal form is /archive/#exp-00n: keep localize's trailing slash.
+      href: archived ? `${localize('/archive')}#${anchor}` : localize(`/${exp.id}`),
       install: exp.install?.unix,
     };
   });

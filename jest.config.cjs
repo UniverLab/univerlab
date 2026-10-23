@@ -6,6 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^\\./page-glob$': '<rootDir>/src/i18n/page-glob.node.ts',
     '\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {

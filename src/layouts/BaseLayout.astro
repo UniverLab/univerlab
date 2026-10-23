@@ -8,7 +8,7 @@ import GhostHint from '../components/GhostHint.astro';
 import type { BgTheme, ExperimentId } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
 import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, hasCounterpart, localizePath, useTranslations } from '../i18n';
 import { organizationNode } from '../lib/structured-data';
 import '../styles/global.css';
 import '../styles/surfaces.css';
@@ -107,9 +107,10 @@ const canonical = new URL(path, site).href;
 const ogImage = ogImageProp ? new URL(ogImageProp, site).href : new URL('/og.png', site).href;
 // hreflang alternates — only for localized pages (docs are English-only).
 const isDocs = path.includes('/docs');
-const stripped = path.replace(/^\/es(?=\/|$)/, '') || '/';
-const enHref = new URL(stripped, site).href;
-const esHref = new URL('/es' + (stripped === '/' ? '' : stripped), site).href;
+const other = lang === 'en' ? 'es' : 'en';
+const enHref = new URL(localizePath(path, 'en'), site).href;
+const esHref = new URL(localizePath(path, 'es'), site).href;
+const showAlts = !isDocs && hasCounterpart(path, other);
 
 const orgJsonLd = organizationNode(site, t.meta.description);
 
@@ -160,7 +161,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     {surface && (
       <link rel="preload" href="/fonts/DejaVuSansMono.ttf" as="font" type="font/ttf" crossorigin />
     )}
-    {!isDocs && (
+    {showAlts && (
       <>
         <link rel="alternate" hreflang="en" href={enHref} />
         <link rel="alternate" hreflang="es" href={esHref} />
