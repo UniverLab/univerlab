@@ -46,8 +46,8 @@ $ demo export gif,mp4,svg
       <div class="spectrum" aria-hidden="true">
         {spectrumBars.map((height) => <span style={`--bar-height:${height}px; --bar-opacity:${(height / 114).toFixed(2)}`} />)}
       </div>
+      <p class="bg-credit mono">{e.bgCredit}</p>
     </div>
-    <p class="bg-credit mono">{e.bgCredit}</p>
   </Fragment>
 
   <!-- The confident light section: the genuine capture, then the same take
