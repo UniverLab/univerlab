@@ -135,7 +135,28 @@ describe('Home — Plate I, the lantern', () => {
   });
 
   it('loads only the clip after the current slide', () => {
-    expect(LANTERN).toMatch(/preload = i === current \|\| i === current \+ 1 \? 'auto' : 'none'/);
+    expect(LANTERN).toMatch(
+      /!reduce && \(i === current \|\| i === current \+ 1\) \? 'auto' : 'none'/,
+    );
+  });
+
+  it('loads no clip at all under reduced motion (the poster is the slide)', () => {
+    expect(LANTERN).toMatch(/if \(reduce \|\| paused \|\| document\.hidden\) return/);
+    expect(LANTERN).toMatch(/!reduce && \(i === current/);
+  });
+
+  it('centres the title slide as a group and the caption along the bottom', () => {
+    // .slide no longer lays out its children in rows, so the title slide's
+    // mark, name and motto stay together in the middle of the screen.
+    expect(HOME).toMatch(/\.slide \{[^}]*position:\s*absolute;[^}]*opacity:\s*0/);
+    expect(HOME).not.toMatch(/\.slide \{[^}]*grid-template-rows/);
+    expect(HOME).toMatch(/\.title-slide \{[^}]*align-content:\s*center/);
+    // The caption is an overlay (mockup), not a row: `main p { max-width: 65ch }`
+    // must not narrow it or push it off the screen.
+    expect(HOME).toMatch(/\.caption \{[^}]*position:\s*absolute/);
+    expect(HOME).toMatch(/\.caption \{[^}]*max-width:\s*none/);
+    expect(HOME).toMatch(/\.caption \{[^}]*z-index:\s*4/);
+    expect(HOME).toMatch(/\.slide video \{[^}]*object-fit:\s*contain/);
   });
 
   it('cycles every 7 s with a 240 ms flash cut', () => {
@@ -251,6 +272,10 @@ describe('Home — CRT power-off', () => {
     expect(CRT).toMatch(/dot\.classList\.add\('flash'\)/);
     expect(CRT).toMatch(/window\.location\.assign\(href\)/);
     expect(CRT).toMatch(/if \(reduce\) \{[\s\S]*?window\.location\.assign\(href\);[\s\S]*?return;/);
+    // The collapse converges on the dot's fixed 40% line, not on 40% of the
+    // whole (very tall) home view — that point is off-screen from the bench.
+    expect(CRT).toMatch(/window\.innerHeight \* 0\.4 - box\.top/);
+    expect(CRT).toMatch(/const box = view\.getBoundingClientRect\(\)/);
   });
 
   it('keeps Enter on a focused machine working through the native button', () => {

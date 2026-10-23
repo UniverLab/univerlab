@@ -6,7 +6,6 @@
  *  `crt-on` once. Under reduced motion it navigates at once.
  */
 const CRT_KEY = 'univerlab-crt';
-const OFF_MS = 550;
 const DOT_MS = 430;
 const NAV_MS = 820;
 
@@ -23,6 +22,12 @@ export function crtNavigate(href: string, view: HTMLElement, dot: HTMLElement): 
     /* storage disabled: navigate plainly below */
   }
 
+  // Collapse at the point where the dot flashes — 40% down the viewport — not
+  // at 40% of the home view, which is thousands of pixels tall: the line and
+  // the point would land off-screen from the bench. The origin is measured
+  // inside the view's own box, so subtract where that box starts.
+  const box = view.getBoundingClientRect();
+  view.style.transformOrigin = `50% ${Math.round(window.innerHeight * 0.4 - box.top)}px`;
   view.classList.remove('on');
   view.classList.add('off');
 

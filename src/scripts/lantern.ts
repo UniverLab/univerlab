@@ -108,7 +108,10 @@ export function startLantern(): void {
   const syncPreload = (): void => {
     videos.forEach((video, i) => {
       if (!video) return;
-      video.preload = i === current || i === current + 1 ? 'auto' : 'none';
+      // Reduced motion never plays a clip: keep the poster and spend no bytes
+      // on the files. Otherwise the current slide and the one after it load.
+      video.preload =
+        !reduce && (i === current || i === current + 1) ? 'auto' : 'none';
     });
   };
 
