@@ -73,9 +73,17 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
       ))}
     </ul>
   </section>
+
+  <p class="bg-credit mono">{e.bgCredit}</p>
 </ExperimentLayout>
 
 <style>
+  .bg-credit {
+    margin: 0.6rem 0 0;
+    color: var(--ink-dim);
+    font-size: 0.72rem;
+  }
+
   .papers { color: var(--ink-faint); font-size: 0.8rem; }
   .proposal {
     display: inline-block; text-decoration: none;

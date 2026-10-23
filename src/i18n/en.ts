@@ -502,6 +502,7 @@ export const en = {
         ['What is DC2?',
           'Data Challenge 2 — a simulated dataset that mimics what LSST will produce, created by the Dark Energy Science Collaboration (DESC). It includes realistic noise, PSF, and atmospheric effects, with a truth catalog telling you exactly which sources are real.'],
       ] as [string, string][],
+      bgCredit: 'Star chart: Yale Bright Star Catalogue (CDS V/50); constellation lines from d3-celestial by Olaf Frohn (BSD-3-Clause).',
     },
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',

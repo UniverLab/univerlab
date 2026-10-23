@@ -136,8 +136,8 @@
 /* astro-denoise — observatory: deep space, violet-black night sky. */
 [data-surface='observatory'],
 [data-flip-surface='observatory'] {
-  --surface-bg: #0a0911;
-  --surface-bg-raise: #110f1b;
+  --surface-bg: #16233f;
+  --surface-bg-raise: #1c2b4a;
   --surface-ink: #ddd9e8;
   --surface-ink-dim: #8f8aa3;
   --surface-ink-faint: #7c7696;

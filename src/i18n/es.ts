@@ -502,6 +502,7 @@ export const es: Dict = {
         ['¿Qué es DC2?',
           'Data Challenge 2 — un conjunto de datos simulados que imita lo que LSST producirá, creado por la Dark Energy Science Collaboration (DESC). Incluye ruido realista, PSF y efectos atmosféricos, con un catálogo de verdad que dice exactamente qué fuentes son reales.'],
       ] as [string, string][],
+      bgCredit: 'Carta celeste: Yale Bright Star Catalogue (CDS V/50); líneas de constelaciones de d3-celestial, de Olaf Frohn (BSD-3-Clause).',
     },
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
