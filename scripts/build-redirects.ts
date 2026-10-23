@@ -60,8 +60,6 @@ const MAX_RULES = 2100;
 export const STATIC_RULES: readonly string[] = [
   '/experiments/:id /:id/ 301',
   '/es/experiments/:id /es/:id/ 301',
-  '/experiments /#experiments 301',
-  '/es/experiments /es/#experiments 301',
   '/cadspec/docs/* /archive#exp-005 301',
   '/cadspec/* /archive#exp-005 301',
   '/cadspec /archive#exp-005 301',

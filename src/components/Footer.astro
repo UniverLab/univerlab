@@ -20,7 +20,7 @@ const brailleCells = toBraille(BRAILLE_SENTENCE);
 
 const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
 const footNav = [
-  { href: localizePath('/', lang) + '#experiments', label: t.nav.experiments },
+  { href: localizePath('/experiments', lang), label: t.nav.experiments },
   { href: localizePath('/archive', lang), label: t.nav.archive },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: '/roadmap/', label: t.nav.roadmap },

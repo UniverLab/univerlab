@@ -5,8 +5,6 @@
 # the end of this file is rewritten by scripts/build-redirects.ts (prebuild).
 /experiments/:id /:id/ 301
 /es/experiments/:id /es/:id/ 301
-/experiments /#experiments 301
-/es/experiments /es/#experiments 301
 /cadspec/docs/* /archive#exp-005 301
 /cadspec/* /archive#exp-005 301
 /cadspec /archive#exp-005 301

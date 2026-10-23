@@ -1,0 +1,213 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { byId } from '../lib/experiments';
+import { entryModels } from '../lib/experiment-entries';
+import { getLang, useTranslations, localizePath } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const enc = t.encyclopedia;
+
+const statusMark: Record<string, string> = {
+  active: '§',
+  research: '¶',
+  archived: '†',
+};
+
+const entries = entryModels((path) => localizePath(path, lang));
+const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
+---
+<BaseLayout
+  title={enc.title}
+  description={enc.description}
+  circadian
+>
+  <section class="enc" aria-labelledby="t-enc">
+    <header class="enc-head">
+      <h1 id="t-enc" class="enc-h1">{enc.head}</h1>
+      <p class="enc-tome">{enc.tome}</p>
+      <p class="enc-intro">{enc.intro}</p>
+    </header>
+
+    <nav class="thumbs" aria-label={enc.tabs.aria}>
+      <button type="button" data-f="all" aria-pressed="true">{enc.tabs.all}</button>
+      <button type="button" data-f="active" aria-pressed="false">{enc.tabs.active}</button>
+      <button type="button" data-f="research" aria-pressed="false">{enc.tabs.research}</button>
+      <button type="button" data-f="archived" aria-pressed="false">{enc.tabs.archived}</button>
+    </nav>
+
+    <div class="entries">
+      {entries.map((entry) => {
+        const exp = byId(entry.id);
+        const ec = expCopy(entry.id);
+        const status = entry.status;
+        const mark = statusMark[status] ?? '';
+        const statusName = enc.titleStatus[status as keyof typeof enc.titleStatus] ?? status;
+        const installCmd = entry.install;
+        const linkLabel = entry.archived ? enc.use.archive : enc.use.plate;
+        return (
+          <article class="entry" id={entry.anchor} data-status={status}>
+            <div class="plate">
+              {entry.archived ? (
+                <span class="num">{exp.number}</span>
+              ) : (
+                <video
+                  src={`/bench/clips/${entry.id}.mp4`}
+                  poster={`/bench/clips/${entry.id}.webp`}
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              )}
+            </div>
+            <div class="entry-body">
+              <h2 class="hw"><b>{exp.name}</b><span class="mark" title={statusName}>{mark}</span></h2>
+              <p class="meta">{enc.meta.replace('{n}', exp.number.replace('EXP-', '')).replace('{status}', enc.statuses[status as keyof typeof enc.statuses] ?? status)}</p>
+              <p class="def">
+                <span class="ety" set:html={ec.etymology} />
+                {' '}
+                <span class="n">{enc.definitionNumber}</span>
+                {' '}
+                {ec.tagline}
+              </p>
+              <div class="use">
+                {installCmd && (
+                  <span class="chip-wrap">
+                    <code class="chip">{installCmd}</code>
+                    <button
+                      type="button"
+                      class="copy-btn"
+                      data-cmd={installCmd}
+                      data-copy={enc.use.copy}
+                      data-copied={enc.use.copied}
+                    >{enc.use.copy}</button>
+                  </span>
+                )}
+                {entry.id === 'quorum' && !installCmd && (
+                  <span>{enc.use.quorum}</span>
+                )}
+                {entry.id === 'astro-denoise' && (
+                  <span>{enc.use.research}</span>
+                )}
+                <a href={entry.href}>{linkLabel}</a>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <p class="enc-key" set:html={enc.key.replace(/§/g, '<span>§</span>').replace(/¶/g, '<span>¶</span>').replace(/†/g, '<span>†</span>')} />
+  </section>
+
+  <script is:inline>
+    (function () {
+      // Tabs filter entries by status via the `hidden` attribute.
+      var tabs = document.querySelectorAll('.thumbs button');
+      var entries = document.querySelectorAll('.entry');
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var f = btn.getAttribute('data-f');
+          tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+          entries.forEach(function (e) {
+            var show = f === 'all' || e.getAttribute('data-status') === f;
+            if (show) e.removeAttribute('hidden');
+            else e.setAttribute('hidden', '');
+          });
+        });
+      });
+
+      // Copy install command.
+      document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var cmd = btn.getAttribute('data-cmd') || '';
+          try { await navigator.clipboard.writeText(cmd); } catch (e) {}
+          var copied = btn.getAttribute('data-copied') || 'Copied';
+          var copy = btn.getAttribute('data-copy') || 'Copy';
+          btn.textContent = copied;
+          setTimeout(function () { btn.textContent = copy; }, 1500);
+        });
+      });
+
+      // Play plates only while on screen; pause off screen. Respect reduced motion.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var videos = document.querySelectorAll('.entry .plate video');
+        if ('IntersectionObserver' in window) {
+          var io = new IntersectionObserver(function (list) {
+            list.forEach(function (entry) {
+              var v = entry.target;
+              if (entry.isIntersecting) {
+                if (!v.dataset.loaded) {
+                  v.dataset.loaded = '1';
+                  v.preload = 'auto';
+                  v.addEventListener('loadeddata', function () { v.play().catch(function () {}); }, { once: true });
+                  v.load();
+                } else {
+                  v.play().catch(function () {});
+                }
+              } else {
+                v.pause();
+              }
+            });
+          }, { threshold: 0.1 });
+          videos.forEach(function (v) { io.observe(v); });
+        }
+      }
+    })();
+  </script>
+</BaseLayout>
+
+<style>
+  .enc { position: relative; display: grid; gap: 18px; max-width: 1120px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px) 0; border-top: 3px double var(--bench-line); min-width: 0; }
+  .enc-head { display: grid; gap: 4px; text-align: center; justify-items: center; }
+  .enc-h1 { font-family: 'Old Standard TT', serif; font-size: clamp(32px, 6vw, 54px); letter-spacing: 0.04em; margin: 0; }
+  .enc-tome { margin: 0; font-family: 'Old Standard TT', serif; font-variant: small-caps; letter-spacing: 0.12em; color: var(--bench-line-soft); font-size: 15px; }
+  .enc-intro { margin: 6px 0 0; max-width: 56ch; color: var(--bench-line-soft); font-size: 16px; }
+
+  .thumbs { display: flex; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .thumbs button { font-family: 'Old Standard TT', serif; font-size: 15px; letter-spacing: 0.04em; color: var(--bench-line); background: color-mix(in srgb, var(--bench-line) 6%, transparent); border: 1px solid var(--bench-line-soft); border-bottom: 0; border-radius: 10px 10px 0 0; padding: 6px 16px 5px; margin: 0 2px; cursor: pointer; }
+  .thumbs button[aria-pressed="true"] { background: var(--bench-line); color: var(--bench-ground); }
+
+  .entries { columns: 2 340px; column-gap: 36px; column-rule: 1px solid var(--bench-rule); border-top: 1px solid var(--bench-line-soft); padding-top: 18px; }
+  .entry { break-inside: avoid; display: grid; grid-template-columns: 110px minmax(0, 1fr); column-gap: 14px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px dotted var(--bench-rule); }
+  .entry[hidden] { display: none; }
+  .entry[data-status="archived"] { opacity: 0.7; }
+
+  .plate { grid-row: span 4; position: relative; width: 110px; aspect-ratio: 960 / 552; align-self: start; margin-top: 4px; }
+  .plate video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%); }
+  :global(html[data-bench-theme='night']) .plate video { filter: invert(1) hue-rotate(180deg); mix-blend-mode: lighten; }
+  .plate .num { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Old Standard TT', serif; font-size: 24px; white-space: nowrap; color: var(--bench-line-soft); }
+
+  .hw { margin: 0; font-family: 'Old Standard TT', serif; font-weight: 400; font-size: 22px; line-height: 1.15; }
+  .hw b { font-weight: 700; font-variant: small-caps; letter-spacing: 0.06em; }
+  .hw .mark { color: #87222c; margin-left: 4px; font-size: 18px; }
+  :global(html[data-bench-theme='night']) .hw .mark { color: #e0a2a6; }
+
+  .meta { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--bench-line-soft); text-transform: uppercase; margin: 2px 0 0; }
+
+  .def { margin: 4px 0 0; font-size: 16.5px; line-height: 1.5; }
+  .def .ety { color: var(--bench-line-soft); }
+  .def .n { font-family: var(--font-mono); font-size: 12px; }
+
+  .entry-body { min-width: 0; }
+  .use { min-width: 0; max-width: 100%; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-family: var(--font-mono); font-size: 12.5px; }
+  .use code { background: color-mix(in srgb, var(--bench-line) 7%, transparent); padding: 2px 6px; overflow-wrap: anywhere; }
+  .use a { color: var(--bench-copper); text-underline-offset: 3px; }
+  .chip-wrap { display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
+  .chip { flex: 0 1 auto; min-width: 0; overflow-x: auto; white-space: nowrap; overflow-wrap: normal; display: block; }
+  .copy-btn { flex: none; }
+  .copy-btn { font-family: var(--font-mono); font-size: 11px; background: none; border: 1px solid var(--bench-line-soft); color: var(--bench-line); padding: 2px 6px; cursor: pointer; border-radius: 4px; }
+
+  .enc-key { margin: 0; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--bench-line-soft); }
+  /* The key marks come from set:html, so they carry no scope attribute: target them globally. */
+  .enc-key :global(span) { color: #87222c; font-family: 'Old Standard TT', serif; font-size: 15px; }
+  :global(html[data-bench-theme='night']) .enc-key :global(span) { color: #e0a2a6; }
+
+  @media (max-width: 520px) {
+    .entry { grid-template-columns: 84px 1fr; }
+    .plate { width: 84px; }
+    .thumbs button { font-size: 13px; padding: 5px 9px 4px; margin: 0 1px; }
+    .enc-tome { font-size: 15px; }
+  }
+</style>

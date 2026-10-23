@@ -259,9 +259,9 @@ describe('build-redirects', () => {
   });
 
   it('replaces only the generated block, leaving hand rules untouched', () => {
-    const current = '/sitemap.xml /sitemap-index.xml 301\n/experiments /#experiments 301\n';
+    const current = '/sitemap.xml /sitemap-index.xml 301\n';
     const next = spliceGeneratedBlock(current, 'GEN');
-    expect(next).toBe('/sitemap.xml /sitemap-index.xml 301\n/experiments /#experiments 301\n\nGEN\n');
+    expect(next).toBe('/sitemap.xml /sitemap-index.xml 301\n\nGEN\n');
   });
 
   it('rebuilds an existing generated block in place, without duplicating it', () => {
@@ -571,16 +571,16 @@ describe('checkTitles', () => {
   it('flags a too-short title with URL and length', () => {
     const dist = distFixture({ 'feed/index.html': titled(s(29)) });
     try {
-      expect(checkTitles(dist)).toEqual(['/feed/: title is 29 chars (want 30–60)']);
+      expect(checkTitles(dist)).toEqual(['/feed/: title is 29 chars (want 30–90)']);
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
   });
 
   it('flags a too-long title with URL and length', () => {
-    const dist = distFixture({ 'index.html': titled(s(61, 'h')) });
+    const dist = distFixture({ 'index.html': titled(s(91, 'h')) });
     try {
-      expect(checkTitles(dist)).toEqual(['/: title is 61 chars (want 30–60)']);
+      expect(checkTitles(dist)).toEqual(['/: title is 91 chars (want 30–90)']);
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }

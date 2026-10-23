@@ -134,6 +134,7 @@ export const es: Dict = {
       need: 'Un agente en un solo harness no carga un proyecto. Un grafo de ellos sí — implementa, verifica, revisa, commitea, y esquiva cada fallo.',
       tagline:
         'Un motor de grafos para agentes de IA — todos los harness, un solo flujo.',
+      etymology: '(Del ingl. <em>canopy</em>, ‘dosel del bosque’.)',
       thread: {
         problem: 'agentes de IA',
         method: 'un motor de grafos sobre cada harness',
@@ -212,6 +213,7 @@ export const es: Dict = {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      etymology: '(De <em>TeX</em> y el ingl. <em>forge</em>, ‘forja’.)',
       thread: {
         problem: 'LaTeX',
         method: 'una sola cadena de herramientas autocontenida',
@@ -278,6 +280,7 @@ export const es: Dict = {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      etymology: '(De <em>git</em> y el ingl. <em>kit</em>, ‘estuche de herramientas’.)',
       thread: {
         problem: 'configuración de repos',
         method: 'builds guardados e idempotentes',
@@ -339,6 +342,7 @@ export const es: Dict = {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      etymology: '(De <em>GitHub</em> y el ingl. <em>scaffold</em>, ‘andamio’.)',
       thread: {
         problem: 'repositorios de GitHub',
         method: 'un asistente idempotente',
@@ -403,6 +407,7 @@ export const es: Dict = {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      etymology: '(De <em>CAD</em> y el ingl. <em>spec</em>, ‘especificación’.)',
       thread: {
         problem: 'CAD',
         method: 'geometría declarativa',
@@ -417,6 +422,7 @@ export const es: Dict = {
       need: 'Aplicar una reducción de ruido a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
         'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      etymology: '(Del gr. <em>ástron</em>, ‘astro’, y el ingl. <em>denoise</em>, ‘quitar el ruido’.)',
       thread: {
         problem: 'reducción de ruido',
         method: 'un benchmark puntuado por la ciencia',
@@ -508,6 +514,7 @@ export const es: Dict = {
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      etymology: '(Del lat. <em>quorum</em>, ‘de los cuales’.)',
       thread: {
         problem: 'estimación',
         method: 'una sala peer-to-peer',
@@ -553,6 +560,7 @@ export const es: Dict = {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
+      etymology: '(Del ingl. <em>demo</em> y <em>stage</em>, ‘escenario’.)',
       thread: {
         problem: 'demos de terminal',
         method: 'una partitura de eventos',
@@ -984,5 +992,41 @@ export const es: Dict = {
     mcpConfigLabel: 'O en la configuración JSON de cualquier cliente MCP',
     mcpCardLabel: 'Server Card',
     mcpCardNote: 'La Server Card de MCP (SEP-2127) que anuncia este servidor a los agentes.',
+  },
+  encyclopedia: {
+    title: 'Experimentos — la enciclopedia de herramientas e investigación abiertas de UniverLab',
+    description:
+      'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
+    head: 'La enciclopedia',
+    tome: 'Tomo I · Los experimentos del laboratorio',
+    intro: 'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
+    tabs: {
+      aria: 'Filtrar por estado',
+      all: 'Todos',
+      active: 'Activos',
+      research: 'Investigación',
+      archived: 'Archivo',
+    },
+    statuses: {
+      active: 'activo',
+      research: 'investigación',
+      archived: 'archivado',
+    },
+    meta: 'EXP-{n} · {status}',
+    definitionNumber: '1.',
+    use: {
+      copy: 'Copiar',
+      copied: 'Copiado',
+      plate: 'Ver la lámina →',
+      archive: 'Ver en el archivo →',
+      quorum: 'abre la mesa → quorum.univerlab.org',
+      research: 'estado de investigación',
+    },
+    key: '§ activo · ¶ en investigación · † archivado',
+    titleStatus: {
+      active: 'activo',
+      research: 'investigación',
+      archived: 'archivado',
+    },
   },
 };

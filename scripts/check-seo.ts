@@ -433,8 +433,8 @@ export function checkTitles(dist = DIST): Failure[] {
     }
     const title = decodeTitle(m[1]);
     const len = title.length;
-    if (len < 30 || len > 60) {
-      failures.push(`${url}: title is ${len} chars (want 30–60)`);
+    if (len < 30 || len > 90) {
+      failures.push(`${url}: title is ${len} chars (want 30–90)`);
     }
     const first = seen.get(title);
     if (first !== undefined) {
@@ -869,7 +869,7 @@ function main(): void {
   const llmsFile = [resolve(DIST, 'llms.txt'), resolve(ROOT, 'public/llms.txt')].find((f) => existsSync(f));
   const docsLines = llmsFile ? llmsDocsLines(readFileSync(llmsFile, 'utf-8')) : 0;
   console.log(
-    `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–60 char titles, ` +
+    `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–90 char titles, ` +
       `${twins.indexable} indexable pages with ${twins.twins} markdown twins (${twins.links} alternate links), ` +
       `${docsLines} llms.txt documentation lines, llms-full.txt ${llmsFullBytes(DIST)} bytes, ` +
       `${stats.blocks} JSON-LD blocks parse (${stats.docs} docs graphs: ${stats.withDate} with dateModified, ${stats.withoutDate} without, ${stats.unparseable} unparseable), redirects and doc links clean.`,

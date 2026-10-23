@@ -134,6 +134,7 @@ export const en = {
       need: 'One agent on one harness can\'t carry a project. A graph of them can — implement, check, review, commit, and route around every failure.',
       tagline:
         'A graph engine for AI coding agents — every harness, one workflow.',
+      etymology: '(From <em>canopy</em>, the forest’s crown.)',
       thread: {
         problem: 'AI agents',
         method: 'a graph engine above every harness',
@@ -212,6 +213,7 @@ export const en = {
       need: 'Writing LaTeX should not require installing four gigabytes of toolchain.',
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
+      etymology: '(From <em>TeX</em> and <em>forge</em>.)',
       thread: {
         problem: 'LaTeX',
         method: 'one self-contained toolchain',
@@ -278,6 +280,7 @@ export const en = {
       need: 'Every new repository starts with the same setup ritual — done by hand, every time.',
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
+      etymology: '(From <em>git</em> and <em>kit</em>, a case of tools.)',
       thread: {
         problem: 'repository setup',
         method: 'saved, idempotent builds',
@@ -339,6 +342,7 @@ export const en = {
       need: 'Creating a GitHub repository properly is a dozen forgettable steps.',
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
+      etymology: '(From <em>GitHub</em> and <em>scaffold</em>.)',
       thread: {
         problem: 'GitHub repositories',
         method: 'an idempotent wizard',
@@ -403,6 +407,7 @@ export const en = {
       need: 'CAD drawings carry no semantics — just lines on a canvas, impossible to diff, review or automate.',
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
+      etymology: '(From <em>CAD</em> and <em>spec</em>, specification.)',
       thread: {
         problem: 'CAD',
         method: 'declarative geometry',
@@ -417,6 +422,7 @@ export const en = {
       need: 'Noise reduction on an astronomical image can recover a faint galaxy — or invent one that was never there. There is no standard, reproducible way to tell which.',
       tagline:
         'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
+      etymology: '(From Greek <em>ástron</em>, star, and <em>denoise</em>.)',
       thread: {
         problem: 'noise reduction',
         method: 'a benchmark scored by the science',
@@ -508,6 +514,7 @@ export const en = {
     'quorum': {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
+      etymology: '(From Latin <em>quorum</em>, ‘of whom’.)',
       thread: {
         problem: 'estimation',
         method: 'a peer-to-peer room',
@@ -553,6 +560,7 @@ export const en = {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
+      etymology: '(From <em>demo</em> and <em>stage</em>.)',
       thread: {
         problem: 'terminal demos',
         method: 'an event score',
@@ -991,6 +999,42 @@ export const en = {
     mcpConfigLabel: 'Or in any MCP client’s JSON config',
     mcpCardLabel: 'Server Card',
     mcpCardNote: 'The MCP Server Card (SEP-2127) that advertises this server to agents.',
+  },
+  encyclopedia: {
+    title: 'Experiments — the UniverLab encyclopedia of open tools and research',
+    description:
+      'Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.',
+    head: 'The encyclopedia',
+    tome: 'Volume I · The lab’s experiments',
+    intro: 'Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.',
+    tabs: {
+      aria: 'Filter by status',
+      all: 'All',
+      active: 'Active',
+      research: 'Research',
+      archived: 'Archive',
+    },
+    statuses: {
+      active: 'active',
+      research: 'research',
+      archived: 'archived',
+    },
+    meta: 'EXP-{n} · {status}',
+    definitionNumber: '1.',
+    use: {
+      copy: 'Copy',
+      copied: 'Copied',
+      plate: 'See the plate →',
+      archive: 'See in the archive →',
+      quorum: 'open the table → quorum.univerlab.org',
+      research: 'research state',
+    },
+    key: '§ active · ¶ research · † archived',
+    titleStatus: {
+      active: 'active',
+      research: 'research',
+      archived: 'archived',
+    },
   },
 };
 
