@@ -100,9 +100,15 @@ describe('gitkit fondo', () => {
       const img = new Image() as any;
       Object.defineProperty(img, 'naturalWidth', { value: 10, writable: true });
       Object.defineProperty(img, 'naturalHeight', { value: 8, writable: true });
+      const k = fakeContext() as any;
+      jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(k);
       const canvas = tint(img, '#c13d9b');
       expect(canvas.width).toBe(10);
       expect(canvas.height).toBe(8);
+      expect(k.drawImage).toHaveBeenCalledWith(img, 0, 0);
+      expect(k.fillStyle).toBe('#c13d9b');
+      expect(k.fillRect).toHaveBeenCalledWith(0, 0, 10, 8);
+      expect(k.globalCompositeOperation).toBe('source-in');
     });
   });
 
@@ -172,11 +178,16 @@ describe('gitkit fondo', () => {
       const frameFn = (loop as jest.Mock).mock.calls[0][1];
       ctx.drawImage.mockClear();
       ctx.clearRect.mockClear();
+      const alphaAtDraw: number[] = [];
+      ctx.drawImage.mockImplementation(() => { alphaAtDraw.push(ctx.globalAlpha); });
       frameFn(1000);
       // clear once; 48 field bands on the host, then the mix composite (the pink copy goes to the mix canvas)
       expect(ctx.clearRect).toHaveBeenCalledTimes(1);
       expect(ctx.drawImage).toHaveBeenCalledTimes(BANDS + 1);
       expect(ctx.drawImage.mock.calls[BANDS][0]).toBeInstanceOf(HTMLCanvasElement);
+      // the mix composite is drawn at COMPOSITE_ALPHA, not the field's BASE_ALPHA
+      expect(alphaAtDraw[BANDS]).toBeCloseTo(COMPOSITE_ALPHA, 6);
+      expect(alphaAtDraw[0]).toBeCloseTo(0.2, 6);
     });
 
     it('destroy unsubscribes pointer, stops loop, disconnects canvas RO, and removes canvases', () => {
@@ -189,17 +200,19 @@ describe('gitkit fondo', () => {
       canvas.__ro = ro;
       const host = document.createElement('div');
       document.body.appendChild(host);
+      host.appendChild(canvas);
       (hostCanvas as jest.Mock).mockReturnValue({
         canvas,
         ctx,
         size: () => ({ w: 100, h: 100, dpr: 1 }),
       });
       const fondo = mount(host, { night: false, reduced: false, base: '/bench/fondos/gitkit/' });
+      expect(host.contains(canvas)).toBe(true);
       fondo.destroy();
       expect(unsub).toHaveBeenCalled();
       expect(stop).toHaveBeenCalled();
       expect(ro.disconnect).toHaveBeenCalled();
-      expect(canvas.parentNode).toBeNull();
+      expect(host.contains(canvas)).toBe(false);
     });
   });
 });
