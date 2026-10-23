@@ -48,7 +48,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
           <article class="entry" id={entry.anchor} data-status={status}>
             <div class="plate">
               {entry.archived ? (
-                <span class="num">{exp.number}</span>
+                <span class="num" aria-hidden="true">{exp.number}</span>
               ) : (
                 <video
                   src={`/bench/clips/${entry.id}.mp4`}
@@ -74,7 +74,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
               <div class="use">
                 {installCmd && (
                   <span class="chip-wrap">
-                    <code class="chip">{installCmd}</code>
+                    <code class="chip" title={installCmd}>{installCmd}</code>
                     <button
                       type="button"
                       class="copy-btn"
@@ -123,8 +123,8 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
         btn.addEventListener('click', async function () {
           var cmd = btn.getAttribute('data-cmd') || '';
           try { await navigator.clipboard.writeText(cmd); } catch (e) {}
-          var copied = btn.getAttribute('data-copied') || 'Copied';
-          var copy = btn.getAttribute('data-copy') || 'Copy';
+          var copied = btn.getAttribute('data-copied') || btn.textContent;
+          var copy = btn.getAttribute('data-copy') || btn.textContent;
           btn.textContent = copied;
           setTimeout(function () { btn.textContent = copy; }, 1500);
         });
@@ -195,7 +195,9 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .use code { background: color-mix(in srgb, var(--bench-line) 7%, transparent); padding: 2px 6px; overflow-wrap: anywhere; }
   .use a { color: var(--bench-copper); text-underline-offset: 3px; }
   .chip-wrap { display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
-  .chip { flex: 0 1 auto; min-width: 0; overflow-x: auto; white-space: nowrap; overflow-wrap: normal; display: block; }
+  /* Wide enough for the whole command once the entry body has room; the chip scrolls only
+     under 520 px, where one line is the only way to keep the row intact. */
+  .chip { flex: 0 1 auto; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; display: block; }
   .copy-btn { flex: none; }
   .copy-btn { font-family: var(--font-mono); font-size: 11px; background: none; border: 1px solid var(--bench-line-soft); color: var(--bench-line); padding: 2px 6px; cursor: pointer; border-radius: 4px; }
 
@@ -209,5 +211,8 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
     .plate { width: 84px; }
     .thumbs button { font-size: 13px; padding: 5px 9px 4px; margin: 0 1px; }
     .enc-tome { font-size: 15px; }
+    .chip { white-space: nowrap; overflow-x: auto; overflow-wrap: normal; }
+    /* `EXP-005` is seven glyphs: keep it inside the 84 px margin column. */
+    .plate .num { font-size: 20px; }
   }
 </style>
