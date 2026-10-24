@@ -222,3 +222,48 @@ describe('i18n — footer.forged in both languages', () => {
     expect(Object.keys(en.footer.built).sort()).toEqual(Object.keys(es.footer.built).sort());
   });
 });
+
+describe('Footer — the wrap lines sit inside the centred column', () => {
+  // A scoped `.margin: 0` is more specific than `.wrap { margin-inline: auto }`,
+  // so the built-with and forged lines drifted to the viewport's left edge at
+  // wide widths instead of lining up with the nav above them. Only the block
+  // axis may be zeroed: the inline margins belong to `.wrap`.
+  const GLOBAL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'global.css'), 'utf8');
+
+  /** The declaration list of the first `selector {` rule in the component. */
+  const rule = (selector: string) => {
+    const at = src.indexOf(`${selector} {`);
+    expect(at).toBeGreaterThan(-1);
+    return src.slice(at, src.indexOf('}', at));
+  };
+
+  it('still has the global .wrap centring these lines must inherit', () => {
+    expect(GLOBAL_CSS).toMatch(/\.wrap\s*\{[^}]*max-width:\s*72rem/);
+    expect(GLOBAL_CSS).toMatch(/\.wrap\s*\{[^}]*margin-inline:\s*auto/);
+  });
+
+  it('.lab-built and .forged zero the block axis only — never the shorthand', () => {
+    for (const sel of ['.lab-built', '.forged']) {
+      const decls = rule(sel);
+      expect(decls).toMatch(/margin-block:\s*0/);
+      expect(decls).not.toMatch(/\bmargin:\s*0/);
+    }
+  });
+
+  it('neither line narrows its .wrap width', () => {
+    for (const sel of ['.lab-built', '.forged']) {
+      expect(rule(sel)).not.toMatch(/max-width/);
+    }
+  });
+
+  it('.forged stays centred and .lab-built stays left-aligned in the column', () => {
+    expect(rule('.forged')).toMatch(/text-align:\s*center/);
+    expect(rule('.lab-built')).not.toMatch(/text-align:\s*center/);
+  });
+
+  it('the other .wrap blocks carry no margin override of their own', () => {
+    for (const sel of ['.inner', '.base', '.colophon-credits']) {
+      expect(rule(sel)).not.toMatch(/\bmargin[a-z-]*\s*:/);
+    }
+  });
+});
