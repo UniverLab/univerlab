@@ -15,6 +15,7 @@ import {
   markSeen,
   labLetters,
   pastLetter,
+  pastLetterParts,
   dailyFact,
   letterMode,
   boxLabel,
@@ -28,6 +29,7 @@ import {
   readOtdCache,
   fetchPool,
   letterPool,
+  summaryText,
   type FilterLang,
   type Fact,
 } from '../lib/science-filter';
@@ -64,6 +66,7 @@ interface MailCopy {
   onWay: string;
   today: string;
   readWikipedia: string;
+  continuesWikipedia: string;
   allToday: string;
   readAnnouncement: string;
 }
@@ -172,7 +175,11 @@ export function startMailbox(): void {
   let pop: HTMLElement | null = null;
   let opener: HTMLElement | null = null;
 
-  const bodyOf = (m: MailLetter) => (m.kind === 'lab' ? m.body : m.text);
+  const bodyOf = (m: MailLetter) => {
+    if (m.kind === 'lab') return m.body;
+    if (m.summary) return summaryText(m);
+    return m.text;
+  };
 
   function syncBox(): void {
     const n = queue.length;
@@ -211,15 +218,21 @@ export function startMailbox(): void {
           fmt(copy.onWay, { years }),
         )}</span>`;
     // A lab letter has a title of its own; a letter from the past is titled
-    // by its head ("Letter of …"), which carries the dialog's label.
-    const heading = lab ? `<h2 id="mail-title">${esc(m.title)}</h2>` : '';
+    // by its head ("Letter of …"), which carries the dialog's label — unless
+    // it carries a summary, whose headline is the event's own line.
+    const parts = !lab && m.kind === 'past' ? pastLetterParts(m, copy) : null;
+    const heading = lab
+      ? `<h2 id="mail-title">${esc(m.title)}</h2>`
+      : parts && parts.headline
+        ? `<h2>${esc(parts.headline)}</h2>`
+        : '';
 
     const links = lab
       ? `<a href="${
           m.exp ? `/status/?topic=${encodeURIComponent(m.exp.id)}` : '/status/'
         }">${esc(copy.readAnnouncement)}</a>`
       : `<a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${esc(
-          copy.readWikipedia,
+          parts ? parts.linkLabel : copy.readWikipedia,
         )}</a><a href="${todayHref}">${esc(copy.allToday)}</a>`;
 
     let face: string;

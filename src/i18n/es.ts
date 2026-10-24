@@ -53,6 +53,7 @@ export const es: Dict = {
       onWay: '{years} años en camino',
       today: 'Hoy',
       readWikipedia: 'Leer en Wikipedia →',
+      continuesWikipedia: 'Sigue en Wikipedia →',
       allToday: 'Todas las cartas de hoy →',
       readAnnouncement: 'Leer el anuncio completo →',
     },

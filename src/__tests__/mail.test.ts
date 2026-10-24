@@ -7,6 +7,7 @@ import {
   firstParagraph,
   labLetters,
   pastLetter,
+  pastLetterParts,
   dailyFact,
   letterMode,
   boxLabel,
@@ -14,6 +15,7 @@ import {
   type Announcement,
   type ExperimentInfo,
   type MailLetter,
+  type PastLetter,
 } from '../lib/mail';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -161,6 +163,63 @@ describe('the letter from the past', () => {
   });
 });
 
+describe('the letter from the past carries a summary', () => {
+  const COPY2 = { readWikipedia: 'Read on Wikipedia →', continuesWikipedia: 'Continues on Wikipedia →' };
+
+  it('pastLetter copies both summary fields', () => {
+    const l = pastLetter(
+      { year: '2007', text: 'China lanza la sonda lunar.', link: 'https://x', summary: 'Cuerpo.', summaryCut: true },
+      NOW,
+    );
+    expect(l.summary).toBe('Cuerpo.');
+    expect(l.summaryCut).toBe(true);
+    const plain = pastLetter({ year: '1928', text: 'penicillin', link: 'https://x' }, NOW);
+    expect(plain.summary).toBeUndefined();
+    expect(plain.summaryCut).toBeUndefined();
+  });
+
+  it('parts print headline + summary with the continue label when cut', () => {
+    const l: PastLetter = {
+      kind: 'past',
+      id: 'past-2026-10-24',
+      year: '2007',
+      text: 'China lanza la sonda lunar.',
+      link: 'https://x',
+      summary: 'Chang\u2019e 1 fue la primera sonda lunar de China. Fue lanzada en 2007.',
+      summaryCut: true,
+    };
+    const parts = pastLetterParts(l, COPY2);
+    expect(parts.headline).toBe('China lanza la sonda lunar.');
+    expect(parts.body.endsWith('…')).toBe(true);
+    expect(parts.body).toContain('Chang\u2019e 1');
+    expect(parts.linkLabel).toBe('Continues on Wikipedia →');
+  });
+
+  it('parts print the text as the body with the read label and no headline without a summary', () => {
+    const l = pastLetter({ year: '1928', text: 'penicillin', link: 'https://x' }, NOW);
+    const parts = pastLetterParts(l, COPY2);
+    expect(parts.headline).toBe('');
+    expect(parts.body).toBe('penicillin');
+    expect(parts.linkLabel).toBe('Read on Wikipedia →');
+  });
+
+  it('an uncut summary keeps the read label', () => {
+    const l = pastLetter(
+      { year: '2007', text: 'Titular.', link: 'https://x', summary: 'Cuerpo corto.', summaryCut: false },
+      NOW,
+    );
+    expect(pastLetterParts(l, COPY2).linkLabel).toBe('Read on Wikipedia →');
+  });
+
+  it('the mailbox script renders the parts: headline h2, summary body, continue label', () => {
+    expect(MAIL_SRC).toMatch(/pastLetterParts\(m, copy\)/);
+    expect(MAIL_SRC).toMatch(/parts\.headline/);
+    expect(MAIL_SRC).toMatch(/parts\.linkLabel/);
+    expect(MAIL_SRC).toContain('continuesWikipedia');
+  });
+});
+
+/* The rest of the papers. */
 describe('the rest of the papers', () => {
   it('takes the first paragraph of an entry', () => {
     expect(firstParagraph('A line.\n\nAnother.\nAnd more.')).toBe('A line.');

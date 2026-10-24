@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildPool, letterPool } from '../lib/science-filter';
+import { buildPool, collectFacts, letterPool, summaryText } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
 import {
   editionDate,
@@ -266,5 +266,52 @@ describe('todayEditionMarkdown', () => {
     // The side column no longer repeats the Events heading right below it.
     expect(md.match(/^## Events$/gm)).toHaveLength(1);
     expect(md).toContain('[Read the full announcement →](https://univerlab.org/status/)');
+  });
+});
+
+describe('the lead carries the summary (es fixture)', () => {
+  const ES = JSON.parse(
+    readFileSync(resolve(__dirname, 'fixtures/onthisday-es-summaries.json'), 'utf8'),
+  ) as { events: Array<{ year: number; text: string; pages?: unknown[] }> };
+
+  it('renders h2 = text and the drop-cap paragraph = summary', () => {
+    const facts = collectFacts(ES.events as Parameters<typeof collectFacts>[0], 'event', 'es');
+    const date = new Date(2026, 9, 24, 12);
+    const lead = todayLead(facts, date);
+    expect(lead).not.toBeNull();
+    const html = todayEditionHtml({ facts, lab: [] }, 'es', date);
+    expect(html).toContain(`<h2>${lead!.text}</h2>`);
+    expect(html).toContain(`<p class="dropcap">${summaryText(lead!)}</p>`);
+    const md = todayEditionMarkdown({ facts, lab: [] }, 'es', date);
+    expect(md).toContain(`**${lead!.text}**`);
+    expect(md).toContain(summaryText(lead!));
+  });
+
+  it('ends the paragraph with … when the summary was cut', () => {
+    const cut = {
+      year: '2007',
+      text: 'China lanza la sonda lunar.',
+      link: 'https://es.wikipedia.org/wiki/X',
+      kind: 'event' as const,
+      page: 'X',
+      summary: 'Primera frase. Segunda frase que sobra.',
+      summaryCut: true,
+    };
+    const html = todayEditionHtml({ facts: [cut], lab: [] }, 'es', new Date(2026, 9, 24, 12));
+    expect(html).toContain(`<p class="dropcap">${summaryText(cut)}</p>`);
+    expect(summaryText(cut).endsWith('…')).toBe(true);
+  });
+
+  it('keeps the old silence with no summary: no drop-cap paragraph', () => {
+    const plain = {
+      year: '1928',
+      text: 'Un médico enciende un respirador.',
+      link: '',
+      kind: 'event' as const,
+      page: '',
+    };
+    const html = todayEditionHtml({ facts: [plain], lab: [] }, 'es', new Date(2026, 9, 24, 12));
+    expect(html).toContain('<h2>Un médico enciende un respirador.</h2>');
+    expect(html).not.toContain('class="dropcap"');
   });
 });

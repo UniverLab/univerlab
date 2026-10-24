@@ -72,7 +72,7 @@ export const POLITICS_ES = [
 /** Drop narrative-length entries (e.g. long match reports). */
 export const MAX_LEN = 200;
 
-const CACHE_KEY = 'univerlab-otd';
+const CACHE_KEY = 'univerlab-otd-2';
 
 /** One normalized fact of the day's pool. */
 export interface Fact {
@@ -82,6 +82,10 @@ export interface Fact {
   kind: 'event' | 'born' | 'died';
   /** Wikipedia page title, when the feed carried one. */
   page: string;
+  /** The event's own page summary, at most 2 sentences and 260 chars. */
+  summary?: string;
+  /** True when the extract held more than `summary` shows. */
+  summaryCut?: boolean;
   /** The entry's photo, kept only when it is a real Commons image (a
    *  `/wikipedia/commons/` URL that is not an `.svg`): events never print
    *  photos — theirs are generic or wrong — so the newspaper only reads this
@@ -106,14 +110,129 @@ export function passesScience(text: string, lang: FilterLang): boolean {
   return hasScience && !hasPolitics;
 }
 
-interface FeedEntry {
+export interface FeedPage {
+  titles?: { normalized?: string; display?: string };
+  content_urls?: { desktop?: { page?: string } };
+  thumbnail?: { source?: string; width?: number; height?: number };
+  extract?: string;
+}
+
+export interface FeedEntry {
   year?: number;
   text?: string;
-  pages?: Array<{
-    titles?: { normalized?: string; display?: string };
-    content_urls?: { desktop?: { page?: string } };
-    thumbnail?: { source?: string; width?: number; height?: number };
-  }>;
+  pages?: FeedPage[];
+}
+
+/** The summary budget: whole sentences, at most two, at most this long. */
+export const SUMMARY_MAX = 260;
+
+function stripTags(s: string): string {
+  return (s || '').replace(/<[^>]*>/g, '');
+}
+
+function pageTitle(p: FeedPage): string {
+  const raw = p.titles?.normalized || stripTags(p.titles?.display || '');
+  return (raw || '').replace(/_/g, ' ').trim();
+}
+
+/** Lowercased, whitespace-collapsed: the live feed writes a non-breaking
+ *  space inside some titles ("Chang\u00a01"), so a raw substring compare
+ *  would miss the page the event is about. */
+function comparable(s: string): string {
+  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+/** The entry's own page (events only): among the pages, the one whose
+ *  title occurs in the entry's text — the object's match starts last —
+ *  else the first page whose extract holds the year, else pages[0].
+ *  Returns undefined when the entry carries no pages. */
+export function mainPage(entry: FeedEntry): FeedPage | undefined {
+  const pages = entry?.pages || [];
+  if (!pages.length) return undefined;
+  const text = comparable(entry.text || '');
+  let best: FeedPage | undefined;
+  let bestIdx = -1;
+  for (const p of pages) {
+    const t = comparable(pageTitle(p));
+    if (!t) continue;
+    const idx = text.lastIndexOf(t);
+    if (idx >= 0 && idx > bestIdx) {
+      best = p;
+      bestIdx = idx;
+    }
+  }
+  if (best) return best;
+  const year = String(entry.year ?? '');
+  if (year && year !== '?') {
+    const re = new RegExp(`(^|\\D)${year}(\\D|$)`);
+    for (const p of pages) {
+      if (p.extract && re.test(p.extract)) return p;
+    }
+  }
+  return pages[0];
+}
+
+/** Shorten an extract to a letter body: whole sentences from the start, at
+ *  most 2 and at most SUMMARY_MAX chars. A sentence ends at `.`, `!` or `?`
+ *  followed by a space or the end — never inside a number, never after a
+ *  single capital initial. Returns null when there is nothing to carry
+ *  (empty, or only repeating the headline). */
+export function shortSummary(
+  extract: string | undefined,
+  headline: string,
+): { summary: string; cut: boolean } | null {
+  const flat = (extract || '').replace(/\s+/g, ' ').trim();
+  if (!flat) return null;
+  if (flat.toLowerCase() === (headline || '').replace(/\s+/g, ' ').trim().toLowerCase()) return null;
+  const ends: number[] = [];
+  for (let i = 0; i < flat.length; i++) {
+    const c = flat[i];
+    if (c !== '.' && c !== '!' && c !== '?') continue;
+    const next = flat[i + 1];
+    const atEnd = i + 1 >= flat.length;
+    if (!atEnd && next !== ' ') continue;
+    if (c === '.') {
+      const prev = flat[i - 1] || '';
+      const after = flat[i + 1] || '';
+      if (/\d/.test(prev) && /\d/.test(after)) continue;
+      const slice = flat.slice(Math.max(0, i - 2), i + 1);
+      if (/(^|\s)[A-Z]\.$/.test(slice)) continue;
+    }
+    ends.push(i);
+  }
+  if (!ends.length) {
+    if (flat.length <= SUMMARY_MAX) return { summary: flat, cut: false };
+    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
+    const summary = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    return { summary, cut: true };
+  }
+  const sentences: string[] = [];
+  let start = 0;
+  for (const e of ends) {
+    sentences.push(flat.slice(start, e + 1).trim());
+    start = e + 1;
+  }
+  let summary = '';
+  for (let k = 0; k < Math.min(2, sentences.length); k++) {
+    const cand = summary ? summary + ' ' + sentences[k] : sentences[k];
+    if (cand.length <= SUMMARY_MAX) summary = cand;
+    else break;
+  }
+  if (!summary) {
+    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
+    const s = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    return { summary: s, cut: true };
+  }
+  const rest = flat.slice(summary.length).trim();
+  return { summary, cut: rest.length > 0 };
+}
+
+/** The summary as printed: when cut, trailing stops and spaces give way to
+ *  a single ellipsis. */
+export function summaryText(f: { summary?: string; summaryCut?: boolean }): string {
+  const s = f.summary || '';
+  if (!f.summaryCut) return s;
+  return s.replace(/[.!?…\s]+$/u, '') + '…';
 }
 
 /** Turn one feed category into normalized, length-sorted pool entries. */
@@ -126,11 +245,13 @@ export function collectFacts(
   const arr = (list || [])
     .filter((e) => passesScience(e.text || '', lang))
     .map((e) => {
+      const chosen: FeedPage | undefined =
+        kind === 'event' ? mainPage(e) : e.pages?.[0];
       let link = '';
-      let page = '';
+      let title = '';
       try {
-        link = e.pages![0].content_urls!.desktop!.page!;
-        page = e.pages![0].titles?.normalized || e.pages![0].titles?.display || '';
+        link = chosen!.content_urls!.desktop!.page!;
+        title = chosen!.titles?.normalized || stripTags(chosen!.titles?.display || '');
       } catch (x) {}
       // A photo only when it is a real Commons image: hot-linked from
       // upload.wikimedia.org under /wikipedia/commons/, never an .svg
@@ -140,23 +261,34 @@ export function collectFacts(
       // check reads the path, not the tail of the whole URL.
       let thumb: Fact['thumb'];
       try {
-        const src = e.pages![0].thumbnail?.source || '';
+        const src = chosen!.thumbnail?.source || '';
         const path = src.split('?')[0];
         const vector = /\.svg(\/|$|\.png$)/i.test(path);
         if (src.includes('/wikipedia/commons/') && !vector) {
           thumb = { src };
-          const w = e.pages![0].thumbnail?.width;
-          const h = e.pages![0].thumbnail?.height;
+          const w = chosen!.thumbnail?.width;
+          const h = chosen!.thumbnail?.height;
           if (typeof w === 'number') thumb.w = w;
           if (typeof h === 'number') thumb.h = h;
         }
       } catch (x) {}
+      let summary: string | undefined;
+      let summaryCut: boolean | undefined;
+      if (kind === 'event' && chosen?.extract) {
+        const short = shortSummary(chosen.extract, e.text || '');
+        if (short) {
+          summary = short.summary;
+          summaryCut = short.cut;
+        }
+      }
       return {
         year: String(e.year || '?'),
         text: e.text || '',
         link,
         kind,
-        page,
+        page: title,
+        ...(summary !== undefined ? { summary } : {}),
+        ...(summaryCut !== undefined ? { summaryCut } : {}),
         ...(thumb ? { thumb } : {}),
       };
     });

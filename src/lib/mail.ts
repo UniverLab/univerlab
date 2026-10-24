@@ -2,7 +2,7 @@
 // been opened today and what each letter carries. No DOM here; the mailbox
 // script runs these and paints the result.
 
-import { dayKey } from './science-filter';
+import { dayKey, summaryText } from './science-filter';
 
 /** One announcement of the public feed (GET https://announcements.univerlab.org). */
 export interface Announcement {
@@ -48,6 +48,10 @@ export interface PastLetter {
   year: string;
   text: string;
   link: string;
+  /** The event's own page summary, when the feed carried one. */
+  summary?: string;
+  /** True when the extract held more than `summary` shows. */
+  summaryCut?: boolean;
 }
 
 export type MailLetter = LabLetter | PastLetter;
@@ -126,14 +130,37 @@ export function labLetters(
 }
 
 /** Today's letter from the past: one per day, id bound to the calendar day. */
-export function pastLetter(fact: { year: string; text: string; link: string }, now: Date): PastLetter {
+export function pastLetter(
+  fact: { year: string; text: string; link: string; summary?: string; summaryCut?: boolean },
+  now: Date,
+): PastLetter {
   return {
     kind: 'past',
     id: `past-${dayKey(now)}`,
     year: fact.year,
     text: fact.text,
     link: fact.link,
+    ...(fact.summary !== undefined ? { summary: fact.summary } : {}),
+    ...(fact.summaryCut !== undefined ? { summaryCut: fact.summaryCut } : {}),
   };
+}
+
+/** How a past letter prints: with a summary, the one-line text is the
+ *  headline and the summary the body; without one, the text is the body. */
+export interface PastLetterParts {
+  headline: string;
+  body: string;
+  linkLabel: string;
+}
+
+export function pastLetterParts(
+  l: PastLetter,
+  copy: { readWikipedia: string; continuesWikipedia: string },
+): PastLetterParts {
+  const headline = l.summary ? l.text : '';
+  const body = l.summary ? summaryText(l) : l.text;
+  const linkLabel = l.summary && l.summaryCut ? copy.continuesWikipedia : copy.readWikipedia;
+  return { headline, body, linkLabel };
 }
 
 /** One fact per day: the pool is shuffled per click in the old popup, but the

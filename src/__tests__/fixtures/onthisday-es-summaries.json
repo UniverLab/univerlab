@@ -1,0 +1,71 @@
+{
+  "events": [
+    {
+      "year": 2007,
+      "text": "China lanza la sonda lunar Chang'e\u00a01.",
+      "pages": [
+        {
+          "titles": { "normalized": "República Popular China" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Rep%C3%BAblica_Popular_China" } },
+          "extract": "China es un país de Asia oriental con más de 1400 millones de habitantes. Su capital es Pekín."
+        },
+        {
+          "titles": { "normalized": "Chang'e 1" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Chang%27e_1" } },
+          "extract": "Chang'e 1 fue la primera sonda lunar de China. Fue lanzada en 2007 y orbitó la Luna durante más de un año para estudiar su superficie."
+        }
+      ]
+    },
+    {
+      "year": 1871,
+      "text": "Se inaugura el Observatorio Astronómico de Córdoba.",
+      "pages": [
+        {
+          "titles": { "normalized": "Córdoba (Argentina)" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/C%C3%B3rdoba_(Argentina)" } },
+          "extract": "Córdoba es una ciudad de Argentina con más de un millón de habitantes. Es la capital de la provincia del mismo nombre."
+        },
+        {
+          "titles": { "normalized": "Argentina" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Argentina" } },
+          "extract": "Argentina es un país de América del Sur. Su capital es Buenos Aires."
+        },
+        {
+          "titles": { "normalized": "Observatorio Astronómico de Córdoba" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Observatorio_Astron%C3%B3mico_de_C%C3%B3rdoba" } },
+          "extract": "El Observatorio Astronómico de Córdoba fue fundado en 1871. Desde entonces estudia el cielo austral con sus telescopios históricos."
+        }
+      ]
+    },
+    {
+      "year": 1998,
+      "text": "Estados Unidos lanza la sonda espacial Deep Space 1.",
+      "pages": [
+        {
+          "titles": { "normalized": "Deep Space 1" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Deep_Space_1" } },
+          "extract": "Deep Space 1 fue una sonda espacial de la NASA. Fue lanzada en 1998 para probar nuevas tecnologías en el espacio profundo."
+        }
+      ]
+    }
+  ],
+  "births": [
+    {
+      "year": 1766,
+      "text": "Francisco Antonio Zea, naturalista y científico, nace en Colombia.",
+      "pages": [
+        {
+          "titles": { "normalized": "Francisco Antonio Zea" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Francisco_Antonio_Zea" } },
+          "extract": "Francisco Antonio Zea fue un científico y político colombiano."
+        },
+        {
+          "titles": { "normalized": "Colombia" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Colombia" } },
+          "extract": "Colombia es un país de América del Sur. Su capital es Bogotá."
+        }
+      ]
+    }
+  ],
+  "deaths": []
+}

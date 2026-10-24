@@ -55,6 +55,7 @@ export const en = {
       onWay: '{years} years on its way',
       today: 'Today',
       readWikipedia: 'Read on Wikipedia →',
+      continuesWikipedia: 'Continues on Wikipedia →',
       allToday: "All of today's letters →",
       readAnnouncement: 'Read the full announcement →',
     },

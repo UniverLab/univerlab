@@ -8,7 +8,7 @@ import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
-import { letterPool, type Fact, type FilterLang } from './science-filter';
+import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
 export type TodayLang = FilterLang;
 
@@ -97,9 +97,11 @@ function leadHeadline(lead: Fact): string {
   return lead.kind === 'event' ? text : lead.page || text.slice(0, 72);
 }
 
-/** The lead's body, under the headline. Empty for an event: its one line is
- *  already the headline, and printing it twice reads as a stutter. */
+/** The lead's body, under the headline. With a summary, the summary is the
+ *  drop-cap paragraph; without one, an event keeps its old silence (its one
+ *  line is already the headline) and a person prints their line. */
 function leadBody(lead: Fact): string {
+  if (lead.summary) return summaryText(lead);
   return lead.kind === 'event' ? '' : lead.text;
 }
 
