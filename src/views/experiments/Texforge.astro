@@ -66,7 +66,17 @@ const tfInitial =
           <tbody>
             {templates.map((tpl) => (
               <tr>
-                <td class="name" translate="no">{tpl.name}</td>
+                <td class="name" translate="no">
+                  {tpl.name}
+                  <button
+                    type="button"
+                    class="copy-btn"
+                    data-cmd={`texforge new my-doc -t ${tpl.name}`}
+                    data-copy={e.templates.copy}
+                    data-copied={e.templates.copied}
+                    aria-label={e.templates.copyLabel.replace('{name}', tpl.name)}
+                  >{e.templates.copy}</button>
+                </td>
                 <td>{tpl.description}</td>
                 <td class="version">{tpl.version}</td>
               </tr>
@@ -135,6 +145,25 @@ const tfInitial =
       }
     });
     io.observe(fig);
+  })();
+
+  // Each registry row copies the command that starts a document with that
+  // template (`texforge new my-doc -t <name>`) — what a visitor runs next,
+  // not the registry command. Same swap-and-restore as the encyclopedia's
+  // `.copy-btn`: on success the label reads "Copied" for 1.5s; when the
+  // Clipboard API is missing or the context is insecure, the write rejects and
+  // the button is left untouched (nothing thrown, nothing promised).
+  (function () {
+    document.querySelectorAll('.catalog .copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        const cmd = btn.getAttribute('data-cmd') || '';
+        try { await navigator.clipboard.writeText(cmd); } catch { return; }
+        const copied = btn.getAttribute('data-copied') || btn.textContent;
+        const copy = btn.getAttribute('data-copy') || btn.textContent;
+        btn.textContent = copied;
+        setTimeout(function () { btn.textContent = copy; }, 1500);
+      });
+    });
   })();
 </script>
 
@@ -205,6 +234,26 @@ const tfInitial =
   .catalog thead th { color: var(--ink-dim); font-weight: 500; }
   .catalog td.name { font-family: var(--font-mono); color: var(--ink); }
   .catalog td.version { font-family: var(--font-mono); color: var(--ink-dim); font-size: 0.85em; }
+  /* Per-row copy: the encyclopedia's `.copy-btn` in this surface's ink —
+     mono 11px, a 1px hairline frame, 4px radius, transparent fill. The 32px
+     floor keeps the tap target honest on touch without a coarse-pointer query.
+     It rides inside the name cell (no fourth column) so the three-column
+     table still fits at 320px. */
+  .catalog .copy-btn {
+    margin-left: 0.4rem;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 0.25rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--rule-t1);
+    color: var(--ink-dim);
+    border-radius: 4px;
+    cursor: pointer;
+  }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
   .sub .use { margin: 0.8rem 0 0; color: var(--ink-dim); font-size: 0.97rem; }
   /* Bistre link with a dashed underline — the garnet essence has no contrast on

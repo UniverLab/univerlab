@@ -342,7 +342,10 @@ export const es: Dict = {
         kicker: 'Plantillas',
         title: '{n} plantillas en el registro abierto',
         cols: { name: 'nombre', description: 'descripción', version: 'versión' },
-        use: 'Empieza un documento con cualquiera:',
+        use: 'Cada fila copia el comando; my-doc es el nombre de tu proyecto:',
+        copy: 'Copiar',
+        copied: 'Copiado',
+        copyLabel: 'Copiar el comando que empieza un documento con {name}',
       },
       faq: [
         ['¿Qué problema resuelve TeXForge?',

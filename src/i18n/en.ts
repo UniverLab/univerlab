@@ -342,7 +342,10 @@ export const en = {
         kicker: 'Templates',
         title: '{n} templates in the open registry',
         cols: { name: 'name', description: 'description', version: 'version' },
-        use: 'Start a document from any of them:',
+        use: 'Every row copies the command; my-doc is your project name:',
+        copy: 'Copy',
+        copied: 'Copied',
+        copyLabel: 'Copy the command that starts a document with {name}',
       },
       faq: [
         ['What problem does TeXForge solve?',
