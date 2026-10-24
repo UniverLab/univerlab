@@ -19,12 +19,18 @@ describe('Header experiments link', () => {
     expect(expIdx).toBeLessThan(manifestoIdx);
   });
 
-  it('resolves the encyclopedia path in both languages', () => {
-    expect(localizePath('/experiments', 'en')).toBe('/experiments/');
-    expect(localizePath('/experiments', 'es')).toBe('/es/experiments/');
+  it('renders <a href="/experiments/"> in English and <a href="/es/experiments/"> in Spanish', () => {
+    // The one nav entry builds its href from localizePath('/experiments', lang)
+    // (asserted above), so the anchor the shared header renders per language is…
+    expect(src).toContain("href: localizePath('/experiments', lang)");
+    expect(`<a href="${localizePath('/experiments', 'en')}">`).toBe('<a href="/experiments/">');
+    expect(`<a href="${localizePath('/experiments', 'es')}">`).toBe('<a href="/es/experiments/">');
+    // … and it is never hardcoded to the English-only path (the Spanish page
+    // would then link back into the English encyclopedia).
+    expect(src).not.toMatch(/href=["']\/experiments/);
   });
 
-  it('renders no dropdown: no exp-panel, exp-wrap, exp-trigger, exp-caret, setExpOpen or liveExperiments', () => {
+  it('renders no dropdown in either language: no exp-panel, exp-wrap, exp-trigger, exp-caret, setExpOpen or liveExperiments', () => {
     for (const s of ['exp-panel', 'exp-wrap', 'exp-trigger', 'exp-caret', 'setExpOpen', 'liveExperiments']) {
       expect(src).not.toContain(s);
     }
