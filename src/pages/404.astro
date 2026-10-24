@@ -19,9 +19,9 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
         src="/bench/mapa/kraken-day-800.webp"
         alt={t.notFound.alt}
         width="1600"
-        height="900"
+        height="914"
         decoding="async"
-        fetchpriority="high"
+        loading="lazy"
       />
     </picture>
     <picture class="kraken kraken-night">
@@ -31,11 +31,41 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
         src="/bench/mapa/kraken-night-800.webp"
         alt={t.notFound.alt}
         width="1600"
-        height="900"
+        height="914"
         decoding="async"
-        fetchpriority="high"
+        loading="lazy"
       />
     </picture>
+
+    <!-- Both charts ship loading=lazy: an eager img would be fetched by the
+         preload scanner before any script can decide, so every visitor would
+         download both charts. Lazy + the CSS display:none above means the
+         off-theme one is never fetched at all; this script (the postcards'
+         swap, keyed to the same test the theme script in <head> uses) promotes
+         the current chart to fetchpriority=high before the first layout. -->
+    <script is:inline data-kraken-swap>
+      (function () {
+        function eager(img) {
+          img.setAttribute('fetchpriority', 'high');
+          img.removeAttribute('loading');
+        }
+        function lazy(img) {
+          img.setAttribute('loading', 'lazy');
+          img.removeAttribute('fetchpriority');
+        }
+        function sync() {
+          var night = document.documentElement.dataset.benchTheme === 'night';
+          var day = document.querySelector('picture.kraken-day > img');
+          var dark = document.querySelector('picture.kraken-night > img');
+          if (day && dark) {
+            if (night) { lazy(day); eager(dark); }
+            else { lazy(dark); eager(day); }
+          }
+        }
+        sync();
+        window.addEventListener('univerlab:themechange', sync);
+      })();
+    </script>
     <h1 lang="la">{t.notFound.title}</h1>
     <p class="lede">{t.notFound.line}</p>
     <p class="links">
@@ -64,11 +94,12 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
     max-width: 64rem;
     margin: 0;
   }
+  /* No forced aspect ratio: the charts ship 1600x914, and the width/height
+     attributes carry that true ratio for layout (a 16/9 here would squish). */
   .kraken img {
     display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 16 / 9;
   }
   /* By day the chart's paper melts into the parchment ground. */
   .kraken-day img { mix-blend-mode: multiply; }

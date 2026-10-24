@@ -44,14 +44,32 @@ describe('404 — Hic sunt dracones', () => {
       .toContain("ext: 'avif' | 'webp'");
   });
 
-  it('fixes intrinsic size 1600x900 and loads the chart high-priority with the dictionary alt', () => {
+  it('fixes the charts’ true intrinsic size 1600x914 and loads only the visible one high-priority', () => {
     for (const phase of ['day', 'night'] as const) {
       const pic = pictureOf(phase);
       expect(pic).toContain('width="1600"');
-      expect(pic).toContain('height="900"');
-      expect(pic).toContain('fetchpriority="high"');
+      // The kraken files ship 1600x914 — their own ratio, not 16:9. The
+      // markup describes the real bytes; a forced ratio would squish them.
+      expect(pic).toContain('height="914"');
       expect(pic).toContain('alt={t.notFound.alt}');
+      // Lazy in markup: an eager img would be fetched by the preload scanner
+      // before the swap script runs, so every visitor would download both
+      // charts; lazy + display:none means the off-theme one never loads.
+      expect(pic).toContain('loading="lazy"');
+      expect(pic).not.toContain('fetchpriority');
     }
+    // The CSS never forces a ratio over the charts: the attributes carry it.
+    expect(page).not.toMatch(/\.kraken img\s*\{[^}]*aspect-ratio/);
+  });
+
+  it('swaps eager/lazy with the theme, keyed to the same test the head script uses', () => {
+    expect(page).toContain("document.documentElement.dataset.benchTheme === 'night'");
+    expect(page).toContain("document.querySelector('picture.kraken-day > img')");
+    expect(page).toContain("document.querySelector('picture.kraken-night > img')");
+    expect(page).toContain("'univerlab:themechange'");
+    // The swap promotes one chart to high priority and demotes the other.
+    expect(page).toMatch(/function eager\(img\)\s*\{\s*img\.setAttribute\('fetchpriority', 'high'\)/);
+    expect(page).toMatch(/function lazy\(img\)\s*\{\s*img\.setAttribute\('loading', 'lazy'\)/);
   });
 
   it('shows exactly one chart per theme via data-bench-theme CSS, and melts the day paper', () => {
@@ -136,5 +154,18 @@ describe('kraken assets', () => {
         }
       }
     }
+  });
+
+  it('the declared width/height describe the real 1600x914 bytes (VP8 keyframe header)', () => {
+    // A swapped asset with a different ratio must fail here until the page's
+    // width/height follow it — a silent squish or layout shift is the defect.
+    const buf = readFileSync(join(root, 'public', 'bench', 'mapa', 'kraken-day-1600.webp'));
+    const i = buf.indexOf('VP8 ');
+    expect(i).toBeGreaterThan(-1);
+    const w = buf.readUInt16LE(i + 14) & 0x3fff;
+    const h = buf.readUInt16LE(i + 16) & 0x3fff;
+    expect(`${w}x${h}`).toBe('1600x914');
+    expect(page).toContain('width="1600"');
+    expect(page).toContain('height="914"');
   });
 });

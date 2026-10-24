@@ -1002,7 +1002,7 @@ export const es: Dict = {
     today: 'Una esfera armilar grabada junto a un reloj de sol de piedra sobre un suelo empedrado',
   },
   // El 404: el borde del mundo conocido — la carta del kraken, su advertencia y
-  // las dos vuelas. El kicker y el título latino son iguales en cada idioma;
+  // las dos vueltas. El kicker y el título latino son iguales en cada idioma;
   // viven aquí para que ninguna cadena visible quede fuera del diccionario.
   notFound: {
     kicker: '404 · terra incognita',
