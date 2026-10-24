@@ -1,10 +1,28 @@
 import { hostCanvas, pointerIn, loop, loadImage } from './runtime';
 import type { Fondo, FondoOpts, MountFondo } from './runtime';
 
-const TILE_W = 620;
-const DRY = 0.018;
-const ROLLER = 48;
-const GARNET = '#7d2c34';
+// Tile width of the rest case at desktop viewports (~1.25 cases per 1440px).
+export const TILE_W = 1180;
+// Tile width on viewports narrower than 40rem.
+export const TILE_W_NARROW = 760;
+// Opacity of the faint rest case frame.
+export const REST_OPACITY = 0.05;
+// Draw alpha of the garnet ink revealed by the roller.
+export const INK_ALPHA = 0.5;
+// Alpha of the roller's trail stroke.
+export const TRAIL_ALPHA = 0.32;
+export const DRY = 0.018;
+export const ROLLER = 48;
+export const GARNET = '#7d2c34';
+// Radial mask that keeps the page edges engraved and the reading column clean.
+export const MASK = 'radial-gradient(ellipse 62% 72% at 50% 42%, transparent 0 38%, #000 88%)';
+
+const tileW = () => {
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia('(max-width: 40rem)').matches ? TILE_W_NARROW : TILE_W;
+  }
+  return window.innerWidth < 680 ? TILE_W_NARROW : TILE_W;
+};
 
 export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => {
   const { base, reduced } = opts;
@@ -14,15 +32,22 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   caseEl.style.inset = '0';
   caseEl.style.pointerEvents = 'none';
   caseEl.style.backgroundImage = `url(${base}galera.webp)`;
-  caseEl.style.backgroundSize = `${TILE_W}px auto`;
+  caseEl.style.backgroundSize = `${tileW()}px auto`;
   caseEl.style.backgroundRepeat = 'repeat';
-  caseEl.style.opacity = '0.1';
+  caseEl.style.opacity = String(REST_OPACITY);
+  caseEl.style.setProperty('mask-image', MASK);
+  caseEl.style.setProperty('-webkit-mask-image', MASK);
   host.appendChild(caseEl);
 
   if (reduced) {
+    const onResize = () => {
+      caseEl.style.backgroundSize = `${tileW()}px auto`;
+    };
+    window.addEventListener('resize', onResize);
     return {
       setNight() {},
       destroy() {
+        window.removeEventListener('resize', onResize);
         caseEl.remove();
       },
     };
@@ -45,7 +70,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     if (!image) return;
     const pattern = k.createPattern(image, 'repeat');
     if (!pattern) return;
-    pattern.setTransform(new DOMMatrix().scale(TILE_W / image.naturalWidth));
+    pattern.setTransform(new DOMMatrix().scale(tileW() / image.naturalWidth));
     k.setTransform(dpr, 0, 0, dpr, 0, 0);
     k.globalCompositeOperation = 'source-over';
     k.clearRect(0, 0, w, h);
@@ -57,6 +82,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   };
 
   const resize = () => {
+    caseEl.style.backgroundSize = `${tileW()}px auto`;
     const s = size();
     dpr = s.dpr;
     w = s.w;
@@ -70,10 +96,16 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     if (ready) paintInkedCase();
   };
 
+  const onResize = () => {
+    caseEl.style.backgroundSize = `${tileW()}px auto`;
+    if (ready) paintInkedCase();
+  };
+  window.addEventListener('resize', onResize);
+
   const roll = (x: number, y: number) => {
     const from = last || { x, y };
     t.globalCompositeOperation = 'source-over';
-    t.strokeStyle = 'rgba(0,0,0,0.38)';
+    t.strokeStyle = `rgba(0,0,0,${TRAIL_ALPHA})`;
     t.lineCap = 'round';
     t.lineWidth = ROLLER;
     t.shadowColor = 'rgba(0,0,0,0.6)';
@@ -95,7 +127,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     t.fillRect(0, 0, w, h);
     c.globalCompositeOperation = 'source-over';
     c.clearRect(0, 0, canvas.width, canvas.height);
-    c.globalAlpha = 0.7;
+    c.globalAlpha = INK_ALPHA;
     c.drawImage(inked, 0, 0);
     c.globalAlpha = 1;
     c.globalCompositeOperation = 'destination-in';
@@ -124,6 +156,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       // night state is carried by the page surface; the engraving is unchanged.
     },
     destroy() {
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('pointerdown', resetLast);
       unsubPointer();
       stopLoop();
