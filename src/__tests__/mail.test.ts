@@ -216,6 +216,9 @@ describe('the letter from the past carries a summary', () => {
     expect(MAIL_SRC).toMatch(/parts\.headline/);
     expect(MAIL_SRC).toMatch(/parts\.linkLabel/);
     expect(MAIL_SRC).toContain('continuesWikipedia');
+    // The typed body comes from the summary too: without this branch the
+    // letter would still print the one line twice.
+    expect(MAIL_SRC).toMatch(/if \(m\.summary\) return summaryText\(m\);/);
   });
 });
 
