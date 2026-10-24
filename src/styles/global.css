@@ -647,7 +647,6 @@ body > header { view-transition-name: site-header; }
 .find-close:hover { color: #e0e0e0; }
 .find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
 .find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
-/* Flight log popover — global scope, appended to body. */
 /* Demo dialog — full-screen overlay for expanded demo view. */
 #demo-dialog {
   position: fixed;

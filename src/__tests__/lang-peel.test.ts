@@ -249,7 +249,7 @@ describe('language corner styles', () => {
     const z = Number(peel![1].match(/z-index:\s*(\d+)/)![1]);
     const dialogZ = Math.max(...[...GLOBAL.matchAll(/z-index:\s*(\d+)/g)].map((m) => Number(m[1])));
     expect(z).toBeGreaterThan(30); // nav flyout / panels
-    expect(z).toBeLessThan(dialogZ); // palette, mail letter, flight log
+    expect(z).toBeLessThan(dialogZ); // palette, mail letter, paper slips
     // The footer is a later sibling: without a stacking context on the header the
     // fixed corner would be painted under the footer's ground.
     expect(HEADER).toMatch(/header \{ position: relative; z-index: 1; \}/);
