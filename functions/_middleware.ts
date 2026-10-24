@@ -94,15 +94,19 @@ async function liveTodayEdition(
   signal: AbortSignal,
 ): Promise<{ html: string; markdown: string }> {
   const date = editionDate();
-  const otd = await fetchImpl(otdUrl(lang, date), {
+  // Both reads run together: the shared 3 s deadline must not be spent twice,
+  // and a slow Wikipedia response must not push the lab mail past it.
+  const otd = fetchImpl(otdUrl(lang, date), {
     headers: { 'User-Agent': 'UniverLab/1.0 (https://univerlab.org)' },
     cf: { cacheTtl: 3600, cacheEverything: true },
     signal,
-  } as RequestInit);
-  if (!otd.ok) throw new Error(`otd ${otd.status}`);
-  const data = (await otd.json()) as Parameters<typeof buildPool>[0];
-  const entries = await loadEntries({ fetchImpl, init: apiInit(), signal });
-  const feed = { facts: buildPool(data, lang), lab: entries };
+  } as RequestInit).then((res) => {
+    if (!res.ok) throw new Error(`otd ${res.status}`);
+    return res.json() as Promise<Parameters<typeof buildPool>[0]>;
+  });
+  const entries = loadEntries({ fetchImpl, init: apiInit(), signal });
+  const [data, lab] = await Promise.all([otd, entries]);
+  const feed = { facts: buildPool(data, lang), lab };
   return {
     html: todayEditionHtml(feed, lang, date),
     markdown: todayEditionMarkdown(feed, lang, date),

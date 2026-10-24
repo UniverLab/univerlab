@@ -122,6 +122,23 @@ function expNameOf(topic: unknown): string {
   return exp ? exp.name : '';
 }
 
+/** The announcement's type as the edition's language spells it. The API
+ *  stores English codes (`launch`, `note`, `update`), so the Spanish
+ *  newspaper never prints "launch" in its kicker; an unknown code passes
+ *  through as served. */
+function typeOf(box: TodayLab, t: Dict): string {
+  const raw = (box.type || '').trim();
+  const known = t.types as Record<string, string>;
+  return known[raw.toLowerCase()] || raw;
+}
+
+/** The day-of-year number the dateline prints as `Sol n`. Noon keeps a DST
+ *  shift from rounding the count down a day. */
+function solOf(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  return Math.floor((date.getTime() - start.getTime()) / 86400000);
+}
+
 function photoFigure(
   fact: Fact,
   t: Dict,
@@ -179,8 +196,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     month: 'long',
     year: 'numeric',
   }).format(date);
-  const start = new Date(date.getFullYear(), 0, 0);
-  const sol = Math.floor((date.getTime() - start.getTime()) / 86400000);
+  const sol = solOf(date);
   const counts = fmt(t.counts, { n: facts.length, m: box ? 1 : 0 });
 
   let out =
@@ -189,13 +205,13 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   if (box) {
     const exp = expNameOf(box.topic);
-    const kicker = [t.labKicker, exp, box.type || '']
+    const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)
       .join(' · ');
     out +=
       `<article class="labmail">` +
       `<p class="kicker">${esc(kicker)}</p>` +
-      `<h3>${esc(box.title || '')}</h3>` +
+      `<h2>${esc(box.title || '')}</h2>` +
       `<p>${esc(firstParagraph(box.body || ''))}</p>` +
       `<a href="/status/">${esc(t.labLink)}</a></article>`;
   }
@@ -247,6 +263,12 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   const box = todayLabBox(feed?.lab || [], date);
 
   const path = lang === 'es' ? 'https://univerlab.org/es/today/' : 'https://univerlab.org/today/';
+  const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
   const lines = [
     '---',
     `title: "${t.name}"`,
@@ -257,14 +279,19 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     '',
     `*${t.motto}*`,
     '',
+    // The edition's dateline: an agent reading the twin needs the day it
+    // was set, exactly as the page prints it.
+    `**${full} · ${t.sol} ${solOf(date)}**`,
+    '',
     `${fmt(t.counts, { n: facts.length, m: box ? 1 : 0 })}`,
     '',
   ];
 
   if (box) {
     const exp = expNameOf(box.topic);
-    const kicker = [t.labKicker, exp, box.type || ''].filter((s) => s).join(' · ');
-    lines.push(`## ${kicker}`, '', `**${box.title || ''}**`, '', firstParagraph(box.body || ''), '');
+    const kicker = [t.labKicker, exp, typeOf(box, t)].filter((s) => s).join(' · ');
+    lines.push(`## ${kicker}`, '', `**${box.title || ''}**`, '', firstParagraph(box.body || ''));
+    lines.push('', `[${t.labLink}](https://univerlab.org/status/)`, '');
   }
 
   if (lead) {
@@ -273,8 +300,13 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     lines.push(`## ${fmt(t.leadKicker, { years })}`, '', `**${headline}**`, '', lead.text);
     if (lead.link) lines.push('', `[${t.readOn}](${lead.link})`);
     if (aside.length) {
-      lines.push('', `## ${t.events}`);
-      for (const f of aside) lines.push(`- **${f.year}**: ${f.text}`);
+      // The page's side column: its own label, so the events heading below
+      // is not printed twice in a row.
+      lines.push('', `## ${t.aside}`);
+      for (const f of aside) {
+        const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
+        lines.push(`- **${f.year}**: ${text}`);
+      }
     }
     lines.push('');
   }

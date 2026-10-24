@@ -1111,6 +1111,8 @@ export const es: Dict = {
     events: 'Acontecimientos',
     births: 'Nacimientos',
     deaths: 'Defunciones',
+    aside: 'También en este día',
+    types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
     yearsWay: '{years} años en camino',
     caption: '{name} · Wikimedia Commons',
     colophon:

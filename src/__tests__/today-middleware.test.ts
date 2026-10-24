@@ -93,6 +93,28 @@ describe('middleware — /today/ HTML', () => {
     expect(asMock(ctx.next)).toHaveBeenCalled();
   });
 
+  it('reads the lab and the encyclopedia at the same time', async () => {
+    // The two reads share one 3 s deadline: if the lab read only started after
+    // the encyclopedia answered, a slow Wikipedia would spend the whole budget.
+    let labRead = false;
+    global.fetch = jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes('wikipedia.org')) {
+        await new Promise((r) => setTimeout(r, 50));
+        if (!labRead) throw new Error('the lab read waited for the encyclopedia');
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      labRead = true;
+      return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    await onRequest(context('/today/', 'text/html'));
+
+    expect(labRead).toBe(true);
+    expect(FakeHTMLRewriter.last?.inner).toContain('class="dateline"');
+  });
+
   it('fills #edition with the day’s edition, dated and UA-tagged', async () => {
     const calls: Array<{ url: string; init?: RequestInit }> = [];
     global.fetch = jest.fn(async (input: string | URL | Request, init?: RequestInit) => {

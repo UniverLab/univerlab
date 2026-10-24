@@ -58,7 +58,9 @@ const t = useTranslations(lang);
       var facts = readOtdCache(lang);
       var factsP = facts && facts.length
         ? Promise.resolve(facts)
-        : fetchPool(fetch, lang, new Date(), FULL_POOL);
+        // El mismo día que pide el edge: la fecha del laboratorio (UTC−5), no
+        // la del visitante, para no imprimir las cartas de otro día.
+        : fetchPool(fetch, lang, editionDate(), FULL_POOL);
       // El buzón del laboratorio es opcional: si su lectura falla (CORS, una
       // caída) igual se imprimen las cartas del día, sin ese recuadro.
       var labP = fetch('https://announcements.univerlab.org/?limit=10')

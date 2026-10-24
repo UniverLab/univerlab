@@ -1119,6 +1119,8 @@ export const en = {
     events: 'Events',
     births: 'Births',
     deaths: 'Deaths',
+    aside: 'Also on this day',
+    types: { launch: 'launch', note: 'note', update: 'update' },
     yearsWay: '{years} years on its way',
     caption: '{name} · Wikimedia Commons',
     colophon:

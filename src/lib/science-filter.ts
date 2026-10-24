@@ -135,10 +135,15 @@ export function collectFacts(
       // A photo only when it is a real Commons image: hot-linked from
       // upload.wikimedia.org under /wikipedia/commons/, never an .svg
       // (flags, coats of arms and diagrams print wrong in halftone).
+      // The feed's URLs carry `?utm_source=…`, and a Commons SVG usually
+      // arrives rasterised as `…/File.svg/330px-File.svg.png`, so the vector
+      // check reads the path, not the tail of the whole URL.
       let thumb: Fact['thumb'];
       try {
         const src = e.pages![0].thumbnail?.source || '';
-        if (src.includes('/wikipedia/commons/') && !src.endsWith('.svg')) {
+        const path = src.split('?')[0];
+        const vector = /\.svg(\/|$|\.png$)/i.test(path);
+        if (src.includes('/wikipedia/commons/') && !vector) {
           thumb = { src };
           const w = e.pages![0].thumbnail?.width;
           const h = e.pages![0].thumbnail?.height;

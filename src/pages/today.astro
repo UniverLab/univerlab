@@ -58,7 +58,9 @@ const t = useTranslations(lang);
       var facts = readOtdCache(lang);
       var factsP = facts && facts.length
         ? Promise.resolve(facts)
-        : fetchPool(fetch, lang, new Date(), FULL_POOL);
+        // The same day the edge asks for: the lab's date (UTC−5), not the
+        // visitor's, so a reader abroad never prints another day's letters.
+        : fetchPool(fetch, lang, editionDate(), FULL_POOL);
       // The lab mailbox is optional: a failed announcements read (CORS, an
       // outage) still prints the day's letters, just without that box.
       var labP = fetch('https://announcements.univerlab.org/?limit=10')

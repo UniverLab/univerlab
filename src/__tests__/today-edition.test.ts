@@ -47,7 +47,7 @@ function feed(lang: 'en' | 'es' = 'en'): TodayFeed {
         date: new Date(Y, 9, 21, 9, 0, 0).toISOString(),
         title: 'Quorum 1.0.0: a planning-poker table drawn as an old plate',
         body: 'The table now looks like the rest of the lab.\n\nSecond paragraph that must not survive.',
-        type: 'lanzamiento',
+        type: 'launch',
         topic: 'quorum',
         link: null,
       },
@@ -115,11 +115,16 @@ describe('todayEditionHtml (en)', () => {
   });
 
   it('frames the lab mail with its kicker, title, first paragraph and /status/ link', () => {
-    expect(html).toContain('Lab mail · today · Quorum · lanzamiento');
+    expect(html).toContain('Lab mail · today · Quorum · launch');
     expect(html).toContain('Quorum 1.0.0: a planning-poker table drawn as an old plate');
     expect(html).toContain('The table now looks like the rest of the lab.');
     expect(html).not.toContain('Second paragraph');
     expect(html).toContain('<a href="/status/">Read the full announcement →</a>');
+  });
+
+  it('prints the lab entry as a second headline, not a level-skip under the h1', () => {
+    expect(html).toContain('<h2>Quorum 1.0.0');
+    expect(html).not.toContain('<h3>Quorum 1.0.0');
   });
 
   it('leads with Nobel: headline, drop-capped first paragraph, Commons photo, caption', () => {
@@ -185,6 +190,18 @@ describe('todayEditionHtml (es)', () => {
     expect(html).toContain('Correo del laboratorio · hoy · Quorum · lanzamiento');
     expect(html).toContain('Wikipedia →');
   });
+
+  it('translates the API type code instead of printing "launch" in Spanish', () => {
+    expect(html).toContain('· lanzamiento');
+    expect(html).not.toContain('· launch');
+    // An unknown code is printed as served, never dropped.
+    const odd = todayEditionHtml(
+      { facts: [], lab: [{ ...feed().lab[0], type: 'release' }] },
+      'es',
+      DATE,
+    );
+    expect(odd).toContain('· release');
+  });
 });
 
 describe('todayEditionMarkdown', () => {
@@ -197,5 +214,15 @@ describe('todayEditionMarkdown', () => {
     expect(md).toContain('## Events');
     expect(md).toContain('Quorum 1.0.0');
     expect(md).not.toContain('class="item');
+  });
+
+  it('datelines the day, labels the side column and links the lab entry', () => {
+    const md = todayEditionMarkdown(feed(), 'en', DATE);
+    const sol = Math.floor((DATE.getTime() - new Date(Y, 0, 0).getTime()) / 86400000);
+    expect(md).toContain(`October 21, ${Y} · Sol ${sol}**`);
+    expect(md).toContain('## Also on this day');
+    // The side column no longer repeats the Events heading right below it.
+    expect(md.match(/^## Events$/gm)).toHaveLength(1);
+    expect(md).toContain('[Read the full announcement →](https://univerlab.org/status/)');
   });
 });

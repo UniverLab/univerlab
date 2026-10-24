@@ -138,6 +138,46 @@ describe('collectFacts, buildPool and letterPool', () => {
     );
     expect(es).toHaveLength(1);
   });
+
+  it('keeps a photo only for a Commons raster, never a vector or a Wikipedia-only file', () => {
+    // The real feed appends `?utm_source=…` and serves an SVG thumbnail as a
+    // rasterised `…/File.svg/330px-File.svg.png`: the guard must read the path.
+    const page = (src: string, w = 330, h = 400) => ({
+      year: 1900,
+      text: 'A physicist studies the cathode ray and publishes the result.',
+      pages: [
+        {
+          titles: { normalized: 'Cathode ray' },
+          content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Cathode_ray' } },
+          thumbnail: { source: src, width: w, height: h },
+        },
+      ],
+    });
+    const UTM = '?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail';
+    const facts = collectFacts(
+      [
+        page('https://upload.wikimedia.org/wikipedia/commons/0/0e/Nobel.jpg/330px-Nobel.jpg' + UTM),
+        page('https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Zea.svg?utm_source=x'),
+        page('https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Zea.svg/330px-Zea.svg.png' + UTM),
+        page('https://upload.wikimedia.org/wikipedia/en/4/4a/Portrait.jpg' + UTM),
+        page('https://upload.wikimedia.org/wikipedia/commons/1/12/Okada.jpg' + UTM, 250, 300),
+      ],
+      'event',
+      'en',
+    );
+    expect(facts).toHaveLength(5);
+    const withPhoto = facts.filter((f) => f.thumb);
+    expect(withPhoto).toHaveLength(2);
+    expect(withPhoto[0].thumb).toEqual({
+      src: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Nobel.jpg/330px-Nobel.jpg' + UTM,
+      w: 330,
+      h: 400,
+    });
+    expect(withPhoto[1].thumb?.w).toBe(250);
+    // Nothing from a vector or a non-Commons page survives.
+    expect(facts.some((f) => /\.svg/i.test(f.thumb?.src || ''))).toBe(false);
+    expect(facts.some((f) => (f.thumb?.src || '').includes('/wikipedia/en/'))).toBe(false);
+  });
 });
 
 describe('dayKey and fetchPool', () => {
@@ -196,7 +236,7 @@ describe('the newspaper pages ask for the whole day', () => {
     ['pages/es/today.astro'],
   ])('%s fetches with FULL_POOL, never a limited pool', (p) => {
     const src = read(p);
-    expect(src).toMatch(/fetchPool\(fetch, lang, new Date\(\), FULL_POOL\)/);
+    expect(src).toMatch(/fetchPool\(fetch, lang, editionDate\(\), FULL_POOL\)/);
   });
 
   it('the mailbox letter shapes its pool with letterPool instead', () => {
