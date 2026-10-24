@@ -94,6 +94,7 @@ export const es: Dict = {
       resume: 'Reanudar la linterna',
       benchLabel: 'El banco: apunta a una máquina para proyectarla, haz clic para abrir su página.',
       alt: 'Una linterna mágica grabada que proyecta sobre una pantalla de tela',
+      open: ' · haz clic en la pantalla para abrirlo',
       worldHint: {
         canopy: 'siembra el autómata del panal',
         texforge: 'el cursor es el rodillo de tinta',

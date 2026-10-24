@@ -134,7 +134,12 @@ export function startLantern(): void {
     typedK.textContent = `${exp?.number ?? id} · ${exp?.name ?? id}`;
     typedLine.textContent = tagline;
     typedLine.classList.remove('is-on');
-    if (hint) hint.textContent = slide?.dataset.worldHint ?? hintText;
+    // While a world is open the hint appends the click affordance
+    // (`data-open-hint`, i18n `home.lantern.open`); clearType restores it.
+    if (hint) {
+      hint.textContent =
+        (slide?.dataset.worldHint ?? hintText) + (hint.dataset.openHint ?? '');
+    }
     if (reduce || cmd.length === 0) {
       // Reduced motion (or nothing to type): the still frame and every line
       // appear at once, with no typing effect.
@@ -272,6 +277,8 @@ export function startLantern(): void {
   // ── Slides ───────────────────────────────────────────────────────────────
   const videos = slides.map((slide) => slide.querySelector('video'));
   let current = 0;
+  // Before the first cut the projection is the title slide: no experiment.
+  screen.dataset.currentExp = slides[current]?.dataset.exp ?? '';
   let lastTurn = performance.now();
   let cutAt = -1e4;
   let paused = false;
@@ -300,6 +307,9 @@ export function startLantern(): void {
   const show = (index: number): void => {
     if (index === current) return;
     current = index;
+    // The screen publishes the experiment it projects ("" on the title slide)
+    // so the page can open it on a click; see Home.astro's #catch handler.
+    screen.dataset.currentExp = slides[current]?.dataset.exp ?? '';
     lastTurn = performance.now();
     cutAt = performance.now();
 

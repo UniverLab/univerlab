@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { liveExperiments } from '../lib/experiments';
+import { shouldScreenNavigate, SCREEN_DRAG_PX } from '../lib/lantern-navigate';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
@@ -456,5 +457,101 @@ describe('Home — copy in both dictionaries', () => {
   it('keeps the former h1 as the About the lab heading', () => {
     expect(HOME).toMatch(/class="wrap section two-col about"[\s\S]*?<h2>\{t\.home\.hero\.title\}<\/h2>/);
     expect(en.home.hero.title).toContain('Open source for the AI era');
+  });
+});
+
+describe('Home — clicking the screen opens the projected experiment', () => {
+  const gesture = {
+    currentExp: 'canopy',
+    dx: 0,
+    dy: 0,
+    pointerType: 'mouse',
+    worldOpen: true,
+  };
+
+  it('refuses the title slide: there is no experiment to open', () => {
+    expect(shouldScreenNavigate({ ...gesture, currentExp: '' })).toBe(false);
+  });
+
+  it('draws the drag line at 6 px: 7 px never navigates, 6 px still does', () => {
+    expect(SCREEN_DRAG_PX).toBe(6);
+    expect(shouldScreenNavigate({ ...gesture, dx: 7 })).toBe(false);
+    expect(shouldScreenNavigate({ ...gesture, dy: 7 })).toBe(false);
+    // The threshold is on the travelled distance, not on each axis.
+    expect(shouldScreenNavigate({ ...gesture, dx: 5, dy: 5 })).toBe(false);
+    expect(shouldScreenNavigate({ ...gesture, dx: 6 })).toBe(true);
+    expect(shouldScreenNavigate({ ...gesture, dy: -6 })).toBe(true);
+  });
+
+  it('keeps the touch first tap opening the world, and navigates the second', () => {
+    expect(shouldScreenNavigate({ ...gesture, pointerType: 'touch', worldOpen: false })).toBe(
+      false,
+    );
+    expect(shouldScreenNavigate({ ...gesture, pointerType: 'touch', worldOpen: true })).toBe(true);
+    // A touch drag never navigates, open world or not.
+    expect(
+      shouldScreenNavigate({ ...gesture, pointerType: 'touch', worldOpen: true, dx: 7 }),
+    ).toBe(false);
+    // A mouse click navigates regardless of the world (hover opened it).
+    expect(shouldScreenNavigate({ ...gesture, pointerType: 'mouse', worldOpen: false })).toBe(true);
+  });
+
+  it('publishes the projection on #screen and keeps the title slide empty', () => {
+    expect(LANTERN).toMatch(
+      /screen\.dataset\.currentExp = slides\[current\]\?\.dataset\.exp \?\? ''/,
+    );
+    // Shown on the first cut and initialised once before the first show().
+    expect((LANTERN.match(/screen\.dataset\.currentExp = /g) ?? []).length).toBe(2);
+    expect(HOME).toMatch(/dataset\.currentExp/);
+  });
+
+  it('wires the catcher click through the helper and the CRT power-off', () => {
+    expect(HOME).toContain('shouldScreenNavigate');
+    expect(HOME).toMatch(/catcher\?\.addEventListener\('click'/);
+    expect(HOME).toMatch(/dx: upX - downX/);
+    expect(HOME).toMatch(/dy: upY - downY/);
+    expect(HOME).toMatch(/pointerType: pointerKind/);
+    expect(HOME).toMatch(/worldOpen: worldOpenAtDown/);
+    expect(HOME).toMatch(/crtNavigate\(href, view, dot\)/);
+    expect(HOME).toMatch(/window\.location\.assign\(href\)/);
+    // The href is the localized path the matching plate already carries.
+    expect(HOME).toMatch(/\.plate\[data-exp="\$\{currentExp\}"\]/);
+    // The world state must be read before startLantern()'s own pointerdown
+    // opens the world, or the first touch tap would navigate instead.
+    const down = HOME.indexOf("catcher?.addEventListener('pointerdown'");
+    const start = HOME.indexOf('startLantern()');
+    expect(down).toBeGreaterThan(-1);
+    expect(start).toBeGreaterThan(down);
+    // The four existing lantern handlers stay put, in lantern.ts.
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerenter'");
+    expect(LANTERN).toContain("catcher?.addEventListener('pointermove'");
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerleave'");
+    expect(LANTERN).toContain("catcher?.addEventListener('pointerdown'");
+  });
+
+  it('affords the click: pointer cursor while projected, crosshair on the title', () => {
+    expect(HOME).toMatch(/\.catch \{[^}]*cursor:\s*crosshair/);
+    expect(HOME).toMatch(
+      /\.screen\[data-current-exp\]:not\(\[data-current-exp=''\]\) \.catch \{[^}]*cursor:\s*pointer/,
+    );
+  });
+
+  it('stays aria-hidden and out of the tab order (plates are the keyboard path)', () => {
+    expect(HOME).toMatch(/id="screen"[\s\S]{0,400}?aria-hidden="true"/);
+    expect(HOME).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
+    expect(HOME).not.toMatch(/id="screen"[^>]*tabindex/i);
+    expect(HOME).not.toMatch(/id="catch"[^>]*tabindex/i);
+  });
+
+  it('appends the open hint to the world hint while a world is open', () => {
+    expect(HOME).toContain('data-open-hint={t.home.lantern.open}');
+    expect(LANTERN).toMatch(
+      /\(slide\?\.dataset\.worldHint \?\? hintText\) \+\s*\(hint\.dataset\.openHint/,
+    );
+    // Leaving the world restores the plain bench label.
+    expect(LANTERN).toMatch(/if \(hint\) hint\.textContent = hintText;/);
+    expect(en.home.lantern.open).toContain('click the screen to open it');
+    expect(es.home.lantern.open).toContain('haz clic en la pantalla para abrirlo');
+    expect(en.home.lantern.open).not.toBe(es.home.lantern.open);
   });
 });

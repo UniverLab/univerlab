@@ -94,6 +94,7 @@ export const en = {
       resume: 'Resume the lantern',
       benchLabel: 'The bench: point at a machine to project it, click it to open its page.',
       alt: 'An engraved magic lantern projecting onto a cloth screen',
+      open: ' · click the screen to open it',
       worldHint: {
         canopy: 'seeds the hive automaton',
         texforge: 'the cursor is the ink roller',

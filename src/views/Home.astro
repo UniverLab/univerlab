@@ -188,7 +188,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
       </div>
 
       <div class="bench-foot">
-        <p class="hint">{t.home.lantern.benchLabel}</p>
+        <p class="hint" data-open-hint={t.home.lantern.open}>{t.home.lantern.benchLabel}</p>
         <button
           type="button"
           class="lantern-pause"
@@ -409,6 +409,9 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .screen.on-dark .typed { color: #ece4d4;
     background: radial-gradient(ellipse at 35% 45%, rgba(10, 10, 14, .78) 45%, rgba(10, 10, 14, 0) 78%); }
   .catch { position: absolute; inset: 0; z-index: 5; cursor: crosshair; touch-action: manipulation; }
+  /* An experiment is projected → the screen opens it (its title slide keeps
+     the crosshair: there is nothing to open on it). */
+  .screen[data-current-exp]:not([data-current-exp='']) .catch { cursor: pointer; }
   @media (prefers-reduced-motion: reduce) {
     .slide { transition: none; }
     .typed .cmd::after { animation: none; }
@@ -542,8 +545,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 <script>
   import { startLantern } from '../scripts/lantern';
   import { crtNavigate } from '../scripts/crt';
-
-  startLantern();
+  import { shouldScreenNavigate } from '../lib/lantern-navigate';
 
   // A machine opens its experiment page through the CRT power-off. The key
   // `sessionStorage['univerlab-crt']` tells BaseLayout to play crt-on once the
@@ -557,5 +559,56 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
       if (view && dot) crtNavigate(href, view, dot);
       else window.location.assign(href);
     });
+  });
+
+  // The screen opens the experiment it projects, through the same CRT power-off.
+  // The gesture lives here, not in lantern.ts, which only publishes the
+  // projection (`#screen[data-current-exp]`, "" on the title slide) and opens
+  // worlds on hover/tap. These listeners register before the lantern starts, on
+  // purpose: lantern's own pointerdown opens the world on the first tap, so the
+  // world state must be read before that happens — otherwise the very tap that
+  // only opens the world would already look like "world open" and navigate.
+  const screen = document.getElementById('screen');
+  const catcher = document.getElementById('catch');
+  let downX = 0;
+  let downY = 0;
+  let upX = 0;
+  let upY = 0;
+  let pointerKind = '';
+  let worldOpenAtDown = false;
+
+  catcher?.addEventListener('pointerdown', (ev) => {
+    const e = ev as PointerEvent;
+    downX = upX = e.clientX;
+    downY = upY = e.clientY;
+    pointerKind = e.pointerType;
+    worldOpenAtDown = screen?.classList.contains('is-world') ?? false;
+  });
+  catcher?.addEventListener('pointerup', (ev) => {
+    const e = ev as PointerEvent;
+    upX = e.clientX;
+    upY = e.clientY;
+  });
+
+  startLantern();
+
+  catcher?.addEventListener('click', () => {
+    const currentExp = screen?.dataset.currentExp ?? '';
+    const open = shouldScreenNavigate({
+      currentExp,
+      dx: upX - downX,
+      dy: upY - downY,
+      pointerType: pointerKind,
+      worldOpen: worldOpenAtDown,
+    });
+    // Nothing to open (title slide), or the gesture was a drag / the first
+    // touch tap that only opens the world: keep today's behaviour.
+    if (!open) return;
+    const href = document.querySelector<HTMLElement>(
+      `.plate[data-exp="${currentExp}"]`,
+    )?.dataset.href;
+    if (!href) return;
+    if (view && dot) crtNavigate(href, view, dot);
+    else window.location.assign(href);
   });
 </script>
