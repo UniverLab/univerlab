@@ -8,6 +8,8 @@ import { machineInk } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
+import { citationTexts } from '../lib/citation';
+import { latestRelease } from '../lib/releases';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 
@@ -39,6 +41,10 @@ const genesisDate = exp.startDate
 // instead of restating it (see src/lib/structured-data.ts).
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
+// The cite block needs the same build-time release the plate shows (cached:
+// no second fetch); without one the APA line drops the Version part.
+const release = await latestRelease(exp.github);
+const cite = exp.citation ? citationTexts(exp.citation, release) : null;
 const baseSchema = experimentAppNode({ site, exp, tagline: e.tagline, pageUrl });
 
 // A landing page is a place in the site, not just a document: UniverLab ›
@@ -167,6 +173,20 @@ const ogImage = `/og/${id}.png`;
     </div>
 
     <slot />
+
+    {cite && (
+      <section class="wrap cite-section" id="cite">
+        <span class="label">{t.common.cite}</span>
+        <h2>{t.common.citeTitle}</h2>
+        <p class="cite-apa">{cite.apa}</p>
+        <div class="cmd cite-cmd" data-cite translate="no">
+          <pre class="cite-bib"><code>{cite.bibtex}</code></pre>
+          <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
+            <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+          </button>
+        </div>
+      </section>
+    )}
 
     {e.faq && e.faq.length > 0 && (
       <section class="wrap faq-section" id="faq">
@@ -411,6 +431,12 @@ const ogImage = `/og/${id}.png`;
   }
   .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
 
+  /* Cite section — same metrics as the FAQ section it precedes. */
+  .cite-section { padding-block: 3rem; max-width: 52rem; }
+  .cite-section h2 { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .cite-apa { margin: 0 0 1rem; color: var(--ink-dim); }
+  .cite-bib { flex: 1; margin: 0; padding: 0.7rem 0.9rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-dim); }
+
   /* ── paper (texforge) — Antimetal editorial overrides.
      The structure above is untouched: same hero, install bar, genesis, faq and
      exp-nav (which keeps its "no top rule" — the footer opens with one). What
@@ -521,6 +547,21 @@ const ogImage = `/og/${id}.png`;
     });
   });
 
+  // Cite block: copy the BibTeX entry.
+  document.querySelectorAll<HTMLElement>('[data-cite]').forEach((box) => {
+    const pre = box.querySelector<HTMLElement>('.cite-bib');
+    const copy = box.querySelector<HTMLButtonElement>('.copy');
+    copy?.addEventListener('click', async () => {
+      if (!pre) return;
+      try {
+        await navigator.clipboard.writeText(pre.textContent || '');
+        copy.classList.add('done');
+        setTimeout(() => copy.classList.remove('done'), 1600);
+      } catch {
+        // Clipboard API unavailable or denied — leave the button untouched.
+      }
+    });
+  });
   // Docs button click tracking
   const docsLink = document.querySelector<HTMLAnchorElement>('[data-docs-link]');
   if (docsLink) {

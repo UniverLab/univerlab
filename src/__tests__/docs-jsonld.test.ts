@@ -260,6 +260,38 @@ describe('structured-data', () => {
   it('gives a research experiment neither an app node nor an id to point at', () => {
     expect(experimentAppNode({ site, exp: exp(), tagline: 't', pageUrl: 'https://univerlab.org/astro-denoise/' })).toBeUndefined();
   });
+
+  it('carries the DOI identifier and sameAs when the experiment has a citation', () => {
+    const node = experimentAppNode({
+      site,
+      exp: exp({
+        install: { unix: 'curl x | sh' },
+        citation: {
+          doi: '10.5281/zenodo.23607434',
+          title: 'canopy (harness-canopy)',
+          authors: [
+            { family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' },
+            { family: 'Solorzano', given: 'Lina' },
+          ],
+        },
+      }),
+      tagline: 't',
+      pageUrl: 'https://univerlab.org/canopy/',
+    })!;
+    expect(node.identifier).toEqual({ '@type': 'PropertyValue', propertyID: 'DOI', value: '10.5281/zenodo.23607434' });
+    expect(node.sameAs).toEqual(['https://doi.org/10.5281/zenodo.23607434']);
+  });
+
+  it('emits neither identifier nor sameAs without a citation', () => {
+    const node = experimentAppNode({
+      site,
+      exp: exp({ install: { unix: 'curl x | sh' } }),
+      tagline: 't',
+      pageUrl: 'https://univerlab.org/gitkit/',
+    })!;
+    expect(node).not.toHaveProperty('identifier');
+    expect(node).not.toHaveProperty('sameAs');
+  });
 });
 
 /**

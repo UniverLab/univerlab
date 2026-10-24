@@ -47,6 +47,8 @@ export const es: Dict = {
     demoBy: 'grabado con DemoStage',
     launch: 'Abrir app ↗',
     faq: 'Preguntas frecuentes',
+    cite: 'Citar',
+    citeTitle: 'Cómo citar',
   },
   status: {
     active: 'activo',

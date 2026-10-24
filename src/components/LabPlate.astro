@@ -27,6 +27,9 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
   {release && (
     <><span class="lp-sep"> · </span><a class="lp-release" href={release.url} target="_blank" rel="noopener noreferrer">{t.plate.release} {release.version}{releaseAge && <> · {releaseAge}</>}</a></>
   )}
+  {exp.citation && (
+    <><span class="lp-sep"> · </span><a class="lp-doi" href={`https://doi.org/${exp.citation.doi}`} target="_blank" rel="noopener noreferrer">DOI {exp.citation.doi}</a></>
+  )}
   <span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap>—</span></span>
   <span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog>{t.plate.lastLog}: —</span>
   {exp.builtWith.map((tool) => (
@@ -51,8 +54,8 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
   /* One link now lives in the caption (the release segment, spec
      lexp-release-signal supersedes R7's "no links"): underline off so it keeps
      the caption's mono register, essence on hover. */
-  .lab-plate .lp-release { text-decoration: none; }
-  .lab-plate .lp-release:hover, .lab-plate .lp-built a:hover { color: var(--essence); }
+  .lab-plate .lp-release, .lab-plate .lp-doi { text-decoration: none; }
+  .lab-plate .lp-release:hover, .lab-plate .lp-doi:hover, .lab-plate .lp-built a:hover { color: var(--essence); }
   .lab-plate .lp-built a { color: var(--ink-dim); text-decoration-color: var(--line); }
 </style>
 

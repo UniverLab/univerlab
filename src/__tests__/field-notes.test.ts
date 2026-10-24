@@ -158,8 +158,9 @@ describe('source guards', () => {
     expect(plate).toContain('latestRelease');           // build-time, not client
     // R7 ("plate has no links") is superseded by lexp-release-signal: the release
     // segment plus the built-with segments moved into the caption line.
-    expect(plate.match(/<a /g) ?? []).toHaveLength(2);
+    expect(plate.match(/<a /g) ?? []).toHaveLength(3);
     expect(plate).toContain('lp-release');
+    expect(plate).toContain('lp-doi');
   });
 
   it('notes use heading/empty strings, one status link, and the shared loader', () => {

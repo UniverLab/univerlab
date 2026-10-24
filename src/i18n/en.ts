@@ -48,6 +48,8 @@ export const en = {
     demoBy: 'recorded with DemoStage',
     launch: 'Launch app ↗',
     faq: 'FAQ',
+    cite: 'Cite',
+    citeTitle: 'How to cite',
   },
   status: {
     active: 'active',

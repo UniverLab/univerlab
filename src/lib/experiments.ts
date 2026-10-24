@@ -18,6 +18,14 @@ export type BgTheme =
   | 'takes'
   | 'spiral';
 
+/** A citable software record for the experiment.
+ *  `doi` is the Zenodo concept DOI (always resolves to the latest version). */
+export interface Citation {
+  doi: string;
+  authors: { family: string; given: string; orcid?: string }[];
+  title: string;
+}
+
 export interface Experiment {
   id: ExperimentId;
   name: string;
@@ -71,6 +79,9 @@ export interface Experiment {
     day: Record<string, string>;
     night: Record<string, string>;
   };
+  /** Citable software record, when the experiment has an archived DOI. Omitted
+   *  until the experiment's releases are archived (needs a `.zenodo.json`). */
+  citation?: Citation;
   /** The thread — problem → method → artifact — one small line of shared lab semantics.
    *  Copy is narrative, so the strings live in the i18n dictionaries (the '@i18n' marker
    *  follows `motif`'s convention): `t.experiments[id].thread` = { problem, method,
@@ -107,7 +118,7 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Canopy', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
+  { id: 'canopy', name: 'Canopy', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], citation: { doi: '10.5281/zenodo.23607434', title: 'canopy (harness-canopy)', authors: [{ family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' }, { family: 'Solorzano', given: 'Lina' }] } },
   { id: 'texforge', name: 'TeXForge', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', bg: 'forge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, fondo: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'gitkit', name: 'GitKit', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
   { id: 'ghscaff', name: 'ghScaff', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, fondo: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
