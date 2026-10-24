@@ -15,9 +15,15 @@ import {
   type ExperimentInfo,
   type MailLetter,
 } from '../lib/mail';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const DAY = 86400000;
 const NOW = new Date('2026-10-24T12:00:00Z');
+
+// The mailbox's own script, read as text: it owns the letter AND the science
+// pool warm-up the header used to run before it stopped opening letters.
+const MAIL_SRC = readFileSync(resolve(__dirname, '..', 'scripts', 'mail.ts'), 'utf8');
 
 const EXP_CANOPY: ExperimentInfo = {
   id: 'canopy',
@@ -143,5 +149,20 @@ describe('the rest of the papers', () => {
     expect(boxLabel(COPY, 0)).toBe('Mailbox: no new letters');
     expect(boxLabel(COPY, 1)).toBe('Mailbox: one new letter');
     expect(boxLabel(COPY, 3)).toBe('Mailbox: 3 new letters');
+  });
+});
+
+describe('the science pool warm-up', () => {
+  it('lives in the mailbox script so the first letter opens without the network', () => {
+    // Moved here from Header.astro, which no longer opens letters: the pool
+    // is warmed off the critical path under the same idle schedule as before.
+    expect(MAIL_SRC).toMatch(
+      /const warmLang: FilterLang = document\.documentElement\.lang === 'es' \? 'es' : 'en'/,
+    );
+    expect(MAIL_SRC).toMatch(/if \(!readOtdCache\(warmLang\)\)/);
+    expect(MAIL_SRC).toMatch(/requestIdleCallback\(warm, \{ timeout: 5000 \}\)/);
+    expect(MAIL_SRC).toMatch(/setTimeout\(warm, 4000\)/);
+    // The mailbox keeps the only letter hook the site has.
+    expect(MAIL_SRC).toMatch(/univerlabOpenMail/);
   });
 });

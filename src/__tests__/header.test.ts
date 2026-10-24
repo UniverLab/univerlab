@@ -53,25 +53,31 @@ describe('Header experiments link', () => {
 });
 
 describe('Header engraved sky body (sun by day, moon by night)', () => {
-  it('names the sky in both languages with the exact spec strings', () => {
-    expect(en.header.skySun).toBe("Today's sun: a science fact for today");
-    expect(en.header.skyMoon).toBe("Tonight's moon: a science fact for today");
-    expect(es.header.skySun).toBe('El sol de hoy: una efeméride de ciencia');
-    expect(es.header.skyMoon).toBe('La luna de hoy: una efeméride de ciencia');
+  it('names the sky action in both languages with the exact spec strings', () => {
+    expect(en.header.skyToNight).toBe('Switch to the night theme');
+    expect(en.header.skyToDay).toBe('Switch to the day theme');
+    expect(es.header.skyToNight).toBe('Cambiar al tema de noche');
+    expect(es.header.skyToDay).toBe('Cambiar al tema de día');
+    // The old keys, which named the letter of the day, are gone from both.
+    expect((en.header as Record<string, unknown>).skySun).toBeUndefined();
+    expect((en.header as Record<string, unknown>).skyMoon).toBeUndefined();
+    expect((es.header as Record<string, unknown>).skySun).toBeUndefined();
+    expect((es.header as Record<string, unknown>).skyMoon).toBeUndefined();
   });
 
-  it('mounts the body in an empty .celestial span with the translated sky name', () => {
+  it('mounts the body in an empty .celestial span and names the action the click will do', () => {
     // .celestial stays an empty mount — the bundled script injects sun/moon.
     expect(src).toMatch(/<span class="celestial" aria-hidden="true"><\/span>/);
-    expect(src).toMatch(/aria-label=\{t\.header\.skySun\}/);
-    expect(src).toMatch(/data-sky-sun=\{t\.header\.skySun\}/);
-    expect(src).toMatch(/data-sky-moon=\{t\.header\.skyMoon\}/);
+    expect(src).toMatch(/aria-label=\{t\.header\.skyToNight\}/);
+    expect(src).toMatch(/title=\{t\.header\.skyToNight\}/);
+    expect(src).toMatch(/data-sky-to-night=\{t\.header\.skyToNight\}/);
+    expect(src).toMatch(/data-sky-to-day=\{t\.header\.skyToDay\}/);
   });
 
   it('renders the sun image by day and the real-phase moon by night', () => {
     expect(src).toMatch(/import \{ moonSVG \} from '\.\.\/lib\/moon-svg'/);
-    // Sun: the approved engraved file, 44px, decorative.
-    expect(src).toMatch(/<img src="\/bench\/identidad\/sol\.svg" alt="" width="44" height="44">/);
+    // Sun: the approved engraved file, 34px, decorative.
+    expect(src).toMatch(/<img src="\/bench\/identidad\/sol\.svg" alt="" width="34" height="34">/);
     // Moon: same synodic computation the circadian script uses for --moon-offset.
     expect(src).toMatch(/Date\.UTC\(2000, 0, 6, 18, 14\)/);
     expect(src).toMatch(/29\.530588853/);
@@ -80,20 +86,23 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/readCelestial|renderCelestial/);
     expect(src).toMatch(/new MutationObserver\(/);
     expect(src).toMatch(/attributeFilter: \['data-celestial'\]/);
-    // The accessible name follows the phase.
-    expect(src).toMatch(/setAttribute\('aria-label', btn\.dataset\.skyMoon/);
-    expect(src).toMatch(/setAttribute\('aria-label', btn\.dataset\.skySun/);
+    // The accessible name (and tooltip) follows the body and names the
+    // action the click will do: sun showing → switch to night, moon → day.
+    expect(src).toMatch(/setAttribute\('aria-label', btn\.dataset\.skyToNight/);
+    expect(src).toMatch(/setAttribute\('title', btn\.dataset\.skyToNight/);
+    expect(src).toMatch(/setAttribute\('aria-label', btn\.dataset\.skyToDay/);
+    expect(src).toMatch(/setAttribute\('title', btn\.dataset\.skyToDay/);
   });
 
-  it('sizes body and hit area at 44px and drops the old 8px dot', () => {
+  it('keeps a 44px hit area and shrinks the body to 34px, dropping the old 8px dot', () => {
     const btnBlock = src.match(/\.celestial-btn\s*\{([\s\S]*?)\n  \}/);
     expect(btnBlock).not.toBeNull();
     expect(btnBlock![1]).toMatch(/width:\s*44px/);
     expect(btnBlock![1]).toMatch(/height:\s*44px/);
     const bodyBlock = src.match(/\.celestial\s*\{([\s\S]*?)\n  \}/);
     expect(bodyBlock).not.toBeNull();
-    expect(bodyBlock![1]).toMatch(/width:\s*44px/);
-    expect(bodyBlock![1]).toMatch(/height:\s*44px/);
+    expect(bodyBlock![1]).toMatch(/width:\s*34px/);
+    expect(bodyBlock![1]).toMatch(/height:\s*34px/);
     expect(bodyBlock![1]).not.toMatch(/background:/);
     expect(bodyBlock![1]).not.toMatch(/box-shadow/);
     // No dot glow or ::before terminator anywhere left.
@@ -113,42 +122,65 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/html\[data-celestial='moon'\] \.celestial :global\(svg\)/);
   });
 
-  it('engraves the hour ruler along the rule and clamps the body off the mailbox', () => {
+  it('engraves the hour ruler as the only header line and clamps the body off the mailbox', () => {
     expect(src).toMatch(/<span class="sky-ruler" aria-hidden="true"><svg preserveAspectRatio="none"><\/svg><\/span>/);
     const rulerBlock = src.match(/\.sky-ruler\s*\{([^}]*)\}/s);
     expect(rulerBlock).not.toBeNull();
     expect(rulerBlock![1]).toMatch(/left:\s*0/);
-    expect(rulerBlock![1]).toMatch(/right:\s*76px/);
+    // The ruler spans the whole header foot — where the removed hr.rule stood,
+    // the mailbox at its right end — so it is the only line.
+    expect(rulerBlock![1]).toMatch(/right:\s*0/);
     expect(rulerBlock![1]).toMatch(/height:\s*16px/);
     // Ruler geometry: 1000-wide viewBox, base at y12, 48 quarter-hours.
     expect(src).toMatch(/viewBox', '0 0 ' \+ W \+ ' 16'/);
+    expect(src).toMatch(/y1="12"/);
     expect(src).toMatch(/m <= 48/);
     expect(src).toMatch(/\(m \/ 48\) \* W/);
     expect(src).toMatch(/six \? 9 : hour \? 5 : 2\.5/);
     expect(src).toMatch(/vector-effect="non-scaling-stroke"/);
-    // Track ends before the mailbox at the rule's right end.
-    expect(src).toMatch(/left: clamp\(22px, var\(--sun-pos, 50%\), calc\(100% - 98px\)\)/);
+    // Track ends before the mailbox at the ruler's right end (body 34px).
+    expect(src).toMatch(/left: clamp\(22px, var\(--sun-pos, 50%\), calc\(100% - 71px\)\)/);
+    // The body is centred on the ruler's baseline (y12 of a 16px ruler at
+    // bottom 0 → 4px above the foot), no longer on the removed hr.
+    expect(src).toMatch(/bottom: 4px;/);
   });
 
-  it('keeps behaviour: position var, letter hook, drag-to-scrub, i18n import', () => {
+  it('switches the theme on a click (palette key + applyTheme) and keeps drag-to-scrub', () => {
     expect(src).toMatch(/--sun-pos/);
-    // The sky body opens today's letter through the mailbox's dialog; a click
-    // that was not a drag forwards to the mail system (no popup of its own).
-    expect(src).toMatch(/window\.univerlabOpenMail\?\.\(btn\)|window\.univerlabOpenMail\(btn\)/);
+    // No letter hook left in the header: letters live in the mailbox only.
+    expect(src).not.toMatch(/univerlabOpenMail|function openMail/);
     expect(src).not.toMatch(/showPopup|otd-popup/);
+    // The click reads the clock (window.calc after dropping the key)…
+    expect(src).toMatch(/function toggleTheme\(\)/);
+    expect(src).toMatch(/if \(window\.calc\) window\.calc\(\)/);
+    // …drops the key first, so the circadian-equal case leaves no key…
+    expect(src).toMatch(/localStorage\.removeItem\('univerlab-theme'\)/);
+    // …writes the palette's key and applies the theme with the palette's
+    // own function (both call sites go through toggleTheme)…
+    expect(src).toMatch(/localStorage\.setItem\('univerlab-theme', target\)/);
+    expect(src).toMatch(/window\.applyTheme\('circadian'\)/);
+    expect(src).toMatch(/window\.applyTheme\(target\)/);
+    expect(src).toMatch(/hideTip\(\);\s*\n\s*toggleTheme\(\);/);
+    expect(src).toMatch(/if \(!e\.detail\) toggleTheme\(\)/);
+    // Drag-to-scrub survives, still gated to circadian mode.
+    expect(src).toMatch(/localStorage\.getItem\('univerlab-theme'\) \|\| !window\.scrubTime/);
     expect(src).toMatch(/addEventListener\('mousedown', onPointerDown\)/);
     expect(src).toMatch(/window\.scrubTime/);
     expect(src).toMatch(/window\.resetScrub/);
   });
 
-  it('imports the shared science filter and renders the mailbox at the rule end', () => {
-    // The keyword lists moved to ../lib/science-filter; the header warms the
-    // day's pool from there and the mailbox it renders owns the letter.
-    expect(src).toMatch(/from '\.\.\/lib\/science-filter'/);
-    expect(src).toMatch(/readOtdCache\(lang\)/);
-    expect(src).toMatch(/fetchPool\(fetch, lang\)/);
+  it('renders the mailbox at the ruler end and draws no second line at the header foot', () => {
+    // The science pool warm-up moved to the mailbox's script (mail.ts); the
+    // header no longer imports ../lib/science-filter at all.
+    expect(src).not.toContain('science-filter');
+    expect(src).not.toMatch(/readOtdCache|fetchPool/);
     expect(src).toMatch(/import Mailbox from '\.\/Mailbox\.astro'/);
     expect(src).toMatch(/<Mailbox \/>/);
+    // No <hr class="rule"> in the header markup — the regleta is the only
+    // line; the bar's own padding keeps the total height the hr carried.
+    expect(src).not.toContain('<hr');
+    expect(src).toMatch(/padding-bottom:\s*calc\(1\.1rem \+ 1px\)/);
+    expect(src).not.toMatch(/padding-block:/);
     // No science keyword list is left in the header itself.
     expect(src).not.toContain('SCIENCE_EN = [');
   });

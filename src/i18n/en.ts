@@ -23,8 +23,10 @@ export const en = {
     roadmap: 'Roadmap',
   },
   header: {
-    skySun: "Today's sun: a science fact for today",
-    skyMoon: "Tonight's moon: a science fact for today",
+    // The sky body's click names the action it will do: the body showing now
+    // is the sun → switch to night, the moon → switch to day.
+    skyToNight: 'Switch to the night theme',
+    skyToDay: 'Switch to the day theme',
     // The page-turn language switch: the corner shows the other language.
     switchTo: 'Switch to',
     langLabel: { en: 'English', es: 'Español' },

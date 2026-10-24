@@ -638,6 +638,17 @@ export function startMailbox(): void {
 }
 
 if (typeof document !== 'undefined') {
+  // Warm today's filtered science pool once, in the background, so the first
+  // letter arrives with no network wait. High timeout keeps it off FCP/LCP.
+  // (This warm-up moved here from the header, which no longer opens letters.)
+  const warmLang: FilterLang = document.documentElement.lang === 'es' ? 'es' : 'en';
+  if (!readOtdCache(warmLang)) {
+    const warm = () => {
+      fetchPool(fetch, warmLang).catch(() => {});
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 5000 });
+    else setTimeout(warm, 4000);
+  }
   if (document.readyState === 'complete') startMailbox();
   else {
     addEventListener('load', () => startMailbox(), { once: true });

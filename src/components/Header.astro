@@ -104,9 +104,8 @@ const signals = [
       </span>
     </nav>
   </div>
-  <hr class="rule" />
   <span class="sky-ruler" aria-hidden="true"><svg preserveAspectRatio="none"></svg></span>
-  <button class="celestial-btn" type="button" aria-label={t.header.skySun} data-sky-sun={t.header.skySun} data-sky-moon={t.header.skyMoon}>
+  <button class="celestial-btn" type="button" aria-label={t.header.skyToNight} title={t.header.skyToNight} data-sky-to-night={t.header.skyToNight} data-sky-to-day={t.header.skyToDay}>
     <span class="celestial" aria-hidden="true"></span>
   </button>
   <Mailbox />
@@ -123,7 +122,7 @@ const signals = [
 <script>
   import { moonSVG } from '../lib/moon-svg';
   // Engraved sky body — the sepia sun by day, the chalk moon at tonight's real
-  // phase by night, riding the header rule like the horizon. The circadian
+  // phase by night, riding the hour ruler like the horizon. The circadian
   // script already sets data-celestial; re-render on load and on every flip.
   (function () {
     var SYNODIC = 29.530588853;
@@ -161,12 +160,36 @@ const signals = [
       var isMoon = document.documentElement.dataset.celestial === 'moon';
       if (isMoon) {
         mount.innerHTML = moonSVG(synodicPhase(), 'hdr');
-        btn.setAttribute('aria-label', btn.dataset.skyMoon || 'moon');
+        // The moon is showing: the click will switch to the day theme.
+        btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
+        btn.setAttribute('title', btn.dataset.skyToDay || 'day');
       } else {
-        mount.innerHTML = '<img src="/bench/identidad/sol.svg" alt="" width="44" height="44">';
-        btn.setAttribute('aria-label', btn.dataset.skySun || 'sun');
+        mount.innerHTML = '<img src="/bench/identidad/sol.svg" alt="" width="34" height="34">';
+        // The sun is showing: the click will switch to the night theme.
+        btn.setAttribute('aria-label', btn.dataset.skyToNight || 'night');
+        btn.setAttribute('title', btn.dataset.skyToNight || 'night');
       }
       drawRuler();
+    }
+
+    // A click switches the theme — letters live in the mailbox now. The sun
+    // switches to slate (night) and the moon to papyrus (day); the choice
+    // rides the palette's own key and function, so the two stay in sync.
+    // Choosing what the circadian clock shows right now drops the key and
+    // returns to circadian, so two clicks come back to the clock.
+    function toggleTheme() {
+      var root = document.documentElement;
+      var target = root.dataset.celestial === 'moon' ? 'day' : 'night';
+      try { localStorage.removeItem('univerlab-theme'); } catch (e) {}
+      if (window.calc) window.calc();
+      var clock = root.dataset.celestial === 'moon' ? 'night' : 'day';
+      if (clock === target) {
+        if (window.applyTheme) window.applyTheme('circadian');
+      } else {
+        try { localStorage.setItem('univerlab-theme', target); } catch (e) {}
+        if (window.applyTheme) window.applyTheme(target);
+      }
+      renderCelestial();
     }
 
     renderCelestial();
@@ -178,6 +201,74 @@ const signals = [
         }
       }
     }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-celestial'] });
+
+    // Drag-to-scrub: hold and drag the celestial icon to preview time.
+    // Only active in circadian mode. A short click still switches the theme.
+    var dragging = false;
+    var startX = 0;
+    var moved = false;
+    var DRAG_THRESHOLD = 6;
+
+    // Create scrub tooltip.
+    var scrubTip = document.createElement('div');
+    scrubTip.className = 'scrub-tip';
+    scrubTip.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#e0e0e0;padding:6px 14px;border-radius:6px;font:12px/1.4 monospace;pointer-events:none;z-index:999;display:none;white-space:pre;text-align:center;';
+    document.body.appendChild(scrubTip);
+
+    function showTip(info) {
+      if (!info) return;
+      var lines = [info.hour + 'h'];
+      info.palettes.forEach(function(p) { lines.push(p.name + ' ' + p.pct + '%'); });
+      scrubTip.textContent = lines.join('  ');
+      scrubTip.style.display = 'block';
+    }
+    function hideTip() { scrubTip.style.display = 'none'; }
+
+    function onPointerDown(e) {
+      dragging = true;
+      moved = false;
+      if (localStorage.getItem('univerlab-theme') || !window.scrubTime) return;
+      startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      btn.classList.add('scrubbing');
+      e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+      if (!dragging) return;
+      var x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      var dx = x - startX;
+      if (Math.abs(dx) > DRAG_THRESHOLD) moved = true;
+      if (!moved) return;
+      var header = btn.closest('header');
+      var rect = header ? header.getBoundingClientRect() : btn.getBoundingClientRect();
+      var fraction = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+      var hour = fraction * 24;
+      window.scrubTime(hour);
+      showTip(window.__scrubInfo);
+    }
+
+    function onPointerUp() {
+      if (!dragging) return;
+      dragging = false;
+      btn.classList.remove('scrubbing');
+      if (moved) {
+        moved = false;
+        hideTip();
+        if (window.resetScrub) window.resetScrub();
+        return;
+      }
+      hideTip();
+      toggleTheme();
+    }
+
+    btn.addEventListener('mousedown', onPointerDown);
+    btn.addEventListener('touchstart', onPointerDown, { passive: false });
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchend', onPointerUp);
+    // Keyboard: Enter/Space on the focused body fires a click with detail 0.
+    btn.addEventListener('click', function (e) { if (!e.detail) toggleTheme(); });
   })();
 </script>
 
@@ -233,105 +324,6 @@ const signals = [
   }
 </script>
 
-<script>
-  // The sky body opens today's letter from the past. The mail system owns the
-  // letter (the mailbox at the rule's end); the header only forwards a click
-  // that was not a drag — the drag stays the scrub over the day. The science
-  // keyword lists the letter is filtered by live in ../lib/science-filter and
-  // are imported here so the day's pool is warmed off the critical path.
-  import {
-    readOtdCache,
-    fetchPool,
-  } from '../lib/science-filter';
-
-  (function () {
-    var btn = document.querySelector('.celestial-btn');
-    if (!btn) return;
-
-    var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
-
-    // Warm today's filtered science pool once, in the background, so the first
-    // letter arrives with no network wait. High timeout keeps it off FCP/LCP.
-    if (!readOtdCache(lang)) {
-      var warm = function () { fetchPool(fetch, lang).catch(function () {}); };
-      if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 5000 });
-      else setTimeout(warm, 4000);
-    }
-
-    function openMail() {
-      if (window.univerlabOpenMail) window.univerlabOpenMail(btn);
-    }
-
-    // Drag-to-scrub: hold and drag the celestial icon to preview time.
-    // Only active in circadian mode. Short click still opens the letter.
-    var dragging = false;
-    var startX = 0;
-    var moved = false;
-    var DRAG_THRESHOLD = 6;
-
-    // Create scrub tooltip.
-    var scrubTip = document.createElement('div');
-    scrubTip.className = 'scrub-tip';
-    scrubTip.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#e0e0e0;padding:6px 14px;border-radius:6px;font:12px/1.4 monospace;pointer-events:none;z-index:999;display:none;white-space:pre;text-align:center;';
-    document.body.appendChild(scrubTip);
-
-    function showTip(info) {
-      if (!info) return;
-      var lines = [info.hour + 'h'];
-      info.palettes.forEach(function(p) { lines.push(p.name + ' ' + p.pct + '%'); });
-      scrubTip.textContent = lines.join('  ');
-      scrubTip.style.display = 'block';
-    }
-    function hideTip() { scrubTip.style.display = 'none'; }
-
-    function onPointerDown(e) {
-      dragging = true;
-      moved = false;
-      if (localStorage.getItem('univerlab-theme') || !window.scrubTime) return;
-      startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-      btn.classList.add('scrubbing');
-      e.preventDefault();
-    }
-
-    function onPointerMove(e) {
-      if (!dragging) return;
-      var x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-      var dx = x - startX;
-      if (Math.abs(dx) > DRAG_THRESHOLD) moved = true;
-      if (!moved) return;
-      var header = btn.closest('header');
-      var rect = header ? header.getBoundingClientRect() : btn.getBoundingClientRect();
-      var fraction = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
-      var hour = fraction * 24;
-      window.scrubTime(hour);
-      showTip(window.__scrubInfo);
-    }
-
-    function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-      btn.classList.remove('scrubbing');
-      if (moved) {
-        moved = false;
-        hideTip();
-        if (window.resetScrub) window.resetScrub();
-        return;
-      }
-      hideTip();
-      openMail();
-    }
-
-    btn.addEventListener('mousedown', onPointerDown);
-    btn.addEventListener('touchstart', onPointerDown, { passive: false });
-    document.addEventListener('mousemove', onPointerMove);
-    document.addEventListener('touchmove', onPointerMove, { passive: false });
-    document.addEventListener('mouseup', onPointerUp);
-    document.addEventListener('touchend', onPointerUp);
-    // Keyboard: Enter/Space on the focused body fires a click with detail 0.
-    btn.addEventListener('click', function (e) { if (!e.detail) openMail(); });
-  })();
-</script>
-
 <style>
   /* The header owns the page-corner switch, which is fixed at the viewport's bottom
      right: a stacking context of its own keeps it painted above the footer's ground
@@ -343,7 +335,10 @@ const signals = [
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding-block: 1.1rem;
+    /* No more hr.rule at the foot: the bar's own padding-bottom
+       carries the 1px so the header keeps the total height it had. */
+    padding-top: 1.1rem;
+    padding-bottom: calc(1.1rem + 1px);
   }
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {
@@ -459,14 +454,15 @@ const signals = [
   }
 
   /* Engraved sun by day, engraved moon at tonight's phase by night — the body
-     rides the header rule like the horizon. The button is a 44px hit area and
-     the body is 44px, centred on the rule; the track ends before the mailbox
-     at the rule's right end, so the position is clamped off it. Fixed
-     colours, never themed: sepia sun, chalk moon. */
+     rides the hour ruler (the header's only line) like the horizon, centred
+     on its baseline. The button keeps a 44px hit area for touch while the
+     body is 34px; the track ends before the mailbox at the ruler's right
+     end, so the position is clamped off it. Fixed colours, never themed:
+     sepia sun, chalk moon. */
   .celestial-btn {
     position: absolute;
-    bottom: 0;
-    left: clamp(22px, var(--sun-pos, 50%), calc(100% - 98px));
+    bottom: 4px;
+    left: clamp(22px, var(--sun-pos, 50%), calc(100% - 71px));
     transform: translate(-50%, 50%);
     width: 44px;
     height: 44px;
@@ -491,8 +487,8 @@ const signals = [
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     pointer-events: none;
   }
@@ -512,12 +508,13 @@ const signals = [
   html[data-celestial='moon'] .celestial :global(svg) {
     filter: drop-shadow(0 0 6px #ecebe455);
   }
-  /* Hour ruler the sky body rides: the 12 hours of the current phase engraved
-     along the rule. It lives only here, never repeated in the page. */
+  /* Hour ruler the sky body rides — the header's only line, spanning to the
+     mailbox at its right end. The 12 hours of the current phase are engraved
+     along it. It lives only here, never repeated in the page. */
   .sky-ruler {
     position: absolute;
     left: 0;
-    right: 76px;
+    right: 0;
     bottom: 0;
     height: 16px;
     color: var(--line);

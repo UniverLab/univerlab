@@ -24,8 +24,8 @@ export const es: Dict = {
     roadmap: 'Hoja de ruta',
   },
   header: {
-    skySun: 'El sol de hoy: una efeméride de ciencia',
-    skyMoon: 'La luna de hoy: una efeméride de ciencia',
+    skyToNight: 'Cambiar al tema de noche',
+    skyToDay: 'Cambiar al tema de día',
     switchTo: 'Cambiar a',
     langLabel: { en: 'English', es: 'Español' },
     // El buzón al final de la regla del encabezado y las cartas que reparte.
