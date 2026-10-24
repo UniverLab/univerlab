@@ -106,6 +106,12 @@ describe('Docs on the lab ground', () => {
     expect(LAYOUT).toMatch(/class="doc-head"/);
     expect(LAYOUT).toContain('t.common.docsHome');
     expect(LAYOUT).toMatch(/--doc-essence:\s*\$\{exp\.essenceHex\}/);
+    // The breadcrumb is a <nav> too. A bare `nav { flex-direction: column;
+    // border-left }` — the sidebar's rule — matched it and stacked every
+    // crumb on its own line behind a stray vertical rule, so the sidebar's
+    // nav rules must stay scoped to `aside`.
+    expect(LAYOUT).toMatch(/aside nav \{\s*display: flex;\s*flex-direction: column;/);
+    expect(LAYOUT).not.toMatch(/\n\s{2}nav\s*\{/);
   });
 
   it('paints h2, h3 and links with --doc-accent, body text with --ink', () => {

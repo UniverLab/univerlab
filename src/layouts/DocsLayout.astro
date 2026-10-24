@@ -109,7 +109,9 @@ const docsJsonLd = buildDocsJsonLd({
   @media (max-width: 52rem) { aside { position: static; } }
   .back { text-decoration: none; color: var(--accent); margin-bottom: 0.8rem; }
   .head { color: var(--ink-faint); margin-bottom: 0.3rem; }
-  nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+  /* `aside nav`, never bare `nav`: the doc's breadcrumb below is also a <nav>
+     and would inherit the sidebar's column direction and its left rule. */
+  aside nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
   .item {
     text-decoration: none; color: var(--ink-dim); font-size: 0.92rem;
     padding: 0.32rem 0 0.32rem 0.9rem; margin-left: -1px;
