@@ -146,8 +146,8 @@ const rows: (keyof typeof ROWS)[] = ['definition', 'axiom', 'proposition', 'coro
     }
   }
   /* The aria-live region must stay in the accessibility tree but invisible.
-     `.visually-hidden` is scoped per component (Manifesto.astro carries its own
-     copy for the cosmos caption) — without this rule the announcement would
+     `.visually-hidden` is scoped per component (Manifesto.astro dropped its
+     copy with the cosmos caption) — without this rule the announcement would
      render as visible body text under the map. */
   .visually-hidden {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
