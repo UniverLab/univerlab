@@ -3,12 +3,15 @@
  *
  * Regression: `src/views/Manifesto.astro` used to reserve its rail gutter
  * with `:global(main#main) { padding-inline-start: 20rem }` inside a
- * min-width:1200px query. Vite emits that rule into `Manifesto.*.css`, a
- * chunk every page links (shared Postcard/Watermark imports), so `/`,
- * `/experiments/` and `/canopy/` were all pushed 320px right at 1200px+.
+ * min-width:1200px query. That rule landed in `Manifesto.*.css`, and every
+ * page links every CSS chunk: `src/i18n/page-glob.ts` globs every
+ * `src/pages` route module, and `hasCounterpart()` (called by BaseLayout and
+ * Header on every page) makes each page's module graph reach every page —
+ * and therefore every view's stylesheet. So `/`,
+ * `/experiments/` and `/canopy/` were all pushed 20rem right at 1200px+.
  * The gutter now lives on the manifesto's own scoped `.manifesto` wrapper,
  * which Astro hashes — it can never match another page even though the
- * chunk is still shared.
+ * chunks are still linked everywhere.
  *
  * Contract, read over the built HTML/CSS in dist/ (CI builds before it
  * tests, so dist/ is present):
