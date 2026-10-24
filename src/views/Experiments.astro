@@ -50,6 +50,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
         const statusName = enc.titleStatus[status as keyof typeof enc.titleStatus] ?? status;
         const installCmd = entry.install;
         const linkLabel = entry.archived ? enc.use.archive : enc.use.plate;
+        const repo = exp.github;
         return (
           <article class="entry" id={entry.anchor} data-status={status}>
             <div class="plate">
@@ -88,8 +89,16 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
                 {entry.id === 'astro-denoise' && (
                   <span>{enc.use.research}</span>
                 )}
-                <a href={entry.href}>{linkLabel}</a>
               </div>
+              <p class="links">
+                <a href={entry.href}>{linkLabel}</a>
+                {repo && (
+                  <>
+                    <span class="links-sep" aria-hidden="true">{' · '}</span>
+                    <a href={repo} target="_blank" rel="noopener noreferrer">{enc.use.repo}</a>
+                  </>
+                )}
+              </p>
             </div>
           </article>
         );
@@ -171,6 +180,9 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .use { min-width: 0; max-width: 100%; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-family: var(--font-mono); font-size: 12.5px; }
   .use code { background: color-mix(in srgb, var(--bench-line) 7%, transparent); padding: 2px 6px; overflow-wrap: anywhere; }
   .use a { color: var(--bench-copper); text-underline-offset: 3px; }
+  .links { margin: 4px 0 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; max-width: 100%; overflow-wrap: anywhere; }
+  .links a { color: var(--bench-copper); text-underline-offset: 3px; }
+  .links-sep { color: var(--bench-line-soft); }
   .chip-wrap { display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
   /* Wide enough for the whole command once the entry body has room; the chip scrolls only
      under 520 px, where one line is the only way to keep the row intact. */

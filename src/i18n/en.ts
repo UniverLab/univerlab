@@ -1120,6 +1120,7 @@ export const en = {
       copied: 'Copied',
       plate: 'See the plate →',
       archive: 'See in the archive →',
+      repo: 'Repository ↗',
       quorum: 'open the table → quorum.univerlab.org',
       research: 'research state',
     },

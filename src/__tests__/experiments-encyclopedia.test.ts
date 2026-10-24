@@ -5,7 +5,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { experiments, isArchived } from '../lib/experiments';
+import { experiments, byId, isArchived } from '../lib/experiments';
 import { entryModels } from '../lib/experiment-entries';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -129,5 +129,38 @@ describe('experiments encyclopedia plate', () => {
       /@media \(max-width: 40rem\) \{\s*\.entry \{ grid-template-columns: 1fr; gap: 14px; \}/,
     );
     expect(VIEW).toContain('.num-frame { height: 200px; }');
+  });
+});
+
+describe('experiments encyclopedia links under each entry', () => {
+  it('renders a links block holding the plate link then the repo link', () => {
+    const blocks = VIEW.match(/<p class="links">[\s\S]*?<\/p>/);
+    expect(blocks).toBeTruthy();
+    const block = blocks![0];
+    expect(block).toContain('href={entry.href}');
+    expect(block).toContain('{linkLabel}');
+    // Plate first, repo second.
+    expect(block.indexOf('entry.href')).toBeLessThan(block.indexOf('href={repo}'));
+    expect(block).toMatch(/href=\{repo\}.*target="_blank".*rel="noopener noreferrer"/s);
+    expect(block).toContain('enc.use.repo');
+    expect(block).toContain('aria-hidden="true"');
+  });
+
+  it('keeps the plate link out of the .use row', () => {
+    const useBlock = VIEW.match(/<div class="use">[\s\S]*?<\/div>/);
+    expect(useBlock).toBeTruthy();
+    expect(useBlock![0]).not.toContain('entry.href');
+  });
+
+  it('gives every entry a github URL, archived entries included', () => {
+    for (const e of entries) {
+      expect(byId(e.id).github).toMatch(/^https:\/\/github\.com\/UniverLab\//);
+    }
+    expect(byId('cadspec').github).toMatch(/^https:\/\/github\.com\/UniverLab\//);
+  });
+
+  it('labels the repository link in both languages', () => {
+    expect(en.encyclopedia.use.repo).toBe('Repository ↗');
+    expect(es.encyclopedia.use.repo).toBe('Repositorio ↗');
   });
 });
