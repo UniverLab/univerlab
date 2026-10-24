@@ -39,6 +39,7 @@ const roman = (n: number): string => {
 };
 ---
 <BaseLayout title={m.metaTitle} description={m.description} bg={false} circadian>
+  <div class="manifesto">
   <Watermark kind="celestial" />
   <section class="wrap opening">
     <div class="page-open">
@@ -295,6 +296,7 @@ const roman = (n: number): string => {
     <p class="note">{m.note}</p>
     <p class="label">{m.why}</p>
   </section>
+  </div>
 </BaseLayout>
 
 <style>
@@ -573,7 +575,7 @@ const roman = (n: number): string => {
   /* At/above 1200px: reserve the left gutter so the fixed rail can never
      overlap the centred reading column, then show the rail inside it. */
   @media (min-width: 1200px) {
-    :global(main#main) { padding-inline-start: 20rem; }
+    .manifesto { padding-inline-start: 20rem; }
     .rail { display: block; }
   }
   @media (prefers-reduced-motion: reduce) {

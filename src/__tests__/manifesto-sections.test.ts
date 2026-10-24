@@ -106,7 +106,10 @@ describe('MAN2 manifesto sections', () => {
   it('shows the rail only at 1200px and above, inside a reserved gutter', () => {
     expect(src).toMatch(/@media\s*\(min-width:\s*1200px\)/);
     expect(src).toMatch(/@media\s*\(max-width:\s*1199/);
-    expect(src).toMatch(/:global\(main#main\)\s*\{\s*padding-inline-start/);
+    // The gutter lives on the manifesto's own scoped wrapper — never on
+    // main#main, whose global selector used to leak onto every page.
+    expect(src).toMatch(/\.manifesto\s*\{\s*padding-inline-start:\s*20rem/);
+    expect(src).not.toMatch(/:global\(main#main\)/);
   });
 
   it('marks the current link with aria-current="true" and drops the transition under reduced motion', () => {
