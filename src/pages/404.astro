@@ -48,7 +48,9 @@ const t = useTranslations(lang);
   .ascii {
     font-size: 0.55rem;
     line-height: 1.1;
-    color: #fff;
+    /* Decorative star-map (aria-hidden): a theme token, so it reads on the
+       parchment by day and on the slate by night. */
+    color: var(--ink-faint);
     margin: 0;
     max-width: 100%;
   }
