@@ -224,6 +224,9 @@
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+  /* The × sits top-right over the letter: keep the row's right end (and a
+     short title under it) clear of it. */
+  padding-right: 22px;
 }
 .mail-pop .letter h2 {
   font-family: var(--font-serif);
@@ -231,6 +234,9 @@
   font-size: 21px;
   line-height: 1.15;
   margin: 2px 0 0;
+  /* Same clearance as the meta row above: a short title must not slide
+     under the ×. */
+  padding-right: 22px;
 }
 .mail-pop .letter p {
   font-family: var(--font-mono);
