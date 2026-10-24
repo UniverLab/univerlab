@@ -26,7 +26,8 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/feed.astro', 'feed', 't.postcards.feed'],
   ['src/pages/es/feed.astro', 'feed', 't.postcards.feed'],
   ['src/views/Manifesto.astro', 'manifesto', 't.postcards.manifesto'],
-  ['src/pages/404.astro', 'not-found', "t.postcards['not-found']"],
+  // The 404 dropped its postcard: the kraken chart is its opening now (see
+  // not-found-kraken.test.ts). The postcard key stays for the asset history.
   ['src/pages/roadmap.astro', 'roadmap', 'en.postcards.roadmap'],
   ['src/pages/status.astro', 'status', 'en.postcards.status'],
   ['src/pages/today.astro', 'today', 't.postcards.today'],
@@ -82,8 +83,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 14 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(14);
+  it('all 13 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(13);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -144,7 +145,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(10);
+    expect(others).toHaveLength(9);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }

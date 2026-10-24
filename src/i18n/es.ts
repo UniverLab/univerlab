@@ -1001,6 +1001,17 @@ export const es: Dict = {
     status: 'Un escritorio grabado con un teletipo bajo una campana de cristal, un libro abierto y una lámpara de latón',
     today: 'Una esfera armilar grabada junto a un reloj de sol de piedra sobre un suelo empedrado',
   },
+  // El 404: el borde del mundo conocido — la carta del kraken, su advertencia y
+  // las dos vuelas. El kicker y el título latino son iguales en cada idioma;
+  // viven aquí para que ninguna cadena visible quede fuera del diccionario.
+  notFound: {
+    kicker: '404 · terra incognita',
+    title: 'Hic sunt dracones',
+    line: 'Esta página no está en ningún mapa. Más allá de aquí, solo monstruos.',
+    alt: 'Una carta náutica antigua grabada que se desvanece en papel en blanco, donde un kraken gigante sale de las olas',
+    back: '← Volver a la sala',
+    encyclopedia: 'La enciclopedia →',
+  },
   roadmap: {
     lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },
     hold: 'en espera',

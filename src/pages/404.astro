@@ -1,41 +1,46 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Postcard from '../components/Postcard.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+const srcset = (phase: 'day' | 'night', ext: 'avif' | 'webp') =>
+  `/bench/mapa/kraken-${phase}-1600.${ext} 1600w, /bench/mapa/kraken-${phase}-800.${ext} 800w`;
+const sizes = '(max-width: 64rem) 100vw, 64rem';
 ---
 <BaseLayout title="404 — UniverLab" bg={false} circadian markdownTwin={false}>
   <section class="wrap notfound">
-    <div class="page-open">
-      <div class="page-open-text">
-        <p class="label code">404</p>
-        <h1>This page drifted off the map.</h1>
-        <p class="lede">The page you’re looking for doesn’t exist — it may have moved, or never been written.</p>
-      </div>
-      <Postcard page="not-found" alt={t.postcards['not-found']} />
-    </div>
-    <pre class="ascii" aria-hidden="true">
-                                  
-		 o#'9MMHb':'-,o,
-	      .oH":HH$' "' ' -*R&o,
-	     dMMM*""'`'      .oM"HM?.
-	   ,MMM'          "HLbd ?&H\
-	  .:MH ."          ` MM  MM&b
-	 . "*H    -        &MMMMMMMMMH:
-         .    dboo        MMMMMMMMMMMM.       unknown
-	 .   dMMMMMMb      *MMMMMMMMMP.
-	 .    MMMMMMMP        *MMMMMP .
-	      `#MMMMM           MM6P ,
-	  '    `MMMP"           HM*`,
-	   '    :MM             .- ,
-	    '.   `#?..  .       ..'
-	       -.   .         .-
-		 ''-.oo,oo.-''
-    </pre>
+    <p class="kicker mono">{t.notFound.kicker}</p>
+    <!-- The edge of the known world: both charts ship, CSS picks by theme the
+         same way the postcards do, so a theme flip never repaints blank. -->
+    <picture class="kraken kraken-day">
+      <source srcset={srcset('day', 'avif')} sizes={sizes} type="image/avif" />
+      <source srcset={srcset('day', 'webp')} sizes={sizes} type="image/webp" />
+      <img
+        src="/bench/mapa/kraken-day-800.webp"
+        alt={t.notFound.alt}
+        width="1600"
+        height="900"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
+    <picture class="kraken kraken-night">
+      <source srcset={srcset('night', 'avif')} sizes={sizes} type="image/avif" />
+      <source srcset={srcset('night', 'webp')} sizes={sizes} type="image/webp" />
+      <img
+        src="/bench/mapa/kraken-night-800.webp"
+        alt={t.notFound.alt}
+        width="1600"
+        height="900"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
+    <h1 lang="la">{t.notFound.title}</h1>
+    <p class="lede">{t.notFound.line}</p>
     <p class="links">
-      <a href={localizePath('/', lang)}>← UniverLab</a>
-      <a href={localizePath('/experiments', lang)}>{t.nav.experiments}</a>
+      <a href={localizePath('/', lang)}>{t.notFound.back}</a>
+      <a href={localizePath('/experiments', lang)}>{t.notFound.encyclopedia}</a>
     </p>
   </section>
 </BaseLayout>
@@ -43,21 +48,44 @@ const t = useTranslations(lang);
 <style>
   .notfound {
     padding-block: clamp(5rem, 18vh, 10rem);
-    display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem;
+    display: flex; flex-direction: column; align-items: center; gap: 1.1rem;
+    text-align: center;
   }
-  .ascii {
-    font-size: 0.55rem;
-    line-height: 1.1;
-    /* Decorative star-map (aria-hidden): a theme token, so it reads on the
-       parchment by day and on the slate by night. */
-    color: var(--ink-faint);
+  .kicker {
     margin: 0;
-    max-width: 100%;
+    color: var(--accent);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
   }
-  .code { color: var(--accent); }
-  .notfound h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); max-width: 18ch; }
+  .kraken {
+    display: block;
+    width: 100%;
+    max-width: 64rem;
+    margin: 0;
+  }
+  .kraken img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+  /* By day the chart's paper melts into the parchment ground. */
+  .kraken-day img { mix-blend-mode: multiply; }
+  html[data-bench-theme='night'] .kraken-day { display: none; }
+  html:not([data-bench-theme='night']) .kraken-night { display: none; }
+  .notfound h1 {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(2.2rem, 6vw, 3rem);
+    margin: 0;
+  }
   .lede { color: var(--ink-dim); max-width: 48ch; margin: 0; }
-  .links { display: flex; gap: 1.6rem; margin-top: 0.6rem; }
+  .links { display: flex; gap: 1.6rem; margin-top: 0.6rem; flex-wrap: wrap; justify-content: center; }
   .links a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
   .links a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 40rem) {
+    .notfound { overflow-x: clip; }
+    .notfound h1 { font-size: 2.2rem; }
+  }
 </style>
