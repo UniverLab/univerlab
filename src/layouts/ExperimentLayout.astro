@@ -3,6 +3,8 @@ import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
+import Machine from '../components/Machine.astro';
+import { machineInk } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
@@ -82,7 +84,7 @@ const ogImage = `/og/${id}.png`;
       <a href={localizePath('/', lang)}>{t.labStrip.lab}</a>
       <span>{exp.number}</span>
     </p>
-    <div class="hero-frame">
+    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
@@ -137,7 +139,7 @@ const ogImage = `/og/${id}.png`;
       )}
     </section>
     {exp.status !== 'archived' && (
-      <video class="hero-machine" src={`/bench/clips/${id}.mp4`} poster={`/bench/clips/${id}.webp`} muted loop playsinline preload="none" aria-hidden="true"></video>
+      <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
     )}
     </div>
 
@@ -314,39 +316,25 @@ const ogImage = `/og/${id}.png`;
   .install .cmd-line { color: #ecebe4; }
   .install .bench-link, .install .bench-text { color: #ecebe4; text-decoration: none; }
   .install .bench-link:hover { color: var(--essence); }
-  /* The clip's paper is keyed out before the blend: contrast pushes the cream
-     to black (screen adds nothing) on dark surfaces, and to white (multiply
-     ignores it) on light ones. Without it the cream shows as a tile. */
-  .hero-machine {
-    height: 110px;
-    width: auto;
-    filter: invert(100%) hue-rotate(180deg) contrast(2.5);
-    mix-blend-mode: screen;
-  }
+  /* The machine is an engraved plate with a transparent ground, already
+     inked for its surface: no recolouring, it shows as engraved. */
   @media (min-width: 40rem) {
-    .hero-machine {
+    :global(.hero-machine) {
       position: absolute;
       right: var(--page-gutter);
       bottom: 1.5rem;
-      height: 180px;
     }
     /* The machine floats in the hero's lower right, under the install bench,
        not over it: the hero keeps the room the machine needs at its foot. */
-    .hero-frame:has(> .hero-machine) { padding-bottom: calc(180px + 2.5rem); }
+    .hero-frame.has-machine { padding-bottom: calc(240px + 2.5rem); }
   }
+  /* On phones the plate is static under the hero; Machine.astro centres it
+     (display: block, width: fit-content, margin-inline: auto). */
   @media (max-width: 39.999rem) {
-    .hero-machine {
+    :global(.hero-machine) {
       position: static;
-      height: 110px;
+      margin-bottom: 1.5rem;
     }
-  }
-  :global(html[data-surface='paper'] .hero-machine),
-  :global(html[data-surface='blueprint'] .hero-machine),
-  :global(html[data-surface='studio'] .hero-machine),
-  :global(html[data-surface='pastel'] .hero-machine),
-  :global(html[data-surface='quorum'][data-bench-theme='day'] .hero-machine) {
-    filter: contrast(1.8);
-    mix-blend-mode: multiply;
   }
   .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .os-tabs { display: inline-flex; gap: 0.9rem; }
@@ -501,24 +489,6 @@ const ogImage = `/og/${id}.png`;
 </style>
 
 <script>
-  // Floating machine: play when hero visible.
-  document.querySelectorAll<HTMLVideoElement>('video.hero-machine').forEach((v) => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // Watch the hero, not the clip: the machine plays while its hero is on screen.
-    const hero = v.closest('.hero-frame') ?? v;
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          v.preload = 'auto';
-          v.play().catch(() => {});
-        } else {
-          v.pause();
-        }
-      }
-    });
-    io.observe(hero);
-  });
-
   // Install block: pick the platform tab (defaulting to the detected OS) and
   // copy whichever command is currently shown.
   document.querySelectorAll<HTMLElement>('[data-install]').forEach((box) => {

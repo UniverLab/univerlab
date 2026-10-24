@@ -67,40 +67,49 @@ describe('experiment frame: terminal bench', () => {
 });
 
 describe('experiment frame: floating machine', () => {
-  it('lazy-loads the lantern clip only when the hero is visible', () => {
+  it('renders the engraved plate through the Machine component', () => {
+    expect(layout).toContain('<Machine');
+    expect(layout).toContain('machineInk(exp)');
     expect(layout).toContain('class="hero-machine"');
-    expect(layout).toContain('preload="none"');
-    expect(layout).toContain('src={`/bench/clips/${id}.mp4`}');
-    expect(layout).toContain("v.preload = 'auto'");
-    expect(layout).toContain("io.observe(hero)");
-    expect(layout).toContain('new IntersectionObserver');
+    expect(layout).toContain('height="240px"');
   });
 
-  it('stays a poster under reduced motion and renders no clip for archived pages', () => {
-    expect(layout).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+  it('renders no plate for archived pages', () => {
     expect(layout).toContain("exp.status !== 'archived'");
   });
 
-  it('uses multiply over light surfaces and screen with inversion over dark ones', () => {
-    expect(layout).toContain('mix-blend-mode: multiply');
-    expect(layout).toContain('mix-blend-mode: screen');
-    expect(layout).toContain('filter: invert(100%) hue-rotate(180deg)');
-    // Quorum is the only surface whose day phase counts as light.
-    expect(layout).toContain("html[data-surface='quorum'][data-bench-theme='day'] .hero-machine");
-    expect(layout).not.toContain(":root[data-bench-theme='day'] .hero-machine");
+  it('drops the clip, its recolouring and its play-on-visible script', () => {
+    expect(layout).not.toContain('<video');
+    expect(layout).not.toContain('/bench/clips/${id}.mp4');
+    expect(layout).not.toContain('mix-blend-mode');
+    expect(layout).not.toContain('invert(100%)');
+    expect(layout).not.toContain('new IntersectionObserver');
+    expect(layout).not.toContain('io.observe(hero)');
+    expect(layout).not.toContain('v.preload');
   });
 
-  it('sits beside the hero, not inside it, so the blend sees the live background', () => {
-    // A view-transition-name makes the hero an isolated group: a child blend
-    // would mix with the hero's transparent backdrop and show as a tile.
-    const frame = layout.indexOf('<div class="hero-frame">');
+  it('sits beside the hero, not inside it, with room kept at the frame foot', () => {
+    // The hero carries a view-transition-name, making it an isolated group:
+    // the plate stays a sibling so it never blends against a transparent hero.
+    const frame = layout.indexOf('hero-frame');
     const section = layout.indexOf('<section class="wrap hero"');
     const sectionEnd = layout.indexOf('</section>', section);
-    const machine = layout.indexOf('<video class="hero-machine"');
+    const machine = layout.indexOf('<Machine');
     expect(frame).toBeGreaterThan(-1);
     expect(section).toBeGreaterThan(frame);
     expect(machine).toBeGreaterThan(sectionEnd);
     expect(layout).toContain('.hero-frame { position: relative; }');
+    expect(layout).toContain('has-machine');
+    expect(layout).toContain('padding-bottom: calc(240px + 2.5rem)');
+  });
+
+  it('floats the plate lower-right on wide screens, static on phones', () => {
+    expect(layout).toContain(':global(.hero-machine)');
+    expect(layout).toContain('right: var(--page-gutter)');
+    expect(layout).toContain('bottom: 1.5rem');
+    const phone = layout.slice(layout.indexOf('@media (max-width: 39.999rem)'));
+    expect(phone).toContain('position: static');
+    expect(phone).toContain('margin-bottom: 1.5rem');
   });
 });
 
