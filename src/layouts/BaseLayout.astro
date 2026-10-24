@@ -328,6 +328,13 @@ https://github.com/UniverLab
           }
         }
         calc();
+        // Publish it: on pages without the circadian script (which defines no
+        // window.applyTheme) this plain calc is what re-reads
+        // localStorage['univerlab-theme'] and flips data-celestial and
+        // data-bench-theme, so a header theme click lands at once. The
+        // circadian script below overwrites window.calc with its palette calc
+        // exactly as before, so circadian pages behave as they always did.
+        window.calc = calc;
         setInterval(calc, 60000);
         document.addEventListener('visibilitychange', function () {
           if (!document.hidden) calc();
@@ -566,20 +573,22 @@ https://github.com/UniverLab
             window.location.href = pick;
           }},
           { cmd: '/fact', label: 'Today in science', action: function () {
-            function triggerCelestial() {
-              var btn = document.querySelector('.celestial-btn');
-              if (!btn) return;
-              btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-              btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            // The letter of the day belongs to the mailbox now — the sky body
+            // switched to the theme — so /fact asks the mailbox for it,
+            // anchored at the mailbox, the same open the box's own click does.
+            function openTodayLetter() {
+              if (window.univerlabOpenMail) { window.univerlabOpenMail(); return; }
+              var box = document.querySelector('.mailbox');
+              if (box) box.click();
             }
             if (window.scrollY < 10) {
-              triggerCelestial();
+              openTodayLetter();
             } else {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               var checkScroll = function() {
                 setTimeout(function() {
                   if (window.scrollY < 10) {
-                    triggerCelestial();
+                    openTodayLetter();
                   } else {
                     checkScroll();
                   }
@@ -599,7 +608,7 @@ https://github.com/UniverLab
                 'Type <kbd>/lang</kbd> to switch between English and Spanish.',
                 'Type <kbd>/theme</kbd> to pick Circadian, Papyrus or Slate.',
                 'The Mission Log tracks every experiment in real time.',
-                'Click the sun or moon for a science fact.',
+                'Click the sun or moon to switch the theme.',
                 'Type <kbd>/find</kbd> to search within the current page.',
                 'Every page has a keyboard shortcut — type <kbd>/</kbd> to discover them.',
                 'The Archive holds experiments that didn\'t make it to production.',
@@ -613,7 +622,7 @@ https://github.com/UniverLab
                 'Escribe <kbd>/lang</kbd> para cambiar entre inglés y español.',
                 'Escribe <kbd>/theme</kbd> para elegir Circadian, Papyrus o Slate.',
                 'El Mission Log registra cada experimento en tiempo real.',
-                'Haz clic en el sol o la luna para un dato científico.',
+                'Haz clic en el sol o la luna para cambiar el tema.',
                 'Escribe <kbd>/find</kbd> para buscar en la página actual.',
                 'Cada página tiene un atajo de teclado — escribe <kbd>/</kbd> para descubrirlos.',
                 'El Archivo contiene experimentos que no llegaron a producción.',

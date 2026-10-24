@@ -151,4 +151,14 @@ describe('data-bench-theme follows the celestial body', () => {
     expect(LAYOUT).toContain("root.dataset.benchTheme = isDay ? 'day' : 'night';");
     expect(LAYOUT.indexOf("root.dataset.benchTheme = isDay")).toBeLessThan(LAYOUT.indexOf('{circadian && ('));
   });
+
+  it('exposes that plain calc as window.calc, and the circadian script takes it over', () => {
+    // The header's theme click re-reads univerlab-theme with it on pages that
+    // define no applyTheme (e.g. /texforge), so a click lands at once there;
+    // the circadian IIFE then publishes its own palette calc as before.
+    const expose = LAYOUT.indexOf('window.calc = calc;');
+    expect(expose).toBeGreaterThan(-1);
+    expect(expose).toBeLessThan(LAYOUT.indexOf('{circadian && ('));
+    expect(CIRCADIAN).toContain('window.calc=calc');
+  });
 });

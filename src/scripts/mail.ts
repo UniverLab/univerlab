@@ -288,7 +288,6 @@ export function startMailbox(): void {
     if (!letter) return;
     syncBox();
     opener = from || box;
-    if (celestial) celestial.setAttribute('aria-expanded', 'true');
     box.setAttribute('aria-expanded', 'true');
 
     const me = build(letter);
@@ -499,7 +498,6 @@ export function startMailbox(): void {
     if (!pop) return;
     const me = pop;
     pop = null;
-    if (celestial) celestial.setAttribute('aria-expanded', 'false');
     box.setAttribute('aria-expanded', 'false');
     if (instant || reduced() || typeof me.animate !== 'function') me.remove();
     else {

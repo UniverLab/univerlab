@@ -165,6 +165,20 @@ describe('the catalog card', () => {
     expect(LAYOUT).not.toContain("name:'Blue'");
     expect(LAYOUT).not.toContain("name:'Silver'");
   });
+
+  it('/fact asks the mailbox for today\u2019s letter instead of driving the sky body', () => {
+    const fact = LAYOUT.slice(LAYOUT.indexOf("cmd: '/fact'"), LAYOUT.indexOf("cmd: '/today'"));
+    expect(fact).toContain("label: 'Today in science'");
+    // It no longer fakes mouse events on the celestial button: that click is
+    // the theme toggle now (the header forwards it to toggleTheme), so a
+    // synthetic press would flip the theme instead of opening the letter.
+    expect(fact).not.toContain('.celestial-btn');
+    expect(fact).not.toContain('MouseEvent');
+    // The letter opens through the mailbox's own hook, falling back to the
+    // box's click — the mailbox stays the only door to a letter.
+    expect(fact).toContain('window.univerlabOpenMail');
+    expect(fact).toContain("document.querySelector('.mailbox')");
+  });
 });
 
 describe('the taped slips', () => {
@@ -188,6 +202,12 @@ describe('the taped slips', () => {
   it('the /tip command tapes up a tip slip, one at a time', () => {
     expect(LAYOUT).toContain("slip('tip', msg, 5000)");
     expect(LAYOUT).toContain("querySelectorAll('.slip.' + cls)");
+    // The sun/moon tip names what the click does since the sky body stopped
+    // opening letters — in both languages.
+    expect(LAYOUT).toContain('Click the sun or moon to switch the theme.');
+    expect(LAYOUT).not.toContain('Click the sun or moon for a science fact.');
+    expect(LAYOUT).toContain('Haz clic en el sol o la luna para cambiar el tema.');
+    expect(LAYOUT).not.toContain('para un dato científico.');
   });
 
   it('ghost hints are slips too, with a small drop and a click to dismiss', () => {

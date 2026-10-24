@@ -166,3 +166,16 @@ describe('the science pool warm-up', () => {
     expect(MAIL_SRC).toMatch(/univerlabOpenMail/);
   });
 });
+
+describe('the letter\u2019s open state belongs to the mailbox', () => {
+  it('stops marking the sky body expanded — the celestial button switches themes now', () => {
+    // Since the header dropped openMail (FR2), an aria-expanded written on
+    // .celestial-btn would announce the letter on the theme button. The state
+    // stays on the box that owns the letter.
+    expect(MAIL_SRC).not.toMatch(/celestial\.setAttribute\('aria-expanded'/);
+    expect(MAIL_SRC).toMatch(/box\.setAttribute\('aria-expanded', 'true'\)/);
+    expect(MAIL_SRC).toMatch(/box\.setAttribute\('aria-expanded', 'false'\)/);
+    // The outside-pointer close keeps its guard for the dialog and the box.
+    expect(MAIL_SRC).toMatch(/!pop\.contains\(t\) && !box\.contains\(t\)/);
+  });
+});

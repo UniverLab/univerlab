@@ -160,6 +160,10 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/localStorage\.setItem\('univerlab-theme', target\)/);
     expect(src).toMatch(/window\.applyTheme\('circadian'\)/);
     expect(src).toMatch(/window\.applyTheme\(target\)/);
+    // …and a page with no circadian script (no window.applyTheme, e.g.
+    // /texforge) still applies the click through window.calc, which
+    // BaseLayout exposes on every page (see bench-ground.test).
+    expect(src).toMatch(/else if \(window\.calc\) window\.calc\(\)/);
     expect(src).toMatch(/hideTip\(\);\s*\n\s*toggleTheme\(\);/);
     expect(src).toMatch(/if \(!e\.detail\) toggleTheme\(\)/);
     // Drag-to-scrub survives, still gated to circadian mode.

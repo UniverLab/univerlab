@@ -188,6 +188,10 @@ const signals = [
       } else {
         try { localStorage.setItem('univerlab-theme', target); } catch (e) {}
         if (window.applyTheme) window.applyTheme(target);
+        // Pages without the circadian script (no window.applyTheme — e.g.
+        // /texforge) still honour the click at once: window.calc is the site's
+        // own clock calc, exposed on every page, and it re-reads the key.
+        else if (window.calc) window.calc();
       }
       renderCelestial();
     }
