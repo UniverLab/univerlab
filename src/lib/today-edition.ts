@@ -89,6 +89,20 @@ function byYearAsc(a: Fact, b: Fact): number {
   return parseInt(a.year, 10) - parseInt(b.year, 10);
 }
 
+/** The lead's headline. A person is named by their page; an event has no
+ *  name of its own — its page is a place, a country or a craft ("Boston",
+ *  "República Popular China") — so its own line is the headline. */
+function leadHeadline(lead: Fact): string {
+  const text = lead.text ? lead.text.charAt(0).toUpperCase() + lead.text.slice(1) : '';
+  return lead.kind === 'event' ? text : lead.page || text.slice(0, 72);
+}
+
+/** The lead's body, under the headline. Empty for an event: its one line is
+ *  already the headline, and printing it twice reads as a stutter. */
+function leadBody(lead: Fact): string {
+  return lead.kind === 'event' ? '' : lead.text;
+}
+
 /** The edition's lead: the same letter the mailbox delivers, chosen by the
  *  shared filter from the day's pool. */
 export function todayLead(facts: Fact[], date: Date): Fact | null {
@@ -218,13 +232,14 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   if (lead) {
     const years = yearsOnWay(lead, date);
-    const headline = lead.page || lead.text.slice(0, 72);
+    const headline = leadHeadline(lead);
+    const body = leadBody(lead);
     out +=
       `<article class="lead"><div class="story">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
       (lead.kind !== 'event' ? photoFigure(lead, t, { eager: true, caption: true }) : '') +
-      `<p class="dropcap">${esc(lead.text)}</p>` +
+      (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
         : '') +
@@ -296,8 +311,10 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
 
   if (lead) {
     const years = yearsOnWay(lead, date);
-    const headline = lead.page || lead.text.slice(0, 72);
-    lines.push(`## ${fmt(t.leadKicker, { years })}`, '', `**${headline}**`, '', lead.text);
+    const headline = leadHeadline(lead);
+    const body = leadBody(lead);
+    lines.push(`## ${fmt(t.leadKicker, { years })}`, '', `**${headline}**`);
+    if (body) lines.push('', body);
     if (lead.link) lines.push('', `[${t.readOn}](${lead.link})`);
     if (aside.length) {
       // The page's side column: its own label, so the events heading below

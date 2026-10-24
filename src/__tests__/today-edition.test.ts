@@ -132,11 +132,17 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('<h3>Quorum 1.0.0');
   });
 
-  it('leads with the day’s event: headline, drop-capped text, no photo on an event', () => {
+  it('leads with the day’s event as its own headline, never a page title or a photo', () => {
     expect(html).toContain(`Letter of the day · ${Y - 1928} years on its way`);
-    expect(html).toContain('<h2>Boston</h2>');
-    expect(html).toContain('class="dropcap"');
-    expect(html.match(/class="dropcap"/g)).toHaveLength(1);
+    // The event's line is the headline: the Wikipedia page behind it
+    // ("Boston") is a place, not this story.
+    const story =
+      'Doctors at a Boston hospital switch on a new laboratory respirator to keep a patient breathing.';
+    expect(html).toContain(`<h2>${story}</h2>`);
+    expect(html).not.toContain('<h2>Boston</h2>');
+    // ...and it is printed once, not repeated as the drop-capped body.
+    expect(html.split(story)).toHaveLength(2);
+    expect(html).not.toContain('class="dropcap"');
     // The lead is an event, and events never print photos: its block
     // carries no figure and no caption at all.
     const leadBlock = html.slice(html.indexOf('<article class="lead">'), html.indexOf('</aside>'));
@@ -236,7 +242,14 @@ describe('todayEditionMarkdown', () => {
   it('carries the same lead and columns as text', () => {
     const md = todayEditionMarkdown(feed(), 'en', DATE);
     expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/today\/"\n---\n/);
-    expect(md).toContain('**Boston**'); // the lead: the same event as the mailbox
+    expect(md).toContain(
+      '**Doctors at a Boston hospital switch on a new laboratory respirator to keep a patient breathing.**',
+    ); // the lead: the same event as the mailbox
+    expect(md).not.toContain('**Boston**');
+    // The event's line is the headline and is not printed again as a body.
+    const story =
+      'Doctors at a Boston hospital switch on a new laboratory respirator to keep a patient breathing.';
+    expect(md.split(story)).toHaveLength(2);
     expect(md).toContain('Alfred Nobel'); // the Births column still lists him
     expect(md).toContain('Letters of science arriving today');
     expect(md).toContain(`${FACTS.length} letters from the past · 1 from the lab`);
