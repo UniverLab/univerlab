@@ -14,7 +14,10 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
   {inks.map((which) => {
     const p = plate(id, which);
     const sizes = plateSizes(p);
-    const eager = which === 'day';
+    // A lone plate is the page's hero art: always eager. A theme pair ships
+    // day eager / night lazy like Postcard, and the swap script below corrects
+    // to the live phase on load and on univerlab:themechange.
+    const eager = inks.length === 1 || which === 'day';
     return (
       <picture class:list={['machine-pic', `machine-${which}`]}>
         <source srcset={srcsetFor(id, which, 'avif')} sizes={sizes} type="image/avif" />

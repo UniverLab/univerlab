@@ -68,6 +68,8 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain('alt=""');
     expect(MACHINE).toContain('fetchpriority');
     expect(MACHINE).toMatch(/loading=\{eager \? undefined : 'lazy'\}/);
+    // A lone plate is the hero art: eager even when its ink is night.
+    expect(MACHINE).toMatch(/inks\.length === 1 \|\|/);
   });
 
   it('swaps the inks on the bench theme like Postcard does', () => {
