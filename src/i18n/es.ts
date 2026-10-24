@@ -23,6 +23,10 @@ export const es: Dict = {
     archive: 'Archivo',
     roadmap: 'Hoja de ruta',
   },
+  header: {
+    skySun: 'El sol de hoy: una efeméride de ciencia',
+    skyMoon: 'La luna de hoy: una efeméride de ciencia',
+  },
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',

@@ -116,7 +116,8 @@ const signals = [
     </nav>
   </div>
   <hr class="rule" />
-  <button class="celestial-btn" type="button" aria-label="Today in science">
+  <span class="sky-ruler" aria-hidden="true"><svg preserveAspectRatio="none"></svg></span>
+  <button class="celestial-btn" type="button" aria-label={t.header.skySun} data-sky-sun={t.header.skySun} data-sky-moon={t.header.skyMoon}>
     <span class="celestial" aria-hidden="true"></span>
   </button>
   <a
@@ -128,6 +129,67 @@ const signals = [
     id="lang-corner"
   ><span class="lang-corner-text">{languages[other]}</span></a>
 </header>
+
+<script>
+  import { moonSVG } from '../lib/moon-svg';
+  // Engraved sky body — the sepia sun by day, the chalk moon at tonight's real
+  // phase by night, riding the header rule like the horizon. The circadian
+  // script already sets data-celestial; re-render on load and on every flip.
+  (function () {
+    var SYNODIC = 29.530588853;
+    var EPOCH = Date.UTC(2000, 0, 6, 18, 14);
+    var btn = document.querySelector('.celestial-btn');
+    var mount = btn ? btn.querySelector('.celestial') : null;
+    var rulerSvg = document.querySelector('.sky-ruler svg');
+    if (!btn || !mount) return;
+
+    function synodicPhase() {
+      var ph = (((Date.now() - EPOCH) / 86400000) % SYNODIC) / SYNODIC;
+      if (ph < 0) ph += 1;
+      return ph;
+    }
+
+    // Hour ruler: the 12 hours of the current phase (06-18 by day, 18-06 by
+    // night) engraved along the rule — hourly ticks 5px, quarters 2.5px at
+    // half opacity, the 06/12/18 (or 18/00/06) marks 9px.
+    function drawRuler() {
+      if (!rulerSvg) return;
+      var W = 1000;
+      var ticks = '<line x1="0" y1="12" x2="' + W + '" y2="12" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+      for (var m = 0; m <= 48; m++) {
+        var x = ((m / 48) * W).toFixed(1);
+        var hour = m % 4 === 0;
+        var six = m % 24 === 0;
+        var len = six ? 9 : hour ? 5 : 2.5;
+        ticks += '<line x1="' + x + '" y1="12" x2="' + x + '" y2="' + (12 - len) + '" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" opacity="' + (hour ? 0.9 : 0.5) + '"/>';
+      }
+      rulerSvg.setAttribute('viewBox', '0 0 ' + W + ' 16');
+      rulerSvg.innerHTML = ticks;
+    }
+
+    function renderCelestial() {
+      var isMoon = document.documentElement.dataset.celestial === 'moon';
+      if (isMoon) {
+        mount.innerHTML = moonSVG(synodicPhase(), 'hdr');
+        btn.setAttribute('aria-label', btn.dataset.skyMoon || 'moon');
+      } else {
+        mount.innerHTML = '<img src="/bench/identidad/sol.svg" alt="" width="44" height="44">';
+        btn.setAttribute('aria-label', btn.dataset.skySun || 'sun');
+      }
+      drawRuler();
+    }
+
+    renderCelestial();
+    new MutationObserver(function (mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        if (mutations[i].attributeName === 'data-celestial') {
+          renderCelestial();
+          break;
+        }
+      }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-celestial'] });
+  })();
+</script>
 
 <script>
   // Persist an explicit language choice so the pre-paint detector honours it.
@@ -726,23 +788,24 @@ const signals = [
     white-space: nowrap;
   }
 
-  /* Sun by day, moon by night — a celestial body tracing the header rule like
-     the horizon. The button is a 28px hit area; the 8px celestial inside is the
-     visual. On circadian pages the script sets --sun-pos and --celestial-color;
-     on experiment pages the dot sits centered with the page's own accent. */
+  /* Engraved sun by day, engraved moon at tonight's phase by night — the body
+     rides the header rule like the horizon. The button is a 44px hit area and
+     the body is 44px, centred on the rule; the track ends before the mailbox
+     at the rule's right end, so the position is clamped off it. Fixed
+     colours, never themed: sepia sun, chalk moon. */
   .celestial-btn {
     position: absolute;
     bottom: 0;
-    left: var(--sun-pos, 50%);
+    left: clamp(22px, var(--sun-pos, 50%), calc(100% - 98px));
     transform: translate(-50%, 50%);
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     border: 0;
     padding: 0;
     background: transparent;
     cursor: pointer;
     z-index: 1;
-    transition: left 60s linear, opacity 0.4s ease;
+    transition: left 60s linear, opacity 0.4s ease, transform 0.2s ease;
     opacity: 1;
     pointer-events: auto;
   }
@@ -750,47 +813,46 @@ const signals = [
     transition: none;
     cursor: grabbing;
   }
-  .celestial-btn:hover .celestial {
-    transform: translate(-50%, -50%) scale(1.35);
+  .celestial-btn:hover {
+    transform: translate(-50%, 50%) scale(1.12);
   }
   .celestial {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 8px;
-    height: 8px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: var(--celestial-color, var(--bg));
-    border: 1px solid var(--line);
-    box-shadow: none;
-    transition: transform 0.2s ease, background 0.4s ease, box-shadow 0.4s ease;
     pointer-events: none;
   }
-  /* Circadian pages: colored fill + glow, no border. */
-  html[data-circadian][data-celestial] .celestial {
-    border: 0;
+  .celestial img,
+  .celestial svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
-  html[data-circadian][data-celestial='sun'] .celestial {
-    box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
+  html[data-celestial='sun'] .celestial img {
+    filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
   }
-  /* Moon — the terminator is a second circle (pseudo-element) sliding across
-     the disc. The intersection of two equal circles gives a curved terminator,
-     like a real moon. New moon: shadow centred (covers all). Full: offset =
-     diameter (no overlap). Waxing lit right; waning lit left. */
-  html[data-circadian][data-celestial='moon'] .celestial {
-    background: var(--celestial-color, transparent);
-    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--celestial-color, transparent) var(--moon-glow, 50%), transparent);
-    border: 0;
-    overflow: hidden;
+  html[data-celestial='moon'] .celestial svg {
+    filter: drop-shadow(0 0 6px #ecebe455);
   }
-  html[data-circadian][data-celestial='moon'] .celestial::before {
-    content: '';
+  /* Hour ruler the sky body rides: the 12 hours of the current phase engraved
+     along the rule. It lives only here, never repeated in the page. */
+  .sky-ruler {
     position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: var(--bg);
-    transform: translateX(var(--moon-geometry-offset, 0));
+    left: 0;
+    right: 76px;
+    bottom: 0;
+    height: 16px;
+    color: var(--line);
+    pointer-events: none;
+  }
+  .sky-ruler svg {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   /* Hamburger button — hidden until the nav no longer fits comfortably. */

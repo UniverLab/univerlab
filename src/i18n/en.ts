@@ -22,6 +22,10 @@ export const en = {
     archive: 'Archive',
     roadmap: 'Roadmap',
   },
+  header: {
+    skySun: "Today's sun: a science fact for today",
+    skyMoon: "Tonight's moon: a science fact for today",
+  },
   footer: {
     quote:
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
