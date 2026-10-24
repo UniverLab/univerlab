@@ -87,6 +87,8 @@ describe('experiments encyclopedia plate', () => {
   it('draws each entry from the Machine component in themed ink, not a video clip', () => {
     expect(VIEW).toContain('<Machine');
     expect(VIEW).toContain('ink="theme"');
+    // The plate is the large engraving: 220–320 px tall, like the page-head postcards.
+    expect(VIEW).toContain('height="clamp(220px, 24vw, 320px)"');
     expect(VIEW).not.toContain('<video');
     expect(VIEW).not.toContain('IntersectionObserver');
   });
@@ -95,10 +97,37 @@ describe('experiments encyclopedia plate', () => {
     // One entry per row in exp order: no multi-column flow.
     expect(VIEW).not.toContain('columns: 2 340px');
     expect(VIEW).toContain('grid-template-columns: minmax(14rem, 22rem)');
+    // Rows are separated by the solid bench rule (the old flow used a dotted one).
+    expect(VIEW).toContain('border-bottom: 1px solid var(--bench-rule)');
+  });
+
+  it('rests each plate on a soft engraved baseline', () => {
+    expect(VIEW).toContain('border-bottom: 1px solid var(--bench-line-soft)');
+  });
+
+  it('keeps the archived entry as its EXP number in a dotted frame of the plate size', () => {
+    expect(VIEW).toContain('class="num-frame"');
+    expect(VIEW).toContain('border: 1px dotted var(--bench-rule)');
+    expect(VIEW).toContain("font-family: 'Old Standard TT', serif; font-size: 56px");
+    expect(VIEW).toContain('.entry[data-status="archived"] { opacity: 0.7; }');
+  });
+
+  it('sets the definition at 18px on a 60ch measure now the body has room', () => {
+    expect(VIEW).toContain('font-size: 18px; line-height: 1.55; max-width: 60ch');
+  });
+
+  it('keeps status.astro’s global board rule from pinning this body to a second row', () => {
+    // status.astro ships `.entry .entry-body { grid-area: 2/1/auto/-1 }` globally;
+    // this scoped reset (higher specificity) is what keeps body beside plate.
+    expect(VIEW).toContain('.entry .entry-body { grid-column: auto; grid-row: auto; }');
   });
 
   it('puts the plate on top at phone width with a 200px machine height', () => {
     expect(VIEW).toContain('--machine-h-phone: 200px');
-    expect(VIEW).toMatch(/@media \(max-width: 40rem\)/);
+    // The phone rule must actually collapse the two columns, not merely exist.
+    expect(VIEW).toMatch(
+      /@media \(max-width: 40rem\) \{\s*\.entry \{ grid-template-columns: 1fr; gap: 14px; \}/,
+    );
+    expect(VIEW).toContain('.num-frame { height: 200px; }');
   });
 });
