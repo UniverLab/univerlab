@@ -640,6 +640,10 @@ export const en = {
     // `<title>`/og:title only — `title` above is the visible <h1> and must stay.
     metaTitle: 'Pensamiento Cósmico — the UniverLab manifesto',
     sub: 'A philosophy of the continuity of consciousness',
+    // The paper itself, citable: a PDF on papers.univerlab.org (R2). Opens in
+    // a new tab; the MIME type is declared so the browser renders, not
+    // downloads, it.
+    paper: 'Read the paper: Pensamiento Cósmico (PDF) ↗',
     description:
       'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
     epigraph:
@@ -766,8 +770,8 @@ export const en = {
   cosmos: {
     kicker: 'Perspective',
     timelineTitle: 'Deep time',
-    // Deep time as a scale bar that decompresses from the largest span down to
-    // a human life (then "You"): [duration, what it measures], biggest first.
+    // Deep time as a list of spans: [duration, what it measures], biggest
+    // first, read as typography (mono span over serif name).
     timescales: [
       ['13.8 billion years', 'The age of the universe'],
       ['4.6 billion years', "The Sun's lifetime"],
@@ -776,13 +780,7 @@ export const en = {
       ['300,000 years', 'Our species'],
       ['80 years', 'A human life'],
     ] as [string, string][],
-    // Numeric spans (years) parallel to `timescales`, largest first. The zoom
-    // factor of each step is derived here by dividing adjacent entries — the
-    // localized label strings are never parsed.
-    timescalesSpans: [13.8e9, 4.6e9, 4.5e9, 3.8e9, 3e5, 80] as number[],
-    you: 'You',
     us: 'Us',
-    youDetail: 'the universe, observing itself',
     coda: 'Somewhere inside all of it, one point is asking what it all is.',
     addressTitle: 'Your cosmic address',
     addressIntro: 'Zoom out',
@@ -795,12 +793,6 @@ export const en = {
       ['Laniakea', 'Ø ≈ 520 Mly'],
       ['Observable Universe', 'Ø ≈ 93 Gly'],
     ] as [string, string][],
-    // Numeric sizes (metres) parallel to `address`, smallest first. Used only
-    // to derive the true ratio between one horizon and the next.
-    addressSpans: [6.4e6, 9e12, 9.461e19, 9.461e20, 9.461e22, 4.92e24, 8.8e26] as number[],
-    // Visually-hidden accessible caption for the SVG (aria-labelledby). The
-    // scene has role="img", so this is the text assistive tech reads.
-    caption: 'A cosmic perspective: deep time from the age of the universe to a human life, then a zoom out through cosmic scales from Earth to the observable universe.',
     // Footer easter egg — the one software metaphor on the site. Clicking the
     // branch reveals the universe's latest commit (hardcoded English in Footer,
     // since git output is never localized).

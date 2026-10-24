@@ -97,11 +97,10 @@ describe('MAN2 manifesto sections', () => {
     expect(en.manifesto.millionYearTestTitle).not.toMatch(/^(I|II|III|IV|V|VI|VII|VIII|IX)$/);
   });
 
-  it('tracks the current section with IntersectionObservers (cosmos + rail)', () => {
-    // MAN1 left exactly one (the cosmos scene); MAN2 added the rail's — two
-    // total. MAN3 reuses the rail observer (attack joins its target list), so
-    // the count stays at two.
-    expect((src.match(/IntersectionObserver/g) ?? []).length).toBe(2);
+  it('tracks the current section with one IntersectionObserver (the rail)', () => {
+    // MAN1's cosmos-scene observer went away with the scrollytelling; only
+    // MAN2's rail observer remains.
+    expect((src.match(/IntersectionObserver/g) ?? []).length).toBe(1);
   });
 
   it('shows the rail only at 1200px and above, inside a reserved gutter', () => {

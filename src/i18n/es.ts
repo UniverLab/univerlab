@@ -637,6 +637,10 @@ export const es: Dict = {
     // Solo para `<title>`/og:title — `title` de arriba es el <h1> visible.
     metaTitle: 'Pensamiento Cósmico — el manifiesto de UniverLab',
     sub: 'Una filosofía de la continuidad de la conciencia',
+    // El paper mismo, citable: un PDF en papers.univerlab.org (R2). Abre en
+    // una pestaña nueva; el tipo MIME está declarado para que el navegador lo
+    // renderice, no lo descargue.
+    paper: 'Lee el paper: Pensamiento Cósmico (PDF) ↗',
     description:
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
@@ -761,8 +765,8 @@ export const es: Dict = {
   cosmos: {
     kicker: 'Perspectiva',
     timelineTitle: 'Tiempo profundo',
-    // El tiempo profundo como una barra de escalas que se descomprime desde el
-    // mayor lapso hasta una vida humana (y luego "Tú"): [duración, qué mide].
+    // El tiempo profundo como una lista de tramos: [duración, qué mide], de
+    // mayor a menor, leída como tipografía (tramo mono sobre nombre serif).
     timescales: [
       ['13 800 millones de años', 'La edad del universo'],
       ['4600 millones de años', 'La vida del Sol'],
@@ -771,13 +775,7 @@ export const es: Dict = {
       ['300 000 años', 'Nuestra especie'],
       ['80 años', 'Una vida humana'],
     ] as [string, string][],
-    // Tramos numéricos (años) paralelos a `timescales`, de mayor a menor. El
-    // factor de cada paso se deriva dividiendo entradas contiguas — las
-    // etiquetas traducidas nunca se analizan.
-    timescalesSpans: [13.8e9, 4.6e9, 4.5e9, 3.8e9, 3e5, 80] as number[],
-    you: 'Tú',
     us: 'Nosotros',
-    youDetail: 'el universo, observándose',
     coda: 'En algún lugar de todo esto, un punto se pregunta qué es todo esto.',
     addressTitle: 'Tu dirección cósmica',
     addressIntro: 'Aleja la vista',
@@ -790,12 +788,6 @@ export const es: Dict = {
       ['Laniakea', 'Ø ≈ 520 Mly'],
       ['Universo observable', 'Ø ≈ 93 Gly'],
     ] as [string, string][],
-    // Tamaños numéricos (metros) paralelos a `address`, de menor a mayor. Solo
-    // se usan para derivar la razón real entre un horizonte y el siguiente.
-    addressSpans: [6.4e6, 9e12, 9.461e19, 9.461e20, 9.461e22, 4.92e24, 8.8e26] as number[],
-    // Caption accesible oculta para el SVG (aria-labelledby). La escena tiene
-    // role="img", así que este es el texto que lee la tecnología asistiva.
-    caption: 'Una perspectiva cósmica: el tiempo profundo desde la edad del universo hasta una vida humana, y luego un zoom out a través de las escalas cósmicas, de la Tierra al universo observable.',
     // Easter egg del footer — la única metáfora de software del sitio. El click
     // en la rama revela el último commit del universo (en inglés hardcodeado en
     // el Footer, porque la salida de git no se localiza).
