@@ -210,6 +210,16 @@ const signals = [
     });
   });
 
+  // Coming back from the other language (the browser's Back button) can restore
+  // this page from the bfcache with the turn still on: a sheet of paper across
+  // the whole screen and a link locked by data-turning. Put the corner back.
+  addEventListener('pageshow', () => {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
+      a.classList.remove('turning');
+      delete a.dataset.turning;
+    });
+  });
+
   // Signal JS presence so collapsed CSS can switch from the no-JS in-flow
   // list to the tap-only flyout. Without JS the experiments stay reachable
   // as the indented list; :focus-within alone is not enough on touch.

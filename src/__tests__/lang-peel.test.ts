@@ -262,7 +262,9 @@ describe('language corner styles', () => {
 });
 
 describe('the page turn navigates to the other language', () => {
-  const script = HEADER.match(/const reduceMotion = matchMedia[\s\S]*?\n  \}\);/);
+  const script = HEADER.match(
+    /const reduceMotion = matchMedia[\s\S]*?\n  document\.documentElement\.classList\.add\('js'\);/,
+  );
 
   it('persists the explicit choice first', () => {
     expect(script).not.toBeNull();
@@ -280,6 +282,14 @@ describe('the page turn navigates to the other language', () => {
     expect(prevent).toBeGreaterThan(guard);
     // a second click/Enter must not restart the sweep
     expect(script![0]).toMatch(/a\.dataset\.turning/);
+  });
+
+  it('puts the corner back when the other language is left with Back', () => {
+    // The browser restores this page from the bfcache with .turning still on:
+    // without the reset the sheet covers the viewport and the link is locked.
+    expect(script![0]).toMatch(/addEventListener\('pageshow'/);
+    expect(script![0]).toMatch(/classList\.remove\('turning'\)/);
+    expect(script![0]).toMatch(/delete a\.dataset\.turning/);
   });
 });
 
