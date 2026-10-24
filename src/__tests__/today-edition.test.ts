@@ -19,18 +19,19 @@ const FIX = JSON.parse(
   readFileSync(resolve(__dirname, 'fixtures/onthisday-1021.json'), 'utf8'),
 );
 
-// The date the scratch run picked: dailyFact(letterPool(buildPool(FIX,'en')),d)
-// for d = new Date(Y,9,21,12), Y in 2015–2045, first hits Alfred Nobel.
-function nobelYear(): number {
+// The letter is events only: the date the scratch run picked is the first
+// d = new Date(Y,9,21,12), Y in 2015–2045, whose dailyFact over
+// letterPool(buildPool(FIX,'en')) hits the 1928 event.
+function leadYear(): number {
   const pool = buildPool(FIX, 'en');
   for (let y = 2015; y <= 2045; y++) {
     const d = new Date(y, 9, 21, 12);
-    if (dailyFact(letterPool(pool), d)?.year === '1833') return y;
+    if (dailyFact(letterPool(pool), d)?.year === '1928') return y;
   }
-  throw new Error('no Nobel year in 2015–2045 — the fixture no longer leads with Nobel');
+  throw new Error('no 1928 event in 2015–2045 — the fixture no longer leads with it');
 }
 
-const Y = nobelYear();
+const Y = leadYear();
 const DATE = new Date(Y, 9, 21, 12);
 const FACTS = buildPool(FIX, 'en');
 const NOBEL_IMG =
@@ -85,9 +86,13 @@ describe('today edition helpers', () => {
     expect(todayRoute('/')).toBeNull();
   });
 
-  it('leads with the same letter the mailbox delivers', () => {
-    expect(todayLead(FACTS, DATE)?.year).toBe('1833');
+  it('leads with the same event the mailbox delivers, never a birth', () => {
+    expect(todayLead(FACTS, DATE)?.year).toBe('1928');
     expect(todayLead([], DATE)).toBeNull();
+    // An events-free day: nothing falls back to a birth or a death.
+    const noEvents = FACTS.filter((f) => f.kind !== 'event');
+    expect(noEvents.length).toBeGreaterThan(0);
+    expect(todayLead(noEvents, DATE)).toBeNull();
   });
 
   it('sides the two oldest non-lead events, newer first', () => {
@@ -127,16 +132,22 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('<h3>Quorum 1.0.0');
   });
 
-  it('leads with Nobel: headline, drop-capped first paragraph, Commons photo, caption', () => {
-    expect(html).toContain(`Letter of the day · ${Y - 1833} years on its way`);
-    expect(html).toContain('<h2>Alfred Nobel</h2>');
+  it('leads with the day’s event: headline, drop-capped text, no photo on an event', () => {
+    expect(html).toContain(`Letter of the day · ${Y - 1928} years on its way`);
+    expect(html).toContain('<h2>Boston</h2>');
     expect(html).toContain('class="dropcap"');
     expect(html.match(/class="dropcap"/g)).toHaveLength(1);
+    // The lead is an event, and events never print photos: its block
+    // carries no figure and no caption at all.
+    const leadBlock = html.slice(html.indexOf('<article class="lead">'), html.indexOf('</aside>'));
+    expect(leadBlock.indexOf('<article class="lead">')).toBe(0);
+    expect(leadBlock).not.toContain('<img');
+    expect(leadBlock).not.toContain('figcaption');
+    // Nobel's photo moved down to the Births column: lazy, uncaptioned.
     expect(html).toContain(NOBEL_IMG);
-    // The lead photo loads eagerly — no loading="lazy" on its tag.
-    const tag = html.slice(html.indexOf(NOBEL_IMG) - 200, html.indexOf(NOBEL_IMG));
-    expect(tag).not.toContain('loading=');
-    expect(html).toContain('Alfred Nobel · Wikimedia Commons');
+    const tag = html.slice(html.indexOf(NOBEL_IMG), html.indexOf(NOBEL_IMG) + 200);
+    expect(tag).toContain('loading="lazy"');
+    expect(html).not.toContain('Alfred Nobel · Wikimedia Commons');
   });
 
   it('keeps the side column to two events and no photos', () => {
@@ -154,6 +165,23 @@ describe('todayEditionHtml (en)', () => {
     expect(html).toContain('<h3>Deaths</h3>');
     // Capitalized text and a Wikipedia link per item.
     expect(html).toContain('Thomas Edison invents a practical incandescent lamp');
+  });
+
+  it('omits the .lead block and starts at the columns when the day has no event', () => {
+    const noEvents = FACTS.filter((f) => f.kind !== 'event');
+    expect(noEvents.length).toBeGreaterThan(0);
+    const bare = todayEditionHtml({ facts: noEvents, lab: [] }, 'en', DATE);
+    expect(bare).not.toContain('class="lead"');
+    expect(bare).not.toContain('Letter of the day');
+    expect(bare).not.toContain('<aside>');
+    // The dateline hands straight over to the columns.
+    expect(bare).toMatch(/<\/div><div class="cols">/);
+    // And the columns still list every birth and death.
+    expect(bare).toContain('<h3>Births</h3>');
+    expect(bare).toContain('<h3>Deaths</h3>');
+    expect(bare).toContain('Alfred Nobel, Swedish chemist');
+    expect(bare).toContain('Niels Bohr, Danish physicist');
+    expect(countItems(bare)).toBe(noEvents.length);
   });
 
   it('never prints event photos, non-Commons images or .svg files', () => {
@@ -208,7 +236,8 @@ describe('todayEditionMarkdown', () => {
   it('carries the same lead and columns as text', () => {
     const md = todayEditionMarkdown(feed(), 'en', DATE);
     expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/today\/"\n---\n/);
-    expect(md).toContain('Alfred Nobel');
+    expect(md).toContain('**Boston**'); // the lead: the same event as the mailbox
+    expect(md).toContain('Alfred Nobel'); // the Births column still lists him
     expect(md).toContain('Letters of science arriving today');
     expect(md).toContain(`${FACTS.length} letters from the past · 1 from the lab`);
     expect(md).toContain('## Events');

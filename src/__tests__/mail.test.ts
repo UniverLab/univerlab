@@ -17,6 +17,7 @@ import {
 } from '../lib/mail';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { buildPool, letterPool, type Fact } from '../lib/science-filter';
 
 const DAY = 86400000;
 const NOW = new Date('2026-10-24T12:00:00Z');
@@ -135,6 +136,28 @@ describe('the letter from the past', () => {
     expect(dailyFact(['one', 'two', 'three'], NOW)).toBe(dailyFact(['one', 'two', 'three'], NOW));
     expect(dailyFact([], NOW)).toBeNull();
     expect(dailyFact(null as unknown as string[], NOW)).toBeNull();
+  });
+
+  it('draws nothing when the day has no event: the mailbox queues no past letter', () => {
+    // A pool of filtered births and deaths only — the letter must never
+    // fall back to either of them.
+    const pool = buildPool(
+      {
+        events: [],
+        births: [{ year: 1833, text: 'Alfred Nobel, Swedish chemist and inventor of dynamite, is born.' }],
+        deaths: [{ year: 1962, text: 'Niels Bohr, Danish physicist, dies.' }],
+      },
+      'en',
+    );
+    expect(pool.filter((f) => f.kind === 'born')).toHaveLength(1);
+    expect(pool.filter((f) => f.kind === 'died')).toHaveLength(1);
+    expect(letterPool(pool)).toEqual([]);
+    expect(dailyFact<Fact>(letterPool(pool), NOW)).toBeNull();
+    // The script's early return on a null fact is what keeps the queue (and
+    // the flag) untouched that day.
+    expect(MAIL_SRC).toMatch(
+      /const fact = dailyFact<Fact>\(letterPool\(pool\), new Date\(\)\);\s*if \(!fact\) return;/,
+    );
   });
 });
 

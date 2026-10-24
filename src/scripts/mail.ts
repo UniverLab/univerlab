@@ -580,8 +580,8 @@ export function startMailbox(): void {
       }
     }
     if (!pool || !pool.length) return;
-    // The cache holds the whole day; the letter keeps the header's handful
-    // of the shortest scientist births and deaths for variety.
+    // The cache holds the whole day; the letter is events only — births
+    // and deaths stay in the newspaper's Nacimientos/Defunciones columns.
     const fact = dailyFact<Fact>(letterPool(pool), new Date());
     if (!fact) return;
     const letter = pastLetter(fact, new Date());

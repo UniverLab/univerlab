@@ -16,6 +16,7 @@ import {
   type FilterLang,
   type Fact,
 } from '../lib/science-filter';
+import { dailyFact } from '../lib/mail';
 
 describe('science keyword lists', () => {
   it('moved out of the header into this module', () => {
@@ -105,7 +106,7 @@ describe('collectFacts, buildPool and letterPool', () => {
     expect(pool.filter((f) => f.kind === 'died')).toHaveLength(2);
   });
 
-  it('letterPool shapes the letter: every event, the shortest 6 births and 4 deaths', () => {
+  it('letterPool is events only: the day’s events, never births or deaths', () => {
     const births = Array.from({ length: 9 }, (v, i) => ({
       year: 1800 + i,
       text: `Chemist number ${i}${' a'.repeat(i)} is born.`,
@@ -116,18 +117,35 @@ describe('collectFacts, buildPool and letterPool', () => {
     }));
     const full = buildPool({ ...FEED, births, deaths }, 'en');
     const pool = letterPool(full);
-    expect(pool.filter((f) => f.kind === 'event')).toHaveLength(1);
-    expect(pool.filter((f) => f.kind === 'born')).toHaveLength(6);
-    expect(pool.filter((f) => f.kind === 'died')).toHaveLength(4);
-    // It kept the shortest ones — the padded texts are the longest, and the
-    // sort is per kind: births keep numbers 0-5, deaths keep 0-3.
-    const kept = pool.map((f) => f.text);
-    expect(kept.some((t) => t.includes('Chemist number 5'))).toBe(true);
-    expect(kept.some((t) => t.includes('Chemist number 6'))).toBe(false);
-    expect(kept.some((t) => t.includes('Physicist number 3'))).toBe(true);
-    expect(kept.some((t) => t.includes('Physicist number 4'))).toBe(false);
-    // 0 means everything, which is what the newspaper asks for.
+    expect(pool.length).toBeGreaterThan(0);
+    expect(pool.every((f) => f.kind === 'event')).toBe(true);
+    expect(pool.filter((f) => f.kind === 'born')).toHaveLength(0);
+    expect(pool.filter((f) => f.kind === 'died')).toHaveLength(0);
+    // 0 means none for births/deaths; for events 0 still means "all", so
+    // the newspaper's FULL_POOL asks for the whole day.
     expect(letterPool(full, FULL_POOL)).toEqual(full);
+    expect(letterPool(full, { events: 0, births: 0, deaths: 0 })).toEqual(
+      full.filter((f) => f.kind === 'event'),
+    );
+    // An explicit cap above 0 still slices: shortest first (the padded
+    // texts are the longest, so births 0-1 stay and number 2 does not).
+    const capped = letterPool(full, { events: 1, births: 2, deaths: 1 });
+    expect(capped.filter((f) => f.kind === 'event')).toHaveLength(1);
+    expect(capped.filter((f) => f.kind === 'born')).toHaveLength(2);
+    expect(capped.filter((f) => f.kind === 'died')).toHaveLength(1);
+    const kept = capped.map((f) => f.text);
+    expect(kept.some((t) => t.includes('Chemist number 1'))).toBe(true);
+    expect(kept.some((t) => t.includes('Chemist number 2'))).toBe(false);
+  });
+
+  it('an events-free pool gives no letter: letterPool [] and dailyFact null', () => {
+    const noEvents = buildPool(FEED, 'en').filter((f) => f.kind !== 'event');
+    expect(noEvents.length).toBeGreaterThan(0);
+    expect(letterPool(noEvents)).toEqual([]);
+    expect(dailyFact(letterPool(noEvents), new Date('2026-10-24T12:00:00Z'))).toBeNull();
+    // Nothing falls back to a birth or a death: the letter's default asks
+    // for events only, and an explicit 0 for the people means none.
+    expect(letterPool(noEvents, { events: 0, births: 0, deaths: 0 })).toEqual([]);
   });
 
   it('filters in the page language', () => {
@@ -214,7 +232,7 @@ describe('dayKey and fetchPool', () => {
       }),
     })) as unknown as typeof fetch;
     const day = new Date(2026, 9, 24);
-    // The header asks for the handful-of-shortest letter pool…
+    // A caller asks for a sliced letter (explicit caps above 0)…
     const items = await fetchPool(fakeFetch, 'en', day, { births: 1, deaths: 1 });
     expect(items.filter((f) => f.kind === 'born')).toHaveLength(1);
     expect(items.filter((f) => f.kind === 'died')).toHaveLength(1);

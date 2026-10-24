@@ -170,10 +170,11 @@ export interface PoolLimits {
   deaths?: number;
 }
 
-/** The newspaper's pool: everything the day's feed kept. 0 means "no cap",
- *  so this is also fetchPool's default and what the cache always stores —
- *  a header warm can never shrink what /today renders. */
-export const FULL_POOL: PoolLimits = { events: 0, births: 0, deaths: 0 };
+/** The newspaper's pool: everything the day's feed kept. A missing kind
+ *  means "all" (and 0 means "all" for events too), so this is also
+ *  fetchPool's default and what the cache always stores — a header warm
+ *  can never shrink what /today renders. */
+export const FULL_POOL: PoolLimits = { events: 0 };
 
 /** The whole filtered day: every science event plus every filtered birth
  *  and death, each kind sorted shortest first. */
@@ -186,19 +187,21 @@ export function buildPool(
     .concat(collectFacts(data.deaths, 'died', lang));
 }
 
-/** The letter's pool (the header's limits): all filtered events — the day's
- *  real science — plus a handful of the shortest scientist births and deaths
- *  for variety. Shaped from the cached whole day, so the mailbox and the
- *  newspaper read the same cache and the letter stays short. */
-export function letterPool(items: Fact[], limits: PoolLimits = {}): Fact[] {
-  const ev = limits.events ?? 0;
-  const bi = limits.births ?? 6;
-  const de = limits.deaths ?? 4;
-  const take = (kind: Fact['kind'], n: number) => {
+/** The letter's pool: only the day's events — births and deaths belong to
+ *  the newspaper's Nacimientos/Defunciones columns, never to the letter. A
+ *  missing limit means "all"; an explicit 0 means none for births/deaths
+ *  and (as always) all for events. Shaped from the cached whole day, so the
+ *  mailbox and the newspaper read the same cache and draw the same event. */
+export function letterPool(items: Fact[], limits: PoolLimits = { births: 0, deaths: 0 }): Fact[] {
+  const take = (kind: Fact['kind'], n: number | undefined): Fact[] => {
     const arr = items.filter((f) => f.kind === kind);
-    return n ? arr.slice(0, n) : arr;
+    if (n == null) return arr;
+    if (kind === 'event') return n ? arr.slice(0, n) : arr;
+    return n ? arr.slice(0, n) : [];
   };
-  return take('event', ev).concat(take('born', bi)).concat(take('died', de));
+  return take('event', limits.events)
+    .concat(take('born', limits.births))
+    .concat(take('died', limits.deaths));
 }
 
 /** Local calendar day as YYYY-MM-DD. */
@@ -224,7 +227,7 @@ export function readOtdCache(lang: FilterLang): Fact[] | null {
 }
 
 /** Fetch the day's feed, filter it to science and cache the whole day for
- *  today. `limits` slices only what this caller gets back (via letterPool);
+ *  today. `limits` only slices what this caller gets back (via letterPool);
  *  the cache always keeps everything, so /today renders the full newspaper
  *  even when the header warmed the cache first. */
 export function fetchPool(
