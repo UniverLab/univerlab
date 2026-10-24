@@ -57,6 +57,21 @@ export const es: Dict = {
       readAnnouncement: 'Leer el anuncio completo →',
     },
   },
+  // La paleta de comandos (ficha de catálogo), su ficha de temas y los avisos
+  // de papel: los textos que el script de consola lee del JSON en línea. Los
+  // nombres de tema se mantienen en inglés en ambos idiomas: son los tres
+  // fondos.
+  console: {
+    drawer: 'fichero · univerlab',
+    themeDrawer: 'ficha 2 · temas',
+    placeholder: 'escribe un comando…',
+    themePlaceholder: 'elige un tema',
+    keys: 'Tab completa · ↑↓ recorre · Enter',
+    esc: 'Esc guarda',
+    theme: { circadian: 'Circadian', papyrus: 'Papyrus', slate: 'Slate' },
+    answer: 'La Respuesta a la Pregunta Fundamental de la Vida, el Universo y Todo lo Demás.',
+    guide: 'Guía del autoestopista galáctico',
+  },
   footer: {
     quote:
       '«Somos los ojos del universo abriéndose tras un largo sueño. Nuestra tarea es crear, cuidar y comprender.»',
@@ -68,6 +83,7 @@ export const es: Dict = {
     },
     // Solo en páginas de experimento: la línea de créditos sobre el sello.
     forged: 'Artefacto concebido y forjado en UniverLab',
+    privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
   },
   common: {
     repo: 'Star en GitHub ↗',
@@ -997,7 +1013,7 @@ export const es: Dict = {
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
     pageTitle: 'Roadmap — what UniverLab is building now, next and later',
-    missionLogLink: 'Mission Log →',
+    statusFeedLink: 'Mission Log →',
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · laboratorio abierto' },

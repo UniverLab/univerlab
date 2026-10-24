@@ -74,6 +74,14 @@
   --bench-plate-variant: 'day';
   /* Lantern clips by day: as they are (light screen). */
   --bench-clip-filter: none;
+  /* Console card + slips (the catalog card palette and the taped paper
+     notices): cream stock, garnet header line, faint blue rules, sepia ink. */
+  --bench-card: #fbf6ea;
+  --bench-card-rule: #c9d6e3;
+  --bench-card-head: #b8434b;
+  --bench-card-ink: #1d1510;
+  --bench-card-soft: #6b5a43;
+  --bench-tape: rgb(236 226 196 / 0.72);
 }
 
 /* ── 2. Roles, night ────────────────────────────────────────────────── */
@@ -91,6 +99,11 @@
   --bench-plate-variant: 'night';
   /* Lantern clips by night: negative that keeps each accent's hue. */
   --bench-clip-filter: invert(1) hue-rotate(180deg);
+  /* Console card by night: a shade deeper stock; ink and sepia stay put. */
+  --bench-card: #e6decb;
+  --bench-card-rule: #a9b8c4;
+  --bench-card-head: #a3343c;
+  --bench-tape: rgb(214 204 176 / 0.7);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -106,5 +119,9 @@
     --bench-emphasis: #e0a2a6;
     --bench-plate-variant: 'night';
     --bench-clip-filter: invert(1) hue-rotate(180deg);
+    --bench-card: #e6decb;
+    --bench-card-rule: #a9b8c4;
+    --bench-card-head: #a3343c;
+    --bench-tape: rgb(214 204 176 / 0.7);
   }
 }

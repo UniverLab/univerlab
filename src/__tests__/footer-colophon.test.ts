@@ -91,13 +91,12 @@ describe('Footer — the engraved frieze band', () => {
 });
 
 describe('Footer — everything it already held stays, in order', () => {
-  it('keeps the flight bar right after the band', () => {
+  it('the wrap column follows the band directly (the flight bar is gone)', () => {
     const bandAt = markup.indexOf('colophon-band');
-    const flightAt = markup.indexOf('flight-bar');
     const innerAt = markup.indexOf('wrap inner');
     expect(bandAt).toBeGreaterThan(-1);
-    expect(flightAt).toBeGreaterThan(bandAt);
-    expect(innerAt).toBeGreaterThan(flightAt);
+    expect(innerAt).toBeGreaterThan(bandAt);
+    expect(markup).not.toContain('flight');
   });
 
   it('keeps mark link, quote, footer nav, built-with, word + branch, privacy — in that order', () => {

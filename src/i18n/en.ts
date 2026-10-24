@@ -57,6 +57,20 @@ export const en = {
       readAnnouncement: 'Read the full announcement →',
     },
   },
+  // The command palette (catalog card), its theme card and the paper slips:
+  // the strings the console script reads from the inlined JSON. The theme
+  // names stay English in both languages — they are the three grounds.
+  console: {
+    drawer: 'fichero · univerlab',
+    themeDrawer: 'ficha 2 · temas',
+    placeholder: 'type a command…',
+    themePlaceholder: 'choose a theme',
+    keys: 'Tab completes · ↑↓ moves · Enter',
+    esc: 'Esc puts it back',
+    theme: { circadian: 'Circadian', papyrus: 'Papyrus', slate: 'Slate' },
+    answer: 'The Answer to the Ultimate Question of Life, the Universe, and Everything.',
+    guide: "The Hitchhiker's Guide to the Galaxy",
+  },
   footer: {
     quote:
       '“We are the eyes of the universe opening after a long sleep. Our work is to create, care, and understand.”',
@@ -70,6 +84,7 @@ export const en = {
     },
     // Experiment pages only: the colophon credits line above the seal.
     forged: 'Artifact conceived and forged at UniverLab',
+    privacy: "no external tracking. theme preferences stay in your browser's local storage.",
   },
   common: {
     repo: 'Star on GitHub ↗',
@@ -1003,7 +1018,7 @@ export const en = {
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
     pageTitle: 'Roadmap — what UniverLab is building now, next and later',
-    missionLogLink: 'Mission Log →',
+    statusFeedLink: 'Mission Log →',
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · open laboratory' },

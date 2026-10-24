@@ -408,38 +408,185 @@ body > header { view-transition-name: site-header; }
    targets these selectors, so their position in the cascade does not matter.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Command palette — terminal-style, always dark, grey monospace. */
+/* Command palette — the library catalog card: cream stock with a garnet header
+   line, faint blue rules every 28px and a punched hole at the bottom, slid up
+   from a drawer at the foot of the page (the mockup's .palette). The card
+   tokens live in bench-tokens.css so night swaps the stock. */
 #cmd-palette {
   display: none;
   position: fixed;
-  inset: 0;
   z-index: 300;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(6px);
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 20vh;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100vw - 32px));
+  transform: translateX(-50%) translateY(115%);
+  color: var(--bench-card-ink);
+  background:
+    linear-gradient(var(--bench-card-head), var(--bench-card-head)) 0 46px / 100% 1.5px no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--bench-card-rule) 27px 28px) 0 48px / 100% calc(100% - 48px) no-repeat,
+    var(--bench-card);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32), 0 1px 0 #fff8 inset;
+  padding: 0 18px 34px;
+  -webkit-mask: radial-gradient(circle at 50% calc(100% - 15px), transparent 7px, #000 7.6px);
+  mask: radial-gradient(circle at 50% calc(100% - 15px), transparent 7px, #000 7.6px);
 }
-#cmd-palette.open { display: flex; }
-.cmd-palette-inner {
-  width: 28rem;
-  max-width: 92vw;
-  background: rgba(18, 18, 22, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  font-family: var(--font-mono);
+#cmd-palette.open { display: block; animation: palette-up 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) forwards; }
+#cmd-palette.closing { display: block; animation: palette-down 0.22s ease-in forwards; }
+@keyframes palette-up {
+  from { transform: translateX(-50%) translateY(115%); }
+  to { transform: translateX(-50%) translateY(0); }
 }
-.cmd-input-row {
+@keyframes palette-down {
+  from { transform: translateX(-50%) translateY(0); }
+  to { transform: translateX(-50%) translateY(120%); }
+}
+#cmd-palette .head {
+  height: 46px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
+#cmd-palette .head .slash { color: var(--bench-card-head); font-weight: 500; }
+#cmd-palette .head input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--bench-card-ink);
+  outline: none;
+  caret-color: var(--bench-card-head);
+}
+#cmd-palette .drawer {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bench-card-soft);
+  white-space: nowrap;
+}
+.cmd-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  max-height: calc(28px * 9);
+  overflow-y: auto;
+}
+.cmd-item {
+  height: 28px;
+  display: grid;
+  grid-template-columns: 18px 9.5em 1fr;
+  align-items: end;
+  padding-bottom: 4px;
+  cursor: pointer;
+}
+.cmd-item .cmd-hand {
+  color: var(--bench-card-head);
+  font-family: var(--font-serif);
+  visibility: hidden;
+}
+.cmd-item .cmd-cmd { font-family: var(--font-mono); font-size: 14px; }
+.cmd-item .cmd-label {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--bench-card-soft);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cmd-item[aria-selected='true'] .cmd-hand { visibility: visible; }
+.cmd-item[aria-selected='true'] .cmd-cmd {
+  text-decoration: underline 1.5px var(--bench-card-head);
+  text-underline-offset: 4px;
+}
+.cmd-list::-webkit-scrollbar { width: 4px; }
+.cmd-list::-webkit-scrollbar-thumb { background: var(--bench-card-rule); border-radius: 2px; }
+#cmd-palette .foot {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--bench-card-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No slide: the card simply rests in place while open. */
+  #cmd-palette.open { animation: none; transform: translateX(-50%) translateY(0); }
+  #cmd-palette.closing { animation: none; }
+}
+
+/* Slips — every non-mail notice arrives on a scrap of old paper taped to the
+   screen: faint lines, two pieces of translucent tape at the top corners, a
+   soft drop shadow (the mockup's .slip). Tips sit lower right, the 42 answer
+   sits centred. */
+.slip {
+  position: fixed;
+  z-index: 320;
+  max-width: min(340px, calc(100vw - 40px));
+  padding: 16px 18px 14px;
+  color: #1d1510;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, rgb(32 22 12 / 0.025) 3px 4px), #f3ead6;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.slip::before, .slip::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 54px;
+  height: 18px;
+  background: var(--bench-tape);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.slip::before { left: 14px; transform: rotate(-7deg); }
+.slip::after { right: 14px; transform: rotate(6deg); }
+.slip kbd { font: inherit; border-bottom: 1.5px solid #87222c; }
+.slip.tip {
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: 96px;
+  transform: rotate(-1.2deg);
+}
+.slip.answer {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-1.6deg);
+  text-align: center;
+  padding: 22px 26px 18px;
+  max-width: min(380px, calc(100vw - 40px));
+  font-family: var(--font-body);
+  font-size: 17px;
+}
+.slip.answer b {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 76px;
+  line-height: 0.9;
+  margin-bottom: 6px;
+}
+.slip.answer i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b5a43;
+  display: block;
+  margin-top: 8px;
+}
+
+/* The /date translator keeps the palette's old bare-bones input chrome. */
 .cmd-prefix {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(128, 128, 128, 0.55);
   font-size: 0.9rem;
   user-select: none;
 }
@@ -448,40 +595,10 @@ body > header { view-transition-name: site-header; }
   background: transparent;
   border: 0;
   outline: none;
-  color: #e0e0e0;
-  font-family: inherit;
+  color: inherit;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
-  caret-color: rgba(255, 255, 255, 0.4);
 }
-.cmd-input::placeholder { color: rgba(255, 255, 255, 0.2); }
-.cmd-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.3rem 0;
-  max-height: 20rem;
-  overflow-y: auto;
-}
-.cmd-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.cmd-item:hover, .cmd-item.sel {
-  background: rgba(255, 255, 255, 0.06);
-}
-.cmd-cmd {
-  color: #e0e0e0;
-  font-size: 0.85rem;
-}
-.cmd-label {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.75rem;
-}
-.cmd-list::-webkit-scrollbar { width: 4px; }
-.cmd-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 /* Find overlay */
 .find-overlay {

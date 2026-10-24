@@ -539,7 +539,6 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(active.textContent || '');
         copy.classList.add('done');
-        if ((window as any).flightLog) (window as any).flightLog.record(`copy-${id}`);
         setTimeout(() => copy.classList.remove('done'), 1600);
       } catch {
         // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
@@ -562,27 +561,4 @@ const ogImage = `/og/${id}.png`;
       }
     });
   });
-  // Docs button click tracking
-  const docsLink = document.querySelector<HTMLAnchorElement>('[data-docs-link]');
-  if (docsLink) {
-    docsLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record(`docs-${id}`);
-    });
-  }
-
-  // Astro Denoise proposal PDF download tracking
-  const proposalLink = document.querySelector<HTMLAnchorElement>('.proposal');
-  if (proposalLink) {
-    proposalLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record('astro-denoise-pdf');
-    });
-  }
-
-  // Quorum launch app button tracking
-  const launchLink = document.querySelector<HTMLAnchorElement>('.launch');
-  if (launchLink) {
-    launchLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record('quorum-launch');
-    });
-  }
 </script>

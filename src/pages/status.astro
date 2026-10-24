@@ -100,46 +100,6 @@ const rmStrings = en.roadmap;
     /* Empty state */
     #log-entries:empty::after { content: 'No entries yet. The log is waiting for its first transmission.'; display: block; font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-faint); padding-block: 3rem; text-align: center; }
 
-    /* Toast — same style as the announcement toast in BaseLayout */
-    .gl-toast-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 319; animation: gl-backdrop-in 0.2s ease; }
-    .gl-toast {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(18, 18, 22, 0.95);
-      color: #fff;
-      font-family: var(--font-mono);
-      font-size: 0.88rem;
-      padding: 0.9rem 2.4rem 0.9rem 1.4rem;
-      border-radius: 8px;
-      border: 1px solid #d4a843;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 168, 67, 0.25), 0 0 60px rgba(212, 168, 67, 0.1);
-      animation: gl-toast-in 0.2s ease;
-      z-index: 320;
-      text-align: center;
-      max-width: 90vw;
-      cursor: pointer;
-      max-height: 80vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .gl-toast span { color: #d4a843; font-weight: 600; }
-    .gl-toast-close { position: absolute; top: 0.3rem; right: 0.5rem; background: none; border: none; color: #d4a843; font-size: 1.2rem; cursor: pointer; line-height: 1; padding: 0 0.2rem; opacity: 0.7; }
-    .gl-toast-close:hover { opacity: 1; }
-    .gl-toast.gl-toast-out { animation: gl-toast-out 0.3s ease forwards; }
-    .gl-toast-backdrop.gl-toast-out { animation: gl-backdrop-out 0.3s ease forwards; }
-    .gl-toast-body { margin-top: 0.5rem; text-align: left; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
-    .gl-toast-body-inner { color: #ccc; font-size: 0.82rem; line-height: 1.5; max-height: 4.5em; overflow: hidden; transition: max-height 0.3s ease; white-space: pre-line; }
-    .gl-toast-body-inner.expanded { max-height: none; overflow-y: auto; }
-    .gl-toast-expand { background: none; border: 0; color: #d4a843; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 0.3rem 0 0; text-align: left; opacity: 0.8; }
-    .gl-toast-expand:hover { opacity: 1; text-decoration: underline; }
-    @keyframes gl-toast-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    @keyframes gl-toast-out { from { opacity: 1; } to { opacity: 0; transform: scale(0.95); } }
-    @keyframes gl-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes gl-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
-
     /* Scroll-driven fade-in (progressive enhancement) */
     @media (prefers-reduced-motion: no-preference) {
       @supports (animation-timeline: view()) {
@@ -500,26 +460,24 @@ const rmStrings = en.roadmap;
         renderEntries();
       }
 
+      // A slip of old paper taped to the lower right — the shared notice skin
+      // for everything that is not mail (the global .slip rules in global.css).
+      function slipNotice(html, ms) {
+        var old = document.querySelectorAll('.slip.notice');
+        for (var i = 0; i < old.length; i++) old[i].remove();
+        var el = document.createElement('div');
+        el.className = 'slip tip notice';
+        el.setAttribute('role', 'status');
+        el.innerHTML = html;
+        document.body.appendChild(el);
+        var bye = function () { if (el.isConnected) el.remove(); };
+        el.addEventListener('click', bye);
+        setTimeout(bye, ms || 5000);
+        return el;
+      }
+
       function showToast(title) {
-        var backdrop = document.createElement('div');
-        backdrop.className = 'gl-toast-backdrop';
-        document.body.appendChild(backdrop);
-
-        var toast = document.createElement('div');
-        toast.className = 'gl-toast';
-        toast.innerHTML = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>New entry: ' + title + '</span>';
-
-        var dismiss = function () {
-          backdrop.classList.add('gl-toast-out');
-          toast.classList.add('gl-toast-out');
-          setTimeout(function () { backdrop.remove(); toast.remove(); }, 300);
-        };
-
-        toast.querySelector('.gl-toast-close').addEventListener('click', dismiss);
-        backdrop.addEventListener('click', dismiss);
-
-        document.body.appendChild(toast);
-        setTimeout(dismiss, 4000);
+        slipNotice('New entry: ' + title);
       }
 
       function applyTopic(topic) {
@@ -604,7 +562,7 @@ const rmStrings = en.roadmap;
       var rmParam = new URLSearchParams(location.search).get('roadmap');
       if (rmParam) rmApplyRoadmapFilter(rmParam, rmParam);
 
-      // Force announcement toast in dev mode
+      // Force announcement notice in dev mode
       if (isDev) {
         setTimeout(function () {
           var mockAnnouncement = MOCK[0];
@@ -615,60 +573,25 @@ const rmStrings = en.roadmap;
           function linkify(text) {
             var escaped = escapeHtml(text);
             return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
-              return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#d4a843;text-decoration:underline;text-underline-offset:2px">' + url + '</a>';
+              return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#87222c;text-decoration:underline;text-underline-offset:2px">' + url + '</a>';
             });
           }
 
-          var backdrop = document.createElement('div');
-          backdrop.className = 'gl-toast-backdrop';
-          document.body.appendChild(backdrop);
-
-          var toast = document.createElement('div');
-          toast.className = 'gl-toast';
-          var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(mockAnnouncement.title) + '</span>';
+          var html = '<strong style="font-weight:600">' + escapeHtml(mockAnnouncement.title) + '</strong>';
           if (mockAnnouncement.body) {
-            var bodyHtml = linkify(mockAnnouncement.body);
-            html += '<div class="gl-toast-body"><div class="gl-toast-body-inner">' + bodyHtml + '</div><button class="gl-toast-expand" type="button">ver más</button></div>';
+            html += '<div style="margin-top:0.4rem">' + linkify(mockAnnouncement.body) + '</div>';
           }
           if (mockAnnouncement.link) {
-            html += '<br><a href="' + escapeHtml(mockAnnouncement.link) + '" target="_blank" rel="noopener noreferrer" style="color:#d4a843;text-decoration:underline;text-underline-offset:2px">View &rarr;</a>';
-          }
-          toast.innerHTML = html;
-
-          var expandBtn = toast.querySelector('.gl-toast-expand');
-          if (expandBtn) {
-            var inner = toast.querySelector('.gl-toast-body-inner');
-            requestAnimationFrame(function () {
-              if (inner.scrollHeight <= inner.clientHeight + 2) {
-                expandBtn.style.display = 'none';
-              } else {
-                expandBtn.addEventListener('click', function (ev) {
-                  ev.stopPropagation();
-                  inner.classList.toggle('expanded');
-                  expandBtn.textContent = inner.classList.contains('expanded') ? 'ver menos' : 'ver más';
-                });
-              }
-            });
+            html += '<br><a href="' + escapeHtml(mockAnnouncement.link) + '" target="_blank" rel="noopener noreferrer" style="color:#87222c;text-decoration:underline;text-underline-offset:2px">View &rarr;</a>';
           }
 
-          var dismiss = function () {
-            backdrop.classList.add('gl-toast-out');
-            toast.classList.add('gl-toast-out');
-            setTimeout(function () { backdrop.remove(); toast.remove(); }, 300);
-          };
-
-          toast.querySelector('.gl-toast-close').addEventListener('click', dismiss);
-          backdrop.addEventListener('click', dismiss);
+          var toast = slipNotice(html, 8000);
           if (mockAnnouncement.link) {
-            toast.style.cursor = 'pointer';
             toast.addEventListener('click', function (ev) {
-              if (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON') return;
+              if (ev.target.tagName === 'A') return;
               window.open(mockAnnouncement.link, '_blank', 'noopener,noreferrer');
             });
           }
-
-          document.body.appendChild(toast);
-          setTimeout(dismiss, 8000);
         }, 1500);
       }
 
