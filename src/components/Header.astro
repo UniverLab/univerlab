@@ -826,16 +826,20 @@ const signals = [
     border-radius: 50%;
     pointer-events: none;
   }
-  .celestial img,
-  .celestial svg {
+  /* The sun img and the moon svg are injected by the bundled script at
+     runtime (innerHTML), so they never carry the Astro scope attribute —
+     the descendant must be :global() or width/height and the fixed
+     drop-shadows silently never apply (same trap as LabSystem's accent). */
+  .celestial :global(img),
+  .celestial :global(svg) {
     width: 100%;
     height: 100%;
     display: block;
   }
-  html[data-celestial='sun'] .celestial img {
+  html[data-celestial='sun'] .celestial :global(img) {
     filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
   }
-  html[data-celestial='moon'] .celestial svg {
+  html[data-celestial='moon'] .celestial :global(svg) {
     filter: drop-shadow(0 0 6px #ecebe455);
   }
   /* Hour ruler the sky body rides: the 12 hours of the current phase engraved

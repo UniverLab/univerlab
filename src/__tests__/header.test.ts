@@ -286,6 +286,13 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/\.celestial-btn:hover\s*\{\s*\n?\s*transform: translate\(-50%, 50%\) scale\(1\.12\)/);
     expect(src).toMatch(/drop-shadow\(0 1px 1px rgb\(32 22 12 \/ \.18\)\)/);
     expect(src).toMatch(/drop-shadow\(0 0 6px #ecebe455\)/);
+    // The img/svg are injected at runtime via innerHTML, so they never carry
+    // the Astro scope attribute: the selectors that size them and cast their
+    // shadows must be :global() descendants or they silently never match.
+    expect(src).toMatch(/\.celestial :global\(img\)/);
+    expect(src).toMatch(/\.celestial :global\(svg\)/);
+    expect(src).toMatch(/html\[data-celestial='sun'\] \.celestial :global\(img\)/);
+    expect(src).toMatch(/html\[data-celestial='moon'\] \.celestial :global\(svg\)/);
   });
 
   it('engraves the hour ruler along the rule and clamps the body off the mailbox', () => {
