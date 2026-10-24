@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
+import Watermark from '../components/Watermark.astro';
 import { en } from '../i18n/en';
 import { loadRoadmap } from '../lib/lab-feed';
 import { roadmapLanesHtml } from '../lib/roadmap-board';
@@ -17,13 +19,17 @@ try {
 }
 const initialHtml = roadmapLanesHtml(initialItems, rmStrings);
 ---
-<BaseLayout title="Roadmap — what UniverLab is building now, next and later" description="Every UniverLab roadmap item by lane — now, next, later, ideas and recently shipped — rendered as plain HTML and kept live from the public announcements API." bg="cosmic" circadian>
+<BaseLayout title="Roadmap — what UniverLab is building now, next and later" description="Every UniverLab roadmap item by lane — now, next, later, ideas and recently shipped — rendered as plain HTML and kept live from the public announcements API." bg={false} circadian>
+  <Watermark kind="blueprint" />
   <section class="wrap board" id="roadmap-board">
     <header class="board-head">
-      <div class="board-titles">
-        <span class="label">ROADMAP</span>
-        <h1>Roadmap</h1>
-        <p class="intro">What UniverLab is building now, next, later, and what has shipped.</p>
+      <div class="page-open">
+        <div class="board-titles page-open-text">
+          <span class="label">ROADMAP</span>
+          <h1>Roadmap</h1>
+          <p class="intro">What UniverLab is building now, next, later, and what has shipped.</p>
+        </div>
+        <Postcard page="roadmap" alt={en.postcards.roadmap} />
       </div>
       <div class="board-actions">
         <a href="/status/" class="feed-link">{rmStrings.missionLogLink}</a>
@@ -66,7 +72,7 @@ const initialHtml = roadmapLanesHtml(initialItems, rmStrings);
     .rm-seg[data-lane="now"] > h2 { color: var(--accent); }
     .rm-seg[data-lane="idea"] > h2 { font-style: italic; }
     .rm-count { color: var(--ink-faint); font-size: 0.58rem; }
-    .rm-card { position: relative; padding-block: 0.55rem; }
+    .rm-card { position: relative; padding-block: 0.55rem; background: color-mix(in srgb, var(--bg) 80%, transparent); }
     .rm-card[hidden] { display: none; }
     .rm-title { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
     .rm-seg[data-lane="done"] .rm-title { color: var(--ink-dim); font-weight: 500; }

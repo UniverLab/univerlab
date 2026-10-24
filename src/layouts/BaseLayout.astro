@@ -17,7 +17,7 @@ import '../styles/bench-tokens.css';
 interface Props {
   title: string;
   description?: string;
-  bg?: BgTheme;
+  bg?: BgTheme | false;
   bgColor?: string;
   /** Per-page Open Graph image URL (e.g. '/og/texforge.png').  Falls back to
    *  '/og.png' when omitted — the site-wide default for home, docs, and
@@ -360,7 +360,7 @@ https://github.com/UniverLab
   <body>
     <script>import { restoreCrtOn } from '../scripts/crt-restore'; restoreCrtOn();</script>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
-    {fondo ? <LiveBackground id={fondo} /> : (!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />)}
+    {bg === false ? null : fondo ? <LiveBackground id={fondo} /> : (!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />)}
     <Header />
     <main id="main">
       <slot />

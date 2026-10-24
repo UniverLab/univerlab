@@ -705,3 +705,19 @@ body.crt-on { transform-origin: 50% 40vh;
   0%   { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.2); }
 }
+
+/* ── Page opening with engraved postcard ─────────────────────────────
+   Below 64rem the postcard sits above the h1, centred, max 22rem.
+   From 64rem up: two columns, text left, postcard right at ~42%. */
+.page-open { display: grid; gap: 1.5rem; align-items: start; }
+.page-open .page-open-text { text-align: left; min-width: 0; }
+.page-open .pc { justify-self: center; width: min(22rem, 100%); transform: rotate(-1.2deg); box-shadow: 0 10px 28px rgb(0 0 0 / .18); border-radius: 3px; }
+html[data-bench-theme='night'] .page-open .pc { box-shadow: 0 10px 28px rgb(0 0 0 / .45); }
+/* Below 64rem the postcard sits above the h1, centred. */
+@media (max-width: 63.99rem) {
+  .page-open .pc { order: -1; }
+}
+@media (min-width: 64rem) {
+  .page-open { grid-template-columns: 1fr 42%; gap: 3rem; }
+  .page-open .pc { width: 100%; justify-self: stretch; }
+}

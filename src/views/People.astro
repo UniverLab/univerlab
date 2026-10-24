@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
+import Watermark from '../components/Watermark.astro';
 import { getLang, useTranslations } from '../i18n';
 import { getContributors } from '../lib/contributors';
 import { founderPersonNode } from '../lib/structured-data';
@@ -13,10 +15,14 @@ const site = Astro.site ?? new URL('https://univerlab.org');
 // page's TechArticle (`{"@id": <site>/#founder}`), so it carries that `@id`.
 const founderJsonLd = founderPersonNode(site, { name: p.founder.name, role: p.founder.role });
 ---
-<BaseLayout title={p.metaTitle} description={p.description} bg="cosmic" circadian structuredData={founderJsonLd}>
-  <section class="wrap head">
-    <span class="label">{p.kicker}</span>
-    <h1>{p.title}</h1>
+<BaseLayout title={p.metaTitle} description={p.description} bg={false} circadian structuredData={founderJsonLd}>
+  <Watermark kind="blueprint" />
+  <section class="wrap head page-open">
+    <div class="head page-open-text">
+      <span class="label">{p.kicker}</span>
+      <h1>{p.title}</h1>
+    </div>
+    <Postcard page="contributors" alt={t.postcards.contributors} />
   </section>
 
   <div class="wrap">

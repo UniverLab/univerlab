@@ -949,6 +949,18 @@ export const en = {
       commits: 'commits',
     },
   },
+  postcards: {
+    api: 'An engraved set of speaking tubes with brass mouthpieces above a wooden desk, joined by a network of bent pipes',
+    archive: 'An engraved glass-front cabinet with dust sheets draped over brass instruments on its shelves and a carved plinth below',
+    contributors: 'An engraved meeting room with a long table holding an open ledger, chairs along both sides and three empty picture frames',
+    experiments: 'An engraved wall of labelled drawers with a leaning ladder beside them',
+    feed: 'An engraved desk with a duplicating press, a typewriter and printed sheets on a wire',
+    manifesto: 'An engraved observatory dome open to the stars with a telescope on a tripod',
+    'not-found': 'An engraved torn sea chart with a corner gone, dividers resting over the water',
+    roadmap: 'An engraved drafting table with a half-drawn sea chart, a compass rose, rolled maps, dividers and a globe',
+    status: 'An engraved desk with a ticker under a glass dome, an open ledger and a brass lamp',
+    today: 'An engraved armillary sphere beside a stone sundial on a cobbled floor',
+  },
   roadmap: {
     lanes: { now: 'Now', next: 'Next', later: 'Later', idea: 'Idea', done: 'Done' },
     hold: 'hold',

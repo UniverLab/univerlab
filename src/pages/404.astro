@@ -1,11 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 ---
-<BaseLayout title="404 — UniverLab" bg="cosmic" markdownTwin={false}>
+<BaseLayout title="404 — UniverLab" bg={false} circadian markdownTwin={false}>
   <section class="wrap notfound">
+    <div class="page-open">
+      <div class="page-open-text">
+        <p class="label code">404</p>
+        <h1>This page drifted off the map.</h1>
+        <p class="lede">The page you’re looking for doesn’t exist — it may have moved, or never been written.</p>
+      </div>
+      <Postcard page="not-found" alt={t.postcards['not-found']} />
+    </div>
     <pre class="ascii" aria-hidden="true">
                                   
 		 o#'9MMHb':'-,o,
@@ -24,9 +33,6 @@ const t = useTranslations(lang);
 	       -.   .         .-
 		 ''-.oo,oo.-''
     </pre>
-    <p class="label code">404</p>
-    <h1>This page drifted off the map.</h1>
-    <p class="lede">The page you’re looking for doesn’t exist — it may have moved, or never been written.</p>
     <p class="links">
       <a href={localizePath('/', lang)}>← UniverLab</a>
       <a href={localizePath('/experiments', lang)}>{t.nav.experiments}</a>

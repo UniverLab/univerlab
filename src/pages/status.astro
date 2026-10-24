@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
+import Watermark from '../components/Watermark.astro';
 import { liveExperiments } from '../lib/experiments';
 import { en } from '../i18n/en';
 const topicColors: Record<string, string> = Object.fromEntries(
@@ -7,13 +9,17 @@ const topicColors: Record<string, string> = Object.fromEntries(
 );
 const rmStrings = en.roadmap;
 ---
-<BaseLayout title="Mission Log — live status of every UniverLab experiment" description="Real-time Mission Log entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg="cosmic" circadian>
+<BaseLayout title="Mission Log — live status of every UniverLab experiment" description="Real-time Mission Log entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg={false} circadian>
+  <Watermark kind="blueprint" />
   <section class="wrap board" id="status-board">
     <header class="board-head">
-      <div class="board-titles">
-        <span class="label">STATUS</span>
-        <h1>Status</h1>
-        <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
+      <div class="page-open">
+        <div class="board-titles page-open-text">
+          <span class="label">STATUS</span>
+          <h1>Status</h1>
+          <p class="intro">Real-time activity from UniverLab experiments and tools.</p>
+        </div>
+        <Postcard page="status" alt={en.postcards.status} />
       </div>
       <div class="board-actions">
         <a href="/roadmap/" class="feed-link">{rmStrings.roadmapLink}</a>
@@ -74,7 +80,7 @@ const rmStrings = en.roadmap;
     .topic-filter.is-active .topic-filter-count, .topic-filter:hover .topic-filter-count { color: currentColor; }
     .filter-empty { padding-block: 3rem; color: var(--ink-faint); font-family: var(--font-mono); font-size: 0.82rem; text-align: center; }
     #log-entries { display: flex; flex-direction: column; }
-    .entry { display: grid; grid-template-columns: 7rem 1fr auto; grid-template-rows: auto auto; gap: 0.4rem 1.2rem; padding-block: 1.8rem; border-bottom: 1px solid var(--line); align-items: start; }
+    .entry { display: grid; grid-template-columns: 7rem 1fr auto; grid-template-rows: auto auto; gap: 0.4rem 1.2rem; padding-block: 1.8rem; border-bottom: 1px solid var(--line); align-items: start; background: color-mix(in srgb, var(--bg) 80%, transparent); }
     .entry time { grid-column: 1; grid-row: 1; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-faint); white-space: nowrap; }
     .entry .type-badge { grid-column: 3; grid-row: 1; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 0.15rem 0.5rem; border-radius: 3px; align-self: start; opacity: 0.8; }
     .entry .entry-body { grid-column: 1 / -1; grid-row: 2; }

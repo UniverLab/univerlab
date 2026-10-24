@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Postcard from '../../components/Postcard.astro';
 import { useTranslations } from '../../i18n';
 import { archivedExperiments } from '../../lib/experiments';
 const t = useTranslations('es');
@@ -13,13 +14,18 @@ const monthYear = (d?: string) =>
 <BaseLayout
   title="El Archivo — las ideas abandonadas de UniverLab"
   description={s.description}
-  bg="cosmic"
+  bg={false}
   circadian
 >
   <section class="wrap opening">
-    <span class="label">{s.kicker}</span>
-    <h1>{s.title}</h1>
-    <p class="intro">{s.intro}</p>
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{s.kicker}</span>
+        <h1>{s.title}</h1>
+        <p class="intro">{s.intro}</p>
+      </div>
+      <Postcard page="archive" alt={t.postcards.archive} />
+    </div>
   </section>
 
   <hr class="rule" />

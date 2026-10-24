@@ -1,16 +1,25 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Postcard from '../../components/Postcard.astro';
+import { getLang, useTranslations } from '../../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
 ---
 <!-- `noindex` because the built HTML holds only a heading and a quote: the
      events come from a client-side fetch of Wikipedia's "On this day" feed, so
      the page has no content for a crawler to index (Google reported /es/today/
      as a Soft 404). The sitemap filter in astro.config.mjs excludes it for the
      same reason — a noindex URL in the sitemap is a reported error. -->
-<BaseLayout title="Hoy en la Ciencia — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." bg="cosmic" circadian noindex>
+<BaseLayout title="Hoy en la Ciencia — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." bg={false} circadian noindex>
   <section class="wrap today-page">
-    <span class="label">HOY EN LA CIENCIA</span>
-    <h1>Hoy</h1>
-    <p class="intro">Eventos científicos que ocurrieron este día en la historia.</p>
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">HOY EN LA CIENCIA</span>
+        <h1>Hoy</h1>
+        <p class="intro">Eventos científicos que ocurrieron este día en la historia.</p>
+      </div>
+      <Postcard page="today" alt={t.postcards.today} />
+    </div>
     <div class="observer-line" id="observer-line"></div>
     <div id="today-loading" class="today-loading">
       <div class="skeleton-line" style="width:60%"></div>

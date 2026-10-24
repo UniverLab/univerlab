@@ -944,6 +944,18 @@ export const es: Dict = {
       commits: 'commits',
     },
   },
+  postcards: {
+    api: 'Un conjunto grabado de tubos acústicos con boquillas de latón sobre un escritorio de madera, unidos por una red de tuberías acodadas',
+    archive: 'Una vitrina de cristal grabada con fundas de tela sobre instrumentos de latón en sus baldas y un zócalo tallado debajo',
+    contributors: 'Una sala de reuniones grabada con una mesa larga que sostiene un libro abierto, sillas a ambos lados y tres marcos vacíos',
+    experiments: 'Una pared grabada de cajones etiquetados con una escalera apoyada al lado',
+    feed: 'Un escritorio grabado con una prensa de copiar, una máquina de escribir y hojas impresas en un alambre',
+    manifesto: 'Una cúpula de observatorio grabada abierta a las estrellas con un telescopio sobre un trípode',
+    'not-found': 'Una carta marina grabada y rasgada con una esquina perdida, un compás sobre el agua',
+    roadmap: 'Una mesa de dibujo grabada con una carta marina a medio trazar, una rosa de los vientos, mapas enrollados, un compás y un globo terráqueo',
+    status: 'Un escritorio grabado con un teletipo bajo una campana de cristal, un libro abierto y una lámpara de latón',
+    today: 'Una esfera armilar grabada junto a un reloj de sol de piedra sobre un suelo empedrado',
+  },
   roadmap: {
     lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },
     hold: 'en espera',

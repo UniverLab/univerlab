@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AttackMap from '../components/AttackMap.astro';
+import Postcard from '../components/Postcard.astro';
+import Watermark from '../components/Watermark.astro';
 import { getLang, useTranslations } from '../i18n';
 import { series, toSvgCoords, toSvgPoints, SVG_W, SVG_H, SVG_LPAD, SVG_TPAD, SVG_RPAD, SVG_BPAD } from '../data/observatory';
 import { startSolLabel } from '../lib/mission-time';
@@ -36,11 +38,17 @@ const roman = (n: number): string => {
   return d[n] ?? String(n);
 };
 ---
-<BaseLayout title={m.metaTitle} description={m.description} bg="cosmic" circadian>
+<BaseLayout title={m.metaTitle} description={m.description} bg={false} circadian>
+  <Watermark kind="celestial" />
   <section class="wrap opening">
-    <span class="label">{m.kicker}</span>
-    <h1>{m.title}</h1>
-    <p class="sub label">{m.sub}</p>
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{m.kicker}</span>
+        <h1>{m.title}</h1>
+        <p class="sub label">{m.sub}</p>
+      </div>
+      <Postcard page="manifesto" alt={t.postcards.manifesto} />
+    </div>
     <!-- Living-document header. Mono voice, --ink-faint. Version, TERRA year and
          Sol are computed from m.docDate in the frontmatter; only `docStatus` is
          localised. NOT aria-hidden: build-md's stripAriaHidden would delete the
@@ -394,7 +402,8 @@ const roman = (n: number): string => {
   h1 { font-size: clamp(2.3rem, 6vw, 3.8rem); }
   .sub { margin: 0; }
   blockquote { margin: 1.4rem 0 0; font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--ink-dim); border-left: 1px solid var(--ink-faint); padding-left: 1.4rem; }
-  .section { padding-block: 3rem; }
+  .section { padding-block: 3rem; background: color-mix(in srgb, var(--bg) 80%, transparent); }
+  .opening { background: color-mix(in srgb, var(--bg) 80%, transparent); }
 
   /* Purpose & Vision — prose + numbered list */
   .purpose-section { max-width: 52rem; }
@@ -1088,73 +1097,10 @@ const roman = (n: number): string => {
 </script>
 
 <script>
-  // Observatory interactive hover: crosshair + data strip for each chart.
-  // SVG_W / SVG_LPAD must match the constants in observatory.ts.
-  const OBS_W = 280, OBS_LPAD = 38, OBS_RPAD = 4;
-
-  document.querySelectorAll<SVGSVGElement>('.obs-svg').forEach((svg) => {
-    const raw = svg.dataset.pts;
-    if (!raw) return;
-    type Coord = { year: number; value: number; x: number; y: number };
-    let pts: Coord[];
-    try { pts = JSON.parse(raw); } catch { return; }
-    if (!pts.length) return;
-
-    const crosshair = svg.querySelector<SVGLineElement>('.obs-crosshair');
-    const dot = svg.querySelector<SVGCircleElement>('.obs-dot');
-    const chart = svg.closest<HTMLElement>('.obs-chart');
-    const yearEl = chart?.querySelector<HTMLElement>('.obs-hover-year');
-    const valEl = chart?.querySelector<HTMLElement>('.obs-hover-val');
-
-    const closestPt = (svgX: number) =>
-      pts.reduce((best, p) =>
-        Math.abs(p.x - svgX) < Math.abs(best.x - svgX) ? p : best);
-
-    const fmtVal = (v: number) =>
-      v >= 1000 ? v.toLocaleString() : v % 1 !== 0 ? v.toFixed(1) : String(v);
-
-    const toSvgX = (clientX: number) => {
-      const r = svg.getBoundingClientRect();
-      return (clientX - r.left) * (OBS_W / r.width);
-    };
-
-    const showPt = (svgX: number) => {
-      const p = closestPt(svgX);
-      crosshair?.setAttribute('x1', p.x.toFixed(1));
-      crosshair?.setAttribute('x2', p.x.toFixed(1));
-      crosshair?.removeAttribute('visibility');
-      dot?.setAttribute('cx', p.x.toFixed(1));
-      dot?.setAttribute('cy', p.y.toFixed(1));
-      dot?.removeAttribute('visibility');
-      if (yearEl) yearEl.textContent = String(p.year);
-      if (valEl) valEl.textContent = fmtVal(p.value);
-    };
-
-    const hidePt = () => {
-      crosshair?.setAttribute('visibility', 'hidden');
-      dot?.setAttribute('visibility', 'hidden');
-      if (yearEl) yearEl.textContent = '—';
-      if (valEl) valEl.textContent = '';
-    };
-
-    svg.addEventListener('mousemove', (e) => {
-      const svgX = toSvgX(e.clientX);
-      if (svgX < OBS_LPAD || svgX > OBS_W - OBS_RPAD) { hidePt(); return; }
-      showPt(svgX);
-    });
-
-    svg.addEventListener('mouseleave', hidePt);
-
-    svg.addEventListener('touchmove', (e) => {
-      if (e.touches.length !== 1) return;
-      e.preventDefault();
-      const svgX = toSvgX(e.touches[0].clientX);
-      if (svgX < OBS_LPAD || svgX > OBS_W - OBS_RPAD) { hidePt(); return; }
-      showPt(svgX);
-    }, { passive: false });
-
-    svg.addEventListener('touchend', hidePt);
-  });
+  // Chart hover lives in src/scripts so this view stays under the
+  // reviewer's 1200-line ceiling (same precedent as AttackMap.astro).
+  import { startObservatoryHover } from '../scripts/observatory-hover';
+  startObservatoryHover();
 </script>
 
 <script>

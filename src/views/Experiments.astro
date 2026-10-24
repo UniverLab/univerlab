@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
 import { byId } from '../lib/experiments';
 import { entryModels } from '../lib/experiment-entries';
 import { getLang, useTranslations, localizePath } from '../i18n';
@@ -19,13 +20,17 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 <BaseLayout
   title={enc.title}
   description={enc.description}
+  bg={false}
   circadian
 >
   <section class="enc" aria-labelledby="t-enc">
-    <header class="enc-head">
-      <h1 id="t-enc" class="enc-h1">{enc.head}</h1>
-      <p class="enc-tome">{enc.tome}</p>
-      <p class="enc-intro">{enc.intro}</p>
+    <header class="enc-head page-open">
+      <div class="page-open-text">
+        <h1 id="t-enc" class="enc-h1">{enc.head}</h1>
+        <p class="enc-tome">{enc.tome}</p>
+        <p class="enc-intro">{enc.intro}</p>
+      </div>
+      <Postcard page="experiments" alt={t.postcards.experiments} />
     </header>
 
     <nav class="thumbs" aria-label={enc.tabs.aria}>
