@@ -75,9 +75,11 @@ describe('global typefaces', () => {
     );
   });
 
-  it('keeps inline IBM Plex strings out of the toast styles', () => {
+  it('keeps inline IBM Plex strings out of the layout styles', () => {
     expect(LAYOUT).not.toContain('font-family:"IBM Plex Mono"');
-    expect(LAYOUT.match(/font-family:var\(--font-mono\)/g)?.length).toBe(3);
+    // The announcement toast is gone (mail arrives in the mailbox); only the
+    // 42 answer's inline style still spells the mono token out.
+    expect(LAYOUT.match(/font-family:var\(--font-mono\)/g)?.length).toBe(1);
   });
 
   it('lets surfaces keep their palette and use the shared typefaces', () => {

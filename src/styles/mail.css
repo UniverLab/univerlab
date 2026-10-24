@@ -1,0 +1,464 @@
+/* The postal system: the mailbox at the end of the header rule, the letter
+   dialog and every paper of the ritual (envelope, flap, seal, address side,
+   letter). Ported from specs/redesign-reference/correo/index.html (view
+   "Header y buzón"), which sets the look and the timings. All colours are
+   --mail-prefixed custom properties: day values on :root, night values under
+   the site's night flag, like the language corner. */
+
+:root {
+  --mail-ground: #f4f0ea;
+  --mail-ink: #1d1510;
+  --mail-env: #e9dcc3;
+  --mail-env-shade: #d9c7a5;
+  --mail-env-edge: #b49c74;
+  --mail-lining: #cdb68c;
+  --mail-lining-ink: #8a6a3c;
+  --mail-letter: #fbf6ea;
+  --mail-letter-ink: #1d1510;
+  --mail-letter-soft: #6b5a43;
+  --mail-link: #87222c;
+  --mail-box: #2f3b33;
+  --mail-box-hi: #4d5d50;
+  --mail-box-ink: #141a16;
+  --mail-brass: #a07c3a;
+  --mail-flag: #9b2a2f;
+  --mail-stamp-bg: #2c3a52;
+  --mail-shadow: 32 22 12;
+  --mail-garnet: #87222c;
+}
+
+:root[data-bench-theme='night'] {
+  --mail-ground: #222928;
+  --mail-ink: #ecebe4;
+  --mail-env: #d3c8b2;
+  --mail-env-shade: #bfb197;
+  --mail-env-edge: #8f8064;
+  --mail-lining: #a99674;
+  --mail-lining-ink: #5d4a2c;
+  --mail-letter: #ece4d3;
+  --mail-letter-ink: #1d1510;
+  --mail-letter-soft: #5e5040;
+  --mail-link: #e0a2a6;
+  --mail-box: #3b4a40;
+  --mail-box-hi: #5f7264;
+  --mail-box-ink: #101512;
+  --mail-brass: #c49a52;
+  --mail-flag: #b8363c;
+  --mail-stamp-bg: #1c2330;
+  --mail-shadow: 0 0 0;
+  --mail-garnet: #e0a2a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-bench-theme='day']) {
+    --mail-ground: #222928;
+    --mail-ink: #ecebe4;
+    --mail-env: #d3c8b2;
+    --mail-env-shade: #bfb197;
+    --mail-env-edge: #8f8064;
+    --mail-lining: #a99674;
+    --mail-lining-ink: #5d4a2c;
+    --mail-letter: #ece4d3;
+    --mail-letter-ink: #1d1510;
+    --mail-letter-soft: #5e5040;
+    --mail-link: #e0a2a6;
+    --mail-box: #3b4a40;
+    --mail-box-hi: #5f7264;
+    --mail-box-ink: #101512;
+    --mail-brass: #c49a52;
+    --mail-flag: #b8363c;
+    --mail-stamp-bg: #1c2330;
+    --mail-shadow: 0 0 0;
+    --mail-garnet: #e0a2a6;
+  }
+}
+
+/* ── The mailbox ─────────────────────────────────────────────────────────── */
+.mailbox {
+  position: absolute;
+  right: 2px;
+  bottom: -1px;
+  width: 46px;
+  height: 58px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  z-index: 2;
+}
+.mailbox svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.mailbox .flag {
+  transform-origin: 41.5px 28px;
+  transform: rotate(90deg);
+  transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.mailbox[data-mail='1'] .flag { transform: rotate(0deg); }
+.mailbox .lid {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transition: transform 0.16s ease;
+}
+.mailbox.opening .lid { transform: translateY(-2.5px) rotate(-8deg); }
+.mailbox:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.mailbox .badge {
+  position: absolute;
+  left: -6px;
+  top: 4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--mail-flag);
+  color: #fbf6ea;
+  font: 500 10.5px/17px var(--font-mono);
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--mail-ground);
+}
+.mailbox .badge[hidden] { display: none; }
+
+/* A small envelope falls into the slot when lab mail arrives. */
+.mail-drop {
+  position: fixed;
+  z-index: 40;
+  width: 26px;
+  height: 16px;
+  background: var(--mail-env);
+  border: 1px solid var(--mail-env-edge);
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .mailbox { width: 40px; height: 52px; }
+}
+
+/* ── The letter dialog ───────────────────────────────────────────────────── */
+.mail-pop {
+  position: fixed;
+  z-index: 30;
+  width: var(--w);
+  padding-top: var(--flap-room);
+  pointer-events: none;
+}
+.mail-pop * { pointer-events: auto; }
+.mail-pop .stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 300 / 186;
+  perspective: 900px;
+  cursor: pointer;
+  outline: none;
+}
+.mail-pop .stage:focus-visible { outline: 2px dashed var(--mail-ink); outline-offset: 6px; }
+.mail-pop .shadow {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -10px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(var(--mail-shadow) / 0.32), transparent);
+  filter: blur(2px);
+}
+.mail-pop .env-back,
+.mail-pop .env-front,
+.mail-pop .flap,
+.mail-pop .holder { position: absolute; inset: 0; }
+.mail-pop .env-back svg,
+.mail-pop .env-front svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.mail-pop .holder { clip-path: inset(-400% -20% 0 -20%); z-index: 2; }
+.mail-pop .holder.free { clip-path: none; z-index: 6; }
+.mail-pop .env-back { z-index: 1; }
+.mail-pop .env-front { z-index: 3; pointer-events: none; }
+.mail-pop .flap {
+  z-index: 4;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+  height: 56.5%;
+}
+.mail-pop .flap.open { z-index: 1; }
+.mail-pop .flap svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  overflow: visible;
+}
+.mail-pop .flap .inner { transform: rotateX(180deg); }
+.mail-pop .letter {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 11%;
+  min-height: 118%;
+  padding: 18px 18px 16px;
+  color: var(--mail-letter-ink);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 25px, rgb(var(--mail-shadow) / 0.045) 25px 26px),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgb(var(--mail-shadow) / 0.018) 3px 4px),
+    var(--mail-letter);
+  clip-path: var(--deckle, none);
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.mail-pop .letter-shadow {
+  position: absolute;
+  inset: 6px -4px -8px 4px;
+  background: rgb(var(--mail-shadow) / 0.28);
+  filter: blur(10px);
+  z-index: -1;
+  opacity: 0;
+}
+.mail-pop .letter .meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mail-letter-soft);
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mail-pop .letter h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.15;
+  margin: 2px 0 0;
+}
+.mail-pop .letter p {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+  min-height: 6.2em;
+  white-space: pre-wrap;
+}
+.mail-pop .letter p .caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  vertical-align: -0.15em;
+  background: var(--mail-letter-ink);
+  opacity: 0.7;
+  animation: mail-blink 1s steps(1) infinite;
+}
+@keyframes mail-blink { 50% { opacity: 0; } }
+.mail-pop .letter .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.mail-pop .letter .links.on { opacity: 1; }
+.mail-pop .letter a {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--mail-link);
+  text-underline-offset: 3px;
+}
+.mail-pop .letter a:focus-visible { outline: 2px solid var(--mail-link); outline-offset: 2px; }
+.mail-pop .letter .next {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--mail-letter-ink);
+  background: none;
+  border: 1px solid var(--mail-letter-soft);
+  padding: 3px 9px;
+  cursor: pointer;
+  justify-self: start;
+}
+.mail-pop .letter .next:focus-visible { outline: 2px solid var(--mail-letter-ink); outline-offset: 2px; }
+.mail-pop .close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: none;
+  font: 20px/1 var(--font-serif);
+  color: var(--mail-letter-soft);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 7;
+}
+.mail-pop .close.on { opacity: 1; }
+.mail-pop .close:focus-visible { outline: 2px solid var(--mail-letter-soft); }
+.mail-pop .seal {
+  position: absolute;
+  z-index: 7;
+  width: 17%;
+  aspect-ratio: 1;
+  left: 41.5%;
+  top: 45%;
+}
+.mail-pop .seal img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(1px 2px 1px rgb(var(--mail-shadow) / 0.35));
+}
+.mail-pop .seal .l { clip-path: polygon(0 0, 53% 0, 47% 18%, 56% 37%, 45% 58%, 54% 79%, 48% 100%, 0 100%); }
+.mail-pop .seal .r { clip-path: polygon(53% 0, 100% 0, 100% 100%, 48% 100%, 54% 79%, 45% 58%, 56% 37%, 47% 18%); }
+.mail-pop .crumb {
+  position: absolute;
+  width: 5px;
+  height: 4px;
+  background: #8f1f24;
+  border-radius: 1px;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+}
+.mail-pop .stage.flipped .seal { cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; }
+.mail-pop .stage.flipped .seal:hover {
+  transform: scale(1.08) rotate(-4deg);
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.25));
+}
+.mail-pop .stage.opened { cursor: default; }
+
+/* The address side, what comes out of the mailbox first. */
+.mail-pop .face {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgb(var(--mail-shadow) / 0.02) 3px 4px),
+    var(--mail-env);
+  border: 1px solid var(--mail-env-edge);
+  box-shadow: inset 0 0 18px rgb(var(--mail-shadow) / 0.08);
+  color: #3b2f24;
+}
+/* Lab mail wears an airmail border in the experiment's colour. */
+.mail-pop .face.lab::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  border: 5px solid transparent;
+  border-image: repeating-linear-gradient(45deg, var(--accent) 0 8px, transparent 8px 12px, #87222c 12px 20px, transparent 20px 24px) 6;
+  opacity: 0.85;
+}
+.mail-pop .stamp {
+  position: absolute;
+  right: 7%;
+  top: 10%;
+  width: 19%;
+  aspect-ratio: 4 / 5;
+  background: #f3ead6;
+  padding: 5%;
+  -webkit-mask: radial-gradient(circle at 3px 3px, transparent 1.6px, #000 1.8px) -3px -3px / 6px 6px;
+  mask: radial-gradient(circle at 3px 3px, transparent 1.6px, #000 1.8px) -3px -3px / 6px 6px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  justify-items: center;
+}
+.mail-pop .stamp .art {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--mail-stamp-bg);
+  display: grid;
+  place-items: center;
+  outline: 1px solid #8a6a3c;
+  outline-offset: -2px;
+}
+.mail-pop .stamp .art img,
+.mail-pop .stamp .art svg { width: 78%; height: 78%; }
+.mail-pop .stamp.lab .art { background: var(--accent); }
+.mail-pop .stamp.lab .art img { width: 70%; height: 70%; }
+.mail-pop .stamp .val {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  color: #6b4f22;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.mail-pop .postmark {
+  position: absolute;
+  right: 18%;
+  top: 12%;
+  width: 25%;
+  aspect-ratio: 1;
+  color: #2a2f3a;
+  opacity: 0.78;
+  transform: rotate(-12deg);
+}
+.mail-pop .postmark svg { width: 100%; height: 100%; overflow: visible; }
+.mail-pop .addr {
+  position: absolute;
+  left: 30%;
+  top: 50%;
+  right: 8%;
+  font-family: var(--font-mono);
+  font-size: clamp(9.5px, 3.1vw, 11.5px);
+  line-height: 1.6;
+  display: grid;
+}
+.mail-pop .addr span:first-child {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.25em;
+}
+.mail-pop .via {
+  position: absolute;
+  left: 6%;
+  top: 10%;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b5a43;
+  border: 1px solid #6b5a43;
+  padding: 2px 5px;
+  transform: rotate(-3deg);
+}
+.mail-pop .hint-step {
+  margin: 16px auto 0;
+  width: fit-content;
+  max-width: 100%;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--mail-ink);
+  background: var(--mail-ground);
+  padding: 3px 10px;
+  box-shadow: 0 1px 4px rgb(var(--mail-shadow) / 0.2);
+}
+.mail-pop .hint-step:empty { display: none; }
+
+/* Age: fine paper grain, a few foxing spots and one tide line, worn edges.
+   Drawn on top with multiply; the spots are random per letter. */
+.mail-pop .grime {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: 9;
+  background-image: var(--spots, none),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .42  0 0 0 0 .3  0 0 0 0 .16  0 0 0 .5 -.08'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .36  0 0 0 0 .18  0 0 0 .55 -.2'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>");
+  background-size: auto, 180px 180px, 100% 100%;
+  box-shadow: inset 0 0 22px rgb(110 78 38 / 0.38), inset 0 0 3px rgb(90 60 30 / 0.4);
+  opacity: 0.95;
+}
+.mail-pop .letter .grime { box-shadow: inset 0 0 26px rgb(120 88 46 / 0.2); opacity: 0.32; z-index: 0; }
+.mail-pop .env-front .grime { z-index: 1; clip-path: polygon(0 0, 46% 56%, 50% 49.5%, 54% 56%, 100% 0, 100% 100%, 0 100%); }
+.mail-pop .flap .grime { z-index: 1; clip-path: polygon(0 0, 100% 0, 52% 100%, 48% 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mailbox .flag,
+  .mailbox .lid { transition: none; }
+  .mail-pop .letter p .caret { animation: none; }
+}

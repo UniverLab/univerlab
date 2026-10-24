@@ -130,12 +130,27 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/left: clamp\(22px, var\(--sun-pos, 50%\), calc\(100% - 98px\)\)/);
   });
 
-  it('keeps behaviour: position var, popup, drag-to-scrub, i18n import', () => {
+  it('keeps behaviour: position var, letter hook, drag-to-scrub, i18n import', () => {
     expect(src).toMatch(/--sun-pos/);
-    expect(src).toMatch(/showPopup|otd-popup/);
+    // The sky body opens today's letter through the mailbox's dialog; a click
+    // that was not a drag forwards to the mail system (no popup of its own).
+    expect(src).toMatch(/window\.univerlabOpenMail\?\.\(btn\)|window\.univerlabOpenMail\(btn\)/);
+    expect(src).not.toMatch(/showPopup|otd-popup/);
     expect(src).toMatch(/addEventListener\('mousedown', onPointerDown\)/);
     expect(src).toMatch(/window\.scrubTime/);
     expect(src).toMatch(/window\.resetScrub/);
+  });
+
+  it('imports the shared science filter and renders the mailbox at the rule end', () => {
+    // The keyword lists moved to ../lib/science-filter; the header warms the
+    // day's pool from there and the mailbox it renders owns the letter.
+    expect(src).toMatch(/from '\.\.\/lib\/science-filter'/);
+    expect(src).toMatch(/readOtdCache\(lang\)/);
+    expect(src).toMatch(/fetchPool\(fetch, lang\)/);
+    expect(src).toMatch(/import Mailbox from '\.\/Mailbox\.astro'/);
+    expect(src).toMatch(/<Mailbox \/>/);
+    // No science keyword list is left in the header itself.
+    expect(src).not.toContain('SCIENCE_EN = [');
   });
 
   it('ported moon matches the phase the header will render', () => {
