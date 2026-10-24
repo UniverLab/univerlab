@@ -1,15 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Postcard from '../components/Postcard.astro';
+import TodaysPaper from '../components/TodaysPaper.astro';
 import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 ---
-<!-- `noindex` because the built HTML holds only a heading and a quote: the
-     events come from a client-side fetch of Wikipedia's "On this day" feed, so
-     the page has no content for a crawler to index (Google read it as a Soft
-     404). The sitemap filter in astro.config.mjs excludes it for the same
-     reason — a noindex URL in the sitemap is a reported error. -->
+<!-- `noindex` because the built HTML holds only the masthead: the edition is
+     set at the edge by functions/_middleware.ts, and the client script below
+     fills #edition with the same renderer when the edge did not. The sitemap
+     filter in astro.config.mjs excludes it for the same reason — a noindex
+     URL in the sitemap is a reported error. -->
 <BaseLayout title="Today in Science — UniverLab" description="Every science event that happened on this day in history." bg={false} circadian noindex>
   <section class="wrap today-page">
     <div class="page-open">
@@ -20,215 +21,63 @@ const t = useTranslations(lang);
       </div>
       <Postcard page="today" alt={t.postcards.today} />
     </div>
-    <div class="observer-line" id="observer-line"></div>
-    <div id="today-loading" class="today-loading">
-      <div class="skeleton-line" style="width:60%"></div>
-      <div class="skeleton-line" style="width:80%"></div>
-      <div class="skeleton-line" style="width:45%"></div>
-    </div>
-    <div id="today-events" class="today-events"></div>
-    <div id="today-error" class="today-error" style="display:none"></div>
+    <TodaysPaper />
   </section>
 
   <style is:global>
-    .today-page { max-width: 42rem; padding-block: 4rem 5rem; }
+    /* The newspaper needs the full wrap: three columns from 48rem, as in the
+       mockup. The old list layout capped the page at 42rem. */
+    .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
     h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 0.3rem; }
     .intro { color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0 0 0.5rem; }
-    .observer-line {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.01em;
-      color: var(--ink-faint);
-      margin-bottom: 2.5rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
-    .skeleton-line {
-      height: 1rem;
-      border-radius: 4px;
-      background: linear-gradient(90deg, var(--line) 25%, transparent 50%, var(--line) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-    .today-events { display: flex; flex-direction: column; }
-    .today-event {
-      display: grid;
-      grid-template-columns: 3.5rem 1fr;
-      gap: 1rem;
-      padding-block: 1.2rem;
-      border-bottom: 1px solid var(--line);
-      animation: fade-in 0.3s ease both;
-    }
-    .today-event:first-child { border-top: 1px solid var(--line); }
-    @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    .event-year {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: var(--accent);
-      padding-top: 0.15rem;
-      text-align: right;
-    }
-    .event-body { display: flex; flex-direction: column; gap: 0.3rem; }
-    .event-kind {
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-    }
-    .event-text {
-      font-family: var(--font-serif);
-      font-size: 0.92rem;
-      color: var(--ink-dim);
-      line-height: 1.6;
-      margin: 0;
-    }
-    .event-link {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--accent);
-      text-decoration: none;
-      letter-spacing: 0.04em;
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
-    }
-    .event-link:hover { opacity: 1; text-decoration: underline; }
-    .section-label {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-      margin-bottom: 0.8rem;
-      opacity: 0.7;
-    }
-    .today-error {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--ink-faint);
-      padding-block: 2rem;
-      text-align: center;
-    }
-    @media (max-width: 480px) {
-      .today-event { grid-template-columns: 1fr; gap: 0.3rem; }
-      .event-year { text-align: left; }
-    }
   </style>
 
   <script>
-    // The day's science pool is shared with the mailbox letter: one
-    // filter, one cache, one module (src/lib/science-filter.ts). The cache
-    // keeps the whole day and this newspaper renders all of it; the letter's
-    // short pool is shaped where the letter is picked (scripts/mail.ts).
+    // The client fallback for the newspaper: when the edge did not set the
+    // type (#edition is still empty), fetch the day's pool and the lab's
+    // announcements and fill it with the same renderer the edge uses.
     import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
+    import { todayEditionHtml, editionDate } from '../lib/today-edition';
 
     (function () {
       var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+      var ed = document.getElementById('edition');
+      if (!ed || (ed.textContent || '').replace(/\s/g, '')) return;
 
-    var I18N = {
-      en: { anniv: 'On a day like today', inYear: 'In', born: 'Birth of ', died: 'Death of ', sol: 'Sol', orbit: 'Orbit', total: 'events' },
-      es: { anniv: 'Un día como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sol: 'Sol', orbit: 'Órbita', total: 'eventos' },
-    };
+      var loading = document.getElementById('today-loading');
+      var failed = function () {
+        if (loading) loading.style.display = 'none';
+        var err = document.getElementById('today-error');
+        if (err) {
+          err.style.display = 'block';
+          // Copy lives in src/i18n (t.today.error), set by the component.
+          err.textContent = err.getAttribute('data-msg') || '';
+        }
+      };
 
-    function observerLine() {
-      var i = I18N[lang] || I18N.en;
-      var now = new Date();
-      var y = now.getFullYear();
-      var start = new Date(y, 0, 0);
-      var dayOfYear = Math.floor((now - start) / 86400000);
-      var total = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
-      var pct = (dayOfYear / total * 100).toFixed(1);
-      return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
-    }
-
-    function setObserverLine() {
-      var line = document.getElementById('observer-line');
-      if (!line) return;
-      var now = new Date();
-      var iso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-      line.textContent = '';
-      var time = document.createElement('time');
-      time.setAttribute('datetime', iso);
-      time.setAttribute('data-mission', '');
-      time.textContent = observerLine();
-      line.appendChild(time);
-    }
-
-    function render(items) {
-      var i = I18N[lang] || I18N.en;
-      setObserverLine();
-
-      var events = items.filter(function (x) { return x.kind === 'event'; });
-      events.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
-      var people = items.filter(function (x) { return x.kind === 'born' || x.kind === 'died'; });
-      people.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
-
-      var container = document.getElementById('today-events');
-
-      if (events.length) {
-        var secLabel = document.createElement('div');
-        secLabel.className = 'section-label';
-        secLabel.textContent = 'SCI EVENTS';
-        container.appendChild(secLabel);
-        events.forEach(function (item, idx) {
-          var el = document.createElement('article');
-          el.className = 'today-event';
-          el.style.animationDelay = (idx * 0.03) + 's';
-          var body = '<span class="event-kind">' + i.anniv + '</span>';
-          body += '<p class="event-text">' + item.text + '</p>';
-          if (item.link) body += '<a class="event-link" href="' + item.link + '" target="_blank" rel="noopener noreferrer">Wikipedia →</a>';
-          el.innerHTML = '<div class="event-year">' + (i.inYear + ' ' + item.year) + '</div><div class="event-body">' + body + '</div>';
-          container.appendChild(el);
-        });
-      }
-
-      if (people.length) {
-        var secLabel2 = document.createElement('div');
-        secLabel2.className = 'section-label';
-        secLabel2.style.marginTop = '2rem';
-        secLabel2.textContent = lang === 'es' ? 'NACIMIENTOS Y FALLECIMIENTOS' : 'BIRTHS AND DEATHS';
-        container.appendChild(secLabel2);
-        people.forEach(function (item, idx) {
-          var el = document.createElement('article');
-          el.className = 'today-event';
-          el.style.animationDelay = (idx * 0.03) + 's';
-          var prefix = item.kind === 'born' ? i.born : i.died;
-          var body = '<span class="event-kind">' + (item.kind === 'born' ? i.born.trim() : i.died.trim()) + '</span>';
-          body += '<p class="event-text">' + prefix + item.text + '</p>';
-          if (item.link) body += '<a class="event-link" href="' + item.link + '" target="_blank" rel="noopener noreferrer">Wikipedia →</a>';
-          el.innerHTML = '<div class="event-year">' + (i.inYear + ' ' + item.year) + '</div><div class="event-body">' + body + '</div>';
-          container.appendChild(el);
-        });
-      }
-    }
-
-    setObserverLine();
-
-    var cached = readOtdCache(lang);
-    if (cached) {
-      document.getElementById('today-loading').style.display = 'none';
-      render(cached);
-    } else {
-      // FULL_POOL: the whole filtered day — every event, birth and death.
-      fetchPool(fetch, lang, new Date(), FULL_POOL)
-        .then(function (items) {
-          document.getElementById('today-loading').style.display = 'none';
-          if (!items || !items.length) {
-            document.getElementById('today-error').style.display = 'block';
-            document.getElementById('today-error').textContent = lang === 'es' ? 'No hay eventos científicos para hoy.' : 'No science events for today.';
-            return;
-          }
-          render(items);
+      var facts = readOtdCache(lang);
+      var factsP = facts && facts.length
+        ? Promise.resolve(facts)
+        : fetchPool(fetch, lang, new Date(), FULL_POOL);
+      // The lab mailbox is optional: a failed announcements read (CORS, an
+      // outage) still prints the day's letters, just without that box.
+      var labP = fetch('https://announcements.univerlab.org/?limit=10')
+        .then(function (res) {
+          if (!res.ok) throw new Error('API ' + res.status);
+          return res.json();
         })
-        .catch(function () {
-          document.getElementById('today-loading').style.display = 'none';
-          document.getElementById('today-error').style.display = 'block';
-          document.getElementById('today-error').textContent = lang === 'es' ? 'Error al cargar eventos.' : 'Failed to load events.';
-        });
-    }
-  })();
+        .then(function (data) {
+          return Array.isArray(data?.entries) ? data.entries : [];
+        })
+        .catch(function () { return []; });
+
+      Promise.all([factsP, labP]).then(
+        function (parts) {
+          if (!parts[0] || !parts[0].length) { failed(); return; }
+          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, editionDate());
+        },
+        function () { failed(); },
+      );
+    })();
   </script>
 </BaseLayout>

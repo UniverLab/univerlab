@@ -1,0 +1,213 @@
+{
+  "events": [
+    {
+      "year": 1638,
+      "text": "The Great Storm at Widecombe leaves the first documented observation of ball lightning in England.",
+      "pages": [
+        {
+          "titles": { "normalized": "Widecombe-in-the-Moor" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Widecombe-in-the-Moor" } }
+        }
+      ]
+    },
+    {
+      "year": 1879,
+      "text": "Thomas Edison invents a practical incandescent lamp that burns for 48 hours.",
+      "pages": [
+        {
+          "titles": { "normalized": "Thomas Edison" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Thomas_Edison" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Thomas_Edison.jpg/320px-Thomas_Edison.jpg",
+            "width": 320,
+            "height": 407
+          }
+        }
+      ]
+    },
+    {
+      "year": 1907,
+      "text": "A powerful earthquake destroys Karatag, and scientists at the Tashkent observatory record the tremors.",
+      "pages": [
+        {
+          "titles": { "normalized": "1907 Karatag earthquake" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/1907_Karatag_earthquake" } }
+        }
+      ]
+    },
+    {
+      "year": 1928,
+      "text": "Doctors at a Boston hospital switch on a new laboratory respirator to keep a patient breathing.",
+      "pages": [
+        {
+          "titles": { "normalized": "Boston" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Boston" } }
+        }
+      ]
+    }
+  ],
+  "births": [
+    {
+      "year": 1766,
+      "text": "Francisco Antonio Zea, Colombian naturalist and scientist, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Francisco Antonio Zea" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Francisco_Antonio_Zea" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Francisco_Antonio_Zea.svg/320px-Francisco_Antonio_Zea.svg",
+            "width": 320,
+            "height": 400
+          }
+        }
+      ]
+    },
+    {
+      "year": 1833,
+      "text": "Alfred Nobel, Swedish chemist and inventor of dynamite, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Alfred Nobel" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Alfred_Nobel" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Alfred_Nobel.jpg/330px-Alfred_Nobel.jpg",
+            "width": 330,
+            "height": 436
+          }
+        }
+      ]
+    },
+    {
+      "year": 1914,
+      "text": "Martin Gardner, American mathematician and writer on science, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Martin Gardner" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Martin_Gardner" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Martin_Gardner.jpg/320px-Martin_Gardner.jpg",
+            "width": 320,
+            "height": 410
+          }
+        }
+      ]
+    },
+    {
+      "year": 1925,
+      "text": "Concepción Llaguno, Spanish chemist, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Concepción Llaguno" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Concepci%C3%B3n_Llaguno" } }
+        }
+      ]
+    },
+    {
+      "year": 1944,
+      "text": "Jean-Pierre Sauvage, French chemist, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Jean-Pierre Sauvage" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Jean-Pierre_Sauvage" } }
+        }
+      ]
+    },
+    {
+      "year": 1950,
+      "text": "Ronald McNair, American astronaut and physicist, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Ronald McNair" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Ronald_McNair" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Ronald_McNair.png/320px-Ronald_McNair.png",
+            "width": 320,
+            "height": 400
+          }
+        }
+      ]
+    },
+    {
+      "year": 1957,
+      "text": "Wolfgang Ketterle, German physicist, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Wolfgang Ketterle" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Wolfgang_Ketterle" } }
+        }
+      ]
+    },
+    {
+      "year": 1958,
+      "text": "Andre Geim, Dutch physicist of Russian origin, is born.",
+      "pages": [
+        {
+          "titles": { "normalized": "Andre Geim" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Andre_Geim" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/Andre_Geim_portrait.jpg/320px-Andre_Geim_portrait.jpg",
+            "width": 320,
+            "height": 400
+          }
+        }
+      ]
+    }
+  ],
+  "deaths": [
+    {
+      "year": 1958,
+      "text": "Jorge Bobone, Argentine astronomer, dies.",
+      "pages": [
+        {
+          "titles": { "normalized": "Jorge Bobone" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Jorge_Bobone" } },
+          "thumbnail": {
+            "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Jorge_Bobone.jpg/240px-Jorge_Bobone.jpg",
+            "width": 240,
+            "height": 300
+          }
+        }
+      ]
+    },
+    {
+      "year": 1962,
+      "text": "Niels Bohr, Danish physicist, dies.",
+      "pages": [
+        {
+          "titles": { "normalized": "Niels Bohr" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Niels_Bohr" } }
+        }
+      ]
+    },
+    {
+      "year": 1967,
+      "text": "Ejnar Hertzsprung, Danish astronomer, dies.",
+      "pages": [
+        {
+          "titles": { "normalized": "Ejnar Hertzsprung" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Ejnar_Hertzsprung" } }
+        }
+      ]
+    },
+    {
+      "year": 1969,
+      "text": "Wacław Sierpiński, Polish mathematician, dies.",
+      "pages": [
+        {
+          "titles": { "normalized": "Wacław Sierpiński" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Wac%C5%82aw_Sierpi%C5%84ski" } }
+        }
+      ]
+    },
+    {
+      "year": 2010,
+      "text": "Benoît Mandelbrot, French-American mathematician, dies.",
+      "pages": [
+        {
+          "titles": { "normalized": "Benoît Mandelbrot" },
+          "content_urls": { "desktop": { "page": "https://en.wikipedia.org/wiki/Beno%C3%AEt_Mandelbrot" } }
+        }
+      ]
+    }
+  ]
+}

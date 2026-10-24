@@ -1104,6 +1104,29 @@ export const en = {
       archived: 'archived',
     },
   },
+  today: {
+    path: 'univerlab.org/today',
+    edition: "Today's edition",
+    name: 'The Courier of the Past',
+    motto: 'Letters of science arriving today, after years on their way',
+    sol: 'Sol',
+    counts: '{n} letters from the past · {m} from the lab',
+    labKicker: 'Lab mail · today',
+    labLink: 'Read the full announcement →',
+    leadKicker: 'Letter of the day · {years} years on its way',
+    readOn: 'Read on Wikipedia →',
+    wikiLink: 'Wikipedia →',
+    events: 'Events',
+    births: 'Births',
+    deaths: 'Deaths',
+    yearsWay: '{years} years on its way',
+    caption: '{name} · Wikimedia Commons',
+    colophon:
+      'Data comes from Wikipedia’s “On this day”, filtered to science; photos from Wikimedia Commons, printed in halftone. Each letter carries its year as a postmark.',
+    loading: 'Setting the type…',
+    empty: 'No science events for today.',
+    error: 'Failed to load the day’s letters.',
+  },
 };
 
 export type Dict = typeof en;

@@ -1,6 +1,14 @@
 import { renderStatusTwin, statusTwinRoute, type Lang } from './status-twin';
 import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
+import { buildPool } from '../src/lib/science-filter';
+import {
+  editionDate,
+  otdUrl,
+  todayEditionHtml,
+  todayEditionMarkdown,
+  todayRoute,
+} from '../src/lib/today-edition';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
 
@@ -75,6 +83,32 @@ function timeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
   return { signal: ctrl.signal, clear: () => clearTimeout(timer) };
 }
 
+/** Both public reads for the newspaper, in parallel, rendered for `lang`.
+ *  Rejects on any failure — the caller's catch is what degrades to the
+ *  static page. The Wikipedia read carries the project's User-Agent and is
+ *  edge-cached one hour per language and day; the lab read reuses the API
+ *  policy. Both share one 3 s deadline. */
+async function liveTodayEdition(
+  lang: 'en' | 'es',
+  fetchImpl: typeof fetch,
+  signal: AbortSignal,
+): Promise<{ html: string; markdown: string }> {
+  const date = editionDate();
+  const otd = await fetchImpl(otdUrl(lang, date), {
+    headers: { 'User-Agent': 'UniverLab/1.0 (https://univerlab.org)' },
+    cf: { cacheTtl: 3600, cacheEverything: true },
+    signal,
+  } as RequestInit);
+  if (!otd.ok) throw new Error(`otd ${otd.status}`);
+  const data = (await otd.json()) as Parameters<typeof buildPool>[0];
+  const entries = await loadEntries({ fetchImpl, init: apiInit(), signal });
+  const feed = { facts: buildPool(data, lang), lab: entries };
+  return {
+    html: todayEditionHtml(feed, lang, date),
+    markdown: todayEditionMarkdown(feed, lang, date),
+  };
+}
+
 /** Both public endpoints, in parallel, rendered for `lang`. Rejects on any
  *  failure — the caller's catch is what degrades to the static twin. The two
  *  reads share one 3 s deadline and one edge-cache policy. */
@@ -136,6 +170,39 @@ export async function onRequest(context: {
     }
   }
 
+  // The newspaper: fetch the static page, then set its #edition to the day's
+  // edition. Any failure (timeout 3 s, non-OK) serves the static page, whose
+  // client script fills #edition with the same renderer.
+  const todayLang = request.method === 'GET' && !wantsMarkdown(accept) ? todayRoute(pathname) : null;
+  if (todayLang) {
+    const staticRes = await next();
+    if (!staticRes.ok) return staticRes;
+    try {
+      const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+      try {
+        const { html } = await liveTodayEdition(todayLang, fetch, signal);
+        const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
+        if (typeof RW === 'function') {
+          const rewriter = new (RW as new () => {
+            on(s: string, h: unknown): unknown;
+            transform(r: Response): Response;
+          })();
+          (rewriter.on as (s: string, h: unknown) => void)('#edition', {
+            element(el: { setInnerContent(c: string, o: unknown): void }) {
+              el.setInnerContent(html, { html: true });
+            },
+          });
+          return rewriter.transform(staticRes);
+        }
+        return staticRes;
+      } finally {
+        clear();
+      }
+    } catch {
+      return staticRes;
+    }
+  }
+
   if (!wantsMarkdown(accept)) {
     return next();
   }
@@ -161,6 +228,23 @@ export async function onRequest(context: {
         try {
           const items = await loadRoadmap({ init: apiInit(), signal });
           return new Response(renderRoadmapTwin(items), { headers: MARKDOWN_HEADERS });
+        } finally {
+          clear();
+        }
+      } catch {
+        // fall through to static twin
+      }
+    }
+
+    // The newspaper's markdown twin, rendered live the same way. Any failure
+    // falls through to the static twin below, never to an error page.
+    const todayMdLang = request.method === 'GET' ? todayRoute(url.pathname) : null;
+    if (todayMdLang) {
+      try {
+        const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+        try {
+          const { markdown } = await liveTodayEdition(todayMdLang, fetch, signal);
+          return new Response(markdown, { headers: MARKDOWN_HEADERS });
         } finally {
           clear();
         }

@@ -82,6 +82,11 @@ export interface Fact {
   kind: 'event' | 'born' | 'died';
   /** Wikipedia page title, when the feed carried one. */
   page: string;
+  /** The entry's photo, kept only when it is a real Commons image (a
+   *  `/wikipedia/commons/` URL that is not an `.svg`): events never print
+   *  photos — theirs are generic or wrong — so the newspaper only reads this
+   *  for the lead story and for people. */
+  thumb?: { src: string; w?: number; h?: number };
 }
 
 function keywordsFor(lang: FilterLang): string[] {
@@ -107,6 +112,7 @@ interface FeedEntry {
   pages?: Array<{
     titles?: { normalized?: string; display?: string };
     content_urls?: { desktop?: { page?: string } };
+    thumbnail?: { source?: string; width?: number; height?: number };
   }>;
 }
 
@@ -126,12 +132,27 @@ export function collectFacts(
         link = e.pages![0].content_urls!.desktop!.page!;
         page = e.pages![0].titles?.normalized || e.pages![0].titles?.display || '';
       } catch (x) {}
+      // A photo only when it is a real Commons image: hot-linked from
+      // upload.wikimedia.org under /wikipedia/commons/, never an .svg
+      // (flags, coats of arms and diagrams print wrong in halftone).
+      let thumb: Fact['thumb'];
+      try {
+        const src = e.pages![0].thumbnail?.source || '';
+        if (src.includes('/wikipedia/commons/') && !src.endsWith('.svg')) {
+          thumb = { src };
+          const w = e.pages![0].thumbnail?.width;
+          const h = e.pages![0].thumbnail?.height;
+          if (typeof w === 'number') thumb.w = w;
+          if (typeof h === 'number') thumb.h = h;
+        }
+      } catch (x) {}
       return {
         year: String(e.year || '?'),
         text: e.text || '',
         link,
         kind,
         page,
+        ...(thumb ? { thumb } : {}),
       };
     });
   arr.sort((a, b) => a.text.length - b.text.length);
