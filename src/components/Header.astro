@@ -9,7 +9,7 @@ import {
   switchLangPath,
   languages,
 } from '../i18n';
-import { experiments, liveExperiments } from '../lib/experiments';
+import { experiments } from '../lib/experiments';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -28,7 +28,7 @@ const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
-  { label: t.nav.experiments, exp: true } as { label: string; exp: boolean; href?: string },
+  { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: '/status/', label: t.nav.log }, // English-only page, no /es twin
   { href: localizePath('/contributors', lang), label: t.nav.people },
@@ -42,6 +42,10 @@ function isActive(href: string, current: string): boolean {
   if (href === '/' || href === '/es/') return current === href || current === href.replace(/\/$/, '');
   return current === href || current.startsWith(href);
 }
+
+// The Experiments entry is a plain link to the encyclopedia; it lights up on
+// the encyclopedia itself, on any experiment page and on experiment docs.
+const navActive = (item: any) => !item.ext && (isActive(item.href, path) || (item.exp && (onExperiment || isDocs)));
 
 // Wave strip along the bottom of the collapsed menu — several short signals
 // drifting at different speeds and phases, like overlapping traffic. Each is a
@@ -80,29 +84,13 @@ const signals = [
     </button>
     <nav id="site-nav">
       {nav.map((item) => (
-        (item as any).exp && !(item as any).href ? (
-          <div class="exp-wrap" id="exp-wrap">
-            <button
-              type="button"
-              class:list={['label', 'exp-trigger', { active: onExperiment }]}
-              aria-expanded="false"
-              aria-haspopup="true"
-              aria-controls="exp-panel"
-            >{item.label}<span class="exp-caret" aria-hidden="true"></span></button>
-            <div id="exp-panel" class="exp-panel" role="group" aria-label={t.nav.experiments}>
-              {liveExperiments.map((e) => (
-                <a href={localizePath('/' + e.id, lang)} class="exp-link label">{e.name}</a>
-              ))}
-            </div>
-          </div>
-        ) : (
         <a
           href={(item as any).href}
           target={(item as any).ext ? '_blank' : undefined}
           rel={(item as any).ext ? 'noopener noreferrer' : undefined}
-          class:list={['label', { active: !(item as any).ext && (isActive((item as any).href, path) || ((item as any).exp && onExperiment)), sponsor: (item as any).sponsor }]}
+          class:list={['label', { active: navActive(item as any), sponsor: (item as any).sponsor }]}
+          aria-current={navActive(item as any) ? 'page' : undefined}
         >{(item as any).sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
-        )
       ))}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
@@ -220,13 +208,7 @@ const signals = [
     });
   });
 
-  // Signal JS presence so collapsed CSS can switch from the no-JS in-flow
-  // list to the tap-only flyout. Without JS the experiments stay reachable
-  // as the indented list; :focus-within alone is not enough on touch.
-  document.documentElement.classList.add('js');
-
-  // Mobile nav: the burger toggles the collapsed menu open/closed, plus the
-  // Experiments dropdown (hover, click/focus, outside click, Escape, link).
+  // Mobile nav: the burger toggles the collapsed menu open/closed.
   const burger = document.querySelector<HTMLButtonElement>('.burger');
   const siteNav = document.getElementById('site-nav');
   if (burger && siteNav) {
@@ -237,47 +219,14 @@ const signals = [
     burger.addEventListener('click', () =>
       setOpen(burger.getAttribute('aria-expanded') !== 'true'),
     );
-    // Close burger after following any link (includes experiment panel links).
+    // Close burger after following any link.
     siteNav.querySelectorAll('a').forEach((a) =>
       a.addEventListener('click', () => setOpen(false)),
     );
 
-    // Experiments dropdown
-    const expWrap = document.getElementById('exp-wrap');
-    const expTrigger = expWrap?.querySelector<HTMLButtonElement>('.exp-trigger');
-    const expPanel = document.getElementById('exp-panel');
-    const setExpOpen = (open: boolean) => {
-      if (!expWrap || !expTrigger) return;
-      expWrap.classList.toggle('open', open);
-      expTrigger.setAttribute('aria-expanded', String(open));
-    };
-    if (expTrigger && expWrap && expPanel) {
-      expTrigger.addEventListener('click', () =>
-        setExpOpen(expTrigger.getAttribute('aria-expanded') !== 'true'),
-      );
-      // Above the collapse breakpoint hover/focus/click all open the panel
-      // below the trigger. Below it (touch) only tap (click) opens the
-      // flyout — there is no hover on a touch screen.
-      const isDesktop = () => window.matchMedia('(min-width: 1025px)').matches;
-      expTrigger.addEventListener('focus', () => { if (isDesktop()) setExpOpen(true); });
-      expWrap.addEventListener('mouseenter', () => { if (isDesktop()) setExpOpen(true); });
-      expWrap.addEventListener('mouseleave', () => { if (isDesktop()) setExpOpen(false); });
-      expPanel.querySelectorAll('a').forEach((a) =>
-        a.addEventListener('click', () => setExpOpen(false)),
-      );
-      document.addEventListener('click', (e) => {
-        if (!expWrap.contains(e.target as Node)) setExpOpen(false);
-      });
-    }
-
-    // Single Escape handler for burger and experiments (reuses the burger listener).
+    // Escape closes the menu.
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const wasExpOpen = expTrigger?.getAttribute('aria-expanded') === 'true';
-        setOpen(false);
-        setExpOpen(false);
-        if (wasExpOpen) expTrigger?.focus();
-      }
+      if (e.key === 'Escape') setOpen(false);
     });
   }
 </script>
@@ -739,34 +688,6 @@ const signals = [
   nav a.sponsor .heart-text { display: none; }
   nav a.sponsor:hover { color: color-mix(in srgb, var(--bench-emphasis) 75%, var(--bench-line)); animation-play-state: paused; }
 
-  /* Experiments dropdown — desktop: overlay, mobile: flyout */
-  .exp-wrap { position: relative; display: inline-flex; align-items: center; }
-  .exp-trigger { background: none; border: 0; padding: 0; cursor: pointer; color: #8a8d93; }
-  .exp-trigger:hover, .exp-trigger:focus-visible, .exp-trigger.active, .exp-trigger[aria-expanded='true'] { color: var(--ink); }
-  .exp-caret::after { content: ' ▸'; display: inline-block; margin-left: 0.15em; font-size: 0.8em; line-height: 1; }
-  .exp-trigger[aria-expanded='true'] .exp-caret::after { content: ' ▾'; }
-  .exp-panel {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    min-width: 13rem;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.75rem 0.95rem;
-    padding-top: 0.7rem;
-    background: var(--menu-bg);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-    z-index: 30;
-  }
-  .exp-panel a { text-decoration: none; color: #8a8d93; text-transform: none; }
-  .exp-panel a:hover, .exp-panel a:focus-visible { color: var(--ink); }
-  .exp-wrap:hover .exp-panel,
-  .exp-wrap:focus-within .exp-panel,
-  .exp-wrap.open .exp-panel { display: flex; }
-
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
     14% { transform: scale(1.15); }
@@ -992,83 +913,6 @@ const signals = [
       overflow: hidden;              /* clip the wave strip to the rounded card */
     }
     nav.open { display: flex; }
-    /* Collapsed experiments: flyout to the left of the menu card.
-       The card is already position:absolute against the header; the flyout
-       reuses that vocabulary one level in: exp-wrap is the anchor, exp-panel
-       is absolute with right:100% + gap, same background/border/radius/shadow
-       as the card, vertically aligned with the trigger row (top:0). */
-    .exp-wrap { width: 100%; flex-direction: column; align-items: flex-end; position: relative; }
-    .exp-trigger { text-align: right; }
-    /* No-JS fallback: indented in-flow list so experiments stay reachable
-       without a tap. With JS (html.js) the flyout takes over and is only
-       shown when .open is toggled via tap — :focus-within alone is not
-       enough on touch, so the in-flow style is the no-JS path. */
-    .exp-panel {
-      position: static;
-      background: transparent;
-      border: 0;
-      border-left: 1px solid var(--line);
-      box-shadow: none;
-      padding: 0.2rem 0 0 1rem;
-      min-width: 0;
-      gap: 0.7rem;
-      align-items: flex-end;
-      border-radius: 0;
-      display: none;
-    }
-    .exp-wrap:hover .exp-panel,
-    .exp-wrap:focus-within .exp-panel,
-    .exp-wrap.open .exp-panel { display: flex; }
-    /* With JS, convert to flyout anchored left of the card */
-    html.js nav { overflow: visible; }
-    html.js .nav-waves { border-radius: 0 0 12px 12px; overflow: hidden; }
-    html.js .exp-panel {
-      position: absolute;
-      top: 0;
-      right: calc(100% + 0.6rem);
-      left: auto;
-      min-width: 13rem;
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-      padding: 0.75rem 0.95rem;
-      gap: 0.45rem;
-      align-items: flex-start;
-      text-align: left;
-      border-left: 1px solid var(--line);
-      z-index: 31;
-    }
-    /* On touch there is no hover — only tap (click) opens the flyout.
-       Suppress the desktop hover/focus-within rule inside the collapsed menu
-       when JS is present; the click handler toggles .open instead. */
-    html.js .exp-wrap:hover .exp-panel,
-    html.js .exp-wrap:focus-within .exp-panel { display: none; }
-    html.js .exp-wrap.open .exp-panel { display: flex; }
-    .exp-panel a { text-transform: none; }
-    /* Viewport fallback: not enough room left of the card for the flyout.
-       Threshold: 520px — card is min 11rem (~176px) + panel min 13rem
-       (~208px) + gap 0.6rem + page padding ~2rem needs ~426px; below
-       ~520px there is not reliably enough room without clipping on phones
-       (360-430px) once scrollbars and safe-area insets are accounted for,
-       so we fall back to the in-flow indented list rather than overflowing. */
-    @media (max-width: 520px) {
-      html.js .exp-panel {
-        position: static;
-        right: auto;
-        left: auto;
-        background: transparent;
-        border: 0;
-        border-left: 1px solid var(--line);
-        box-shadow: none;
-        padding: 0.2rem 0 0 1rem;
-        min-width: 0;
-        gap: 0.7rem;
-        align-items: flex-end;
-        border-radius: 0;
-        text-align: right;
-      }
-    }
 
     /* Several short signals drift along the bottom of the open menu, each at its
        own speed — a faint P2P chatter. */

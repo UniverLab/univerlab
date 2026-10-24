@@ -263,7 +263,7 @@ describe('language corner styles', () => {
 
 describe('the page turn navigates to the other language', () => {
   const script = HEADER.match(
-    /const reduceMotion = matchMedia[\s\S]*?\n  document\.documentElement\.classList\.add\('js'\);/,
+    /const reduceMotion = matchMedia[\s\S]*?delete a\.dataset\.turning;/,
   );
 
   it('persists the explicit choice first', () => {
