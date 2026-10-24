@@ -21,6 +21,16 @@ describe('demo loupe: asset', () => {
     expect(LUPA).toContain('#2a2118');
     expect(LUPA).toContain('#a07c3a');
   });
+
+  it('keeps the lens hole transparent so the magnified video shows through', () => {
+    // The loupe is the frame, never a lid: the r=110 circle is stroke-only and
+    // the root paints nothing by default. Filling the hole would hide the zoom
+    // while every geometry assertion above still passed.
+    expect(LUPA).toMatch(/<svg[^>]*fill="none"/);
+    const hole = LUPA.match(/<circle cx="150" cy="150" r="110"[^>]*>/)![0];
+    expect(hole).not.toContain('fill=');
+    expect(LUPA).not.toMatch(/<rect/);
+  });
 });
 
 describe('demo loupe: markup', () => {
@@ -52,9 +62,16 @@ describe('demo loupe: css', () => {
     expect(DEMO).toMatch(/\.demo-loupe\s*\{[^}]*max-width:\s*none/);
   });
 
-  it('has no white ring border or shadow left on the lens', () => {
-    expect(DEMO).not.toMatch(/\.demo-lens\s*\{[^}]*border:\s*2px solid rgba\(255,\s*255,\s*255/);
-    expect(DEMO).not.toMatch(/\.demo-lens\s*\{[^}]*box-shadow:\s*0 0 0 1px rgba\(0,0,0/);
+  it('draws no ring border or shadow around the lens', () => {
+    // Any border or shadow at all would paint a second frame around the zoom;
+    // the loupe image is the only frame, so the only allowed value is `none` —
+    // whatever colour a later edit picks.
+    const lensBlock = DEMO.match(/\.demo-lens \{[\s\S]*?\}/)![0];
+    const ring = lensBlock
+      .split(';')
+      .map((decl) => decl.trim())
+      .filter((decl) => /^(border(-(top|right|bottom|left))?|box-shadow)\s*:/.test(decl));
+    for (const decl of ring) expect(decl).toMatch(/:\s*none$/);
     expect(DEMO).toMatch(/\.demo-lens\s*\{[^}]*overflow:\s*visible/);
   });
 
