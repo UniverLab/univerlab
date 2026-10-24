@@ -63,7 +63,12 @@ describe('TeXForge template rows copy the start command', () => {
   if (names.length === 0) {
     it('should render no copy button when no template is registered', () => {
       for (const { file } of PAGES) {
-        expect(pageHtml(file)).not.toContain('copy-btn');
+        const html = pageHtml(file);
+        // The component's <style>/<script> still spell the class (the handler
+        // queries nothing and no-ops), so only the markup proves it: no table,
+        // no button carrying the class.
+        expect(html).not.toContain('<table class="catalog"');
+        expect(html).not.toMatch(/class="copy-btn"/);
       }
     });
     return;
