@@ -34,6 +34,9 @@
   /* Copper: links on hover, the postcards' night lines. */
   --bench-c-copper: #9a5530;
   --bench-c-copper-bright: #d6955b;
+  /* Garnet: the lab's emphasis — the wax seal's colour, worn by the status marks, the
+     sponsor heart and links on paper (8:1 on the parchment). */
+  --bench-c-garnet: #87222c;
   /* Slate: the night ground, under the tile textures/pizarra.webp (background-size 341px). */
   --bench-c-slate: #222928;
   /* Deeper slate: second night surface (panels, cards). */
@@ -64,6 +67,8 @@
   --bench-brass: var(--bench-c-brass);
   /* Copper accent (hover). */
   --bench-copper: var(--bench-c-copper);
+  /* The lab's emphasis: the wax seal, the status marks, the sponsor heart, links on paper. */
+  --bench-emphasis: var(--bench-c-garnet);
   /* Which plate variant to load: components read this to choose
      public/bench/machines/<id>-day-* or -night-* (value is a string, not a colour). */
   --bench-plate-variant: 'day';
@@ -82,6 +87,7 @@
   --bench-rule: var(--bench-c-rule-night);
   --bench-brass: #d9b878;
   --bench-copper: var(--bench-c-copper-bright);
+  --bench-emphasis: #e0a2a6;
   --bench-plate-variant: 'night';
   /* Lantern clips by night: negative that keeps each accent's hue. */
   --bench-clip-filter: invert(1) hue-rotate(180deg);
@@ -97,6 +103,7 @@
     --bench-rule: var(--bench-c-rule-night);
     --bench-brass: #d9b878;
     --bench-copper: var(--bench-c-copper-bright);
+    --bench-emphasis: #e0a2a6;
     --bench-plate-variant: 'night';
     --bench-clip-filter: invert(1) hue-rotate(180deg);
   }

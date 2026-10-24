@@ -25,6 +25,9 @@ export const en = {
   header: {
     skySun: "Today's sun: a science fact for today",
     skyMoon: "Tonight's moon: a science fact for today",
+    // The page-turn language switch: the corner shows the other language.
+    switchTo: 'Switch to',
+    langLabel: { en: 'English', es: 'Español' },
   },
   footer: {
     quote:

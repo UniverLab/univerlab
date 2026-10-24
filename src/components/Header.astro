@@ -121,13 +121,13 @@ const signals = [
     <span class="celestial" aria-hidden="true"></span>
   </button>
   <a
-    class="lang-corner"
+    class="peel"
     href={toggleHref}
     data-set-lang={other}
     hreflang={other}
-    aria-label={`Switch to ${languages[other]}`}
+    aria-label={`${t.header.switchTo} ${t.header.langLabel[other]}`}
     id="lang-corner"
-  ><span class="lang-corner-text">{languages[other]}</span></a>
+  ><span class="under"><span class="label"><span class="short">{languages[other]}</span><span class="long">{t.header.langLabel[other]}</span></span></span><span class="flap"></span></a>
 </header>
 
 <script>
@@ -192,12 +192,21 @@ const signals = [
 </script>
 
 <script>
-  // Persist an explicit language choice so the pre-paint detector honours it.
+  // Persist an explicit language choice so the pre-paint detector honours it,
+  // and turn the page: the corner sweeps across the screen and the switch lands
+  // when the turn covers it. Reduced motion navigates at once.
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
-    a.addEventListener('click', () => {
+    a.addEventListener('click', (event) => {
       try {
         localStorage.setItem('univerlab-lang', a.dataset.setLang!);
       } catch (e) {}
+      if (reduceMotion) return; // plain navigation
+      event.preventDefault();
+      if (a.dataset.turning) return; // a second Enter must not restart the turn
+      a.dataset.turning = 'true';
+      a.classList.add('turning');
+      setTimeout(() => location.assign(a.href), 550);
     });
   });
 
@@ -692,7 +701,10 @@ const signals = [
 </script>
 
 <style>
-  header { position: relative; }
+  /* The header owns the page-corner switch, which is fixed at the viewport's bottom
+     right: a stacking context of its own keeps it painted above the footer's ground
+     (a later sibling) while the footer's own popups still layer above it. */
+  header { position: relative; z-index: 1; }
   .bar {
     position: relative;
     display: flex;
@@ -712,10 +724,10 @@ const signals = [
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: #8a8d93; }
   nav a:hover, nav a.active { color: var(--ink); }
-  nav a.sponsor { color: var(--accent, #c9a227); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor { color: var(--bench-emphasis); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
   nav a.sponsor svg { display: block; }
   nav a.sponsor .heart-text { display: none; }
-  nav a.sponsor:hover { color: #f0d060; animation-play-state: paused; }
+  nav a.sponsor:hover { color: color-mix(in srgb, var(--bench-emphasis) 75%, var(--bench-line)); animation-play-state: paused; }
 
   /* Experiments dropdown — desktop: overlay, mobile: flyout */
   .exp-wrap { position: relative; display: inline-flex; align-items: center; }
@@ -755,37 +767,91 @@ const signals = [
   .lang { color: var(--ink-faint); }
   .lang:hover { color: var(--ink); }
 
-  /* Language corner — a folded page triangle in the top-right with the
-     language code centered inside. Simple, discoverable, no clutter. */
-  .lang-corner {
+  /* Language corner — the bottom-right corner of the page is turned up, showing the
+     page underneath in the other language; it lifts when approached and a click
+     turns the page across the screen before switching. */
+  .peel {
+    --s: 58px;
+    --next-paper: #e9e1d0;
+    --flap-a: #d6c8ad;
+    --flap-b: #f2eadb;
+    --flap-c: #c4b28d;
     position: fixed;
-    top: 0;
+    z-index: 45;
     right: 0;
-    z-index: 50;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 38px 38px 0;
-    border-color: transparent var(--accent, #c9a227) transparent transparent;
-    cursor: pointer;
+    bottom: 0;
+    width: var(--s);
+    height: var(--s);
+    display: block;
     text-decoration: none;
-    pointer-events: auto;
-    transition: border-width 0.15s ease;
+    margin: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) 0;
+    transition: width 0.28s cubic-bezier(0.3, 0.7, 0.3, 1), height 0.28s cubic-bezier(0.3, 0.7, 0.3, 1);
   }
-  .lang-corner:hover {
-    border-width: 0 32px 32px 0;
+  .peel:hover,
+  .peel:focus-visible { --s: 86px; }
+  .peel.turning {
+    --s: 160vmax;
+    transition-duration: 0.55s;
+    transition-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4);
   }
-  .lang-corner-text {
+  .peel .under {
     position: absolute;
-    top: 0px;
-    right: -35px;
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: #000;
-    pointer-events: none;
+    inset: 0;
+    background: var(--next-paper);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    box-shadow: inset 8px 8px 14px rgb(0 0 0 / 0.18);
+  }
+  .peel .label {
+    position: absolute;
+    right: 7px;
+    bottom: 6px;
+    font-family: var(--font-serif);
+    font-variant: small-caps;
+    text-transform: none; /* the site's .label uppercases; small caps need the real case */
+    letter-spacing: 0.1em;
+    font-size: 13px;
+    color: var(--bench-line);
     white-space: nowrap;
+  }
+  .peel .long { display: none; }
+  .peel:hover .short,
+  .peel:focus-visible .short,
+  .peel.turning .short { display: none; }
+  .peel:hover .long,
+  .peel:focus-visible .long,
+  .peel.turning .long { display: inline; }
+  .peel .flap {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    background: linear-gradient(135deg, var(--flap-c) 0%, var(--flap-a) 18%, var(--flap-b) 48%, var(--flap-a) 72%, var(--flap-c) 100%);
+    filter: drop-shadow(-3px -3px 4px rgb(0 0 0 / 0.22));
+  }
+  .peel .flap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 46%, rgb(255 255 255 / 0.35) 50%, transparent 54%);
+  }
+  .peel:focus-visible { outline: 2px solid var(--bench-line); outline-offset: -4px; }
+
+  /* Night: the page underneath is slate, the folded back a lighter sheet. */
+  :global([data-bench-theme='night']) .peel {
+    --next-paper: #2c3432;
+    --flap-a: #3a4441;
+    --flap-b: #4b5753;
+    --flap-c: #2e3634;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-bench-theme='day'])) .peel {
+      --next-paper: #2c3432;
+      --flap-a: #3a4441;
+      --flap-b: #4b5753;
+      --flap-c: #2e3634;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .peel { transition: none; }
   }
 
   /* Engraved sun by day, engraved moon at tonight's phase by night — the body

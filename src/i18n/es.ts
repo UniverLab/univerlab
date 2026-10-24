@@ -26,6 +26,8 @@ export const es: Dict = {
   header: {
     skySun: 'El sol de hoy: una efeméride de ciencia',
     skyMoon: 'La luna de hoy: una efeméride de ciencia',
+    switchTo: 'Cambiar a',
+    langLabel: { en: 'English', es: 'Español' },
   },
   footer: {
     quote:

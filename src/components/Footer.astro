@@ -264,7 +264,11 @@ Date:   now
   @media (max-width: 40rem) {
     .inner { flex-direction: column; gap: 1.6rem; padding-top: 9rem; }
     .foot-nav { gap: 1.2rem; }
+    footer { padding-bottom: 4.5rem; }
   }
+  /* The page-corner language switch sits at the bottom right at every width; the
+     branch button shares that line, so the base keeps it clear of the fold. */
+  .base { padding-bottom: 4.5rem; }
   /* The forged colophon line — experiment pages only: the artifact's name in
      the mono face, then the dictionary line. One line above the credits rule. */
   .forged {
