@@ -74,7 +74,7 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
   .machine-pic { display: block; margin: 0; }
   .machine img { height: var(--machine-h); width: auto; display: block; }
   @media (max-width: 39.999rem) {
-    .machine img { height: 150px; }
+    .machine img { height: var(--machine-h-phone, 150px); }
   }
   /* The ink swap applies only to theme machines: a single-ink plate is the
      page's only machine and stays visible in either phase. */

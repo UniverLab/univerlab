@@ -82,3 +82,23 @@ describe('experiments encyclopedia view', () => {
     expect(VIEW).toContain("setAttribute('aria-pressed'");
   });
 });
+
+describe('experiments encyclopedia plate', () => {
+  it('draws each entry from the Machine component in themed ink, not a video clip', () => {
+    expect(VIEW).toContain('<Machine');
+    expect(VIEW).toContain('ink="theme"');
+    expect(VIEW).not.toContain('<video');
+    expect(VIEW).not.toContain('IntersectionObserver');
+  });
+
+  it('lays the entries out as a single column of plate-beside-body rows', () => {
+    // One entry per row in exp order: no multi-column flow.
+    expect(VIEW).not.toContain('columns: 2 340px');
+    expect(VIEW).toContain('grid-template-columns: minmax(14rem, 22rem)');
+  });
+
+  it('puts the plate on top at phone width with a 200px machine height', () => {
+    expect(VIEW).toContain('--machine-h-phone: 200px');
+    expect(VIEW).toMatch(/@media \(max-width: 40rem\)/);
+  });
+});

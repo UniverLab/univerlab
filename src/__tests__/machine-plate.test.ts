@@ -93,6 +93,6 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain('width: fit-content');
     expect(MACHINE).toContain('margin-inline: auto');
     expect(MACHINE).toMatch(/\.machine img \{ height: var\(--machine-h\)/);
-    expect(MACHINE).toMatch(/@media \(max-width: 39\.999rem\) \{\s*\.machine img \{ height: 150px; \}/);
+    expect(MACHINE).toMatch(/@media \(max-width: 39\.999rem\) \{\s*\.machine img \{ height: var\(--machine-h-phone, 150px\); \}/);
   });
 });
