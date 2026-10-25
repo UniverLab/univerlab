@@ -12,6 +12,12 @@ import {
 import { experiments } from '../lib/experiments';
 import Mailbox from './Mailbox.astro';
 
+interface Props {
+  /** Only circadian pages honour the celestial disc; the rest never paint it. */
+  circadian?: boolean;
+}
+const { circadian = true } = Astro.props;
+
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const path = Astro.url.pathname;
@@ -105,9 +111,11 @@ const signals = [
     </nav>
   </div>
   <span class="sky-ruler" aria-hidden="true"><svg preserveAspectRatio="none"></svg></span>
-  <button class="celestial-btn" type="button" aria-label={t.header.skyToNight} title={t.header.skyToNight} data-sky-to-night={t.header.skyToNight} data-sky-to-day={t.header.skyToDay}>
-    <span class="celestial" aria-hidden="true"></span>
-  </button>
+  {circadian && (
+    <button class="celestial-btn" type="button" aria-label={t.header.skyToNight} title={t.header.skyToNight} data-sky-to-night={t.header.skyToNight} data-sky-to-day={t.header.skyToDay}>
+      <span class="celestial" aria-hidden="true"></span>
+    </button>
+  )}
   <Mailbox />
   <a
     class="peel"
@@ -130,7 +138,7 @@ const signals = [
     var btn = document.querySelector('.celestial-btn');
     var mount = btn ? btn.querySelector('.celestial') : null;
     var rulerSvg = document.querySelector('.sky-ruler svg');
-    if (!btn || !mount) return;
+    if (!btn || !mount) { drawRuler(); return; }
 
     function synodicPhase() {
       var ph = (((Date.now() - EPOCH) / 86400000) % SYNODIC) / SYNODIC;

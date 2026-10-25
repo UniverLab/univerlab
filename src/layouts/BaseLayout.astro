@@ -357,7 +357,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     <script>import { restoreCrtOn } from '../scripts/crt-restore'; restoreCrtOn();</script>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
     {fondo && <LiveBackground id={fondo} />}
-    <Header />
+    <Header circadian={circadian} />
     <main id="main">
       <slot />
     </main>

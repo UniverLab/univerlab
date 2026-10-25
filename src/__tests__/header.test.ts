@@ -197,3 +197,34 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(q3).toContain('A40 40 0 0 0');
   });
 });
+
+describe('celestial button is circadian-only', () => {
+  const BASE = readFileSync(resolve(__dirname, '..', 'layouts', 'BaseLayout.astro'), 'utf8');
+
+  it('declares a circadian prop defaulting to true and gates the button on it', () => {
+    expect(src).toMatch(/interface Props \{[^}]*circadian\?: boolean/);
+    expect(src).toMatch(/const \{ circadian = true \} = Astro\.props;/);
+    // The gate wraps ONLY the button: ruler, guard, then the mailbox outside it.
+    expect(src).toMatch(/\{circadian && \(\s*<button class="celestial-btn"/);
+    const rulerIdx = src.indexOf('<span class="sky-ruler"');
+    const guardIdx = src.indexOf('{circadian && (');
+    const mailboxIdx = src.indexOf('<Mailbox />');
+    expect(rulerIdx).toBeGreaterThan(-1);
+    expect(guardIdx).toBeGreaterThan(rulerIdx);
+    expect(mailboxIdx).toBeGreaterThan(guardIdx);
+  });
+
+  it('still draws the hour ruler when the button is not rendered', () => {
+    // Without the button the guard used to return before drawRuler(), leaving
+    // the header rule blank on every non-circadian page.
+    expect(src).toMatch(/if \(!btn \|\| !mount\) \{ drawRuler\(\); return; \}/);
+  });
+
+  it('hides by not rendering — never with display:none on the button', () => {
+    expect(src).not.toMatch(/\.celestial-btn[^}]*display:\s*none/);
+  });
+
+  it('forwards BaseLayout’s own circadian value to the header', () => {
+    expect(BASE).toMatch(/<Header circadian=\{circadian\} \/>/);
+  });
+});
