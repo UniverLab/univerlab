@@ -216,6 +216,7 @@ export const es: Dict = {
       tagline:
         'Un motor de grafos para agentes de IA — todos los harness, un solo flujo.',
       etymology: '(Del ingl. <em>canopy</em>, ‘dosel del bosque’.)',
+      figure: 'Colmena de madera donde muchos agentes trabajan bajo un mismo techo, cada uno en su celda y todos en un solo flujo. Como el dosel del bosque, no hace crecer los árboles: los cubre y los ordena para que la luz llegue a todos.',
       thread: {
         problem: 'agentes de IA',
         method: 'un motor de grafos sobre cada harness',
@@ -295,6 +296,7 @@ export const es: Dict = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       etymology: '(De <em>TeX</em> y el ingl. <em>forge</em>, ‘forja’.)',
+      figure: 'Prensa de tipos para la época de las máquinas: entra el manuscrito, sale el pliego. Con ella LaTeX deja de ser un oficio de instaladores y vuelve a ser lo que siempre fue, el arte de componer bien una página.',
       thread: {
         problem: 'LaTeX',
         method: 'una sola cadena de herramientas autocontenida',
@@ -365,6 +367,7 @@ export const es: Dict = {
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
       etymology: '(De <em>git</em> y el ingl. <em>kit</em>, ‘estuche de herramientas’.)',
+      figure: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
       thread: {
         problem: 'configuración de repos',
         method: 'builds guardados e idempotentes',
@@ -427,6 +430,7 @@ export const es: Dict = {
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       etymology: '(De <em>GitHub</em> y el ingl. <em>scaffold</em>, ‘andamio’.)',
+      figure: 'Andamio que se levanta antes que la obra: protege las ramas, alza los chequeos y deja cada repositorio en pie desde el primer día, para que lo que se construya encima no haya que apuntalarlo después.',
       thread: {
         problem: 'repositorios de GitHub',
         method: 'un asistente idempotente',
@@ -492,6 +496,7 @@ export const es: Dict = {
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
       etymology: '(De <em>CAD</em> y el ingl. <em>spec</em>, ‘especificación’.)',
+      figure: 'Mesa de dibujo que declaraba las piezas en lugar de trazarlas. Se archivó cuando el laboratorio prefirió envolver las mejores herramientas antes que reinventarlas; su idea sigue en las que la reemplazaron.',
       thread: {
         problem: 'CAD',
         method: 'geometría declarativa',
@@ -507,6 +512,7 @@ export const es: Dict = {
       tagline:
         'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
       etymology: '(Del gr. <em>ástron</em>, ‘astro’, y el ingl. <em>denoise</em>, ‘quitar el ruido’.)',
+      figure: 'Ocular que separa la luz del ruido: entre el grano que deja el sensor y la estrella que de verdad está ahí, una investigación que mide antes de afirmar.',
       thread: {
         problem: 'reducción de ruido',
         method: 'un benchmark puntuado por la ciencia',
@@ -599,6 +605,7 @@ export const es: Dict = {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       etymology: '(Del lat. <em>quorum</em>, ‘de los cuales’.)',
+      figure: 'Mesa de cartas boca abajo: cada quien juega su estimación a la vez y nadie arrastra a los demás; el acuerdo aparece cuando se voltean.',
       thread: {
         problem: 'estimación',
         method: 'una sala peer-to-peer',
@@ -645,6 +652,7 @@ export const es: Dict = {
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       etymology: '(Del ingl. <em>demo</em> y <em>stage</em>, ‘escenario’.)',
+      figure: 'Zoótropo de la terminal: cada demostración se escribe como una partitura y se reproduce idéntica, cuadro a cuadro, como el galope que Muybridge descompuso para que por fin pudiera verse.',
       thread: {
         problem: 'demos de terminal',
         method: 'una partitura de eventos',
@@ -1113,6 +1121,8 @@ export const es: Dict = {
     },
     meta: 'EXP-{n} · {status}',
     definitionNumber: '1.',
+    definitionNumber2: '2.',
+    figLabel: 'fig.',
     use: {
       copy: 'Copiar',
       copied: 'Copiado',

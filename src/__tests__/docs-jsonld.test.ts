@@ -162,6 +162,7 @@ describe('structured-data', () => {
   const exp = (over: Partial<Experiment> = {}): Experiment => ({
     id: 'gitkit',
     name: 'GitKit',
+    ipa: '/ˈɡɪt.kɪt/',
     number: 'EXP-003',
     status: 'active',
     essenceHex: '#e06fc0',

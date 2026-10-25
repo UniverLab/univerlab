@@ -57,11 +57,11 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
               {entry.archived ? (
                 <span class="num-frame" aria-hidden="true"><span class="num">{exp.number}</span></span>
               ) : (
-                <Machine id={entry.id} ink="theme" height="clamp(220px, 24vw, 320px)" />
+                <Machine id={entry.id} ink="theme" height="var(--plate-h)" />
               )}
             </div>
             <div class="entry-body">
-              <h2 class="hw"><b>{exp.name}</b><span class="mark" title={statusName}>{mark}</span></h2>
+              <h2 class="hw"><b>{exp.name}</b><span class="ipa" lang="und-fonipa">{exp.ipa}</span><span class="mark" title={statusName}>{mark}</span></h2>
               <p class="meta">{enc.meta.replace('{n}', exp.number.replace('EXP-', '')).replace('{status}', enc.statuses[status as keyof typeof enc.statuses] ?? status)}</p>
               <p class="def">
                 <span class="ety" set:html={ec.etymology} />
@@ -70,6 +70,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
                 {' '}
                 {ec.tagline}
               </p>
+              <p class="def fig"><span class="n">{enc.definitionNumber2}</span>{' '}<i>{enc.figLabel}</i>{' '}{ec.figure}</p>
               <div class="use">
                 {installCmd && (
                   <span class="chip-wrap">
@@ -152,17 +153,23 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .thumbs button[aria-pressed="true"] { background: var(--bench-line); color: var(--bench-ground); }
 
   .entries { display: grid; border-top: 1px solid var(--bench-line-soft); padding-top: 18px; }
-  .entry { display: grid; grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding: 18px 0; margin: 0; border-bottom: 1px solid var(--bench-rule); }
+  /* status.astro also ships *global* board styles for `.entry` — a border-bottom rule
+     and `grid-template-rows: auto auto` — which would keep drawing a line between these
+     entries and leave an empty second row (its row-gap) under every body. The scoped
+     selector outranks it (the attribute raises the specificity). */
+  .entry { display: grid; grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding-block: 2.25rem; margin: 0; border: 0; grid-template-rows: none; }
   .entry[hidden] { display: none; }
   .entry[data-status="archived"] { opacity: 0.7; }
 
-  .plate { --machine-h-phone: 200px; border-bottom: 1px solid var(--bench-line-soft); padding-bottom: 12px; }
-  .num-frame { display: grid; place-items: center; width: 100%; height: clamp(220px, 24vw, 320px); border: 1px dotted var(--bench-rule); }
+  .plate { --machine-h-phone: 200px; --plate-h: clamp(180px, 19vw, 260px); }
+  .plate :global(.machine img) { height: auto; max-height: var(--plate-h); max-width: 100%; }
+  .num-frame { display: grid; place-items: center; width: 100%; height: var(--plate-h); border: 1px dotted var(--bench-rule); }
   .num { font-family: 'Old Standard TT', serif; font-size: 56px; line-height: 1; white-space: nowrap; color: var(--bench-line-soft); }
 
   .hw { margin: 0; font-family: 'Old Standard TT', serif; font-weight: 400; font-size: 22px; line-height: 1.15; }
   .hw b { font-weight: 700; font-variant: small-caps; letter-spacing: 0.06em; }
   .hw .mark { color: #87222c; margin-left: 4px; font-size: 18px; }
+  .ipa { font-size: 0.8em; color: var(--bench-line-soft); margin-left: 6px; }
   :global(html[data-bench-theme='night']) .hw .mark { color: #e0a2a6; }
 
   .meta { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--bench-line-soft); text-transform: uppercase; margin: 2px 0 0; }
@@ -170,6 +177,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .def { margin: 4px 0 0; font-size: 18px; line-height: 1.55; max-width: 60ch; }
   .def .ety { color: var(--bench-line-soft); }
   .def .n { font-family: var(--font-mono); font-size: 12px; }
+  .def.fig { margin-top: 2px; }
 
   .entry-body { min-width: 0; }
   /* status.astro builds its board markup by script, so its board styles are
@@ -195,6 +203,10 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .enc-key :global(span) { color: #87222c; font-family: 'Old Standard TT', serif; font-size: 15px; }
   :global(html[data-bench-theme='night']) .enc-key :global(span) { color: #e0a2a6; }
 
+  @media (max-width: 56.25rem) {
+    .plate { --plate-h: 200px; }
+  }
+
   @media (max-width: 40rem) {
     .entry { grid-template-columns: 1fr; gap: 14px; }
     .num-frame { height: 200px; }
@@ -205,5 +217,9 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
     .thumbs button { font-size: 13px; padding: 5px 9px 4px; margin: 0 1px; }
     .enc-tome { font-size: 15px; }
     .chip { white-space: nowrap; overflow-x: auto; overflow-wrap: normal; }
+  }
+
+  @media (min-width: 900px) {
+    .entry { grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr); align-items: center; }
   }
 </style>

@@ -13,6 +13,29 @@ import { es } from '../i18n/es';
 const VIEW = readFileSync(resolve(__dirname, '../views/Experiments.astro'), 'utf8');
 const entries = entryModels((path) => path);
 
+/** The pronunciation every entry shows right after its headword, slashes included. */
+const IPA: Record<string, string> = {
+  canopy: '/ˈkæn.ə.pi/',
+  texforge: '/ˈtɛk.fɔːrdʒ/',
+  gitkit: '/ˈɡɪt.kɪt/',
+  ghscaff: '/ˌdʒiː.eɪtʃ ˈskæf/',
+  cadspec: '/ˈkæd.spɛk/',
+  'astro-denoise': '/ˈæs.troʊ diːˈnɔɪz/',
+  demostage: '/ˈdɛm.oʊ.steɪdʒ/',
+  quorum: '/ˈkwɔː.rəm/',
+};
+
+/** GitKit's figurative sense, copied from the spec for both languages. */
+const GITKIT_FIGURE = {
+  en: "The craftsman's case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.",
+  es: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
+};
+
+type ExperimentCopy = { etymology?: string; figure?: string };
+/** Read one experiment's copy from either dictionary without constraining its shape. */
+const copyOf = (dict: unknown, id: string): ExperimentCopy | undefined =>
+  (dict as { experiments: Record<string, ExperimentCopy> }).experiments[id];
+
 describe('experiments encyclopedia entry list', () => {
   it('has one entry per registry experiment, in registry order', () => {
     expect(entries.map((e) => e.id)).toEqual(experiments.map((e) => e.id));
@@ -67,6 +90,55 @@ describe('experiments encyclopedia entry list', () => {
   });
 });
 
+describe('experiments encyclopedia pronunciation and second sense', () => {
+  it('gives every experiment the IPA value the entry renders', () => {
+    expect(Object.keys(IPA).sort()).toEqual(experiments.map((e) => e.id).sort());
+    for (const exp of experiments) expect(exp.ipa).toBe(IPA[exp.id]);
+  });
+
+  it('writes a figurative sense for every entry in both languages', () => {
+    for (const exp of experiments) {
+      expect(copyOf(en, exp.id)?.figure?.trim()).toBeTruthy();
+      expect(copyOf(es, exp.id)?.figure?.trim()).toBeTruthy();
+    }
+    expect(copyOf(en, 'gitkit')?.figure).toBe(GITKIT_FIGURE.en);
+    expect(copyOf(es, 'gitkit')?.figure).toBe(GITKIT_FIGURE.es);
+  });
+
+  it('renders the pronunciation right after the headword, as IPA, in every entry', () => {
+    expect(VIEW).toContain('class="ipa"');
+    expect(VIEW).toContain('lang="und-fonipa"');
+    expect(VIEW).toContain('{exp.ipa}');
+    // It sits between the headword and the status mark, inside the same h2.
+    const hw = VIEW.match(/<h2 class="hw">.*<\/h2>/);
+    expect(hw).toBeTruthy();
+    expect(hw![0]).toContain('<span class="ipa" lang="und-fonipa">{exp.ipa}</span>');
+    expect(hw![0].indexOf('</b>')).toBeLessThan(hw![0].indexOf('class="ipa"'));
+    expect(hw![0].indexOf('class="ipa"')).toBeLessThan(hw![0].indexOf('class="mark"'));
+  });
+
+  it('renders the figurative sense as the second numbered sense after the first definition', () => {
+    expect(VIEW).toContain('<p class="def fig">');
+    expect(VIEW).toContain('{enc.definitionNumber2}');
+    expect(VIEW).toContain('{enc.figLabel}');
+    expect(VIEW).toContain('{ec.figure}');
+    const first = VIEW.indexOf('<p class="def">');
+    const second = VIEW.indexOf('<p class="def fig">');
+    expect(first).toBeGreaterThan(-1);
+    expect(second).toBeGreaterThan(first);
+    expect(second - first).toBeLessThan(600);
+    // Both senses share the .def style so they read as one entry.
+    expect(VIEW).toContain('.def.fig { margin-top: 2px; }');
+  });
+
+  it('labels the second sense the same way in both languages', () => {
+    for (const dict of [en, es]) {
+      expect(dict.encyclopedia.definitionNumber2).toBe('2.');
+      expect(dict.encyclopedia.figLabel).toBe('fig.');
+    }
+  });
+});
+
 describe('experiments encyclopedia view', () => {
   it('renders the entry list by mapping over entryModels, not a hand-written list', () => {
     expect(VIEW).toContain('entryModels(');
@@ -87,8 +159,10 @@ describe('experiments encyclopedia plate', () => {
   it('draws each entry from the Machine component in themed ink, not a video clip', () => {
     expect(VIEW).toContain('<Machine');
     expect(VIEW).toContain('ink="theme"');
-    // The plate is the large engraving: 220–320 px tall, like the page-head postcards.
-    expect(VIEW).toContain('height="clamp(220px, 24vw, 320px)"');
+    // The plate is the large engraving, sized by --plate-h so the machine and
+    // the archived number frame always share one height.
+    expect(VIEW).toContain('height="var(--plate-h)"');
+    expect(VIEW).toContain('clamp(180px, 19vw, 260px)');
     expect(VIEW).not.toContain('<video');
     expect(VIEW).not.toContain('IntersectionObserver');
   });
@@ -96,13 +170,26 @@ describe('experiments encyclopedia plate', () => {
   it('lays the entries out as a single column of plate-beside-body rows', () => {
     // One entry per row in exp order: no multi-column flow.
     expect(VIEW).not.toContain('columns: 2 340px');
-    expect(VIEW).toContain('grid-template-columns: minmax(14rem, 22rem)');
-    // Rows are separated by the solid bench rule (the old flow used a dotted one).
-    expect(VIEW).toContain('border-bottom: 1px solid var(--bench-rule)');
   });
 
-  it('rests each plate on a soft engraved baseline', () => {
-    expect(VIEW).toContain('border-bottom: 1px solid var(--bench-line-soft)');
+  it('separates the entries by space, never by a rule', () => {
+    // Neither this view nor status.astro's global `.entry` may draw a line.
+    expect(VIEW).not.toMatch(/\.(entry|plate) \{[^}]*border-bottom/);
+    expect(VIEW).toMatch(/\.entry \{[^}]*border: 0;/);
+    expect(VIEW).toContain('padding-block: 2.25rem');
+  });
+
+  it('leaves no phantom board row under the entry body', () => {
+    // status.astro's global `grid-template-rows: auto auto` would add an empty
+    // second row (and its 2.5rem row-gap) below every entry body.
+    expect(VIEW).toMatch(/\.entry \{[^}]*grid-template-rows: none;/);
+  });
+
+  it('centres the text block against a smaller plate from 900px up', () => {
+    expect(VIEW).toMatch(
+      /@media \(min-width: 900px\) \{\s*\.entry \{ grid-template-columns: minmax\(12rem, 17rem\) minmax\(0, 1fr\); align-items: center; \}/,
+    );
+    expect(VIEW).toContain('--plate-h: clamp(180px, 19vw, 260px)');
   });
 
   it('keeps the archived entry as its EXP number in a dotted frame of the plate size', () => {

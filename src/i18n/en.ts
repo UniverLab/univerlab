@@ -218,6 +218,7 @@ export const en = {
       tagline:
         'A graph engine for AI coding agents — every harness, one workflow.',
       etymology: '(From <em>canopy</em>, the forest’s crown.)',
+      figure: 'A wooden hive where many agents work under one roof, each in its own cell and all in one flow. Like the forest canopy, it does not grow the trees: it covers and orders them so the light reaches every one.',
       thread: {
         problem: 'AI agents',
         method: 'a graph engine above every harness',
@@ -297,6 +298,7 @@ export const en = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       etymology: '(From <em>TeX</em> and <em>forge</em>.)',
+      figure: 'A type press for the age of machines: the manuscript goes in, the printed sheet comes out. With it LaTeX stops being an installer\'s trade and becomes again what it always was, the art of setting a page well.',
       thread: {
         problem: 'LaTeX',
         method: 'one self-contained toolchain',
@@ -367,6 +369,7 @@ export const en = {
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
       etymology: '(From <em>git</em> and <em>kit</em>, a case of tools.)',
+      figure: 'The craftsman\'s case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.',
       thread: {
         problem: 'repository setup',
         method: 'saved, idempotent builds',
@@ -429,6 +432,7 @@ export const en = {
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       etymology: '(From <em>GitHub</em> and <em>scaffold</em>.)',
+      figure: 'Scaffolding raised before the building: it guards the branches, lifts the checks and leaves every repository standing from day one, so whatever is built on top never needs propping up later.',
       thread: {
         problem: 'GitHub repositories',
         method: 'an idempotent wizard',
@@ -494,6 +498,7 @@ export const en = {
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
       etymology: '(From <em>CAD</em> and <em>spec</em>, specification.)',
+      figure: 'A drafting table that declared parts instead of drawing them. It was archived when the lab chose to wrap the best tools rather than reinvent them; its idea lives on in the tools that replaced it.',
       thread: {
         problem: 'CAD',
         method: 'declarative geometry',
@@ -509,6 +514,7 @@ export const en = {
       tagline:
         'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
       etymology: '(From Greek <em>ástron</em>, star, and <em>denoise</em>.)',
+      figure: 'An eyepiece that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
       thread: {
         problem: 'noise reduction',
         method: 'a benchmark scored by the science',
@@ -601,6 +607,7 @@ export const en = {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       etymology: '(From Latin <em>quorum</em>, ‘of whom’.)',
+      figure: 'A table of face-down cards: everyone plays their estimate at once and nobody sways the others; agreement appears when they turn over.',
       thread: {
         problem: 'estimation',
         method: 'a peer-to-peer room',
@@ -647,6 +654,7 @@ export const en = {
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
       etymology: '(From <em>demo</em> and <em>stage</em>.)',
+      figure: 'A zoetrope for the terminal: every demo is written like a score and plays back the same, frame by frame, like the gallop Muybridge broke apart so it could finally be seen.',
       thread: {
         problem: 'terminal demos',
         method: 'an event score',
@@ -1122,6 +1130,8 @@ export const en = {
     },
     meta: 'EXP-{n} · {status}',
     definitionNumber: '1.',
+    definitionNumber2: '2.',
+    figLabel: 'fig.',
     use: {
       copy: 'Copy',
       copied: 'Copied',
