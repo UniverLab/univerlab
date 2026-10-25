@@ -174,19 +174,28 @@ describe('circadian override hands back to the clock', () => {
     expect(boot).toBeGreaterThan(-1);
     expect(boot).toBeLessThan(CIRCADIAN.indexOf('applyTheme(sv)'));
     const drop = fnBody('function dropStale()');
-    expect(drop).toContain("nat().day?'day':'night'");
+    // Equality, not mere presence: an inverted guard would still remove the
+    // key, just at the wrong moment (a hand-back that never happens).
+    expect(drop).toContain("s===(nat().day?'day':'night')");
     expect(drop).toContain("localStorage.removeItem('univerlab-theme')");
   });
 
   it('drops it on the 60s tick and the visibility pass', () => {
-    const marks: Array<[string, number]> = [
-      ['var tm=setInterval', CIRCADIAN.indexOf('var tm=setInterval')],
-      ["addEventListener('visibilitychange'", CIRCADIAN.indexOf("addEventListener('visibilitychange'")],
-      ['tm=setInterval(function(){', CIRCADIAN.lastIndexOf('tm=setInterval(function(){')],
-    ];
-    for (const [mark, at] of marks) {
-      expect(at).toBeGreaterThan(-1);
-      expect(CIRCADIAN.slice(at, at + 300)).toContain('dropStale();');
-    }
+    // Each call site is pinned on its own. A time-window assertion let one
+    // site's call sit inside another's window and mask its removal: the
+    // outer tick and the visibility pass are 202 characters apart, so both
+    // fell inside a 300-character slice.
+    expect(CIRCADIAN).toContain(
+      "var tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)",
+    );
+    expect(CIRCADIAN).toContain(
+      "document.addEventListener('visibilitychange',function(){if(!document.hidden){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme')){",
+    );
+    expect(CIRCADIAN).toContain(
+      "clearInterval(tm);tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)",
+    );
+    // Boot, outer tick, visibility pass, inner re-created tick: no site may
+    // lose its drop, and none may gain a fifth.
+    expect(CIRCADIAN.match(/dropStale\(\);/g)).toHaveLength(4);
   });
 });
