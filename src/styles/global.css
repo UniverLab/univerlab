@@ -368,6 +368,10 @@ strong { color: var(--essence, var(--accent)); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  /* Hash jumps and any scrollIntoView() without an explicit behaviour still
+     inherited html's smooth scrolling: the skip link animated itself for the
+     visitors who asked for no motion. */
+  html { scroll-behavior: auto; }
 }
 
 /* Cross-document view transitions — landing cards are windows onto the
