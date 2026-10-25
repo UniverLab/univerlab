@@ -277,6 +277,11 @@ const ogImage = `/og/${id}.png`;
 
   .exp-name { font-family: var(--font-serif); font-weight: 400; }
   .koan { font-family: var(--font-body); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
+  /* Quorum's table link is the page's only route to the live table, so it wears
+     the page's ink (spec: "text link, page ink"), not the koan's essence gold:
+     #e6b24a on the day sand reads 1.6:1, the ink clears 4.5:1 in both themes.
+     Underline, hover and focus come from global a. */
+  .koan a { color: var(--ink); }
   :global(html[data-surface='observatory'] .koan) {
     font-family: var(--font-serif);
     font-size: clamp(1.5rem, 3.6vw, 2.4rem);

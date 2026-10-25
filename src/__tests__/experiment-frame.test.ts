@@ -9,9 +9,11 @@ import { es } from '../i18n/es';
 
 const LAYOUT = resolve(__dirname, '../layouts/ExperimentLayout.astro');
 const DEMO_STAGE = resolve(__dirname, '../views/experiments/DemoStage.astro');
+const EXPERIMENTS = resolve(__dirname, '../lib/experiments.ts');
 
 const layout = readFileSync(LAYOUT, 'utf8');
 const demoStage = readFileSync(DEMO_STAGE, 'utf8');
+const experiments = readFileSync(EXPERIMENTS, 'utf8');
 
 describe('experiment frame: lab strip', () => {
   it('is the first child of .exp, before the hero', () => {
@@ -59,6 +61,21 @@ describe('experiment frame: terminal bench', () => {
     expect(layout).not.toContain('install term');
     expect(layout).not.toContain('bench-text');
     expect(layout).not.toContain("t.experiments['astro-denoise']");
+  });
+
+  it('renders no .install on /quorum/ or /astro-denoise/ — neither record ships an install', () => {
+    // The gate alone would still render a panel if the data grew an install:
+    // this is the data half of the contract (source guard, no build needed).
+    const record = (id: string) => experiments.split('\n').find((l) => l.includes(`{ id: '${id}'`));
+    for (const id of ['quorum', 'astro-denoise']) {
+      const line = record(id);
+      expect(line).toBeDefined();
+      expect(line).not.toMatch(/\binstall\s*:/);
+    }
+    // … while the install pages keep theirs.
+    for (const id of ['canopy', 'gitkit', 'ghscaff', 'demostage']) {
+      expect(record(id)).toMatch(/\binstall\s*:/);
+    }
   });
 
   it('shows Quorum a table link in the koan line instead of an install panel', () => {
