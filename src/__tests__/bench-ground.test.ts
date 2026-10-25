@@ -162,3 +162,31 @@ describe('data-bench-theme follows the celestial body', () => {
     expect(CIRCADIAN).toContain('window.calc=calc');
   });
 });
+
+describe('circadian override hands back to the clock', () => {
+  it('shares the natural day/night decision with calc()', () => {
+    expect(CIRCADIAN).toContain('function nat()');
+    expect(fnBody('function calc()')).toContain('var n=nat()');
+  });
+
+  it('drops an equal override before applying it, at boot', () => {
+    const boot = CIRCADIAN.indexOf('dropStale();var sv=');
+    expect(boot).toBeGreaterThan(-1);
+    expect(boot).toBeLessThan(CIRCADIAN.indexOf('applyTheme(sv)'));
+    const drop = fnBody('function dropStale()');
+    expect(drop).toContain("nat().day?'day':'night'");
+    expect(drop).toContain("localStorage.removeItem('univerlab-theme')");
+  });
+
+  it('drops it on the 60s tick and the visibility pass', () => {
+    const marks: Array<[string, number]> = [
+      ['var tm=setInterval', CIRCADIAN.indexOf('var tm=setInterval')],
+      ["addEventListener('visibilitychange'", CIRCADIAN.indexOf("addEventListener('visibilitychange'")],
+      ['tm=setInterval(function(){', CIRCADIAN.lastIndexOf('tm=setInterval(function(){')],
+    ];
+    for (const [mark, at] of marks) {
+      expect(at).toBeGreaterThan(-1);
+      expect(CIRCADIAN.slice(at, at + 300)).toContain('dropStale();');
+    }
+  });
+});
