@@ -10,6 +10,7 @@ const HALO = 0.5;
 const COMB_ALPHA = 0.035;
 const REVIVE_IDLE = 4000;
 const REVIVE_GAP = 3000;
+export const MASK = 'radial-gradient(ellipse 70% 78% at 50% 45%, transparent 0 46%, #000 92%)';
 
 export interface CanopyCell {
   x: number;
@@ -50,6 +51,8 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   const { base, reduced } = opts;
 
   const { canvas, ctx: c, size } = hostCanvas(host);
+  canvas.style.setProperty('mask-image', MASK);
+  canvas.style.setProperty('-webkit-mask-image', MASK);
 
   if (reduced) {
     let still: HTMLImageElement | null = null;

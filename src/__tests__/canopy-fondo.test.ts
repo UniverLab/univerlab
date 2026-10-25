@@ -1,4 +1,4 @@
-import { stepCells, ON, DYING } from '../scripts/fondos/canopy';
+import { stepCells, ON, DYING, MASK } from '../scripts/fondos/canopy';
 import { byId } from '../lib/experiments';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -61,5 +61,12 @@ describe('canopy fondo', () => {
   it('LiveBackground exposes a canopy loader', () => {
     const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'index.ts'), 'utf8');
     expect(src).toMatch(/canopy:\s*\(\)\s*=>\s*import\(['"]\.\/canopy['"]\)/);
+  });
+
+  it('masks the reading column clean on its case element', () => {
+    expect(MASK).toBe('radial-gradient(ellipse 70% 78% at 50% 45%, transparent 0 46%, #000 92%)');
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
+    expect(src).toMatch(/canvas\.style\.setProperty\('mask-image', MASK\)/);
+    expect(src).toContain('-webkit-mask-image');
   });
 });
