@@ -230,7 +230,11 @@ describe('language corner styles', () => {
     expect(under![1]).toMatch(/clip-path:\s*polygon\(100% 0, 100% 100%, 0 100%\)/);
     expect(under![1]).toMatch(/background:\s*var\(--next-paper\)/);
     expect(under![1]).toMatch(/box-shadow:\s*inset/);
-    expect(peel![1]).toMatch(/--next-paper:\s*#e9e1d0/);
+    expect(peel![1]).toContain('--next-paper: color-mix(in srgb, var(--bg) 82%, transparent);');
+    expect(peel![1]).toContain('--flap-a: color-mix(in srgb, var(--bg-raise) 92%, var(--ink) 8%);');
+    expect(peel![1]).toContain('--flap-b: var(--bg-raise);');
+    expect(peel![1]).toContain('--flap-c: color-mix(in srgb, var(--line) 80%, var(--ink) 20%);');
+    expect(label![1]).toMatch(/color:\s*var\(--bench-line\)/);
   });
 
   it("folds the corner as the paper's back, with a light streak", () => {
@@ -251,13 +255,12 @@ describe('language corner styles', () => {
     expect(label![1]).toMatch(/font-size:\s*13px/);
   });
 
-  it('follows the night phase for both papers', () => {
-    expect(HEADER).toMatch(
-      /\[data-bench-theme='night'\]\) \.peel \{[\s\S]*?--next-paper:\s*#2c3432;[\s\S]*?\}/,
-    );
-    expect(HEADER).toMatch(/--flap-a:\s*#3a4441/);
-    expect(HEADER).toMatch(/--flap-b:\s*#4b5753/);
-    expect(HEADER).toMatch(/--flap-c:\s*#2e3634/);
+  it('takes its ground from the page, never the hour', () => {
+    for (const hex of ['#e9e1d0', '#d6c8ad', '#f2eadb', '#c4b28d', '#2c3432', '#3a4441', '#4b5753', '#2e3634']) {
+      expect(HEADER).not.toContain(hex);
+    }
+    expect(HEADER).not.toContain('data-bench-theme');
+    expect(HEADER).not.toContain('prefers-color-scheme: dark');
   });
 
   it('stacks above content but below the dialogs', () => {

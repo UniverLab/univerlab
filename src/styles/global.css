@@ -547,7 +547,7 @@ body > header { view-transition-name: site-header; }
 .slip kbd { font: inherit; border-bottom: 1.5px solid #87222c; }
 .slip.tip {
   right: max(20px, env(safe-area-inset-right, 0px));
-  bottom: 96px;
+  bottom: calc(58px + 12px);
   transform: rotate(-1.2deg);
 }
 .slip.answer {

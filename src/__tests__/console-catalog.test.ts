@@ -185,6 +185,7 @@ describe('the taped slips', () => {
   it('styles paper, tape and tilt from the mockup', () => {
     expect(GLOBAL).toMatch(/\.slip \{[^}]*#f3ead6/s);
     expect(GLOBAL).toMatch(/\.slip::before, \.slip::after \{[^}]*background: var\(--bench-tape\)/s);
+    expect(GLOBAL).toMatch(/\.slip\.tip \{[^}]*bottom:\s*calc\(58px \+ 12px\)/s);
     expect(GLOBAL).toMatch(/\.slip\.tip \{[^}]*rotate\(-1\.2deg\)/s);
     expect(GLOBAL).toMatch(/\.slip \{[^}]*z-index: 320/s);
     // The skin above is untouched; the two bounds are additive, so a long

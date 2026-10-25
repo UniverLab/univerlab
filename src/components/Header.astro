@@ -383,10 +383,10 @@ const signals = [
      turns the page across the screen before switching. */
   .peel {
     --s: 58px;
-    --next-paper: #e9e1d0;
-    --flap-a: #d6c8ad;
-    --flap-b: #f2eadb;
-    --flap-c: #c4b28d;
+    --next-paper: color-mix(in srgb, var(--bg) 82%, transparent);
+    --flap-a: color-mix(in srgb, var(--bg-raise) 92%, var(--ink) 8%);
+    --flap-b: var(--bg-raise);
+    --flap-c: color-mix(in srgb, var(--line) 80%, var(--ink) 20%);
     position: fixed;
     z-index: 45;
     right: 0;
@@ -446,21 +446,6 @@ const signals = [
   }
   .peel:focus-visible { outline: 2px solid var(--bench-line); outline-offset: -4px; }
 
-  /* Night: the page underneath is slate, the folded back a lighter sheet. */
-  :global([data-bench-theme='night']) .peel {
-    --next-paper: #2c3432;
-    --flap-a: #3a4441;
-    --flap-b: #4b5753;
-    --flap-c: #2e3634;
-  }
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-bench-theme='day'])) .peel {
-      --next-paper: #2c3432;
-      --flap-a: #3a4441;
-      --flap-b: #4b5753;
-      --flap-c: #2e3634;
-    }
-  }
   @media (prefers-reduced-motion: reduce) {
     .peel { transition: none; }
   }
