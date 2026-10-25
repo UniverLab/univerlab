@@ -21,6 +21,9 @@
 /es/research /es/astro-denoise/ 301
 /es/status /status/ 301
 /es/status/ /status/ 301
+# /roadmap/ is English-only like /status/.
+/es/roadmap /roadmap/ 301
+/es/roadmap/ /roadmap/ 301
 /es/:id/docs/* /:id/docs/:splat 301
 /es/:id/docs /:id/docs/ 301
 

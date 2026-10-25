@@ -76,6 +76,9 @@ export const STATIC_RULES: readonly string[] = [
   '/es/research /es/astro-denoise/ 301',
   '/es/status /status/ 301',
   '/es/status/ /status/ 301',
+  // /roadmap/ is English-only like /status/.
+  '/es/roadmap /roadmap/ 301',
+  '/es/roadmap/ /roadmap/ 301',
   // Docs are English-only, so the Spanish spellings Google crawled are a
   // whole-segment mistake: send them to the English page rather than 404.
   '/es/:id/docs/* /:id/docs/:splat 301',
