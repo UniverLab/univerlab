@@ -261,6 +261,12 @@ describe('language corner styles', () => {
     }
     expect(HEADER).not.toContain('data-bench-theme');
     expect(HEADER).not.toContain('prefers-color-scheme: dark');
+    // --bench-line is the one token that still rides the hour (bench-tokens
+    // makes it chalk at night): the corner re-derives it from the page's ink,
+    // or the label and the focus ring would swap to chalk on texforge's paper
+    // at midnight and to ink on canopy's abyss by day — a peel that does not
+    // look the same at noon and at midnight.
+    expect(peel![1]).toContain('--bench-line: var(--ink);');
   });
 
   it('stacks above content but below the dialogs', () => {

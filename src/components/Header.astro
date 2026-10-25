@@ -387,6 +387,13 @@ const signals = [
     --flap-a: color-mix(in srgb, var(--bg-raise) 92%, var(--ink) 8%);
     --flap-b: var(--bg-raise);
     --flap-c: color-mix(in srgb, var(--line) 80%, var(--ink) 20%);
+    /* The corner rides the page, never the hour: bench-tokens swaps
+       --bench-line for chalk in the night phase even on a fixed surface,
+       which put chalk on texforge's paper at midnight and ink on canopy's
+       abyss by day. Inside this box the bench line resolves to the page's
+       own ink — the text colour of this ground in both phases — so .label
+       and the focus ring keep reading var(--bench-line). */
+    --bench-line: var(--ink);
     position: fixed;
     z-index: 45;
     right: 0;
