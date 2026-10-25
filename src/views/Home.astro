@@ -48,7 +48,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 }));
 ---
 
-<BaseLayout title={t.meta.title} bg="cosmic" circadian structuredData={webSite}>
+<BaseLayout title={t.meta.title} bg={false} circadian structuredData={webSite}>
   <div class="crt-view" id="home-view">
     <section class="wrap hall" aria-labelledby="frontis-title">
       <!-- Frontispiece: the title page of an old encyclopedia. -->
@@ -287,6 +287,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
             <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
           </div>
         </div>
+        <a class="dir-roadmap" href="/roadmap/">{t.home.directions.roadmap}</a>
       </div>
     </section>
 
@@ -532,6 +533,8 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .dir-next li { color: var(--ink-faint);
                  border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
   @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
+
+  .dir-roadmap { display: inline-block; margin-top: 1rem; color: var(--ink); }
 
   .axis { color: var(--ink-dim); margin: 0 0 1rem; max-width: 60ch; }
 

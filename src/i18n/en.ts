@@ -201,6 +201,7 @@ export const en = {
         'Simulation',
         'Knowledge systems',
       ],
+      roadmap: 'The roadmap, item by item →',
     },
     closing: {
       kicker: '04 — Why',

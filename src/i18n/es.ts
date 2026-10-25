@@ -199,6 +199,7 @@ export const es: Dict = {
         'Simulación',
         'Sistemas de conocimiento',
       ],
+      roadmap: 'La hoja de ruta, punto por punto →',
     },
     closing: {
       kicker: '04 — Por qué',
