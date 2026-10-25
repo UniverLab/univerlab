@@ -155,6 +155,13 @@ describe('experiments encyclopedia view', () => {
   });
 });
 
+describe('experiments encyclopedia rules', () => {
+  it('frames the entry list with the double rule and leaves the body top bare', () => {
+    expect(VIEW).not.toMatch(/\.enc \{[^}]*border-top/);
+    expect(VIEW).toMatch(/\.entries \{[^}]*border-top: 3px double var\(--bench-line\);/);
+  });
+});
+
 describe('experiments encyclopedia plate', () => {
   it('draws each entry from the Machine component in themed ink, not a video clip', () => {
     expect(VIEW).toContain('<Machine');

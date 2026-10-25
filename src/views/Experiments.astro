@@ -143,7 +143,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 </BaseLayout>
 
 <style>
-  .enc { position: relative; display: grid; gap: 18px; max-width: 1120px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px) 0; border-top: 3px double var(--bench-line); min-width: 0; }
+  .enc { position: relative; display: grid; gap: 18px; max-width: 1120px; margin: 0 auto; padding: 10px clamp(16px, 4vw, 48px) 0; min-width: 0; }
   .enc-head { display: grid; gap: 4px; text-align: center; justify-items: center; }
   .enc-h1 { font-family: 'Old Standard TT', serif; font-size: clamp(32px, 6vw, 54px); letter-spacing: 0.04em; margin: 0; }
   .enc-tome { margin: 0; font-family: 'Old Standard TT', serif; font-variant: small-caps; letter-spacing: 0.12em; color: var(--bench-line-soft); font-size: 15px; }
@@ -153,7 +153,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .thumbs button { font-family: 'Old Standard TT', serif; font-size: 15px; letter-spacing: 0.04em; color: var(--bench-line); background: color-mix(in srgb, var(--bench-line) 6%, transparent); border: 1px solid var(--bench-line-soft); border-bottom: 0; border-radius: 10px 10px 0 0; padding: 6px 16px 5px; margin: 0 2px; cursor: pointer; }
   .thumbs button[aria-pressed="true"] { background: var(--bench-line); color: var(--bench-ground); }
 
-  .entries { display: grid; border-top: 1px solid var(--bench-line-soft); padding-top: 18px; }
+  .entries { display: grid; border-top: 3px double var(--bench-line); padding-top: 18px; }
   /* status.astro also ships *global* board styles for `.entry` — a border-bottom rule
      and `grid-template-rows: auto auto` — which would keep drawing a line between these
      entries and leave an empty second row (its row-gap) under every body. The scoped
