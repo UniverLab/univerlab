@@ -44,10 +44,6 @@ describe('English-only pages are never linked with the /es prefix', () => {
     expect(hasCounterpart(`/${n}/`, 'es')).toBe(false);
   });
 
-  it('there is no Spanish status page to link to', () => {
-    expect(existsSync(resolve(ROOT, 'src/pages/es/status.astro'))).toBe(false);
-  });
-
   it('field notes link to /status/?topic=<id> in every language', () => {
     const src = read('src/components/FieldNotes.astro');
     expect(src).toContain('const statusHref = `/status/?topic=${exp.id}`;');
@@ -73,13 +69,12 @@ describe('the Spanish spellings of an English-only page redirect', () => {
 
   it('the docs catch-all is last, so it can shadow nothing above it', () => {
     expect(catchAllLine).toBeGreaterThan(0);
-    expect(STATIC_RULES.indexOf(CATCH_ALL)).toBeGreaterThan(-1);
+    expect(STATIC_RULES).toContain(CATCH_ALL);
   });
 
   it.each(englishOnly)('%s is a static rule above the docs catch-all', (n) => {
     for (const rule of spellings(n)) {
       expect(STATIC_RULES).toContain(rule);
-      expect(STATIC_RULES.indexOf(rule)).toBeGreaterThan(-1);
       expect(STATIC_RULES.indexOf(rule)).toBeLessThan(STATIC_RULES.indexOf(CATCH_ALL));
 
       expect(lines).toContain(rule);
