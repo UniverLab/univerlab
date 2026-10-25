@@ -1068,7 +1068,7 @@ export const es: Dict = {
   api: {
     title: 'API de anuncios de UniverLab — endpoints y ejemplos',
     description:
-      'Todas las rutas de la API pública de anuncios — el Cuaderno de bitácora y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl para usar.',
+      'Todas las rutas de la API pública — el Cuaderno de bitácora y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
     kicker: 'API',
     heading: 'API de anuncios',
     intro:

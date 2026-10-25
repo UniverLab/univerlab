@@ -32,7 +32,7 @@ Every public resource is anonymous and read-only:
 
 ## What is not open
 
-Publishing is owner-only. Writing to the Mission Log or to the roadmap at
+Publishing is owner-only. Writing to the Logbook or to the roadmap at
 `https://announcements.univerlab.org` requires a bearer token only the laboratory holds, and
 it is not open to registration. Read those routes freely; do not plan on writing to them. A
 write without a token is a `401`, never a silent public write.

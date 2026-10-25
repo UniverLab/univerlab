@@ -50,8 +50,8 @@ const rpcErr = (id: unknown, code: number, message: string): Response =>
 
 /** The instructions `initialize` ships: one sentence, read-only, dates named. */
 const INSTRUCTIONS =
-  'Read-only lab data: roadmap, Mission Log, about text and date translation; ' +
-  'dates use the TERRA/Sol mission format — convert them with translate_mission_date.';
+  'Read-only lab data: roadmap, Logbook, about text and date translation; ' +
+  'dates use the year · Sol mission format — convert them with translate_mission_date.';
 
 /**
  * The build-time about text, read from the static artefact
