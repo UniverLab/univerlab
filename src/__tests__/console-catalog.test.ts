@@ -187,6 +187,10 @@ describe('the taped slips', () => {
     expect(GLOBAL).toMatch(/\.slip::before, \.slip::after \{[^}]*background: var\(--bench-tape\)/s);
     expect(GLOBAL).toMatch(/\.slip\.tip \{[^}]*rotate\(-1\.2deg\)/s);
     expect(GLOBAL).toMatch(/\.slip \{[^}]*z-index: 320/s);
+    // The skin above is untouched; the two bounds are additive, so a long
+    // announcement scrolls inside the card instead of growing it off-screen.
+    expect(GLOBAL).toMatch(/\.slip \{[^}]*max-height: min\(320px, 40vh\)/s);
+    expect(GLOBAL).toMatch(/\.slip \{[^}]*overflow-y: auto/s);
   });
 
   it('the 42 egg arrives as a centred answer slip with the guide line', () => {
@@ -219,8 +223,18 @@ describe('the taped slips', () => {
   });
 
   it('the status page announces new entries as a slip', () => {
-    expect(STATUS).toContain("el.className = 'slip tip notice'");
-    expect(STATUS).toContain("slipNotice('New entry: ' + title)");
+    // Arrival is the mailbox's business on every page (mail.ts wireEvents /
+    // arrive / syncBox) plus loadLabMail on reload: status.astro only keeps
+    // its own EventSource for the newspaper list itself, so no slip, toast or
+    // dev mock may be left in the page.
+    expect(STATUS).not.toContain('slipNotice');
+    expect(STATUS).not.toContain('showToast');
+    expect(STATUS).not.toContain('isDev');
+    expect(STATUS).not.toContain('MOCK');
+    // The live list still prepends rows without a reload.
+    expect(STATUS).toContain("new EventSource(API + '/events')");
+    expect(STATUS).toContain('function prependEntry');
+    expect(STATUS).toContain('prependEntry(entry);');
   });
 });
 

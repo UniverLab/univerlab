@@ -165,22 +165,6 @@ const rmStrings = en.roadmap;
         }
       }
 
-      var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      var MOCK = [
-        { date: '2026-07-18T10:00:00Z', type: 'launch', title: 'New release', body: 'This release brings parallel agents with shared context and a new DAG designer in the canopy UI — drag nodes, wire outputs to inputs, and run the whole graph with one click. The designer supports conditional branches, fan-out patterns, and error recovery nodes that automatically retry failed steps with exponential backoff. You can also define subgraphs that act as reusable components, similar to functions in a programming language, which keeps complex workflows manageable as they grow.\n\nPerformance is up: cold starts dropped from 1.2s to 400ms after moving to a lighter isolate. Memory per agent went from 45MB to 28MB. The new scheduler supports priority queues, so critical agents can preempt lower-priority work when resources are tight. We benchmarked a 12-agent DAG running end-to-end in 3.4s, down from 8.1s.\n\nOn observability, every agent run now emits structured traces compatible with OpenTelemetry. Pipe them to Jaeger, Grafana Tempo, or any OTLP collector. The flight log shows trace spans inline. There is also a new /metrics endpoint with Prometheus-compatible counters for agent starts, completions, failures, and queue depth.\n\nBreaking changes: config format moved from YAML to TOML. Run `canopy migrate-config` to rewrite every file in place. Check the full changelog at https://github.com/UniverLab/harness-canopy/releases and the migration guide at https://univerlab.org/canopy/docs/migration. Open a thread at https://github.com/UniverLab/harness-canopy/discussions if you run into issues.', link: 'https://github.com/UniverLab/harness-canopy/releases/tag/v0.5.0' },
-        { date: '2026-07-17T22:00:00Z', type: 'note', title: 'Dress rehearsal', body: 'Before a vehicle flies, it runs a dress rehearsal: the full countdown on the pad, tanks loaded, every system exercised in sequence, stopping just short of ignition. Nothing leaves the ground. The point is to find out what breaks while breaking it is still cheap.' },
-        { date: '2026-07-17T18:00:00Z', type: 'launch', title: 'First light', body: 'Astronomers call it first light: the moment a new instrument opens its eye and returns an image. That first picture is never the best one the telescope will ever take. It is the proof that the optics align, the detector responds, the data path is open.' },
-        { date: '2026-07-17T12:00:00Z', type: 'deploy', title: 'Announcements worker online', body: 'The announcements Durable Object is live. Entries serialize through SQLite, fan out over SSE, and mirror to KV for fast reads. The first transmission reached the log without incident.' },
-        { date: '2026-07-17T09:00:00Z', type: 'note', title: 'Status page ships', body: 'The status page is now part of the public site. Real-time entries, infinite scroll, toast notifications for live updates, and a cosmic background that matches the mission log aesthetic.' },
-        { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
-      ];
-      MOCK[0].topic = 'canopy';
-      MOCK[1].topic = 'canopy';
-      MOCK[2].topic = 'general';
-      MOCK[3].topic = 'general';
-      MOCK[4].topic = 'general';
-      MOCK[5].topic = null;
-
       var TOPIC_DEFS = [
         { id: 'general', label: 'General' },
         { id: 'canopy', label: 'Canopy' },
@@ -409,19 +393,6 @@ const rmStrings = en.roadmap;
         if (loading || !hasMore) return;
         loading = true;
 
-        if (isDev) {
-          var batch = MOCK.slice(offset, offset + PAGE);
-          allEntries = allEntries.concat(batch.map(normalizeEntry));
-          offset += batch.length;
-          hasMore = offset < MOCK.length;
-          loading = false;
-          updateTopicFilters();
-          updateTypeFilters();
-          renderEntries();
-          if (!hasMore) observer.disconnect();
-          return;
-        }
-
         fetch(API + '?offset=' + offset + '&limit=' + PAGE)
           .then(function (r) { return r.json(); })
           .then(function (data) {
@@ -444,7 +415,6 @@ const rmStrings = en.roadmap;
         updateTopicFilters();
         updateTypeFilters();
         renderEntries();
-        showToast(entry.title);
       }
 
       function updateEntry(entry) {
@@ -455,26 +425,6 @@ const rmStrings = en.roadmap;
         updateTopicFilters();
         updateTypeFilters();
         renderEntries();
-      }
-
-      // A slip of old paper taped to the lower right — the shared notice skin
-      // for everything that is not mail (the global .slip rules in global.css).
-      function slipNotice(html, ms) {
-        var old = document.querySelectorAll('.slip.notice');
-        for (var i = 0; i < old.length; i++) old[i].remove();
-        var el = document.createElement('div');
-        el.className = 'slip tip notice';
-        el.setAttribute('role', 'status');
-        el.innerHTML = html;
-        document.body.appendChild(el);
-        var bye = function () { if (el.isConnected) el.remove(); };
-        el.addEventListener('click', bye);
-        setTimeout(bye, ms || 5000);
-        return el;
-      }
-
-      function showToast(title) {
-        slipNotice('New entry: ' + title);
       }
 
       function applyTopic(topic) {
@@ -559,55 +509,20 @@ const rmStrings = en.roadmap;
       var rmParam = new URLSearchParams(location.search).get('roadmap');
       if (rmParam) rmApplyRoadmapFilter(rmParam, rmParam);
 
-      // Force announcement notice in dev mode
-      if (isDev) {
-        setTimeout(function () {
-          var mockAnnouncement = MOCK[0];
-
-          function escapeHtml(s) {
-            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-          }
-          function linkify(text) {
-            var escaped = escapeHtml(text);
-            return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
-              return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#87222c;text-decoration:underline;text-underline-offset:2px">' + url + '</a>';
-            });
-          }
-
-          var html = '<strong style="font-weight:600">' + escapeHtml(mockAnnouncement.title) + '</strong>';
-          if (mockAnnouncement.body) {
-            html += '<div style="margin-top:0.4rem">' + linkify(mockAnnouncement.body) + '</div>';
-          }
-          if (mockAnnouncement.link) {
-            html += '<br><a href="' + escapeHtml(mockAnnouncement.link) + '" target="_blank" rel="noopener noreferrer" style="color:#87222c;text-decoration:underline;text-underline-offset:2px">View &rarr;</a>';
-          }
-
-          var toast = slipNotice(html, 8000);
-          if (mockAnnouncement.link) {
-            toast.addEventListener('click', function (ev) {
-              if (ev.target.tagName === 'A') return;
-              window.open(mockAnnouncement.link, '_blank', 'noopener,noreferrer');
-            });
-          }
-        }, 1500);
-      }
-
       // SSE
-      if (!isDev) {
-        var source = new EventSource(API + '/events');
-        source.addEventListener('entry', function (e) {
-          try {
-            var entry = JSON.parse(e.data);
-            prependEntry(entry);
-          } catch (err) {}
-        });
-        source.addEventListener('update', function (e) {
-          try {
-            updateEntry(JSON.parse(e.data));
-          } catch (err) {}
-        });
-        source.onerror = function () {};
-      }
+      var source = new EventSource(API + '/events');
+      source.addEventListener('entry', function (e) {
+        try {
+          var entry = JSON.parse(e.data);
+          prependEntry(entry);
+        } catch (err) {}
+      });
+      source.addEventListener('update', function (e) {
+        try {
+          updateEntry(JSON.parse(e.data));
+        } catch (err) {}
+      });
+      source.onerror = function () {};
     })();
   </script>
 </BaseLayout>
