@@ -368,14 +368,17 @@ export function startLantern(): void {
     });
   }
 
-  // The cycle and the clip stop while the tab is hidden.
-  document.addEventListener('visibilitychange', () => {
+  // A hidden tab stops cycle and clip; a bfcache restore fires no
+  // visibilitychange, so pageshow must resume them too.
+  const resume = (): void => {
     if (document.hidden) videos.forEach((video) => video?.pause());
     else {
       lastTurn = performance.now();
       playCurrent();
     }
-  });
+  };
+  document.addEventListener('visibilitychange', resume);
+  window.addEventListener('pageshow', resume);
 
   // ── Old-cinema layer ─────────────────────────────────────────────────────
   const ctx = film.getContext('2d');

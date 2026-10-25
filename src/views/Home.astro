@@ -614,4 +614,10 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
     if (view && dot) crtNavigate(href, view, dot);
     else window.location.assign(href);
   });
+
+  // Back restores the bfcache snapshot with the power-off class still on and
+  // .crt-view.off fills forwards to opacity 0: the home came back blank.
+  addEventListener('pageshow', () => {
+    view?.classList.remove('off');
+  });
 </script>

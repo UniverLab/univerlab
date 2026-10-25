@@ -198,6 +198,12 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/pauseBtn\.setAttribute\('aria-pressed'/);
   });
 
+  it('resumes the clip after a bfcache restore', () => {
+    expect(LANTERN).toContain("document.addEventListener('visibilitychange', resume");
+    expect(LANTERN).toMatch(/window\.addEventListener\('pageshow', resume\)/);
+    expect(LANTERN).toMatch(/const resume = \(\): void => \{[\s\S]*?lastTurn = performance\.now\(\);[\s\S]*?playCurrent\(\);/);
+  });
+
   it('shows the title slide only under reduced motion', () => {
     expect(LANTERN).toMatch(/prefers-reduced-motion: reduce/);
     expect(LANTERN).toMatch(/if \(reduce \|\| paused \|\| document\.hidden\) return/);
@@ -266,6 +272,10 @@ describe('Home — CRT power-off', () => {
     expect(CRT_RESTORE).toContain('window.setTimeout(clear, 1400)');
     expect(CRT).toContain("const CRT_KEY = 'univerlab-crt'");
     expect(CRT).toContain('sessionStorage.setItem(CRT_KEY');
+  });
+
+  it('shows the home again on Back restore', () => {
+    expect(HOME).toMatch(/addEventListener\('pageshow', \(\) => \{\s*view\?\.classList\.remove\('off'\);\s*\}\)/);
   });
 
   it('collapses the view, flashes the dot and navigates; instant under reduced motion', () => {
