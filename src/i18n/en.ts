@@ -73,6 +73,8 @@ export const en = {
     theme: { circadian: 'Circadian', papyrus: 'Papyrus', slate: 'Slate' },
     answer: 'The Answer to the Ultimate Question of Life, the Universe, and Everything.',
     guide: "The Hitchhiker's Guide to the Galaxy",
+    belowSurface: 'You went below the surface.',
+    pullRequest: 'The next great discovery is one pull request.',
   },
   footer: {
     quote:
@@ -718,7 +720,7 @@ export const en = {
       '«Wonder at the existence of consciousness is the root of all motivation for continuity.»',
     // Living-document header data. Version + date are invariant facts, not
     // prose; "living document" is the only localised word. The Sol and the
-    // TERRA year are computed at render time from `docDate` (mission-time.ts),
+    // year are computed at render time from `docDate` (mission-time.ts),
     // never typed into the dictionary.
     docStatus: 'living document',
     docVersion: '3.0',
@@ -1044,7 +1046,7 @@ export const en = {
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
     pageTitle: 'Roadmap — what UniverLab is building now, next and later',
-    statusFeedLink: 'Mission Log →',
+    statusFeedLink: 'Logbook →',
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · open laboratory' },
@@ -1060,14 +1062,14 @@ export const en = {
   notes: {
     heading: 'Field notes',
     empty: 'No field notes yet — this is where the log will speak.',
-    statusLink: 'Mission Log →',
+    statusLink: 'Logbook →',
   },
   feed: {
     kicker: 'Feed',
-    title: 'Follow the Mission Log in your RSS reader — UniverLab',
-    description: 'The UniverLab Mission Log is published as an RSS feed you can follow from your own reader — any reader works, just paste the URL and stay current.',
+    title: 'Follow the Logbook in your RSS reader — UniverLab',
+    description: 'The UniverLab Logbook is published as an RSS feed you can follow from your own reader — any reader works, just paste the URL and stay current.',
     heading: 'RSS',
-    intro: 'The Mission Log is published as an RSS feed you can follow from your own reader.',
+    intro: 'The Logbook is published as an RSS feed you can follow from your own reader.',
     copy: 'Copy',
     copied: 'Copied',
     hint: 'Any RSS reader works — no specific app needed, just paste the URL.',
@@ -1075,11 +1077,11 @@ export const en = {
   api: {
     title: 'UniverLab announcements API — endpoints and examples',
     description:
-      'Every route of the public announcements API — the Mission Log and the roadmap — with its parameters, its response shape and a curl example you can run today.',
+      'Every route of the public announcements API — the Logbook and the roadmap — with its parameters, its response shape and a curl example you can run today.',
     kicker: 'API',
     heading: 'Announcements API',
     intro:
-      'The public API behind the Mission Log and the roadmap on this site. Every route listed here is an unauthenticated, read-only GET: there is no account, no key and nothing to arrange before calling it. Read what you like, as often as you like.',
+      'The public API behind the Logbook and the roadmap on this site. Every route listed here is an unauthenticated, read-only GET: there is no account, no key and nothing to arrange before calling it. Read what you like, as often as you like.',
     baseLabel: 'Base URL',
     baseNote: 'Anonymous, read-only GET. Every response carries the CORS origin this site runs on.',
     endpointsLabel: 'Endpoints',

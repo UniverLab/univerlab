@@ -29,9 +29,9 @@ const idx = liveExperiments.findIndex((x) => x.id === id);
 const prevExp = liveExperiments[(idx - 1 + liveExperiments.length) % liveExperiments.length];
 const nextExp = liveExperiments[(idx + 1) % liveExperiments.length];
 
-// Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
+// Format startDate as "YYYY · Sol NNN" for the genesis section.
 const genesisDate = exp.startDate
-  ? `TERRA ${new Date(exp.startDate).getFullYear()} · ${startSolLabel(exp.startDate)}`
+  ? `${new Date(exp.startDate).getFullYear()} · ${startSolLabel(exp.startDate)}`
   : undefined;
 
 // Rich result: SoftwareApplication for CLI tools, WebApplication for hosted

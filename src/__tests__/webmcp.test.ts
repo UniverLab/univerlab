@@ -312,7 +312,7 @@ describe('list_announcements', () => {
       }) as unknown as typeof fetch,
     });
     const md = await byName(failing, 'list_announcements').execute({});
-    expect(md).toContain('Mission Log is unavailable');
+    expect(md).toContain('Logbook is unavailable');
     expect(md).toContain('offline');
     expect(md).toContain(ENTRIES_URL);
     expect(md).toContain(FEED_URL);
@@ -418,7 +418,7 @@ describe('translate_mission_date', () => {
   it('converts a mission date to a calendar date', async () => {
     const result = JSON.parse(await tool().execute({ input: 'TERRA 2026 · Sol 282 · 14:00 UTC' }));
     expect(result.direction).toBe('to-calendar');
-    expect(result.mission).toContain('TERRA 2026 · Sol 282');
+    expect(result.mission).toContain('2026 · Sol 282');
     expect(result.iso).toBe('2026-10-09T14:00Z');
     expect(result.calendar).toContain('2026');
   });

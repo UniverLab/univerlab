@@ -9,7 +9,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
 );
 const rmStrings = en.roadmap;
 ---
-<BaseLayout title="Mission Log — live status of every UniverLab experiment" description="Real-time Mission Log entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg={false} circadian>
+<BaseLayout title="Logbook — live status of every UniverLab experiment" description="Real-time logbook entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg={false} circadian>
   <Watermark kind="blueprint" />
   <section class="wrap board" id="status-board">
     <header class="board-head">
@@ -37,10 +37,10 @@ const rmStrings = en.roadmap;
       </nav>
     </div>
     <div class="board-cols">
-      <section class="board-col board-log" aria-label="Mission log">
-        <div class="col-label" aria-hidden="true"><span class="label">MISSION LOG</span></div>
+      <section class="board-col board-log" aria-label="Logbook">
+        <div class="col-label" aria-hidden="true"><span class="label">LOGBOOK</span></div>
         <div id="roadmap-clear" class="rm-clear" hidden></div>
-        <div id="log-scroller" class="log-scroller" tabindex="0" aria-label="Mission log entries">
+        <div id="log-scroller" class="log-scroller" tabindex="0" aria-label="Logbook entries">
           <div id="log-entries">
             <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
             <article class="entry skeleton"><time></time><div class="entry-body"></div><div class="type-badge"></div></article>
@@ -220,7 +220,7 @@ const rmStrings = en.roadmap;
         var dayOfYear = Math.floor((d - start) / 86400000);
         var hh = String(d.getUTCHours()).padStart(2, '0');
         var mm = String(d.getUTCMinutes()).padStart(2, '0');
-        return 'TERRA ' + y + ' \u00b7 Sol ' + dayOfYear + ' \u00b7 ' + hh + ':' + mm + ' UTC';
+        return y + ' \u00b7 Sol ' + dayOfYear + ' \u00b7 ' + hh + ':' + mm + ' UTC';
       }
       function solOf(iso) {
         var d = new Date(iso);

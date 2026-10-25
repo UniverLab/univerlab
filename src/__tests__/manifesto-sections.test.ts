@@ -132,7 +132,7 @@ describe('MAN2 manifesto sections', () => {
     const html = [
       '<main>',
       '<nav class="rail"><ol><li><a href="#imperatives"><span>V</span>The imperatives</a></li></ol></nav>',
-      '<p class="doc-header">living document · v3.0 · TERRA 2026 · Sol 168</p>',
+      '<p class="doc-header">living document · v3.0 · 2026 · Sol 168</p>',
       '<svg class="mtt-illustration" aria-hidden="true"><circle cx="10" cy="10" r="1.3"/></svg>',
       '<h2>The million-year test</h2>',
       `<blockquote class="prose">${en.manifesto.millionYearTestQuestion}</blockquote>`,
@@ -144,7 +144,7 @@ describe('MAN2 manifesto sections', () => {
     ].join('');
     const md = htmlToMarkdown(html);
     const flat = md.replace(/\s+/g, ' ');
-    expect(flat).toContain('living document · v3.0 · TERRA 2026 · Sol 168');
+    expect(flat).toContain('living document · v3.0 · 2026 · Sol 168');
     expect(flat).toContain('## The million-year test');
     expect(flat).toContain(en.manifesto.millionYearTestQuestion);
     expect(flat).toContain(en.manifesto.millionYearTestAnswer);

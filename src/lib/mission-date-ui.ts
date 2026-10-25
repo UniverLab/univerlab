@@ -104,7 +104,7 @@ export function openDateTranslator(closePalette: () => void, lang: string): void
       '<div class="date-input-row">' +
         '<span class="cmd-prefix">/</span>' +
         '<input class="cmd-input date-t-input" type="text" spellcheck="false" autocomplete="off" placeholder="' +
-          (es ? 'TERRA 2026 \u00b7 Sol 282 \u2026 o 2026-10-09' : 'TERRA 2026 \u00b7 Sol 282 \u2026 or 2026-10-09') + '" />' +
+          (es ? '2026 \u00b7 Sol 282 \u2026 o 2026-10-09' : '2026 \u00b7 Sol 282 \u2026 or 2026-10-09') + '" />' +
         '<button class="date-t-close" type="button" aria-label="Close">&times;</button>' +
       '</div>' +
       '<div class="date-t-results"></div>' +

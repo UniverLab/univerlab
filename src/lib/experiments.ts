@@ -50,7 +50,7 @@ export interface Experiment {
    *  shows and the hero-mark slot renders. '@i18n' = resolved from the
    *  translations dictionary (language-dependent motifs live there, not here). */
   motif: string;
-  /** First commit date (YYYY-MM-DD). Shown in genesis section as "TERRA YYYY · Mon DD". */
+  /** First commit date (YYYY-MM-DD). Shown in genesis section as "YYYY · Sol NNN". */
   startDate?: string;
   /** Date the experiment was archived (YYYY-MM-DD). Archived experiments leave every
    *  live listing and appear on /archive under "Built and archived". */

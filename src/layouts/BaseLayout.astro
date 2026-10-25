@@ -144,7 +144,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     {!noindex && markdownTwin && (
       <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
     )}
-    <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
+    <link rel="alternate" type="application/atom+xml" title="UniverLab Logbook" href="https://announcements.univerlab.org/feed.atom" />
     {/* ARD / AI Catalog (specVersion 1.0) — advertised three ways: this head link, robots.txt's Agentmap, llms.txt's head. */}
     <link rel="ai-catalog" href={new URL('/.well-known/ai-catalog.json', site).href} />
     <!-- Type. Old Standard TT for titles, EB Garamond for long text, Sometype
@@ -228,31 +228,37 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       })();
     </script>
     <script>
-      // Console Easter egg — ASCII art + invitation to contribute.
+      // Console Easter egg — a diving helmet: opening the developer tools
+      // goes below the page's surface. Art: lgbeard's "Scuba" (asciiart.eu),
+      // cut down to the helmet; his initials LGB stay, as the artist asks.
+      // Printed with console.info — a greeting for whoever opens the devtools,
+      // not a log line.
       (function () {
-        var art = `
-        _..._
-      .'     '.      _
-     /    .-""-\\   _/ \\
-   .-|   /:.   |  |   |
-   |  \\  |:.   /.-'-./
-   | .-'-;:__.'    =/
-   .'=  *=|     _.='
-  /   _.  |    ;
- ;-.-'|    \\   |
-/   | \\    _\\  _\\
-\\__/'._;.  ==' ==\\
-         \\    \\   |
-         /    /   /
-         /-._/-._/
-         \\   \`\\  \\
-          \`-._/._/
-
-Open Computational Laboratory
-https://github.com/UniverLab
-
- "The next great discovery is one pull request."`;
-        console.log(art);
+        function print() {
+          var art = `                           o    .
+                      .      O
+                         o       .
+               _..--==--.._    o      (/)
+            .-\`   ______   \`-.        (/)
+           / _   .--==--.  .' \\       (\\)
+          /    /.-=____=-.\\ .\` \\      (/)
+         | '. // ||    || \\\\    |     (\\)
+         |   ||==||====||==||   |     (/)
+         |   ||' ||    ||  || \` |     (\\)
+         | \`.\\\\==||====||==//   |     (/)
+          \\   \\\`.||____||.'/   /      (\\)
+           \\   \`-.______.-' . /      (/)
+           /'-._          _.-'\\      (\\)
+      _...-| .  \`-......-'  . |-..._ (/)
+  .-'   '.  '.__.   ::  ' __.'  .' _.'\\)
+.'        '.|\`._''------''_.\`|.'_][\\).' '.
+                                       LGB`;
+          var S = {};
+          try { S = JSON.parse(document.getElementById('console-strings').textContent); } catch (e) {}
+          console.info(art + '\n\n' + S.belowSurface + '\n' + S.pullRequest + '\nhttps://github.com/UniverLab');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', print);
+        else print();
       })();
     </script>
     <script is:inline>
@@ -607,7 +613,7 @@ https://github.com/UniverLab
                 'The celestial body traces the horizon — it\'s your clock.',
                 'Type <kbd>/lang</kbd> to switch between English and Spanish.',
                 'Type <kbd>/theme</kbd> to pick Circadian, Papyrus or Slate.',
-                'The Mission Log tracks every experiment in real time.',
+                'The Logbook tracks every experiment in real time.',
                 'Click the sun or moon to switch the theme.',
                 'Type <kbd>/find</kbd> to search within the current page.',
                 'Every page has a keyboard shortcut — type <kbd>/</kbd> to discover them.',
@@ -621,7 +627,7 @@ https://github.com/UniverLab
                 'El cuerpo celeste recorre el horizonte — es tu reloj.',
                 'Escribe <kbd>/lang</kbd> para cambiar entre inglés y español.',
                 'Escribe <kbd>/theme</kbd> para elegir Circadian, Papyrus o Slate.',
-                'El Mission Log registra cada experimento en tiempo real.',
+                'El Cuaderno de bitácora registra cada experimento en tiempo real.',
                 'Haz clic en el sol o la luna para cambiar el tema.',
                 'Escribe <kbd>/find</kbd> para buscar en la página actual.',
                 'Cada página tiene un atajo de teclado — escribe <kbd>/</kbd> para descubrirlos.',
@@ -655,7 +661,7 @@ https://github.com/UniverLab
           { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
-          { cmd: '/status', label: 'Mission Log', href: '/status/' },
+          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' },
           { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 

@@ -21,9 +21,9 @@ import {
 // is pinned per timezone in mission-date-tz.test.ts.
 describe('formatMissionDate / formatSolLabel / startSolLabel pins', () => {
   it('formatMissionDate pins three known dates', () => {
-    expect(formatMissionDate('2026-09-16T10:00:00Z')).toBe('TERRA 2026 · Sol 259 · 10:00 UTC');
-    expect(formatMissionDate('2026-01-01T12:00:00Z')).toBe('TERRA 2026 · Sol 1 · 12:00 UTC');
-    expect(formatMissionDate('2024-02-29T12:00:00Z')).toBe('TERRA 2024 · Sol 60 · 12:00 UTC');
+    expect(formatMissionDate('2026-09-16T10:00:00Z')).toBe('2026 · Sol 259 · 10:00 UTC');
+    expect(formatMissionDate('2026-01-01T12:00:00Z')).toBe('2026 · Sol 1 · 12:00 UTC');
+    expect(formatMissionDate('2024-02-29T12:00:00Z')).toBe('2024 · Sol 60 · 12:00 UTC');
   });
 
   it('startSolLabel pins three known dates', () => {
@@ -83,6 +83,22 @@ describe('parseMissionDate', () => {
     expect(r!.utcTime).toBe('14:00');
   });
 
+  it('parses the new year Sol form without time', () => {
+    const rNew = parseMissionDate('2026 · Sol 282');
+    expect(rNew).not.toBeNull();
+    expect(rNew!.year).toBe(2026);
+    expect(rNew!.sol).toBe(282);
+    expect(rNew!.utcTime).toBeUndefined();
+  });
+
+  it('parses the new year Sol form with time', () => {
+    const rNew = parseMissionDate('2026 · Sol 282 · 14:00 UTC');
+    expect(rNew).not.toBeNull();
+    expect(rNew!.year).toBe(2026);
+    expect(rNew!.sol).toBe(282);
+    expect(rNew!.utcTime).toBe('14:00');
+  });
+
   it('parses Terra year Sol without time', () => {
     const r = parseMissionDate('Terra 2026 Sol 282');
     expect(r).not.toBeNull();
@@ -129,12 +145,12 @@ describe('toMissionDate', () => {
   });
 
   it('datetime includes the time segment', () => {
-    expect(toMissionDate('2026-10-09T14:00Z')).toBe('TERRA 2026 · Sol 282 · 14:00 UTC');
+    expect(toMissionDate('2026-10-09T14:00Z')).toBe('2026 · Sol 282 · 14:00 UTC');
   });
 
   it('accepts a Date (UTC instant)', () => {
     const d = new Date(Date.UTC(2026, 9, 9, 14, 0, 0));
-    expect(toMissionDate(d)).toBe('TERRA 2026 · Sol 282 · 14:00 UTC');
+    expect(toMissionDate(d)).toBe('2026 · Sol 282 · 14:00 UTC');
   });
 });
 
@@ -185,7 +201,7 @@ describe('translateMissionDate', () => {
   it('to-calendar from a full mission date', () => {
     const r = translateMissionDate('TERRA 2026 · Sol 282 · 14:00 UTC', 'en') as any;
     expect(r.direction).toBe('to-calendar');
-    expect(r.mission).toContain('TERRA 2026 · Sol 282');
+    expect(r.mission).toContain('2026 · Sol 282');
     expect(r.iso).toBe('2026-10-09T14:00Z');
     expect(r.calendar).toContain('2026');
     expect(r.calendar).toContain('(your time)');
@@ -212,7 +228,7 @@ describe('translateMissionDate', () => {
   it('to-mission from an ISO datetime', () => {
     const r = translateMissionDate('2026-10-09T14:00Z', 'en') as any;
     expect(r.direction).toBe('to-mission');
-    expect(r.mission).toContain('TERRA 2026 · Sol 282');
+    expect(r.mission).toContain('2026 · Sol 282');
     expect(r.calendar).toContain('(your time)');
   });
 

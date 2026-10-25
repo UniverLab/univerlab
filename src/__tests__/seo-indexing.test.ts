@@ -607,7 +607,7 @@ describe('checkTitles', () => {
   });
 
   it('flags an exact duplicate across two indexable pages', () => {
-    const shared = 'Mission Log RSS feed — UniverLab';
+    const shared = 'The Logbook RSS feed — UniverLab';
     expect(shared.length).toBe(32);
     const dist = distFixture({
       'feed/index.html': titled(shared),
@@ -801,7 +801,7 @@ function docsHead(o: { date?: string | null; ogType?: string; extra?: string } =
     `<meta name="description" content="${DOC_DESC.replace('&', '&amp;')}" />`,
     `<meta property="og:type" content="${o.ogType ?? 'article'}" />`,
     date ? `<meta property="article:modified_time" content="${date}" />` : '',
-    date ? `<p class="doc-updated">Last updated <time datetime="${date}">TERRA 2026 · Sol 224 · 13:08 UTC</time></p>` : '',
+    date ? `<p class="doc-updated">Last updated <time datetime="${date}">2026 · Sol 224 · 13:08 UTC</time></p>` : '',
     o.extra ?? '',
   ].join('');
 }

@@ -134,7 +134,7 @@ const THEMES: Record<Theme, Runner> = {
    lens (up to 18 px) and brightened, their links likewise, so the pointer
    speaks the product's own language (gravity) instead of blowing generic
    particles about. /status moves the well to 0.75w so the
-   orbits stay clear of the Mission Log column's text; every other cosmic page
+   orbits stay clear of the logbook column's text; every other cosmic page
    keeps the centred well. Restores the pre-lvis-home-windows mechanics on
    every cosmic page; the home-only "field" runner is gone. orbit.ts. */
   cosmic: orbit,

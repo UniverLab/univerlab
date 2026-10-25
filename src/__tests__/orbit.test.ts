@@ -667,7 +667,7 @@ describe('orbit', () => {
     }
   });
 
-  it('puts the well at 0.75w on /status so the orbits clear the Mission Log text', () => {
+  it('puts the well at 0.75w on /status so the orbits clear the logbook text', () => {
     // Given: the same pinned field on the status page
     history.pushState({}, '', '/status/');
     PIN();

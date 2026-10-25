@@ -44,7 +44,7 @@ beforeEach(() => {
 
 describe('initMissionDateTooltip', () => {
   it('enhances elements already on the page at boot: focusable, tooltip on hover', async () => {
-    const el = missionTime('2026-10-09T14:00:00Z', 'TERRA 2026 · Sol 282 · 14:00 UTC');
+    const el = missionTime('2026-10-09T14:00:00Z', '2026 · Sol 282 · 14:00 UTC');
     initMissionDateTooltip(); // the synchronous initial scan claims it
     el.dispatchEvent(new MouseEvent('mouseenter'));
     expect(el.getAttribute('tabindex')).toBe('0');
@@ -55,7 +55,7 @@ describe('initMissionDateTooltip', () => {
   });
 
   it('shares one tooltip element across dates', async () => {
-    const a = missionTime('2026-10-09T14:00:00Z', 'TERRA 2026 · Sol 282 · 14:00 UTC');
+    const a = missionTime('2026-10-09T14:00:00Z', '2026 · Sol 282 · 14:00 UTC');
     const b = missionTime('2026-04-03', 'Sol 93');
     await tick(); // the auto-booted observer enhances both
     a.dispatchEvent(new MouseEvent('mouseenter'));
@@ -64,7 +64,7 @@ describe('initMissionDateTooltip', () => {
   });
 
   it('reveals on focus too, and hides on blur and Escape', async () => {
-    const el = missionTime('2026-10-09T14:00:00Z', 'TERRA 2026 · Sol 282 · 14:00 UTC');
+    const el = missionTime('2026-10-09T14:00:00Z', '2026 · Sol 282 · 14:00 UTC');
     await tick();
     el.dispatchEvent(new FocusEvent('focus'));
     expect(visibleTip()).not.toBeNull();
@@ -89,7 +89,7 @@ describe('initMissionDateTooltip', () => {
   it('enhances dates rendered after boot (the SSE stream path)', async () => {
     // Nothing in the DOM when the module booted; the entry arrives later.
     await tick();
-    const el = missionTime('2026-10-09T14:00:00Z', 'TERRA 2026 · Sol 282 · 14:00 UTC');
+    const el = missionTime('2026-10-09T14:00:00Z', '2026 · Sol 282 · 14:00 UTC');
     await tick();
     el.dispatchEvent(new MouseEvent('mouseenter'));
     expect(el.getAttribute('tabindex')).toBe('0');
@@ -98,7 +98,7 @@ describe('initMissionDateTooltip', () => {
 
   it('localizes the tooltip to the page language (es)', async () => {
     document.documentElement.lang = 'es';
-    const el = missionTime('2026-10-09T14:00:00Z', 'TERRA 2026 · Sol 282 · 14:00 UTC');
+    const el = missionTime('2026-10-09T14:00:00Z', '2026 · Sol 282 · 14:00 UTC');
     // Same synchronous turn as the insert, before any observer runs: this
     // init's scan() claims the element with the Spanish closure.
     initMissionDateTooltip();
@@ -126,7 +126,7 @@ describe('openDateTranslator', () => {
     const labels = [...document.querySelectorAll('.date-t-label')].map((n) => n.textContent);
     expect(labels).toEqual(['Mission', 'ISO', 'Calendar']);
     const vals = [...document.querySelectorAll('.date-t-val')].map(val);
-    expect(vals[0]).toBe('TERRA 2026 · Sol 282 · 14:00 UTC');
+    expect(vals[0]).toBe('2026 · Sol 282 · 14:00 UTC');
     expect(vals[1]).toBe('2026-10-09T14:00Z');
     // One copy button per form.
     expect(document.querySelectorAll('.date-t-copy')).toHaveLength(3);
@@ -149,7 +149,7 @@ describe('openDateTranslator', () => {
     inp.value = 'not a date';
     inp.dispatchEvent(new Event('input', { bubbles: true }));
     expect(document.querySelector('.date-t-error')?.textContent).toBe(
-      'Not a mission date (TERRA/Sol) or ISO date.',
+      'Not a mission date (2026 · Sol 282) or ISO date.',
     );
   });
 
@@ -160,7 +160,7 @@ describe('openDateTranslator', () => {
     inp.value = 'nada';
     inp.dispatchEvent(new Event('input', { bubbles: true }));
     expect(document.querySelector('.date-t-error')?.textContent).toBe(
-      'No es una fecha de misión (TERRA/Sol) ni una fecha ISO.',
+      'No es una fecha de misión (2026 · Sol 282) ni una fecha ISO.',
     );
     inp.value = 'TERRA 2026 · Sol 282 · 14:00 UTC';
     inp.dispatchEvent(new Event('input', { bubbles: true }));

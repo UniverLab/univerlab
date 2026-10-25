@@ -41,7 +41,7 @@ export const MCP_SERVER_INFO = { name: 'univerlab', title: 'UniverLab' } as cons
 
 /** One sentence, ≤100 chars (the schema's `maxLength` for `description`). */
 const DESCRIPTION =
-  "UniverLab's read-only MCP server: roadmap, Mission Log, about, and mission-date tools.";
+  "UniverLab's read-only MCP server: roadmap, logbook, about, and mission-date tools.";
 
 export function buildServerCard(): Record<string, unknown> {
   return {

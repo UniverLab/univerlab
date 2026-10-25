@@ -131,7 +131,7 @@ export function htmlToMarkdown(html: string): string {
   // with data-mission (Astro keeps the attribute in the built HTML); the
   // text-shape match is the backstop for a <time> that carries the label
   // but not the marker, and for the pre-marker shape of older fixtures.
-  const MISSION_RE = /^(TERRA \d{4} · Sol \d+ · \d{2}:\d{2} UTC|Sol \d+)/;
+  const MISSION_RE = /^((?:TERRA )?\d{4} · Sol \d+ · \d{2}:\d{2} UTC|Sol \d+)/;
   td.addRule('missionDate', {
     filter: (node) =>
       node.nodeName === 'TIME' &&

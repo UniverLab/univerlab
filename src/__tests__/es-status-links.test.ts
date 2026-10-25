@@ -30,7 +30,7 @@ describe('status links never take the /es prefix', () => {
 
   it('the command palette links to /status/', () => {
     const src = read('src/layouts/BaseLayout.astro');
-    expect(src).toContain("{ cmd: '/status', label: 'Mission Log', href: '/status/' }");
+    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' }");
     expect(src).not.toContain("base + '/status/'");
   });
 });

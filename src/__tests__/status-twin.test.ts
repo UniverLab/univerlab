@@ -29,7 +29,7 @@ const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
 /** The static twin an outage falls back to — the built 116-byte front matter. */
 const STATIC_TWIN =
   '---\n' +
-  'title: "Mission Log — live status of every UniverLab experiment"\n' +
+  'title: "Logbook — live status of every UniverLab experiment"\n' +
   'source: "https://univerlab.org/status/"\n' +
   '---\n\n';
 
@@ -54,7 +54,7 @@ function entryHead(date: string): string {
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
-  return `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
+  return `**${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
 }
 
 /** Every `##`/`###` heading in order — lane order is asserted on this. */
@@ -126,7 +126,7 @@ describe('renderStatusTwin — roadmap lanes', () => {
       '### Later',
       '### Idea',
       '### Done',
-      '## Mission Log',
+      '## Logbook',
     ]);
   });
 
@@ -153,7 +153,7 @@ describe('renderStatusTwin — roadmap lanes', () => {
   });
 
   it('lists done newest-first by shipped_at', () => {
-    const done = md.slice(md.indexOf('### Done'), md.indexOf('## Mission Log'));
+    const done = md.slice(md.indexOf('### Done'), md.indexOf('## Logbook'));
     expect(done.indexOf('Shipped second')).toBeLessThan(done.indexOf('Shipped first'));
   });
 
@@ -201,7 +201,7 @@ describe('renderStatusTwin — Spanish', () => {
   });
 
   it('takes the lane headings and the hold label from es.roadmap', () => {
-    expect(headings(md)).toEqual(['## Roadmap', '### Ahora', '### Hecho', '## Mission Log']);
+    expect(headings(md)).toEqual(['## Roadmap', '### Ahora', '### Hecho', '## Cuaderno de bitácora']);
     expect(md).toContain('— en espera: en revisión');
   });
 
@@ -369,7 +369,7 @@ describe('middleware — live twin', () => {
     expect(body).toContain('## Roadmap');
     expect(body).toContain('### Now');
     expect(body).toContain('Ship the live twin');
-    expect(body).toContain('## Mission Log');
+    expect(body).toContain('## Logbook');
     expect(body).toContain('The live twin ships');
     expect(body).toContain(FEED_URL);
     expect(asMock(ctx.env.ASSETS.fetch)).not.toHaveBeenCalled();
@@ -396,7 +396,7 @@ describe('middleware — live twin', () => {
     global.fetch = apiMock() as unknown as typeof fetch;
     const body = await (await onRequest(context('/es/status/'))).text();
     expect(body).toContain('### Ahora');
-    expect(body).toContain('## Mission Log');
+    expect(body).toContain('## Cuaderno de bitácora');
     expect(body).toContain('The live twin ships');
   });
 
@@ -517,7 +517,7 @@ describe('public/llms.txt', () => {
 
   it('writes the live lines as prose, so the docs-line count cannot drift', () => {
     const live = head.slice(head.indexOf('## Live'));
-    expect(live).toMatch(/^- Mission Log and roadmap: https:\/\/univerlab\.org\/status\/index\.md /m);
+    expect(live).toMatch(/^- Logbook and roadmap: https:\/\/univerlab\.org\/status\/index\.md /m);
     expect(live).toMatch(/^- Atom feed: https:\/\/announcements\.univerlab\.org\/feed\.atom /m);
     expect(live).not.toMatch(/^- \[[^\]]*\]\(https:\/\/univerlab\.org\/[^)]*index\.md\): /m);
   });

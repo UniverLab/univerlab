@@ -84,7 +84,7 @@ describe('entries meta visibility', () => {
   });
 });
 
-describe('Sol parity with the Mission Log formatter', () => {
+describe('Sol parity with the logbook formatter', () => {
   it('shipped_at Sol matches the log formatter for the same instant', () => {
     const shippedAt = '2026-09-16T10:00:00Z';
     const sol = solDayOfYear(shippedAt);
@@ -99,7 +99,7 @@ describe('Sol parity with the Mission Log formatter', () => {
     );
   });
 
-  it('landed Sol in the shared renderer equals the Mission Log formatter', () => {
+  it('landed Sol in the shared renderer equals the logbook formatter', () => {
     for (const iso of [
       '2026-01-01T00:00:00Z',
       '2026-09-16T10:00:00Z',

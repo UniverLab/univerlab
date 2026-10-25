@@ -15,7 +15,7 @@
  *  lenses.
  *  Restores the pre-lvis-home-windows cosmic mechanics on every cosmic page
  *  (the home-only cursor-seeded "field" runner is gone); /status and /es/status
- *  move the well to 0.75w so the orbits stay clear of the Mission Log column's
+ *  move the well to 0.75w so the orbits stay clear of the logbook column's
  *  text — orbit.ts reads the pathname for that, every other page keeps 0.5w.
  *  Reduced motion never reaches here (ThemeBackground returns before importing
  *  this module). The ~30fps cap, the resize handling and the hidden-tab pause
@@ -71,7 +71,7 @@ type Mote = { x: number; y: number; vx: number; vy: number; s: number };
 
 export function orbit(ctx: OrbitCtx): (t: number) => void {
   const { c } = ctx;
-  /* Which well? The Mission Log page (and its /es twin) carries a text column
+  /* Which well? The logbook page (and its /es twin) carries a text column
      the orbits must stay clear of, so its well sits over the right side; every
      other cosmic page keeps the centred baseline well. Read ONCE, here at
      construction — the runner outlives no navigation, and a module-level read

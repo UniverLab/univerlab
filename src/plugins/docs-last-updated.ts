@@ -71,7 +71,7 @@ const docsLastUpdated: HastPluginDefinition = {
             type: 'element',
             tagName: 'time',
             // The raw `%cI` instant for machines; the rendered text is the
-            // site's own TERRA/Sol label, same as the Mission Log.
+            // site's own year · Sol label, same as the logbook.
             properties: { dateTime: iso, 'data-mission': '' },
             children: [{ type: 'text', value: formatMissionDate(iso) }],
           },

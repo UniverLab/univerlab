@@ -40,7 +40,7 @@ describe('buildFeedXml', () => {
     expect(id).toBe('https://univerlab.org/');
 
     const title = doc.querySelector('feed > title')?.textContent;
-    expect(title).toBe('UniverLab Mission Log');
+    expect(title).toBe('UniverLab Logbook');
 
     const links = Array.from(doc.querySelectorAll('feed > link'));
     const self = links.find((l) => l.getAttribute('rel') === 'self');

@@ -9,7 +9,7 @@ export interface FeedEntry {
 }
 
 const FEED_ID = 'https://univerlab.org/';
-const FEED_TITLE = 'UniverLab Mission Log';
+const FEED_TITLE = 'UniverLab Logbook';
 const FEED_SELF = 'https://announcements.univerlab.org/feed.atom';
 const FEED_ALT = 'https://univerlab.org/status/';
 

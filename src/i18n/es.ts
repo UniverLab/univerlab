@@ -72,6 +72,8 @@ export const es: Dict = {
     theme: { circadian: 'Circadian', papyrus: 'Papyrus', slate: 'Slate' },
     answer: 'La Respuesta a la Pregunta Fundamental de la Vida, el Universo y Todo lo Demás.',
     guide: 'Guía del autoestopista galáctico',
+    belowSurface: 'Bajaste bajo la superficie.',
+    pullRequest: 'El próximo gran hallazgo es un pull request.',
   },
   footer: {
     quote:
@@ -1037,7 +1039,7 @@ export const es: Dict = {
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
     pageTitle: 'Roadmap — what UniverLab is building now, next and later',
-    statusFeedLink: 'Mission Log →',
+    statusFeedLink: 'Cuaderno de bitácora →',
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · laboratorio abierto' },
@@ -1055,10 +1057,10 @@ export const es: Dict = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'Sigue el Mission Log en tu lector de RSS — UniverLab',
-    description: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
+    title: 'Sigue el Cuaderno de bitácora en tu lector de RSS — UniverLab',
+    description: 'El Cuaderno de bitácora se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
     heading: 'RSS',
-    intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
+    intro: 'El Cuaderno de bitácora se publica como feed RSS y puedes seguirlo desde tu propio lector.',
     copy: 'Copiar',
     copied: 'Copiado',
     hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',
@@ -1066,11 +1068,11 @@ export const es: Dict = {
   api: {
     title: 'API de anuncios de UniverLab — endpoints y ejemplos',
     description:
-      'Todas las rutas de la API pública de anuncios — el Mission Log y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
+      'Todas las rutas de la API pública de anuncios — el Cuaderno de bitácora y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl para usar.',
     kicker: 'API',
     heading: 'API de anuncios',
     intro:
-      'La API pública que está detrás del Mission Log y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
+      'La API pública que está detrás del Cuaderno de bitácora y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
     baseLabel: 'URL base',
     baseNote: 'GET anónimo y de solo lectura. Cada respuesta lleva el origen CORS de este sitio.',
     endpointsLabel: 'Endpoints',
