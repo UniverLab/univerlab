@@ -517,7 +517,6 @@ export const es: Dict = {
       description:
         'Benchmark reproducible de métodos de reducción de ruido en imágenes DC2 del Vera Rubin Observatory, por recuperación de fuentes débiles, calidad y coste.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
-      bench: 'estado: investigación · tesis en curso',
       lede:
         'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de reducción de ruido sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
       genesis: {

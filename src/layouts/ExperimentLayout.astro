@@ -93,7 +93,7 @@ const ogImage = `/og/${id}.png`;
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
-      <p class="koan">{e.koan}</p>
+      <p class="koan">{e.koan}{id === 'quorum' && (<>{' · '}<a href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.experiments.quorum.bench}</a></>)}</p>
       <p class="lede prose" set:html={e.lede} />
       <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
@@ -105,8 +105,8 @@ const ogImage = `/og/${id}.png`;
           )}
           <slot name="cta" />
       </div>
-      {(exp.install || id === 'quorum') && (
-        <div class={id === 'quorum' ? 'install term' : 'install'} data-install={exp.install ? '' : undefined}>
+      {exp.install && (
+        <div class="install" data-install>
           {exp.install && (
             <>
               <div class="install-head">
@@ -129,15 +129,7 @@ const ogImage = `/og/${id}.png`;
               </div>
             </>
           )}
-          {id === 'quorum' && (
-            <a class="bench-link" href="https://quorum.univerlab.org">{t.experiments.quorum.bench}</a>
-          )}
-          <Banner id={id === 'quorum' ? 'quorum' : id} color={exp.essenceHex} />
-        </div>
-      )}
-      {id === 'astro-denoise' && (
-        <div class="install term">
-          <p class="bench-text">{t.experiments['astro-denoise'].bench}</p>
+          <Banner id={id} color={exp.essenceHex} />
         </div>
       )}
     </section>
@@ -329,8 +321,6 @@ const ogImage = `/og/${id}.png`;
   .install .cmd { background: #0e0c09; border-color: #3a352d; }
   .install .copy { border-left-color: #3a352d; }
   .install .cmd-line { color: #ecebe4; }
-  .install .bench-link, .install .bench-text { color: #ecebe4; text-decoration: none; }
-  .install .bench-link:hover { color: var(--essence); }
   /* The machine is an engraved plate with a transparent ground, already
      inked for its surface: no recolouring, it shows as engraved. */
   @media (min-width: 40rem) {

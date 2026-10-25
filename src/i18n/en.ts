@@ -519,7 +519,6 @@ export const en = {
       description:
         'A reproducible benchmark of noise-reduction methods on simulated Vera Rubin Observatory DC2 images, scored by faint-source recovery, image quality and cost.',
       koan: 'Frontier knowledge hides behind the noise…',
-      bench: 'status: research · thesis in progress',
       lede:
         'astro-denoise is a <strong>research proposal</strong> for a modular, reproducible benchmark of noise-reduction methods on simulated Vera <strong>Rubin</strong> Observatory (LSST DC2) images. Any method — classical filter, trained network — plugs into the same protocol and runs on the same patches, and is scored not by how clean the image looks, but by <em>what it does to the science</em>: the <strong>completeness</strong> and <strong>purity</strong> of the faint-source catalog, compared against the DC2 truth catalog. <strong>BM3D</strong> and a <strong>U-Net</strong> are the first two references being explored — the platform is designed to grow as more methods are added.',
       genesis: {
