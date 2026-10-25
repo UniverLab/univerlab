@@ -246,6 +246,11 @@
   min-height: 6.2em;
   white-space: pre-wrap;
 }
+/* A letter from the past reads in italic; lab letters stay upright. Body
+   paragraphs only — headline, meta, links and caret keep their style. */
+.mail-pop .letter.past p {
+  font-style: italic;
+}
 .mail-pop .letter p .caret {
   display: inline-block;
   width: 0.55em;

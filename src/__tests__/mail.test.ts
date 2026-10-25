@@ -20,6 +20,8 @@ import {
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildPool, letterPool, type Fact } from '../lib/science-filter';
+import { en } from '../i18n/en';
+import { es } from '../i18n/es';
 
 const DAY = 86400000;
 const NOW = new Date('2026-10-24T12:00:00Z');
@@ -27,6 +29,7 @@ const NOW = new Date('2026-10-24T12:00:00Z');
 // The mailbox's own script, read as text: it owns the letter AND the science
 // pool warm-up the header used to run before it stopped opening letters.
 const MAIL_SRC = readFileSync(resolve(__dirname, '..', 'scripts', 'mail.ts'), 'utf8');
+const MAIL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'mail.css'), 'utf8');
 
 const EXP_CANOPY: ExperimentInfo = {
   id: 'canopy',
@@ -219,6 +222,37 @@ describe('the letter from the past carries a summary', () => {
     // The typed body comes from the summary too: without this branch the
     // letter would still print the one line twice.
     expect(MAIL_SRC).toMatch(/if \(m\.summary\) return summaryText\(m\);/);
+  });
+});
+
+/* The two touches on the past letter: it links to the newspaper and it reads
+   in italic. build() is closure-local, so both halves are asserted on the
+   sources the dialog renders from — the class branch and the stylesheet. */
+describe('a letter from the past', () => {
+  it('carries the past class on its letter node; the lab letter does not', () => {
+    // One ternary, chosen by the lab branch, written on the article — remove
+    // either half and the past letter loses its class.
+    expect(MAIL_SRC).toMatch(/const letterCls = lab \? 'letter' : 'letter past';/);
+    expect(MAIL_SRC).toMatch(/<article class="\$\{letterCls\}">/);
+    expect(MAIL_SRC).not.toMatch(/<article class="letter">/);
+    // The lab branch is the plain class: no "past" reaches a lab letter.
+    expect(MAIL_SRC).toMatch(/const letterCls = lab \? 'letter' :/);
+  });
+
+  it('sets its body paragraphs in italic and leaves the upright letters alone', () => {
+    expect(MAIL_CSS).toMatch(/\.mail-pop \.letter\.past p \{\s*font-style: italic;\s*\}/);
+    // No italic on the shared rule: a lab letter keeps its upright body.
+    expect(MAIL_CSS).not.toMatch(/\.mail-pop \.letter p \{[^}]*font-style: italic/);
+    // The headline stays out of the italic: it sits outside the paragraphs.
+    expect(MAIL_CSS).not.toMatch(/\.mail-pop \.letter\.past h2/);
+  });
+
+  it('says "See the newspaper" under the letter in both languages', () => {
+    expect(en.header.mailbox.allToday).toBe('See the newspaper →');
+    expect(es.header.mailbox.allToday).toBe('Ver el periódico →');
+    // The past letter alone renders the link, to /today/ — the newspaper.
+    expect(MAIL_SRC).toMatch(/copy\.allToday/);
+    expect(MAIL_SRC).toMatch(/const todayHref = lang === 'es' \? '\/es\/today\/' : '\/today\/';/);
   });
 });
 

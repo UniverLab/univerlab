@@ -56,7 +56,7 @@ export const en = {
       today: 'Today',
       readWikipedia: 'Read on Wikipedia →',
       continuesWikipedia: 'Continues on Wikipedia →',
-      allToday: "All of today's letters →",
+      allToday: 'See the newspaper →',
       readAnnouncement: 'Read the full announcement →',
     },
   },

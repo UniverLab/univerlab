@@ -194,6 +194,8 @@ function startMailbox(): void {
   /* ── The address side and the letter ─────────────────────────────────── */
   function build(m: MailLetter): HTMLElement {
     const lab = m.kind === 'lab';
+    // A letter from the past reads in italic; lab letters stay upright.
+    const letterCls = lab ? 'letter' : 'letter past';
     const now = new Date();
     const w = Math.min(320, innerWidth - 32);
     const stageH = (w * 186) / 300;
@@ -269,7 +271,7 @@ function startMailbox(): void {
       <div class="stage" tabindex="0" role="button" aria-label="${esc(copy.stage)}">
         <div class="shadow"></div>
         <div class="env-back">${ENVELOPE}</div>
-        <div class="holder"><article class="letter">
+        <div class="holder"><article class="${letterCls}">
           <div class="letter-shadow"></div><div class="grime"></div>
           <button type="button" class="close" aria-label="${esc(copy.close)}">×</button>
           <div class="meta">${meta}</div>

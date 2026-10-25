@@ -54,7 +54,7 @@ export const es: Dict = {
       today: 'Hoy',
       readWikipedia: 'Leer en Wikipedia →',
       continuesWikipedia: 'Sigue en Wikipedia →',
-      allToday: 'Todas las cartas de hoy →',
+      allToday: 'Ver el periódico →',
       readAnnouncement: 'Leer el anuncio completo →',
     },
   },
