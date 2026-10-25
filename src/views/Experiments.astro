@@ -163,8 +163,10 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .entry[data-status="archived"] { opacity: 0.7; }
 
   .plate { --machine-h-phone: 200px; --plate-h: clamp(180px, 19vw, 260px); }
-  /* The whole plate is the entry link; block keeps the machine's size unchanged. */
-  .plate-link { display: block; }
+  /* The whole plate is the entry link; block keeps the machine's size unchanged.
+     No text decoration: the link wraps art, and the default underline would draw
+     a line under the archived entry's EXP number. */
+  .plate-link { display: block; text-decoration: none; }
   .plate :global(.machine img) { height: auto; max-height: var(--plate-h); max-width: 100%; }
   .num-frame { display: grid; place-items: center; width: 100%; height: var(--plate-h); border: 1px dotted var(--bench-rule); }
   .num { font-family: 'Old Standard TT', serif; font-size: 56px; line-height: 1; white-space: nowrap; color: var(--bench-line-soft); }

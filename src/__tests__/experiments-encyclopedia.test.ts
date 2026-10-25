@@ -217,6 +217,9 @@ describe('experiments encyclopedia plate', () => {
     expect(VIEW).toContain('border: 1px dotted var(--bench-rule)');
     expect(VIEW).toContain("font-family: 'Old Standard TT', serif; font-size: 56px");
     expect(VIEW).toContain('.entry[data-status="archived"] { opacity: 0.7; }');
+    // The number now sits inside the plate link: the anchor's default underline
+    // must not draw a line under EXP-00n.
+    expect(VIEW).toMatch(/\.plate-link \{[^}]*text-decoration: none;/);
   });
 
   it('sets the definition at 18px on a 60ch measure now the body has room', () => {
