@@ -142,18 +142,29 @@ describe('source guards', () => {
   const notes = readFileSync(resolve(__dirname, '../components/FieldNotes.astro'), 'utf8');
   const client = readFileSync(resolve(__dirname, '../lib/announcements-client.ts'), 'utf8');
 
-  it('layout hosts lab-strip before hero, LabPlate inside hero, FieldNotes after exp-nav, inside .exp', () => {
+  it('layout hosts lab-strip before hero, LabPlate below the hero, FieldNotes after exp-nav, inside .exp', () => {
     expect(layout).toContain('<p class="lab-strip">');
     expect(layout).toContain('<LabPlate');
     expect(layout).toContain('<FieldNotes');
     expect(layout.indexOf('<p class="lab-strip">')).toBeLessThan(layout.indexOf('<section class="wrap hero"'));
-    expect(layout.indexOf('<LabPlate')).toBeGreaterThan(layout.indexOf('<section class="wrap hero"'));
+    // The plate is a quiet colophon row: past the hero (which keeps title,
+    // essence and koan only), before the slot where page content starts.
+    const heroEnd = layout.indexOf('</section>', layout.indexOf('<section class="wrap hero"'));
+    expect(layout.indexOf('<LabPlate')).toBeGreaterThan(heroEnd);
+    expect(layout.indexOf('<LabPlate')).toBeLessThan(layout.indexOf('<slot name="before-genesis"'));
+    // Exactly one mount per experiment page.
+    expect(layout.match(/<LabPlate\b/g) ?? []).toHaveLength(1);
     expect(layout.indexOf('<FieldNotes')).toBeGreaterThan(layout.indexOf('exp-nav'));
   });
 
   it('plate has hydrated segments, static Sol, and one release link (R7 superseded)', () => {
     expect(plate).toContain('data-plate-roadmap');
     expect(plate).toContain('data-plate-lastlog');
+    // Segments are hidden until the client finds data — no em-dash filler.
+    expect(plate).not.toContain('data-dash');
+    expect(plate).toContain('data-plate-seg');
+    expect(plate).toMatch(/data-plate-seg="roadmap" hidden/);
+    expect(plate).toMatch(/data-plate-seg="lastlog" hidden/);
     expect(plate).toContain('startSolLabel');
     expect(plate).toContain('latestRelease');           // build-time, not client
     // R7 ("plate has no links") is superseded by lexp-release-signal: the release

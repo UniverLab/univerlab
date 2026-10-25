@@ -36,7 +36,7 @@ describe('experiment frame: caption block', () => {
     expect(layout).not.toContain('built-with');
   });
 
-  it('keeps LabPlate inside the hero, after the koan', () => {
+  it('keeps LabPlate after the koan', () => {
     const hero = layout.indexOf('<section class="wrap hero"');
     const koan = layout.indexOf('<p class="koan">');
     const plate = layout.indexOf('<LabPlate');

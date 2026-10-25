@@ -21,7 +21,6 @@ const t = useTranslations(lang);
 const hasHeroMark = Astro.slots.has('hero-mark');
 const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
-const statusLabel = t.status[exp.status];
 const surface = exp.surface;
 
 // Cyclical prev/next so you can browse experiments without going back home.
@@ -92,11 +91,9 @@ const ogImage = `/og/${id}.png`;
     </p>
     <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
-      <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}</p>
-      <LabPlate id={id} />
       <p class="lede prose" set:html={e.lede} />
       <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
@@ -148,6 +145,8 @@ const ogImage = `/og/${id}.png`;
       <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
     )}
     </div>
+
+    <LabPlate id={id} />
 
     <slot name="before-genesis" />
 
@@ -284,10 +283,6 @@ const ogImage = `/og/${id}.png`;
 
   .demo-col { display: flex; align-items: center; justify-content: center; }
 
-  .num { color: var(--essence); }
-  .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
-  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
-  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
   .exp-name { font-family: var(--font-serif); font-weight: 400; }
   .koan { font-family: var(--font-body); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
   :global(html[data-surface='observatory'] .koan) {
