@@ -749,7 +749,7 @@ export const es: Dict = {
     ] as [string, string][],
     worksTitle: 'En desarrollo',
     worksBody:
-      'Dos obras de largo plazo que extienden este manifiesto: una recorre de dónde nació la idea, la otra la convierte en un sistema riguroso. Ambas están en una etapa muy temprana, sin fecha definida.',
+      'El paper publicado que desarrolla este argumento, y una obra de largo plazo que recorre de dónde nació la idea. La obra está en una etapa muy temprana, sin fecha definida.',
     worksBadge: 'Largo plazo',
     works: [
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],

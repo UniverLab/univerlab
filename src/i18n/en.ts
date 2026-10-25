@@ -758,7 +758,7 @@ export const en = {
     ] as [string, string][],
     worksTitle: 'In development',
     worksBody:
-      'Two long-term works that extend this manifesto: one traces where the idea came from, the other turns it into a rigorous system. Both are early, with no fixed date.',
+      'The published paper that develops this argument, and one long-term work that traces where the idea came from. The work is early, with no fixed date.',
     worksBadge: 'Long-term',
     works: [
       ['Eco del Silencio', 'The lived path, told as a collection of stories — “Un Viaje Introspectivo a la Esencia Humana”. The events and turns (fear, freedom, community) that led to Pensamiento Cósmico. Not the argument, but the experience the argument grew out of.'],
