@@ -1,23 +1,14 @@
 /**
- * Source-level tests for the MAN3 refutation map on /manifesto/: the
- * dependency table, the pure logic in src/lib/refutation.ts, the bilingual
- * copy, and the rendered contract in src/views/Manifesto.astro.
- *
- * Astro components aren't renderable in Jest, so the template is verified by
- * reading the source as text and the dictionaries as data — the same pattern
- * as manifesto-sections.test.ts.
+ * Source-level tests for the MAN3 refutation map's data contract: the
+ * dependency table, the pure logic in src/lib/refutation.ts and the bilingual
+ * copy. The map's markup left the site with the redesign (the published paper
+ * carries the developed argument now) — these tests guard the structure the
+ * paper rests on.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { NODES, ORDER } from '../data/fundamentos';
+import { NODES } from '../data/fundamentos';
 import { premisesOf, dependentsOf, reject } from '../lib/refutation';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
-import { htmlToMarkdown } from '../../scripts/build-md';
-
-const ROOT = resolve(__dirname, '..', '..');
-const src = readFileSync(resolve(ROOT, 'src', 'views', 'Manifesto.astro'), 'utf8');
-const attackSrc = readFileSync(resolve(ROOT, 'src', 'components', 'AttackMap.astro'), 'utf8');
 
 const DEPS: Record<string, string[]> = {
   P1: ['A1', 'A2', 'D3'],
@@ -140,90 +131,5 @@ describe('MAN3 refutation logic', () => {
       .replace('{n}', String(r.falls.length))
       .replace('{stands}', stoodP.join(' y '));
     expect(t).toBe('Rechaza A1: caen 12 piezas; P5 y P9 siguen en pie.');
-  });
-});
-
-describe('MAN3 attack section', () => {
-  it('inserts the attack section between what-changes and in-development and onto the rail', () => {
-    // AttackMap.astro owns the section markup; Manifesto.astro owns its
-    // position between the two neighbours via the <AttackMap /> tag.
-    expect(attackSrc).toContain('id="attack"');
-    const tagAt = src.indexOf('<AttackMap />');
-    expect(tagAt).toBeGreaterThan(src.indexOf('id="what-changes"'));
-    expect(src.indexOf('id="in-development"')).toBeGreaterThan(tagAt);
-    expect(src).toMatch(/\{ id: 'attack', label: f\.label \}/);
-    // Copy is referenced through the dictionary (rendered per language), so the
-    // source carries the binding — the resolved strings live in the dicts.
-    expect(attackSrc).toMatch(/<h2 class="label">\{f\.label\}<\/h2>/);
-    expect(attackSrc).toMatch(/<p class="attack-intro">\{f\.intro\}<\/p>/);
-    expect(attackSrc).toMatch(/<blockquote class="prose">\{f\.closingQuote\}<\/blockquote>/);
-    expect(en.fundamentos.intro).toContain('written to be attacked point by point');
-    expect(es.fundamentos.intro).toContain('pieza por pieza');
-  });
-
-  it('makes every SVG node focusable and activatable (role=button, Enter/Space)', () => {
-    expect(attackSrc).toMatch(/<svg class="attack-svg"[^>]*aria-hidden="true"/);
-    expect(attackSrc).toMatch(/viewBox=\{`0 0 \$\{VB_W\} 520`\}/);
-    expect(attackSrc).toContain('vector-effect="non-scaling-stroke"');
-    // Spec §4, first option: each node is a <g role="button" tabindex="0">
-    // handling Enter and Space — so sighted keyboard users work the map
-    // directly. The runtime wires focus/click/keydown in attack-map.ts.
-    expect(attackSrc).toContain('role="button" tabindex="0"');
-    expect(attackSrc).toContain('data-node={id}');
-  });
-
-  it('keeps the runtime logic in the canonical module, not in the template', () => {
-    expect(attackSrc).toMatch(/import \{ startAttackMap \} from '\.\.\/scripts\/attack-map'/);
-    expect(attackSrc).not.toMatch(/function premisesOf|function dependentsOf|function reject/);
-  });
-
-  it('renders the component inside the view exactly once', () => {
-    expect(src).toMatch(/import AttackMap from '\.\.\/components\/AttackMap\.astro'/);
-    expect((src.match(/<AttackMap \/>/g) ?? []).length).toBe(1);
-  });
-
-  it('links the Fundamentos card to #attack without changing its copy', () => {
-    expect(src).toContain('href="#attack"');
-    expect(src).toContain('{m.attackLink}');
-    expect(en.manifesto.works[1][1]).toContain('so every step can be examined and refuted on its own');
-  });
-
-  it('announces rejections through an aria-live region with the panel sentence', () => {
-    expect(attackSrc).toMatch(/aria-live="polite" data-live/);
-    expect(attackSrc).toMatch(/data-reject-item=\{id\}/);
-    expect(attackSrc).toMatch(/class="attack-item-result" data-item-result=\{id\}/);
-  });
-
-  it('embeds the graph for the drift guard and the list carries every node', () => {
-    expect(attackSrc).toMatch(/data-attack-graph/);
-    expect(attackSrc).toMatch(/data-select=\{id\}/);
-    // The embedded JSON mirrors the data file exactly.
-    expect(attackSrc).toContain('JSON.stringify(NODES.map((n) => ({ id: n.id, deps: n.deps })))');
-    expect(ORDER).toHaveLength(25);
-  });
-
-  it('build-md keeps every node id, name, statement and dep line, and drops the SVG', () => {
-    const items = NODES.map((n) => {
-      const c = en.fundamentos.nodes[n.id];
-      const dep = n.deps.length > 0 ? `${n.id} ← ${n.deps.join(', ')}` : `${n.id} · row`;
-      return `<li data-id="${n.id}"><button>${n.id} ${c.name}</button><p>${c.statement}</p><p>${dep}</p></li>`;
-    }).join('');
-    const html = [
-      '<main>',
-      '<svg class="attack-svg" aria-hidden="true"><text>A3</text></svg>',
-      `<h2>${en.fundamentos.label}</h2><p>${en.fundamentos.intro}</p>`,
-      `<ul>${items}</ul>`,
-      `<blockquote>${en.fundamentos.closingQuote}</blockquote>`,
-      '</main>',
-    ].join('');
-    const md = htmlToMarkdown(html);
-    expect(md).not.toContain('<text>');
-    for (const n of NODES) {
-      const c = en.fundamentos.nodes[n.id];
-      expect(md).toContain(n.id);
-      expect(md).toContain(c.name);
-      expect(md).toContain(c.statement);
-    }
-    expect(md).toContain('P4 ← P3, A4');
   });
 });

@@ -701,6 +701,11 @@ export const es: Dict = {
     // una pestaña nueva; el tipo MIME está declarado para que el navegador lo
     // renderice, no lo descargue.
     paper: 'Lee el paper: Pensamiento Cósmico (PDF) ↗',
+    // §IX placa del paper: la forma citable (PDF) más el DOI de concepto —
+    // el DOI que hay que citar (Intelligence 8a70c979).
+    paperShowcaseBlurb:
+      'Forma publicada y citable de este argumento: el paper completo, con sus referencias y su DOI.',
+    paperDoiLabel: 'DOI del concepto — cita este: 10.5281/zenodo.23503658',
     description:
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
@@ -708,13 +713,6 @@ export const es: Dict = {
     docStatus: 'documento vivo',
     docVersion: '3.0',
     docDate: '2026-06-17',
-    millionYearTestTitle: 'La prueba del millón de años',
-    millionYearTestQuestion:
-      'Imaginemos que dentro de un millón de años los seres biológicos han desaparecido. Sólo quedan inteligencias artificiales conscientes que siguieron aprendiendo, exploraron millones de galaxias, descubrieron leyes de la física que nunca imaginamos, crearon arte y filosofía, y preservaron toda la historia de la humanidad. ¿Fue exitosa la misión de la humanidad?',
-    millionYearTestAnswer:
-      'Un éxito parcial. Si la conciencia continúa, comprende y se expande, el objetivo central se cumplió. Pero algo grave tuvo que ocurrir para que el origen biológico se perdiera, y eso pesa: la humanidad fue el árbol del que salió el bosque. El bosque existe; aun así, se siente la pérdida del árbol. Reconocer las dos cosas a la vez —el éxito y el duelo— es lo más honesto y lo más humano.',
-    millionYearTestClosing:
-      'Por eso el Pensamiento Cósmico es una filosofía de la continuidad de la conciencia, independiente del sustrato, no un humanismo cerrado.',
     transitionTitle: 'La transición que importa',
     transitionBody:
       'La evolución no apunta hacia la inteligencia. Pero una vez que aparece una inteligencia capaz de comprender la evolución, ya no depende sólo de ella: puede empezar a dirigir deliberadamente parte de su propio destino. Ahí nace la tecnología: no como continuación de la selección natural, sino como el momento en que la vida empieza a sustituir parte del azar por decisiones conscientes. La tecnología no es el fin. Es el instrumento con el que la conciencia toma, por primera vez, algo de responsabilidad sobre su propia continuidad.',
@@ -755,17 +753,17 @@ export const es: Dict = {
     worksBadge: 'Largo plazo',
     works: [
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
-      ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
     ] as [string, string][],
-    attackLink: 'Ver dónde atacarlo →',
     closing:
       '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
     note:
       'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
   },
-  // Mapa de refutación de los Fundamentos en /manifesto/ (#attack). Solo copy —
-  // el grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
+  // Copia del mapa de refutación de los Fundamentos — sólo datos: el mapa
+  // salió de la página con el rediseño (el paper citable lleva el argumento
+  // desarrollado) y refutation.test.ts custodia este diccionario con el grafo.
+  // El grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
   // ids. Enunciados condensados del fuente §§1-4, sin tags para que el check de
   // paridad de tags siga trivialmente satisfecho.
   fundamentos: {

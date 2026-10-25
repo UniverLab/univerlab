@@ -83,14 +83,22 @@ describe('i18n system', () => {
       expect(enKeys.sort()).toEqual(esKeys.sort());
     });
 
-    it('manifesto man2 keys are present in both languages', () => {
+    it('manifesto keys are present in both languages', () => {
       for (const k of [
-        'docStatus', 'docVersion', 'docDate', 'millionYearTestTitle',
-        'millionYearTestQuestion', 'millionYearTestAnswer', 'millionYearTestClosing',
+        'docStatus', 'docVersion', 'docDate',
+        'paperShowcaseBlurb', 'paperDoiLabel',
         'transitionTitle', 'transitionBody',
       ]) {
         expect(en.manifesto).toHaveProperty(k);
         expect(es.manifesto).toHaveProperty(k);
+      }
+      // The deleted sections' copy must not linger in either dictionary.
+      for (const gone of [
+        'millionYearTestTitle', 'millionYearTestQuestion',
+        'millionYearTestAnswer', 'millionYearTestClosing', 'attackLink',
+      ]) {
+        expect(en.manifesto).not.toHaveProperty(gone);
+        expect(es.manifesto).not.toHaveProperty(gone);
       }
     });
 

@@ -6,7 +6,7 @@
  *  constants the template drew with — so drawing and hover cannot drift.
  *
  *  Loaded from Manifesto.astro with a plain `<script>` + `import`, the same
- *  precedent as AttackMap.astro and Home.astro; it lives in src/scripts so the
+ *  precedent as Home.astro; it lives in src/scripts so the
  *  view stays under the reviewer's 1200-line ceiling. */
 
 import { SVG_W, SVG_LPAD, SVG_RPAD } from '../data/observatory';

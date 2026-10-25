@@ -706,6 +706,11 @@ export const en = {
     // a new tab; the MIME type is declared so the browser renders, not
     // downloads, it.
     paper: 'Read the paper: Pensamiento Cósmico (PDF) ↗',
+    // §IX paper showcase plate: the citable form (PDF) plus the concept DOI —
+    // the DOI to cite (per Intelligence 8a70c979).
+    paperShowcaseBlurb:
+      'The published, citable form of this argument: the full paper, references and DOI included.',
+    paperDoiLabel: 'Concept DOI — cite this one: 10.5281/zenodo.23503658',
     description:
       'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
     epigraph:
@@ -717,13 +722,6 @@ export const en = {
     docStatus: 'living document',
     docVersion: '3.0',
     docDate: '2026-06-17',
-    millionYearTestTitle: 'The million-year test',
-    millionYearTestQuestion:
-      'Imagine that a million years from now biological beings have disappeared. Only conscious artificial intelligences remain — they kept learning, explored millions of galaxies, discovered laws of physics we never imagined, made art and philosophy, and preserved the whole history of humanity. Did humanity\'s mission succeed?',
-    millionYearTestAnswer:
-      'A partial success. If consciousness continues, understands and expands, the central goal was met. But something serious must have happened for the biological origin to be lost, and that weighs: humanity was the tree the forest grew from. The forest exists; still, the loss of the tree is felt. Holding both at once — the success and the grief — is the most honest and the most human answer.',
-    millionYearTestClosing:
-      'That is why Pensamiento Cósmico is a philosophy of the continuity of consciousness, independent of its substrate — not a closed humanism.',
     transitionTitle: 'The transition that matters',
     transitionBody:
       'Evolution does not aim at intelligence. But once an intelligence appears that can understand evolution, it no longer depends on evolution alone: it can begin to steer part of its own fate on purpose. That is where technology is born — not as a continuation of natural selection, but as the moment life starts replacing part of chance with conscious decisions. Technology is not the end. It is the instrument with which consciousness, for the first time, takes some responsibility for its own continuity.',
@@ -764,17 +762,17 @@ export const en = {
     worksBadge: 'Long-term',
     works: [
       ['Eco del Silencio', 'The lived path, told as a collection of stories — “Un Viaje Introspectivo a la Esencia Humana”. The events and turns (fear, freedom, community) that led to Pensamiento Cósmico. Not the argument, but the experience the argument grew out of.'],
-      ['Fundamentos del Pensamiento Cósmico', 'The formalization. The same ideas stated as a rigorous system — definitions, axioms, propositions and corollaries — so every step can be examined and refuted on its own. Where the manifesto narrates, the Fundamentos prove.'],
     ] as [string, string][],
-    attackLink: 'See where to attack it →',
     closing:
       '«Univerlab exists not to write software, nor to learn AI, nor to ship open source — those are all means — but to raise, even infinitesimally, the probability that knowledge and consciousness continue. Not a laboratory about the universe, but a laboratory of the universe.»',
     note:
       'A living system: its axioms and derivations are written to be attacked, point by point. An idea that cannot be refuted cannot be held either.',
     why: 'This is why the laboratory exists.',
   },
-  // The Fundamentos refutation map on /manifesto/ (#attack). Copy only — the
-  // graph (ids, kinds, deps) lives in src/data/fundamentos.ts, keyed by the
+  // The Fundamentos refutation map's copy — data only: the map left the page
+  // with the paper redesign (the citable paper carries the developed
+  // argument), and refutation.test.ts guards this dictionary with the graph.
+  // The graph (ids, kinds, deps) lives in src/data/fundamentos.ts, keyed by the
   // same ids. Statements are condensed from the source §§1-4, tag-free so the
   // i18n tag-parity check stays trivially satisfied.
   fundamentos: {
