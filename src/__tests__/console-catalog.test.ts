@@ -222,7 +222,7 @@ describe('the taped slips', () => {
     expect(GHOST).not.toContain('ghost-hint--visible');
   });
 
-  it('the status page announces new entries as a slip', () => {
+  it('the status page leaves arrival to the mailbox and only keeps the live list', () => {
     // Arrival is the mailbox's business on every page (mail.ts wireEvents /
     // arrive / syncBox) plus loadLabMail on reload: status.astro only keeps
     // its own EventSource for the newspaper list itself, so no slip, toast or
