@@ -167,7 +167,7 @@ const signals = [
     function renderCelestial() {
       var isMoon = document.documentElement.dataset.celestial === 'moon';
       if (isMoon) {
-        mount.innerHTML = moonSVG(synodicPhase(), 'hdr');
+        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', 31);
         // The moon is showing: the click will switch to the day theme.
         btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
         btn.setAttribute('title', btn.dataset.skyToDay || 'day');
@@ -508,6 +508,11 @@ const signals = [
   }
   html[data-celestial='sun'] .celestial :global(img) {
     filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
+  }
+  /* Low sun: dawn and dusk redden the engraved icon the way the ruler dot
+     already reddens, leaving the plain-day shadow above as the default. */
+  html[data-celestial='sun'][data-sunlow] .celestial :global(img) {
+    filter: sepia(1) saturate(3.4) hue-rotate(-24deg) brightness(0.97) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 7px rgb(191 52 23 / 0.35));
   }
   html[data-celestial='moon'] .celestial :global(svg) {
     filter: drop-shadow(0 0 6px #ecebe455);

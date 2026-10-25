@@ -163,6 +163,25 @@ describe('data-bench-theme follows the celestial body', () => {
   });
 });
 
+describe('the horizon blend reddens the sun', () => {
+  it('deepens the ruler-dot end point to #bf3417 in both entries', () => {
+    expect(CIRCADIAN).not.toContain('#d46020');
+    expect(CIRCADIAN.match(/'#bf3417'/g)).toHaveLength(2);
+  });
+
+  it('flags data-sunlow while the sun is low in calc() and scrubTime()', () => {
+    const flag = "if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow";
+    expect(fnBody('function calc()')).toContain(flag);
+    expect(fnBody('window.scrubTime=function(hour)')).toContain(flag);
+  });
+
+  it('applyTheme() clears the low-sun flag when it paints full day', () => {
+    expect(fnBody('window.applyTheme=function(mode)')).toContain(
+      'delete document.documentElement.dataset.sunlow',
+    );
+  });
+});
+
 describe('circadian override hands back to the clock', () => {
   it('shares the natural day/night decision with calc()', () => {
     expect(CIRCADIAN).toContain('function nat()');

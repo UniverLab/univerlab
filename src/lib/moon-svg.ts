@@ -1,9 +1,10 @@
-// moonSVG(phase, id): the engraved moon at any phase in [0, 1): 0 new, 0.5 full, waxing lit on the right.
+// moonSVG(phase, id, r): the engraved moon at any phase in [0, 1): 0 new, 0.5 full, waxing lit on the right.
 // A chalk moon for the night ground: the lit part glows, the shadow is cross-hatched. Fixed colours:
-// the moon only shows at night. Ported verbatim from public/bench/identidad/luna.js.
-export function moonSVG(phase: number, id: string): string {
+// the moon only shows at night. Ported verbatim from public/bench/identidad/luna.js; r (disc radius in
+// the 120 viewBox) defaults to the stamp's 40 so that output stays byte-identical there, while the
+// header passes the sun's disc radius so both bodies read the same size.
+export function moonSVG(phase: number, id: string, r = 40): string {
   const c = 60,
-    r = 40,
     p = ((phase % 1) + 1) % 1;
   const k = Math.cos(2 * Math.PI * p); // terminator ellipse: x radius = |k| * r
   const waxing = p < 0.5;

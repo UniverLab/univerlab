@@ -39,6 +39,20 @@ describe('moonSVG (engraved moon port)', () => {
     }
   });
 
+  it('takes a disc radius so the header moon matches the sun disc', () => {
+    // Header mounts at r=31 — the sun icon's disc radius in the same 120 box —
+    // so the two bodies read as one size while the halo keeps r+10.
+    const svg = moonSVG(0.25, 'hdr', 31);
+    expect(svg.match(/<svg/g)).toHaveLength(1);
+    expect(svg).toMatch(/<\/svg>$/);
+    expect(svg).toContain('r="31"');
+    expect(svg).toContain('r="41"');
+    expect(svg).toContain('<clipPath id="hdr-c"><circle cx="60" cy="60" r="31"/></clipPath>');
+    expect(litD(svg)).toMatch(/^M60 29 A31 31 0 0 1 60 91 /);
+    // Everything still derives from the one radius: no stray 40 anywhere.
+    expect(svg).not.toContain('40');
+  });
+
   it('lights the right side when waxing and the left side when waning', () => {
     const waxing = litD(moonSVG(0.25, 'm'));
     const waning = litD(moonSVG(0.75, 'm'));
