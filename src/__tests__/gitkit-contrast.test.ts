@@ -146,3 +146,25 @@ describe('GitKit pastel orchid scale', () => {
     expect(pin).not.toMatch(/--orchid-fill/);
   });
 });
+
+describe('GitKit terminal banner', () => {
+  it('prints the install-panel banner in the panel ink with phosphor glow, centred', () => {
+    const body = ruleBody(surfCss, "html[data-surface='pastel'] .install .banner");
+    expect(body).toMatch(/color:\s*inherit/);
+    expect(body).toMatch(/opacity:\s*1/);
+    expect(body).toMatch(/text-shadow:[^;]*color-mix\(in srgb, var\(--c\) 30%/);
+    expect(body).toMatch(/margin-inline:\s*auto/);
+    expect(body).toMatch(/width:\s*fit-content/);
+    expect(body).not.toMatch(/text-align/);
+  });
+
+  it('blinks a block caret after the install-panel banner on every non-tui bench', () => {
+    const caret = ruleBody(surfCss, "html[data-surface='pastel'] .install .banner::after");
+    expect(caret).toMatch(/content:\s*'▋'/);
+    expect(caret).toMatch(/animation:\s*cf-blink/);
+    const koan = ruleBody(surfCss, "html[data-surface='tui'] .koan::after");
+    expect(koan).toMatch(/animation:\s*cf-blink/);
+    expect(surfCss).toMatch(/@keyframes cf-blink/);
+    expect(surfCss).not.toMatch(/data-surface='tui'\][^{]*\.install \.banner/);
+  });
+});

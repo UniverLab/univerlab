@@ -37,6 +37,21 @@ html[data-surface='observatory'] .banner {
   opacity: 1;
 }
 
+html[data-surface='paper'] .install .banner,
+html[data-surface='industrial'] .install .banner,
+html[data-surface='quorum'] .install .banner,
+html[data-surface='pastel'] .install .banner,
+html[data-surface='studio'] .install .banner,
+html[data-surface='blueprint'] .install .banner,
+html[data-surface='observatory'] .install .banner {
+  color: inherit;
+  opacity: 1;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
+  margin-inline: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
 /* A blinking caret on the terminal surfaces (canopy) — a small sign of
    life. Auto-disabled under prefers-reduced-motion (global.css zeroes animation). */
 @keyframes cf-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
@@ -44,6 +59,19 @@ html[data-surface='tui'] .koan::after {
   content: '▋';
   margin-left: 0.18em;
   color: var(--essence);
+  animation: cf-blink 1.06s infinite;
+}
+html[data-surface='paper'] .install .banner::after,
+html[data-surface='industrial'] .install .banner::after,
+html[data-surface='quorum'] .install .banner::after,
+html[data-surface='pastel'] .install .banner::after,
+html[data-surface='studio'] .install .banner::after,
+html[data-surface='blueprint'] .install .banner::after,
+html[data-surface='observatory'] .install .banner::after {
+  content: '▋';
+  margin-left: 0.3em;
+  display: inline-block;
+  color: var(--c);
   animation: cf-blink 1.06s infinite;
 }
 
