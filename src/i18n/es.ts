@@ -146,6 +146,7 @@ export const es: Dict = {
     lantern: {
       pause: 'Pausar la linterna',
       resume: 'Reanudar la linterna',
+      paused: 'En pausa',
       benchLabel: 'El banco: apunta a una máquina para proyectarla, haz clic para abrir su página.',
       alt: 'Una linterna mágica grabada que proyecta sobre una pantalla de tela',
       open: ' · haz clic en la pantalla para abrirlo',

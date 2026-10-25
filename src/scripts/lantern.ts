@@ -34,7 +34,8 @@ export function startLantern(): void {
   if (slides.length === 0) return;
   const plates = Array.from(document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]'));
   const lanternImg = document.getElementById('lantern-img') as HTMLImageElement | null;
-  const pauseBtn = document.getElementById('lantern-pause') as HTMLButtonElement | null;
+  const pauseBtn = document.getElementById('lantern-pause') as HTMLElement | null;
+  const pausedPlate = document.getElementById('lantern-paused');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ── World mode: the screen becomes the experiment's live background ──────
@@ -355,15 +356,28 @@ export function startLantern(): void {
 
   // ── Pause toggle ─────────────────────────────────────────────────────────
   if (pauseBtn) {
-    pauseBtn.addEventListener('click', () => {
+    // The projector (<picture id="lantern-pause">) carries the control: the
+    // label moves through aria-label — textContent would destroy the sources
+    // and the <img> inside the picture (T3).
+    const togglePause = (): void => {
       paused = !paused;
       pauseBtn.setAttribute('aria-pressed', String(paused));
-      pauseBtn.textContent =
-        (paused ? pauseBtn.dataset.resumeLabel : pauseBtn.dataset.pauseLabel) ?? pauseBtn.textContent;
+      pauseBtn.setAttribute(
+        'aria-label',
+        (paused ? pauseBtn.dataset.resumeLabel : pauseBtn.dataset.pauseLabel) ?? '',
+      );
+      pausedPlate?.toggleAttribute('hidden', paused);
       if (paused) currentVideo()?.pause();
       else {
         lastTurn = performance.now();
         playCurrent();
+      }
+    };
+    pauseBtn.addEventListener('click', togglePause);
+    pauseBtn.addEventListener('keydown', (ev) => {
+      if ((ev as KeyboardEvent).key === 'Enter' || (ev as KeyboardEvent).key === ' ') {
+        ev.preventDefault();
+        togglePause();
       }
     });
   }

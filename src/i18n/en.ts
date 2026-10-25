@@ -148,6 +148,7 @@ export const en = {
     lantern: {
       pause: 'Pause the lantern',
       resume: 'Resume the lantern',
+      paused: 'Paused',
       benchLabel: 'The bench: point at a machine to project it, click it to open its page.',
       alt: 'An engraved magic lantern projecting onto a cloth screen',
       open: ' · click the screen to open it',

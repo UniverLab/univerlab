@@ -112,7 +112,18 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
           <div class="catch" id="catch" aria-hidden="true"></div>
         </div>
 
-        <picture class="lantern-pic">
+        <!-- The projector is the pause control itself (id kept for lantern.ts);
+             the screen keeps its own click-to-open on #catch (FEAT-30). -->
+        <picture
+          class="lantern-pic"
+          id="lantern-pause"
+          role="button"
+          tabindex="0"
+          aria-pressed="false"
+          aria-label={t.home.lantern.pause}
+          data-pause-label={t.home.lantern.pause}
+          data-resume-label={t.home.lantern.resume}
+        >
           <source
             data-phase="day"
             type="image/avif"
@@ -150,6 +161,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
             data-night-src="/bench/live/lantern-night-900.webp"
           />
         </picture>
+        <p class="lantern-paused" id="lantern-paused" hidden>{t.home.lantern.paused}</p>
       </div>
 
       <!-- The bench: the seven machines, all the same height. -->
@@ -189,16 +201,6 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 
       <div class="bench-foot">
         <p class="hint" data-open-hint={t.home.lantern.open}>{t.home.lantern.benchLabel}</p>
-        <button
-          type="button"
-          class="lantern-pause"
-          id="lantern-pause"
-          aria-pressed="false"
-          data-pause-label={t.home.lantern.pause}
-          data-resume-label={t.home.lantern.resume}
-        >
-          {t.home.lantern.pause}
-        </button>
       </div>
     </section>
 
@@ -348,9 +350,10 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 
   /* ── The lantern and its screen ───────────────────────────────────────── */
   .lantern { position: relative; width: min(100%, 780px); }
-  .lantern-pic { position: relative; z-index: 2; display: block; pointer-events: none; }
-  .lantern-pic img { display: block; width: 100%; height: auto; pointer-events: none; }
-  .screen { position: absolute; z-index: 1; overflow: hidden;
+  .lantern-pic { position: relative; z-index: 2; display: block; cursor: pointer; }
+  .lantern-pic img { display: block; width: 100%; height: auto; }
+  .lantern-pic:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
+  .screen { position: absolute; z-index: 3; overflow: hidden;
             background: var(--bench-c-parchment); }
   :global(html[data-bench-theme='night']) .screen { background: #15110c; }
 
@@ -468,15 +471,14 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
                 justify-content: center; gap: 0.5rem 1.25rem; margin-top: 0.25rem; }
   .hint { margin: 0; font-size: 0.85rem; color: var(--bench-line-soft);
           text-align: center; max-width: none; }
-  .lantern-pause { font-family: var(--font-mono); font-size: 0.72rem;
-                   letter-spacing: 0.08em; text-transform: uppercase;
-                   color: var(--bench-line); background: transparent;
-                   border: 1px solid var(--bench-line-soft);
-                   padding: 0.35rem 0.7rem; cursor: pointer; }
-  .lantern-pause:hover { border-color: var(--bench-line); }
-  .lantern-pause[aria-pressed='true'] { background: var(--bench-line);
-                                        color: var(--bench-ground); }
-  .lantern-pause:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
+  /* The pause plate: absolute under the projector, so the bench row never
+     shifts; it inherits the plate-label family's mono/ink-dim voice. */
+  .lantern-paused { position: absolute; z-index: 4; left: 50%; bottom: 0.5rem;
+                    transform: translateX(-50%); margin: 0; pointer-events: none;
+                    color: var(--bench-line-soft);
+                    text-shadow: 0 0 6px rgba(244, 240, 234, .85);
+                    font-family: var(--font-mono); font-size: 12px;
+                    letter-spacing: 0.14em; text-transform: uppercase; }
 
   /* ── Separators ───────────────────────────────────────────────────────── */
   .sep { color: var(--bench-line); margin-block: 2.25rem; }

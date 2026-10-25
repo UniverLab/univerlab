@@ -121,10 +121,12 @@ describe('Home — Plate I, the lantern', () => {
     expect(fractions(homeViewer('night'))).toEqual([0.16, 0.068, 0.69, 0.7]);
   });
 
-  it('puts the lantern image above the screen and lets clicks through', () => {
+  it('keeps the image behind the screen, but hands it the clicks as the projector', () => {
+    // The screen paints above the picture (z 3 > 2), so click-to-open stays on
+    // the screen; the picture takes every click outside the viewer rect.
     expect(HOME).toMatch(/\.lantern-pic \{[^}]*z-index:\s*2/);
-    expect(HOME).toMatch(/\.lantern-pic img \{[^}]*pointer-events:\s*none/);
-    expect(HOME).toMatch(/\.screen \{[^}]*z-index:\s*1/);
+    expect(HOME).toMatch(/\.lantern-pic \{[^}]*cursor:\s*pointer/);
+    expect(HOME).toMatch(/\.screen \{[^}]*z-index:\s*3/);
   });
 
   it('renders one video per live experiment, with the title slide first', () => {
@@ -196,6 +198,21 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/held < 0/);
     expect(LANTERN).toContain("document.addEventListener('visibilitychange'");
     expect(LANTERN).toMatch(/pauseBtn\.setAttribute\('aria-pressed'/);
+    // The projector itself is the pause control: id/role/tabindex/aria live on
+    // the <picture>, and the standalone bench-foot button is gone.
+    expect(HOME).toMatch(
+      /<picture\s+class="lantern-pic"\s+id="lantern-pause"\s+role="button"\s+tabindex="0"\s+aria-pressed="false"/,
+    );
+    expect(HOME).toMatch(/aria-label=\{t\.home\.lantern\.pause\}/);
+    expect(HOME).toMatch(/data-pause-label=\{t\.home\.lantern\.pause\}/);
+    expect(HOME).toMatch(/data-resume-label=\{t\.home\.lantern\.resume\}/);
+    expect(HOME).not.toMatch(/class="lantern-pause"/);
+    expect(HOME).not.toMatch(/\.lantern-pause \{/);
+    // Keyboard: Enter/Space toggle, and the paused plate follows aria-pressed.
+    expect(LANTERN).toMatch(/pauseBtn\.addEventListener\('keydown'/);
+    expect(LANTERN).toMatch(/key === 'Enter' \|\| \(ev as KeyboardEvent\)\.key === ' '/);
+    expect(LANTERN).toMatch(/getElementById\('lantern-paused'\)/);
+    expect(LANTERN).toMatch(/toggleAttribute\('hidden', paused\)/);
   });
 
   it('resumes the clip after a bfcache restore', () => {
@@ -457,11 +474,24 @@ describe('Home — copy in both dictionaries', () => {
     expect(es.home.lantern.pause).toBe('Pausar la linterna');
     expect(en.home.lantern.resume).toBeTruthy();
     expect(es.home.lantern.resume).toBeTruthy();
+    expect(en.home.lantern.paused).toBe('Paused');
+    expect(es.home.lantern.paused).toBe('En pausa');
+    expect(en.home.lantern.paused).not.toBe(es.home.lantern.paused);
     expect(en.home.lantern.benchLabel).toContain('point at a machine');
     expect(es.home.lantern.benchLabel).toContain('apunta a una máquina');
     expect(en.home.lantern.alt).toContain('magic lantern');
     expect(es.home.lantern.alt).toContain('linterna mágica');
     expect(en.home.lantern.alt).not.toBe(es.home.lantern.alt);
+  });
+
+  it('shows a paused plate under the projector, hidden until paused', () => {
+    // Hidden by default, absolutely positioned so the bench row never shifts.
+    expect(HOME).toMatch(/<p class="lantern-paused" id="lantern-paused" hidden>/);
+    expect(HOME).toContain('{t.home.lantern.paused}');
+    expect(HOME).toMatch(/\.lantern-paused \{[^}]*position:\s*absolute/);
+    expect(HOME).toMatch(/\.lantern-paused \{[^}]*z-index:\s*4/);
+    expect(en.home.lantern.paused).toBe('Paused');
+    expect(es.home.lantern.paused).toBe('En pausa');
   });
 
   it('keeps the former h1 as the About the lab heading', () => {
