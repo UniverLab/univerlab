@@ -136,13 +136,6 @@ html[data-surface='paper'] .exp .demo-cap .label {
   color: var(--ink-faint);
 }
 
-/* The quiet paper motif mounts on canvas now (see backgrounds.ts): keep it
-   faint enough that it never washes the cream out. `pointer-events: none`
-   and `z-index: -1` stay as ThemeBackground sets them. */
-html[data-surface='paper'] canvas.bg {
-  opacity: 0.25;
-}
-
 /* Parchment canvas with cream section bands (Antimetal layout law): the two
    narrative blocks — genesis and FAQ — sit on full-bleed cream #f7f6f3 bands,
    everything else rests on the parchment canvas. The band is a positioned
@@ -1022,7 +1015,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
    again. Same specificity here, and surfaces.css bundles after global.css,
    so the plate below stays the lab-native #12101e steel. */
 html[data-surface='industrial']:root { --bg-raise: #12101e; }
-:root[data-surface='industrial'] canvas.bg { opacity: .68; }
 :root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,
 :root[data-surface='industrial'] .hero::after { content: none; }
@@ -1084,11 +1076,6 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
-/* The runner caps its own node fills at 0.35 and ring strokes at 0.5 (see
-   bg-bubbles.ts), so the page's saturation is bounded at the source; .6 stays
-   the link-legibility floor lgitkit-one-background FR4 measured (at .5 the
-   ambient links fall to 0.14 × .5 = 0.07, under that floor). */
-:root[data-surface='pastel'] canvas.bg { opacity: .6; }
 
 :root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 /* Preserve single-name heroes on the two pages without a supplied style file. */

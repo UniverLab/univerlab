@@ -167,8 +167,6 @@ export const en = {
       body:
         'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy/">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
-    experiments: {
-    },
     philosophy: {
       kicker: '02 — Philosophy',
       title: 'Technology is not the goal.',

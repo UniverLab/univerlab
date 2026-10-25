@@ -499,7 +499,7 @@ const signals = [
   /* The sun img and the moon svg are injected by the bundled script at
      runtime (innerHTML), so they never carry the Astro scope attribute —
      the descendant must be :global() or width/height and the fixed
-     drop-shadows silently never apply (same trap as LabSystem's accent). */
+     drop-shadows silently never apply. */
   .celestial :global(img),
   .celestial :global(svg) {
     width: 100%;

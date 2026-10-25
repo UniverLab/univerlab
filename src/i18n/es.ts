@@ -165,8 +165,6 @@ export const es: Dict = {
       body:
         'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
-    experiments: {
-    },
     philosophy: {
       kicker: '02 — Filosofía',
       title: 'La tecnología no es el fin.',

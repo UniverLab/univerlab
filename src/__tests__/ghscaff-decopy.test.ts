@@ -1,7 +1,7 @@
 /**
  * ghScaff de-copy — the page must read as industrial steel, not AuthKit's
- * frosted glass. Astro/CSS aren't rendered in Jest here (see hero-scale and
- * lab-system tests), so the contract is asserted on the source as text.
+ * frosted glass. Astro/CSS aren't rendered in Jest here (see hero-scale), so
+ * the contract is asserted on the source as text.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';

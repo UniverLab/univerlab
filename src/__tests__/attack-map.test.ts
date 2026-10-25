@@ -5,7 +5,7 @@
  * restores. The sentence builder mirrors the template's data-* templates, so
  * counts and ids always come from reject() — nothing hard-coded.
  *
- * Given-When-Then pattern, like orbit.test.ts: build the section DOM the way
+ * Given-When-Then pattern: build the section DOM the way
  * AttackMap.astro renders it (25 nodes, 31 edges, panel, list, live region).
  */
 import { NODES, ROWS } from '../data/fundamentos';
