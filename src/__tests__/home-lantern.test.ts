@@ -212,7 +212,10 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/pauseBtn\.addEventListener\('keydown'/);
     expect(LANTERN).toMatch(/key === 'Enter' \|\| \(ev as KeyboardEvent\)\.key === ' '/);
     expect(LANTERN).toMatch(/getElementById\('lantern-paused'\)/);
-    expect(LANTERN).toMatch(/toggleAttribute\('hidden', paused\)/);
+    // hidden is the force argument: it must come OFF while paused, so the
+    // flag is negated (the inverse silently keeps the plate invisible).
+    expect(LANTERN).toMatch(/toggleAttribute\('hidden', !paused\)/);
+    expect(LANTERN).not.toMatch(/toggleAttribute\('hidden', paused\)/);
   });
 
   it('resumes the clip after a bfcache restore', () => {
@@ -490,6 +493,11 @@ describe('Home — copy in both dictionaries', () => {
     expect(HOME).toContain('{t.home.lantern.paused}');
     expect(HOME).toMatch(/\.lantern-paused \{[^}]*position:\s*absolute/);
     expect(HOME).toMatch(/\.lantern-paused \{[^}]*z-index:\s*4/);
+    // It sits inside the engraving's clean bottom strip: a large bottom offset
+    // would put the word on the tripod base, whose pedestal post crosses it at
+    // phone width; negative offsets would drift it onto the bench row.
+    expect(HOME).toMatch(/\.lantern-paused \{[^}]*bottom:\s*0\.15rem/);
+    expect(HOME).not.toMatch(/\.lantern-paused \{[^}]*bottom:\s*-/);
     expect(en.home.lantern.paused).toBe('Paused');
     expect(es.home.lantern.paused).toBe('En pausa');
   });

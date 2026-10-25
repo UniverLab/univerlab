@@ -472,12 +472,18 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .hint { margin: 0; font-size: 0.85rem; color: var(--bench-line-soft);
           text-align: center; max-width: none; }
   /* The pause plate: absolute under the projector, so the bench row never
-     shifts; it inherits the plate-label family's mono/ink-dim voice. */
-  .lantern-paused { position: absolute; z-index: 4; left: 50%; bottom: 0.5rem;
+     shifts; it inherits the plate-label family's mono/ink-dim voice.
+     It sits in the engraving's clean bottom strip (the image's last ~5 %,
+     which scales with the picture) rather than over the tripod base — whose
+     pedestal post would cross the word at phone width — and it never
+     reaches the bench row below. The halo wears the ground's own colour, so
+     it masks speckle without washing the glyphs; a fixed parchment halo
+     would glow around chalk at night. */
+  .lantern-paused { position: absolute; z-index: 4; left: 50%; bottom: 0.15rem;
                     transform: translateX(-50%); margin: 0; pointer-events: none;
-                    color: var(--bench-line-soft);
-                    text-shadow: 0 0 6px rgba(244, 240, 234, .85);
-                    font-family: var(--font-mono); font-size: 12px;
+                    color: var(--bench-line-soft); line-height: 1;
+                    text-shadow: 0 0 6px var(--bench-ground);
+                    font-family: var(--font-mono); font-size: 11px;
                     letter-spacing: 0.14em; text-transform: uppercase; }
 
   /* ── Separators ───────────────────────────────────────────────────────── */

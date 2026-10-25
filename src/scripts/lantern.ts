@@ -366,7 +366,9 @@ export function startLantern(): void {
         'aria-label',
         (paused ? pauseBtn.dataset.resumeLabel : pauseBtn.dataset.pauseLabel) ?? '',
       );
-      pausedPlate?.toggleAttribute('hidden', paused);
+      // toggleAttribute's second argument is the force, not the state: hidden
+      // goes on while playing and comes off while paused.
+      pausedPlate?.toggleAttribute('hidden', !paused);
       if (paused) currentVideo()?.pause();
       else {
         lastTurn = performance.now();
