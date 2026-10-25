@@ -38,7 +38,9 @@
   --mail-letter: #ece4d3;
   --mail-letter-ink: #1d1510;
   --mail-letter-soft: #5e5040;
-  --mail-link: #e0a2a6;
+  /* The letter's paper stays light at night, so its links keep the day
+     garnet (the mockup's --link does too); pale pink vanished on cream. */
+  --mail-link: #87222c;
   --mail-box: #3b4a40;
   --mail-box-hi: #5f7264;
   --mail-box-ink: #101512;
@@ -60,7 +62,9 @@
     --mail-letter: #ece4d3;
     --mail-letter-ink: #1d1510;
     --mail-letter-soft: #5e5040;
-    --mail-link: #e0a2a6;
+    /* The letter's paper stays light at night, so its links keep the day
+       garnet (the mockup's --link does too); pale pink vanished on cream. */
+    --mail-link: #87222c;
     --mail-box: #3b4a40;
     --mail-box-hi: #5f7264;
     --mail-box-ink: #101512;
