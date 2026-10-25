@@ -1118,7 +1118,8 @@ export const es: Dict = {
     use: {
       copy: 'Copiar',
       copied: 'Copiado',
-      plate: 'Ver la lámina →',
+      plate: 'Saber más →',
+      open: 'Abrir {name}',
       archive: 'Ver en el archivo →',
       repo: 'Repositorio ↗',
       quorum: 'abre la mesa → quorum.univerlab.org',

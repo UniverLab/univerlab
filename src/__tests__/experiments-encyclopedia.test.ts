@@ -167,6 +167,26 @@ describe('experiments encyclopedia plate', () => {
     expect(VIEW).not.toContain('IntersectionObserver');
   });
 
+  it('sits the plate inside the entry link with an open-the-entry label', () => {
+    const plate = VIEW.match(/<div class="plate">[\s\S]*?<\/div>/);
+    expect(plate).toBeTruthy();
+    const block = plate![0];
+    const anchor = block.indexOf('<a class="plate-link" href={entry.href}');
+    const machine = block.indexOf('<Machine');
+    const frame = block.indexOf('class="num-frame"');
+    const close = block.indexOf('</a>');
+    expect(anchor).toBeGreaterThan(-1);
+    // The live machine and the archived number frame both sit inside the anchor.
+    expect(machine).toBeGreaterThan(anchor);
+    expect(frame).toBeGreaterThan(anchor);
+    expect(close).toBeGreaterThan(machine);
+    expect(close).toBeGreaterThan(frame);
+    expect(block).toContain("aria-label={enc.use.open.replace('{name}', exp.name)}");
+    // The accessible name interpolates the entry name in both languages.
+    expect(en.encyclopedia.use.open).toBe('Open {name}');
+    expect(es.encyclopedia.use.open).toBe('Abrir {name}');
+  });
+
   it('lays the entries out as a single column of plate-beside-body rows', () => {
     // One entry per row in exp order: no multi-column flow.
     expect(VIEW).not.toContain('columns: 2 340px');
@@ -237,6 +257,27 @@ describe('experiments encyclopedia links under each entry', () => {
     const useBlock = VIEW.match(/<div class="use">[\s\S]*?<\/div>/);
     expect(useBlock).toBeTruthy();
     expect(useBlock![0]).not.toContain('entry.href');
+  });
+
+  it('labels the entry link Learn more in both languages', () => {
+    expect(en.encyclopedia.use.plate).toBe('Learn more →');
+    expect(es.encyclopedia.use.plate).toBe('Saber más →');
+    // The links row renders that value as its first link, archive label kept for archived entries.
+    expect(VIEW).toContain('const linkLabel = entry.archived ? enc.use.archive : enc.use.plate;');
+    expect(VIEW).toContain('<a href={entry.href}>{linkLabel}</a>');
+  });
+
+  it('makes the entry name a link to the same entry', () => {
+    const hw = VIEW.match(/<h2 class="hw">.*<\/h2>/);
+    expect(hw).toBeTruthy();
+    const link = hw![0].match(
+      /<h2 class="hw"><a class="hw-link" href=\{entry\.href\}>([\s\S]*?)<\/a><\/h2>/,
+    );
+    expect(link).toBeTruthy();
+    expect(link![1]).toContain('<b>{exp.name}</b>');
+    // The headword keeps its inner order: name, IPA, status mark.
+    expect(link![1].indexOf('</b>')).toBeLessThan(link![1].indexOf('class="ipa"'));
+    expect(link![1].indexOf('class="ipa"')).toBeLessThan(link![1].indexOf('class="mark"'));
   });
 
   it('gives every entry a github URL, archived entries included', () => {

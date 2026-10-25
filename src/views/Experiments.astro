@@ -53,14 +53,16 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
         return (
           <article class="entry" id={entry.anchor} data-status={status}>
             <div class="plate">
-              {entry.archived ? (
-                <span class="num-frame" aria-hidden="true"><span class="num">{exp.number}</span></span>
-              ) : (
-                <Machine id={entry.id} ink="theme" height="var(--plate-h)" />
-              )}
+              <a class="plate-link" href={entry.href} aria-label={enc.use.open.replace('{name}', exp.name)}>
+                {entry.archived ? (
+                  <span class="num-frame" aria-hidden="true"><span class="num">{exp.number}</span></span>
+                ) : (
+                  <Machine id={entry.id} ink="theme" height="var(--plate-h)" />
+                )}
+              </a>
             </div>
             <div class="entry-body">
-              <h2 class="hw"><b>{exp.name}</b><span class="ipa" lang="und-fonipa">{exp.ipa}</span><span class="mark" title={statusName}>{mark}</span></h2>
+              <h2 class="hw"><a class="hw-link" href={entry.href}><b>{exp.name}</b><span class="ipa" lang="und-fonipa">{exp.ipa}</span><span class="mark" title={statusName}>{mark}</span></a></h2>
               <p class="meta">{enc.meta.replace('{n}', exp.number.replace('EXP-', '')).replace('{status}', enc.statuses[status as keyof typeof enc.statuses] ?? status)}</p>
               <p class="def">
                 <span class="ety" set:html={ec.etymology} />
@@ -161,11 +163,17 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .entry[data-status="archived"] { opacity: 0.7; }
 
   .plate { --machine-h-phone: 200px; --plate-h: clamp(180px, 19vw, 260px); }
+  /* The whole plate is the entry link; block keeps the machine's size unchanged. */
+  .plate-link { display: block; }
   .plate :global(.machine img) { height: auto; max-height: var(--plate-h); max-width: 100%; }
   .num-frame { display: grid; place-items: center; width: 100%; height: var(--plate-h); border: 1px dotted var(--bench-rule); }
   .num { font-family: 'Old Standard TT', serif; font-size: 56px; line-height: 1; white-space: nowrap; color: var(--bench-line-soft); }
 
   .hw { margin: 0; font-family: 'Old Standard TT', serif; font-weight: 400; font-size: 22px; line-height: 1.15; }
+  /* The name reads as plain headword until it is hovered or focused, then takes
+     the entry's link style (same colour + underline offset as .links a). */
+  .hw-link { color: inherit; text-decoration: none; }
+  .hw-link:hover, .hw-link:focus-visible { color: var(--bench-copper); text-decoration: underline; text-underline-offset: 3px; }
   .hw b { font-weight: 700; font-variant: small-caps; letter-spacing: 0.06em; }
   .hw .mark { color: #87222c; margin-left: 4px; font-size: 18px; }
   .ipa { font-size: 0.8em; color: var(--bench-line-soft); margin-left: 6px; }

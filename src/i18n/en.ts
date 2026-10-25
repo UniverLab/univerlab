@@ -1127,7 +1127,8 @@ export const en = {
     use: {
       copy: 'Copy',
       copied: 'Copied',
-      plate: 'See the plate →',
+      plate: 'Learn more →',
+      open: 'Open {name}',
       archive: 'See in the archive →',
       repo: 'Repository ↗',
       quorum: 'open the table → quorum.univerlab.org',
