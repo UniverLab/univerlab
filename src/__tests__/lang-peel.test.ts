@@ -17,6 +17,7 @@ const TOKENS = read('styles', 'bench-tokens.css');
 const HEADER = read('components', 'Header.astro');
 const FOOTER = read('components', 'Footer.astro');
 const GLOBAL = read('styles', 'global.css');
+const LAYOUT = read('layouts', 'BaseLayout.astro');
 
 /** Relative luminance of a #rrggbb colour (WCAG). */
 function luminance(hex: string): number {
@@ -31,6 +32,13 @@ function contrast(a: string, b: string): number {
   const la = luminance(a);
   const lb = luminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** The circadian palette pair (ground, accent) for one of the four slots. */
+function circadian(n: 'DG' | 'DW' | 'NB' | 'NS') {
+  const m = LAYOUT.match(new RegExp(n + "=\\{'--bg':'(#[0-9a-f]{6})'[^}]*?'--accent':'(#[0-9a-f]{6})'"));
+  expect(m).not.toBeNull();
+  return { ground: m![1], accent: m![2] };
 }
 
 /** Declarations of the first `{ … }` block that starts at `at`. */
@@ -96,6 +104,14 @@ describe('emphasis token: the wax-seal garnet', () => {
     expect(day).toBeGreaterThanOrEqual(7.9);
     expect(night).toBeGreaterThanOrEqual(4.5);
     expect(noJsNight).toBe(night);
+    // The header heart now tracks the circadian accent as its ground shifts, so
+    // the accent itself has to stay legible on that ground in all four slots.
+    for (const n of ['DG', 'DW'] as const) {
+      expect(contrast(circadian(n).accent, circadian(n).ground)).toBeGreaterThanOrEqual(4.4);
+    }
+    for (const n of ['NB', 'NS'] as const) {
+      expect(contrast(circadian(n).accent, circadian(n).ground)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   it('documents what the emphasis is for', () => {
@@ -103,21 +119,20 @@ describe('emphasis token: the wax-seal garnet', () => {
   });
 });
 
-describe('sponsor heart beats in the garnet', () => {
+describe('sponsor heart follows the page accent', () => {
   const rule = HEADER.match(/\n\s*nav a\.sponsor \{([^}]*)\}/);
   const hover = HEADER.match(/\n\s*nav a\.sponsor:hover \{([^}]*)\}/);
 
-  it('paints the heart with the emphasis role, not the gold accent', () => {
+  it('paints the heart with the page accent, garnet as the fallback', () => {
     expect(rule).not.toBeNull();
-    expect(rule![1]).toMatch(/color:\s*var\(--bench-emphasis\)/);
+    expect(rule![1]).toMatch(/color:\s*var\(--accent,\s*var\(--bench-emphasis\)\)/);
     expect(rule![1]).not.toMatch(/#c9a227/);
-    expect(rule![1]).not.toMatch(/var\(--accent/);
   });
 
   it('lifts the hover towards the ink', () => {
     expect(hover).not.toBeNull();
     expect(hover![1]).toMatch(
-      /color:\s*color-mix\(in srgb,\s*var\(--bench-emphasis\) 75%,\s*var\(--bench-line\)\)/,
+      /color:\s*color-mix\(in srgb,\s*var\(--accent,\s*var\(--bench-emphasis\)\) 75%,\s*var\(--bench-line\)\)/,
     );
     expect(hover![1]).not.toMatch(/#f0d060/);
   });

@@ -363,10 +363,10 @@ const signals = [
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: #8a8d93; }
   nav a:hover, nav a.active { color: var(--ink); }
-  nav a.sponsor { color: var(--bench-emphasis); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
   nav a.sponsor svg { display: block; }
   nav a.sponsor .heart-text { display: none; }
-  nav a.sponsor:hover { color: color-mix(in srgb, var(--bench-emphasis) 75%, var(--bench-line)); animation-play-state: paused; }
+  nav a.sponsor:hover { color: color-mix(in srgb, var(--accent, var(--bench-emphasis)) 75%, var(--bench-line)); animation-play-state: paused; }
 
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
