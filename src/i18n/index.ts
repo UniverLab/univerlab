@@ -43,12 +43,6 @@ export function localizePath(path: string, lang: Lang): string {
   return ensureSlash(stripped) + suffix;
 }
 
-/** Resolve an experiment's hero motif for rendering. Every motif is carried
- *  literally in src/lib/experiments.ts; `t` is kept so callers stay the same. */
-export function motifOf(exp: { motif: string }, _t: Dict): string {
-  return exp.motif;
-}
-
 /** Given the current URL and a target language, return the equivalent path. */
 export function switchLangPath(url: URL, target: Lang): string {
   const stripped = url.pathname.replace(/^\/es(?=\/|$)/, '') || '/';

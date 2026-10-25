@@ -80,7 +80,7 @@ function atLeast45(label: string, value: number) {
 
 describe('Docs on the lab ground', () => {
   it("drops the experiment's background runner so the bench ground shows", () => {
-    expect(LAYOUT).toContain('bg={false}');
+    expect(LAYOUT).not.toMatch(/bg=\{/);
     expect(LAYOUT).not.toMatch(/bg=\{exp\.bg\}/);
     expect(LAYOUT).not.toContain('mutedCanvas');
     // No surface prop either — `html:not([data-surface])` is what paints

@@ -54,7 +54,7 @@ const docsJsonLd = buildDocsJsonLd({
 <BaseLayout
   title={composeDocsTitle(title, exp.name)}
   description={metaDescription}
-  bg={false}
+ 
   circadian
   ogType="article"
   articleModifiedTime={lastModified ?? undefined}
@@ -175,8 +175,8 @@ const docsJsonLd = buildDocsJsonLd({
   }
   .prose-doc .doc-updated time { font-variant-numeric: tabular-nums; }
   /* The reading ground: EB Garamond at the theme's long-text size and the
-     lab's 70ch measure, on the circadian bench ground (the layout passes
-     `bg={false}`, so no experiment canvas is painted under it). */
+     lab's 70ch measure, on the circadian bench ground (no experiment canvas
+     is painted under it). */
   .prose-doc {
     --doc-accent: color-mix(in srgb, var(--doc-essence) 50%, #1d1510);
     font-family: var(--font-body);

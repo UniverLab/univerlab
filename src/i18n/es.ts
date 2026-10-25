@@ -120,7 +120,6 @@ export const es: Dict = {
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
-      systemAria: 'UniverLab y sus experimentos',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
       // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
@@ -167,11 +166,6 @@ export const es: Dict = {
         'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
     },
     experiments: {
-      kicker: '00 — Experimentos',
-      method:
-        'Problemas distintos, un mismo método: tomar trabajo que vive en procedimientos frágiles y manuales, y volverlo explícito, reproducible y automatizable — por una persona o por un agente.',
-      archivedOne: '1 experimento archivado →',
-      archivedMany: '{n} experimentos archivados →',
     },
     philosophy: {
       kicker: '02 — Filosofía',
@@ -1038,7 +1032,6 @@ export const es: Dict = {
     empty: 'Aún no hay nada en el roadmap.',
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
-    pageTitle: 'Roadmap — what UniverLab is building now, next and later',
     statusFeedLink: 'Cuaderno de bitácora →',
     roadmapLink: 'Roadmap →',
   },
@@ -1082,8 +1075,6 @@ export const es: Dict = {
     responseLabel: 'Respuesta',
     optionalLabel: 'opcional',
     requiredLabel: 'obligatorio',
-    yesLabel: 'sí',
-    noLabel: 'no',
     specLabel: 'Documento OpenAPI',
     specNote:
       'Esta página se genera al construir el sitio a partir de la descripción OpenAPI 3.1 de la misma API, así que la página y la descripción no pueden divergir. Descárgala para tener la versión legible por máquina de todo lo anterior.',

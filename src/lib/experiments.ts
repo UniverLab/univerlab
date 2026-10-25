@@ -6,17 +6,7 @@ export type { ExperimentId };
 export type Status = 'active' | 'beta' | 'research' | 'archived';
 /** The lab tools that made an experiment — ids of experiments whose tools built this one.
  *  Only the four with verified evidence (see `builtWith` below) exist here. */
-export type BuiltWith = 'canopy' | 'ghscaff' | 'demostage' | 'gitkit';
-export type BgTheme =
-  | 'cosmic'
-  | 'brain'
-  | 'primitives'
-  | 'starfield'
-  | 'forge'
-  | 'scaffold'
-  | 'bubbles'
-  | 'takes'
-  | 'spiral';
+type BuiltWith = 'canopy' | 'ghscaff' | 'demostage' | 'gitkit';
 
 /** A citable software record for the experiment.
  *  `doi` is the Zenodo concept DOI (always resolves to the latest version). */
@@ -45,7 +35,6 @@ export interface Experiment {
    *  dots and large shapes keep `essenceHex`. Omitted → `essenceHex`. */
   essenceTextHex?: string;
   github: string;
-  bg: BgTheme;
   /** Hero ASCII motif of the experiment's own page — what the home card window
    *  shows and the hero-mark slot renders. '@i18n' = resolved from the
    *  translations dictionary (language-dependent motifs live there, not here). */
@@ -121,14 +110,14 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Canopy', ipa: '/ˈkæn.ə.pi/', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', bg: 'brain', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], citation: { doi: '10.5281/zenodo.23607434', title: 'canopy (harness-canopy)', authors: [{ family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' }, { family: 'Solorzano', given: 'Lina' }] } },
-  { id: 'texforge', name: 'TeXForge', ipa: '/ˈtɛk.fɔːrdʒ/', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', bg: 'forge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, fondo: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
-  { id: 'gitkit', name: 'GitKit', ipa: '/ˈɡɪt.kɪt/', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', bg: 'bubbles', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
-  { id: 'ghscaff', name: 'ghScaff', ipa: '/ˌdʒiː.eɪtʃ ˈskæf/', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', bg: 'scaffold', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, fondo: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
-  { id: 'cadspec', name: 'cadSpec', ipa: '/ˈkæd.spɛk/', number: 'EXP-005', status: 'archived', essenceHex: '#4874ea', essenceTextHex: '#3f6de9', github: 'https://github.com/UniverLab/cadspec', bg: 'primitives', motif: '├─ 8.50 ─┤ · plan 1:1 · declared, not drawn', surface: 'blueprint', startDate: '2026-04-10', endDate: '2026-10-13', thread: '@i18n', builtWith: ['ghscaff', 'gitkit'] },
-  { id: 'astro-denoise', name: 'Astro Denoise', ipa: '/ˈæs.troʊ diːˈnɔɪz/', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab/astro-denoise', bg: 'starfield', motif: '⁘∴⁙∵ ──∿──→ · ✦ ·', surface: 'observatory', startDate: '2026-04-10', thread: '@i18n', builtWith: [], fondo: true },
-  { id: 'demostage', name: 'DemoStage', ipa: '/ˈdɛm.oʊ.steɪdʒ/', number: 'EXP-007', status: 'active', essenceHex: '#fa5838', github: 'https://github.com/UniverLab/demostage', bg: 'takes', motif: '▶──●────●───□', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
-  { id: 'quorum', name: 'Quorum', ipa: '/ˈkwɔː.rəm/', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', bg: 'spiral', motif: '○──◇──○', surface: 'quorum', startDate: '2026-06-30', url: 'https://quorum.univerlab.org', circadian: true, fondo: true, thread: '@i18n', builtWith: ['ghscaff', 'gitkit'],
+  { id: 'canopy', name: 'Canopy', ipa: '/ˈkæn.ə.pi/', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], citation: { doi: '10.5281/zenodo.23607434', title: 'canopy (harness-canopy)', authors: [{ family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' }, { family: 'Solorzano', given: 'Lina' }] } },
+  { id: 'texforge', name: 'TeXForge', ipa: '/ˈtɛk.fɔːrdʒ/', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, fondo: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
+  { id: 'gitkit', name: 'GitKit', ipa: '/ˈɡɪt.kɪt/', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
+  { id: 'ghscaff', name: 'ghScaff', ipa: '/ˌdʒiː.eɪtʃ ˈskæf/', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, fondo: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
+  { id: 'cadspec', name: 'cadSpec', ipa: '/ˈkæd.spɛk/', number: 'EXP-005', status: 'archived', essenceHex: '#4874ea', essenceTextHex: '#3f6de9', github: 'https://github.com/UniverLab/cadspec', motif: '├─ 8.50 ─┤ · plan 1:1 · declared, not drawn', surface: 'blueprint', startDate: '2026-04-10', endDate: '2026-10-13', thread: '@i18n', builtWith: ['ghscaff', 'gitkit'] },
+  { id: 'astro-denoise', name: 'Astro Denoise', ipa: '/ˈæs.troʊ diːˈnɔɪz/', number: 'EXP-006', status: 'research', essenceHex: '#a78bfa', github: 'https://github.com/UniverLab/astro-denoise', motif: '⁘∴⁙∵ ──∿──→ · ✦ ·', surface: 'observatory', startDate: '2026-04-10', thread: '@i18n', builtWith: [], fondo: true },
+  { id: 'demostage', name: 'DemoStage', ipa: '/ˈdɛm.oʊ.steɪdʒ/', number: 'EXP-007', status: 'active', essenceHex: '#fa5838', github: 'https://github.com/UniverLab/demostage', motif: '▶──●────●───□', surface: 'studio', startDate: '2026-06-18', install: both('demostage'), hasDocs: true, demo: '/demos/demostage.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
+  { id: 'quorum', name: 'Quorum', ipa: '/ˈkwɔː.rəm/', number: 'EXP-008', status: 'active', essenceHex: '#e6b24a', github: 'https://github.com/UniverLab/quorum', motif: '○──◇──○', surface: 'quorum', startDate: '2026-06-30', url: 'https://quorum.univerlab.org', circadian: true, fondo: true, thread: '@i18n', builtWith: ['ghscaff', 'gitkit'],
     circadianPalette: {
       day:   { '--bg': '#f0e8da', '--bg-raise': '#f7f2e8', '--ink': '#3a2a1a', '--ink-dim': '#7a6a52', '--ink-faint': '#a89878', '--line': '#ddd2c0', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#c4b8a0' },
       night: { '--bg': '#241a12', '--bg-raise': '#2f2318', '--ink': '#f2e7d3', '--ink-dim': '#b8a583', '--ink-faint': '#8a7a5e', '--line': '#40331f', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#5a4a32' },

@@ -30,11 +30,11 @@ import { SITE_VERSION } from './site-version';
 export const SUPPORTED_PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26'] as const;
 
 /** The `$schema` the v1 schema requires, verbatim (its pattern is exact). */
-export const SERVER_CARD_SCHEMA =
+const SERVER_CARD_SCHEMA =
   'https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json';
 
 /** The remote endpoint the card advertises. */
-export const MCP_ENDPOINT = 'https://univerlab.org/mcp';
+const MCP_ENDPOINT = 'https://univerlab.org/mcp';
 
 /** `serverInfo` as `/mcp` serves it — name and title shared with the card. */
 export const MCP_SERVER_INFO = { name: 'univerlab', title: 'UniverLab' } as const;

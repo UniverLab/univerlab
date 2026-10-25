@@ -15,7 +15,7 @@ const site = Astro.site ?? new URL('https://univerlab.org');
 // page's TechArticle (`{"@id": <site>/#founder}`), so it carries that `@id`.
 const founderJsonLd = founderPersonNode(site, { name: p.founder.name, role: p.founder.role });
 ---
-<BaseLayout title={p.metaTitle} description={p.description} bg={false} circadian structuredData={founderJsonLd}>
+<BaseLayout title={p.metaTitle} description={p.description} circadian structuredData={founderJsonLd}>
   <Watermark kind="blueprint" />
   <section class="wrap head page-open">
     <div class="head page-open-text">

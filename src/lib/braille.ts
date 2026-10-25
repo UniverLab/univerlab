@@ -8,7 +8,7 @@
  * so the sentence round‑trips through a plain reverse map and any missing
  * cell is a test failure, not a silent glitch.
  */
-export const BRAILLE_ALPHABET: Record<string, string> = {
+const BRAILLE_ALPHABET: Record<string, string> = {
   ' ': '\u2800', // blank cell — the only "punctuation" the sentence needs
   a: '\u2801',
   b: '\u2803',
@@ -48,7 +48,7 @@ export const BRAILLE_ALPHABET: Record<string, string> = {
 export const BRAILLE_SENTENCE = 'el universo se lee de muchas formas';
 
 /** Lookup from cell back to letter — the decoder's reverse map. */
-export const BRAILLE_REVERSE: Record<string, string> = Object.fromEntries(
+const BRAILLE_REVERSE: Record<string, string> = Object.fromEntries(
   Object.entries(BRAILLE_ALPHABET).map(([letter, cell]) => [cell, letter]),
 );
 

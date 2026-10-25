@@ -7,7 +7,7 @@ const srcset = (phase: 'day' | 'night', ext: 'avif' | 'webp') =>
   `/bench/mapa/kraken-${phase}-1600.${ext} 1600w, /bench/mapa/kraken-${phase}-800.${ext} 800w`;
 const sizes = '(max-width: 64rem) 100vw, 64rem';
 ---
-<BaseLayout title="404 — UniverLab" bg={false} circadian markdownTwin={false}>
+<BaseLayout title="404 — UniverLab" circadian markdownTwin={false}>
   <section class="wrap notfound">
     <p class="kicker mono">{t.notFound.kicker}</p>
     <!-- The edge of the known world: both charts ship, CSS picks by theme the

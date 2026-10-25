@@ -167,7 +167,6 @@ describe('structured-data', () => {
     status: 'active',
     essenceHex: '#e06fc0',
     github: 'https://github.com/UniverLab/gitkit',
-    bg: 'bubbles',
     motif: 'x',
     thread: '@i18n',
     builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'],

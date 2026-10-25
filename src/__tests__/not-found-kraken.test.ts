@@ -107,7 +107,7 @@ describe('404 — Hic sunt dracones', () => {
     expect(page).not.toContain('<pre');
     expect(page).not.toContain('bg="cosmic"');
     expect(page).not.toContain('drifted');
-    expect(page).toContain('bg={false}');
+    expect(page).not.toMatch(/bg=\{/);
     expect(page).toContain('markdownTwin={false}');
   });
 

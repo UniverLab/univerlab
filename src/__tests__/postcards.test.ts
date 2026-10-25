@@ -92,7 +92,7 @@ describe('page openings', () => {
       expect(`${file}\n${src}`).toContain("import Postcard from");
       // The canvas runner left these pages; the postcard is the opening now.
       expect(src).not.toContain('bg="cosmic"');
-      expect(src).toContain('bg={false}');
+      expect(src).not.toMatch(/bg=\{/);
     }
   });
 

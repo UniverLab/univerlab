@@ -2,12 +2,11 @@
  * The home looks ahead: the roadmap link in the directions section, and the
  * dotted background gone. User review, 2026-10-24:
  *
- * The cosmic canvas (particles joined by lines) still ran behind the
- * frontispiece — Home asked for bg="cosmic" and BaseLayout defaulted to
- * 'cosmic', so every page that passed no bg got the dots too. Now Home asks
- * for none, the default is none, and the built home (en and es) ships without
- * the background canvas. The cosmic theme itself stays in the code
- * (backgrounds.ts / orbit.ts) for REFACTOR-2 to delete.
+ * The cosmic canvas (particles joined by lines) ran behind the frontispiece
+ * until the redesign removed it: Home no longer asks for a background, the
+ * bg prop is gone from BaseLayout, and the built home (en and es) ships
+ * without the background canvas. The old runners (backgrounds.ts / orbit.ts
+ * and their twins) were deleted with it.
  *
  * The directions section links the roadmap page under the Now/Next lists.
  * The href is fixed ('/roadmap/', the Footer.astro pattern): roadmap.astro is
@@ -39,20 +38,20 @@ const docsLayout = readFileSync(join(root, 'src/layouts/DocsLayout.astro'), 'utf
 const BG_ELEMENT = '<canvas class="bg"';
 
 describe('home: no dotted background anywhere', () => {
-  it('Home.astro stops asking for the cosmic canvas', () => {
-    expect(home).toContain('bg={false}');
+  it('Home.astro asks for no background canvas', () => {
+    expect(home).not.toMatch(/bg=\{/);
     expect(home).not.toContain('bg="cosmic"');
   });
 
-  it('BaseLayout defaults bg to false, so pages that omit bg render no canvas', () => {
-    expect(baseLayout).toContain('bg = false');
-    expect(baseLayout).not.toMatch(/bg\s*=\s*'cosmic'/);
-    // And the render honours it: false short-circuits to nothing at all.
-    expect(baseLayout).toContain('bg === false ? null :');
+  it('BaseLayout carries no bg prop, so pages render no canvas', () => {
+    expect(baseLayout).not.toMatch(/bg\s*=\s*['"]/);
+    expect(baseLayout).not.toMatch(/bg\s*=\s*false/);
+    // And the render mounts only the fondo runtime, never the old canvas.
+    expect(baseLayout).not.toContain('<canvas class="bg"');
   });
 
-  it('DocsLayout passes bg={false} for its users', () => {
-    expect(docsLayout).toContain('bg={false}');
+  it('DocsLayout passes no bg for its users', () => {
+    expect(docsLayout).not.toMatch(/bg=\{/);
   });
 
   it('the built home (en and es) ships no background canvas element', () => {
@@ -97,12 +96,6 @@ describe('home: no dotted background anywhere', () => {
       const html = readFileSync(join(root, 'dist', p), 'utf8');
       expect(html).not.toContain(BG_ELEMENT);
     }
-  });
-
-  it('leaves the cosmic theme in the code for REFACTOR-2 to delete', () => {
-    // Out of scope here: backgrounds.ts keeps the theme; only its mounts are gone.
-    const backgrounds = readFileSync(join(root, 'src/scripts/backgrounds.ts'), 'utf8');
-    expect(backgrounds).toContain('cosmic');
   });
 });
 

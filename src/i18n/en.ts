@@ -123,7 +123,6 @@ export const en = {
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
       tagline: 'SCI · CLI · BIO',
-      systemAria: 'UniverLab and its experiments',
       // Name gloss: "univer" holds while the suffix + sense rotate, unpacking
       // universe / universal / university / universalize. Each sense carries a
       // small catalog; the hero shuffles each catalog and shows every gloss once
@@ -169,11 +168,6 @@ export const en = {
         'This isn’t a pile of repositories. It started as a handful of skills for everyday work — until one grew teeth and became <a href="/canopy/">Canopy</a>, an agent system that, before long, was building Canopy itself, then every experiment after it. These tools aren’t products lined up for sale — they are open experiments that became tools because someone needed them, and stay open so others can learn from them.',
     },
     experiments: {
-      kicker: '00 — Experiments',
-      method:
-        'Different problems, one method: take work that lives in fragile, manual procedures and make it explicit, reproducible and automatable — by a person or by an agent.',
-      archivedOne: '1 archived experiment →',
-      archivedMany: '{n} archived experiments →',
     },
     philosophy: {
       kicker: '02 — Philosophy',
@@ -1045,7 +1039,6 @@ export const en = {
     empty: 'Nothing on the roadmap yet.',
     emptyTopic: 'Nothing on the roadmap under {topic}.',
     unavailable: 'Roadmap unavailable.',
-    pageTitle: 'Roadmap — what UniverLab is building now, next and later',
     statusFeedLink: 'Logbook →',
     roadmapLink: 'Roadmap →',
   },
@@ -1091,8 +1084,6 @@ export const en = {
     responseLabel: 'Response',
     optionalLabel: 'optional',
     requiredLabel: 'required',
-    yesLabel: 'yes',
-    noLabel: 'no',
     specLabel: 'OpenAPI document',
     specNote:
       'This page is generated at build time from the OpenAPI 3.1 description of the same API, so the page and the description cannot drift. Fetch it for the machine-readable version of everything above.',

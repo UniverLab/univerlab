@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/pages/**/*.{astro,ts}", "scripts/*.ts"],
+  "entry": ["src/pages/**/*.{astro,ts}", "scripts/*.ts", "functions/**/*.ts", "src/scripts/crt-restore.ts"],
   "project": ["src/**/*.{ts,astro}"],
   "ignoreDependencies": ["@astrojs/markdown-satteri", "satteri"],
   "ignoreUnresolved": ["identity-obj-proxy"]

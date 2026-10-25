@@ -21,9 +21,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /** The OpenAPI document, resolved from the repo root the scripts run in. */
-export const OPENAPI_FILE = resolve(process.cwd(), 'public', 'openapi', 'announcements.json');
+const OPENAPI_FILE = resolve(process.cwd(), 'public', 'openapi', 'announcements.json');
 
-export interface ApiParameter {
+interface ApiParameter {
   name: string;
   location: 'query' | 'path' | 'header';
   required: boolean;
@@ -31,7 +31,7 @@ export interface ApiParameter {
   description: string;
 }
 
-export interface ApiOperation {
+interface ApiOperation {
   method: 'get';
   path: string;
   summary: string;

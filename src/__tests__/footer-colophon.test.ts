@@ -194,7 +194,7 @@ describe('Footer — the lab faces', () => {
 
 describe('Layouts — expId plumbing', () => {
   it('BaseLayout declares the optional prop and forwards it to Footer', () => {
-    expect(BASE).toMatch(/import type \{ BgTheme, ExperimentId \} from '..\/lib\/experiments'/);
+    expect(BASE).toMatch(/import type \{ ExperimentId \} from '..\/lib\/experiments'/);
     expect(BASE).toMatch(/expId\?:\s*ExperimentId/);
     expect(BASE).toMatch(/expId,$/m);
     expect(BASE).toContain('<Footer expId={expId} />');

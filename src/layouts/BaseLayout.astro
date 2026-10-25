@@ -2,10 +2,9 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import EssenceTokens from '../components/EssenceTokens.astro';
-import ThemeBackground from '../components/ThemeBackground.astro';
 import LiveBackground from '../components/LiveBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
-import type { BgTheme, ExperimentId } from '../lib/experiments';
+import type { ExperimentId } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
 import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
 import { getLang, hasCounterpart, localizePath, useTranslations } from '../i18n';
@@ -17,16 +16,12 @@ import '../styles/bench-tokens.css';
 interface Props {
   title: string;
   description?: string;
-  bg?: BgTheme | false;
-  bgColor?: string;
   /** Per-page Open Graph image URL (e.g. '/og/texforge.png').  Falls back to
    *  '/og.png' when omitted — the site-wide default for home, docs, and
    *  experiment pages that don't supply their own card. */
   ogImage?: string;
   /** Core pages: shift the palette progressively with the time of day. */
   circadian?: boolean;
-  /** Docs: render the background animation in a neutral grey, not the accent. */
-  mutedCanvas?: boolean;
   /** Experiment pages: a fixed visual surface (paper, tui, blueprint, …). */
   surface?: string;
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
@@ -62,11 +57,8 @@ const t = useTranslations(lang);
 const {
   title,
   description = t.meta.description,
-  bg = false,
-  bgColor,
   ogImage: ogImageProp,
   circadian = false,
-  mutedCanvas = false,
   surface,
   structuredData,
   jsonLdGraph,
@@ -78,15 +70,6 @@ const {
   expId,
   fondo,
 } = Astro.props;
-const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
-// Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
-// calm and geometric; its cursor reaction is the CSS grid parallax alone). Paper
-// mounts one too, but its own quiet motif — see backgrounds.ts, which picks it
-// for `data-surface="paper"` instead of the experiment's BgTheme. ghscaff
-// (scaffold) keeps its live drawing. studio keeps its canvas: DemoStage's takes
-// runner records and replays the cursor (R13) — the generic drift motes, not the
-// stage itself, were why it used to be dropped.
-const stillSurface = ['blueprint'].includes(surface ?? '');
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
 // The three lab typefaces, on every page: Old Standard TT (titles), EB Garamond
@@ -128,7 +111,7 @@ const aboutMarkdown = buildSiteAbout(site);
 const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
 ---
 <!doctype html>
-<html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined} style={bgColor ? `--accent: ${bgColor}` : undefined}>
+<html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -373,7 +356,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   <body>
     <script>import { restoreCrtOn } from '../scripts/crt-restore'; restoreCrtOn();</script>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
-    {bg === false ? null : fondo ? <LiveBackground id={fondo} /> : (!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />)}
+    {fondo && <LiveBackground id={fondo} />}
     <Header />
     <main id="main">
       <slot />

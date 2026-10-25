@@ -84,7 +84,7 @@ const structuredData: Record<string, unknown>[] = [baseSchema, breadcrumbSchema,
 // Per-experiment Open Graph card — generated at build time into public/og/.
 const ogImage = `/og/${id}.png`;
 ---
-<BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette} expId={id} fondo={exp.fondo ? id : undefined}>
+<BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette} expId={id} fondo={exp.fondo ? id : undefined}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
     <p class="lab-strip">
       <a href={localizePath('/', lang)}>{t.labStrip.lab}</a>

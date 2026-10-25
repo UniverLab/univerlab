@@ -9,7 +9,7 @@ const topicColors: Record<string, string> = Object.fromEntries(
 );
 const rmStrings = en.roadmap;
 ---
-<BaseLayout title="Logbook — live status of every UniverLab experiment" description="Real-time logbook entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." bg={false} circadian>
+<BaseLayout title="Logbook — live status of every UniverLab experiment" description="Real-time logbook entries and roadmap from every UniverLab experiment — filter by topic, follow along live, or subscribe via the RSS feed." circadian>
   <Watermark kind="blueprint" />
   <section class="wrap board" id="status-board">
     <header class="board-head">
@@ -175,11 +175,8 @@ const rmStrings = en.roadmap;
         { date: '2026-07-16T20:00:00Z', type: 'bugfix', title: 'Skeleton placeholders cleared', body: 'The skeleton loading placeholders were not being removed when the first batch of entries loaded. A one-line fix clears the container before appending real entries.' }
       ];
       MOCK[0].topic = 'canopy';
-      MOCK[0].roadmap_id = 'rm-now-1';
       MOCK[1].topic = 'canopy';
-      MOCK[1].roadmap_id = 'rm-now-1';
       MOCK[2].topic = 'general';
-      MOCK[2].roadmap_id = null;
       MOCK[3].topic = 'general';
       MOCK[4].topic = 'general';
       MOCK[5].topic = null;

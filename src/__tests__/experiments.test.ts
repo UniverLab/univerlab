@@ -2,7 +2,7 @@
  * Tests for experiments.ts - the core experiment registry
  * Using Given-When-Then (GWT) pattern for clear test documentation
  */
-import { experiments, byId, Status, BgTheme } from '../lib/experiments';
+import { experiments, byId, Status } from '../lib/experiments';
 
 describe('experiments.ts', () => {
   describe('experiments array', () => {
@@ -47,7 +47,6 @@ describe('experiments.ts', () => {
           expect(exp).toHaveProperty('status');
           expect(exp).toHaveProperty('essenceHex');
           expect(exp).toHaveProperty('github');
-          expect(exp).toHaveProperty('bg');
         });
 
         it(`should have valid status for experiment ${exp.id}`, () => {
@@ -135,19 +134,4 @@ describe('experiments.ts', () => {
     });
   });
 
-  describe('background themes', () => {
-    const validThemes: BgTheme[] = [
-      'cosmic', 'brain', 'primitives', 'starfield',
-      'forge', 'scaffold', 'bubbles', 'takes', 'spiral'
-    ];
-
-    it('should use valid background themes for all experiments', () => {
-      // Given: All experiments in the registry
-      // When: We check their background themes
-      experiments.forEach(exp => {
-        // Then: Each should use a valid theme
-        expect(validThemes).toContain(exp.bg);
-      });
-    });
-  });
 });

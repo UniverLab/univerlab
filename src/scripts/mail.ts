@@ -152,7 +152,7 @@ function step(
 
 const wait = (n: number) => new Promise((ok) => setTimeout(ok, n));
 
-export function startMailbox(): void {
+function startMailbox(): void {
   const box = document.querySelector<HTMLButtonElement>('.mailbox');
   if (!box) return;
   const badge = box.querySelector<HTMLElement>('.badge');

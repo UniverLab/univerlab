@@ -46,7 +46,7 @@ export const ENTRIES_DEFAULT_LIMIT = 10;
 export const ENTRIES_MAX_LIMIT = 20;
 
 /** How many rows one read asks the API for — one round trip, no pagination. */
-export const FETCH_LIMIT = 100;
+const FETCH_LIMIT = 100;
 
 /** A public `GET /roadmap` item, plus the field the twin prints. */
 export interface RoadmapItem extends FieldNotesRoadmapItem {
@@ -59,7 +59,7 @@ export type Entry = FieldNotesEntry;
  * Section labels. The twin passes its dictionary's copy (both languages); a
  * tool passes nothing and gets English, which is what the tools are written in.
  */
-export interface FeedLabels {
+interface FeedLabels {
   /** Label per lane, keyed by lane id. */
   lanes?: Partial<Record<Lane, string>>;
   /** Prefix for `blocked_reason` — the dictionaries call it `hold`. */
