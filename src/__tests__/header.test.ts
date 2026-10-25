@@ -227,4 +227,17 @@ describe('celestial button is circadian-only', () => {
   it('forwards BaseLayout’s own circadian value to the header', () => {
     expect(BASE).toMatch(/<Header circadian=\{circadian\} \/>/);
   });
+
+  it('keeps the disc on quorum: ExperimentLayout forwards the registry flag', () => {
+    // The whole chain that decides per experiment: ExperimentLayout passes
+    // exp.circadian down (BaseLayout defaults it to false, so losing this line
+    // would silently strip the disc from /quorum too), and the registry marks
+    // quorum circadian. No registry change is part of this spec — just pinned.
+    const EXP = readFileSync(resolve(__dirname, '..', 'layouts', 'ExperimentLayout.astro'), 'utf8');
+    expect(EXP).toMatch(/circadian=\{exp\.circadian\}/);
+    const registry = readFileSync(resolve(__dirname, '..', 'lib', 'experiments.ts'), 'utf8');
+    const quorumLine = registry.match(/\{ id: 'quorum'[^}]*\}/);
+    expect(quorumLine).not.toBeNull();
+    expect(quorumLine![0]).toMatch(/circadian: true/);
+  });
 });
