@@ -256,6 +256,56 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       // Celestial position — always runs so the sun/moon dot moves along the
       // header rule on every page. Circadian pages add palette + color on top.
       (function () {
+        // A manual theme (the sky body or /theme) holds only until the
+        // clock's own next turn — sunrise or sunset — then the key drops and
+        // the page is circadian again. 'univerlab-theme-until' stores that
+        // turn; a key without it (an old choice) has already expired.
+        function halfDay(d) {
+          var y = d.getFullYear();
+          var kJan = new Date(y, 0, 1).getTimezoneOffset();
+          var kJul = new Date(y, 6, 1).getTimezoneOffset();
+          if (kJan === kJul) return 6;
+          var doy = Math.floor((d - new Date(y, 0, 0)) / 86400000);
+          var s = Math.cos((2 * Math.PI * (doy - 172)) / 365.25);
+          if (kJan < kJul) s = -s;
+          return 6 + 2.5 * s;
+        }
+        function nextTurn(now) {
+          var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+          var half = halfDay(now);
+          var hour = (now.getTime() - midnight) / 3600000;
+          if (hour < 12 - half) return midnight + (12 - half) * 3600000;
+          if (hour < 12 + half) return midnight + (12 + half) * 3600000;
+          var tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+          return tomorrow.getTime() + (12 - halfDay(tomorrow)) * 3600000;
+        }
+        window.univerlabTheme = {
+          set: function (mode) {
+            try {
+              localStorage.setItem('univerlab-theme', mode);
+              localStorage.setItem('univerlab-theme-until', String(nextTurn(new Date())));
+            } catch (e) {}
+          },
+          clear: function () {
+            try {
+              localStorage.removeItem('univerlab-theme');
+              localStorage.removeItem('univerlab-theme-until');
+            } catch (e) {}
+          },
+          read: function () {
+            var mode = null;
+            var until = 0;
+            try {
+              mode = localStorage.getItem('univerlab-theme');
+              until = Number(localStorage.getItem('univerlab-theme-until')) || 0;
+            } catch (e) {}
+            if (mode && until <= Date.now()) {
+              window.univerlabTheme.clear();
+              return null;
+            }
+            return mode;
+          },
+        };
         function calc() {
           var d = new Date();
           var hour = d.getHours() + d.getMinutes() / 60;
@@ -273,8 +323,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
           var sunrise = 12 - half;
           var sunset = 12 + half;
           var actualDay = hour >= sunrise && hour < sunset;
-          var forcedTheme = null;
-          try { forcedTheme = localStorage.getItem('univerlab-theme'); } catch (e) {}
+          var forcedTheme = window.univerlabTheme.read();
           var isDay = forcedTheme === 'night' || forcedTheme === 'slate' ? false : forcedTheme === 'day' || forcedTheme === 'papyrus' ? true : actualDay;
           var pos;
           if (actualDay) {
@@ -341,7 +390,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     {circadian && (
       <script is:inline>
         (function(){try{var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#8a6a2c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'};var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#9a5530','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'};var NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#d6955b','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'};var NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#d9b878','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'};try{var pa=document.documentElement.getAttribute('data-circadian-palette');if(pa){var sp=JSON.parse(pa);if(sp.day){DG=sp.day;DW=sp.day}if(sp.night){NS=sp.night;NB=sp.night}}}catch(_){}function hx(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}function lerp(a,b,t){var x=hx(a),y=hx(b);function h(n){return('0'+Math.round(n).toString(16)).slice(-2)}return'#'+h(x[0]+(y[0]-x[0])*t)+h(x[1]+(y[1]-x[1])*t)+h(x[2]+(y[2]-x[2])*t)}function mix(a,b,f){var o={};for(var k in a)o[k]=lerp(a[k],b[k],f);return o}function ap(p){var r=document.documentElement;for(var k in p)r.style.setProperty(k,p[k])}function updateMoon(){var d=new Date(),E=Date.UTC(2000,0,6,18,14),S=29.530588853,dn=(d.getTime()-E)/864e4,ph=(dn%S)/S;if(ph<0)ph+=1;var il=(1-Math.cos(2*Math.PI*ph))/2,mo=8*(1-2*Math.abs(ph-.5)),sg=ph<.5?-1:1,r=document.documentElement;r.style.setProperty('--moon-offset',(sg*mo).toFixed(2)+'px');r.style.setProperty('--moon-glow',Math.round(il*70)+'%')}function nat(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,y=d.getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,doy=Math.floor((d-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}return{h:h,sr:12-hf,ss:12+hf,day:h>=12-hf&&h<12+hf}}
-function dropStale(){var s=localStorage.getItem('univerlab-theme');if((s==='day'||s==='night')&&s===(nat().day?'day':'night'))localStorage.removeItem('univerlab-theme')}
+function dropStale(){var T=window.univerlabTheme,s=T.read();if((s==='day'||s==='night')&&s===(nat().day?'day':'night'))T.clear()}
 function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,de=sr+1,ds=ss-1;if(h<de)w=1-(h-sr)/1;else if(h>=ds)w=(h-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{var sse=h>=ss?h-ss:h+(24-ss),nl=24-(ss-sr),np=nl>0?sse/nl:0,ibh=!1;if(np<.15){pal=mix(NB,NS,np/.15);ibh=np<.08}else if(np<.85){pal=NS}else{pal=mix(NS,NB,(np-.85)/.15);ibh=np>.92}}ap(pal);var pos;if(day){pos=((h-sr)/(ss-sr))*100}else{var ss2=h>=ss?h-ss:h+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{cel=ibh?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';r.dataset.circadian='true';updateMoon();try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'circadian'}}))}catch(_){}}window.scrubTime=function(hour){if(localStorage.getItem('univerlab-theme'))return;hour=((hour%24)+24)%24;var y=new Date().getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,now=new Date(),doy=Math.floor((now-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}var sr=12-hf,ss=12+hf,day=hour>=sr&&hour<ss,pal,w=0,nl,np,sse;if(day){var de=sr+1,ds=ss-1;if(hour<de)w=1-(hour-sr)/1;else if(hour>=ds)w=(hour-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{sse=hour>=ss?hour-ss:hour+(24-ss);nl=24-(ss-sr);np=nl>0?sse/nl:0;if(np<.15)pal=mix(NB,NS,np/.15);else if(np<.85)pal=NS;else pal=mix(NS,NB,(np-.85)/.15)}ap(pal);var pos;if(day){pos=((hour-sr)/(ss-sr))*100}else{var ss2=hour>=ss?hour-ss:hour+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{var ib=(np<.08||np>.92);cel=ib?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';updateMoon();var mi={hour:Math.round(hour*10)/10,nightPos:0,palettes:[]};if(!day){mi.nightPos=Math.round(np*1000)/10;if(np<.15){var f=np/.15;mi.palettes=[{name:'Twilight',pct:Math.round((1-f)*100)},{name:'Night',pct:Math.round(f*100)}]}else if(np<.85)mi.palettes=[{name:'Night',pct:100}];else{var f=(np-.85)/.15;mi.palettes=[{name:'Night',pct:Math.round((1-f)*100)},{name:'Dawn',pct:Math.round(f*100)}]}}else{if(w>.01)mi.palettes=[{name:'Day',pct:Math.round((1-w)*100)},{name:hour<12?'Dawn':'Dusk',pct:Math.round(w*100)}];else mi.palettes=[{name:'Day',pct:100}]}window.__scrubInfo=mi;window.__scrubHour=hour;try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'scrub'}}))}catch(_){}};window.resetScrub=function(){calc();var b=document.querySelector('.celestial-btn');if(b){b.style.transition='left .2s ease-out';setTimeout(function(){b.style.transition=''},250)}};window.calc=calc;window.applyTheme=function(mode){if(mode==='day'){ap(DG);document.documentElement.dataset.celestial='sun';document.documentElement.dataset.benchTheme='day';document.documentElement.dataset.circadian='true';delete document.documentElement.dataset.sunlow}else if(mode==='night'){ap(NS);document.documentElement.dataset.celestial='moon';document.documentElement.dataset.benchTheme='night';document.documentElement.dataset.circadian='true'}else{calc()}if(mode!=='circadian'){updateMoon();var r=document.documentElement;r.style.setProperty('--celestial-color',mode==='night'?'#a8adb5':DG['--canvas-color'])}if(mode!=='circadian'){try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:mode}}))}catch(_){}}};dropStale();var sv=localStorage.getItem('univerlab-theme');if(sv==='day'||sv==='night')applyTheme(sv);else calc();var tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme')){calc();clearInterval(tm);tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)}}})}catch(e){}})()
       </script>
       <script is:inline>
@@ -537,17 +586,16 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
         }
 
         function getThemeCmds() {
-          var t = null;
-          try { t = localStorage.getItem('univerlab-theme'); } catch (e) {}
+          var t = window.univerlabTheme.read();
           // A stored 'day'/'night' from the old themes keeps working as
           // Papyrus/Slate.
           var active = !t ? 'circadian' : t === 'day' ? 'papyrus' : 'slate';
           var check = ' \u2713';
           var names = S.theme || {};
           return [
-            { cmd: 'circadian', label: (names.circadian || 'Circadian') + (active === 'circadian' ? check : ''), action: function () { try { localStorage.removeItem('univerlab-theme'); } catch (e) {} if (window.applyTheme) applyTheme('circadian'); } },
-            { cmd: 'papyrus', label: (names.papyrus || 'Papyrus') + (active === 'papyrus' ? check : ''), action: function () { try { localStorage.setItem('univerlab-theme', 'day'); } catch (e) {} if (window.applyTheme) applyTheme('day'); } },
-            { cmd: 'slate', label: (names.slate || 'Slate') + (active === 'slate' ? check : ''), action: function () { try { localStorage.setItem('univerlab-theme', 'night'); } catch (e) {} if (window.applyTheme) applyTheme('night'); } },
+            { cmd: 'circadian', label: (names.circadian || 'Circadian') + (active === 'circadian' ? check : ''), action: function () { window.univerlabTheme.clear(); if (window.applyTheme) applyTheme('circadian'); else if (window.calc) calc(); } },
+            { cmd: 'papyrus', label: (names.papyrus || 'Papyrus') + (active === 'papyrus' ? check : ''), action: function () { window.univerlabTheme.set('day'); if (window.applyTheme) applyTheme('day'); else if (window.calc) calc(); } },
+            { cmd: 'slate', label: (names.slate || 'Slate') + (active === 'slate' ? check : ''), action: function () { window.univerlabTheme.set('night'); if (window.applyTheme) applyTheme('night'); else if (window.calc) calc(); } },
           ];
         }
 
