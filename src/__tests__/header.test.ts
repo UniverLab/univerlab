@@ -165,10 +165,10 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/function toggleTheme\(\)/);
     expect(src).toMatch(/if \(window\.calc\) window\.calc\(\)/);
     // …drops the key first, so the circadian-equal case leaves no key…
-    expect(src).toMatch(/localStorage\.removeItem\('univerlab-theme'\)/);
+    expect(src).toMatch(/window\.univerlabTheme\.clear\(\)/);
     // …writes the palette's key and applies the theme with the palette's
     // own function (both call sites go through toggleTheme)…
-    expect(src).toMatch(/localStorage\.setItem\('univerlab-theme', target\)/);
+    expect(src).toMatch(/window\.univerlabTheme\.set\(target\)/);
     expect(src).toMatch(/window\.applyTheme\('circadian'\)/);
     expect(src).toMatch(/window\.applyTheme\(target\)/);
     // …and a page with no circadian script (no window.applyTheme, e.g.
@@ -178,8 +178,12 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     expect(src).toMatch(/hideTip\(\);\s*\n\s*toggleTheme\(\);/);
     expect(src).toMatch(/if \(!e\.detail\) toggleTheme\(\)/);
     // Drag-to-scrub survives, still gated to circadian mode.
-    expect(src).toMatch(/localStorage\.getItem\('univerlab-theme'\) \|\| !window\.scrubTime/);
-    expect(src).toMatch(/addEventListener\('mousedown', onPointerDown\)/);
+    expect(src).toMatch(/!window\.univerlabTheme\.read\(\) && !!window\.scrubTime/);
+    // One pointer stream: a touch + mouse pair let the emulated mouseup
+    // toggle a second time and undo every mobile tap after the first.
+    expect(src).toMatch(/addEventListener\('pointerdown', onPointerDown\)/);
+    expect(src).not.toMatch(/'(touchstart|touchend|mousedown|mouseup)'/);
+    expect(src).toMatch(/touch-action: none;/);
     expect(src).toMatch(/window\.scrubTime/);
     expect(src).toMatch(/window\.resetScrub/);
   });
