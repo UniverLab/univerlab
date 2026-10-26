@@ -50,7 +50,7 @@ const tfInitial =
     </figure>
   </section>
 
-  <section class="wrap section trule">
+  <section class="wrap section trule templates-section">
     {templates.length > 0 ? (
       <div class="sub">
         <span class="label">{e.templates.kicker}</span>
@@ -229,7 +229,9 @@ const tfInitial =
   .press-no { font-family: var(--font-mono); font-size: 0.72rem; color: var(--rubric); min-width: 1.5rem; }
   /* Press terms are headline voice: system serif at 400, upright, bistre. */
   .colophon strong { color: var(--ink); font-family: var(--font-serif); font-weight: 400; font-style: normal; }
-  .sub { max-width: 46rem; }
+  /* Centered on the measure like every other narrative band; the cream plate
+     behind it comes from surfaces.css's paper band chain. */
+  .sub { max-width: 46rem; margin-inline: auto; }
   .catalog { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
   .catalog th, .catalog td { padding: 0.5rem 0.6rem; border-bottom: 1px dashed var(--rule-t1); text-align: left; vertical-align: top; }
   .catalog thead th { color: var(--ink-dim); font-weight: 500; }

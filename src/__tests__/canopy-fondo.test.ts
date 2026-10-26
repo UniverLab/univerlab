@@ -64,7 +64,7 @@ describe('canopy fondo', () => {
   });
 
   it('masks the reading column clean on its case element', () => {
-    expect(MASK).toBe('radial-gradient(ellipse 70% 78% at 50% 45%, transparent 0 46%, #000 92%)');
+    expect(MASK).toBe('radial-gradient(ellipse 66% 76% at 50% 44%, transparent 0 38%, #000 88%)');
     const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
     expect(src).toMatch(/canvas\.style\.setProperty\('mask-image', MASK\)/);
     expect(src).toContain('-webkit-mask-image');

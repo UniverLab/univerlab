@@ -345,3 +345,31 @@ describe('the language names are translated in both catalogs', () => {
     expect(HEADER).not.toMatch(/aria-label="Switch to/);
   });
 });
+
+describe('English-only pages never ping-pong the language', () => {
+  // Regression: the pre-paint auto-language script hardcoded its exemptions
+  // ('/docs', '/status/') and the roadmap — English-only, its /es spelling
+  // 301ing back — looped /roadmap/ → /es/roadmap/ → /roadmap/ forever for
+  // every browser that had chosen Spanish. The permission is now computed
+  // per page from the page tree (hasCounterpart), and the corner, with no
+  // twin to show, flips the preference and stays on the page.
+  const BASE = read('layouts', 'BaseLayout.astro');
+
+  it('BaseLayout gates the pre-paint script on the derived autoLang flag', () => {
+    expect(BASE).toMatch(/const autoLang = hasCounterpart\(path, other\);/);
+    expect(BASE).toMatch(/data-lang-auto=\{autoLang \? 'on' : 'off'\}/);
+    expect(BASE).toMatch(/documentElement\.dataset\.langAuto !== 'on'/);
+  });
+
+  it('leaves no per-page exemptions hardcoded in the script', () => {
+    expect(BASE).not.toMatch(/path === '\/status\/'/);
+    expect(BASE).not.toMatch(/path\.indexOf\('\/docs'\)/);
+  });
+
+  it('the corner stays on the page when the other language has no twin', () => {
+    expect(HEADER).toMatch(
+      /const toggleHref = hasCounterpart\(path, other\) \? switchLangPath\(Astro\.url, other\) : path;/,
+    );
+    expect(HEADER).not.toMatch(/: localizePath\('\/', other\)/);
+  });
+});
