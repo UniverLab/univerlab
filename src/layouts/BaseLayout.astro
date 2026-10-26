@@ -94,6 +94,11 @@ const other = lang === 'en' ? 'es' : 'en';
 const enHref = new URL(localizePath(path, 'en'), site).href;
 const esHref = new URL(localizePath(path, 'es'), site).href;
 const showAlts = !isDocs && hasCounterpart(path, other);
+// Whether the pre-paint language script may switch this page at all: only
+// when the other language actually has it. English-only routes (docs, status,
+// roadmap, the 404) answer false — sending them to their /es spelling is a
+// round trip with that path's _redirects rule, a loop that never lands.
+const autoLang = hasCounterpart(path, other);
 
 const orgJsonLd = organizationNode(site, t.meta.description);
 
@@ -111,7 +116,7 @@ const aboutMarkdown = buildSiteAbout(site);
 const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
 ---
 <!doctype html>
-<html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined}>
+<html lang={lang} data-surface={surface} data-lang-auto={autoLang ? 'on' : 'off'} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -191,8 +196,11 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       (function () {
         try {
           var path = location.pathname;
-          // Documentation and status are English-only — never redirect them.
-          if (path.indexOf('/docs') !== -1 || path === '/status/' || path.indexOf('/status/') === 0) return;
+          // Derived on the server from the page tree and stamped on <html>
+          // before paint: 'off' for English-only routes, whose /es spelling
+          // only 301s back here. Hardcoding the exemptions is what let the
+          // roadmap loop when it joined them.
+          if (document.documentElement.dataset.langAuto !== 'on') return;
           var stored = localStorage.getItem('univerlab-lang');
           var onEs = /^\/es(\/|$)/.test(path);
           if (!stored) {
