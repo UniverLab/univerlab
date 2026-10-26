@@ -97,6 +97,10 @@ const markLabel = (k: number) => {
     width: 100%;
     margin-inline: auto;
     overflow: hidden;
+    /* Its own sheet of paper: the page's watermark never shows through the plate. */
+    background-color: var(--bench-ground, var(--bg));
+    background-image: var(--bench-ground-tile);
+    background-size: var(--bench-ground-size, 341px);
     border: 1px solid var(--line);
     outline: 1px solid var(--line);
     outline-offset: 5px;
