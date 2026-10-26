@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { experiments, byId, isArchived } from '../lib/experiments';
 import { entryModels } from '../lib/experiment-entries';
+import { plate } from '../lib/machines';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
@@ -180,14 +181,11 @@ describe('experiments encyclopedia plate', () => {
     const block = plate![0];
     const anchor = block.indexOf('<a class="plate-link" href={entry.href}');
     const machine = block.indexOf('<Machine');
-    const frame = block.indexOf('class="num-frame"');
     const close = block.indexOf('</a>');
     expect(anchor).toBeGreaterThan(-1);
-    // The live machine and the archived number frame both sit inside the anchor.
+    // Every entry's machine, archived ones included, sits inside the anchor.
     expect(machine).toBeGreaterThan(anchor);
-    expect(frame).toBeGreaterThan(anchor);
     expect(close).toBeGreaterThan(machine);
-    expect(close).toBeGreaterThan(frame);
     expect(block).toContain("aria-label={enc.use.open.replace('{name}', exp.name)}");
     // The accessible name interpolates the entry name in both languages.
     expect(en.encyclopedia.use.open).toBe('Open {name}');
@@ -219,13 +217,14 @@ describe('experiments encyclopedia plate', () => {
     expect(VIEW).toContain('--plate-h: clamp(180px, 19vw, 260px)');
   });
 
-  it('keeps the archived entry as its EXP number in a dotted frame of the plate size', () => {
-    expect(VIEW).toContain('class="num-frame"');
-    expect(VIEW).toContain('border: 1px dotted var(--bench-rule)');
-    expect(VIEW).toContain("font-family: 'Old Standard TT', serif; font-size: 56px");
+  it('gives the archived entry its own covered plate, dimmed like the rest of the entry', () => {
+    // cadSpec is put away: its drafting table under a dust cloth replaces the
+    // old dotted EXP-number frame, at the same plate size as every machine.
+    expect(VIEW).not.toContain('num-frame');
+    expect(VIEW).not.toContain('entry.archived ? (');
+    expect(plate('cadspec', 'day').h).toBe(plate('quorum', 'day').h);
+    expect(plate('cadspec', 'night').h).toBe(plate('quorum', 'night').h);
     expect(VIEW).toContain('.entry[data-status="archived"] { opacity: 0.7; }');
-    // The number now sits inside the plate link: the anchor's default underline
-    // must not draw a line under EXP-00n.
     expect(VIEW).toMatch(/\.plate-link \{[^}]*text-decoration: none;/);
   });
 
@@ -245,7 +244,6 @@ describe('experiments encyclopedia plate', () => {
     expect(VIEW).toMatch(
       /@media \(max-width: 40rem\) \{\s*\.entry \{ grid-template-columns: 1fr; gap: 14px; \}/,
     );
-    expect(VIEW).toContain('.num-frame { height: 200px; }');
   });
 });
 
