@@ -92,7 +92,7 @@ describe('global typefaces', () => {
 describe('default ground', () => {
   it('paints the parchment or slate tile on body only when no surface is set', () => {
     expect(GLOBAL).toMatch(
-      /html:not\(\[data-surface\]\) body \{\s*background-color: var\(--bench-ground\);\s*background-image: var\(--bench-ground-tile\);\s*background-size: 341px;/,
+      /html:not\(\[data-surface\]\) body \{\s*background-color: var\(--bench-ground\);\s*background-image: var\(--bench-ground-tile\);\s*background-size: var\(--bench-ground-size, 341px\);/,
     );
   });
 });
