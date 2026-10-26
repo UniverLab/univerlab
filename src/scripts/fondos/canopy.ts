@@ -10,7 +10,7 @@ const HALO = 0.5;
 const COMB_ALPHA = 0.035;
 const REVIVE_IDLE = 4000;
 const REVIVE_GAP = 3000;
-export const MASK = 'radial-gradient(ellipse 70% 78% at 50% 45%, transparent 0 46%, #000 92%)';
+export const MASK = 'radial-gradient(ellipse 66% 76% at 50% 44%, transparent 0 38%, #000 88%)';
 
 export interface CanopyCell {
   x: number;
