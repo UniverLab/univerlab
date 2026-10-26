@@ -21,7 +21,7 @@ const PDF = 'https://papers.univerlab.org/pensamiento-cosmico/pensamiento-cosmic
 describe('manifesto paper link', () => {
   it('links the paper PDF in the opening section, right after the intro', () => {
     const subAt = src.indexOf('<p class="sub label">{m.sub}</p>');
-    const linkAt = src.indexOf(`href="${PDF}"`);
+    const linkAt = src.indexOf('href={PDF}');
     const openingAt = src.indexOf('<section class="wrap opening">');
     const openingEnd = src.indexOf('</section>', openingAt);
     expect(openingAt).toBeGreaterThan(-1);
@@ -31,7 +31,8 @@ describe('manifesto paper link', () => {
   });
 
   it('marks the PDF link safe for a new tab and declares the MIME type', () => {
-    const a = src.match(/<a[^>]*href="https:\/\/papers\.univerlab\.org[^>]*>/);
+    expect(src).toContain(`const PDF = '${PDF}';`);
+    const a = src.match(/<a[^>]*href=\{PDF\}[^>]*>/);
     expect(a).not.toBeNull();
     expect(a![0]).toContain('class="paper-link"');
     expect(a![0]).toContain('target="_blank"');
@@ -60,15 +61,15 @@ describe('manifesto paper link', () => {
 // per Intelligence 8a70c979) — never the version DOI.
 describe('manifesto paper showcase plate', () => {
   const plateAt = () => src.indexOf('class="works-paper"');
-  const sectionAt = () => src.indexOf('id="in-development"');
+  const sectionAt = () => src.indexOf('id="practice"');
 
-  it('places the plate first inside section IX', () => {
+  it('places the plate first among the works of the practice section', () => {
     expect(sectionAt()).toBeGreaterThan(-1);
     expect(plateAt()).toBeGreaterThan(sectionAt());
     // The seal card opens the works list; Eco del Silencio follows it.
     expect(src.indexOf('works-paper')).toBeLessThan(src.indexOf('{m.works.map'));
-    // Single-column list at the full reading width — no side-by-side cards.
-    expect(src).toMatch(/\.works\s*\{[^}]*grid-template-columns:\s*1fr/);
+    // The works sit side by side when the column has room, stacked otherwise.
+    expect(src).toMatch(/\.works\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(18rem, 1fr\)\)/);
   });
 
   it('carries the wax seal beside the title', () => {
@@ -82,7 +83,7 @@ describe('manifesto paper showcase plate', () => {
 
   it('links both the PDF and the concept DOI, opening safely', () => {
     const plate = src.slice(plateAt(), src.indexOf('</ul>', plateAt()));
-    expect(plate).toContain(PDF);
+    expect(plate).toContain('href={PDF}');
     expect(plate).toContain('target="_blank"');
     expect(plate).toContain('rel="noopener noreferrer"');
     expect(plate).toContain('type="application/pdf"');

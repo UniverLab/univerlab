@@ -17,8 +17,9 @@
  * tests, so dist/ is present):
  * - no stylesheet linked from `/`, `/experiments/` or `/canopy/` gives
  *   `main#main` a non-zero `padding-inline-start`;
- * - the stylesheets linked from `/manifesto/` DO reserve the 20rem gutter
- *   on `.manifesto` under min-width:1200px.
+ * - the stylesheets linked from `/manifesto/` give the index its own column
+ *   on the scoped `.m-body` grid under min-width:1100px (v4 replaced the
+ *   20rem padding gutter with that grid).
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -57,11 +58,11 @@ function astroCssFiles(): string[] {
 // A `main#main` rule with a non-zero start padding — the leak signature.
 // Scoped Astro selectors (`.manifesto[data-astro-…]`) never match this.
 const LEAK = /main#main[^{}]*\{[^}]*padding-inline-start:\s*(?!0(?:[;\s}]))[^;}]+/;
-// The gutter as scoped by Manifesto.astro: `.manifesto` (hashed by Astro,
-// so it matches `.manifesto.xxx` too) reserving 20rem under min-width:1200px.
-// The minifier (Lightning CSS) may rewrite the query to `(width>=1200px)`,
-// so either spelling counts.
-const GUTTER = /@media[^{]*1200px[^{]*\{[\s\S]{0,800}?\.manifesto[^{]*\{[^}]*padding-inline-start:\s*20rem/;
+// The index column as scoped by Manifesto.astro: `.m-body` (hashed by Astro,
+// so it matches `.m-body.xxx` too) becomes a two-column grid from 1100px. The
+// minifier (Lightning CSS) may rewrite the query to `(width>=1100px)`, so
+// either spelling counts.
+const GUTTER = /@media[^{]*1100px[^{]*\{[\s\S]{0,800}?\.m-body[^{]*\{[^}]*grid-template-columns:\s*13\.5rem/;
 
 describe('manifesto rail gutter stays on the manifesto', () => {
   it.each([['/', 'index.html'], ['/experiments/', 'experiments/index.html'], ['/canopy/', 'canopy/index.html']])(
@@ -79,7 +80,7 @@ describe('manifesto rail gutter stays on the manifesto', () => {
     }
   });
 
-  it('keeps the 20rem gutter on .manifesto at 1200px and above', () => {
+  it('gives the index its own grid column on .m-body at 1100px and above', () => {
     const css = linkedCss('manifesto/index.html');
     expect(css.some((c) => GUTTER.test(c))).toBe(true);
   });

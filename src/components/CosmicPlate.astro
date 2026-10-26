@@ -1,0 +1,158 @@
+---
+// Plate I of the manifesto: the cosmic perspective as a pull-back engraving.
+// The markup is generated at build time (src/lib/cosmic-plate.ts); the script
+// below only drives each scene's scale and opacity from the scroll. The two
+// lists under the plate carry the same facts as text — the legend of the plate,
+// what reduced motion, no-JS readers and the markdown twin read.
+import { scenes, timeRule, timeX, TIME_MARKS_GYR, VIEW } from '../lib/cosmic-plate';
+
+interface Props {
+  copy: {
+    hint: string;
+    us: string;
+    usScale: string;
+    coda: string;
+    timelineTitle: string;
+    addressTitle: string;
+    timescales: [string, string][];
+    address: [string, string][];
+  };
+}
+const { copy } = Astro.props;
+const drawn = scenes();
+const captions: [string, string][] = [[copy.us, copy.usScale], ...copy.address];
+// Time labels: the universe's age spans the rule; the five marks are stacked at
+// rising heights so the clustered Sun / Earth / life labels never collide.
+const [universe, ...marks] = copy.timescales;
+const markLabel = (k: number) => {
+  const [span, name] = marks[k];
+  if (k < 3) {
+    const x = timeX(TIME_MARKS_GYR[k]);
+    const y = -104 - k * 34;
+    return { x, y, anchor: 'end', span, name, tick: `M${x} -94 V${y + 6}` };
+  }
+  if (k === 3) return { x: -446, y: 22, anchor: 'start', span, name, tick: '' };
+  return { x: 446, y: 2, anchor: 'end', span, name, tick: '' };
+};
+---
+<figure class="cosmic" data-cosmic aria-labelledby="cosmic-legend-title">
+  <div class="cosmic-track">
+    <div class="cosmic-stage">
+      <svg class="cosmic-svg" viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
+        {drawn.map((markup, i) => (
+          <g class="cs" data-i={i} style={i === 0 ? undefined : 'opacity:0'} set:html={markup} />
+        ))}
+        <g class="ct" style="opacity:0" transform="translate(0 70)">
+          <Fragment set:html={timeRule()} />
+          <text class="t-big" x="-450" y="-74">{universe[1]} · {universe[0]}</text>
+          {marks.map((_, k) => {
+            const l = markLabel(k);
+            return (
+              <g class={`tl tl-${k}`}>
+                {l.tick && <path d={l.tick} fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 3" vector-effect="non-scaling-stroke" />}
+                <text class="t-name" x={l.x} y={l.y} text-anchor={l.anchor}>{l.name}</text>
+                <text class="t-span" x={l.x} y={l.y + 14} text-anchor={l.anchor}>{l.span}</text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+      <div class="cosmic-cap" aria-hidden="true">
+        <span class="cap-name">{captions[0][0]}</span>
+        <span class="cap-scale">{captions[0][1]}</span>
+      </div>
+      <p class="cosmic-coda">{copy.coda}</p>
+      <p class="cosmic-hint" aria-hidden="true">{copy.hint}</p>
+      <span class="corner c-tl" aria-hidden="true"></span><span class="corner c-tr" aria-hidden="true"></span>
+      <span class="corner c-bl" aria-hidden="true"></span><span class="corner c-br" aria-hidden="true"></span>
+    </div>
+  </div>
+  <figcaption class="cosmic-legend">
+    <div>
+      <h3 id="cosmic-legend-title" class="legend-h">{copy.addressTitle}</h3>
+      <ol class="legend-list">
+        {captions.map(([name, scale]) => <li><span>{name}</span> <span class="lg-num">{scale}</span></li>)}
+      </ol>
+    </div>
+    <div>
+      <h3 class="legend-h">{copy.timelineTitle}</h3>
+      <ol class="legend-list">
+        {copy.timescales.map(([span, name]) => <li><span>{name}</span> <span class="lg-num">{span}</span></li>)}
+      </ol>
+    </div>
+  </figcaption>
+  <script type="application/json" data-cosmic-captions set:html={JSON.stringify({ space: captions, time: copy.timescales.map(([span, name]) => [name, span]) })} />
+</figure>
+
+<style>
+  .cosmic { margin: 2.5rem 0 0; color: var(--ink); }
+  /* The tall track exists only once the script is live: without it (no JS,
+     reduced motion) the stage is a plain plate in the flow. */
+  .cosmic-track { position: relative; }
+  .cosmic[data-live] .cosmic-track { height: 560vh; }
+  .cosmic-stage {
+    position: relative;
+    aspect-ratio: 25 / 16;
+    max-height: 92vh;
+    width: 100%;
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    outline: 1px solid var(--line);
+    outline-offset: 5px;
+  }
+  .cosmic[data-live] .cosmic-stage { position: sticky; top: max(4.5rem, calc(50vh - 46vh)); }
+  .cosmic-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .cosmic-svg :global(.cs), .cosmic-svg :global(.ct) { will-change: transform, opacity; }
+  .cosmic-svg :global(text) { fill: currentColor; }
+  .cosmic-svg :global(.t-big) { font-family: var(--font-serif); font-style: italic; font-size: 17px; }
+  .cosmic-svg :global(.t-name) { font-family: var(--font-serif); font-size: 15px; }
+  .cosmic-svg :global(.t-span) { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; }
+  .cosmic-cap {
+    position: absolute; left: 1.4rem; bottom: 1.1rem;
+    display: flex; flex-direction: column; gap: 0.15rem;
+    pointer-events: none;
+  }
+  .cap-name { font-family: var(--font-serif); font-style: italic; font-size: clamp(1.15rem, 2.4vw, 1.6rem); }
+  .cap-scale { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.06em; color: var(--ink-dim); }
+  .cosmic-coda {
+    /* At the top of the plate, clear of the caption at its foot. */
+    position: absolute; inset: 1.6rem 8% auto; margin: 0;
+    font-family: var(--font-serif); font-style: italic; text-align: center;
+    font-size: clamp(1.05rem, 2.2vw, 1.4rem); color: var(--ink);
+    opacity: 0; transition: opacity 0.6s ease;
+  }
+  .cosmic-coda.on { opacity: 1; }
+  .cosmic-hint {
+    position: absolute; right: 1.4rem; bottom: 1.1rem; margin: 0;
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; color: var(--ink-faint);
+    transition: opacity 0.4s ease;
+  }
+  .cosmic:not([data-live]) .cosmic-hint, .cosmic:not([data-live]) .cosmic-coda { display: none; }
+  .cosmic-hint.off { opacity: 0; }
+  /* Engraver's corner marks on the plate. */
+  .corner { position: absolute; width: 14px; height: 14px; border: 0 solid var(--ink-faint); }
+  .corner.c-tl { top: 8px; left: 8px; border-top-width: 1px; border-left-width: 1px; }
+  .corner.c-tr { top: 8px; right: 8px; border-top-width: 1px; border-right-width: 1px; }
+  .corner.c-bl { bottom: 8px; left: 8px; border-bottom-width: 1px; border-left-width: 1px; }
+  .corner.c-br { bottom: 8px; right: 8px; border-bottom-width: 1px; border-right-width: 1px; }
+  /* The legend: the plate's facts as text, two columns under it. */
+  .cosmic-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.2rem 3rem; margin-top: 1.6rem; }
+  .legend-h { font-size: 0.72rem; font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); margin: 0 0 0.5rem; font-weight: 400; }
+  .legend-list { list-style: none; margin: 0; padding: 0; }
+  .legend-list li { display: flex; justify-content: space-between; gap: 1rem; padding-block: 0.32rem; border-bottom: 1px dotted var(--line); font-size: 0.95rem; }
+  .lg-num { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-dim); white-space: nowrap; }
+  @media (max-width: 40rem) {
+    .cosmic-stage { aspect-ratio: 4 / 5; }
+    /* Narrow plates crop instead of shrinking (see the script); the time
+       labels then live in the caption, which stays legible. */
+    .cosmic-svg :global(.ct text) { display: none; }
+    .cosmic-cap { left: 1rem; bottom: 0.9rem; }
+    .cosmic-hint { display: none; }
+  }
+</style>
+
+<script>
+  import { mountCosmicPlate } from '../scripts/cosmic-plate';
+  mountCosmicPlate();
+</script>
