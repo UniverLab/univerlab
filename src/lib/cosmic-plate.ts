@@ -108,11 +108,11 @@ function observer(): string {
     // The observer, feet on the horizon: head tilted back to the sky, one arm
     // raised toward the stars, the other at rest; a single round-capped line.
     `<g transform="translate(0 40)" ${LINE} stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">`,
-    '<circle cx="2" cy="-73" r="6.5"/>',
-    '<path d="M0.5 -66 C0 -56 -0.5 -46 0 -36"/>',
+    '<circle cx="-1.5" cy="-73" r="6.5"/>',
+    '<path d="M-0.5 -66.5 C0 -56 -0.5 -46 0 -36"/>',
     '<path d="M0 -36 L-4.5 -18 L-7 0 M-7 0 H-11"/>',
     '<path d="M0 -36 L4 -18 L6 0 M6 0 H10"/>',
-    '<path d="M0.3 -60 L9 -72 L14 -90"/>',
+    '<path d="M0.3 -60 L12 -69 L18 -86"/>',
     '<path d="M0.3 -60 L-5 -47 L-6.5 -35"/>',
     '</g>',
     dots(field(rand, 140, 480).filter(([, y]) => y < -30), 1.6, 0.9),
