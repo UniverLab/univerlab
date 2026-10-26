@@ -68,5 +68,17 @@ describe('canopy fondo', () => {
     const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
     expect(src).toMatch(/canvas\.style\.setProperty\('mask-image', MASK\)/);
     expect(src).toContain('-webkit-mask-image');
+    // The animated layer carries the same mask as the still comb.
+    expect(src).toMatch(/layer\.style\.setProperty\('mask-image', MASK\)/);
+  });
+
+  it('keeps full-screen canvas work out of the animation frame', () => {
+    // Measured on a 4x-throttled phone: a canvas blur filter (20ms) and a
+    // full-screen 'lighter' drawImage (15ms) per frame held the page at 12fps.
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
+    expect(src).not.toMatch(/\.filter = 'blur/);
+    expect(src).not.toMatch(/globalCompositeOperation = 'lighter'/);
+    expect(src).toContain("glow.style.mixBlendMode = 'plus-lighter'");
+    expect(src).toMatch(/if \(now - lastDraw < DRAW_MS\) return;/);
   });
 });
