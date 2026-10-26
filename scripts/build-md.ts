@@ -117,6 +117,10 @@ export function htmlToMarkdown(html: string): string {
   }
 
   let cleaned = content;
+  // Comments go first: a comment that mentions a tag (`<nav> is deliberate`)
+  // would otherwise start one of the tag strips below, which then eats the
+  // comment's closing `-->` and turns the rest of the page into a comment.
+  cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
   cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, '');
   cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, '');
   cleaned = cleaned.replace(/<nav[\s\S]*?<\/nav>/gi, '');
