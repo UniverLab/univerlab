@@ -6,16 +6,20 @@ const { kind } = Astro.props;
 ---
 <div class={`watermark watermark-${kind}`} aria-hidden="true"></div>
 <style>
+  /* The drawing is printed on the paper: it scrolls with the ground tile
+     instead of staying fixed under it, so the paper's mottling never slides
+     across the lines. Absolute against <body>, it spans the whole page. */
   .watermark {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: -1;
     pointer-events: none;
   }
   /* The ground tile is painted by <body>, which would otherwise cover a negative
      z-index layer. Making body the stacking context lifts the drawing above the
-     tile while keeping it under the text. */
-  :global(body) { isolation: isolate; }
+     tile while keeping it under the text; position: relative makes it the
+     watermark's box. */
+  :global(body) { isolation: isolate; position: relative; }
   .watermark-blueprint {
     background-image: image-set(
       url('/bench/textures/blueprint-day.avif') type('image/avif'),
@@ -36,9 +40,13 @@ const { kind } = Astro.props;
       url('/bench/textures/celestial-day-1600.avif') type('image/avif'),
       url('/bench/textures/celestial-day-1600.webp') type('image/webp')
     );
-    background-size: cover;
-    background-position: center;
+    /* One engraving across the top of the page, fading into plain paper
+       below the opening rather than stretched over the whole length. */
+    background-size: 100% auto;
+    background-position: top center;
     background-repeat: no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 70vh, transparent 130vh);
+    mask-image: linear-gradient(to bottom, #000 0, #000 70vh, transparent 130vh);
     opacity: 0.45;
   }
   :global(html[data-bench-theme='night']) .watermark-celestial {
