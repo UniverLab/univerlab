@@ -7,7 +7,7 @@
  *  itself is decorative; every string it shows also exists in the page.
  */
 import { formatSolLabel } from '../lib/mission-time';
-import { liveExperiments } from '../lib/experiments';
+import { liveExperiments, type Experiment } from '../lib/experiments';
 import { fondoLoaders } from './fondos/index';
 import type { Fondo } from './fondos/runtime';
 
@@ -50,9 +50,9 @@ export function startLantern(): void {
   const typedK = typed?.querySelector('[data-typed="k"]');
   const typedCmd = typed?.querySelector('[data-typed="cmd"]');
   const typedLine = typed?.querySelector('[data-typed="line"]');
-  const hint = document.querySelector('.hint');
+  const hint = document.querySelector<HTMLElement>('.hint');
   const hintText = hint?.textContent ?? '';
-  const expById = new Map(liveExperiments.map((exp) => [exp.id, exp]));
+  const expById = new Map<string, Experiment>(liveExperiments.map((exp) => [exp.id, exp]));
   let inWorld = false;
   let world: Fondo | null = null;
   let worldId: string | null = null;
