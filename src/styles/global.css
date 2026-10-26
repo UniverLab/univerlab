@@ -29,9 +29,9 @@
   --canopy: #00a9a0;
   --astro-denoise: #a78bfa;
 
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
-  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'Sometype Mono', ui-monospace, Menlo, monospace;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-serif: 'Old Standard TT', Georgia, serif;
 
   --measure: 64ch;
   --space: clamp(1rem, 2.5vw, 1.75rem);
@@ -39,10 +39,8 @@
 }
 
 /* Fixed per-experiment surfaces. Each palette lives in ONE token group, keyed by the
-   data-surface name from src/lib/experiments.ts. The groups are consumed twice:
-   at the page level (`data-surface` on <html>, set by BaseLayout) and by the Home
-   card window-flip (`data-flip-surface` on .card). Hovering a landing card must
-   resolve the same substrate tokens as the experiment's own page — never a copy.
+   data-surface name from src/lib/experiments.ts and consumed at the page level
+   (`data-surface` on <html>, set by BaseLayout).
    Ground truth: docs/landing-poc/styles/*.md via lfix-surfaces-ground-truth (f176b24).
    Each experiment keeps its own --essence accent (set inline on the card). */
 
@@ -58,15 +56,13 @@
    surfaces.css is out of this spec's scope.)
    Each experiment's essence accent lives in `src/lib/experiments.ts` and is
    emitted by `src/components/EssenceTokens.astro` as `--surface-essence` /
-   `--surface-essence-text` — never here. Read by the home card flip and by
-   each experiment page's own text/fill rules; scripts/og takes the accent
-   from the registry directly. */
+   `--surface-essence-text` — never here. Read by each experiment page's own
+   text/fill rules; scripts/og takes the accent from the registry directly. */
 
 /* texforge — Antimetal editorial register (docs/landing-poc/styles/antimetal.md):
    Parchment canvas, Cream surface, Bistre ink, Graphite secondary, Flint helper,
    Quill hairline. Dash vocabulary (--rule-t1…t3) and fonts stay html-only below. */
-[data-surface='paper'],
-[data-flip-surface='paper'] {
+[data-surface='paper'] {
   --surface-bg: #d7d7d0;
   --surface-bg-raise: #f7f6f3;
   --surface-ink: #1a1614;
@@ -80,8 +76,7 @@
    secondary; lavender-phosphor/platinum/bg-deep/CTA gradient/radii are
    page-only extras below. No shadows on this surface — the card's flip
    edge highlight (Home) uses an ink-mix so it stays whisper-light here. */
-[data-surface='tui'],
-[data-flip-surface='tui'] {
+[data-surface='tui'] {
   --surface-bg: #012624;
   --surface-bg-raise: #003734;
   --surface-ink: #edfffe;
@@ -92,8 +87,7 @@
 
 /* gitkit — Supahub sunlit canvas (docs/landing-poc/styles/supahub.md).
    The orchid pair (re-pointed at the essence tokens) + fonts are page-only extras below. */
-[data-surface='pastel'],
-[data-flip-surface='pastel'] {
+[data-surface='pastel'] {
   --surface-bg: #ffffff;
   --surface-bg-raise: #f1f5f9;
   --surface-ink: #111827;
@@ -105,8 +99,7 @@
 /* ghscaff — AuthKit frosted midnight glass (docs/landing-poc/styles/authkit.md).
    Midnight canvas with steel-blue fog inks; the old "warm iron foundry" literals
    in this file were never rendered (the POC block out-ranked them). */
-[data-surface='industrial'],
-[data-flip-surface='industrial'] {
+[data-surface='industrial'] {
   --surface-bg: #05060f;
   --surface-bg-raise: rgba(186,214,247,.05);
   /* Header menu plate only — NOT --bg-raise: the glass cards, .cmd and hero
@@ -123,8 +116,7 @@
    near-black ink; the accent is the registry blue, and the page reads its
    text ink (pinned by surfaces.css) — the landing card keeps the registry
    essence. */
-[data-surface='blueprint'],
-[data-flip-surface='blueprint'] {
+[data-surface='blueprint'] {
   --surface-bg: #ffffff;
   --surface-bg-raise: #f2f2f3;
   --surface-ink: #17191c;
@@ -134,10 +126,9 @@
 }
 
 /* astro-denoise — observatory: deep space, violet-black night sky. */
-[data-surface='observatory'],
-[data-flip-surface='observatory'] {
-  --surface-bg: #0a0911;
-  --surface-bg-raise: #110f1b;
+[data-surface='observatory'] {
+  --surface-bg: #16233f;
+  --surface-bg-raise: #1c2b4a;
   --surface-ink: #ddd9e8;
   --surface-ink-dim: #8f8aa3;
   --surface-ink-faint: #7c7696;
@@ -147,8 +138,7 @@
 /* quorum — card table under a lamp (warm espresso). The /quorum page overrides
    these inline via its circadian palette; the group is the no-JS substrate and
    the reference the landing's circadian flip cards are tuned against. */
-[data-surface='quorum'],
-[data-flip-surface='quorum'] {
+[data-surface='quorum'] {
   --surface-bg: #241a12;
   --surface-bg-raise: #2f2318;
   --surface-ink: #f2e7d3;
@@ -162,8 +152,7 @@
    Obsidian Ember canvas, Dark Cocoa raise, Linen ink, Warm Ash inks, Signal Red
    hairline. The Altius furniture (--molten/--peach/--blush/--flare,
    radii, color-scheme) are page-only extras below. */
-[data-surface='studio'],
-[data-flip-surface='studio'] {
+[data-surface='studio'] {
   --surface-bg: #190501;
   --surface-bg-raise: #340a01;
   --surface-ink: #f7f6ff;
@@ -200,8 +189,8 @@ html[data-surface]:root {
    (pre-existing; typography is not a substrate token — leave that war to a
    future spec). Kept here verbatim from the old block. */
 html[data-surface='paper'] {
-  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-serif: 'Old Standard TT', Georgia, serif;
   --rule-t1: color-mix(in srgb, var(--line) 85%, transparent);
   --rule-t2: color-mix(in srgb, var(--line) 70%, transparent);
   --rule-t3: color-mix(in srgb, var(--line) 60%, transparent);
@@ -269,16 +258,24 @@ html {
 
 body { margin: 0; min-height: 100vh; }
 
+/* The default ground: parchment by day, slate by night (bench-tokens.css). Experiment
+   pages keep their own surface ground. */
+html:not([data-surface]) body {
+  background-color: var(--bench-ground);
+  background-image: var(--bench-ground-tile);
+  background-size: 341px;
+}
+
 ::selection { background: var(--ink); color: var(--bg); }
 
 h1, h2, h3 {
-  font-weight: 500;
+  font-family: var(--font-serif);
+  font-weight: 400;
   line-height: 1.15;
   margin: 0;
 }
 
 h1, h2 {
-  font-family: var(--font-serif);
   letter-spacing: 0;
 }
 
@@ -346,12 +343,24 @@ button, a, summary, [role='button'] { touch-action: manipulation; }
 
 .prose { max-width: var(--measure); }
 .prose p { margin: 0 0 1.1em; }
+
+/* Long text: EB Garamond at reading size; whole paragraphs are never italic. */
+.prose, main p {
+  font-size: clamp(1.06rem, 1rem + 0.25vw, 1.19rem);
+  line-height: 1.6;
+  max-width: 65ch;
+  font-style: normal;
+}
 /* Emphasis: a few important words carry the page's colour — the UniverLab
    yellow on the core pages, the experiment's own essence on its page. */
 strong { color: var(--essence, var(--accent)); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  /* Hash jumps and any scrollIntoView() without an explicit behaviour still
+     inherited html's smooth scrolling: the skip link animated itself for the
+     visitors who asked for no motion. */
+  html { scroll-behavior: auto; }
 }
 
 /* Cross-document view transitions — landing cards are windows onto the
@@ -392,38 +401,187 @@ body > header { view-transition-name: site-header; }
    targets these selectors, so their position in the cascade does not matter.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Command palette — terminal-style, always dark, grey monospace. */
+/* Command palette — the library catalog card: cream stock with a garnet header
+   line, faint blue rules every 28px and a punched hole at the bottom, slid up
+   from a drawer at the foot of the page (the mockup's .palette). The card
+   tokens live in bench-tokens.css so night swaps the stock. */
 #cmd-palette {
   display: none;
   position: fixed;
-  inset: 0;
   z-index: 300;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(6px);
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 20vh;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100vw - 32px));
+  transform: translateX(-50%) translateY(115%);
+  color: var(--bench-card-ink);
+  background:
+    linear-gradient(var(--bench-card-head), var(--bench-card-head)) 0 46px / 100% 1.5px no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 27px, var(--bench-card-rule) 27px 28px) 0 48px / 100% calc(100% - 48px) no-repeat,
+    var(--bench-card);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32), 0 1px 0 #fff8 inset;
+  padding: 0 18px 34px;
+  -webkit-mask: radial-gradient(circle at 50% calc(100% - 15px), transparent 7px, #000 7.6px);
+  mask: radial-gradient(circle at 50% calc(100% - 15px), transparent 7px, #000 7.6px);
 }
-#cmd-palette.open { display: flex; }
-.cmd-palette-inner {
-  width: 28rem;
-  max-width: 92vw;
-  background: rgba(18, 18, 22, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  font-family: 'IBM Plex Mono', monospace;
+#cmd-palette.open { display: block; animation: palette-up 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) forwards; }
+#cmd-palette.closing { display: block; animation: palette-down 0.22s ease-in forwards; }
+@keyframes palette-up {
+  from { transform: translateX(-50%) translateY(115%); }
+  to { transform: translateX(-50%) translateY(0); }
 }
-.cmd-input-row {
+@keyframes palette-down {
+  from { transform: translateX(-50%) translateY(0); }
+  to { transform: translateX(-50%) translateY(120%); }
+}
+#cmd-palette .head {
+  height: 46px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
+#cmd-palette .head .slash { color: var(--bench-card-head); font-weight: 500; }
+#cmd-palette .head input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--bench-card-ink);
+  outline: none;
+  caret-color: var(--bench-card-head);
+}
+#cmd-palette .drawer {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bench-card-soft);
+  white-space: nowrap;
+}
+.cmd-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  max-height: calc(28px * 9);
+  overflow-y: auto;
+}
+.cmd-item {
+  height: 28px;
+  display: grid;
+  grid-template-columns: 18px 9.5em 1fr;
+  align-items: end;
+  padding-bottom: 4px;
+  cursor: pointer;
+}
+.cmd-item .cmd-hand {
+  color: var(--bench-card-head);
+  font-family: var(--font-serif);
+  visibility: hidden;
+}
+.cmd-item .cmd-cmd { font-family: var(--font-mono); font-size: 14px; }
+.cmd-item .cmd-label {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--bench-card-soft);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cmd-item[aria-selected='true'] .cmd-hand { visibility: visible; }
+.cmd-item[aria-selected='true'] .cmd-cmd {
+  text-decoration: underline 1.5px var(--bench-card-head);
+  text-underline-offset: 4px;
+}
+.cmd-list::-webkit-scrollbar { width: 4px; }
+.cmd-list::-webkit-scrollbar-thumb { background: var(--bench-card-rule); border-radius: 2px; }
+#cmd-palette .foot {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--bench-card-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No slide: the card simply rests in place while open. */
+  #cmd-palette.open { animation: none; transform: translateX(-50%) translateY(0); }
+  #cmd-palette.closing { animation: none; }
+}
+
+/* Slips — every non-mail notice arrives on a scrap of old paper taped to the
+   screen: faint lines, two pieces of translucent tape at the top corners, a
+   soft drop shadow (the mockup's .slip). Tips sit lower right, the 42 answer
+   sits centred. */
+.slip {
+  position: fixed;
+  z-index: 320;
+  max-width: min(340px, calc(100vw - 40px));
+  max-height: min(320px, 40vh);
+  overflow-y: auto;
+  padding: 16px 18px 14px;
+  color: #1d1510;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, rgb(32 22 12 / 0.025) 3px 4px), #f3ead6;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.slip::before, .slip::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 54px;
+  height: 18px;
+  background: var(--bench-tape);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.slip::before { left: 14px; transform: rotate(-7deg); }
+.slip::after { right: 14px; transform: rotate(6deg); }
+.slip kbd { font: inherit; border-bottom: 1.5px solid #87222c; }
+.slip.tip {
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: calc(58px + 12px);
+  transform: rotate(-1.2deg);
+}
+.slip.answer {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-1.6deg);
+  text-align: center;
+  padding: 22px 26px 18px;
+  max-width: min(380px, calc(100vw - 40px));
+  font-family: var(--font-body);
+  font-size: 17px;
+}
+.slip.answer b {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 76px;
+  line-height: 0.9;
+  margin-bottom: 6px;
+}
+.slip.answer i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b5a43;
+  display: block;
+  margin-top: 8px;
+}
+
+/* The /date translator keeps the palette's old bare-bones input chrome. */
 .cmd-prefix {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(128, 128, 128, 0.55);
   font-size: 0.9rem;
   user-select: none;
 }
@@ -432,40 +590,10 @@ body > header { view-transition-name: site-header; }
   background: transparent;
   border: 0;
   outline: none;
-  color: #e0e0e0;
-  font-family: inherit;
+  color: inherit;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
-  caret-color: rgba(255, 255, 255, 0.4);
 }
-.cmd-input::placeholder { color: rgba(255, 255, 255, 0.2); }
-.cmd-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.3rem 0;
-  max-height: 20rem;
-  overflow-y: auto;
-}
-.cmd-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.cmd-item:hover, .cmd-item.sel {
-  background: rgba(255, 255, 255, 0.06);
-}
-.cmd-cmd {
-  color: #e0e0e0;
-  font-size: 0.85rem;
-}
-.cmd-label {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.75rem;
-}
-.cmd-list::-webkit-scrollbar { width: 4px; }
-.cmd-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 /* Find overlay */
 .find-overlay {
@@ -487,7 +615,7 @@ body > header { view-transition-name: site-header; }
   padding: 0.4rem 0.6rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
 }
 .find-input {
   background: none;
@@ -514,7 +642,6 @@ body > header { view-transition-name: site-header; }
 .find-close:hover { color: #e0e0e0; }
 .find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
 .find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
-/* Flight log popover — global scope, appended to body. */
 /* Demo dialog — full-screen overlay for expanded demo view. */
 #demo-dialog {
   position: fixed;
@@ -649,4 +776,59 @@ time[data-mission]:focus {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* ── CRT power-off / power-on (home → experiment page) ─────────────────────
+   The home view collapses to a line, then a point; a white dot flashes and
+   the browser navigates. BaseLayout adds `crt-on` to <body> when the
+   destination loads with sessionStorage['univerlab-crt'] set. */
+.crt-view { transform-origin: 50% 40%; }
+.crt-view.off { animation: crt-off 0.55s cubic-bezier(0.6, 0, 0.9, 0.4) forwards; }
+.crt-view.on { animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+/* The destination page has no .crt-view wrapper — only the home does — so the
+   power-on plays on <body> itself: every page the bench opens lights up, not
+   just the ones that happen to wrap their content. The origin sits at the
+   viewport's 40% line (fresh load = scroll 0) where .crt-dot flashes. */
+body.crt-on { transform-origin: 50% 40vh;
+              animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+
+@keyframes crt-off {
+  0%   { transform: scale(1, 1); filter: brightness(1); }
+  45%  { transform: scale(1, 0.006); filter: brightness(3); }
+  80%  { transform: scale(0.004, 0.006); filter: brightness(6); }
+  100% { transform: scale(0, 0); filter: brightness(8); opacity: 0; }
+}
+
+@keyframes crt-on {
+  0%   { transform: scale(0, 0.006); filter: brightness(6); opacity: 1; }
+  35%  { transform: scale(1, 0.006); filter: brightness(3); }
+  100% { transform: scale(1, 1); filter: brightness(1); }
+}
+
+.crt-dot {
+  position: fixed; left: 50%; top: 40%; width: 6px; height: 6px; margin: -3px;
+  border-radius: 50%; background: #fff; box-shadow: 0 0 18px 6px #fff8;
+  opacity: 0; pointer-events: none; z-index: 20;
+}
+.crt-dot.flash { animation: crt-dot-flash 0.5s ease-out; }
+
+@keyframes crt-dot-flash {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.2); }
+}
+
+/* ── Page opening with engraved postcard ─────────────────────────────
+   Below 64rem the postcard sits above the h1, centred, max 22rem.
+   From 64rem up: two columns, text left, postcard right at ~42%. */
+.page-open { display: grid; gap: 1.5rem; align-items: start; }
+.page-open .page-open-text { text-align: left; min-width: 0; }
+.page-open .pc { justify-self: center; width: min(22rem, 100%); transform: rotate(-1.2deg); box-shadow: 0 10px 28px rgb(0 0 0 / .18); border-radius: 3px; }
+html[data-bench-theme='night'] .page-open .pc { box-shadow: 0 10px 28px rgb(0 0 0 / .45); }
+/* Below 64rem the postcard sits above the h1, centred. */
+@media (max-width: 63.99rem) {
+  .page-open .pc { order: -1; }
+}
+@media (min-width: 64rem) {
+  .page-open { grid-template-columns: 1fr 42%; gap: 3rem; }
+  .page-open .pc { width: 100%; justify-self: stretch; }
 }

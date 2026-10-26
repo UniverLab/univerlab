@@ -3,12 +3,20 @@ import Mark from './Mark.astro';
 import NameGloss from './NameGloss.astro';
 import {
   getLang,
+  hasCounterpart,
   useTranslations,
   localizePath,
   switchLangPath,
   languages,
 } from '../i18n';
-import { experiments, liveExperiments } from '../lib/experiments';
+import { experiments } from '../lib/experiments';
+import Mailbox from './Mailbox.astro';
+
+interface Props {
+  /** Only circadian pages honour the celestial disc; the rest never paint it. */
+  circadian?: boolean;
+}
+const { circadian = true } = Astro.props;
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -27,7 +35,7 @@ const isDocs = !!docExp;
 const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
-  { label: t.nav.experiments, exp: true } as { label: string; exp: boolean; href?: string },
+  { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
   { href: '/status/', label: t.nav.log }, // English-only page, no /es twin
   { href: localizePath('/contributors', lang), label: t.nav.people },
@@ -35,12 +43,16 @@ const nav = [
   { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';
-const toggleHref = switchLangPath(Astro.url, other);
+const toggleHref = hasCounterpart(path, other) ? switchLangPath(Astro.url, other) : localizePath('/', other);
 
 function isActive(href: string, current: string): boolean {
   if (href === '/' || href === '/es/') return current === href || current === href.replace(/\/$/, '');
   return current === href || current.startsWith(href);
 }
+
+// The Experiments entry is a plain link to the encyclopedia; it lights up on
+// the encyclopedia itself, on any experiment page and on experiment docs.
+const navActive = (item: any) => !item.ext && (isActive(item.href, path) || (item.exp && (onExperiment || isDocs)));
 
 // Wave strip along the bottom of the collapsed menu — several short signals
 // drifting at different speeds and phases, like overlapping traffic. Each is a
@@ -79,29 +91,13 @@ const signals = [
     </button>
     <nav id="site-nav">
       {nav.map((item) => (
-        (item as any).exp && !(item as any).href ? (
-          <div class="exp-wrap" id="exp-wrap">
-            <button
-              type="button"
-              class:list={['label', 'exp-trigger', { active: onExperiment }]}
-              aria-expanded="false"
-              aria-haspopup="true"
-              aria-controls="exp-panel"
-            >{item.label}<span class="exp-caret" aria-hidden="true"></span></button>
-            <div id="exp-panel" class="exp-panel" role="group" aria-label={t.nav.experiments}>
-              {liveExperiments.map((e) => (
-                <a href={localizePath('/' + e.id, lang)} class="exp-link label">{e.name}</a>
-              ))}
-            </div>
-          </div>
-        ) : (
         <a
           href={(item as any).href}
           target={(item as any).ext ? '_blank' : undefined}
           rel={(item as any).ext ? 'noopener noreferrer' : undefined}
-          class:list={['label', { active: !(item as any).ext && (isActive((item as any).href, path) || ((item as any).exp && onExperiment)), sponsor: (item as any).sponsor }]}
+          class:list={['label', { active: navActive(item as any), sponsor: (item as any).sponsor }]}
+          aria-current={navActive(item as any) ? 'page' : undefined}
         >{(item as any).sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
-        )
       ))}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
@@ -114,451 +110,112 @@ const signals = [
       </span>
     </nav>
   </div>
-  <hr class="rule" />
-  <button class="celestial-btn" type="button" aria-label="Today in science">
-    <span class="celestial" aria-hidden="true"></span>
-  </button>
+  <span class="sky-ruler" aria-hidden="true"><svg preserveAspectRatio="none"></svg></span>
+  {circadian && (
+    <button class="celestial-btn" type="button" aria-label={t.header.skyToNight} title={t.header.skyToNight} data-sky-to-night={t.header.skyToNight} data-sky-to-day={t.header.skyToDay}>
+      <span class="celestial" aria-hidden="true"></span>
+    </button>
+  )}
+  <Mailbox />
   <a
-    class="lang-corner"
+    class="peel"
     href={toggleHref}
     data-set-lang={other}
     hreflang={other}
-    aria-label={`Switch to ${languages[other]}`}
+    aria-label={`${t.header.switchTo} ${t.header.langLabel[other]}`}
     id="lang-corner"
-  ><span class="lang-corner-text">{languages[other]}</span></a>
+  ><span class="under"><span class="label"><span class="short">{languages[other]}</span><span class="long">{t.header.langLabel[other]}</span></span></span><span class="flap"></span></a>
 </header>
 
 <script>
-  // Persist an explicit language choice so the pre-paint detector honours it.
-  document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
-    a.addEventListener('click', () => {
-      try {
-        localStorage.setItem('univerlab-lang', a.dataset.setLang!);
-      } catch (e) {}
-    });
-  });
-
-  // Signal JS presence so collapsed CSS can switch from the no-JS in-flow
-  // list to the tap-only flyout. Without JS the experiments stay reachable
-  // as the indented list; :focus-within alone is not enough on touch.
-  document.documentElement.classList.add('js');
-
-  // Mobile nav: the burger toggles the collapsed menu open/closed, plus the
-  // Experiments dropdown (hover, click/focus, outside click, Escape, link).
-  const burger = document.querySelector<HTMLButtonElement>('.burger');
-  const siteNav = document.getElementById('site-nav');
-  if (burger && siteNav) {
-    const setOpen = (open: boolean) => {
-      siteNav.classList.toggle('open', open);
-      burger.setAttribute('aria-expanded', String(open));
-    };
-    burger.addEventListener('click', () =>
-      setOpen(burger.getAttribute('aria-expanded') !== 'true'),
-    );
-    // Close burger after following any link (includes experiment panel links).
-    siteNav.querySelectorAll('a').forEach((a) =>
-      a.addEventListener('click', () => setOpen(false)),
-    );
-
-    // Experiments dropdown
-    const expWrap = document.getElementById('exp-wrap');
-    const expTrigger = expWrap?.querySelector<HTMLButtonElement>('.exp-trigger');
-    const expPanel = document.getElementById('exp-panel');
-    const setExpOpen = (open: boolean) => {
-      if (!expWrap || !expTrigger) return;
-      expWrap.classList.toggle('open', open);
-      expTrigger.setAttribute('aria-expanded', String(open));
-    };
-    if (expTrigger && expWrap && expPanel) {
-      expTrigger.addEventListener('click', () =>
-        setExpOpen(expTrigger.getAttribute('aria-expanded') !== 'true'),
-      );
-      // Above the collapse breakpoint hover/focus/click all open the panel
-      // below the trigger. Below it (touch) only tap (click) opens the
-      // flyout — there is no hover on a touch screen.
-      const isDesktop = () => window.matchMedia('(min-width: 1025px)').matches;
-      expTrigger.addEventListener('focus', () => { if (isDesktop()) setExpOpen(true); });
-      expWrap.addEventListener('mouseenter', () => { if (isDesktop()) setExpOpen(true); });
-      expWrap.addEventListener('mouseleave', () => { if (isDesktop()) setExpOpen(false); });
-      expPanel.querySelectorAll('a').forEach((a) =>
-        a.addEventListener('click', () => setExpOpen(false)),
-      );
-      document.addEventListener('click', (e) => {
-        if (!expWrap.contains(e.target as Node)) setExpOpen(false);
-      });
-    }
-
-    // Single Escape handler for burger and experiments (reuses the burger listener).
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const wasExpOpen = expTrigger?.getAttribute('aria-expanded') === 'true';
-        setOpen(false);
-        setExpOpen(false);
-        if (wasExpOpen) expTrigger?.focus();
-      }
-    });
-  }
-</script>
-
-<script>
-  // Today in science — click the sun/moon for a historical science fact.
-  // Fetches Wikipedia's "On This Day" API in the page's language on click,
-  // with hardcoded sun/moon facts as fallback.
+  import { moonSVG } from '../lib/moon-svg';
+  // Engraved sky body — the sepia sun by day, the chalk moon at tonight's real
+  // phase by night, riding the hour ruler like the horizon. The circadian
+  // script already sets data-celestial; re-render on load and on every flip.
   (function () {
+    var SYNODIC = 29.530588853;
+    var EPOCH = Date.UTC(2000, 0, 6, 18, 14);
     var btn = document.querySelector('.celestial-btn');
-    if (!btn) return;
+    var mount = btn ? btn.querySelector('.celestial') : null;
+    var rulerSvg = document.querySelector('.sky-ruler svg');
+    if (!btn || !mount) { drawRuler(); return; }
 
-    var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+    function synodicPhase() {
+      var ph = (((Date.now() - EPOCH) / 86400000) % SYNODIC) / SYNODIC;
+      if (ph < 0) ph += 1;
+      return ph;
+    }
 
-    var SUN_FACTS = {
-      en: [
-        'The Sun holds 99.86% of the Solar System\u2019s mass \u2014 everything else is debris.',
-        'Sunlight takes 8 minutes to reach Earth, but a photon takes ~170,000 years to escape the Sun\u2019s core.',
-        'The Sun\u2019s core burns at 15 million \u00b0C \u2014 hot enough to fuse hydrogen into helium.',
-        'The Sun loses 4 million tons of mass every second through nuclear fusion.',
-        'The Sun\u2019s magnetic field flips every ~11 years, reversing north and south poles.',
-        'One million Earths could fit inside the Sun.',
-        'The Sun rotates faster at its equator (25 days) than at its poles (35 days) \u2014 it is not a solid body.',
-        'The Sun is a G2V yellow dwarf, yet brighter than 85% of the Milky Way\u2019s stars.',
-        'The Sun was born from a collapsing cloud of gas and dust 4.6 billion years ago.',
-        'Every second, the Sun converts 600 million tons of hydrogen into helium.',
-      ],
-      es: [
-        'El Sol concentra el 99.86% de la masa del Sistema Solar \u2014 todo lo dem\u00e1s es escombros.',
-        'La luz del Sol tarda 8 minutos en llegar a la Tierra, pero un fot\u00f3n tarda ~170.000 a\u00f1os en escapar del n\u00facleo solar.',
-        'El n\u00facleo del Sol arde a 15 millones de \u00b0C \u2014 suficiente para fusionar hidr\u00f3geno en helio.',
-        'El Sol pierde 4 millones de toneladas de masa por segundo mediante fusi\u00f3n nuclear.',
-        'El campo magn\u00e9tico del Sol se invierte cada ~11 a\u00f1os, intercambiando los polos norte y sur.',
-        'Caben un mill\u00f3n de Tierras dentro del Sol.',
-        'El Sol rota m\u00e1s r\u00e1pido en su ecuador (25 d\u00edas) que en sus polos (35 d\u00edas) \u2014 no es un cuerpo s\u00f3lido.',
-        'El Sol es una enana amarilla G2V, pero m\u00e1s brillante que el 85% de las estrellas de la V\u00eda L\u00e1ctea.',
-        'El Sol naci\u00f3 del colapso de una nube de gas y polvo hace 4.600 millones de a\u00f1os.',
-        'Cada segundo, el Sol convierte 600 millones de toneladas de hidr\u00f3geno en helio.',
-      ],
-    };
-
-    var MOON_FACTS = {
-      en: [
-        'The Moon drifts away from Earth at 3.8 cm per year \u2014 about the speed your fingernails grow.',
-        'The Moon is tidally locked \u2014 it always shows the same face to Earth.',
-        'Moonquakes can last for over an hour; the dry Moon has no water to dampen vibrations.',
-        'Lunar temperatures swing from -173 \u00b0C at night to 127 \u00b0C in daylight.',
-        'A lunar day \u2014 sunrise to sunrise \u2014 lasts 29.5 Earth days.',
-        'The Moon\u2019s gravity is 1/6 of Earth\u2019s \u2014 you\u2019d weigh six times less.',
-        'The Moon has an exosphere: a few atoms per cubic centimeter, not a true atmosphere.',
-        'The South Pole-Aitken Basin is the Moon\u2019s largest crater: 2,500 km wide, 13 km deep.',
-        'During Apollo 11, lunar dust smelled like spent gunpowder \u2014 a mystery still unexplained.',
-        'The Moon stabilizes Earth\u2019s axial tilt; without it, our seasons would swing chaotically.',
-      ],
-      es: [
-        'La Luna se aleja de la Tierra 3.8 cm por a\u00f1o \u2014 tan r\u00e1pido como crecen tus u\u00f1as.',
-        'La Luna est\u00e1 anclada por mareas \u2014 siempre muestra la misma cara a la Tierra.',
-        'Los sismos lunares pueden durar m\u00e1s de una hora; la Luna seca no tiene agua que amortig\u00fce las vibraciones.',
-        'Las temperaturas lunares oscilan entre -173 \u00b0C de noche y 127 \u00b0C de d\u00eda.',
-        'Un d\u00eda lunar \u2014 del amanecer al amanecer \u2014 dura 29.5 d\u00edas terrestres.',
-        'La gravedad de la Luna es 1/6 de la terrestre \u2014 pesar\u00edas seis veces menos.',
-        'La Luna tiene una exosfera: unos pocos \u00e1tomos por cent\u00edmetro c\u00fabico, no una atm\u00f3sfera real.',
-        'La cuenca Polo Sur-Aitken es el mayor cr\u00e1ter lunar: 2.500 km de ancho, 13 km de profundidad.',
-        'Durante el Apolo 11, el polvo lunar ol\u00eda a p\u00f3lvora gastada \u2014 un misterio a\u00fan sin explicar.',
-        'La Luna estabiliza la inclinaci\u00f3n axial de la Tierra; sin ella, las estaciones ser\u00edan ca\u00f3ticas.',
-      ],
-    };
-
-    // Science filter for Wikipedia "On This Day" events. Stems are matched with
-    // indexOf against the lowercased text, so 'physic' catches physics/physicist
-    // and 'descubr' catches descubri\u00f3/descubrimiento. We keep an event only when
-    // it mentions science AND mentions no war/politics/religion/sport term \u2014 that
-    // second list is what keeps battles and coronations out of the feed.
-    var SCIENCE_EN = [
-      'science', 'scientist', 'physic', 'chemist', 'chemistry', 'biolog',
-      'astronom', 'telescope', 'observatory', 'planet', 'comet', 'asteroid',
-      'spacecraft', 'satellite', 'rocket', 'orbit', 'space probe', 'astronaut',
-      'cosmonaut', 'galaxy', 'supernova', 'eclipse', 'nasa', 'space station',
-      'mathematic', 'theorem', 'invent', 'patent', 'discover', 'experiment',
-      'laborator', 'vaccine', 'antibiotic', 'medicine', 'surgery', 'genome',
-      'dna', 'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
-      'evolution', 'fossil', 'dinosaur', 'geolog', 'microscope', 'electricity',
-      'transistor', 'computer', 'internet', 'engineer', 'particle', 'x-ray',
-      'periodic table', 'nobel prize in physics', 'nobel prize in chemistry',
-      'nobel prize in physiology', 'naturalist', 'observation of',
-    ];
-    var SCIENCE_ES = [
-      'ciencia', 'cient\u00edfic', 'f\u00edsic', 'qu\u00edmic', 'biolog',
-      'astronom', 'telescopio', 'observatorio', 'planeta', 'cometa', 'asteroide',
-      'nave espacial', 'sat\u00e9lite', 'cohete', '\u00f3rbita', 'sonda',
-      'astronauta', 'cosmonauta', 'galaxia', 'supernova', 'eclipse',
-      'estaci\u00f3n espacial', 'matem\u00e1tic', 'teorema', 'invent', 'patente',
-      'descubr', 'experimento', 'laboratorio', 'vacuna', 'antibi\u00f3tic',
-      'medicina', 'cirug\u00eda', 'genoma', 'adn', '\u00e1tomo', 'reactor nuclear',
-      'electr\u00f3n', 'cu\u00e1ntic', 'relatividad', 'evoluci\u00f3n', 'f\u00f3sil',
-      'dinosaurio', 'geolog', 'microscopio', 'electricidad', 'transistor',
-      'computador', 'ordenador', 'internet', 'ingenier', 'part\u00edcula',
-      'rayos x', 'tabla peri\u00f3dica', 'naturalista', 'premio nobel de f\u00edsica',
-      'premio nobel de qu\u00edmica', 'premio nobel de medicina',
-    ];
-    // War, politics, religion and sport terms that veto an event even if it also
-    // trips a science word (e.g. "nuclear weapon" in a war, a royal coronation).
-    var POLITICS_EN = [
-      'war', 'battle', 'treaty', 'election', 'president', 'king', 'queen',
-      'emperor', 'monarch', 'parliament', 'congress', 'army', 'military',
-      'troops', 'invasion', 'coup', 'revolution', 'independence', 'empire',
-      'dynasty', 'siege', 'rebellion', 'riot', 'massacre', 'genocide',
-      'dictator', 'assassinat', 'weapon', 'bombing', 'pope', 'bishop',
-      'saint', 'church', 'politician', 'senator', 'governor', 'minister',
-      // Sport & entertainment (substrings chosen to avoid collisions like
-      // 'cup'→occupied, 'league'→colleague, 'sport'→transport).
-      'championship', 'tournament', 'olympic', 'football', 'soccer',
-      'basketball', 'baseball', 'tennis', 'cricket', 'rugby', 'hockey',
-      'boxing', 'marathon', 'fifa', 'world cup', 'stadium', 'goalkeeper',
-      'midfielder', 'striker', 'film festival', 'box office',
-    ];
-    var POLITICS_ES = [
-      'guerra', 'batalla', 'tratado', 'elecci\u00f3n', 'elecciones', 'presidente',
-      'rey', 'reina', 'emperador', 'monarca', 'parlamento', 'congreso',
-      'ej\u00e9rcito', 'militar', 'tropas', 'invasi\u00f3n', 'golpe de estado',
-      'revoluci\u00f3n', 'independencia', 'imperio', 'dinast\u00eda', 'asedio',
-      'rebeli\u00f3n', 'disturbio', 'masacre', 'genocidio', 'dictador',
-      'asesinat', 'arma', 'bombardeo', 'papa', 'obispo', 'santo', 'iglesia',
-      'político', 'política', 'senador', 'gobernador', 'ministro',
-      // Deporte y espect\u00e1culo. 'deportiv' cubre deportivo/deportiva; evito
-      // 'liga' (obliga), 'gol' (golfo) y 'copa' suelto por colisiones.
-      'campeonato', 'torneo', 'ol\u00edmpic', 'deportiv', 'f\u00fatbol', 'futbol',
-      'baloncesto', 'b\u00e9isbol', 'tenis', 'cr\u00edquet', 'boxeo', 'marat\u00f3n',
-      'fifa', 'mundial', 'copa del mundo', 'estadio', 'goleador',
-      'futbolista', 'delantero', 'festival de cine', 'taquilla',
-    ];
-
-    // anniv/inYear frame each fact as history ("On a day like today \u00b7 In 1929 \u00b7
-    // \u2026") rather than news. born/died are sentence prefixes folded into the
-    // fact itself so the kicker stays a neutral anniversary line.
-    var I18N = {
-      en: { anniv: 'On a day like today', inYear: 'In', born: 'Birth of ', died: 'Death of ', sun: 'Sun \u00b7 fact', moon: 'Moon \u00b7 fact', link: 'Read on Wikipedia \u2192', sol: 'Sol', orbit: 'Orbit' },
-      es: { anniv: 'Un d\u00eda como hoy', inYear: 'En', born: 'Nace ', died: 'Muere ', sun: 'Sol \u00b7 dato', moon: 'Luna \u00b7 dato', link: 'Ver en Wikipedia \u2192', sol: 'Sol', orbit: '\u00d3rbita' },
-    };
-
-    function showPopup(data) {
-      var existing = document.querySelector('.otd-popup');
-      if (existing) existing.remove();
-
-      var popup = document.createElement('div');
-      popup.className = 'otd-popup';
-
-      var html = '<button class="otd-close" type="button" aria-label="Close">\u00d7</button>';
-      var todayPath = lang === 'es' ? '/es/today/' : '/today/';
-      var kickerHtml = data.kicker;
-      if (lang === 'es') {
-        kickerHtml = kickerHtml.replace('hoy', '<a class="otd-kicker-link" href="' + todayPath + '">hoy</a>');
-      } else {
-        kickerHtml = kickerHtml.replace('today', '<a class="otd-kicker-link" href="' + todayPath + '">today</a>');
+    // Hour ruler: the 12 hours of the current phase (06-18 by day, 18-06 by
+    // night) engraved along the rule — hourly ticks 5px, quarters 2.5px at
+    // half opacity, the 06/12/18 (or 18/00/06) marks 9px.
+    function drawRuler() {
+      if (!rulerSvg) return;
+      var W = 1000;
+      var ticks = '<line x1="0" y1="12" x2="' + W + '" y2="12" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+      for (var m = 0; m <= 48; m++) {
+        var x = ((m / 48) * W).toFixed(1);
+        var hour = m % 4 === 0;
+        var six = m % 24 === 0;
+        var len = six ? 9 : hour ? 5 : 2.5;
+        ticks += '<line x1="' + x + '" y1="12" x2="' + x + '" y2="' + (12 - len) + '" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" opacity="' + (hour ? 0.9 : 0.5) + '"/>';
       }
-      html += '<div class="otd-kicker">' + kickerHtml + '</div>';
-      if (data.year) html += '<div class="otd-year">' + data.year + '</div>';
-      html += '<div class="otd-text">' + data.text + '</div>';
-      if (data.link) html += '<a class="otd-link" href="' + data.link + '" target="_blank" rel="noopener noreferrer">' + data.linkLabel + '</a>';
-      // The observer's place in time \u2014 ties the historical fact to the visitor's
-      // own present, the same instant seen at two scales.
-      if (data.observer) html += '<div class="otd-observer"><time datetime="' + data.observerIso + '" data-mission>' + data.observer + '</time></div>';
-
-      popup.innerHTML = html;
-
-      var rect = btn.getBoundingClientRect();
-      var popupWidth = Math.min(300, window.innerWidth - 24);
-      var left = rect.left + rect.width / 2 - popupWidth / 2;
-      left = Math.max(12, Math.min(left, window.innerWidth - popupWidth - 12));
-      var posY = rect.bottom + 8;
-
-      popup.style.position = 'fixed';
-      popup.style.top = posY + 'px';
-      popup.style.left = left + 'px';
-      popup.style.width = popupWidth + 'px';
-
-      document.body.appendChild(popup);
-
-      var close = function () { popup.remove(); };
-      popup.querySelector('.otd-close').addEventListener('click', close);
-
-      setTimeout(function () {
-        document.addEventListener('click', function outside(e) {
-          if (!popup.contains(e.target) && !btn.contains(e.target)) {
-            close();
-            document.removeEventListener('click', outside);
-          }
-        });
-        var scrollTimeout;
-        window.addEventListener('scroll', function onScroll() {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(function () {
-            close();
-            window.removeEventListener('scroll', onScroll);
-          }, 200);
-        }, { passive: true });
-      }, 300);
-
-      document.addEventListener('keydown', function esc(e) {
-        if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
-      });
+      rulerSvg.setAttribute('viewBox', '0 0 ' + W + ' 16');
+      rulerSvg.innerHTML = ticks;
     }
 
-    // ---- Cache: prefetch the day's science facts once, serve clicks instantly.
-    // The first Wikipedia call is slow (cold), and a single fetched fact would
-    // repeat all day. So we fetch the whole filtered pool in the background on
-    // load and keep it in localStorage for the day; each click then pulls a
-    // random one with no network wait. The cache is keyed to today + language
-    // and is rebuilt when it is missing, stale, or empty.
-    var CACHE_KEY = 'univerlab-otd';
-    var MAX_LEN = 200; // drop narrative-length entries (e.g. long match reports)
-
-    var keywords = lang === 'es' ? SCIENCE_ES : SCIENCE_EN;
-    var politics = lang === 'es' ? POLITICS_ES : POLITICS_EN;
-
-    function todayKey() {
-      var n = new Date();
-      return n.getFullYear() + '-' +
-        String(n.getMonth() + 1).padStart(2, '0') + '-' +
-        String(n.getDate()).padStart(2, '0');
-    }
-
-    function passes(e) {
-      var text = e.text || '';
-      if (!text || text.length > MAX_LEN) return false;
-      var low = text.toLowerCase();
-      var hasScience = keywords.some(function (k) { return low.indexOf(k) !== -1; });
-      var hasPolitics = politics.some(function (k) { return low.indexOf(k) !== -1; });
-      return hasScience && !hasPolitics;
-    }
-
-    // Turn one feed category into normalized, length-sorted pool entries.
-    function collect(list, kind, limit) {
-      var arr = (list || []).filter(passes).map(function (e) {
-        var link = '';
-        try { link = e.pages[0].content_urls.desktop.page; } catch (x) {}
-        return { year: String(e.year || '?'), text: e.text || '', link: link, kind: kind };
-      });
-      arr.sort(function (a, b) { return a.text.length - b.text.length; });
-      return limit ? arr.slice(0, limit) : arr;
-    }
-
-    // All filtered events (the day's real science) plus a handful of the
-    // shortest scientist births and deaths for variety.
-    function buildPool(data) {
-      return collect(data.events, 'event', 0)
-        .concat(collect(data.births, 'born', 6))
-        .concat(collect(data.deaths, 'died', 4));
-    }
-
-    function readCache() {
-      try {
-        var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-        if (!c || c.date !== todayKey() || c.lang !== lang || !c.items || !c.items.length) return null;
-        return c.items;
-      } catch (e) { return null; }
-    }
-
-    var fetching = false;
-    function fetchAndCache() {
-      if (fetching) return Promise.resolve(null);
-      fetching = true;
-      var now = new Date();
-      var mm = String(now.getMonth() + 1).padStart(2, '0');
-      var dd = String(now.getDate()).padStart(2, '0');
-      var url = 'https://' + lang + '.wikipedia.org/api/rest_v1/feed/onthisday/all/' + mm + '/' + dd;
-      return fetch(url, { headers: { Accept: 'application/json' } })
-        .then(function (res) { if (!res.ok) throw new Error('API ' + res.status); return res.json(); })
-        .then(function (data) {
-          var items = buildPool(data);
-          if (items.length) {
-            try {
-              localStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayKey(), lang: lang, items: items }));
-            } catch (e) {}
-          }
-          return items;
-        })
-        .finally(function () { fetching = false; });
-    }
-
-    // Warm the cache after the page is fully idle, off the critical path,
-    // if today's facts are not already stored. High timeout (5s) ensures
-    // this never competes with FCP/LCP or the canvas animation init.
-    if (!readCache()) {
-      var warm = function () { fetchAndCache().catch(function () {}); };
-      if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 5000 });
-      else setTimeout(warm, 4000);
-    }
-
-    function shuffle(a) {
-      a = a.slice();
-      for (var k = a.length - 1; k > 0; k--) {
-        var j = Math.floor(Math.random() * (k + 1));
-        var t = a[k]; a[k] = a[j]; a[j] = t;
-      }
-      return a;
-    }
-
-    // The visitor's position in Earth's current orbit, framed as a space-mission
-    // readout. Computed client-side (local date) so it is never stale, and
-    // leap-year aware (365/366). "Sol" borrows the mission term for a solar day.
-    function observerLine() {
-      var i = I18N[lang] || I18N.en;
-      var now = new Date();
-      var y = now.getFullYear();
-      var start = new Date(y, 0, 0);
-      var dayOfYear = Math.floor((now - start) / 86400000);
-      var total = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
-      var pct = (dayOfYear / total * 100).toFixed(1);
-      // Mission codename: identical in every locale, stamped with the year.
-      return 'TERRA ' + y + ' · ' + i.sol + ' ' + dayOfYear + ' · ' + i.orbit + ' ' + pct + '%';
-    }
-
-    function observerIso() {
-      var now = new Date();
-      return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    }
-
-    // Show order: events first (real history), each in a random order with no
-    // repeat, and only once every event is exhausted do births and deaths
-    // appear. When the whole queue drains it is rebuilt, restarting the cycle.
-    var queue = [];
-    var lastText = '';
-    function showFromPool(items) {
-      var i = I18N[lang] || I18N.en;
-      if (!queue.length) {
-        var events = items.filter(function (x) { return x.kind === 'event'; });
-        var extras = items.filter(function (x) { return x.kind !== 'event'; });
-        queue = shuffle(events).concat(shuffle(extras));
-      }
-      var it = queue.shift();
-      // Guard against showing the same fact twice across a queue rebuild.
-      if (it && it.text === lastText && queue.length) { queue.push(it); it = queue.shift(); }
-      lastText = it.text;
-      var prefix = it.kind === 'born' ? i.born : it.kind === 'died' ? i.died : '';
-      showPopup({
-        kicker: i.anniv,
-        year: i.inYear + ' ' + it.year,
-        text: prefix + it.text,
-        link: it.link,
-        linkLabel: i.link,
-        observer: observerLine(),
-        observerIso: observerIso(),
-      });
-    }
-
-    function showHardcoded() {
-      var i = I18N[lang] || I18N.en;
+    function renderCelestial() {
       var isMoon = document.documentElement.dataset.celestial === 'moon';
-      var facts = isMoon ? (MOON_FACTS[lang] || MOON_FACTS.en) : (SUN_FACTS[lang] || SUN_FACTS.en);
-      showPopup({
-        kicker: isMoon ? i.moon : i.sun,
-        year: '',
-        text: facts[Math.floor(Math.random() * facts.length)],
-        link: '',
-        linkLabel: '',
-        observer: observerLine(),
-        observerIso: observerIso(),
-      });
+      if (isMoon) {
+        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', 31);
+        // The moon is showing: the click will switch to the day theme.
+        btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
+        btn.setAttribute('title', btn.dataset.skyToDay || 'day');
+      } else {
+        mount.innerHTML = '<img src="/bench/identidad/sol.svg" alt="" width="34" height="34">';
+        // The sun is showing: the click will switch to the night theme.
+        btn.setAttribute('aria-label', btn.dataset.skyToNight || 'night');
+        btn.setAttribute('title', btn.dataset.skyToNight || 'night');
+      }
+      drawRuler();
     }
+
+    // A click switches the theme — letters live in the mailbox now. The sun
+    // switches to slate (night) and the moon to papyrus (day); the choice
+    // rides the palette's own key and function, so the two stay in sync.
+    // Choosing what the circadian clock shows right now drops the key and
+    // returns to circadian, so two clicks come back to the clock.
+    function toggleTheme() {
+      var root = document.documentElement;
+      var target = root.dataset.celestial === 'moon' ? 'day' : 'night';
+      try { localStorage.removeItem('univerlab-theme'); } catch (e) {}
+      if (window.calc) window.calc();
+      var clock = root.dataset.celestial === 'moon' ? 'night' : 'day';
+      if (clock === target) {
+        if (window.applyTheme) window.applyTheme('circadian');
+      } else {
+        try { localStorage.setItem('univerlab-theme', target); } catch (e) {}
+        if (window.applyTheme) window.applyTheme(target);
+        // Pages without the circadian script (no window.applyTheme — e.g.
+        // /texforge) still honour the click at once: window.calc is the site's
+        // own clock calc, exposed on every page, and it re-reads the key.
+        else if (window.calc) window.calc();
+      }
+      renderCelestial();
+    }
+
+    renderCelestial();
+    new MutationObserver(function (mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        if (mutations[i].attributeName === 'data-celestial') {
+          renderCelestial();
+          break;
+        }
+      }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-celestial'] });
 
     // Drag-to-scrub: hold and drag the celestial icon to preview time.
-    // Only active in circadian mode. Short click still shows a fact.
+    // Only active in circadian mode. A short click still switches the theme.
     var dragging = false;
     var startX = 0;
     var moved = false;
@@ -613,10 +270,7 @@ const signals = [
         return;
       }
       hideTip();
-      var items = readCache();
-      if (items) { showFromPool(items); return; }
-      showHardcoded();
-      fetchAndCache().catch(function () {});
+      toggleTheme();
     }
 
     btn.addEventListener('mousedown', onPointerDown);
@@ -625,18 +279,78 @@ const signals = [
     document.addEventListener('touchmove', onPointerMove, { passive: false });
     document.addEventListener('mouseup', onPointerUp);
     document.addEventListener('touchend', onPointerUp);
+    // Keyboard: Enter/Space on the focused body fires a click with detail 0.
+    btn.addEventListener('click', function (e) { if (!e.detail) toggleTheme(); });
   })();
 </script>
 
+<script>
+  // Persist an explicit language choice so the pre-paint detector honours it,
+  // and turn the page: the corner sweeps across the screen and the switch lands
+  // when the turn covers it. Reduced motion navigates at once.
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
+    a.addEventListener('click', (event) => {
+      try {
+        localStorage.setItem('univerlab-lang', a.dataset.setLang!);
+      } catch (e) {}
+      if (reduceMotion) return; // plain navigation
+      event.preventDefault();
+      if (a.dataset.turning) return; // a second Enter must not restart the turn
+      a.dataset.turning = 'true';
+      a.classList.add('turning');
+      setTimeout(() => location.assign(a.href), 550);
+    });
+  });
+
+  // Coming back from the other language (the browser's Back button) can restore
+  // this page from the bfcache with the turn still on: a sheet of paper across
+  // the whole screen and a link locked by data-turning. Put the corner back.
+  addEventListener('pageshow', () => {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-set-lang]').forEach((a) => {
+      a.classList.remove('turning');
+      delete a.dataset.turning;
+    });
+  });
+
+  // Mobile nav: the burger toggles the collapsed menu open/closed.
+  const burger = document.querySelector<HTMLButtonElement>('.burger');
+  const siteNav = document.getElementById('site-nav');
+  if (burger && siteNav) {
+    const setOpen = (open: boolean) => {
+      siteNav.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+    };
+    burger.addEventListener('click', () =>
+      setOpen(burger.getAttribute('aria-expanded') !== 'true'),
+    );
+    // Close burger after following any link.
+    siteNav.querySelectorAll('a').forEach((a) =>
+      a.addEventListener('click', () => setOpen(false)),
+    );
+
+    // Escape closes the menu.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  }
+</script>
+
 <style>
-  header { position: relative; }
+  /* The header owns the page-corner switch, which is fixed at the viewport's bottom
+     right: a stacking context of its own keeps it painted above the footer's ground
+     (a later sibling) while the footer's own popups still layer above it. */
+  header { position: relative; z-index: 1; }
   .bar {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding-block: 1.1rem;
+    /* No more hr.rule at the foot: the bar's own padding-bottom
+       carries the 1px so the header keeps the total height it had. */
+    padding-top: 1.1rem;
+    padding-bottom: calc(1.1rem + 1px);
   }
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {
@@ -649,38 +363,10 @@ const signals = [
   nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   nav a { text-decoration: none; color: #8a8d93; }
   nav a:hover, nav a.active { color: var(--ink); }
-  nav a.sponsor { color: var(--accent, #c9a227); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
   nav a.sponsor svg { display: block; }
   nav a.sponsor .heart-text { display: none; }
-  nav a.sponsor:hover { color: #f0d060; animation-play-state: paused; }
-
-  /* Experiments dropdown — desktop: overlay, mobile: flyout */
-  .exp-wrap { position: relative; display: inline-flex; align-items: center; }
-  .exp-trigger { background: none; border: 0; padding: 0; cursor: pointer; color: #8a8d93; }
-  .exp-trigger:hover, .exp-trigger:focus-visible, .exp-trigger.active, .exp-trigger[aria-expanded='true'] { color: var(--ink); }
-  .exp-caret::after { content: ' ▸'; display: inline-block; margin-left: 0.15em; font-size: 0.8em; line-height: 1; }
-  .exp-trigger[aria-expanded='true'] .exp-caret::after { content: ' ▾'; }
-  .exp-panel {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    min-width: 13rem;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.75rem 0.95rem;
-    padding-top: 0.7rem;
-    background: var(--menu-bg);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-    z-index: 30;
-  }
-  .exp-panel a { text-decoration: none; color: #8a8d93; text-transform: none; }
-  .exp-panel a:hover, .exp-panel a:focus-visible { color: var(--ink); }
-  .exp-wrap:hover .exp-panel,
-  .exp-wrap:focus-within .exp-panel,
-  .exp-wrap.open .exp-panel { display: flex; }
+  nav a.sponsor:hover { color: color-mix(in srgb, var(--accent, var(--bench-emphasis)) 75%, var(--bench-line)); animation-play-state: paused; }
 
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
@@ -692,56 +378,104 @@ const signals = [
   .lang { color: var(--ink-faint); }
   .lang:hover { color: var(--ink); }
 
-  /* Language corner — a folded page triangle in the top-right with the
-     language code centered inside. Simple, discoverable, no clutter. */
-  .lang-corner {
+  /* Language corner — the bottom-right corner of the page is turned up, showing the
+     page underneath in the other language; it lifts when approached and a click
+     turns the page across the screen before switching. */
+  .peel {
+    --s: 58px;
+    --next-paper: color-mix(in srgb, var(--bg) 82%, transparent);
+    --flap-a: color-mix(in srgb, var(--bg-raise) 92%, var(--ink) 8%);
+    --flap-b: var(--bg-raise);
+    --flap-c: color-mix(in srgb, var(--line) 80%, var(--ink) 20%);
+    /* The corner rides the page, never the hour: bench-tokens swaps
+       --bench-line for chalk in the night phase even on a fixed surface,
+       which put chalk on texforge's paper at midnight and ink on canopy's
+       abyss by day. Inside this box the bench line resolves to the page's
+       own ink — the text colour of this ground in both phases — so .label
+       and the focus ring keep reading var(--bench-line). */
+    --bench-line: var(--ink);
     position: fixed;
-    top: 0;
+    z-index: 45;
     right: 0;
-    z-index: 50;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 38px 38px 0;
-    border-color: transparent var(--accent, #c9a227) transparent transparent;
-    cursor: pointer;
+    bottom: 0;
+    width: var(--s);
+    height: var(--s);
+    display: block;
     text-decoration: none;
-    pointer-events: auto;
-    transition: border-width 0.15s ease;
+    margin: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) 0;
+    transition: width 0.28s cubic-bezier(0.3, 0.7, 0.3, 1), height 0.28s cubic-bezier(0.3, 0.7, 0.3, 1);
   }
-  .lang-corner:hover {
-    border-width: 0 32px 32px 0;
+  .peel:hover,
+  .peel:focus-visible { --s: 86px; }
+  .peel.turning {
+    --s: 160vmax;
+    transition-duration: 0.55s;
+    transition-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4);
   }
-  .lang-corner-text {
+  .peel .under {
     position: absolute;
-    top: 0px;
-    right: -35px;
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: #000;
-    pointer-events: none;
+    inset: 0;
+    background: var(--next-paper);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    box-shadow: inset 8px 8px 14px rgb(0 0 0 / 0.18);
+  }
+  .peel .label {
+    position: absolute;
+    right: 7px;
+    bottom: 6px;
+    font-family: var(--font-serif);
+    font-variant: small-caps;
+    text-transform: none; /* the site's .label uppercases; small caps need the real case */
+    letter-spacing: 0.1em;
+    font-size: 13px;
+    color: var(--bench-line);
     white-space: nowrap;
   }
+  .peel .long { display: none; }
+  .peel:hover .short,
+  .peel:focus-visible .short,
+  .peel.turning .short { display: none; }
+  .peel:hover .long,
+  .peel:focus-visible .long,
+  .peel.turning .long { display: inline; }
+  .peel .flap {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    background: linear-gradient(135deg, var(--flap-c) 0%, var(--flap-a) 18%, var(--flap-b) 48%, var(--flap-a) 72%, var(--flap-c) 100%);
+    filter: drop-shadow(-3px -3px 4px rgb(0 0 0 / 0.22));
+  }
+  .peel .flap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 46%, rgb(255 255 255 / 0.35) 50%, transparent 54%);
+  }
+  .peel:focus-visible { outline: 2px solid var(--bench-line); outline-offset: -4px; }
 
-  /* Sun by day, moon by night — a celestial body tracing the header rule like
-     the horizon. The button is a 28px hit area; the 8px celestial inside is the
-     visual. On circadian pages the script sets --sun-pos and --celestial-color;
-     on experiment pages the dot sits centered with the page's own accent. */
+  @media (prefers-reduced-motion: reduce) {
+    .peel { transition: none; }
+  }
+
+  /* Engraved sun by day, engraved moon at tonight's phase by night — the body
+     rides the hour ruler (the header's only line) like the horizon, centred
+     on its baseline. The button keeps a 44px hit area for touch while the
+     body is 34px; the track ends before the mailbox at the ruler's right
+     end, so the position is clamped off it. Fixed colours, never themed:
+     sepia sun, chalk moon. */
   .celestial-btn {
     position: absolute;
-    bottom: 0;
-    left: var(--sun-pos, 50%);
+    bottom: 4px;
+    left: clamp(22px, var(--sun-pos, 50%), calc(100% - 71px));
     transform: translate(-50%, 50%);
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     border: 0;
     padding: 0;
     background: transparent;
     cursor: pointer;
     z-index: 1;
-    transition: left 60s linear, opacity 0.4s ease;
+    transition: left 60s linear, opacity 0.4s ease, transform 0.2s ease;
     opacity: 1;
     pointer-events: auto;
   }
@@ -749,47 +483,56 @@ const signals = [
     transition: none;
     cursor: grabbing;
   }
-  .celestial-btn:hover .celestial {
-    transform: translate(-50%, -50%) scale(1.35);
+  .celestial-btn:hover {
+    transform: translate(-50%, 50%) scale(1.12);
   }
   .celestial {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 8px;
-    height: 8px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background: var(--celestial-color, var(--bg));
-    border: 1px solid var(--line);
-    box-shadow: none;
-    transition: transform 0.2s ease, background 0.4s ease, box-shadow 0.4s ease;
     pointer-events: none;
   }
-  /* Circadian pages: colored fill + glow, no border. */
-  html[data-circadian][data-celestial] .celestial {
-    border: 0;
+  /* The sun img and the moon svg are injected by the bundled script at
+     runtime (innerHTML), so they never carry the Astro scope attribute —
+     the descendant must be :global() or width/height and the fixed
+     drop-shadows silently never apply. */
+  .celestial :global(img),
+  .celestial :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
-  html[data-circadian][data-celestial='sun'] .celestial {
-    box-shadow: 0 0 14px 2px var(--celestial-color, transparent);
+  html[data-celestial='sun'] .celestial :global(img) {
+    filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
   }
-  /* Moon — the terminator is a second circle (pseudo-element) sliding across
-     the disc. The intersection of two equal circles gives a curved terminator,
-     like a real moon. New moon: shadow centred (covers all). Full: offset =
-     diameter (no overlap). Waxing lit right; waning lit left. */
-  html[data-circadian][data-celestial='moon'] .celestial {
-    background: var(--celestial-color, transparent);
-    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--celestial-color, transparent) var(--moon-glow, 50%), transparent);
-    border: 0;
-    overflow: hidden;
+  /* Low sun: dawn and dusk redden the engraved icon the way the ruler dot
+     already reddens, leaving the plain-day shadow above as the default. */
+  html[data-celestial='sun'][data-sunlow] .celestial :global(img) {
+    filter: sepia(1) saturate(3.4) hue-rotate(-24deg) brightness(0.97) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 7px rgb(191 52 23 / 0.35));
   }
-  html[data-circadian][data-celestial='moon'] .celestial::before {
-    content: '';
+  html[data-celestial='moon'] .celestial :global(svg) {
+    filter: drop-shadow(0 0 6px #ecebe455);
+  }
+  /* Hour ruler the sky body rides — the header's only line, spanning to the
+     mailbox at its right end. The 12 hours of the current phase are engraved
+     along it. It lives only here, never repeated in the page. */
+  .sky-ruler {
     position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: var(--bg);
-    transform: translateX(var(--moon-geometry-offset, 0));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+    color: var(--line);
+    pointer-events: none;
+  }
+  .sky-ruler svg {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   /* Hamburger button — hidden until the nav no longer fits comfortably. */
@@ -827,6 +570,9 @@ const signals = [
   .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
 
   @media (max-width: 1024px) {
+    /* The mailbox stands at the rule's right end and rises into the bar:
+       keep the burger and menu clear of it. */
+    .bar { padding-right: 56px; }
     .burger { display: inline-flex; }
     nav a.sponsor .heart-icon { display: none; }
     nav a.sponsor .heart-text { display: inline; }
@@ -849,83 +595,6 @@ const signals = [
       overflow: hidden;              /* clip the wave strip to the rounded card */
     }
     nav.open { display: flex; }
-    /* Collapsed experiments: flyout to the left of the menu card.
-       The card is already position:absolute against the header; the flyout
-       reuses that vocabulary one level in: exp-wrap is the anchor, exp-panel
-       is absolute with right:100% + gap, same background/border/radius/shadow
-       as the card, vertically aligned with the trigger row (top:0). */
-    .exp-wrap { width: 100%; flex-direction: column; align-items: flex-end; position: relative; }
-    .exp-trigger { text-align: right; }
-    /* No-JS fallback: indented in-flow list so experiments stay reachable
-       without a tap. With JS (html.js) the flyout takes over and is only
-       shown when .open is toggled via tap — :focus-within alone is not
-       enough on touch, so the in-flow style is the no-JS path. */
-    .exp-panel {
-      position: static;
-      background: transparent;
-      border: 0;
-      border-left: 1px solid var(--line);
-      box-shadow: none;
-      padding: 0.2rem 0 0 1rem;
-      min-width: 0;
-      gap: 0.7rem;
-      align-items: flex-end;
-      border-radius: 0;
-      display: none;
-    }
-    .exp-wrap:hover .exp-panel,
-    .exp-wrap:focus-within .exp-panel,
-    .exp-wrap.open .exp-panel { display: flex; }
-    /* With JS, convert to flyout anchored left of the card */
-    html.js nav { overflow: visible; }
-    html.js .nav-waves { border-radius: 0 0 12px 12px; overflow: hidden; }
-    html.js .exp-panel {
-      position: absolute;
-      top: 0;
-      right: calc(100% + 0.6rem);
-      left: auto;
-      min-width: 13rem;
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-      padding: 0.75rem 0.95rem;
-      gap: 0.45rem;
-      align-items: flex-start;
-      text-align: left;
-      border-left: 1px solid var(--line);
-      z-index: 31;
-    }
-    /* On touch there is no hover — only tap (click) opens the flyout.
-       Suppress the desktop hover/focus-within rule inside the collapsed menu
-       when JS is present; the click handler toggles .open instead. */
-    html.js .exp-wrap:hover .exp-panel,
-    html.js .exp-wrap:focus-within .exp-panel { display: none; }
-    html.js .exp-wrap.open .exp-panel { display: flex; }
-    .exp-panel a { text-transform: none; }
-    /* Viewport fallback: not enough room left of the card for the flyout.
-       Threshold: 520px — card is min 11rem (~176px) + panel min 13rem
-       (~208px) + gap 0.6rem + page padding ~2rem needs ~426px; below
-       ~520px there is not reliably enough room without clipping on phones
-       (360-430px) once scrollbars and safe-area insets are accounted for,
-       so we fall back to the in-flow indented list rather than overflowing. */
-    @media (max-width: 520px) {
-      html.js .exp-panel {
-        position: static;
-        right: auto;
-        left: auto;
-        background: transparent;
-        border: 0;
-        border-left: 1px solid var(--line);
-        box-shadow: none;
-        padding: 0.2rem 0 0 1rem;
-        min-width: 0;
-        gap: 0.7rem;
-        align-items: flex-end;
-        border-radius: 0;
-        text-align: right;
-      }
-    }
 
     /* Several short signals drift along the bottom of the open menu, each at its
        own speed — a faint P2P chatter. */
@@ -957,86 +626,3 @@ const signals = [
   }
 </style>
 
-<style is:global>
-  /* "Today in science" popup — a small card that drops from the sun/moon.
-     Appended to <body>, so it needs global scope. Uses the page's CSS vars
-     to blend with the circadian palette. */
-  .otd-popup {
-    position: fixed;
-    z-index: 100;
-    width: 300px;
-    max-width: calc(100vw - 24px);
-    background: var(--menu-bg);
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--accent);
-    padding: 1.1rem 1.2rem 1rem;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
-    animation: otd-in 0.18s ease;
-  }
-  @keyframes otd-in {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .otd-popup .otd-kicker {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: 0.6rem;
-  }
-  .otd-popup .otd-year {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    color: var(--accent);
-    margin-bottom: 0.5rem;
-    line-height: 1;
-  }
-  .otd-popup .otd-text {
-    font-family: var(--font-serif);
-    font-size: 0.92rem;
-    color: var(--ink-dim);
-    line-height: 1.6;
-    margin-bottom: 0.7rem;
-  }
-  .otd-popup .otd-link {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--accent);
-    text-decoration: none;
-    letter-spacing: 0.05em;
-  }
-  .otd-popup .otd-link:hover { text-decoration: underline; }
-  .otd-popup .otd-observer {
-    margin-top: 0.9rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid var(--line);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.01em;
-    color: var(--ink-faint);
-    white-space: nowrap;        /* keep the mission readout on one line */
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .otd-popup .otd-close {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.6rem;
-    border: 0;
-    background: none;
-    color: var(--ink-faint);
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.2rem 0.4rem;
-    line-height: 1;
-  }
-  .otd-popup .otd-close:hover { color: var(--ink); }
-  .otd-popup .otd-kicker-link {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s ease;
-  }
-  .otd-popup .otd-kicker-link:hover { border-bottom-color: var(--accent); }
-</style>

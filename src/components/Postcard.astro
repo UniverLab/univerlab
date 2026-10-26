@@ -1,0 +1,75 @@
+---
+interface Props {
+  page: 'api' | 'archive' | 'contributors' | 'experiments' | 'feed' | 'manifesto' | 'not-found' | 'roadmap' | 'status' | 'today';
+  alt: string;
+}
+const { page, alt } = Astro.props;
+const sizes = '(min-width: 64rem) 42vw, min(22rem, 100vw)';
+const desktop = (phase: 'day' | 'night', ext: 'avif' | 'webp') =>
+  `/bench/postcards/${page}-${phase}-1600.${ext} 1600w, /bench/postcards/${page}-${phase}-800.${ext} 800w`;
+---
+<picture class="pc pc-day" data-pc="day">
+  <source media="(max-width: 40rem)" srcset={`/bench/postcards/${page}-day-mobile.avif`} type="image/avif" />
+  <source media="(max-width: 40rem)" srcset={`/bench/postcards/${page}-day-mobile.webp`} type="image/webp" />
+  <source srcset={desktop('day', 'avif')} sizes={sizes} type="image/avif" />
+  <source srcset={desktop('day', 'webp')} sizes={sizes} type="image/webp" />
+  <img
+    src={`/bench/postcards/${page}-day-800.webp`}
+    alt={alt}
+    width="1600"
+    height="900"
+    decoding="async"
+    fetchpriority="high"
+  />
+</picture>
+<picture class="pc pc-night" data-pc="night">
+  <source media="(max-width: 40rem)" srcset={`/bench/postcards/${page}-night-mobile.avif`} type="image/avif" />
+  <source media="(max-width: 40rem)" srcset={`/bench/postcards/${page}-night-mobile.webp`} type="image/webp" />
+  <source srcset={desktop('night', 'avif')} sizes={sizes} type="image/avif" />
+  <source srcset={desktop('night', 'webp')} sizes={sizes} type="image/webp" />
+  <img
+    src={`/bench/postcards/${page}-night-800.webp`}
+    alt={alt}
+    width="1600"
+    height="900"
+    decoding="async"
+    loading="lazy"
+  />
+</picture>
+
+<!-- Only the picture matching the current phase is fetched eagerly: the day
+     card ships fetchpriority=high, the night card loading=lazy, and this swaps
+     them before paint with the same test the theme script in <head> uses. -->
+<script is:inline data-pc-swap>
+  (function () {
+    function eager(img) {
+      img.setAttribute('fetchpriority', 'high');
+      img.removeAttribute('loading');
+    }
+    function lazy(img) {
+      img.setAttribute('loading', 'lazy');
+      img.removeAttribute('fetchpriority');
+    }
+    function sync() {
+      var night = document.documentElement.dataset.benchTheme === 'night';
+      var day = document.querySelector('picture.pc-day > img');
+      var dark = document.querySelector('picture.pc-night > img');
+      if (day && dark) {
+        if (night) { lazy(day); eager(dark); }
+        else { lazy(dark); eager(day); }
+      }
+    }
+    sync();
+    window.addEventListener('univerlab:themechange', sync);
+  })();
+</script>
+
+<style>
+  .pc { display: block; margin: 0; }
+  .pc img { width: 100%; height: auto; aspect-ratio: 16 / 9; display: block; border-radius: 3px; }
+  html[data-bench-theme='night'] .pc-day { display: none; }
+  html:not([data-bench-theme='night']) .pc-night { display: none; }
+  @media (max-width: 40rem) {
+    .pc img { aspect-ratio: 720 / 900; }
+  }
+</style>

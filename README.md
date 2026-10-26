@@ -139,7 +139,7 @@ Commands are auto-generated from experiment IDs in `experiments.ts`.
 - **Esc** — close the palette
 
 Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`.
-Theme submenu: `/theme` → Light, Dark, Auto (circadian).
+Theme submenu: `/theme` → Circadian, Papyrus, Slate.
 Each experiment also gets a `/<id>` command (e.g. `/canopy`, `/texforge`).
 
 To add a new experiment command: add its ID to the `experimentIds` array in

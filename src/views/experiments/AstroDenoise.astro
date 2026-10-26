@@ -23,6 +23,26 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
   <a slot="cta-first" class="proposal btn" href={proposalUrl} target="_blank" rel="noopener noreferrer">{e.proposalCta}</a>
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
 
+  <section class="wrap section objectives">
+    <span class="label">{e.objectives.kicker}</span>
+    <h2>{e.objectives.thesisTitle}</h2>
+    <p class="olead">{e.objectives.general}</p>
+    <ol class="qs">
+      {e.objectives.items.map((o, i) => (
+        <li><span class="qno">{i + 1}</span><span class="ostate" class:list={[{ done: i === 0 }]}>{o.state}</span><span>{o.text}</span></li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="wrap section repos">
+    <span class="label">{e.repos.kicker}</span>
+    <ul class="qs">
+      {e.repos.items.map((r) => (
+        <li><a class="rname" href={r.url} target="_blank" rel="noopener noreferrer" translate="no">{r.name}</a><span>{r.description}</span></li>
+      ))}
+    </ul>
+  </section>
+
   <section class="wrap section">
     <span class="label">{e.questions.kicker}</span>
     <ul class="qs">
@@ -53,9 +73,17 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
       ))}
     </ul>
   </section>
+
+  <p class="bg-credit mono">{e.bgCredit}</p>
 </ExperimentLayout>
 
 <style>
+  .bg-credit {
+    margin: 0.6rem 0 0;
+    color: var(--ink-dim);
+    font-size: 0.72rem;
+  }
+
   .papers { color: var(--ink-faint); font-size: 0.8rem; }
   .proposal {
     display: inline-block; text-decoration: none;
@@ -68,6 +96,19 @@ const proposalUrl = 'https://papers.univerlab.org/astro-denoise/proposal.pdf';
   .qs { list-style: none; padding: 0; margin: 1.2rem 0 0; max-width: 40rem; }
   .qs li { display: flex; gap: 0.9rem; align-items: baseline; padding-block: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--astro-denoise) 20%, var(--line)); color: var(--ink-dim); }
   .qno { font-family: var(--font-mono); font-size: 0.78rem; color: var(--astro-denoise); flex: none; }
+  .objectives h2 { font-size: 1.5rem; margin: 0.5rem 0 0; max-width: 48rem; }
+  .olead { color: var(--ink); max-width: 48rem; margin: 1rem 0 0; line-height: 1.6; }
+  .ostate {
+    font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-dim); flex: none; min-width: 7.5rem;
+  }
+  .ostate.done { color: var(--astro-denoise); }
+  .rname { font-family: var(--font-mono); font-size: 0.85rem; color: var(--astro-denoise); text-decoration: none; flex: none; min-width: 16rem; }
+  .rname:hover { text-decoration: underline; }
+  @media (max-width: 40rem) {
+    .objectives .qs li, .repos .qs li { flex-direction: column; gap: 0.25rem; }
+    .ostate, .rname { min-width: 0; }
+  }
 
   /* Affiliation / data-source logos — a slow band, shown as they ship (the
      brand-manual versions are already made for a dark background). */

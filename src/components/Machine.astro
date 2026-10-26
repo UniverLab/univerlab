@@ -1,0 +1,83 @@
+---
+import { plate, srcsetFor, plateSizes, type MachineTheme } from '../lib/machines';
+
+interface Props {
+  id: string;
+  ink?: MachineTheme;
+  height?: string;
+  class?: string;
+}
+const { id, ink = 'night', height = '240px', class: className } = Astro.props;
+const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] : [ink];
+---
+<span class:list={['machine', className]} data-machine={ink} style={`--machine-h:${height}`}>
+  {inks.map((which) => {
+    const p = plate(id, which);
+    const sizes = plateSizes(p);
+    // A lone plate is the page's hero art: always eager. A theme pair ships
+    // day eager / night lazy like Postcard, and the swap script below corrects
+    // to the live phase on load and on univerlab:themechange.
+    const eager = inks.length === 1 || which === 'day';
+    return (
+      <picture class:list={['machine-pic', `machine-${which}`]}>
+        <source srcset={srcsetFor(id, which, 'avif')} sizes={sizes} type="image/avif" />
+        <source srcset={srcsetFor(id, which, 'webp')} sizes={sizes} type="image/webp" />
+        <img
+          src={`/bench/machines/${id}-${which}-450.webp`}
+          width={p.w}
+          height={p.h}
+          alt=""
+          decoding="async"
+          fetchpriority={eager ? 'high' : undefined}
+          loading={eager ? undefined : 'lazy'}
+        />
+      </picture>
+    );
+  })}
+</span>
+
+<!-- Only the picture matching the current phase is fetched eagerly: the day
+     plate ships fetchpriority=high, the night plate loading=lazy, and this swaps
+     them on the same signal the theme script in <head> uses. A single-ink
+     machine has no pair, so the sync below finds nothing and does nothing. -->
+<script is:inline data-machine-swap>
+  (function () {
+    function eager(img) {
+      img.setAttribute('fetchpriority', 'high');
+      img.removeAttribute('loading');
+    }
+    function lazy(img) {
+      img.setAttribute('loading', 'lazy');
+      img.removeAttribute('fetchpriority');
+    }
+    function sync() {
+      var night = document.documentElement.dataset.benchTheme === 'night';
+      var roots = document.querySelectorAll('span[data-machine="theme"]');
+      for (var i = 0; i < roots.length; i++) {
+        var day = roots[i].querySelector('picture.machine-day > img');
+        var dark = roots[i].querySelector('picture.machine-night > img');
+        if (day && dark) {
+          if (night) { lazy(day); eager(dark); }
+          else { lazy(dark); eager(day); }
+        }
+      }
+    }
+    sync();
+    window.addEventListener('univerlab:themechange', sync);
+  })();
+</script>
+
+<style>
+  /* Static (phone) the plate centres itself under the hero; absolutely
+     placed in a hero corner it shrinks to the plate either way. */
+  .machine { display: block; width: fit-content; margin-inline: auto; }
+  .machine-pic { display: block; margin: 0; }
+  .machine img { height: var(--machine-h); width: auto; display: block; }
+  @media (max-width: 39.999rem) {
+    .machine img { height: var(--machine-h-phone, 150px); }
+  }
+  /* The ink swap applies only to theme machines: a single-ink plate is the
+     page's only machine and stays visible in either phase. */
+  html[data-bench-theme='night'] .machine[data-machine='theme'] .machine-day { display: none; }
+  html:not([data-bench-theme='night']) .machine[data-machine='theme'] .machine-night { display: none; }
+</style>

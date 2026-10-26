@@ -52,7 +52,7 @@ function entryHead(date: string): string {
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
-  return `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
+  return `**${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
 }
 
 /** A `fetch` that answers one URL and records what it was called with. */
@@ -250,7 +250,7 @@ describe('entry ordering and filtering', () => {
     const md = entriesMarkdown(log, { limit: 2 });
     expect(md.split('\n')).toHaveLength(2);
     expect(md.startsWith(`- ${entryHead('2026-09-03T10:00:00Z')} · launch · general — **Same day, later id**`)).toBe(true);
-    expect(entriesMarkdown(log, { topic: 'quorum' })).toBe('Nothing in the Mission Log.');
+    expect(entriesMarkdown(log, { topic: 'quorum' })).toBe('Nothing in the logbook.');
     expect(entriesMarkdown(log, { topic: 'quorum', labels: { empty: '' } })).toBe('');
   });
 });

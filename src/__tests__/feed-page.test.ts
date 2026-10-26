@@ -92,7 +92,7 @@ describe('status page links to feed', () => {
     // link text is RSS (same word as feed page heading)
     expect(status).toMatch(/>RSS<\/a>/);
     // Spec 4 split: the feed link lives in the shared .board-head (header row
-    // spanning both columns), which now precedes the MISSION LOG col-label
+    // spanning both columns), which now precedes the LOGBOOK col-label
     // rather than sitting beside it in the old .log-head.
     const headEnd = status.indexOf('</header>');
     const feedIdx = status.indexOf('href="/feed');

@@ -3,9 +3,13 @@ import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
+import Machine from '../components/Machine.astro';
+import { machineInk } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
+import { citationTexts } from '../lib/citation';
+import { latestRelease } from '../lib/releases';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 
@@ -17,7 +21,6 @@ const t = useTranslations(lang);
 const hasHeroMark = Astro.slots.has('hero-mark');
 const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
-const statusLabel = t.status[exp.status];
 const surface = exp.surface;
 
 // Cyclical prev/next so you can browse experiments without going back home.
@@ -25,9 +28,9 @@ const idx = liveExperiments.findIndex((x) => x.id === id);
 const prevExp = liveExperiments[(idx - 1 + liveExperiments.length) % liveExperiments.length];
 const nextExp = liveExperiments[(idx + 1) % liveExperiments.length];
 
-// Format startDate as "TERRA YYYY · Sol NNN" for the genesis section.
+// Format startDate as "YYYY · Sol NNN" for the genesis section.
 const genesisDate = exp.startDate
-  ? `TERRA ${new Date(exp.startDate).getFullYear()} · ${startSolLabel(exp.startDate)}`
+  ? `${new Date(exp.startDate).getFullYear()} · ${startSolLabel(exp.startDate)}`
   : undefined;
 
 // Rich result: SoftwareApplication for CLI tools, WebApplication for hosted
@@ -37,6 +40,10 @@ const genesisDate = exp.startDate
 // instead of restating it (see src/lib/structured-data.ts).
 const site = Astro.site ?? new URL('https://univerlab.org');
 const pageUrl = new URL(Astro.url.pathname, site).href;
+// The cite block needs the same build-time release the plate shows (cached:
+// no second fetch); without one the APA line drops the Version part.
+const release = await latestRelease(exp.github);
+const cite = exp.citation ? citationTexts(exp.citation, release) : null;
 const baseSchema = experimentAppNode({ site, exp, tagline: e.tagline, pageUrl });
 
 // A landing page is a place in the site, not just a document: UniverLab ›
@@ -76,28 +83,17 @@ const structuredData: Record<string, unknown>[] = [baseSchema, breadcrumbSchema,
 // Per-experiment Open Graph card — generated at build time into public/og/.
 const ogImage = `/og/${id}.png`;
 ---
-<BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} bg={exp.bg} bgColor={exp.essenceHex} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette}>
+<BaseLayout title={e.title ?? `${exp.name} — UniverLab`} description={e.description ?? e.tagline} ogImage={ogImage} surface={surface} structuredData={structuredData} circadian={exp.circadian} circadianPalette={exp.circadianPalette} expId={id} fondo={exp.fondo ? id : undefined}>
   <div class="exp" style={`--essence: ${exp.essenceHex}`}>
-    <LabPlate id={id} />
-    {exp.builtWith.length > 0 && (
-      <p class="built-with">
-        {exp.builtWith.map((tool, i) => (
-          <>
-            {i > 0 && <span class="bw-sep"> · </span>}
-            {t.builtWithSegments[tool]}{' '}<a href={localizePath(`/${tool}`, lang)} translate="no">{byId(tool).name}</a>
-          </>
-        ))}
-      </p>
-    )}
+    <p class="lab-strip">
+      <a href={localizePath('/', lang)}>{t.labStrip.lab}</a>
+      <span>{exp.number}</span>
+    </p>
+    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
-      <p class="label num">{exp.number} · <span class="dot" data-status={exp.status}></span>{statusLabel}</p>
       {hasHeroMark && <slot name="hero-mark" />}
-      {/* The product name is stated twice on purpose (user decision
-          2026-09-28): this visible <h1> is the name/SEO copy in the name
-          position, and the ASCII banner below closes the hero as the
-          signature — right after the install bar, where it already sits. */}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
-      <p class="koan">{e.koan}</p>
+      <p class="koan">{e.koan}{id === 'quorum' && (<>{' · '}<a href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.experiments.quorum.bench}</a></>)}</p>
       <p class="lede prose" set:html={e.lede} />
       <p class="thread">{e.thread.problem} → {e.thread.method} → {e.thread.artifact}</p>
       {hasHeroVisual && <div class="hero-visual"><slot name="hero-visual" /></div>}
@@ -111,32 +107,38 @@ const ogImage = `/og/${id}.png`;
       </div>
       {exp.install && (
         <div class="install" data-install>
-          <div class="install-head">
-            <span class="label">{t.common.install}</span>
-            {exp.install.windows && (
-              <div class="os-tabs" role="tablist" aria-label="Platform">
-                <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
-                <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
+          {exp.install && (
+            <>
+              <div class="install-head">
+                <span class="label">{t.common.install}</span>
+                {exp.install.windows && (
+                  <div class="os-tabs" role="tablist" aria-label="Platform">
+                    <button type="button" class="os-tab" data-os="unix" aria-selected="true">macOS / Linux</button>
+                    <button type="button" class="os-tab" data-os="windows" aria-selected="false">Windows</button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div class="cmd" translate="no">
-            <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
-            {exp.install.windows && (
-              <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
-            )}
-            <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-              <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
-            </button>
-          </div>
+              <div class="cmd" translate="no">
+                <code class="cmd-line" data-os="unix">{exp.install.unix}</code>
+                {exp.install.windows && (
+                  <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
+                )}
+                <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
+                  <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+                </button>
+              </div>
+            </>
+          )}
+          <Banner id={id} color={exp.essenceHex} />
         </div>
       )}
-      {/* Banner LAST: the ASCII wordmark closes the hero, under the install /
-          entry bar (pages with no install command land here straight after the
-          CTA row). Renders nothing for an id with no art — `banners` covers
-          every shipped experiment except astro-denoise. */}
-      <Banner id={id} color={exp.essenceHex} />
     </section>
+    {exp.status !== 'archived' && (
+      <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
+    )}
+    </div>
+
+    <LabPlate id={id} />
 
     <slot name="before-genesis" />
 
@@ -162,6 +164,20 @@ const ogImage = `/og/${id}.png`;
     </div>
 
     <slot />
+
+    {cite && (
+      <section class="wrap cite-section" id="cite">
+        <span class="label">{t.common.cite}</span>
+        <h2>{t.common.citeTitle}</h2>
+        <p class="cite-apa">{cite.apa}</p>
+        <div class="cmd cite-cmd" data-cite translate="no">
+          <pre class="cite-bib"><code>{cite.bibtex}</code></pre>
+          <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
+            <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+          </button>
+        </div>
+      </section>
+    )}
 
     {e.faq && e.faq.length > 0 && (
       <section class="wrap faq-section" id="faq">
@@ -213,7 +229,28 @@ const ogImage = `/og/${id}.png`;
     to   { opacity: 1; }
   }
 
+  /* Lab strip — experiment pages only, first child of .exp. */
+  .lab-strip {
+    max-width: var(--max-w, 70rem);
+    margin: 0 auto;
+    padding-inline: var(--page-gutter);
+    height: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid color-mix(in srgb, var(--essence) 40%, transparent);
+  }
+  .lab-strip a { color: var(--ink-dim); text-decoration: none; }
+  .lab-strip a:hover { color: var(--essence); }
+
   /* Hero */
+  /* The machine is a sibling of the hero, not a child: the hero's view
+     transition name makes it an isolated group, and a blend inside it has no
+     page behind it to mix with. The frame is the machine's containing block. */
+  .hero-frame { position: relative; }
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .hero-visual { width: 100%; }
@@ -238,13 +275,15 @@ const ogImage = `/og/${id}.png`;
 
   .demo-col { display: flex; align-items: center; justify-content: center; }
 
-  .num { color: var(--essence); }
-  .dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--essence); vertical-align: middle; margin: -0.1rem 0.4rem 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--essence) 22%, transparent); }
-  .dot[data-status='beta'] { background: var(--ink-dim); box-shadow: none; }
-  .dot[data-status='research'] { background: var(--ink-faint); box-shadow: none; }
-  .koan { font-family: var(--font-serif); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
+  .exp-name { font-family: var(--font-serif); font-weight: 400; }
+  .koan { font-family: var(--font-body); font-style: italic; color: var(--essence); opacity: 0.85; margin: 0.4rem 0 0; }
+  /* Quorum's table link is the page's only route to the live table, so it wears
+     the page's ink (spec: "text link, page ink"), not the koan's essence gold:
+     #e6b24a on the day sand reads 1.6:1, the ink clears 4.5:1 in both themes.
+     Underline, hover and focus come from global a. */
+  .koan a { color: var(--ink); }
   :global(html[data-surface='observatory'] .koan) {
-    font-family: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif !important;
+    font-family: var(--font-serif);
     font-size: clamp(1.5rem, 3.6vw, 2.4rem);
     line-height: 1.15;
     color: #e8e6e1 !important;
@@ -267,17 +306,6 @@ const ogImage = `/og/${id}.png`;
   .lede { color: var(--ink-dim); font-size: 1.08rem; margin: 0; }
   /* The thread — one line under the hero lede, plate register, dim ink, tokens only. */
   .thread { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-dim); margin: 0; }
-  /* Built-with line — the plate area's second line: same mono register as .lab-plate,
-     own paragraph (the plate is one nowrap translate="no" line; this one translates). */
-  .built-with {
-    max-width: var(--max-w, 70rem); margin: 0.35rem auto 0;
-    padding-inline: var(--page-gutter);
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
-    color: var(--ink-dim);
-  }
-  .built-with .bw-sep { color: var(--ink-faint); }
-  .built-with a { color: var(--ink-dim); text-decoration-color: var(--line); }
-  .built-with a:hover { color: var(--essence); }
   :global(.exp .lede strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .lede code) { color: var(--essence); font-size: 0.9em; }
 
@@ -294,7 +322,30 @@ const ogImage = `/og/${id}.png`;
   .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
   .btn.ghost:hover { border-color: var(--essence); color: var(--essence); background: transparent; }
 
-  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; }
+  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; background: #16130f; color: #ecebe4; border-radius: 4px; font-family: var(--font-mono); padding: 0.9rem 1rem; }
+  .install .cmd { background: #0e0c09; border-color: #3a352d; }
+  .install .copy { border-left-color: #3a352d; }
+  .install .cmd-line { color: #ecebe4; }
+  /* The machine is an engraved plate with a transparent ground, already
+     inked for its surface: no recolouring, it shows as engraved. */
+  @media (min-width: 40rem) {
+    :global(.hero-machine) {
+      position: absolute;
+      right: var(--page-gutter);
+      bottom: 1.5rem;
+    }
+    /* The machine floats in the hero's lower right, under the install bench,
+       not over it: the hero keeps the room the machine needs at its foot. */
+    .hero-frame.has-machine { padding-bottom: calc(240px + 2.5rem); }
+  }
+  /* On phones the plate is static under the hero; Machine.astro centres it
+     (display: block, width: fit-content, margin-inline: auto). */
+  @media (max-width: 39.999rem) {
+    :global(.hero-machine) {
+      position: static;
+      margin-bottom: 1.5rem;
+    }
+  }
   .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .os-tabs { display: inline-flex; gap: 0.9rem; }
   .os-tab {
@@ -369,6 +420,12 @@ const ogImage = `/og/${id}.png`;
     color: var(--ink); margin: 0 0 0.5rem; letter-spacing: 0.01em;
   }
   .faq-a { margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.65; }
+
+  /* Cite section — same metrics as the FAQ section it precedes. */
+  .cite-section { padding-block: 3rem; max-width: 52rem; }
+  .cite-section h2 { font-size: 1.6rem; margin-block: 0.6rem 1.4rem; }
+  .cite-apa { margin: 0 0 1rem; color: var(--ink-dim); }
+  .cite-bib { flex: 1; margin: 0; padding: 0.7rem 0.9rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-dim); }
 
   /* ── paper (texforge) — Antimetal editorial overrides.
      The structure above is untouched: same hero, install bar, genesis, faq and
@@ -472,7 +529,6 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(active.textContent || '');
         copy.classList.add('done');
-        if ((window as any).flightLog) (window as any).flightLog.record(`copy-${id}`);
         setTimeout(() => copy.classList.remove('done'), 1600);
       } catch {
         // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
@@ -480,27 +536,19 @@ const ogImage = `/og/${id}.png`;
     });
   });
 
-  // Docs button click tracking
-  const docsLink = document.querySelector<HTMLAnchorElement>('[data-docs-link]');
-  if (docsLink) {
-    docsLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record(`docs-${id}`);
+  // Cite block: copy the BibTeX entry.
+  document.querySelectorAll<HTMLElement>('[data-cite]').forEach((box) => {
+    const pre = box.querySelector<HTMLElement>('.cite-bib');
+    const copy = box.querySelector<HTMLButtonElement>('.copy');
+    copy?.addEventListener('click', async () => {
+      if (!pre) return;
+      try {
+        await navigator.clipboard.writeText(pre.textContent || '');
+        copy.classList.add('done');
+        setTimeout(() => copy.classList.remove('done'), 1600);
+      } catch {
+        // Clipboard API unavailable or denied — leave the button untouched.
+      }
     });
-  }
-
-  // Astro Denoise proposal PDF download tracking
-  const proposalLink = document.querySelector<HTMLAnchorElement>('.proposal');
-  if (proposalLink) {
-    proposalLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record('astro-denoise-pdf');
-    });
-  }
-
-  // Quorum launch app button tracking
-  const launchLink = document.querySelector<HTMLAnchorElement>('.launch');
-  if (launchLink) {
-    launchLink.addEventListener('click', () => {
-      if ((window as any).flightLog) (window as any).flightLog.record('quorum-launch');
-    });
-  }
+  });
 </script>

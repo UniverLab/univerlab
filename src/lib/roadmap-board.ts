@@ -1,4 +1,5 @@
 import { solDayOfYear } from './mission-time';
+import { activeRoadmap, laneRows, LANE_ORDER, topicOf, type RoadmapItem } from './lab-feed';
 
 export interface EntriesSummary {
   count: number;
@@ -78,4 +79,69 @@ export function landedText(tpl: string, shippedAt: string): string {
 
 export function moreText(tpl: string, n: number): string {
   return formatTemplate(tpl, { n });
+}
+
+function escHtml(v: unknown): string {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export interface RoadmapHtmlLabels {
+  lanes?: Partial<Record<string, string>>;
+  hold?: string;
+  landed?: string;
+  entriesMeta?: string;
+  entriesMetaOne?: string;
+}
+
+export function roadmapLanesHtml(items: any, labels?: RoadmapHtmlLabels | any): string {
+  const L = labels || {};
+  const lanesMap = (L && L.lanes) ? L.lanes : L;
+  const laneName = (lane: string): string => {
+    if (lanesMap && lanesMap[lane]) return String(lanesMap[lane]);
+    return lane.charAt(0).toUpperCase() + lane.slice(1);
+  };
+  const active = activeRoadmap(Array.isArray(items) ? items : []);
+  let out = '';
+  for (const lane of LANE_ORDER) {
+    const rows = laneRows(active as any, lane as any) as any[];
+    if (!rows.length) continue;
+    out += `<section class="rm-seg" data-lane="${escHtml(lane)}" aria-labelledby="lane-${escHtml(lane)}">`;
+    out += `<h2 id="lane-${escHtml(lane)}">${escHtml(laneName(lane))} <span class="rm-count">${rows.length}</span></h2>`;
+    for (const item of rows) {
+      const id = item.id;
+      out += `<article class="rm-card" data-roadmap-id="${escHtml(id)}">`;
+      out += `<h3 class="rm-title">${escHtml(item.title)}</h3>`;
+      if (item.summary != null && String(item.summary).trim() !== '') {
+        out += `<p class="rm-summary">${escHtml(item.summary)}</p>`;
+      }
+      const topic = topicOf(item.topic);
+      let meta = `<span class="rm-topic">${escHtml(topic)}</span>`;
+      if (shouldShowEntriesMeta(item.entries)) {
+        const e = item.entries;
+        const text = entriesMetaText(
+          (L && L.entriesMetaOne) || '1 log entry · last Sol {sol}',
+          (L && L.entriesMeta) || '{n} log entries · last Sol {sol}',
+          e.count,
+          e.last_date,
+        );
+        meta += ` <a href="/status/?roadmap=${escHtml(id)}" class="rm-entries">${escHtml(text)}</a>`;
+      }
+      if (item.state === 'done' && item.shipped_at) {
+        const text = landedText((L && L.landed) || 'landed Sol {sol}', item.shipped_at);
+        meta += ` <time class="rm-landed" datetime="${escHtml(item.shipped_at)}">${escHtml(text)}</time>`;
+      }
+      out += `<div class="rm-meta">${meta}</div>`;
+      if (item.blocked_reason) {
+        out += `<div class="rm-hold">${escHtml((L && L.hold) || 'hold')}: ${escHtml(item.blocked_reason)}</div>`;
+      }
+      out += `</article>`;
+    }
+    out += `</section>`;
+  }
+  return out;
 }

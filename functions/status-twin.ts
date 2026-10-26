@@ -55,7 +55,7 @@ interface Headings {
   /** Front-matter title — the HTML page's own `<title>`, so the live twin, the
    *  static twin an outage falls back to, and the page all agree. */
   title: string;
-  /** Section labels: the status page hardcodes ROADMAP / MISSION LOG in both
+  /** Section labels: the status page hardcodes ROADMAP / LOGBOOK in both
    *  languages, and there is no Spanish status page to take copy from. */
   roadmap: string;
   missionLog: string;
@@ -68,9 +68,9 @@ interface Headings {
 
 const HEADINGS: Record<Lang, Headings> = {
   en: {
-    title: 'Mission Log — live status of every UniverLab experiment',
+    title: 'Logbook — live status of every UniverLab experiment',
     roadmap: 'Roadmap',
-    missionLog: 'Mission Log',
+    missionLog: 'Logbook',
     hold: en.roadmap.hold,
     lanes: en.roadmap.lanes,
     live:
@@ -78,9 +78,9 @@ const HEADINGS: Record<Lang, Headings> = {
       `the same data is published as an Atom feed at ${FEED_URL}.`,
   },
   es: {
-    title: 'Mission Log — estado en vivo de cada experimento de UniverLab',
+    title: 'Cuaderno de bitácora — estado en vivo de cada experimento de UniverLab',
     roadmap: 'Roadmap',
-    missionLog: 'Mission Log',
+    missionLog: 'Cuaderno de bitácora',
     hold: es.roadmap.hold,
     lanes: es.roadmap.lanes,
     live:

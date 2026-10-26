@@ -1,15 +1,29 @@
 ---
 import Mark from './Mark.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
-import { byId } from '../lib/experiments';
+import { byId, type ExperimentId } from '../lib/experiments';
+import { BRAILLE_SENTENCE, toBraille } from '../lib/braille';
+
+interface Props {
+  /** Experiment pages: the id whose name opens the forged colophon line. */
+  expId?: ExperimentId;
+}
+const { expId } = Astro.props;
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
+// The forged line only exists on experiment pages — other routes render the
+// footer without it.
+const forged = expId ? byId(expId) : null;
+// One faint line of braille under the UNIVERLAB word, the same sentence in
+// both languages.
+const brailleCells = toBraille(BRAILLE_SENTENCE);
 
 const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
 const footNav = [
-  { href: localizePath('/', lang) + '#experiments', label: t.nav.experiments },
+  { href: localizePath('/experiments', lang), label: t.nav.experiments },
   { href: localizePath('/archive', lang), label: t.nav.archive },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
+  { href: '/roadmap/', label: t.nav.roadmap },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: localizePath('/api', lang), label: t.nav.api },
   { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
@@ -17,9 +31,12 @@ const footNav = [
 ];
 ---
 <footer>
-  <div class="flight-bar" role="button" tabindex="0" aria-label="Flight log">
-    <div class="flight-fill"></div>
-  </div>
+  <!-- The engraved frieze: decorative band across the top of the footer,
+       sinking into the ink before the text (Quorum's colophon band). -->
+  <picture class="colophon-band" aria-hidden="true">
+    <source type="image/avif" srcset="/bench/colophon/frieze-960.avif 960w, /bench/colophon/frieze-1920.avif 1920w" sizes="100vw">
+    <img src="/bench/colophon/frieze-1920.webp" srcset="/bench/colophon/frieze-960.webp 960w, /bench/colophon/frieze-1920.webp 1920w" sizes="100vw" width="1920" height="608" alt="" loading="lazy" decoding="async">
+  </picture>
   <div class="wrap inner">
     <div class="left">
       <!-- Quiet click target: the mark links to this site's own repository. No
@@ -48,7 +65,17 @@ const footNav = [
     {t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a>
   </p>
   <div class="wrap base">
-    <span class="word" translate="no">UNIVERLAB</span>
+    <div class="word-block">
+      <span class="word" translate="no">UNIVERLAB</span>
+      <!-- Braille easter egg (user, 2026-10-21): one faint line of real grade-1
+           cells, the same sentence in every language, never translated and
+           never reacting. The element carries role="img" + aria-label so a
+           screen reader speaks the sentence; the glyph text itself is hidden
+           so it isn't read letter by letter. -->
+      <span class="braille" role="img" aria-label={BRAILLE_SENTENCE}>
+        <span aria-hidden="true">{brailleCells}</span>
+      </span>
+    </div>
     <span class="meta">
       <button
         type="button"
@@ -70,7 +97,16 @@ Date:   now
     observing itself</pre>
     </div>
   </div>
-  <p class="wrap privacy">no external tracking. flight log and theme preferences stay in your browser's local storage.</p>
+  {forged && (
+    <p class="wrap forged">
+      <span class="forged-name" translate="no">{forged.name}</span>
+      <span class="sep">{' · '}</span>{t.footer.forged}
+    </p>
+  )}
+  <div class="wrap colophon-credits">
+    <img src="/bench/colophon/sello-lacre.svg" width="28" height="28" alt="" aria-hidden="true">
+    <p class="privacy">{t.footer.privacy}</p>
+  </div>
 </footer>
 
 <style>
@@ -85,6 +121,7 @@ Date:   now
     --f-ink-dim: #8a8d93;
     --f-ink-faint: #4a4d53;
     --f-line: #1a1a1a;
+    position: relative;
     background: var(--f-bg);
     color: var(--f-ink);
     margin-top: 2rem;
@@ -92,22 +129,48 @@ Date:   now
   footer :global(svg) { color: var(--f-ink-faint); }
   footer :focus-visible { outline-color: var(--f-ink); }
 
+  /* The engraved machinery frieze (Quorum's colophon band): absolutely over
+     the dark ink at the very top of the footer, sinking into it through a
+     mask so the text below never competes with it. Aria-hidden and lazy —
+     the fixed width/height keep it from shifting layout. */
+  .colophon-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 16rem;
+    -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 90%);
+    mask-image: linear-gradient(180deg, #000 30%, transparent 90%);
+  }
+  .colophon-band img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 45%;
+  }
+
   .inner {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 2.5rem;
     flex-wrap: wrap;
-    padding-block: 2.6rem 2rem;
+    /* 12rem of headroom clear the 16rem band's densest third; the mask starts
+       fading before the first line of content. */
+    padding-block: 12rem 2rem;
   }
   .left { display: flex; gap: 1rem; align-items: flex-start; max-width: 34rem; }
   /* No hover, no underline — a quiet, discoverable click target. */
   .mark-link { display: inline-flex; line-height: 0; flex: none; }
   .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: 0.95rem; line-height: 1.55; }
-  .foot-nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; height: 1.5rem; }
+  /* Nav links in the colophon face (Quorum's rule: serif links, mono labels);
+     every target keeps a 32px tap reach on touch screens. */
+  .foot-nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
   .foot-nav a {
     text-decoration: none; color: var(--f-ink-dim);
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    font-family: var(--font-serif); font-size: 1.05rem;
+    display: inline-flex; align-items: center; min-height: 32px;
     transition: color 0.15s ease;
   }
   .foot-nav a:hover { color: var(--f-ink); }
@@ -138,9 +201,21 @@ Date:   now
     border-top: 1px solid var(--f-line);
   }
   .word { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.32em; color: var(--f-ink-dim); }
+  /* The braille easter egg sits quietly under the word: no hover, no
+     translation, just plain grade-1 cells at a faint opacity. The font stack
+     is chosen only for having braille glyphs. */
+  .word-block { display: flex; flex-direction: column; gap: 0.45rem; }
+  .braille {
+    opacity: 0.45;
+    font-family: "DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--f-ink-dim);
+    line-height: 1;
+  }
   /* The site's own built-with — one line above the base rule, footer's dark palette. */
   .lab-built {
-    margin: 0; padding-block: 0 1.6rem;
+    margin-block: 0; padding-block: 0 1.6rem;
     font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
     color: var(--f-ink-dim);
   }
@@ -184,132 +259,43 @@ Date:   now
   }
 
   @media (max-width: 40rem) {
-    .inner { flex-direction: column; gap: 1.6rem; }
-    .foot-nav { height: auto; gap: 1.2rem; }
+    .inner { flex-direction: column; gap: 1.6rem; padding-top: 9rem; }
+    .foot-nav { gap: 1.2rem; }
+    footer { padding-bottom: 4.5rem; }
   }
+  /* The page-corner language switch sits at the bottom right at every width; the
+     branch button shares that line, so the base keeps it clear of the fold. */
+  .base { padding-bottom: 4.5rem; }
+  /* The forged colophon line — experiment pages only: the artifact's name in
+     the mono face, then the dictionary line. One line above the credits rule. */
+  .forged {
+    margin-block: 0; padding-bottom: 0.9rem;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    color: var(--f-ink-dim); text-align: center;
+  }
+  .forged-name { font-family: var(--font-mono); }
+  .forged .sep { color: var(--f-ink-faint); }
+
+  /* Quorum's colophon credits: the garnet seal ahead of the privacy line,
+     below a 25% currentColor rule. */
+  .colophon-credits {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1.2rem 0 1.4rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  }
+  .colophon-credits img { flex: none; }
   .privacy {
-    margin: 0; padding-block: 1rem 1.4rem;
-    max-width: none;
+    margin: 0;
     font-family: var(--font-mono); font-size: 0.65rem;
     letter-spacing: 0.12em;
     color: var(--f-ink-faint); text-align: center;
   }
 
-  /* Flight bar — replaces the border-top as the body/footer separator.
-     2px line that fills left→right as the session progresses. */
-  .flight-bar {
-    position: relative;
-    height: 2px;
-    background: var(--f-line);
-    cursor: pointer;
-  }
-  .flight-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--essence, var(--accent, #c9a227));
-    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  }
   @media (prefers-reduced-motion: reduce) {
     .foot-nav a.sponsor { animation: none !important; }
-  }
-</style>
-
-<style is:global>
-  /* Flight log — terminal-style dialog matching the command palette.
-     Must be global because the dialog is appended to <body>. */
-  .flight-log {
-    position: fixed;
-    inset: 0;
-    z-index: 300;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 18vh;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(6px);
-    animation: flog-in 0.18s ease;
-  }
-  @keyframes flog-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .flight-log-box {
-    width: 28rem;
-    max-width: 92vw;
-    background: rgba(18, 18, 22, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
-    overflow: hidden;
-    font-family: 'IBM Plex Mono', monospace;
-    max-height: 60vh;
-    display: flex;
-    flex-direction: column;
-  }
-  .flight-log-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    flex: none;
-  }
-  .flight-log-title {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.7rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  .flight-log-close {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.25);
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.2rem 0.4rem;
-    line-height: 1;
-  }
-  .flight-log-close:hover { color: #e0e0e0; }
-  .flight-log-entries {
-    list-style: none;
-    margin: 0;
-    padding: 0.4rem 0;
-    overflow-y: auto;
-    flex: 1;
-    min-height: 0;
-  }
-  .flight-log-entries::-webkit-scrollbar { width: 3px; }
-  .flight-log-entries::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-  .flight-entry {
-    padding: 0.4rem 1rem;
-    font-size: 0.72rem;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.35);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  }
-  .flight-entry-new {
-    color: #e0e0e0;
-    background: rgba(255, 255, 255, 0.03);
-  }
-  .flight-sol { color: var(--accent, #c9a227); }
-  .flight-ts { color: rgba(255, 255, 255, 0.2); }
-  .flight-entry-new .flight-ts { color: rgba(255, 255, 255, 0.4); }
-  .flight-sep { color: rgba(255, 255, 255, 0.1); margin: 0 0.3rem; }
-  .flight-msg { color: rgba(255, 255, 255, 0.5); }
-  .flight-entry-new .flight-msg { color: #e0e0e0; }
-  .flight-log-empty {
-    padding: 1.5rem 1rem;
-    color: rgba(255, 255, 255, 0.2);
-    font-size: 0.7rem;
-    text-align: center;
-  }
-  .flight-log-footer {
-    padding: 0.5rem 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 0.58rem;
-    color: rgba(255, 255, 255, 0.15);
-    letter-spacing: 0.06em;
-    flex: none;
   }
 </style>
 
@@ -326,21 +312,12 @@ Date:   now
     branch.addEventListener('click', (e) => {
       e.stopPropagation();
       setOpen(branch.getAttribute('aria-expanded') !== 'true');
-      if ((window as any).missionLog) (window as any).missionLog.discover('footer-commit');
     });
     document.addEventListener('click', (e) => {
       if (!panel.hidden && !panel.contains(e.target as Node) && e.target !== branch) setOpen(false);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setOpen(false);
-    });
-  }
-
-  // Footer logo — hidden click target to the site repo.
-  const markLink = document.querySelector<HTMLAnchorElement>('.mark-link');
-  if (markLink) {
-    markLink.addEventListener('click', () => {
-      if ((window as any).missionLog) (window as any).missionLog.discover('footer-logo');
     });
   }
 </script>

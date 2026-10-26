@@ -2,29 +2,26 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import EssenceTokens from '../components/EssenceTokens.astro';
-import ThemeBackground from '../components/ThemeBackground.astro';
+import LiveBackground from '../components/LiveBackground.astro';
 import GhostHint from '../components/GhostHint.astro';
-import type { BgTheme } from '../lib/experiments';
+import type { ExperimentId } from '../lib/experiments';
 import { buildSiteAbout } from '../lib/site-about';
 import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '../lib/origin-trial';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, hasCounterpart, localizePath, useTranslations } from '../i18n';
 import { organizationNode } from '../lib/structured-data';
 import '../styles/global.css';
 import '../styles/surfaces.css';
+import '../styles/bench-tokens.css';
 
 interface Props {
   title: string;
   description?: string;
-  bg?: BgTheme;
-  bgColor?: string;
   /** Per-page Open Graph image URL (e.g. '/og/texforge.png').  Falls back to
    *  '/og.png' when omitted — the site-wide default for home, docs, and
    *  experiment pages that don't supply their own card. */
   ogImage?: string;
   /** Core pages: shift the palette progressively with the time of day. */
   circadian?: boolean;
-  /** Docs: render the background animation in a neutral grey, not the accent. */
-  mutedCanvas?: boolean;
   /** Experiment pages: a fixed visual surface (paper, tui, blueprint, …). */
   surface?: string;
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
@@ -46,6 +43,11 @@ interface Props {
   /** The page builds an `index.html` and therefore has a markdown twin.
    *  `false` only for pages whose output is not `index.html` (404). */
   markdownTwin?: boolean;
+  /** Experiment pages: the footer opens its forged colophon line with this
+   *  experiment's name. Omitted everywhere else. */
+  expId?: ExperimentId;
+  /** Opt into the cursor-driven engraved background runtime. */
+  fondo?: ExperimentId;
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
@@ -55,11 +57,8 @@ const t = useTranslations(lang);
 const {
   title,
   description = t.meta.description,
-  bg = 'cosmic',
-  bgColor,
   ogImage: ogImageProp,
   circadian = false,
-  mutedCanvas = false,
   surface,
   structuredData,
   jsonLdGraph,
@@ -68,28 +67,18 @@ const {
   circadianPalette,
   noindex = false,
   markdownTwin = true,
+  expId,
+  fondo,
 } = Astro.props;
-const canvasColor = circadian ? (mutedCanvas ? 'auto-mute' : 'auto') : bgColor;
-// Surfaces that drop the ambient canvas: blueprint (cadspec's clean plan —
-// calm and geometric; its cursor reaction is the CSS grid parallax alone). Paper
-// mounts one too, but its own quiet motif — see backgrounds.ts, which picks it
-// for `data-surface="paper"` instead of the experiment's BgTheme. ghscaff
-// (scaffold) keeps its live drawing. studio keeps its canvas: DemoStage's takes
-// runner records and replays the cursor (R13) — the generic drift motes, not the
-// stage itself, were why it used to be dropped.
-const stillSurface = ['blueprint'].includes(surface ?? '');
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
-// Only request the font families a given surface actually uses. Every page
-// needs Inter (body) + the mono signature; `paper` sets its display face in
-// the system serif stack (no webfont — see surfaces.css), so it pushes nothing
-// extra; the grotesque surfaces add Space Grotesk; terminal surfaces
-// (tui/canopy) and the core pages need nothing more. This keeps unused webfonts
-// off the page entirely.
-const fontFamilies = ['IBM+Plex+Mono:wght@400;500', 'Inter:wght@400;500;600'];
-if (['industrial', 'pastel', 'blueprint', 'observatory', 'studio', 'quorum'].includes(surface ?? '')) {
-  fontFamilies.push('Space+Grotesk:wght@300;400;500;600');
-}
+// The three lab typefaces, on every page: Old Standard TT (titles), EB Garamond
+// (long text), Sometype Mono (wordmark, commands, code, EXP numbers, dates).
+const fontFamilies = [
+  'Old+Standard+TT:ital,wght@0,400;0,700;1,400',
+  'EB+Garamond:ital,wght@0,400;0,500;1,400',
+  'Sometype+Mono:wght@400;500',
+];
 const fontHref =
   'https://fonts.googleapis.com/css2?' +
   fontFamilies.map((f) => 'family=' + f).join('&') +
@@ -101,9 +90,10 @@ const canonical = new URL(path, site).href;
 const ogImage = ogImageProp ? new URL(ogImageProp, site).href : new URL('/og.png', site).href;
 // hreflang alternates — only for localized pages (docs are English-only).
 const isDocs = path.includes('/docs');
-const stripped = path.replace(/^\/es(?=\/|$)/, '') || '/';
-const enHref = new URL(stripped, site).href;
-const esHref = new URL('/es' + (stripped === '/' ? '' : stripped), site).href;
+const other = lang === 'en' ? 'es' : 'en';
+const enHref = new URL(localizePath(path, 'en'), site).href;
+const esHref = new URL(localizePath(path, 'es'), site).href;
+const showAlts = !isDocs && hasCounterpart(path, other);
 
 const orgJsonLd = organizationNode(site, t.meta.description);
 
@@ -121,7 +111,7 @@ const aboutMarkdown = buildSiteAbout(site);
 const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
 ---
 <!doctype html>
-<html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined} style={bgColor ? `--accent: ${bgColor}` : undefined}>
+<html lang={lang} data-surface={surface} data-circadian-palette={circadianPalette ? JSON.stringify(circadianPalette) : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -137,15 +127,12 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     {!noindex && markdownTwin && (
       <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
     )}
-    <link rel="alternate" type="application/atom+xml" title="UniverLab Mission Log" href="https://announcements.univerlab.org/feed.atom" />
+    <link rel="alternate" type="application/atom+xml" title="UniverLab Logbook" href="https://announcements.univerlab.org/feed.atom" />
     {/* ARD / AI Catalog (specVersion 1.0) — advertised three ways: this head link, robots.txt's Agentmap, llms.txt's head. */}
     <link rel="ai-catalog" href={new URL('/.well-known/ai-catalog.json', site).href} />
-    <!-- Type. IBM Plex Mono is the constant UniverLab signature (the mono
-         labels); Inter is the default body. Per-surface display voices:
-         the system serif stack (paper/texforge — no webfont pushed), Space
-         Grotesk (scaffold, blueprint, observatory, studio — technical
-         grotesque), and the mono itself for the terminal surfaces
-         (tui/canopy) and the pastel surface (pastel/gitkit). -->
+    <!-- Type. Old Standard TT for titles, EB Garamond for long text, Sometype
+         Mono for the wordmark and code. Surfaces keep their palette and layout
+         and use the same tokens (--font-serif, --font-body, --font-mono). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Non-render-blocking: fetch as `print`, promote to `all` once loaded;
@@ -157,7 +144,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     {surface && (
       <link rel="preload" href="/fonts/DejaVuSansMono.ttf" as="font" type="font/ttf" crossorigin />
     )}
-    {!isDocs && (
+    {showAlts && (
       <>
         <link rel="alternate" hreflang="en" href={enHref} />
         <link rel="alternate" hreflang="es" href={esHref} />
@@ -224,31 +211,37 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       })();
     </script>
     <script>
-      // Console Easter egg — ASCII art + invitation to contribute.
+      // Console Easter egg — a diving helmet: opening the developer tools
+      // goes below the page's surface. Art: lgbeard's "Scuba" (asciiart.eu),
+      // cut down to the helmet; his initials LGB stay, as the artist asks.
+      // Printed with console.info — a greeting for whoever opens the devtools,
+      // not a log line.
       (function () {
-        var art = `
-        _..._
-      .'     '.      _
-     /    .-""-\\   _/ \\
-   .-|   /:.   |  |   |
-   |  \\  |:.   /.-'-./
-   | .-'-;:__.'    =/
-   .'=  *=|     _.='
-  /   _.  |    ;
- ;-.-'|    \\   |
-/   | \\    _\\  _\\
-\\__/'._;.  ==' ==\\
-         \\    \\   |
-         /    /   /
-         /-._/-._/
-         \\   \`\\  \\
-          \`-._/._/
-
-Open Computational Laboratory
-https://github.com/UniverLab
-
- "The next great discovery is one pull request."`;
-        console.log(art);
+        function print() {
+          var art = `                           o    .
+                      .      O
+                         o       .
+               _..--==--.._    o      (/)
+            .-\`   ______   \`-.        (/)
+           / _   .--==--.  .' \\       (\\)
+          /    /.-=____=-.\\ .\` \\      (/)
+         | '. // ||    || \\\\    |     (\\)
+         |   ||==||====||==||   |     (/)
+         |   ||' ||    ||  || \` |     (\\)
+         | \`.\\\\==||====||==//   |     (/)
+          \\   \\\`.||____||.'/   /      (\\)
+           \\   \`-.______.-' . /      (/)
+           /'-._          _.-'\\      (\\)
+      _...-| .  \`-......-'  . |-..._ (/)
+  .-'   '.  '.__.   ::  ' __.'  .' _.'\\)
+.'        '.|\`._''------''_.\`|.'_][\\).' '.
+                                       LGB`;
+          var S = {};
+          try { S = JSON.parse(document.getElementById('console-strings').textContent); } catch (e) {}
+          console.info(art + '\n\n' + S.belowSurface + '\n' + S.pullRequest + '\nhttps://github.com/UniverLab');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', print);
+        else print();
       })();
     </script>
     <script is:inline>
@@ -274,7 +267,7 @@ https://github.com/UniverLab
           var actualDay = hour >= sunrise && hour < sunset;
           var forcedTheme = null;
           try { forcedTheme = localStorage.getItem('univerlab-theme'); } catch (e) {}
-          var isDay = forcedTheme === 'night' ? false : forcedTheme === 'day' ? true : actualDay;
+          var isDay = forcedTheme === 'night' || forcedTheme === 'slate' ? false : forcedTheme === 'day' || forcedTheme === 'papyrus' ? true : actualDay;
           var pos;
           if (actualDay) {
             pos = ((hour - sunrise) / (sunset - sunrise)) * 100;
@@ -286,6 +279,7 @@ https://github.com/UniverLab
           var root = document.documentElement;
           root.style.setProperty('--sun-pos', pos.toFixed(2) + '%');
           root.dataset.celestial = isDay ? 'sun' : 'moon';
+          root.dataset.benchTheme = isDay ? 'day' : 'night';
           // Moon phase must be set every time the moon is shown — on plain
           // (non-circadian) pages this is the only script, and on circadian
           // pages this runs on nav + the 60s tick too. Without it the crescent
@@ -323,6 +317,13 @@ https://github.com/UniverLab
           }
         }
         calc();
+        // Publish it: on pages without the circadian script (which defines no
+        // window.applyTheme) this plain calc is what re-reads
+        // localStorage['univerlab-theme'] and flips data-celestial and
+        // data-bench-theme, so a header theme click lands at once. The
+        // circadian script below overwrites window.calc with its palette calc
+        // exactly as before, so circadian pages behave as they always did.
+        window.calc = calc;
         setInterval(calc, 60000);
         document.addEventListener('visibilitychange', function () {
           if (!document.hidden) calc();
@@ -331,7 +332,9 @@ https://github.com/UniverLab
     </script>
     {circadian && (
       <script is:inline>
-        (function(){try{var DG={'--bg':'#f8f4ea','--bg-raise':'#f0eadb','--ink':'#2c2218','--ink-dim':'#6b5c4a','--ink-faint':'#9a8b74','--line':'#ddd0b8','--accent':'#c88a1a','--canvas-color':'#bb7e35','--canvas-mute':'#bdb5a6'};var DW={'--bg':'#f0d8c8','--bg-raise':'#e6c8b0','--ink':'#2e1e10','--ink-dim':'#705838','--ink-faint':'#a08860','--line':'#d0b098','--accent':'#d07820','--canvas-color':'#e08828','--canvas-mute':'#b8a080'};var NB={'--bg':'#0d1b2a','--bg-raise':'#132236','--ink':'#c8d4e0','--ink-dim':'#7890a8','--ink-faint':'#4a6070','--line':'#1c2e44','--accent':'#5b8db8','--canvas-color':'#4a7ca8','--canvas-mute':'#2a3c50'};var NS={'--bg':'#0f1115','--bg-raise':'#15181d','--ink':'#e3e6e8','--ink-dim':'#a8adb5','--ink-faint':'#6b7178','--line':'#23262c','--accent':'#e6c84a','--canvas-color':'#d3bf72','--canvas-mute':'#474a54'};try{var pa=document.documentElement.getAttribute('data-circadian-palette');if(pa){var sp=JSON.parse(pa);if(sp.day){DG=sp.day;DW=sp.day}if(sp.night){NS=sp.night;NB=sp.night}}}catch(_){}function hx(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}function lerp(a,b,t){var x=hx(a),y=hx(b);function h(n){return('0'+Math.round(n).toString(16)).slice(-2)}return'#'+h(x[0]+(y[0]-x[0])*t)+h(x[1]+(y[1]-x[1])*t)+h(x[2]+(y[2]-x[2])*t)}function mix(a,b,f){var o={};for(var k in a)o[k]=lerp(a[k],b[k],f);return o}function ap(p){var r=document.documentElement;for(var k in p)r.style.setProperty(k,p[k])}function updateMoon(){var d=new Date(),E=Date.UTC(2000,0,6,18,14),S=29.530588853,dn=(d.getTime()-E)/864e4,ph=(dn%S)/S;if(ph<0)ph+=1;var il=(1-Math.cos(2*Math.PI*ph))/2,mo=8*(1-2*Math.abs(ph-.5)),sg=ph<.5?-1:1,r=document.documentElement;r.style.setProperty('--moon-offset',(sg*mo).toFixed(2)+'px');r.style.setProperty('--moon-glow',Math.round(il*70)+'%')}function calc(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,y=d.getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,doy=Math.floor((d-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}var sr=12-hf,ss=12+hf,day=h>=sr&&h<ss,pal;if(day){var w=0,de=sr+1,ds=ss-1;if(h<de)w=1-(h-sr)/1;else if(h>=ds)w=(h-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{var sse=h>=ss?h-ss:h+(24-ss),nl=24-(ss-sr),np=nl>0?sse/nl:0,ibh=!1;if(np<.15){pal=mix(NB,NS,np/.15);ibh=np<.08}else if(np<.85){pal=NS}else{pal=mix(NS,NB,(np-.85)/.15);ibh=np>.92}}ap(pal);var bgc=document.querySelector('canvas.bg');if(bgc&&bgc.__bgCtx)bgc.__bgCtx.color=pal['--canvas-color']||pal['--accent']||'#b9b6ae';var pos;if(day){pos=((h-sr)/(ss-sr))*100}else{var ss2=h>=ss?h-ss:h+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#d46020',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{cel=ibh?'#b8a8b0':'#a8adb5'}r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.circadian='true';updateMoon();try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'circadian'}}))}catch(_){}}window.scrubTime=function(hour){if(localStorage.getItem('univerlab-theme'))return;hour=((hour%24)+24)%24;var y=new Date().getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,now=new Date(),doy=Math.floor((now-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}var sr=12-hf,ss=12+hf,day=hour>=sr&&hour<ss,pal,w=0,nl,np,sse;if(day){var de=sr+1,ds=ss-1;if(hour<de)w=1-(hour-sr)/1;else if(hour>=ds)w=(hour-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{sse=hour>=ss?hour-ss:hour+(24-ss);nl=24-(ss-sr);np=nl>0?sse/nl:0;if(np<.15)pal=mix(NB,NS,np/.15);else if(np<.85)pal=NS;else pal=mix(NS,NB,(np-.85)/.15)}ap(pal);var bgc=document.querySelector('canvas.bg');if(bgc&&bgc.__bgCtx)bgc.__bgCtx.color=pal['--canvas-color']||pal['--accent']||'#b9b6ae';var pos;if(day){pos=((hour-sr)/(ss-sr))*100}else{var ss2=hour>=ss?hour-ss:hour+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#d46020',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{var ib=(np<.08||np>.92);cel=ib?'#b8a8b0':'#a8adb5'}r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';updateMoon();var mi={hour:Math.round(hour*10)/10,nightPos:0,palettes:[]};if(!day){mi.nightPos=Math.round(np*1000)/10;if(np<.15){var f=np/.15;mi.palettes=[{name:'Blue',pct:Math.round((1-f)*100)},{name:'Silver',pct:Math.round(f*100)}]}else if(np<.85)mi.palettes=[{name:'Silver',pct:100}];else{var f=(np-.85)/.15;mi.palettes=[{name:'Silver',pct:Math.round((1-f)*100)},{name:'Blue',pct:Math.round(f*100)}]}}else{if(w>.01)mi.palettes=[{name:'Gold',pct:Math.round((1-w)*100)},{name:'Warm',pct:Math.round(w*100)}];else mi.palettes=[{name:'Gold',pct:100}]}window.__scrubInfo=mi;window.__scrubHour=hour;try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'scrub'}}))}catch(_){}};window.resetScrub=function(){calc();var b=document.querySelector('.celestial-btn');if(b){b.style.transition='left .2s ease-out';setTimeout(function(){b.style.transition=''},250)}};window.calc=calc;window.applyTheme=function(mode){if(mode==='day'){var dp=localStorage.getItem('univerlab-day-palette')==='warm'?DW:DG;ap(dp);var c1=document.querySelector('canvas.bg');if(c1&&c1.__bgCtx)c1.__bgCtx.color=dp['--canvas-color']||dp['--accent']||'#b9b6ae';document.documentElement.dataset.celestial='sun';document.documentElement.dataset.circadian='true'}else if(mode==='night'){var nv=localStorage.getItem('univerlab-night-palette'),np=nv==='blue'?NB:NS;ap(np);var c2=document.querySelector('canvas.bg');if(c2&&c2.__bgCtx)c2.__bgCtx.color=np['--canvas-color']||np['--accent']||'#b9b6ae';document.documentElement.dataset.celestial='moon';document.documentElement.dataset.circadian='true'}else{calc()}if(mode!=='circadian'){updateMoon();var r=document.documentElement;if(mode==='night'){var nv2=localStorage.getItem('univerlab-night-palette'),cc=nv2==='blue'?'#b8a8b0':'#a8adb5';r.style.setProperty('--celestial-color',cc)}else{var iw=localStorage.getItem('univerlab-day-palette')==='warm',dp2=iw?DW:DG,st=iw?'#d46020':dp2['--canvas-color'];r.style.setProperty('--celestial-color',lerp(dp2['--canvas-color'],st,iw?.5:0))}}if(mode!=='circadian'){try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:mode}}))}catch(_){}}};var sv=localStorage.getItem('univerlab-theme');if(sv==='day'||sv==='night')applyTheme(sv);else calc();var tm=setInterval(function(){updateMoon();if(!localStorage.getItem('univerlab-theme'))calc()},6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden){updateMoon();if(!localStorage.getItem('univerlab-theme')){calc();clearInterval(tm);tm=setInterval(function(){updateMoon();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)}}})}catch(e){}})()
+        (function(){try{var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#8a6a2c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'};var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#9a5530','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'};var NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#d6955b','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'};var NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#d9b878','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'};try{var pa=document.documentElement.getAttribute('data-circadian-palette');if(pa){var sp=JSON.parse(pa);if(sp.day){DG=sp.day;DW=sp.day}if(sp.night){NS=sp.night;NB=sp.night}}}catch(_){}function hx(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}function lerp(a,b,t){var x=hx(a),y=hx(b);function h(n){return('0'+Math.round(n).toString(16)).slice(-2)}return'#'+h(x[0]+(y[0]-x[0])*t)+h(x[1]+(y[1]-x[1])*t)+h(x[2]+(y[2]-x[2])*t)}function mix(a,b,f){var o={};for(var k in a)o[k]=lerp(a[k],b[k],f);return o}function ap(p){var r=document.documentElement;for(var k in p)r.style.setProperty(k,p[k])}function updateMoon(){var d=new Date(),E=Date.UTC(2000,0,6,18,14),S=29.530588853,dn=(d.getTime()-E)/864e4,ph=(dn%S)/S;if(ph<0)ph+=1;var il=(1-Math.cos(2*Math.PI*ph))/2,mo=8*(1-2*Math.abs(ph-.5)),sg=ph<.5?-1:1,r=document.documentElement;r.style.setProperty('--moon-offset',(sg*mo).toFixed(2)+'px');r.style.setProperty('--moon-glow',Math.round(il*70)+'%')}function nat(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,y=d.getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,doy=Math.floor((d-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}return{h:h,sr:12-hf,ss:12+hf,day:h>=12-hf&&h<12+hf}}
+function dropStale(){var s=localStorage.getItem('univerlab-theme');if((s==='day'||s==='night')&&s===(nat().day?'day':'night'))localStorage.removeItem('univerlab-theme')}
+function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,de=sr+1,ds=ss-1;if(h<de)w=1-(h-sr)/1;else if(h>=ds)w=(h-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{var sse=h>=ss?h-ss:h+(24-ss),nl=24-(ss-sr),np=nl>0?sse/nl:0,ibh=!1;if(np<.15){pal=mix(NB,NS,np/.15);ibh=np<.08}else if(np<.85){pal=NS}else{pal=mix(NS,NB,(np-.85)/.15);ibh=np>.92}}ap(pal);var pos;if(day){pos=((h-sr)/(ss-sr))*100}else{var ss2=h>=ss?h-ss:h+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{cel=ibh?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';r.dataset.circadian='true';updateMoon();try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'circadian'}}))}catch(_){}}window.scrubTime=function(hour){if(localStorage.getItem('univerlab-theme'))return;hour=((hour%24)+24)%24;var y=new Date().getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,now=new Date(),doy=Math.floor((now-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}var sr=12-hf,ss=12+hf,day=hour>=sr&&hour<ss,pal,w=0,nl,np,sse;if(day){var de=sr+1,ds=ss-1;if(hour<de)w=1-(hour-sr)/1;else if(hour>=ds)w=(hour-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{sse=hour>=ss?hour-ss:hour+(24-ss);nl=24-(ss-sr);np=nl>0?sse/nl:0;if(np<.15)pal=mix(NB,NS,np/.15);else if(np<.85)pal=NS;else pal=mix(NS,NB,(np-.85)/.15)}ap(pal);var pos;if(day){pos=((hour-sr)/(ss-sr))*100}else{var ss2=hour>=ss?hour-ss:hour+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{var ib=(np<.08||np>.92);cel=ib?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';updateMoon();var mi={hour:Math.round(hour*10)/10,nightPos:0,palettes:[]};if(!day){mi.nightPos=Math.round(np*1000)/10;if(np<.15){var f=np/.15;mi.palettes=[{name:'Twilight',pct:Math.round((1-f)*100)},{name:'Night',pct:Math.round(f*100)}]}else if(np<.85)mi.palettes=[{name:'Night',pct:100}];else{var f=(np-.85)/.15;mi.palettes=[{name:'Night',pct:Math.round((1-f)*100)},{name:'Dawn',pct:Math.round(f*100)}]}}else{if(w>.01)mi.palettes=[{name:'Day',pct:Math.round((1-w)*100)},{name:hour<12?'Dawn':'Dusk',pct:Math.round(w*100)}];else mi.palettes=[{name:'Day',pct:100}]}window.__scrubInfo=mi;window.__scrubHour=hour;try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'scrub'}}))}catch(_){}};window.resetScrub=function(){calc();var b=document.querySelector('.celestial-btn');if(b){b.style.transition='left .2s ease-out';setTimeout(function(){b.style.transition=''},250)}};window.calc=calc;window.applyTheme=function(mode){if(mode==='day'){ap(DG);document.documentElement.dataset.celestial='sun';document.documentElement.dataset.benchTheme='day';document.documentElement.dataset.circadian='true';delete document.documentElement.dataset.sunlow}else if(mode==='night'){ap(NS);document.documentElement.dataset.celestial='moon';document.documentElement.dataset.benchTheme='night';document.documentElement.dataset.circadian='true'}else{calc()}if(mode!=='circadian'){updateMoon();var r=document.documentElement;r.style.setProperty('--celestial-color',mode==='night'?'#a8adb5':DG['--canvas-color'])}if(mode!=='circadian'){try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:mode}}))}catch(_){}}};dropStale();var sv=localStorage.getItem('univerlab-theme');if(sv==='day'||sv==='night')applyTheme(sv);else calc();var tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme')){calc();clearInterval(tm);tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)}}})}catch(e){}})()
       </script>
       <script is:inline>
         (function () {
@@ -353,29 +356,76 @@ https://github.com/UniverLab
     )}
    </head>
   <body>
+    <script>import { restoreCrtOn } from '../scripts/crt-restore'; restoreCrtOn();</script>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
-    {!stillSurface && <ThemeBackground theme={bg} color={canvasColor} />}
-    <Header />
+    {fondo && <LiveBackground id={fondo} />}
+    <Header circadian={circadian} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer expId={expId} />
     <GhostHint hints={[
       { id: 'cmd-palette', msg: 'Press <kbd>/</kbd> for commands', first: true },
       { id: 'today-science', msg: 'The celestial marker hides a fact from today in science', prob: 0.16 },
-      { id: 'flight-log', msg: 'The flight bar keeps a record of what you discover', prob: 0.13 },
       { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
     ]} />
+    {/* The palette reads its strings (drawer labels, foot line, theme names,
+        the 42 answer) from this JSON at runtime: one source, the i18n
+        dictionary, no literals in the script. */}
+    <script is:inline type="application/json" id="console-strings" set:html={serialize(t.console)}></script>
     <script>
       import { openDateTranslator } from '../lib/mission-date-ui';
-      // Command palette — terminal-style / command with Tab autocomplete.
-      // Commands are derived from experiment IDs + static routes.
+      // Command palette — the library catalog card: type `/` and the card
+      // slides up from the foot of the page, typed on a typewriter. Commands
+      // are derived from experiment IDs + static routes.
       // To add a new experiment: add its ID to the experiments array in
       // experiments.ts — the palette picks it up automatically.
       (function () {
         var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
         var base = lang === 'es' ? '/es' : '';
         var path = window.location.pathname;
+
+        // One-time cleanup of the retired console state: the two forced
+        // warm/blue palette keys and the flight log's storage entries.
+        try {
+          localStorage.removeItem('univerlab-day-palette');
+          localStorage.removeItem('univerlab-night-palette');
+          localStorage.removeItem('univerlab-flight-log');
+        } catch (e) {}
+
+        // The palette's own strings, inlined at build time from the i18n
+        // dictionary (see the console-strings script in the head of <body>).
+        var S = {};
+        try { S = JSON.parse(document.getElementById('console-strings').textContent); } catch (e) {}
+
+        // A slip of old paper taped to the screen — every notice that is not
+        // mail: tips, feedback, the 42 answer. One slip per kind; a click or
+        // the timeout takes it back off.
+        function slip(cls, html, ms) {
+          ms = ms || 5000;
+          var old = document.querySelectorAll('.slip.' + cls);
+          for (var i = 0; i < old.length; i++) old[i].remove();
+          var el = document.createElement('div');
+          el.className = 'slip ' + cls;
+          el.setAttribute('role', 'status');
+          el.innerHTML = html;
+          document.body.appendChild(el);
+          var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!reduce && el.animate) {
+            el.animate(
+              [{ opacity: 0, translate: '0 14px' }, { opacity: 1, translate: '0 0' }],
+              { duration: 260, easing: 'cubic-bezier(.2,.8,.3,1)' }
+            );
+          }
+          var bye = function () {
+            if (!el.isConnected) return;
+            if (reduce || !el.animate) { el.remove(); return; }
+            el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' })
+              .finished.then(function () { el.remove(); });
+          };
+          el.addEventListener('click', bye);
+          setTimeout(bye, ms);
+        }
 
         // /find — open a search overlay for the current page / docs.
         function openFind() {
@@ -465,45 +515,41 @@ https://github.com/UniverLab
           setTimeout(function () { input.focus(); }, 50);
         }
 
-        // /theme submenu — replaces the command list with theme options.
+        // /theme — the second catalog card: the three grounds, in order.
         function showThemeMenu() {
+          if (!overlay) create();
+          overlay.classList.remove('closing');
+          overlay.classList.add('open');
           inSubmenu = true;
-          var themeCmds = getThemeCmds();
-          filtered = themeCmds;
+          input.value = '';
+          setHeader(true);
           selected = 0;
-          input.value = '/theme ';
-          open();
-          render();
+          filter('');
+          setTimeout(function () { input.focus(); }, 50);
         }
 
         function getThemeCmds() {
-          var t = localStorage.getItem('univerlab-theme');
-          var dp = localStorage.getItem('univerlab-day-palette');
-          var np = localStorage.getItem('univerlab-night-palette');
-          var active;
-          if (!t) active = 'circadian';
-          else if (t === 'day' && dp === 'warm') active = 'dorada';
-          else if (t === 'night' && np === 'blue') active = 'azul';
-          else if (t === 'day') active = 'dia';
-          else active = 'noche';
+          var t = null;
+          try { t = localStorage.getItem('univerlab-theme'); } catch (e) {}
+          // A stored 'day'/'night' from the old themes keeps working as
+          // Papyrus/Slate.
+          var active = !t ? 'circadian' : t === 'day' ? 'papyrus' : 'slate';
           var check = ' \u2713';
+          var names = S.theme || {};
           return [
-            { cmd: 'circadian', label: 'Circadian' + (active === 'circadian' ? check : ''), action: function () { localStorage.removeItem('univerlab-theme'); localStorage.removeItem('univerlab-day-palette'); localStorage.removeItem('univerlab-night-palette'); applyTheme('circadian'); } },
-            { cmd: 'golden-hour', label: 'Golden hour' + (active === 'dorada' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.setItem('univerlab-day-palette', 'warm'); applyTheme('day'); } },
-            { cmd: 'blue-hour', label: 'Blue hour' + (active === 'azul' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.setItem('univerlab-night-palette', 'blue'); applyTheme('night'); } },
-            { cmd: 'day', label: 'Day' + (active === 'dia' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'day'); localStorage.removeItem('univerlab-day-palette'); applyTheme('day'); } },
-            { cmd: 'night', label: 'Night' + (active === 'noche' ? check : ''), action: function () { localStorage.setItem('univerlab-theme', 'night'); localStorage.removeItem('univerlab-night-palette'); applyTheme('night'); } },
+            { cmd: 'circadian', label: (names.circadian || 'Circadian') + (active === 'circadian' ? check : ''), action: function () { try { localStorage.removeItem('univerlab-theme'); } catch (e) {} if (window.applyTheme) applyTheme('circadian'); } },
+            { cmd: 'papyrus', label: (names.papyrus || 'Papyrus') + (active === 'papyrus' ? check : ''), action: function () { try { localStorage.setItem('univerlab-theme', 'day'); } catch (e) {} if (window.applyTheme) applyTheme('day'); } },
+            { cmd: 'slate', label: (names.slate || 'Slate') + (active === 'slate' ? check : ''), action: function () { try { localStorage.setItem('univerlab-theme', 'night'); } catch (e) {} if (window.applyTheme) applyTheme('night'); } },
           ];
         }
 
         // Static commands — always available.
         var staticCmds = [
           { cmd: '/home', label: 'Home', href: base + '/' },
-          { cmd: '/experiments', label: 'Experiments', href: base + '/#experiments' },
+          { cmd: '/experiments', label: 'Experiments', href: base + '/experiments/' },
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto/' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors/' },
           { cmd: '/random', label: 'Surprise me', action: function () {
-            if (window.missionLog) window.missionLog.discover('random');
             var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
             var pages = ['/', '/manifesto/', '/contributors/', '/archive/'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
@@ -518,21 +564,22 @@ https://github.com/UniverLab
             window.location.href = pick;
           }},
           { cmd: '/fact', label: 'Today in science', action: function () {
-            if (window.missionLog) window.missionLog.discover('today');
-            function triggerCelestial() {
-              var btn = document.querySelector('.celestial-btn');
-              if (!btn) return;
-              btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-              btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            // The letter of the day belongs to the mailbox now — the sky body
+            // switched to the theme — so /fact asks the mailbox for it,
+            // anchored at the mailbox, the same open the box's own click does.
+            function openTodayLetter() {
+              if (window.univerlabOpenMail) { window.univerlabOpenMail(); return; }
+              var box = document.querySelector('.mailbox');
+              if (box) box.click();
             }
             if (window.scrollY < 10) {
-              triggerCelestial();
+              openTodayLetter();
             } else {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               var checkScroll = function() {
                 setTimeout(function() {
                   if (window.scrollY < 10) {
-                    triggerCelestial();
+                    openTodayLetter();
                   } else {
                     checkScroll();
                   }
@@ -543,7 +590,6 @@ https://github.com/UniverLab
           }},
           { cmd: '/today', label: 'Today in science (full page)', href: base + '/today/' },
           { cmd: '/tip', label: 'Tip', action: function () {
-            if (window.missionLog) window.missionLog.discover('tip');
             var tips = {
               en: [
                 'Drag the sun/moon to scrub through time.',
@@ -551,9 +597,9 @@ https://github.com/UniverLab
                 'Press <kbd>Esc</kbd> to close any popup.',
                 'The celestial body traces the horizon — it\'s your clock.',
                 'Type <kbd>/lang</kbd> to switch between English and Spanish.',
-                'Type <kbd>/theme</kbd> to change the visual theme.',
-                'The Mission Log tracks every experiment in real time.',
-                'Click the sun or moon for a science fact.',
+                'Type <kbd>/theme</kbd> to pick Circadian, Papyrus or Slate.',
+                'The Logbook tracks every experiment in real time.',
+                'Click the sun or moon to switch the theme.',
                 'Type <kbd>/find</kbd> to search within the current page.',
                 'Every page has a keyboard shortcut — type <kbd>/</kbd> to discover them.',
                 'The Archive holds experiments that didn\'t make it to production.',
@@ -565,9 +611,9 @@ https://github.com/UniverLab
                 'Presiona <kbd>Esc</kbd> para cerrar cualquier popup.',
                 'El cuerpo celeste recorre el horizonte — es tu reloj.',
                 'Escribe <kbd>/lang</kbd> para cambiar entre inglés y español.',
-                'Escribe <kbd>/theme</kbd> para cambiar el tema visual.',
-                'El Mission Log registra cada experimento en tiempo real.',
-                'Haz clic en el sol o la luna para un dato científico.',
+                'Escribe <kbd>/theme</kbd> para elegir Circadian, Papyrus o Slate.',
+                'El Cuaderno de bitácora registra cada experimento en tiempo real.',
+                'Haz clic en el sol o la luna para cambiar el tema.',
                 'Escribe <kbd>/find</kbd> para buscar en la página actual.',
                 'Cada página tiene un atajo de teclado — escribe <kbd>/</kbd> para descubrirlos.',
                 'El Archivo contiene experimentos que no llegaron a producción.',
@@ -577,28 +623,15 @@ https://github.com/UniverLab
             var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
             var pool = tips[lang] || tips.en;
             var msg = pool[Math.floor(Math.random() * pool.length)];
-            var el = document.createElement('div');
-            el.className = 'ghost-hint ghost-hint--visible';
-            el.setAttribute('aria-hidden', 'true');
-            el.innerHTML = '<span class="ghost-hint__text">' + msg + '</span>';
-            document.body.appendChild(el);
-            setTimeout(function () { el.remove(); }, 5000);
+            slip('tip', msg, 5000);
           }},
           { cmd: '/up', label: 'Scroll to top', action: function () {
-            if (window.missionLog) window.missionLog.discover('up');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }},
           { cmd: '/down', label: 'Scroll to bottom', action: function () {
-            if (window.missionLog) window.missionLog.discover('down');
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
           }},
-          { cmd: '/log', label: 'Flight log', action: function () {
-            if (window.missionLog) window.missionLog.discover('log');
-            var bar = document.querySelector('.flight-bar');
-            if (bar) bar.click();
-          }},
           { cmd: '/lang', label: 'Switch language', action: function () {
-            if (window.missionLog) window.missionLog.discover('lang');
             var onEs = window.location.pathname.indexOf('/es') === 0;
             var other = onEs ? 'en' : 'es';
             try { localStorage.setItem('univerlab-lang', other); } catch (e) {}
@@ -610,10 +643,10 @@ https://github.com/UniverLab
             }
           }},
           { cmd: '/github', label: 'GitHub', action: function () { window.open(githubUrl(), '_blank', 'noopener'); } },
-          { cmd: '/find', label: 'Find on page', action: function () { if (window.missionLog) window.missionLog.discover('find'); openFind(); } },
+          { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
-          { cmd: '/status', label: 'Mission Log', href: '/status/' },
+          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' },
           { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 
@@ -658,8 +691,9 @@ https://github.com/UniverLab
 
         var overlay = null;
         var input = null;
-        var overlay = null;
         var list = null;
+        var slash = null;
+        var drawer = null;
         var selected = 0;
         var filtered = [];
         var inSubmenu = false;
@@ -667,66 +701,92 @@ https://github.com/UniverLab
         function create() {
           overlay = document.createElement('div');
           overlay.id = 'cmd-palette';
+          overlay.className = 'palette';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-label', 'Command palette');
           overlay.innerHTML =
-            '<div class="cmd-palette-inner">' +
-              '<div class="cmd-input-row">' +
-                '<span class="cmd-prefix">/</span>' +
-                '<input class="cmd-input" type="text" spellcheck="false" autocomplete="off" placeholder="Type a command..." />' +
-              '</div>' +
-              '<ul class="cmd-list"></ul>' +
-            '</div>';
+            '<div class="head">' +
+              '<span class="slash">/</span>' +
+              '<input type="text" spellcheck="false" autocomplete="off" />' +
+              '<span class="drawer"></span>' +
+            '</div>' +
+            '<ul class="cmd-list" role="listbox"></ul>' +
+            '<div class="foot"><span class="keys"></span><span class="esc"></span></div>';
           document.body.appendChild(overlay);
-          input = overlay.querySelector('.cmd-input');
+          input = overlay.querySelector('input');
           list = overlay.querySelector('.cmd-list');
+          slash = overlay.querySelector('.slash');
+          drawer = overlay.querySelector('.drawer');
+          overlay.querySelector('.keys').textContent = S.keys || '';
+          overlay.querySelector('.esc').textContent = S.esc || '';
           input.addEventListener('input', onInput);
           input.addEventListener('keydown', onKey);
-          overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+          list.addEventListener('click', function (e) {
+            var li = e.target.closest ? e.target.closest('li[data-i]') : null;
+            if (li) execute(filtered[Number(li.getAttribute('data-i'))]);
+          });
           filter('');
+        }
+
+        // The header line: the red slash reads `/` for commands, `/theme`
+        // inside the theme card; the drawer label at the right follows it.
+        function setHeader(sub) {
+          slash.textContent = sub ? '/theme' : '/';
+          input.placeholder = sub ? (S.themePlaceholder || '') : (S.placeholder || '');
+          drawer.textContent = sub ? (S.themeDrawer || '') : (S.drawer || '');
         }
 
         function open() {
           if (!overlay) create();
+          overlay.classList.remove('closing');
           overlay.classList.add('open');
+          inSubmenu = false;
           input.value = '';
+          setHeader(false);
           selected = 0;
           filter('');
-          if (window.missionLog) window.missionLog.discover('palette');
           setTimeout(function () { input.focus(); }, 50);
         }
 
         function close() {
-          if (overlay) overlay.classList.remove('open');
+          if (!overlay) return;
           inSubmenu = false;
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            overlay.classList.remove('open');
+            return;
+          }
+          // Slide the card back down into its drawer. If a new card was
+          // opened meanwhile (/theme re-opens at once), leave it alone.
+          overlay.classList.add('closing');
+          setTimeout(function () {
+            if (!overlay.classList.contains('closing')) return;
+            overlay.classList.remove('open');
+            overlay.classList.remove('closing');
+          }, 220);
         }
 
-        function isOpen() { return overlay && overlay.classList.contains('open'); }
+        function isOpen() { return !!(overlay && overlay.classList.contains('open') && !overlay.classList.contains('closing')); }
 
         function filter(q) {
-          q = q.toLowerCase().replace(/^\//, '');
-          if (inSubmenu) {
-            // In submenu: filter the theme options, not all commands.
-            var themeCmds = getThemeCmds();
-            filtered = q
-              ? themeCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
-              : themeCmds;
-          } else {
-            filtered = q
-              ? allCmds.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
-              : allCmds.slice();
-          }
+          q = (q || '').toLowerCase().replace(/^\//, '');
+          var source = inSubmenu ? getThemeCmds() : allCmds;
+          filtered = q
+            ? source.filter(function (c) { return c.cmd.toLowerCase().indexOf(q) !== -1 || c.label.toLowerCase().indexOf(q) !== -1; })
+            : source.slice();
           selected = 0;
           render();
         }
 
         function render() {
           list.innerHTML = filtered.map(function (c, i) {
-            return '<li class="cmd-item' + (i === selected ? ' sel' : '') + '">' +
+            return '<li class="cmd-item" role="option" aria-selected="' + (i === selected) + '" data-i="' + i + '">' +
+              '<span class="cmd-hand">☞</span>' +
               '<span class="cmd-cmd">' + c.cmd + '</span>' +
               '<span class="cmd-label">' + c.label + '</span>' +
             '</li>';
           }).join('');
           // Scroll selected into view.
-          var sel = list.querySelector('.sel');
+          var sel = list.querySelector('[aria-selected="true"]');
           if (sel) sel.scrollIntoView({ block: 'nearest' });
         }
 
@@ -742,10 +802,11 @@ https://github.com/UniverLab
         }
 
         function onInput() {
-          var v = input.value;
-          // Keep the / prefix.
-          if (!v.startsWith('/')) input.value = '/' + v;
-          filter(input.value);
+          // The red slash sits in the header line; the field holds the bare
+          // command, so any typed `/` is dropped.
+          var v = input.value.replace(/^\//, '');
+          if (input.value !== v) input.value = v;
+          filter(v);
         }
 
         function onKey(e) {
@@ -755,7 +816,7 @@ https://github.com/UniverLab
           if (e.key === 'Tab') {
             e.preventDefault();
             if (filtered[selected]) {
-              input.value = filtered[selected].cmd;
+              input.value = filtered[selected].cmd.replace(/^\//, '');
               filter(input.value);
             }
             return;
@@ -773,31 +834,12 @@ https://github.com/UniverLab
         document.addEventListener('keydown', function (e) {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-          // Easter egg: typing "42" shows the Answer.
+          // Easter egg: typing "42" tapes the Answer up as a centred slip.
           keySeq += e.key;
           if (keySeq.length > 10) keySeq = keySeq.slice(-10);
           if (keySeq.indexOf('42') !== -1) {
             keySeq = '';
-            if (window.missionLog) window.missionLog.discover('easter-42');
-            var bd = document.createElement('div');
-            bd.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:319;animation:gl-toast-in .2s ease';
-            document.body.appendChild(bd);
-            var msg = document.createElement('div');
-            msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:0.9rem;padding:0.9rem 2.4rem 0.9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);z-index:320;text-align:center;max-width:90vw;cursor:pointer;animation:gl-toast-in .2s ease';
-            var lang = document.documentElement.lang || 'en';
-            var html = lang === 'es'
-              ? '<span style="color:#ffe264;font-weight:600">42</span> — La <span style="color:#ffe264;font-weight:600">Respuesta</span> a la Pregunta Fundamental de la <span style="color:#ffe264;font-weight:600">Vida</span>, el <span style="color:#ffe264;font-weight:600">Universo</span> y Todo lo <span style="color:#ffe264;font-weight:600">Demás</span>.'
-              : '<span style="color:#ffe264;font-weight:600">42</span> — The <span style="color:#ffe264;font-weight:600">Answer</span> to the Ultimate Question of Life, the <span style="color:#ffe264;font-weight:600">Universe</span>, and <span style="color:#ffe264;font-weight:600">Everything</span>.';
-            msg.innerHTML = html;
-            document.body.appendChild(msg);
-            var dismiss42 = function () {
-              bd.style.transition = 'opacity 0.3s'; bd.style.opacity = '0';
-              msg.style.transition = 'opacity 0.3s'; msg.style.opacity = '0';
-              setTimeout(function () { bd.remove(); msg.remove(); }, 300);
-            };
-            bd.addEventListener('click', dismiss42);
-            msg.addEventListener('click', dismiss42);
-            setTimeout(dismiss42, 5000);
+            slip('answer', '<b>42</b>' + S.answer + '<i>' + S.guide + '</i>', 6000);
             return;
           }
 
@@ -913,182 +955,6 @@ https://github.com/UniverLab
       })();
     </script>
 
-    <script>
-      // Flight log — terminal-style session record like spacecraft telemetry.
-      // Dispatch: window.flightLog.record('event-id')
-      // The bar on the footer fills as entries accumulate; click to open log.
-      (function () {
-        var STORAGE_KEY = 'univerlab-flight-log';
-        var MAX_ENTRIES = 100;
-        var EVENTS = {
-          // Core pages
-          manifesto:     'Session started: manifesto',
-          archive:       'Archive accessed',
-          contributors:  'Contributors wall viewed',
-          // Experiments (per-page)
-          'exp-canopy':       'Visited Canopy',
-          'exp-texforge':     'Visited TeXForge',
-          'exp-gitkit':       'Visited GitKit',
-          'exp-ghscaff':      'Visited ghScaff',
-          'exp-astro-denoise':'Visited Astro Denoise',
-          'exp-demostage':    'Visited DemoStage',
-          'exp-quorum':       'Visited Quorum',
-          // Per-experiment install copy
-          'copy-canopy':       'Copied Canopy install command',
-          'copy-texforge':     'Copied TeXForge install command',
-          'copy-gitkit':       'Copied GitKit install command',
-          'copy-ghscaff':      'Copied ghScaff install command',
-          'copy-demostage':    'Copied DemoStage install command',
-          // Per-experiment docs
-          'docs-canopy':       'Opened Canopy docs',
-          'docs-texforge':     'Opened TeXForge docs',
-          'docs-gitkit':       'Opened GitKit docs',
-          'docs-ghscaff':      'Opened ghScaff docs',
-          'docs-demostage':    'Opened DemoStage docs',
-          'docs-quorum':       'Opened Quorum docs',
-          // Special interactions
-          'astro-denoise-pdf': 'Downloaded Astro Denoise proposal',
-          'quorum-launch':     'Launched Quorum app',
-          // Celestial / time
-          celestial:     'Celestial body observed',
-          'visit-day':   'Daytime session detected',
-          'visit-night': 'Nighttime session detected',
-          // Commands
-          palette:       'Command palette opened',
-          today:         'Command /today executed',
-          random:        'Command /random executed',
-          up:            'Command /up executed',
-          down:          'Command /down executed',
-          log:           'Flight log opened',
-          find:          'Page search activated',
-          theme:         'Visual theme reconfigured',
-          lang:          'Language subsystem switched',
-          // Interactions
-          keyboard:      'Keyboard navigation engaged',
-          'exp-nav':     'Inter-experiment navigation',
-          // Easter eggs
-          'easter-42':   'Input sequence "42" detected',
-          'footer-logo': 'Hidden repository link discovered',
-          'footer-commit':'Cosmic commit panel opened',
-        };
-
-        function read() {
-          try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; }
-        }
-        function write(arr) {
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(-MAX_ENTRIES))); } catch (e) {}
-        }
-
-        var bar = document.querySelector('.flight-bar');
-        var fill = document.querySelector('.flight-fill');
-        var logEl = null;
-
-        function solTs() {
-          var d = new Date();
-          var y = d.getFullYear();
-          var start = new Date(y, 0, 0);
-          var sol = Math.floor((d - start) / 86400000);
-          var hh = String(d.getHours()).padStart(2, '0');
-          var mm = String(d.getMinutes()).padStart(2, '0');
-          var ss = String(d.getSeconds()).padStart(2, '0');
-          return { sol: sol, time: hh + ':' + mm + ':' + ss };
-        }
-
-        function updateBar() {
-          var n = read().length;
-          var pct = Math.min(Math.round((n / 100) * 100), 100);
-          if (fill) fill.style.width = pct + '%';
-        }
-
-        function renderLog() {
-          var entries = read();
-          var inner = '<div class="flight-log-head">' +
-            '<span class="flight-log-title">Flight Log</span>' +
-            '<button class="flight-log-close" type="button" aria-label="Close">&times;</button>' +
-            '</div>';
-          if (!entries.length) {
-            inner += '<div class="flight-log-empty">No entries yet. Start exploring.</div>';
-          } else {
-            inner += '<ul class="flight-log-entries">';
-            var reversed = entries.slice().reverse();
-            reversed.forEach(function (e, i) {
-              var isNew = i === 0;
-              inner += '<li class="flight-entry' + (isNew ? ' flight-entry-new' : '') + '">' +
-                '<span class="flight-sol">Sol ' + e.sol + '</span>' +
-                '<span class="flight-sep">·</span>' +
-                '<span class="flight-ts">' + e.ts + '</span>' +
-                '<span class="flight-sep">—</span>' +
-                '<span class="flight-msg">' + e.msg + '</span></li>';
-            });
-            inner += '</ul>';
-          }
-          inner += '<div class="flight-log-footer">' + entries.length + ' entries logged</div>';
-          return '<div class="flight-log-box">' + inner + '</div>';
-        }
-
-        function openLog() {
-          if (logEl) { logEl.remove(); logEl = null; return; }
-          logEl = document.createElement('div');
-          logEl.className = 'flight-log';
-          logEl.innerHTML = renderLog();
-          document.body.appendChild(logEl);
-          logEl.querySelector('.flight-log-close').addEventListener('click', function () { logEl.remove(); logEl = null; });
-          setTimeout(function () {
-            document.addEventListener('click', function outside(e) {
-              if (logEl && !logEl.contains(e.target) && !(bar && bar.contains(e.target))) {
-                logEl.remove(); logEl = null;
-                document.removeEventListener('click', outside);
-              }
-            });
-          }, 10);
-          document.addEventListener('keydown', function esc(e) {
-            if (e.key === 'Escape' && logEl) { logEl.remove(); logEl = null; document.removeEventListener('keydown', esc); }
-          });
-        }
-
-        if (bar) {
-          bar.addEventListener('click', openLog);
-          bar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLog(); } });
-        }
-
-        updateBar();
-
-        // Public API — call from any inline script on the page.
-        window.flightLog = {
-          record: function (id) {
-            var arr = read();
-            // Idempotent: only record if this event ID doesn't already exist
-            if (arr.some(function (e) { return e.id === id; })) return;
-            var st = solTs();
-            arr.push({ id: id, sol: st.sol, ts: st.time, msg: EVENTS[id] || id });
-            write(arr);
-            updateBar();
-            if (logEl) logEl.innerHTML = renderLog();
-          },
-          has: function (id) { return read().some(function (e) { return e.id === id; }); },
-        };
-
-        window.missionLog = { discover: window.flightLog.record, has: window.flightLog.has };
-
-        // Auto-detect page visits — runs once on load for each page.
-        var p = window.location.pathname;
-        if (p === '/manifesto/' || p === '/es/manifesto/') window.flightLog.record('manifesto');
-        if (p === '/archive/' || p === '/es/archive/') window.flightLog.record('archive');
-        if (p === '/contributors/' || p === '/es/contributors/') window.flightLog.record('contributors');
-
-        // Per-experiment page visits
-        var expIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
-        expIds.forEach(function (id) {
-          if (p === '/' + id + '/' || p === '/es/' + id + '/') window.flightLog.record('exp-' + id);
-        });
-
-        // Day/night visit detection
-        var hour = new Date().getHours();
-        if (hour >= 6 && hour < 18) window.flightLog.record('visit-day');
-        else window.flightLog.record('visit-night');
-      })();
-    </script>
-
     {/* WebMCP (AGR2): registers the lab's four read-only tools on browsers that
         ship `modelContext`. On every other browser this module finds no API and
         returns before doing anything — no registration, no request. */}
@@ -1097,98 +963,6 @@ https://github.com/UniverLab
     </script>
     <script>
       import '../lib/mission-date-ui';
-    </script>
-    <script is:inline>
-      (function () {
-        if (document.documentElement.hasAttribute('data-dev')) return;
-
-        var style = document.createElement('style');
-        style.textContent =
-          '@keyframes gl-toast-in{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}' +
-          '@keyframes gl-toast-out{from{opacity:1}to{opacity:0;transform:translate(-50%,-50%) scale(.95)}}' +
-          '.gl-toast-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:319;animation:gl-toast-in .2s ease}' +
-          '.gl-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(18,18,22,0.95);color:#fff;font-family:"IBM Plex Mono",monospace;font-size:.88rem;padding:.9rem 2.4rem .9rem 1.4rem;border-radius:8px;border:1px solid #d4a843;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(212,168,67,0.25),0 0 60px rgba(212,168,67,0.1);animation:gl-toast-in .2s ease;z-index:320;text-align:center;max-width:90vw;cursor:pointer;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}' +
-          '.gl-toast span{color:#d4a843;font-weight:600}.gl-toast a{color:#d4a843;text-decoration:underline;text-underline-offset:2px}' +
-          '.gl-toast-close{position:absolute;top:.3rem;right:.5rem;background:none;border:none;color:#d4a843;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 .2rem;opacity:.7}.gl-toast-close:hover{opacity:1}' +
-          '.gl-toast.gl-toast-out{animation:gl-toast-out .3s ease forwards}' +
-          '.gl-toast-body{margin-top:.5rem;text-align:left;overflow:hidden;flex:1;display:flex;flex-direction:column}' +
-          '.gl-toast-body-inner{color:#ccc;font-size:.82rem;line-height:1.5;max-height:4.5em;overflow:hidden;transition:max-height .3s ease;white-space:pre-line}' +
-          '.gl-toast-body-inner.expanded{max-height:none;overflow-y:auto}' +
-          '.gl-toast-expand{background:none;border:0;color:#d4a843;font-family:"IBM Plex Mono",monospace;font-size:.72rem;cursor:pointer;padding:.3rem 0 0;text-align:left;opacity:.8}.gl-toast-expand:hover{opacity:1;text-decoration:underline}';
-        document.head.appendChild(style);
-
-        function escapeHtml(s) {
-          return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-        function linkify(text) {
-          var escaped = escapeHtml(text);
-          return escaped.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
-            return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
-          });
-        }
-
-        var source = new EventSource('https://announcements.univerlab.org/events');
-        source.addEventListener('entry', function (e) {
-          try {
-            var entry = JSON.parse(e.data);
-
-            var backdrop = document.createElement('div');
-            backdrop.className = 'gl-toast-backdrop';
-            document.body.appendChild(backdrop);
-
-            var toast = document.createElement('div');
-            toast.className = 'gl-toast';
-            var html = '<button class="gl-toast-close" aria-label="Close">&times;</button><span>' + escapeHtml(entry.title) + '</span>';
-            if (entry.body) {
-              var bodyHtml = linkify(entry.body);
-              html += '<div class="gl-toast-body"><div class="gl-toast-body-inner">' + bodyHtml + '</div><button class="gl-toast-expand" type="button">ver más</button></div>';
-            }
-            if (entry.link) {
-              html += '<br><a href="' + escapeHtml(entry.link) + '" target="_blank" rel="noopener noreferrer">View &rarr;</a>';
-            }
-            toast.innerHTML = html;
-
-            var expandBtn = toast.querySelector('.gl-toast-expand');
-            if (expandBtn) {
-              var inner = toast.querySelector('.gl-toast-body-inner');
-              requestAnimationFrame(function () {
-                if (inner.scrollHeight <= inner.clientHeight + 2) {
-                  expandBtn.style.display = 'none';
-                } else {
-                  expandBtn.addEventListener('click', function (ev) {
-                    ev.stopPropagation();
-                    inner.classList.toggle('expanded');
-                    expandBtn.textContent = inner.classList.contains('expanded') ? 'ver menos' : 'ver más';
-                  });
-                }
-              });
-            }
-
-            var dismiss = function () {
-              backdrop.style.transition = 'opacity 0.3s';
-              backdrop.style.opacity = '0';
-              toast.style.transition = 'opacity 0.3s';
-              toast.style.opacity = '0';
-              setTimeout(function () { backdrop.remove(); toast.remove(); }, 300);
-            };
-
-            toast.querySelector('.gl-toast-close').addEventListener('click', dismiss);
-            backdrop.addEventListener('click', dismiss);
-
-            if (entry.link) {
-              toast.style.cursor = 'pointer';
-              toast.addEventListener('click', function (ev) {
-                if (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON') return;
-                window.open(entry.link, '_blank', 'noopener,noreferrer');
-              });
-            }
-
-            document.body.appendChild(toast);
-            setTimeout(dismiss, 8000);
-          } catch (err) {}
-        });
-        source.onerror = function () {};
-      })();
     </script>
   </body>
 </html>

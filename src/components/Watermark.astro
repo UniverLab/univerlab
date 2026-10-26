@@ -1,0 +1,64 @@
+---
+interface Props {
+  kind: 'blueprint' | 'celestial';
+}
+const { kind } = Astro.props;
+---
+<div class={`watermark watermark-${kind}`} aria-hidden="true"></div>
+<style>
+  .watermark {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  /* The ground tile is painted by <body>, which would otherwise cover a negative
+     z-index layer. Making body the stacking context lifts the drawing above the
+     tile while keeping it under the text. */
+  :global(body) { isolation: isolate; }
+  .watermark-blueprint {
+    background-image: image-set(
+      url('/bench/textures/blueprint-day.avif') type('image/avif'),
+      url('/bench/textures/blueprint-day.webp') type('image/webp')
+    );
+    background-size: 800px;
+    background-repeat: repeat;
+    opacity: 0.5;
+  }
+  :global(html[data-bench-theme='night']) .watermark-blueprint {
+    background-image: image-set(
+      url('/bench/textures/blueprint-night.avif') type('image/avif'),
+      url('/bench/textures/blueprint-night.webp') type('image/webp')
+    );
+  }
+  .watermark-celestial {
+    background-image: image-set(
+      url('/bench/textures/celestial-day-1600.avif') type('image/avif'),
+      url('/bench/textures/celestial-day-1600.webp') type('image/webp')
+    );
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.45;
+  }
+  :global(html[data-bench-theme='night']) .watermark-celestial {
+    background-image: image-set(
+      url('/bench/textures/celestial-night-1600.avif') type('image/avif'),
+      url('/bench/textures/celestial-night-1600.webp') type('image/webp')
+    );
+  }
+  @media (max-width: 50rem) {
+    .watermark-celestial {
+      background-image: image-set(
+        url('/bench/textures/celestial-day-800.avif') type('image/avif'),
+        url('/bench/textures/celestial-day-800.webp') type('image/webp')
+      );
+    }
+    :global(html[data-bench-theme='night']) .watermark-celestial {
+      background-image: image-set(
+        url('/bench/textures/celestial-night-800.avif') type('image/avif'),
+        url('/bench/textures/celestial-night-800.webp') type('image/webp')
+      );
+    }
+  }
+</style>

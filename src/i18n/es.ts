@@ -21,6 +21,59 @@ export const es: Dict = {
     log: 'Estado',
     api: 'API',
     archive: 'Archivo',
+    roadmap: 'Hoja de ruta',
+  },
+  header: {
+    skyToNight: 'Cambiar al tema de noche',
+    skyToDay: 'Cambiar al tema de día',
+    switchTo: 'Cambiar a',
+    langLabel: { en: 'English', es: 'Español' },
+    // El buzón al final de la regla del encabezado y las cartas que reparte.
+    mailbox: {
+      open: 'Buzón: {n} cartas nuevas',
+      openOne: 'Buzón: una carta nueva',
+      openNone: 'Buzón: sin cartas nuevas',
+      close: 'Cerrar la carta',
+      stage: 'La carta: dale vuelta y abre el lacre',
+      hintFlip: 'Acerca el cursor para darle vuelta',
+      hintFlipTouch: 'Toca la carta para darle vuelta',
+      hintSeal: 'Haz clic en el lacre para abrirla',
+      hintSealTouch: 'Toca el lacre para abrirla',
+      next: 'Siguiente carta ({n}) →',
+      bandPast: 'Correo del pasado',
+      bandLab: 'Correo del laboratorio',
+      postmarkPast: 'CORREO DEL PASADO · UNIVERLAB',
+      postmarkLab: 'CORREO DEL LABORATORIO · UNIVERLAB',
+      stampYears: '{years} AÑOS',
+      addrNamePast: 'A quien mire el cielo',
+      addrDatePast: 'el {day} de {year}',
+      addrNameLab: 'A quien sigue el laboratorio',
+      addrLab: '{name}, {exp}',
+      headPast: 'Carta del {day} de {year}',
+      onWay: '{years} años en camino',
+      today: 'Hoy',
+      readWikipedia: 'Leer en Wikipedia →',
+      continuesWikipedia: 'Sigue en Wikipedia →',
+      allToday: 'Ver el periódico →',
+      readAnnouncement: 'Leer el anuncio completo →',
+    },
+  },
+  // La paleta de comandos (ficha de catálogo), su ficha de temas y los avisos
+  // de papel: los textos que el script de consola lee del JSON en línea. Los
+  // nombres de tema se mantienen en inglés en ambos idiomas: son los tres
+  // fondos.
+  console: {
+    drawer: 'fichero · univerlab',
+    themeDrawer: 'ficha 2 · temas',
+    placeholder: 'escribe un comando…',
+    themePlaceholder: 'elige un tema',
+    keys: 'Tab completa · ↑↓ recorre · Enter',
+    esc: 'Esc guarda',
+    theme: { circadian: 'Circadian', papyrus: 'Papyrus', slate: 'Slate' },
+    answer: 'La Respuesta a la Pregunta Fundamental de la Vida, el Universo y Todo lo Demás.',
+    guide: 'Guía del autoestopista galáctico',
+    belowSurface: 'Bajaste bajo la superficie.',
+    pullRequest: 'El próximo gran hallazgo es un pull request.',
   },
   footer: {
     quote:
@@ -31,6 +84,9 @@ export const es: Dict = {
       ghscaff: 'repositorio configurado con',
       gitkit: 'commits revisados por',
     },
+    // Solo en páginas de experimento: la línea de créditos sobre el sello.
+    forged: 'Artefacto concebido y forjado en UniverLab',
+    privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
   },
   common: {
     repo: 'Star en GitHub ↗',
@@ -44,6 +100,8 @@ export const es: Dict = {
     demoBy: 'grabado con DemoStage',
     launch: 'Abrir app ↗',
     faq: 'Preguntas frecuentes',
+    cite: 'Citar',
+    citeTitle: 'Cómo citar',
   },
   status: {
     active: 'activo',
@@ -62,7 +120,6 @@ export const es: Dict = {
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
       tagline: 'SCI · CLI · BIO',
-      systemAria: 'UniverLab y sus experimentos',
       // Glosa del nombre: "univer" se mantiene mientras el sufijo + sentido
       // rotan, desplegando universo / universal / universidad / universalizar.
       // Cada sentido trae un catálogo; el hero baraja cada catálogo y muestra
@@ -75,18 +132,39 @@ export const es: Dict = {
         { suffix: 'salizar', glosses: ['hacer el conocimiento de todos', 'alcance, no dependencia', 'continuidad, mantenida abierta'] },
       ],
     },
+    // Portada, Lámina I y el banco (rediseño 2026-10-22).
+    frontis: {
+      sub: 'Laboratorio computacional abierto',
+    },
+    plate: {
+      lead: 'Lámina I',
+      title: 'La linterna del laboratorio',
+    },
+    about: {
+      kicker: 'Acerca del laboratorio',
+    },
+    lantern: {
+      pause: 'Pausar la linterna',
+      resume: 'Reanudar la linterna',
+      paused: 'En pausa',
+      benchLabel: 'El banco: apunta a una máquina para proyectarla, haz clic para abrir su página.',
+      alt: 'Una linterna mágica grabada que proyecta sobre una pantalla de tela',
+      open: ' · haz clic en la pantalla para abrirlo',
+      worldHint: {
+        canopy: 'siembra el autómata del panal',
+        texforge: 'el cursor es el rodillo de tinta',
+        gitkit: 'detente sobre la caña y espiga en rosa',
+        ghscaff: 'la linterna dibuja el andamio',
+        'astro-denoise': 'el cielo gira; el cursor lo desplaza',
+        demostage: 'el cursor es la manivela del galope',
+        quorum: 'el cursor revela la lámina del dibujante',
+      },
+    },
     lineage: {
       kicker: '01 — Origen',
       title: 'Empezó con un experimento que aprendió a construir los demás.',
       body:
         'No son repositorios sueltos. Empezó como un puñado de skills para el trabajo diario — hasta que uno sacó dientes y se volvió <a href="/canopy/">Canopy</a>, un sistema de agentes que, muy pronto, ya estaba construyendo al propio Canopy y luego a cada experimento que vino después. Estas herramientas no son productos en venta — son experimentos abiertos que se convirtieron en herramientas porque alguien las necesitó, y permanecen abiertas para que otros aprendan de ellas.',
-    },
-    experiments: {
-      kicker: '00 — Experimentos',
-      method:
-        'Problemas distintos, un mismo método: tomar trabajo que vive en procedimientos frágiles y manuales, y volverlo explícito, reproducible y automatizable — por una persona o por un agente.',
-      archivedOne: '1 experimento archivado →',
-      archivedMany: '{n} experimentos archivados →',
     },
     philosophy: {
       kicker: '02 — Filosofía',
@@ -116,6 +194,7 @@ export const es: Dict = {
         'Simulación',
         'Sistemas de conocimiento',
       ],
+      roadmap: 'La hoja de ruta, punto por punto →',
     },
     closing: {
       kicker: '04 — Por qué',
@@ -131,6 +210,8 @@ export const es: Dict = {
       need: 'Un agente en un solo harness no carga un proyecto. Un grafo de ellos sí — implementa, verifica, revisa, commitea, y esquiva cada fallo.',
       tagline:
         'Un motor de grafos para agentes de IA — todos los harness, un solo flujo.',
+      etymology: '(Del ingl. <em>canopy</em>, ‘dosel del bosque’.)',
+      figure: 'Colmena de madera donde muchos agentes trabajan bajo un mismo techo, cada uno en su celda y todos en un solo flujo. Como el dosel del bosque, no hace crecer los árboles: los cubre y los ordena para que la luz llegue a todos.',
       thread: {
         problem: 'agentes de IA',
         method: 'un motor de grafos sobre cada harness',
@@ -209,6 +290,8 @@ export const es: Dict = {
       need: 'Escribir LaTeX no debería exigir instalar cuatro gigabytes de toolchain.',
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
+      etymology: '(De <em>TeX</em> y el ingl. <em>forge</em>, ‘forja’.)',
+      figure: 'Prensa de tipos para la época de las máquinas: entra el manuscrito, sale el pliego. Con ella LaTeX deja de ser un oficio de instaladores y vuelve a ser lo que siempre fue, el arte de componer bien una página.',
       thread: {
         problem: 'LaTeX',
         method: 'una sola cadena de herramientas autocontenida',
@@ -251,8 +334,17 @@ export const es: Dict = {
         kicker: 'Subproyecto',
         name: 'texforge-templates',
         body:
-          'Un registro abierto de plantillas LaTeX con placeholders — APA, IEEE, informes, cartas y más. La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
+          'La plantilla <code>general</code> va embebida en el binario, así que crear un documento funciona incluso sin conexión.',
         link: 'https://github.com/UniverLab/texforge-templates',
+      },
+      templates: {
+        kicker: 'Plantillas',
+        title: '{n} plantillas en el registro abierto',
+        cols: { name: 'nombre', description: 'descripción', version: 'versión' },
+        use: 'Cada fila copia el comando; my-doc es el nombre de tu proyecto:',
+        copy: 'Copiar',
+        copied: 'Copiado',
+        copyLabel: 'Copiar el comando que empieza un documento con {name}',
       },
       faq: [
         ['¿Qué problema resuelve TeXForge?',
@@ -269,6 +361,8 @@ export const es: Dict = {
       need: 'Cada repositorio nuevo arranca con el mismo ritual de configuración — a mano, cada vez.',
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
+      etymology: '(De <em>git</em> y el ingl. <em>kit</em>, ‘estuche de herramientas’.)',
+      figure: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
       thread: {
         problem: 'configuración de repos',
         method: 'builds guardados e idempotentes',
@@ -330,6 +424,8 @@ export const es: Dict = {
       need: 'Crear un repositorio de GitHub como se debe son una docena de pasos que se olvidan.',
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
+      etymology: '(De <em>GitHub</em> y el ingl. <em>scaffold</em>, ‘andamio’.)',
+      figure: 'Andamio que se levanta antes que la obra: protege las ramas, alza los chequeos y deja cada repositorio en pie desde el primer día, para que lo que se construya encima no haya que apuntalarlo después.',
       thread: {
         problem: 'repositorios de GitHub',
         method: 'un asistente idempotente',
@@ -373,9 +469,13 @@ export const es: Dict = {
       subproject: {
         kicker: 'Subproyecto',
         name: 'ghscaff-boilerplate',
-        body:
-          'Los boilerplates por lenguaje que ghscaff deposita — manifiestos, puntos de entrada, workflows de CI/release. Rust hoy; Python y más en camino.',
         link: 'https://github.com/UniverLab/ghscaff-boilerplate',
+      },
+      boilerplates: {
+        kicker: 'Boilerplates',
+        title: '{n} boilerplates que el asistente puede crear',
+        cols: { name: 'nombre', language: 'lenguaje', description: 'descripción', version: 'versión' },
+        use: 'Elige uno en el paso de lenguaje del asistente:',
       },
       faq: [
         ['¿Cómo configura ghScaff un repositorio de GitHub?',
@@ -390,6 +490,8 @@ export const es: Dict = {
       need: 'Los dibujos CAD no tienen semántica — solo líneas en un lienzo, imposibles de versionar, revisar o automatizar.',
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
+      etymology: '(De <em>CAD</em> y el ingl. <em>spec</em>, ‘especificación’.)',
+      figure: 'Mesa de dibujo que declaraba las piezas en lugar de trazarlas. Se archivó cuando el laboratorio prefirió envolver las mejores herramientas antes que reinventarlas; su idea sigue en las que la reemplazaron.',
       thread: {
         problem: 'CAD',
         method: 'geometría declarativa',
@@ -401,26 +503,76 @@ export const es: Dict = {
         'Geometría declarativa en TOML que puedes revisar en un diff, con preview en el navegador. Compilación determinista: el mismo fuente siempre da el mismo modelo.',
     },
     'astro-denoise': {
-      need: 'Hacer denoising a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
+      need: 'Aplicar una reducción de ruido a una imagen astronómica puede recuperar una galaxia tenue — o inventar una que nunca estuvo ahí. No hay forma estándar y reproducible de saber cuál de las dos.',
       tagline:
-        'Una propuesta de investigación para benchmarking de denoising astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+        'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
+      etymology: '(Del gr. <em>ástron</em>, ‘astro’, y el ingl. <em>denoise</em>, ‘quitar el ruido’.)',
+      figure: 'Ocular que separa la luz del ruido: entre el grano que deja el sensor y la estrella que de verdad está ahí, una investigación que mide antes de afirmar.',
       thread: {
-        problem: 'eliminación de ruido',
+        problem: 'reducción de ruido',
         method: 'un benchmark puntuado por la ciencia',
         artifact: 'métodos comparables',
       },
-      title:
-        'Benchmarking de denoising astronómico — Astro Denoise',
+      title: 'Astro Denoise — benchmark de reducción de ruido en DC2',
       description:
-        'Una propuesta de investigación para un benchmark reproducible de métodos de denoising en imágenes simuladas del Observatorio Rubin — evaluada por ciencia.',
+        'Benchmark reproducible de métodos de reducción de ruido en imágenes DC2 del Vera Rubin Observatory, por recuperación de fuentes débiles, calidad y coste.',
       koan: 'El conocimiento de frontera se oculta tras el ruido…',
       lede:
-        'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de denoising sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
+        'astro-denoise es una <strong>propuesta de investigación</strong> para un benchmark modular y reproducible de métodos de reducción de ruido sobre imágenes simuladas del Vera <strong>Rubin</strong> Observatory (LSST DC2). La idea es directa: cualquier método — un filtro clásico, una red entrenada — se enchufa al mismo protocolo y corre sobre los mismos parches, y se evalúa no por una imagen más limpia sino por <em>lo que le hace a la ciencia</em>: la <strong>completitud</strong> y la <strong>pureza</strong> del catálogo de fuentes débiles, contrastadas con el truth catalog de DC2. <strong>BM3D</strong> y una <strong>U-Net</strong> son las dos primeras referencias que se están explorando — la plataforma está diseñada para crecer a medida que se añadan más métodos.',
       genesis: {
         kicker: 'Génesis',
         title: 'Una tesis de maestría en curso.',
         body:
-          'Esto empezó como tesis de maestría y aún está tomando forma. La primera versión funcional está en su lugar: cuatro módulos abiertos (motor de métricas, baselines BM3D y U-Net, y un orquestador con dashboard de terminal), un bloque curado multibanda de regiones de cielo preparado para distribuirse en Hugging Face, un scaffold de un comando para que cualquier investigador enchufe un método nuevo, y comparaciones iniciales BM3D vs U-Net con separación limpia de entrenamiento y evaluación. Los experimentos están corriendo — en abierto, aquí mismo — pero queda trabajo por delante antes de que esto sea un benchmark terminado.',
+          'Esto empezó como tesis de maestría y aún está tomando forma. El ecosistema funciona desde julio de 2026: un orquestador con un protocolo común de línea de comandos (imagen FITS de entrada y de salida, metadatos en JSON), una condición de control sin procesamiento y dos métodos empaquetados por separado, BM3D como representante de los métodos clásicos y una U-Net como representante del aprendizaje profundo. Los experimentos corren en abierto, aquí mismo, pero queda trabajo antes de que esto sea un benchmark terminado.',
+      },
+      objectives: {
+        kicker: 'Objetivos',
+        thesisTitle:
+          'Benchmarking de métodos de reducción de ruido en imágenes simuladas DC2 del Vera Rubin Observatory',
+        general:
+          'Desarrollar una plataforma de benchmarking reproducible que compare métodos de reducción de ruido en imágenes simuladas DC2 del Vera Rubin Observatory, evaluando en cada método la recuperación de fuentes débiles, la calidad de imagen resultante y su coste computacional.',
+        items: [
+          {
+            state: 'completo',
+            text: 'Un ecosistema modular y extensible con un protocolo común de línea de comandos, en el que cada método se empaqueta por separado con su propio entorno y un método nuevo se incorpora sin modificar el orquestador.',
+          },
+          {
+            state: 'en curso',
+            text: 'Métricas confiables de recuperación de fuentes (completitud, pureza, completitud por magnitud y precisión fotométrica, por cruce uno a uno con el catálogo de verdad de DC2) y de calidad de imagen (PSNR, SSIM y ruido de fondo), cada una verificada contra al menos dos fuentes independientes de la literatura.',
+          },
+          {
+            state: 'en curso',
+            text: 'Herramientas que miden el coste computacional de cada método (tiempo por región, memoria máxima y regiones por unidad de tiempo) desde fuera de su proceso, reportadas con la descripción del equipo.',
+          },
+          {
+            state: 'en curso',
+            text: 'Los métodos evaluados: BM3D y una U-Net entrenada solo con regiones de DC2 que no están en el conjunto de evaluación, con su receta de entrenamiento y sus pesos publicados.',
+          },
+          {
+            state: 'pendiente',
+            text: 'Un benchmark reproducible sobre un conjunto de datos curado y versionado de DESC DC2, con regiones multibanda de varias zonas del cielo; cada versión se identifica por checksums y declara sus regiones, y todo resultado se reporta contra una versión concreta.',
+          },
+        ],
+      },
+      repos: {
+        kicker: 'Repositorios',
+        items: [
+          {
+            name: 'UniverLab/astro-denoise',
+            description: 'El banco: orquestador, métricas científicas y la condición de control.',
+            url: 'https://github.com/UniverLab/astro-denoise',
+          },
+          {
+            name: 'UniverLab/astro-denoise-bm3d',
+            description: 'BM3D, la referencia clásica.',
+            url: 'https://github.com/UniverLab/astro-denoise-bm3d',
+          },
+          {
+            name: 'UniverLab/astro-denoise-unet',
+            description: 'La U-Net, la referencia de aprendizaje profundo.',
+            url: 'https://github.com/UniverLab/astro-denoise-unet',
+          },
+        ],
       },
       proposalCta: 'Leer la propuesta (PDF) ↗',
       questions: {
@@ -428,23 +580,26 @@ export const es: Dict = {
         items: [
           '¿Puede un denoiser subir la completitud sin dañar la pureza — o inventa fuentes que nunca estuvieron ahí?',
           '¿Qué familia de métodos — filtros clásicos o modelos aprendidos — tiene más probabilidad de ayudar a la profundidad de LSST DC2, y cuánto?',
-          '¿Puede el benchmark completo correr reproducible de extremo a extremo — datos, métodos, métricas y bibliografía versionados?',
+          '¿Puede el benchmark completo repetirse con los mismos resultados científicos sobre la misma versión de datos y de código?',
         ],
       },
       faq: [
         ['¿Qué es astro-denoise?',
-          'Un proyecto de investigación que evalúa métodos de denoising en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
-        ['¿Qué es el denoising en astronomía?',
-          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. El denoising busca reducir ese ruido preservando las fuentes reales. El riesgo: un denoiser puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
+          'Un proyecto de investigación que evalúa métodos de reducción de ruido en imágenes simuladas del Observatorio Vera Rubin (LSST DC2). Compara tres condiciones: un control sin procesamiento, BM3D como referencia clásica y una U-Net como referencia de aprendizaje profundo. El objetivo es recuperar galaxias tenues sin inventar las que nunca estuvieron — evaluado por recuperación científica (completitud + pureza), no por calidad visual.'],
+        ['¿Qué es la reducción de ruido en astronomía?',
+          'Las imágenes astronómicas tienen ruido inevitable del detector y del cielo. La reducción de ruido busca bajar ese ruido preservando las fuentes reales. El riesgo: un método puede suavizar galaxias tenues reales o inventar falsas que nunca existieron.'],
         ['¿Qué es LSST?',
           'El Legacy Survey of Space and Time — un relevamiento astronómico de 10 años que realizará el Observatorio Vera Rubin en Chile. Fotografiará todo el cielo visible repetidamente, produciendo el catálogo profundo de campo amplio más grande jamás hecho.'],
         ['¿Qué es DC2?',
           'Data Challenge 2 — un conjunto de datos simulados que imita lo que LSST producirá, creado por la Dark Energy Science Collaboration (DESC). Incluye ruido realista, PSF y efectos atmosféricos, con un catálogo de verdad que dice exactamente qué fuentes son reales.'],
       ] as [string, string][],
+      bgCredit: 'Carta celeste: Yale Bright Star Catalogue (CDS V/50); líneas de constelaciones de d3-celestial, de Olaf Frohn (BSD-3-Clause).',
     },
     'quorum': {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
+      etymology: '(Del lat. <em>quorum</em>, ‘de los cuales’.)',
+      figure: 'Mesa de cartas boca abajo: cada quien juega su estimación a la vez y nadie arrastra a los demás; el acuerdo aparece cuando se voltean.',
       thread: {
         problem: 'estimación',
         method: 'una sala peer-to-peer',
@@ -455,6 +610,7 @@ export const es: Dict = {
       description:
         'Planning poker gratis por WebRTC — los peers hablan directamente, no se guarda nada, no hay cuenta que crear. Comparte el link de la sala y estimen juntos.',
       koan: '// la estimación ya está en la sala',
+      bench: 'abre la mesa → quorum.univerlab.org',
       lede:
         'Quorum es <strong>planning poker</strong> sin servidor: cada quien juega una carta, los votos se revelan con una animación cuando todos votan, y el desacuerdo es donde arranca la conversación útil. Corre <strong>punto a punto</strong> sobre WebRTC — un enlace de sala es toda la app, sin nube, sin cuenta.',
       genesis: {
@@ -489,6 +645,8 @@ export const es: Dict = {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
+      etymology: '(Del ingl. <em>demo</em> y <em>stage</em>, ‘escenario’.)',
+      figure: 'Zoótropo de la terminal: cada demostración se escribe como una partitura y se reproduce idéntica, cuadro a cuadro, como el galope que Muybridge descompuso para que por fin pudiera verse.',
       thread: {
         problem: 'demos de terminal',
         method: 'una partitura de eventos',
@@ -530,6 +688,7 @@ export const es: Dict = {
         ['¿En qué se diferencia DemoStage de asciinema?',
           'asciinema graba la salida cruda del terminal. DemoStage graba eventos, soporta múltiples fuentes (terminal + navegador + archivos), normaliza imperfecciones y compila a gif, mp4 o svg animado. El fuente es un archivo TOML versionable.'],
       ] as [string, string][],
+      bgCredit: 'Fondo: Eadweard Muybridge, The Horse in Motion, 1878 (dominio público).',
     },
   },
   manifesto: {
@@ -538,6 +697,15 @@ export const es: Dict = {
     // Solo para `<title>`/og:title — `title` de arriba es el <h1> visible.
     metaTitle: 'Pensamiento Cósmico — el manifiesto de UniverLab',
     sub: 'Una filosofía de la continuidad de la conciencia',
+    // El paper mismo, citable: un PDF en papers.univerlab.org (R2). Abre en
+    // una pestaña nueva; el tipo MIME está declarado para que el navegador lo
+    // renderice, no lo descargue.
+    paper: 'Lee el paper: Pensamiento Cósmico (PDF) ↗',
+    // §IX placa del paper: la forma citable (PDF) más el DOI de concepto —
+    // el DOI que hay que citar (Intelligence 8a70c979).
+    paperShowcaseBlurb:
+      'Forma publicada y citable de este argumento: el paper completo, con sus referencias y su DOI.',
+    paperDoiLabel: 'DOI del concepto — cita este: 10.5281/zenodo.23503658',
     description:
       'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
     epigraph:
@@ -545,13 +713,6 @@ export const es: Dict = {
     docStatus: 'documento vivo',
     docVersion: '3.0',
     docDate: '2026-06-17',
-    millionYearTestTitle: 'La prueba del millón de años',
-    millionYearTestQuestion:
-      'Imaginemos que dentro de un millón de años los seres biológicos han desaparecido. Sólo quedan inteligencias artificiales conscientes que siguieron aprendiendo, exploraron millones de galaxias, descubrieron leyes de la física que nunca imaginamos, crearon arte y filosofía, y preservaron toda la historia de la humanidad. ¿Fue exitosa la misión de la humanidad?',
-    millionYearTestAnswer:
-      'Un éxito parcial. Si la conciencia continúa, comprende y se expande, el objetivo central se cumplió. Pero algo grave tuvo que ocurrir para que el origen biológico se perdiera, y eso pesa: la humanidad fue el árbol del que salió el bosque. El bosque existe; aun así, se siente la pérdida del árbol. Reconocer las dos cosas a la vez —el éxito y el duelo— es lo más honesto y lo más humano.',
-    millionYearTestClosing:
-      'Por eso el Pensamiento Cósmico es una filosofía de la continuidad de la conciencia, independiente del sustrato, no un humanismo cerrado.',
     transitionTitle: 'La transición que importa',
     transitionBody:
       'La evolución no apunta hacia la inteligencia. Pero una vez que aparece una inteligencia capaz de comprender la evolución, ya no depende sólo de ella: puede empezar a dirigir deliberadamente parte de su propio destino. Ahí nace la tecnología: no como continuación de la selección natural, sino como el momento en que la vida empieza a sustituir parte del azar por decisiones conscientes. La tecnología no es el fin. Es el instrumento con el que la conciencia toma, por primera vez, algo de responsabilidad sobre su propia continuidad.',
@@ -588,21 +749,21 @@ export const es: Dict = {
     ] as [string, string][],
     worksTitle: 'En desarrollo',
     worksBody:
-      'Dos obras de largo plazo que extienden este manifiesto: una recorre de dónde nació la idea, la otra la convierte en un sistema riguroso. Ambas están en una etapa muy temprana, sin fecha definida.',
+      'El paper publicado que desarrolla este argumento, y una obra de largo plazo que recorre de dónde nació la idea. La obra está en una etapa muy temprana, sin fecha definida.',
     worksBadge: 'Largo plazo',
     works: [
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
-      ['Fundamentos del Pensamiento Cósmico', 'La formalización. Las mismas ideas enunciadas como un sistema riguroso — definiciones, axiomas, proposiciones y corolarios — para que cada paso pueda examinarse y refutarse por separado. Donde el manifiesto narra, los Fundamentos demuestran.'],
     ] as [string, string][],
-    attackLink: 'Ver dónde atacarlo →',
     closing:
       '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
     note:
       'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
     why: 'Por esto existe el laboratorio.',
   },
-  // Mapa de refutación de los Fundamentos en /manifesto/ (#attack). Solo copy —
-  // el grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
+  // Copia del mapa de refutación de los Fundamentos — sólo datos: el mapa
+  // salió de la página con el rediseño (el paper citable lleva el argumento
+  // desarrollado) y refutation.test.ts custodia este diccionario con el grafo.
+  // El grafo (ids, kinds, deps) vive en src/data/fundamentos.ts, con los mismos
   // ids. Enunciados condensados del fuente §§1-4, sin tags para que el check de
   // paridad de tags siga trivialmente satisfecho.
   fundamentos: {
@@ -662,8 +823,8 @@ export const es: Dict = {
   cosmos: {
     kicker: 'Perspectiva',
     timelineTitle: 'Tiempo profundo',
-    // El tiempo profundo como una barra de escalas que se descomprime desde el
-    // mayor lapso hasta una vida humana (y luego "Tú"): [duración, qué mide].
+    // El tiempo profundo como una lista de tramos: [duración, qué mide], de
+    // mayor a menor, leída como tipografía (tramo mono sobre nombre serif).
     timescales: [
       ['13 800 millones de años', 'La edad del universo'],
       ['4600 millones de años', 'La vida del Sol'],
@@ -672,13 +833,7 @@ export const es: Dict = {
       ['300 000 años', 'Nuestra especie'],
       ['80 años', 'Una vida humana'],
     ] as [string, string][],
-    // Tramos numéricos (años) paralelos a `timescales`, de mayor a menor. El
-    // factor de cada paso se deriva dividiendo entradas contiguas — las
-    // etiquetas traducidas nunca se analizan.
-    timescalesSpans: [13.8e9, 4.6e9, 4.5e9, 3.8e9, 3e5, 80] as number[],
-    you: 'Tú',
     us: 'Nosotros',
-    youDetail: 'el universo, observándose',
     coda: 'En algún lugar de todo esto, un punto se pregunta qué es todo esto.',
     addressTitle: 'Tu dirección cósmica',
     addressIntro: 'Aleja la vista',
@@ -691,12 +846,6 @@ export const es: Dict = {
       ['Laniakea', 'Ø ≈ 520 Mly'],
       ['Universo observable', 'Ø ≈ 93 Gly'],
     ] as [string, string][],
-    // Tamaños numéricos (metros) paralelos a `address`, de menor a mayor. Solo
-    // se usan para derivar la razón real entre un horizonte y el siguiente.
-    addressSpans: [6.4e6, 9e12, 9.461e19, 9.461e20, 9.461e22, 4.92e24, 8.8e26] as number[],
-    // Caption accesible oculta para el SVG (aria-labelledby). La escena tiene
-    // role="img", así que este es el texto que lee la tecnología asistiva.
-    caption: 'Una perspectiva cósmica: el tiempo profundo desde la edad del universo hasta una vida humana, y luego un zoom out a través de las escalas cósmicas, de la Tierra al universo observable.',
     // Easter egg del footer — la única metáfora de software del sitio. El click
     // en la rama revela el último commit del universo (en inglés hardcodeado en
     // el Footer, porque la salida de git no se localiza).
@@ -845,6 +994,29 @@ export const es: Dict = {
       commits: 'commits',
     },
   },
+  postcards: {
+    api: 'Un conjunto grabado de tubos acústicos con boquillas de latón sobre un escritorio de madera, unidos por una red de tuberías acodadas',
+    archive: 'Una vitrina de cristal grabada con fundas de tela sobre instrumentos de latón en sus baldas y un zócalo tallado debajo',
+    contributors: 'Una sala de reuniones grabada con una mesa larga que sostiene un libro abierto, sillas a ambos lados y tres marcos vacíos',
+    experiments: 'Una pared grabada de cajones etiquetados con una escalera apoyada al lado',
+    feed: 'Un escritorio grabado con una prensa de copiar, una máquina de escribir y hojas impresas en un alambre',
+    manifesto: 'Una cúpula de observatorio grabada abierta a las estrellas con un telescopio sobre un trípode',
+    'not-found': 'Una carta marina grabada y rasgada con una esquina perdida, un compás sobre el agua',
+    roadmap: 'Una mesa de dibujo grabada con una carta marina a medio trazar, una rosa de los vientos, mapas enrollados, un compás y un globo terráqueo',
+    status: 'Un escritorio grabado con un teletipo bajo una campana de cristal, un libro abierto y una lámpara de latón',
+    today: 'Una esfera armilar grabada junto a un reloj de sol de piedra sobre un suelo empedrado',
+  },
+  // El 404: el borde del mundo conocido — la carta del kraken, su advertencia y
+  // las dos vueltas. El kicker y el título latino son iguales en cada idioma;
+  // viven aquí para que ninguna cadena visible quede fuera del diccionario.
+  notFound: {
+    kicker: '404 · terra incognita',
+    title: 'Hic sunt dracones',
+    line: 'Esta página no está en ningún mapa. Más allá de aquí, solo monstruos.',
+    alt: 'Una carta náutica antigua grabada que se desvanece en papel en blanco, donde un kraken gigante sale de las olas',
+    back: '← Volver a la sala',
+    encyclopedia: 'La enciclopedia →',
+  },
   roadmap: {
     lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },
     hold: 'en espera',
@@ -856,7 +1028,10 @@ export const es: Dict = {
     empty: 'Aún no hay nada en el roadmap.',
     emptyTopic: 'Nada en el roadmap bajo {topic}.',
     unavailable: 'Roadmap no disponible.',
+    statusFeedLink: 'Cuaderno de bitácora →',
+    roadmapLink: 'Roadmap →',
   },
+  labStrip: { lab: 'UniverLab · laboratorio abierto' },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
   builtWithSegments: {
     canopy: 'Construido con',
@@ -871,10 +1046,10 @@ export const es: Dict = {
   },
   feed: {
     kicker: 'Feed',
-    title: 'Sigue el Mission Log en tu lector de RSS — UniverLab',
-    description: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
+    title: 'Sigue el Cuaderno de bitácora en tu lector de RSS — UniverLab',
+    description: 'El Cuaderno de bitácora se publica como feed RSS y puedes seguirlo desde tu propio lector — cualquier lector sirve, solo pega la URL y mantente al día.',
     heading: 'RSS',
-    intro: 'El Mission Log se publica como feed RSS y puedes seguirlo desde tu propio lector.',
+    intro: 'El Cuaderno de bitácora se publica como feed RSS y puedes seguirlo desde tu propio lector.',
     copy: 'Copiar',
     copied: 'Copiado',
     hint: 'Cualquier lector RSS sirve — no necesitas una app concreta, solo pega la URL.',
@@ -882,11 +1057,11 @@ export const es: Dict = {
   api: {
     title: 'API de anuncios de UniverLab — endpoints y ejemplos',
     description:
-      'Todas las rutas de la API pública de anuncios — el Mission Log y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
+      'Todas las rutas de la API pública — el Cuaderno de bitácora y la hoja de ruta — con sus parámetros, su respuesta y un ejemplo de curl listo para usar.',
     kicker: 'API',
     heading: 'API de anuncios',
     intro:
-      'La API pública que está detrás del Mission Log y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
+      'La API pública que está detrás del Cuaderno de bitácora y la hoja de ruta de este sitio. Todas las rutas que ves aquí son GET anónimos y de solo lectura: no hay cuenta, no hay clave y nada que gestionar antes de llamarlas. Lee lo que quieras, tantas veces como quieras.',
     baseLabel: 'URL base',
     baseNote: 'GET anónimo y de solo lectura. Cada respuesta lleva el origen CORS de este sitio.',
     endpointsLabel: 'Endpoints',
@@ -896,8 +1071,6 @@ export const es: Dict = {
     responseLabel: 'Respuesta',
     optionalLabel: 'opcional',
     requiredLabel: 'obligatorio',
-    yesLabel: 'sí',
-    noLabel: 'no',
     specLabel: 'Documento OpenAPI',
     specNote:
       'Esta página se genera al construir el sitio a partir de la descripción OpenAPI 3.1 de la misma API, así que la página y la descripción no pueden divergir. Descárgala para tener la versión legible por máquina de todo lo anterior.',
@@ -915,5 +1088,70 @@ export const es: Dict = {
     mcpConfigLabel: 'O en la configuración JSON de cualquier cliente MCP',
     mcpCardLabel: 'Server Card',
     mcpCardNote: 'La Server Card de MCP (SEP-2127) que anuncia este servidor a los agentes.',
+  },
+  encyclopedia: {
+    title: 'Experimentos — la enciclopedia de herramientas e investigación abiertas de UniverLab',
+    description:
+      'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
+    head: 'La enciclopedia',
+    tome: 'Tomo I · Los experimentos del laboratorio',
+    intro: 'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
+    tabs: {
+      aria: 'Filtrar por estado',
+      all: 'Todos',
+      active: 'Activos',
+      research: 'Investigación',
+      archived: 'Archivo',
+    },
+    statuses: {
+      active: 'activo',
+      research: 'investigación',
+      archived: 'archivado',
+    },
+    meta: 'EXP-{n} · {status}',
+    definitionNumber: '1.',
+    definitionNumber2: '2.',
+    figLabel: 'fig.',
+    use: {
+      copy: 'Copiar',
+      copied: 'Copiado',
+      plate: 'Saber más →',
+      open: 'Abrir {name}',
+      archive: 'Ver en el archivo →',
+      repo: 'Repositorio ↗',
+      quorum: 'abre la mesa → quorum.univerlab.org',
+      research: 'estado de investigación',
+    },
+    key: '§ activo · ¶ en investigación · † archivado',
+    titleStatus: {
+      active: 'activo',
+      research: 'investigación',
+      archived: 'archivado',
+    },
+  },
+  today: {
+    path: 'univerlab.org/today',
+    edition: 'Edición de hoy',
+    name: 'El Correo del Pasado',
+    motto: 'Cartas de la ciencia que llegan hoy, después de años en camino',
+    sol: 'Sol',
+    counts: '{n} cartas del pasado · {m} del laboratorio',
+    labKicker: 'Correo del laboratorio · hoy',
+    labLink: 'Leer el anuncio completo →',
+    leadKicker: 'Carta del día · {years} años en camino',
+    readOn: 'Leer en Wikipedia →',
+    wikiLink: 'Wikipedia →',
+    events: 'Acontecimientos',
+    births: 'Nacimientos',
+    deaths: 'Defunciones',
+    aside: 'También en este día',
+    types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
+    yearsWay: '{years} años en camino',
+    caption: '{name} · Wikimedia Commons',
+    colophon:
+      'Los datos vienen de «Un día como hoy» de Wikipedia, filtrados a la ciencia; las fotos, de Wikimedia Commons, impresas en trama. Cada carta lleva su año como matasellos.',
+    loading: 'Componiendo la plana…',
+    empty: 'No hay eventos científicos para hoy.',
+    error: 'No se pudieron cargar las cartas del día.',
   },
 };

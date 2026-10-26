@@ -40,13 +40,13 @@ describe('buildFeedXml', () => {
     expect(id).toBe('https://univerlab.org/');
 
     const title = doc.querySelector('feed > title')?.textContent;
-    expect(title).toBe('UniverLab Mission Log');
+    expect(title).toBe('UniverLab Logbook');
 
     const links = Array.from(doc.querySelectorAll('feed > link'));
     const self = links.find((l) => l.getAttribute('rel') === 'self');
     expect(self?.getAttribute('href')).toBe('https://announcements.univerlab.org/feed.atom');
     const alt = links.find((l) => l.getAttribute('rel') === 'alternate');
-    expect(alt?.getAttribute('href')).toBe('https://univerlab.org/status');
+    expect(alt?.getAttribute('href')).toBe('https://univerlab.org/status/');
 
     // One <entry> per entry
     const entryEls = doc.querySelectorAll('feed > entry');
@@ -106,7 +106,7 @@ describe('buildFeedXml', () => {
     const links = Array.from(doc.querySelectorAll('entry > link'));
     for (const l of links) {
       expect(l.getAttribute('rel')).toBe('alternate');
-      expect(l.getAttribute('href')).toBe('https://univerlab.org/status');
+      expect(l.getAttribute('href')).toBe('https://univerlab.org/status/');
     }
     const contents = Array.from(doc.querySelectorAll('entry > content'));
     for (const c of contents) expect(c.getAttribute('type')).toBe('html');

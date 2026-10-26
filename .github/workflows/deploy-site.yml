@@ -132,6 +132,20 @@ jobs:
           path: canopy-registry
           sparse-checkout: platforms
           fetch-depth: 0
+      # TeXForge templates — registry.toml for the template catalogue
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/texforge-templates
+          path: texforge-templates
+          sparse-checkout: registry.toml
+          sparse-checkout-cone-mode: false
+      # ghScaff boilerplates — template.toml heads for the boilerplate catalogue
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/ghscaff-boilerplate
+          path: ghscaff-boilerplate
+          sparse-checkout: '*/template.toml'
+          sparse-checkout-cone-mode: false
 
       - uses: actions/setup-node@v4
         with:

@@ -1,13 +1,16 @@
 /**
- * Source-level tests for the rebuilt /manifesto "Perspective" scene: one inline
- * SVG, two acts (deep time, then the cosmic address), driven by native scroll.
+ * Source-level tests for the /manifesto "Perspective" section: the cosmic
+ * perspective as editorial typography — deep time and the cosmic address as
+ * two ordered lists, the coda as a closing italic line — with the old
+ * scrollytelling (live SVG, poster SVG, 500vh track, its script and its
+ * dictionary keys) gone.
  *
  * Astro components aren't renderable in Jest, so we verify the contract by
- * reading the source files as text and the dictionaries as data. The scene
- * renders its copy through `c.timescales.map(...)` and `c.address.map(...)`, so
- * every label in the dictionary is emitted; these tests pin that the whole
- * arrays are what the scene reads, that the numeric spans line up, that the
- * cruise-control script is gone, and that i18n parity still holds.
+ * reading the source file as text and the dictionaries as data. The section
+ * renders its copy through `c.timescales.map(...)` and `c.address.map(...)`,
+ * so every label in the dictionary is emitted; these tests pin that the whole
+ * arrays are what the section reads, that the markup is lists — not SVG —
+ * and that i18n parity still holds.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -18,50 +21,58 @@ import { es } from '../i18n/es';
 const ROOT = resolve(__dirname, '..', '..');
 const astroSrc = readFileSync(resolve(ROOT, 'src', 'views', 'Manifesto.astro'), 'utf8');
 
-// The scene's SVG template path. The live stage and the static poster are two
-// SVGs (the poster is the reduced-motion / no-JS artifact); between them they
-// carry every label, so the assertions read their union.
-const sliceSvg = (cls: string): string => {
-  const start = astroSrc.indexOf(`<svg class="${cls}"`);
-  if (start === -1) return '';
-  const end = astroSrc.indexOf('</svg>', start);
-  return astroSrc.slice(start, end);
-};
-const sceneSvg = sliceSvg('cosmos-svg') + sliceSvg('cosmos-poster');
-
-// The cosmos script (the first <script> block), kept separate so the "no wheel
-// / no preventDefault" checks never trip on the unrelated Observatory script.
-const scriptStart = astroSrc.indexOf('<script>');
-const scriptEnd = astroSrc.indexOf('</script>', scriptStart);
-const cosmosScript = astroSrc.slice(scriptStart, scriptEnd);
+// The perspective section, from its id to the section's close — the exact
+// span the assertions read.
+const sectionStart = astroSrc.indexOf('<section id="perspective"');
+const sectionEnd = astroSrc.indexOf('</section>', sectionStart);
+const perspective = sectionStart === -1 ? '' : astroSrc.slice(sectionStart, sectionEnd);
 
 const dicts: Array<[string, typeof en]> = [
   ['en', en],
   ['es', es],
 ];
 
-describe('manifesto cosmos scene', () => {
-  it('renders one inline SVG with a fixed viewBox and an accessible caption', () => {
-    expect(sceneSvg).toMatch(/viewBox="0 0 1000 1000"/);
-    expect(sceneSvg).toMatch(/role="img"/);
-    expect(sceneSvg).toMatch(/aria-labelledby="cosmos-caption"/);
+describe('manifesto cosmos section', () => {
+  it('keeps the id and opens with the localised kicker as a reading section', () => {
+    expect(sectionStart).toBeGreaterThan(-1);
+    expect(perspective).toMatch(/class="wrap section"/);
+    expect(perspective).toMatch(/<h2 class="sec-h">\{c\.kicker\}<\/h2>/);
   });
 
-  it('keeps the deep-time and address data as semantic lists for agents', () => {
-    expect(astroSrc).toMatch(/<ol>/);
-    expect(astroSrc).toMatch(/<dl>/);
-    expect(astroSrc).toMatch(/timescales\.map/);
+  it('renders deep time as an ordered list of mono spans over editorial names', () => {
+    expect(perspective).toMatch(/<h3 class="cosmos-h">\{c\.timelineTitle\}<\/h3>/);
+    expect(perspective).toMatch(/<ol class="timescales">/);
+    expect(perspective).toMatch(/c\.timescales\.map\(\(\[span, name\]\)/);
+    // The space between span and name is a text node: flex layout ignores it,
+    // but build-md needs it so the markdown twin does not glue the two words.
+    expect(perspective).toMatch(/<li><span class="ts-span">\{span\}<\/span> \{name\}<\/li>/);
   });
 
-  it('is scroll-driven with a sticky track and an IntersectionObserver', () => {
-    expect(astroSrc).toMatch(/data-cosmos\b/);
-    expect(astroSrc).toMatch(/position:\s*sticky/);
-    expect(astroSrc).toMatch(/IntersectionObserver/);
+  it('renders the cosmic address as an ordered list that starts with Us', () => {
+    expect(perspective).toMatch(/<h3 class="cosmos-h">\{c\.addressTitle\}<\/h3>/);
+    expect(perspective).toMatch(/<p>\{c\.addressIntro\}<\/p>/);
+    expect(perspective).toMatch(/<ol class="address">/);
+    const usAt = perspective.indexOf('<li>{c.us}</li>');
+    const mapAt = perspective.indexOf('c.address.map');
+    expect(usAt).toBeGreaterThan(-1);
+    expect(mapAt).toBeGreaterThan(usAt);
+    expect(perspective).toMatch(/<li>\{name\} <span class="ad-scale">\{scale\}<\/span><\/li>/);
+  });
+
+  it('renders the coda as the closing centred italic line', () => {
+    expect(perspective).toMatch(/<p class="cosmos-coda">\{c\.coda\}<\/p>/);
+  });
+
+  it('has removed the scrollytelling: no data hooks, no sticky track, no SVG', () => {
+    expect(astroSrc).not.toMatch(/data-cosmos/);
+    expect(astroSrc).not.toMatch(/cosmos-scrolly|cosmos-sticky|cosmos-svg|cosmos-poster/);
+    expect(astroSrc).not.toMatch(/500vh/);
+    expect(astroSrc).not.toMatch(/position:\s*sticky/);
+    expect(astroSrc).not.toMatch(/cosmos-caption|visually-hidden/);
   });
 
   describe.each(dicts)('%s dictionary', (_lang, dict) => {
-    it('has every timescale label reachable in the scene SVG', () => {
-      expect(sceneSvg).toMatch(/c\.timescales\.map/);
+    it('carries every timescale as a [span, name] pair', () => {
       for (const [span, name] of dict.cosmos.timescales) {
         expect(typeof span).toBe('string');
         expect(span.length).toBeGreaterThan(0);
@@ -70,84 +81,39 @@ describe('manifesto cosmos scene', () => {
       }
     });
 
-    it('has every address name and scale string reachable in the scene SVG', () => {
-      expect(sceneSvg).toMatch(/c\.address\.map/);
+    it('carries every horizon as a [name, scale] pair', () => {
       for (const [name, scale] of dict.cosmos.address) {
         expect(name.length).toBeGreaterThan(0);
         expect(scale.length).toBeGreaterThan(0);
       }
     });
 
-    it('renders the coda in the scene SVG', () => {
-      expect(sceneSvg).toContain('{c.coda}');
+    it('carries us and the coda', () => {
+      expect(typeof dict.cosmos.us).toBe('string');
+      expect(dict.cosmos.us.length).toBeGreaterThan(0);
       expect(typeof dict.cosmos.coda).toBe('string');
       expect(dict.cosmos.coda.length).toBeGreaterThan(0);
     });
 
-    it('references every cosmos key the scene uses', () => {
-      for (const key of [
-        'timescales', 'address', 'coda', 'you', 'us', 'youDetail',
-        'addressTitle', 'addressIntro', 'timelineTitle', 'caption', 'kicker',
-      ]) {
-        expect(astroSrc).toMatch(new RegExp(`c\\.${key}`));
+    it('no longer carries the scrollytelling-only keys', () => {
+      for (const key of ['timescalesSpans', 'you', 'youDetail', 'addressSpans', 'caption']) {
+        expect(dict.cosmos).not.toHaveProperty(key);
       }
-      // The accessible name of both SVGs is the localised caption, never a
-      // hard-coded English string.
-      expect(astroSrc).toMatch(/\{c\.caption\}/);
+    });
+
+    it('references every cosmos key the section uses', () => {
+      for (const key of [
+        'timescales', 'address', 'coda', 'us',
+        'addressTitle', 'addressIntro', 'timelineTitle', 'kicker',
+      ]) {
+        expect(astroSrc).toMatch(new RegExp(`c\\.${key}\\b`));
+      }
     });
   });
 
   it('en and es have the same cosmos array lengths', () => {
     expect(es.cosmos.timescales.length).toBe(en.cosmos.timescales.length);
     expect(es.cosmos.address.length).toBe(en.cosmos.address.length);
-    expect(es.cosmos.timescalesSpans.length).toBe(en.cosmos.timescalesSpans.length);
-    expect(es.cosmos.addressSpans.length).toBe(en.cosmos.addressSpans.length);
-  });
-
-  describe('numeric spans', () => {
-    it('timescalesSpans: one per timescale, strictly decreasing', () => {
-      const s = en.cosmos.timescalesSpans;
-      expect(s.length).toBe(en.cosmos.timescales.length);
-      for (let i = 1; i < s.length; i++) expect(s[i]).toBeLessThan(s[i - 1]);
-    });
-
-    it('timescalesSpans: every derived zoom factor is greater than 1', () => {
-      const s = en.cosmos.timescalesSpans;
-      for (let i = 1; i < s.length; i++) expect(s[i - 1] / s[i]).toBeGreaterThan(1);
-    });
-
-    it('addressSpans: one per horizon, strictly increasing', () => {
-      const s = en.cosmos.addressSpans;
-      expect(s.length).toBe(en.cosmos.address.length);
-      for (let i = 1; i < s.length; i++) expect(s[i]).toBeGreaterThan(s[i - 1]);
-    });
-  });
-
-  describe('cruise control removed', () => {
-    it('has no wheel listener and no preventDefault in the cosmos script', () => {
-      expect(cosmosScript).not.toMatch(/addEventListener\s*\(\s*['"]wheel['"]/);
-      expect(cosmosScript).not.toMatch(/preventDefault\s*\(/);
-    });
-
-    it('no longer contains the .zo-stack element', () => {
-      expect(astroSrc).not.toMatch(/\.zo-stack/);
-    });
-  });
-
-  // The address stack is the one text the CSS cannot size: the script writes
-  // `font-size` per entry, and a presentation attribute would beat any rule.
-  // Its taper must therefore respect the 32-unit floor the scene CSS documents
-  // (32 units ≈ 12.5 px at the 390 px mobile drawing scale), so the faded
-  // echoes stay readable instead of collapsing into hairlines.
-  it('keeps every script-driven label at or above the 32-unit legibility floor', () => {
-    const taper = astroSrc.match(/'font-size':\s*(Math\.max\(.+?\))\s*,/);
-    expect(taper).not.toBeNull();
-    const sizeAt = (age: number) => new Function('age', `return (${taper![1]});`)(age) as number;
-    for (let age = 0; age < 4; age++) {
-      expect(sizeAt(age)).toBeGreaterThanOrEqual(32);
-    }
-    // …and it has to shrink, or the stack stops reading as a stack.
-    expect(sizeAt(0)).toBeGreaterThan(sizeAt(3));
   });
 
   it('check-i18n parity holds', () => {

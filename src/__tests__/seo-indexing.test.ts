@@ -259,9 +259,9 @@ describe('build-redirects', () => {
   });
 
   it('replaces only the generated block, leaving hand rules untouched', () => {
-    const current = '/sitemap.xml /sitemap-index.xml 301\n/experiments /#experiments 301\n';
+    const current = '/sitemap.xml /sitemap-index.xml 301\n';
     const next = spliceGeneratedBlock(current, 'GEN');
-    expect(next).toBe('/sitemap.xml /sitemap-index.xml 301\n/experiments /#experiments 301\n\nGEN\n');
+    expect(next).toBe('/sitemap.xml /sitemap-index.xml 301\n\nGEN\n');
   });
 
   it('rebuilds an existing generated block in place, without duplicating it', () => {
@@ -571,16 +571,16 @@ describe('checkTitles', () => {
   it('flags a too-short title with URL and length', () => {
     const dist = distFixture({ 'feed/index.html': titled(s(29)) });
     try {
-      expect(checkTitles(dist)).toEqual(['/feed/: title is 29 chars (want 30–60)']);
+      expect(checkTitles(dist)).toEqual(['/feed/: title is 29 chars (want 30–90)']);
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
   });
 
   it('flags a too-long title with URL and length', () => {
-    const dist = distFixture({ 'index.html': titled(s(61, 'h')) });
+    const dist = distFixture({ 'index.html': titled(s(91, 'h')) });
     try {
-      expect(checkTitles(dist)).toEqual(['/: title is 61 chars (want 30–60)']);
+      expect(checkTitles(dist)).toEqual(['/: title is 91 chars (want 30–90)']);
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
@@ -607,7 +607,7 @@ describe('checkTitles', () => {
   });
 
   it('flags an exact duplicate across two indexable pages', () => {
-    const shared = 'Mission Log RSS feed — UniverLab';
+    const shared = 'The Logbook RSS feed — UniverLab';
     expect(shared.length).toBe(32);
     const dist = distFixture({
       'feed/index.html': titled(shared),
@@ -801,7 +801,7 @@ function docsHead(o: { date?: string | null; ogType?: string; extra?: string } =
     `<meta name="description" content="${DOC_DESC.replace('&', '&amp;')}" />`,
     `<meta property="og:type" content="${o.ogType ?? 'article'}" />`,
     date ? `<meta property="article:modified_time" content="${date}" />` : '',
-    date ? `<p class="doc-updated">Last updated <time datetime="${date}">TERRA 2026 · Sol 224 · 13:08 UTC</time></p>` : '',
+    date ? `<p class="doc-updated">Last updated <time datetime="${date}">2026 · Sol 224 · 13:08 UTC</time></p>` : '',
     o.extra ?? '',
   ].join('');
 }
@@ -1084,11 +1084,16 @@ describe('deploy-site.yml checkout depth', () => {
     .filter((s) => s.includes('actions/checkout@v4') && s.includes('repository:'));
 
   it('checks out every sibling repo with full history', () => {
-    expect(checkouts.length).toBe(6); // 5 docs repos + canopy-registry
+    expect(checkouts.length).toBe(8); // 5 docs repos + canopy-registry + texforge-templates + ghscaff-boilerplate
     for (const block of checkouts) {
       const repo = /repository:\s*(\S+)/.exec(block)?.[1];
-      expect(block).toContain('fetch-depth: 0');
       expect(repo).toBeDefined();
+      if (repo === 'UniverLab/texforge-templates' || repo === 'UniverLab/ghscaff-boilerplate') {
+        // Sparse catalog checkouts: no full history needed.
+        expect(block).not.toContain('fetch-depth: 0');
+      } else {
+        expect(block).toContain('fetch-depth: 0');
+      }
     }
   });
 

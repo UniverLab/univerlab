@@ -15,14 +15,14 @@ export function formatSolLabel(iso: string): string {
   return 'Sol ' + solDayOfYear(iso);
 }
 
-/** Full TERRA label used by the Mission Log and the roadmap DONE meta. */
+/** Full year · Sol label used by the logbook and the roadmap DONE meta. */
 export function formatMissionDate(iso: string): string {
   const d = new Date(iso);
   const y = d.getFullYear();
   const sol = solDayOfYear(iso);
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
-  return 'TERRA ' + y + ' \u00b7 Sol ' + sol + ' \u00b7 ' + hh + ':' + mm + ' UTC';
+  return y + ' \u00b7 Sol ' + sol + ' \u00b7 ' + hh + ':' + mm + ' UTC';
 }
 
 /** Sol of an experiment's registry startDate (local-midnight parse, same as the genesis line). The plate's "Sol n since startDate". */
@@ -71,8 +71,9 @@ export function parseMissionDate(
   // Normalize separators: ·, -, and / become spaces, then collapse whitespace.
   const norm = trimmed.replace(/·/g, ' ').replace(/-/g, ' ').replace(/\//g, ' ').replace(/\s+/g, ' ').trim();
 
-  // Full form: TERRA 2026 Sol 282 [14:00 UTC].
-  const full = /^TERRA\s+(\d{4})\s+SOL\s+(\d{1,3})(?:\s+(\d{1,2}):(\d{2})\s+UTC)?$/i.exec(norm);
+  // Full form: [TERRA] 2026 Sol 282 [14:00 UTC]. The TERRA prefix is legacy
+  // (old links and stored text); new labels print the year bare.
+  const full = /^(?:TERRA\s+)?(\d{4})\s+SOL\s+(\d{1,3})(?:\s+(\d{1,2}):(\d{2})\s+UTC)?$/i.exec(norm);
   if (full) {
     const year = parseInt(full[1], 10);
     const sol = parseInt(full[2], 10);
@@ -128,8 +129,8 @@ export function translateMissionDate(
   if (parsed) {
     const { year, sol, utcTime, date } = parsed;
     const mission = utcTime
-      ? `TERRA ${year} \u00b7 Sol ${sol} \u00b7 ${utcTime} UTC`
-      : `TERRA ${year} \u00b7 Sol ${sol}`;
+      ? `${year} \u00b7 Sol ${sol} \u00b7 ${utcTime} UTC`
+      : `${year} \u00b7 Sol ${sol}`;
     const iso = utcTime ? `${isoDate(date)}T${utcTime}Z` : isoDate(date);
     const displayDate = utcTime
       ? new Date(Date.UTC(year, date.getMonth(), date.getDate(), ...utcTime.split(':').map(Number)))
@@ -168,7 +169,7 @@ export function translateMissionDate(
   return {
     error:
       lang === 'es'
-        ? 'No es una fecha de misión (TERRA/Sol) ni una fecha ISO.'
-        : 'Not a mission date (TERRA/Sol) or ISO date.',
+        ? 'No es una fecha de misión (2026 · Sol 282) ni una fecha ISO.'
+        : 'Not a mission date (2026 · Sol 282) or ISO date.',
   };
 }

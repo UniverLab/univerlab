@@ -76,7 +76,7 @@ describe('round-trip under TZ', () => {
       // is Sol 365 of 2025 in Bogotá (UTC-5) but Sol 1 of 2026 in UTC — the
       // documented local-midnight epoch quirk, pinned per zone.
       expect(result.quirk).toBe(
-        tz === 'UTC' ? 'TERRA 2026 · Sol 1 · 00:00 UTC' : 'TERRA 2025 · Sol 365 · 00:00 UTC',
+        tz === 'UTC' ? '2026 · Sol 1 · 00:00 UTC' : '2025 · Sol 365 · 00:00 UTC',
       );
 
       // Both years, every day (2026 is not a leap year — no Sol 366).

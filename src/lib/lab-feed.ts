@@ -26,7 +26,7 @@ export const ANNOUNCEMENTS_API = 'https://announcements.univerlab.org';
 /** `GET /roadmap` — the roadmap board, active rows only. */
 export const ROADMAP_URL = `${ANNOUNCEMENTS_API}/roadmap`;
 
-/** `GET /` — the Mission Log entries. */
+/** `GET /` — the logbook entries. */
 export const ENTRIES_URL = `${ANNOUNCEMENTS_API}/`;
 
 /** The Atom feed every page advertises — the fallback a failure points at. */
@@ -46,7 +46,7 @@ export const ENTRIES_DEFAULT_LIMIT = 10;
 export const ENTRIES_MAX_LIMIT = 20;
 
 /** How many rows one read asks the API for — one round trip, no pagination. */
-export const FETCH_LIMIT = 100;
+const FETCH_LIMIT = 100;
 
 /** A public `GET /roadmap` item, plus the field the twin prints. */
 export interface RoadmapItem extends FieldNotesRoadmapItem {
@@ -59,7 +59,7 @@ export type Entry = FieldNotesEntry;
  * Section labels. The twin passes its dictionary's copy (both languages); a
  * tool passes nothing and gets English, which is what the tools are written in.
  */
-export interface FeedLabels {
+interface FeedLabels {
   /** Label per lane, keyed by lane id. */
   lanes?: Partial<Record<Lane, string>>;
   /** Prefix for `blocked_reason` — the dictionaries call it `hold`. */
@@ -153,7 +153,7 @@ export function roadmapLine(item: RoadmapItem, hold: string = DEFAULT_LABELS.hol
   return line;
 }
 
-/** One Mission Log entry — one line, first paragraph, optional link.
+/** One logbook entry — one line, first paragraph, optional link.
  *  The mission-date label carries its ISO in parentheses so an agent reading
  *  the twin never has to convert. */
 export function entryLine(e: Entry): string {
@@ -162,7 +162,7 @@ export function entryLine(e: Entry): string {
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   const iso = `${isoDate(e.date)}T${hh}:${mm}Z`;
   const sol = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
-  const head = `**TERRA ${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${iso})`;
+  const head = `**${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${iso})`;
   const bits = [head];
   if (e.type) bits.push(e.type);
   bits.push(topicOf(e.topic));
@@ -213,11 +213,11 @@ export function roadmapMarkdown(items: RoadmapItem[], opts: FeedOpts = {}): stri
   return sections.join('\n\n') || L.empty;
 }
 
-/** The Mission Log as markdown, in AGR1's format: one line per entry, newest
+/** The logbook as markdown, in AGR1's format: one line per entry, newest
  *  first, capped at `limit`. */
 export function entriesMarkdown(entries: Entry[], opts: FeedOpts = {}): string {
   const rows = filterEntries(entries, opts);
-  if (!rows.length) return opts.labels?.empty ?? 'Nothing in the Mission Log.';
+  if (!rows.length) return opts.labels?.empty ?? 'Nothing in the logbook.';
   return rows.map(entryLine).join('\n');
 }
 
@@ -238,7 +238,7 @@ export async function loadRoadmap(o: LoadOpts = {}): Promise<RoadmapItem[]> {
   return activeRoadmap(Array.isArray(json?.items) ? json.items : []);
 }
 
-/** `GET /?limit=<n>` — Mission Log entries, in the order the API returns them. */
+/** `GET /?limit=<n>` — logbook entries, in the order the API returns them. */
 export async function loadEntries(o: LoadOpts = {}): Promise<Entry[]> {
   const json = await apiJson<{ entries?: Entry[] }>(`${ENTRIES_URL}?limit=${o.limit ?? FETCH_LIMIT}`, o);
   return Array.isArray(json?.entries) ? json.entries : [];

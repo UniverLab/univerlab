@@ -1,6 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import { byId } from '../lib/experiments';
+import Machine from '../components/Machine.astro';
+import { byId, type ExperimentId } from '../lib/experiments';
 import { docLastModified } from '../lib/doc-last-modified';
 import { buildDocsJsonLd } from '../lib/docs-jsonld';
 import { composeDocsDescription } from '../lib/docs-description';
@@ -53,12 +54,11 @@ const docsJsonLd = buildDocsJsonLd({
 <BaseLayout
   title={composeDocsTitle(title, exp.name)}
   description={metaDescription}
-  bg={exp.bg}
   circadian
-  mutedCanvas
   ogType="article"
   articleModifiedTime={lastModified ?? undefined}
   jsonLdGraph={docsJsonLd['@graph']}
+  expId={id as ExperimentId}
 >
   <div class="wrap docs">
     <aside>
@@ -73,7 +73,22 @@ const docsJsonLd = buildDocsJsonLd({
         ))}
       </nav>
     </aside>
-    <article class="prose-doc">
+    <article class="prose-doc" style={`--doc-essence: ${exp.essenceHex}`}>
+      <header class="doc-head">
+        <Machine id={id} ink="theme" height="72px" />
+        <div class="doc-head-text">
+          <p class="doc-exp">{exp.name}</p>
+          <nav class="doc-crumb" aria-label="Breadcrumb">
+            <a href={`/${id}/docs/`}>{t.common.docsHome}</a>
+            {current && (
+              <>
+                <span>/</span>
+                <span aria-current="page">{title}</span>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
       <slot />
     </article>
   </div>
@@ -93,7 +108,9 @@ const docsJsonLd = buildDocsJsonLd({
   @media (max-width: 52rem) { aside { position: static; } }
   .back { text-decoration: none; color: var(--accent); margin-bottom: 0.8rem; }
   .head { color: var(--ink-faint); margin-bottom: 0.3rem; }
-  nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+  /* `aside nav`, never bare `nav`: the doc's breadcrumb below is also a <nav>
+     and would inherit the sidebar's column direction and its left rule. */
+  aside nav { display: flex; flex-direction: column; border-left: 1px solid var(--line); }
   .item {
     text-decoration: none; color: var(--ink-dim); font-size: 0.92rem;
     padding: 0.32rem 0 0.32rem 0.9rem; margin-left: -1px;
@@ -102,10 +119,50 @@ const docsJsonLd = buildDocsJsonLd({
   .item:hover { color: var(--ink); }
   .item.active { color: var(--accent); border-left-color: var(--accent); }
 
-  .prose-doc { max-width: 46rem; min-width: 0; }
+  .prose-doc { min-width: 0; }
+
+  /* The doc's header plate: the machine, the experiment's name and the
+     breadcrumb. `--machine-h-phone` stops Machine's own phone fallback from
+     growing the 72px mark to its 150px default, and the machine's
+     `margin-inline:auto` (centring it in a hero) would indent it here. */
+  .doc-head {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    --machine-h-phone: 72px;
+  }
+  .doc-head-text { min-width: 0; }
+  .doc-exp {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin: 0 0 0.4rem;
+  }
+  .doc-crumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+  }
+  .doc-crumb a { color: var(--doc-accent); text-decoration: none; }
+  .doc-crumb a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .doc-crumb span { margin-inline: 0.4rem; color: var(--ink-faint); }
+  .doc-crumb span[aria-current='page'] { margin-inline: 0; color: var(--ink-dim); }
 </style>
 
 <style is:global>
+  /* Machine centres itself inside a hero (margin-inline:auto) and is a flex
+     item in the doc header: with free space left over, those auto margins
+     would float the plate away from the experiment's name instead of holding
+     it at the head. `html` lifts this above the component's own scoped rule
+     whichever order the stylesheets land in. */
+  html .doc-head .machine { margin-inline: 0; flex: none; }
+
   /* Markdown rendering for repo docs */
   .prose-doc h1 { font-size: 1.9rem; margin: 0 0 1rem; letter-spacing: -0.015em; }
   /* "Last updated …" under the heading — inserted by
@@ -116,10 +173,26 @@ const docsJsonLd = buildDocsJsonLd({
     color: var(--ink-faint); margin: -0.55rem 0 1.6rem;
   }
   .prose-doc .doc-updated time { font-variant-numeric: tabular-nums; }
+  /* The reading ground: EB Garamond at the theme's long-text size and the
+     lab's 70ch measure, on the circadian bench ground (no experiment canvas
+     is painted under it). */
+  .prose-doc {
+    --doc-accent: color-mix(in srgb, var(--doc-essence) 50%, #1d1510);
+    font-family: var(--font-body);
+    font-size: clamp(1.06rem, 1rem + 0.25vw, 1.19rem);
+    line-height: 1.6;
+    max-width: 70ch;
+  }
+  /* Night leans further toward the light ink so the accent stays legible on
+     slate; the percentages are per phase, never per experiment (see
+     docs-bench-ground.test.ts for the 4.5:1 floor both mixes must clear). */
+  html[data-bench-theme='night'] .prose-doc {
+    --doc-accent: color-mix(in srgb, var(--doc-essence) 75%, #ecebe4);
+  }
   .prose-doc h2 { font-size: 1.35rem; margin: 2.4rem 0 0.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
   .prose-doc h3 { font-size: 1.08rem; margin: 1.8rem 0 0.6rem; }
-  .prose-doc p, .prose-doc li { color: var(--ink-dim); line-height: 1.7; }
-  .prose-doc a { color: var(--accent); }
+  .prose-doc h2, .prose-doc h3, .prose-doc a { color: var(--doc-accent); }
+  .prose-doc p, .prose-doc li { color: var(--ink); line-height: 1.6; max-width: 70ch; }
   .prose-doc strong { color: var(--ink); font-weight: 500; }
   .prose-doc ul, .prose-doc ol { padding-left: 1.2rem; }
   .prose-doc li { margin: 0.3rem 0; }
@@ -221,7 +294,7 @@ const docsJsonLd = buildDocsJsonLd({
           gridColor: colors.line,
           pieOuterStrokeWidth: '1px', pieStrokeColor: colors.border, pieTitleTextSize: '16px', pieTitleTextColor: colors.textColor,
           textColor: colors.textColor,
-          fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+          fontFamily: 'var(--font-mono)',
         },
         themeCSS: `
           .node rect, .node circle, .node polygon, .node ellipse { fill: var(--bg-raise); stroke: var(--accent); }

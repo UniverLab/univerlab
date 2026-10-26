@@ -43,7 +43,7 @@ export function isDocsExcluded(rel: string): boolean {
 }
 
 /** Site id → `owner/repo`, derived from the DOCS_BASES dir name (the repo). */
-export function docsRepo(id: string): string {
+function docsRepo(id: string): string {
   const base = DOCS_BASES[id];
   const repo = base.replace(/^\.\.\//, '').split('/')[0];
   return `UniverLab/${repo}`;

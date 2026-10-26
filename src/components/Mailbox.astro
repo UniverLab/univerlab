@@ -1,0 +1,51 @@
+---
+// The mailbox at the end of the header rule: the engraved wall box of the
+// approved mockup (specs/redesign-reference/correo/index.html, view "Header y
+// buzón"). Its red flag is up and a round badge counts while the queue holds
+// unopened mail; both go down when it empties. A click opens the next letter.
+import { getLang, useTranslations } from '../i18n';
+import { experiments } from '../lib/experiments';
+import '../styles/mail.css';
+
+const lang = getLang(Astro.url);
+const copy = useTranslations(lang).header.mailbox;
+
+// What a lab letter needs at runtime: identity, number and essence colour.
+const exps = experiments.map((e) => ({
+  id: e.id,
+  name: e.name,
+  number: e.number,
+  essenceHex: e.essenceHex,
+}));
+---
+<button
+  class="mailbox"
+  type="button"
+  data-mail="0"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-label={copy.openNone}
+  data-lang={lang}
+  data-copy={JSON.stringify(copy)}
+  data-exps={JSON.stringify(exps)}
+>
+  <svg viewBox="0 0 46 58" aria-hidden="true">
+    <defs><pattern id="bx-h" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 1.5 H3" stroke="var(--mail-box-ink)" stroke-width=".6" opacity=".55"/></pattern></defs>
+    <path d="M23 57 V40" stroke="var(--mail-box-ink)" stroke-width="3"/>
+    <path d="M15 57 H31" stroke="var(--mail-box-ink)" stroke-width="2"/>
+    <path d="M6 40 V20 Q6 6 23 6 Q40 6 40 20 V40 Z" fill="var(--mail-box)" stroke="var(--mail-box-ink)" stroke-width="1.4"/>
+    <path d="M30 9 Q40 11 40 20 V40 H33 V20 Q33 12 30 9 Z" fill="url(#bx-h)"/>
+    <path d="M10 18 Q12 10 19 9" stroke="var(--mail-box-hi)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <rect x="13" y="19" width="20" height="3.4" rx="1" fill="var(--mail-box-ink)"/>
+    <rect class="lid" x="12" y="17.4" width="22" height="2" rx="1" fill="var(--mail-brass)"/>
+    <rect x="16" y="28" width="14" height="7" rx="1" fill="none" stroke="var(--mail-brass)" stroke-width="1"/>
+    <circle cx="23" cy="31.5" r="1.1" fill="var(--mail-brass)"/>
+    <g class="flag"><path d="M41.5 28 V10" stroke="var(--mail-box-ink)" stroke-width="1.6"/><path d="M41.5 10 H50 V15.5 H41.5 Z" fill="var(--mail-flag)" stroke="var(--mail-box-ink)" stroke-width=".8"/></g>
+    <circle cx="41.5" cy="28" r="1.4" fill="var(--mail-brass)"/>
+  </svg>
+  <span class="badge" hidden></span>
+</button>
+
+<script>
+  import '../scripts/mail';
+</script>

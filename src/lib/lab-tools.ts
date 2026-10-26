@@ -121,9 +121,9 @@ export function buildTools(deps: ToolDeps): McpTool[] {
 
   const announcements: McpTool = {
     name: 'list_announcements',
-    title: 'UniverLab Mission Log',
+    title: 'UniverLab Logbook',
     description:
-      'The UniverLab Mission Log: announcements, launches and releases, newest first, read ' +
+      'The UniverLab Logbook: announcements, launches and releases, newest first, read ' +
       'fresh from the lab’s public announcements API on every call.',
     inputSchema: {
       type: 'object',
@@ -159,7 +159,7 @@ export function buildTools(deps: ToolDeps): McpTool[] {
           limit: clampLimit(input.limit),
         });
       } catch (err) {
-        return unavailable('Mission Log', ENTRIES_URL, err);
+        return unavailable('Logbook', ENTRIES_URL, err);
       }
     },
   };
@@ -183,7 +183,7 @@ export function buildTools(deps: ToolDeps): McpTool[] {
     title: 'Translate a mission date',
     description:
       'Converts between a UniverLab mission date and a calendar date. ' +
-      'Mission dates use the form "TERRA <year> · Sol <n> · <HH:MM> UTC" — Sol n is the n-th ' +
+      'Mission dates use the form "<year> · Sol <n> · <HH:MM> UTC" — Sol n is the n-th ' +
       'day of the year (Sol 1 = 1 January). Converts a mission date to its ISO/calendar date, ' +
       'or an ISO date (2026-10-09) / datetime (2026-10-09T14:00Z) to its mission-date label. ' +
       'Read-only, no network calls.',
@@ -193,7 +193,7 @@ export function buildTools(deps: ToolDeps): McpTool[] {
         input: {
           type: 'string',
           description:
-            'A mission date ("TERRA 2026 · Sol 282", "Sol 282", "sol282") or an ISO date/datetime ' +
+            'A mission date ("2026 · Sol 282", "Sol 282", "sol282") or an ISO date/datetime ' +
             '("2026-10-09", "2026-10-09T14:00Z").',
         },
         lang: {

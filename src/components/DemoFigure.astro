@@ -43,7 +43,7 @@ const isGif = src.endsWith('.gif');
       </div>
     )}
   </div>
-  <div class="demo-lens" aria-hidden="true"><div class="demo-lens-inner"></div></div>
+  <div class="demo-lens" aria-hidden="true"><div class="demo-lens-inner"></div><img src="/bench/identidad/lupa.svg" alt="" aria-hidden="true" class="demo-loupe" /></div>
   <figcaption class="demo-cap"><span class="label mono">{label}</span>{caption}</figcaption>
 </figure>
 
@@ -279,15 +279,15 @@ const isGif = src.endsWith('.gif');
   }
   .demo-video { display: block; width: 100%; height: auto; }
 
-  /* Magnifying glass lens */
+  /* Magnifying glass lens — engraved brass loupe overlay */
   .demo-lens {
     position: fixed;
     width: 220px;
     height: 220px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
-    overflow: hidden;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
     pointer-events: none;
     opacity: 0;
     z-index: 100;
@@ -296,9 +296,20 @@ const isGif = src.endsWith('.gif');
   .demo-lens-inner {
     width: 100%;
     height: 100%;
+    border-radius: 50%;
     background-repeat: no-repeat;
     position: relative;
     overflow: hidden;
+  }
+  .demo-loupe {
+    position: absolute;
+    width: 330px;
+    height: 330px;
+    left: -40px;
+    top: -40px;
+    max-width: none;
+    pointer-events: none;
+    filter: none !important;
   }
 
   /* Custom player wrapper */

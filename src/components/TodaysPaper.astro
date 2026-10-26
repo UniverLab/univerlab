@@ -1,0 +1,84 @@
+---
+import { getLang, useTranslations } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+---
+<!-- The newspaper: the masthead is static, #edition is set at the edge by
+  functions/_middleware.ts (HTMLRewriter) or, on failure, by the client script
+  in pages/today.astro with the same renderer. The page-open above keeps the
+  only h1, so the masthead name is a paragraph set like one. -->
+<div class="paper">
+  <header class="masthead">
+    <div class="ear"><span>{t.today.path}</span><span>{t.today.edition}</span></div>
+    <p class="masthead-name">{t.today.name}</p>
+    <p class="motto">{t.today.motto}</p>
+  </header>
+  <div id="edition"></div>
+  <div id="today-loading" class="today-loading" role="status" aria-label={t.today.loading}>
+    <div class="skeleton-line" style="width:60%"></div>
+    <div class="skeleton-line" style="width:80%"></div>
+    <div class="skeleton-line" style="width:45%"></div>
+  </div>
+  <div id="today-error" class="today-error" style="display:none" role="alert" data-msg={t.today.error}></div>
+</div>
+
+<style is:global>
+  .paper { display: grid; gap: 18px; margin-top: 2.5rem; }
+  .masthead { text-align: center; display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 3px double var(--bench-line); }
+  .masthead .ear { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bench-line-soft); flex-wrap: wrap; }
+  .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--bench-line); }
+  .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; color: var(--bench-line-soft); }
+  #edition { display: grid; gap: 18px; }
+  /* The edge-filled edition hides the skeletons without waiting for JS. */
+  #edition:not(:empty) + #today-loading { display: none; }
+  .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--bench-line); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--bench-line); }
+  .lead { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; border-bottom: 1px solid var(--bench-rule); padding-bottom: 20px; }
+  .lead .kicker, .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bench-line-soft); margin: 0; font-weight: 400; }
+  .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(30px, 5.2vw, 54px); line-height: 1.02; margin: 6px 0 10px; text-wrap: balance; color: var(--bench-line); }
+  .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--bench-line); }
+  .lead .story .dropcap::first-letter { font-family: var(--font-serif); float: left; font-size: 3.4em; line-height: 0.82; padding: 4px 8px 0 0; }
+  .lead a, .item a { font-family: var(--font-mono); font-size: 12px; color: var(--bench-emphasis); text-underline-offset: 3px; }
+  .lead aside { border-left: 1px solid var(--bench-rule); padding-left: 22px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--bench-line-soft); }
+  .lead aside b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--bench-line); display: block; line-height: 1.1; }
+  .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
+  .col + .col { border-left: 1px solid var(--bench-rule); }
+  .col:first-child { padding-left: 0; } .col:last-child { padding-right: 0; }
+  .col h3 { border-bottom: 1px solid var(--bench-line); padding-bottom: 4px; }
+  .item { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px dotted var(--bench-rule); }
+  .item:last-child { border-bottom: 0; }
+  .item .yr { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--bench-line); }
+  .item .yr span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--bench-line-soft); white-space: nowrap; }
+  .item p { margin: 0; font-family: var(--font-body); font-size: 16.5px; line-height: 1.45; color: var(--bench-line); }
+  .item a { justify-self: start; }
+  .labmail { border: 1px solid var(--bench-line); outline: 1px solid var(--bench-line); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
+  .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bench-line-soft); margin: 0; }
+  .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--bench-line); }
+  .labmail p { margin: 0; font-family: var(--font-body); font-size: 17px; color: var(--bench-line); }
+  .labmail a { font-family: var(--font-mono); font-size: 12px; color: var(--bench-emphasis); text-underline-offset: 3px; justify-self: start; }
+  /* Newspaper photos: printed halftone, sepia-tinted, framed like a press
+    print. The mat keeps its paper tone in both phases. */
+  .photo { position: relative; margin: 0; display: grid; gap: 4px; }
+  .photo .print { position: relative; overflow: hidden; background: var(--bench-c-parchment-deep); padding: 4px; box-shadow: 0 1px 0 var(--bench-rule); }
+  .photo img { display: block; width: 100%; height: auto; filter: grayscale(1) sepia(0.3) contrast(1.35) brightness(1.04); }
+  .photo .print::after { content: ""; position: absolute; inset: 4px; pointer-events: none; mix-blend-mode: multiply; opacity: 0.28;
+    background: radial-gradient(circle, #2a2118 30%, transparent 33%) 0 0 / 2.5px 2.5px; }
+  .photo figcaption { font-family: var(--font-mono); font-size: 10.5px; color: var(--bench-line-soft); letter-spacing: 0.03em; }
+  .lead .story .photo { float: right; width: min(42%, 220px); margin: 4px 0 10px 18px; }
+  .item.has-photo { grid-template-columns: 64px minmax(0, 1fr); column-gap: 12px; }
+  .item.has-photo .photo { grid-row: span 3; }
+  .item.has-photo .yr, .item.has-photo p, .item.has-photo a { grid-column: 2; }
+  .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--bench-line-soft); text-align: center; border-top: 3px double var(--bench-line); padding-top: 8px; margin: 0; }
+  .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
+  .skeleton-line { height: 1rem; border-radius: 4px; background: linear-gradient(90deg, var(--bench-rule) 25%, transparent 50%, var(--bench-rule) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .today-error { font-family: var(--font-mono); font-size: 0.8rem; color: var(--bench-line-soft); padding-block: 2rem; text-align: center; }
+  @media (max-width: 47.99rem) {
+    .lead { grid-template-columns: 1fr; }
+    .lead aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--bench-rule); padding-top: 12px; }
+    .cols { grid-template-columns: 1fr; }
+    .col, .col:first-child, .col:last-child { padding-inline: 0; }
+    .col + .col { border-left: 0; border-top: 1px solid var(--bench-line); padding-top: 14px; margin-top: 8px; }
+  }
+</style>

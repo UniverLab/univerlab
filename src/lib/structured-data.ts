@@ -110,6 +110,7 @@ export function experimentAppNode(o: {
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author,
+      ...(exp.citation ? { identifier: { '@type': 'PropertyValue', propertyID: 'DOI', value: exp.citation.doi }, sameAs: [`https://doi.org/${exp.citation.doi}`] } : {}),
     };
   }
   if (exp.url) {
@@ -124,6 +125,7 @@ export function experimentAppNode(o: {
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author,
+      ...(exp.citation ? { identifier: { '@type': 'PropertyValue', propertyID: 'DOI', value: exp.citation.doi }, sameAs: [`https://doi.org/${exp.citation.doi}`] } : {}),
     };
   }
   return undefined;

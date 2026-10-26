@@ -1,6 +1,6 @@
 ---
 import { byId, type ExperimentId } from '../lib/experiments';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 import { latestRelease, releaseAgeLabel } from '../lib/releases';
 
@@ -17,7 +17,7 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
 <p class="lab-plate" translate="no"
    data-exp-id={exp.id} data-exp-name={exp.name}
    data-roadmap-label={t.plate.roadmap} data-lastlog-label={t.plate.lastLog}
-   data-dash={t.plate.none} data-lanes={JSON.stringify(t.roadmap.lanes)}
+   data-lanes={JSON.stringify(t.roadmap.lanes)}
    data-status-label={statusLabel} data-start-sol={solLabel ?? ''}
    data-release={release?.version}
    data-release-date={release ? release.publishedAt.slice(0, 10) : undefined}>
@@ -27,32 +27,38 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
   {release && (
     <><span class="lp-sep"> · </span><a class="lp-release" href={release.url} target="_blank" rel="noopener noreferrer">{t.plate.release} {release.version}{releaseAge && <> · {releaseAge}</>}</a></>
   )}
-  <span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap>—</span></span>
-  <span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog>{t.plate.lastLog}: —</span>
+  {exp.citation && (
+    <><span class="lp-sep"> · </span><a class="lp-doi" href={`https://doi.org/${exp.citation.doi}`} target="_blank" rel="noopener noreferrer">DOI {exp.citation.doi}</a></>
+  )}
+  <span data-plate-seg="roadmap" hidden><span class="lp-sep"> · </span><span class="lp-roadmap">{t.plate.roadmap}: <span data-plate-roadmap></span></span></span>
+  <span data-plate-seg="lastlog" hidden><span class="lp-sep"> · </span><span class="lp-lastlog" data-plate-lastlog></span></span>
+  {exp.builtWith.map((tool) => (
+    <>
+      <span class="lp-sep"> · </span><span class="lp-built">{t.builtWithSegments[tool]}{' '}<a href={localizePath(`/${tool}`, lang)} translate="no">{byId(tool).name}</a></span>
+    </>
+  ))}
 </p>
 
 <style>
   .lab-plate {
-    display: flex; flex-wrap: nowrap; align-items: baseline; gap: 0;
+    /* Quiet colophon row below the hero: mono, faint ink, flush left like
+       the genesis section beneath it, wrapping on one line. */
+    display: block; text-align: left;
     max-width: var(--max-w, 70rem); margin: 0 auto;
-    padding: 0.9rem var(--page-gutter) 0;
-    min-height: 1.5rem;
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
-    color: var(--ink-dim); white-space: nowrap; overflow: hidden;
+    padding: 0 var(--page-gutter);
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em;
+    color: var(--ink-faint);
   }
+  /* Segments with no data behind them stay hidden (no em-dash filler). */
+  .lab-plate [hidden] { display: none; }
   .lab-plate .lp-num, .lab-plate .lp-status { color: var(--essence); }
-  .lab-plate .lp-sep { color: var(--ink-faint); }
-  .lab-plate .lp-lastlog { overflow: hidden; text-overflow: ellipsis; }
-  /* One link now lives in the plate (the release segment, spec
+  .lab-plate .lp-sep { color: var(--ink-faint); white-space: pre; }
+  /* One link now lives in the caption (the release segment, spec
      lexp-release-signal supersedes R7's "no links"): underline off so it keeps
-     the plate's mono register, essence on hover, never shrinkable so the
-     version stays intact when the line runs long. */
-  .lab-plate .lp-release { flex: 0 0 auto; text-decoration: none; }
-  .lab-plate .lp-release:hover { color: var(--essence); }
-  /* The plate is nowrap + overflow:hidden, so the segment pushes roadmap/last
-     log off the right edge on phones; let whole spans wrap instead of silently
-     clipping them. */
-  @media (max-width: 50rem) { .lab-plate { flex-wrap: wrap; row-gap: 0.2rem; } }
+     the caption's mono register, essence on hover. */
+  .lab-plate .lp-release, .lab-plate .lp-doi { text-decoration: none; }
+  .lab-plate .lp-release:hover, .lab-plate .lp-doi:hover, .lab-plate .lp-built a:hover { color: var(--essence); }
+  .lab-plate .lp-built a { color: var(--ink-faint); text-decoration-color: var(--line); }
 </style>
 
 <script>
@@ -85,6 +91,7 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
         // Keep the raw state.
       }
       rmSpan.textContent = label;
+      el.querySelector<HTMLElement>('[data-plate-seg="roadmap"]')?.removeAttribute('hidden');
     }
     const newest = selectEntries(data.entries, exp, 1)[0];
     const ll = el.querySelector('[data-plate-lastlog]');
@@ -97,6 +104,7 @@ const releaseAge = release ? releaseAgeLabel(release.publishedAt, lang) : '';
       ll.textContent = `${lastLogLabel}: `;
       ll.appendChild(time);
       ll.appendChild(document.createTextNode(` \u201c${newest.title}\u201d`));
+      el.querySelector<HTMLElement>('[data-plate-seg="lastlog"]')?.removeAttribute('hidden');
     }
   })();
 </script>

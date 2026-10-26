@@ -136,7 +136,7 @@ describe('essence single source', () => {
     );
     expect(src).toMatch(/from '\.\.\/lib\/experiments'/);
     expect(src).toContain('[data-surface=');
-    expect(src).toContain('[data-flip-surface=');
+    expect(src).not.toContain('[data-flip-surface=');
     expect(src).toContain('exp.surface');
     expect(src).toContain('exp.essenceHex');
     expect(src).toContain('exp.essenceTextHex');

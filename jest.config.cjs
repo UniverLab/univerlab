@@ -6,6 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^\\./page-glob$': '<rootDir>/src/i18n/page-glob.node.ts',
     '\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
@@ -19,6 +20,17 @@ module.exports = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/node_modules/**',
+    // Browser render glue: canvas/rAF/DOM paint that jsdom cannot execute
+    // (the lantern projector, the per-experiment fondos, the CRT transition,
+    // the mail fold, the observatory crosshair, the mailbox wiring). Their
+    // pure logic lives in src/lib/* and IS measured here; these modules are
+    // held by source-pinning tests (home-lantern.test.ts et al.).
+    '!src/scripts/lantern.ts',
+    '!src/scripts/crt.ts',
+    '!src/scripts/crt-restore.ts',
+    '!src/scripts/mail.ts',
+    '!src/scripts/observatory-hover.ts',
+    '!src/scripts/fondos/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'clover'],

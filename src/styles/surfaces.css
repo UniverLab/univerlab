@@ -37,6 +37,21 @@ html[data-surface='observatory'] .banner {
   opacity: 1;
 }
 
+html[data-surface='paper'] .install .banner,
+html[data-surface='industrial'] .install .banner,
+html[data-surface='quorum'] .install .banner,
+html[data-surface='pastel'] .install .banner,
+html[data-surface='studio'] .install .banner,
+html[data-surface='blueprint'] .install .banner,
+html[data-surface='observatory'] .install .banner {
+  color: inherit;
+  opacity: 1;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
+  margin-inline: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
 /* A blinking caret on the terminal surfaces (canopy) — a small sign of
    life. Auto-disabled under prefers-reduced-motion (global.css zeroes animation). */
 @keyframes cf-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
@@ -44,6 +59,19 @@ html[data-surface='tui'] .koan::after {
   content: '▋';
   margin-left: 0.18em;
   color: var(--essence);
+  animation: cf-blink 1.06s infinite;
+}
+html[data-surface='paper'] .install .banner::after,
+html[data-surface='industrial'] .install .banner::after,
+html[data-surface='quorum'] .install .banner::after,
+html[data-surface='pastel'] .install .banner::after,
+html[data-surface='studio'] .install .banner::after,
+html[data-surface='blueprint'] .install .banner::after,
+html[data-surface='observatory'] .install .banner::after {
+  content: '▋';
+  margin-left: 0.3em;
+  display: inline-block;
+  color: var(--c);
   animation: cf-blink 1.06s infinite;
 }
 
@@ -57,10 +85,6 @@ html[data-surface='tui'] .koan::after {
    solid rule inside content and never an accent colour fighting the cream.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='paper'] {
-  /* Display: system serif only — no webfont name in the stack. */
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-  /* Body: sans (the page is typeset, not set in Spectral). */
-  --font-body: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
 /* Headings: serif 400 across the page — no 500/600 display weights, no
@@ -140,13 +164,6 @@ html[data-surface='paper'] .exp .demo-cap .label {
   color: var(--ink-faint);
 }
 
-/* The quiet paper motif mounts on canvas now (see backgrounds.ts): keep it
-   faint enough that it never washes the cream out. `pointer-events: none`
-   and `z-index: -1` stay as ThemeBackground sets them. */
-html[data-surface='paper'] canvas.bg {
-  opacity: 0.25;
-}
-
 /* Parchment canvas with cream section bands (Antimetal layout law): the two
    narrative blocks — genesis and FAQ — sit on full-bleed cream #f7f6f3 bands,
    everything else rests on the parchment canvas. The band is a positioned
@@ -198,13 +215,11 @@ html[data-surface='tui'] .koan::before {
    stability.)
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='pastel'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 /* Tight display headlines. */
 html[data-surface='pastel'] .genesis h2,
 html[data-surface='pastel'] h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -234,7 +249,7 @@ html[data-surface='pastel'] .exp-name {
   clip: auto;
   overflow: visible;
   white-space: normal;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   letter-spacing: -0.02em;
   font-size: clamp(2.6rem, 7vw, 4.6rem);
@@ -336,8 +351,6 @@ html[data-surface='pastel'] .hero-stage { position: relative; overflow-x: clip; 
    with a cursor-anchored spotlight.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='industrial'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --glass-v: var(--surface-essence);
   --bg: #0b0a14;
   --bg-raise: #12101e;
@@ -347,12 +360,12 @@ html[data-surface='industrial'] {
   --line: #232035;
 }
 html[data-surface='industrial'] .genesis h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 html[data-surface='industrial'] .koan {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-style: normal;
   font-weight: 500;
   opacity: 1;
@@ -365,8 +378,6 @@ html[data-surface='industrial'] .koan {
    No neon, no busy grid — precision carries it. (Key name kept for stability.)
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='blueprint'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 html[data-surface='blueprint'] .exp {
   /* The registry fill blue sits just under 4.5:1 on white — accents read
@@ -386,7 +397,7 @@ html[data-surface='blueprint'] body::before {
     linear-gradient(0deg, transparent calc(50% - 0.5px), color-mix(in srgb, var(--surface-essence-text) 13%, transparent) 50%, transparent calc(50% + 0.5px));
 }
 html[data-surface='blueprint'] .genesis h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -406,8 +417,6 @@ html[data-surface='blueprint'] .koan {
    clean grotesque; the koan reads as a shell comment.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='quorum'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 /* A warm lamp pools over the top of the table. */
 html[data-surface='quorum'] body::before {
@@ -419,7 +428,7 @@ html[data-surface='quorum'] body::before {
   background: radial-gradient(90% 70% at 50% -18%, color-mix(in srgb, #e6b24a 16%, transparent), transparent 60%);
 }
 html[data-surface='quorum'] .genesis h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -449,12 +458,10 @@ html[data-surface='quorum'] .exp .lede {
    light, wide-tracked grotesque — so the page feels like an instrument readout.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='observatory'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 html[data-surface='observatory'] h2,
 html[data-surface='observatory'] .genesis h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 300;
   letter-spacing: 0.04em;
 }
@@ -467,8 +474,6 @@ html[data-surface='observatory'] .genesis h2 {
    display. The warm-neutral backdrop lets the coral key light read.
    ───────────────────────────────────────────────────────────────────────── */
 html[data-surface='studio'] {
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 /* A bright set: a faint coral key-light wash from the top of the white page;
    the black terminal monitor provides the contrast. Dimmed (12% → 6%) and
@@ -482,11 +487,11 @@ html[data-surface='studio'] body::before {
   background: radial-gradient(70% 34% at 50% 0%, color-mix(in srgb, var(--essence) 6%, transparent), transparent 70%);
 }
 html[data-surface='studio'] .genesis h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-serif);
   font-weight: 600;
 }
 html[data-surface='studio'] .koan {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-body);
   font-style: italic;
   opacity: 1;
 }
@@ -733,7 +738,7 @@ html[data-surface='industrial'] .exp-name {
   clip: auto;
   overflow: visible;
   white-space: normal;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   letter-spacing: -0.02em;
   font-size: clamp(2.6rem, 7vw, 4.6rem);
@@ -853,8 +858,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
   --ink-faint: #979799;
   --line: #ececec;
   --essence: var(--surface-essence-text);
-  --font-serif: 'Source Serif 4', 'Iowan Old Style', Palatino, Georgia, serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 /* The `:root` centre-line axes that used to sit here are gone: they tied with
    Cadspec.astro's page grid on specificity ((0,2,2)) and won on source order
@@ -906,8 +909,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
   --canopy: #00a9a0;
   --canvas-color: #00a9a0;
   --canvas-mute: #003734;
-  --font-serif: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --accent: #00827c !important;
 }
 :root[data-surface='tui'] .exp { --essence: var(--surface-essence) !important; --accent: #00827c !important; }
@@ -923,7 +924,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
 :root[data-surface='tui'] .exp-name {
   position: static; width: auto; height: auto; margin: 0; padding: 0;
   overflow: visible; clip: auto; white-space: normal; border: 0;
-  font: 500 clamp(3.8rem, 8vw, 6rem)/1 Matter, 'Inter', sans-serif;
+  font: 500 clamp(3.8rem, 8vw, 6rem)/1 var(--font-serif);
   letter-spacing: -.04em; color: #fff;
 }
 :root[data-surface='tui'] .koan { font: 400 1rem/1.5 var(--font-body); font-style: normal; color: #edfffe; opacity: 1; margin: 0; }
@@ -933,7 +934,7 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
 :root[data-surface='tui'] .ascii-motif { color: #cbfffc; letter-spacing: .18em; opacity: .8; }
 :root[data-surface='tui'] .hero-visual { width: min(100%, 23rem); }
 :root[data-surface='tui'] .actions { justify-content: center; margin-top: .4rem; }
-:root[data-surface='tui'] .actions .btn { background: linear-gradient(90deg,#00827c,#cbfffc); border: 0; border-radius: 6px; color: #012624; font: 500 .875rem/1.4 Arial,sans-serif; text-transform: uppercase; padding: .7rem 1.4rem; }
+:root[data-surface='tui'] .actions .btn { background: linear-gradient(90deg,#00827c,#cbfffc); border: 0; border-radius: 6px; color: #012624; font: 500 .875rem/1.4 var(--font-mono); text-transform: uppercase; padding: .7rem 1.4rem; }
 :root[data-surface='tui'] .actions .btn.ghost { background: transparent; border: 1px solid #edfffe; color: #edfffe; }
 :root[data-surface='tui'] .install { margin: .5rem auto 0; }
 :root[data-surface='tui'] .cmd { background: #003734; border: 1px solid rgba(203,255,252,.16); }
@@ -949,8 +950,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
   --line: #e3e3de;
   --essence: var(--surface-essence-text);
   --accent: #1a1614;
-  --font-serif: 'Noto Serif', 'Iowan Old Style', Georgia, serif;
-  --font-body: Inter, system-ui, sans-serif;
   --accent: #1a1614 !important;
 }
 /* ExperimentLayout sets `--essence` inline on `.exp` from `essenceHex` — the
@@ -995,8 +994,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
   --ink-dim: #baadab;
   --ink-faint: #baadab;
   --line: #951c04;
-  --font-serif: Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
   --accent: var(--surface-essence) !important;
 }
 :root[data-surface='studio'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
@@ -1036,8 +1033,6 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
   --glass-v: var(--surface-essence);
   --canvas-color: var(--surface-essence);
   --canvas-mute: #3f4959;
-  --font-serif: 'Space Grotesk', sans-serif;
-  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
   --accent: var(--surface-essence) !important;
 }
 :root[data-surface='industrial'] .exp { --essence: var(--surface-essence) !important; --accent: var(--surface-essence) !important; }
@@ -1048,13 +1043,12 @@ html[data-surface='industrial'] .fan li:nth-child(7) .step-name { color: color-m
    again. Same specificity here, and surfaces.css bundles after global.css,
    so the plate below stays the lab-native #12101e steel. */
 html[data-surface='industrial']:root { --bg-raise: #12101e; }
-:root[data-surface='industrial'] canvas.bg { opacity: .68; }
 :root[data-surface='industrial'] .hero { align-items: center; text-align: center; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 12px; padding: 2rem 1rem 1rem; }
 :root[data-surface='industrial'] .hero::before,
 :root[data-surface='industrial'] .hero::after { content: none; }
 :root[data-surface='industrial'] .koan { color: #c7d3ea; font: 400 .9375rem/1.5 var(--font-mono); font-style: normal; opacity: 1; }
 :root[data-surface='industrial'] .lede { color: #c7d3ea; max-width: 58ch; text-align: center; }
-:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 'Space Grotesk',sans-serif; color: var(--ink); }
+:root[data-surface='industrial'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 500 clamp(2.75rem,5vw,3rem)/1.16 var(--font-serif); color: var(--ink); }
 :root[data-surface='industrial'] .ascii-motif { color: var(--surface-essence); }
 :root[data-surface='industrial'] .actions { justify-content: center; }
 /* Padding is set here, not left to ExperimentLayout's scoped .btn: the
@@ -1087,15 +1081,13 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
   --orchid-text: var(--surface-essence-text);
   --orchid-fill: var(--surface-essence);
   --canvas-color: var(--surface-essence);
-  --font-serif: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
   --accent: var(--surface-essence-text) !important;
 }
 :root[data-surface='pastel'] .exp { --essence: var(--surface-essence-text) !important; --accent: var(--surface-essence-text) !important; }
 :root[data-surface='pastel'] .hero { align-items: center; text-align: center; background: #fff; border: 0; padding: 1.4rem 1rem .5rem; gap: .8rem; }
 :root[data-surface='pastel'] .hero::before,
 :root[data-surface='pastel'] .hero::after { content: none; }
-:root[data-surface='pastel'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 600 clamp(3rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif; letter-spacing: -.025em; color: #111827; }
+:root[data-surface='pastel'] .exp-name { position: static; width: auto; height: auto; margin: 0; padding: 0; clip: auto; overflow: visible; white-space: normal; border: 0; font: 600 clamp(3rem,6vw,3.5rem)/1.05 var(--font-serif); letter-spacing: -.025em; color: #111827; }
 :root[data-surface='pastel'] .koan { font-family: var(--font-body); font-style: normal; color: #3f4654; opacity: 1; }
 :root[data-surface='pastel'] .lede { color: #6b7589; max-width: 58ch; text-align: center; }
 :root[data-surface='pastel'] .ascii-motif { color: var(--surface-essence-text); }
@@ -1112,25 +1104,20 @@ html[data-surface='industrial']:root { --bg-raise: #12101e; }
 :root[data-surface='pastel'] .card { border-radius: 12px; border-color: #d8e0ea; }
 :root[data-surface='pastel'] .card { padding: .9rem 1rem; }
 :root[data-surface='pastel'] .git-rail li { padding-block: .3rem; }
-/* The runner caps its own node fills at 0.35 and ring strokes at 0.5 (see
-   bg-bubbles.ts), so the page's saturation is bounded at the source; .6 stays
-   the link-legibility floor lgitkit-one-background FR4 measured (at .5 the
-   ambient links fall to 0.14 × .5 = 0.07, under that floor). */
-:root[data-surface='pastel'] canvas.bg { opacity: .6; }
 
 :root[data-surface='quorum'] .hero { align-items: center; text-align: center; }
 /* Preserve single-name heroes on the two pages without a supplied style file. */
 :root[data-surface='quorum'] .exp-name {
   position: static; width: auto; height: auto; margin: 0; padding: 0;
   overflow: visible; clip: auto; white-space: normal; border: 0;
-  font: 600 clamp(2.6rem,6vw,3.5rem)/1.05 'Space Grotesk',sans-serif;
+  font: 600 clamp(2.6rem,6vw,3.5rem)/1.05 var(--font-serif);
   letter-spacing: -.02em; color: var(--ink);
 }
 :root[data-surface='quorum'] .ascii-motif { color: var(--essence); }
 :root[data-surface='observatory'] .exp-name {
   position: static; width: auto; height: auto; margin: 0; padding: 0;
   overflow: visible; clip: auto; white-space: normal; border: 0;
-  font: 500 clamp(3rem,7vw,5.5rem)/1 'Space Grotesk',sans-serif;
+  font: 500 clamp(3rem,7vw,5.5rem)/1 var(--font-serif);
   letter-spacing: -.04em; color: #f7f8fc;
 }
 :root[data-surface='observatory'] .ascii-motif { color: var(--astro-denoise); }

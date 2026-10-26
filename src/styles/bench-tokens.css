@@ -1,0 +1,127 @@
+/* Home redesign design tokens (the lab's lecture hall: magic lantern, bench of machines).
+
+   The site is circadian by the viewer's clock (day 06-18 h): by day an etching on parchment, by
+   night chalk on a slate board. The machine plates and the lantern clips follow the phase; each
+   experiment's live background keeps its own site colours in both phases. Decisions: Intelligence
+   6d07dd49 (grounds, plates), aa2f0a5e (lantern, clips, machines), 9f7024ed (backgrounds).
+
+   Two layers:
+   1. Palette (`--bench-c-*`): fixed colours, identical day and night.
+   2. Roles (`--bench-*`): what components use. Day values live on :root; the night set replaces
+      them under [data-bench-theme="night"], which the page sets from the viewer's clock. The
+      prefers-color-scheme block only covers a page that has not set it yet (no JS).
+
+   Contrast (WCAG) on the role's own ground: text roles >= 4.5:1, stroke-only roles >= 3:1.
+
+   Not imported anywhere yet: the build wires it in. */
+
+:root {
+  /* ── 1. Palette ─────────────────────────────────────────────────────── */
+
+  /* Parchment: the day ground, under the tile textures/pergamino.webp (background-size 341px).
+     Every day plate's paper was keyed to transparent, so plates sit on it without an edge. */
+  --bench-c-parchment: #f4f0ea;
+  /* Deeper parchment: second paper for panels and cards. */
+  --bench-c-parchment-deep: #eee7dc;
+  /* Ink: the etching's sepia-black line, measured from the day plates. */
+  --bench-c-ink: #1d1510;
+  /* Sepia: hatching mid-tone; captions and secondary text on parchment (5.8:1). */
+  --bench-c-sepia: #6b5a43;
+  /* Graphite: rules, table borders, meta text on parchment (6.2:1). */
+  --bench-c-graphite: #5d5852;
+  /* Brass (stroke): small accents on parchment (4.4:1, strokes and large text only). */
+  --bench-c-brass: #8a6a2c;
+  /* Copper: links on hover, the postcards' night lines. */
+  --bench-c-copper: #9a5530;
+  --bench-c-copper-bright: #d6955b;
+  /* Garnet: the lab's emphasis — the wax seal's colour, worn by the status marks, the
+     sponsor heart and links on paper (8:1 on the parchment). */
+  --bench-c-garnet: #87222c;
+  /* Slate: the night ground, under the tile textures/pizarra.webp (background-size 341px). */
+  --bench-c-slate: #222928;
+  /* Deeper slate: second night surface (panels, cards). */
+  --bench-c-slate-deep: #1a201f;
+  /* Chalk: the night ink; main text at night. */
+  --bench-c-chalk: #ecebe4;
+  /* Dim chalk: secondary text at night. */
+  --bench-c-chalk-dim: #b9bdb5;
+  /* Night rule: rules and borders at night (strokes only). */
+  --bench-c-rule-night: #5b6560;
+  /* Lamplight: the lantern's projected light and the footer seal text. */
+  --bench-c-lamplight: #f6ecd2;
+
+  /* ── 2. Roles, day ──────────────────────────────────────────────────── */
+
+  /* Page ground behind everything; pair it with the parchment tile. */
+  --bench-ground: var(--bench-c-parchment);
+  --bench-ground-tile: url('/bench/textures/pergamino.webp');
+  /* Raised surfaces: panels, the spec table. */
+  --bench-ground-alt: var(--bench-c-parchment-deep);
+  /* Main text and main line. */
+  --bench-line: var(--bench-c-ink);
+  /* Secondary text (captions, EXP numbers, notes). */
+  --bench-line-soft: var(--bench-c-sepia);
+  /* Rules and borders. */
+  --bench-rule: var(--bench-c-graphite);
+  /* Brass accent (strokes, focus rings). */
+  --bench-brass: var(--bench-c-brass);
+  /* Copper accent (hover). */
+  --bench-copper: var(--bench-c-copper);
+  /* The lab's emphasis: the wax seal, the status marks, the sponsor heart, links on paper. */
+  --bench-emphasis: var(--bench-c-garnet);
+  /* Which plate variant to load: components read this to choose
+     public/bench/machines/<id>-day-* or -night-* (value is a string, not a colour). */
+  --bench-plate-variant: 'day';
+  /* Lantern clips by day: as they are (light screen). */
+  --bench-clip-filter: none;
+  /* Console card + slips (the catalog card palette and the taped paper
+     notices): cream stock, garnet header line, faint blue rules, sepia ink. */
+  --bench-card: #fbf6ea;
+  --bench-card-rule: #c9d6e3;
+  --bench-card-head: #b8434b;
+  --bench-card-ink: #1d1510;
+  --bench-card-soft: #6b5a43;
+  --bench-tape: rgb(236 226 196 / 0.72);
+}
+
+/* ── 2. Roles, night ────────────────────────────────────────────────── */
+
+[data-bench-theme='night'] {
+  --bench-ground: var(--bench-c-slate);
+  --bench-ground-tile: url('/bench/textures/pizarra.webp');
+  --bench-ground-alt: var(--bench-c-slate-deep);
+  --bench-line: var(--bench-c-chalk);
+  --bench-line-soft: var(--bench-c-chalk-dim);
+  --bench-rule: var(--bench-c-rule-night);
+  --bench-brass: #d9b878;
+  --bench-copper: var(--bench-c-copper-bright);
+  --bench-emphasis: #e0a2a6;
+  --bench-plate-variant: 'night';
+  /* Lantern clips by night: negative that keeps each accent's hue. */
+  --bench-clip-filter: invert(1) hue-rotate(180deg);
+  /* Console card by night: a shade deeper stock; ink and sepia stay put. */
+  --bench-card: #e6decb;
+  --bench-card-rule: #a9b8c4;
+  --bench-card-head: #a3343c;
+  --bench-tape: rgb(214 204 176 / 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-bench-theme='day']) {
+    --bench-ground: var(--bench-c-slate);
+    --bench-ground-tile: url('/bench/textures/pizarra.webp');
+    --bench-ground-alt: var(--bench-c-slate-deep);
+    --bench-line: var(--bench-c-chalk);
+    --bench-line-soft: var(--bench-c-chalk-dim);
+    --bench-rule: var(--bench-c-rule-night);
+    --bench-brass: #d9b878;
+    --bench-copper: var(--bench-c-copper-bright);
+    --bench-emphasis: #e0a2a6;
+    --bench-plate-variant: 'night';
+    --bench-clip-filter: invert(1) hue-rotate(180deg);
+    --bench-card: #e6decb;
+    --bench-card-rule: #a9b8c4;
+    --bench-card-head: #a3343c;
+    --bench-tape: rgb(214 204 176 / 0.7);
+  }
+}

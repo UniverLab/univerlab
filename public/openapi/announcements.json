@@ -4,7 +4,7 @@
     "title": "UniverLab announcements API",
     "version": "1.0.0",
     "summary": "The public, read-only half of the UniverLab announcements API.",
-    "description": "The public, read-only half of the UniverLab announcements API — the Mission Log and the roadmap that https://univerlab.org/status/ renders. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: https://univerlab.org`, so a page on univerlab.org can call them straight from the browser. Writing to the Mission Log or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
+    "description": "The public, read-only half of the UniverLab announcements API — the Logbook and the roadmap that https://univerlab.org/status/ renders. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: https://univerlab.org`, so a page on univerlab.org can call them straight from the browser. Writing to the Logbook or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
     "contact": {
       "name": "Jheison Martinez Bolivar",
       "email": "jheison.mb@univerlab.org"
@@ -17,7 +17,7 @@
   ],
   "tags": [
     {
-      "name": "Mission Log",
+      "name": "Logbook",
       "description": "The announcements themselves."
     },
     {
@@ -30,9 +30,9 @@
       "get": {
         "operationId": "listEntries",
         "tags": [
-          "Mission Log"
+          "Logbook"
         ],
-        "summary": "List Mission Log entries",
+        "summary": "List Logbook entries",
         "description": "The most recent announcements, newest first, read from the mirror the API keeps at the edge. `offset` and `limit` page through the newest 100 entries that mirror holds.",
         "parameters": [
           {
@@ -78,9 +78,9 @@
       "get": {
         "operationId": "getAtomFeed",
         "tags": [
-          "Mission Log"
+          "Logbook"
         ],
-        "summary": "Atom feed of the Mission Log",
+        "summary": "Atom feed of the Logbook",
         "description": "The same entries as an Atom feed, for a feed reader. The response carries an `ETag`; a conditional request that returns it saves the whole body.",
         "parameters": [
           {
@@ -122,7 +122,7 @@
       "get": {
         "operationId": "streamEvents",
         "tags": [
-          "Mission Log"
+          "Logbook"
         ],
         "summary": "Server-sent events stream",
         "description": "A long-lived `text/event-stream`. It opens with a `:ok` comment, sends a `:ping` comment every 30 seconds, and pushes an `entry`, `update` or `roadmap` event whose data is the changed object as JSON. It exists for one live view at a time: hold the connection instead of reconnecting, and close it when the view closes. It answers `503` once 200 listeners are already attached.",

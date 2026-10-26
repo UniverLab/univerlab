@@ -118,6 +118,12 @@ describe('GitKit pastel orchid scale', () => {
     expect(contrast(orchidLt!, TERM_BG)).toBeGreaterThanOrEqual(4.5);     // 12.25 terminal plate
   });
 
+  // The experiment-frame terminal bench (.install) is a dark panel with its own
+  // ink on every experiment page; its command and banner text must clear 4.5:1.
+  it('holds >= 4.5:1 on the experiment terminal bench panel', () => {
+    expect(contrast('#ecebe4', '#16130f')).toBeGreaterThanOrEqual(4.5);
+  });
+
   // The two contrast defects PAL2 fixes: --orchid-text (4.16:1) on a --bg-raise
   // plate must never be reinstated as accent text.
   it('does not use --orchid-text on the raised install-bar or hook-card accents', () => {
@@ -138,5 +144,27 @@ describe('GitKit pastel orchid scale', () => {
     const pin = ruleBody(surfCss, "html[data-surface='pastel'] .demo-fig");
     expect(pin).toMatch(/--orchid-text/);
     expect(pin).not.toMatch(/--orchid-fill/);
+  });
+});
+
+describe('GitKit terminal banner', () => {
+  it('prints the install-panel banner in the panel ink with phosphor glow, centred', () => {
+    const body = ruleBody(surfCss, "html[data-surface='pastel'] .install .banner");
+    expect(body).toMatch(/color:\s*inherit/);
+    expect(body).toMatch(/opacity:\s*1/);
+    expect(body).toMatch(/text-shadow:[^;]*color-mix\(in srgb, var\(--c\) 30%/);
+    expect(body).toMatch(/margin-inline:\s*auto/);
+    expect(body).toMatch(/width:\s*fit-content/);
+    expect(body).not.toMatch(/text-align/);
+  });
+
+  it('blinks a block caret after the install-panel banner on every non-tui bench', () => {
+    const caret = ruleBody(surfCss, "html[data-surface='pastel'] .install .banner::after");
+    expect(caret).toMatch(/content:\s*'▋'/);
+    expect(caret).toMatch(/animation:\s*cf-blink/);
+    const koan = ruleBody(surfCss, "html[data-surface='tui'] .koan::after");
+    expect(koan).toMatch(/animation:\s*cf-blink/);
+    expect(surfCss).toMatch(/@keyframes cf-blink/);
+    expect(surfCss).not.toMatch(/data-surface='tui'\][^{]*\.install \.banner/);
   });
 });

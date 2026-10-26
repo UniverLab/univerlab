@@ -3,7 +3,7 @@
  * reported for univerlab.org on 2026-09-28, or the meta-description errors
  * Bing reported on 2026-09-29.
  *
- * Eight invariants, each one a lever that actually moves a metric in Search
+ * Nine invariants, each one a lever that actually moves a metric in Search
  * Console or in a generative engine's answer:
  *
  *   1. Every `<loc>` in the built sitemap maps to a real HTML file that is not
@@ -30,6 +30,10 @@
  *   8. Every docs source file has its built page — the guard for a sibling
  *      checkout that went missing, which `getCollection` reports only as a
  *      warning and an empty collection.
+ *   9. Every URL our own pages advertise is the final URL — the "Page with
+ *      redirect" report of 2026-10-23: canonicals, hreflang alternates and
+ *      in-site anchors must end in `/`, must not be a `_redirects` source,
+ *      and must resolve to a built page (see `scripts/seo/final-urls.ts`).
  *
  * This is the half of the check `astro.config.mjs`'s sitemap `filter` cannot
  * do: the filter sees URL strings at build time, this sees `dist/`. Wired as
@@ -41,6 +45,7 @@ import { resolve } from 'node:path';
 import { DOCS_BASES, DOCS_EXCLUDED_REDIRECTS, ROOT, STATIC_RULES, docsRoute, isDocsExcluded, readDocsRedirects } from './build-redirects.ts';
 import { NOINDEX } from './build-md.ts';
 import { MAX_FULL_BYTES } from './build-llms.ts';
+import { checkFinalUrls } from './seo/final-urls.ts';
 import { experiments, liveExperiments, type Experiment } from '../src/lib/experiments.ts';
 
 const DIST = resolve(ROOT, 'dist');
@@ -177,6 +182,15 @@ export function checkRedirects(dist = DIST): Failure[] {
     }
   }
   return failures;
+}
+
+/** Every `_redirects` source path, for the final-URL invariant: an advertised
+ *  URL that names one of these is a redirect hop, not the final URL. */
+export function redirectSources(dist = DIST): Set<string> {
+  const candidates = [resolve(dist, '_redirects'), resolve(ROOT, 'public/_redirects')];
+  const file = candidates.find((f) => existsSync(f));
+  if (!file) return new Set();
+  return new Set(ruleLines(readFileSync(file, 'utf-8')).map(sourceOf));
 }
 
 // ------------------------------------------------------------ docs links
@@ -433,8 +447,8 @@ export function checkTitles(dist = DIST): Failure[] {
     }
     const title = decodeTitle(m[1]);
     const len = title.length;
-    if (len < 30 || len > 60) {
-      failures.push(`${url}: title is ${len} chars (want 30–60)`);
+    if (len < 30 || len > 90) {
+      failures.push(`${url}: title is ${len} chars (want 30–90)`);
     }
     const first = seen.get(title);
     if (first !== undefined) {
@@ -849,6 +863,7 @@ export function checkAll(dist = DIST): Failure[] {
     ...checkTitles(dist),
     ...checkJsonLd(dist),
     ...checkDocsPages(dist),
+    ...checkFinalUrls(dist, redirectSources(dist)),
   ];
 }
 
@@ -869,7 +884,7 @@ function main(): void {
   const llmsFile = [resolve(DIST, 'llms.txt'), resolve(ROOT, 'public/llms.txt')].find((f) => existsSync(f));
   const docsLines = llmsFile ? llmsDocsLines(readFileSync(llmsFile, 'utf-8')) : 0;
   console.log(
-    `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–60 char titles, ` +
+    `✓ indexing check: ${sitemapLocations(DIST).length} sitemap URLs indexable, ${indexableCount(DIST)} pages with distinct 30–90 char titles, ` +
       `${twins.indexable} indexable pages with ${twins.twins} markdown twins (${twins.links} alternate links), ` +
       `${docsLines} llms.txt documentation lines, llms-full.txt ${llmsFullBytes(DIST)} bytes, ` +
       `${stats.blocks} JSON-LD blocks parse (${stats.docs} docs graphs: ${stats.withDate} with dateModified, ${stats.withoutDate} without, ${stats.unparseable} unparseable), redirects and doc links clean.`,

@@ -1,5 +1,5 @@
 /**
- * announcements.univerlab.org — Mission Log API
+ * announcements.univerlab.org — Logbook API
  *
  *   GET  /             → JSON array of entries (served from the KV mirror, edge-cheap)
  *   GET  /events       → SSE stream (pushes `event: entry|update|roadmap`)

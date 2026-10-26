@@ -78,7 +78,7 @@ export function composeAbout(s: AboutSources): string {
     '## Where to read more',
     '',
     `- The lab for agents (this site, in full): ${new URL('/llms.txt', s.site).href}`,
-    `- Mission Log and roadmap, live: ${new URL('/status/index.md', s.site).href}`,
+    `- Logbook and roadmap, live: ${new URL('/status/index.md', s.site).href}`,
     `- Atom feed of every log entry: ${FEED_URL}`,
   );
 

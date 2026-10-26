@@ -5,8 +5,9 @@
 // same green gradient the CLI wizard prints line by line.
 //
 // Metrics: banners are drawn for DejaVu Sans Mono (same font embedded in the
-// CLIs). IBM Plex Mono — the site mono — has different block-glyph widths, so
-// descenders (g, p, y, t, f) look shifted if we reuse --font-mono here.
+// CLIs). Sometype Mono — the site mono — may have different block-glyph widths
+// (not measured), so descenders (g, p, y, t, f) could look shifted if we reuse
+// --font-mono here.
 import { banners } from '../lib/banners';
 interface Props { id: string; color: string; }
 const { id, color } = Astro.props;
