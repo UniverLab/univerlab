@@ -701,73 +701,113 @@ export const en = {
     title: 'Pensamiento Cósmico',
     // `<title>`/og:title only — `title` above is the visible <h1> and must stay.
     metaTitle: 'Pensamiento Cósmico — the UniverLab manifesto',
-    sub: 'A philosophy of the continuity of consciousness',
+    sub: 'A philosophy for the present and a heuristic of transcendence',
     // The paper itself, citable: a PDF on papers.univerlab.org (R2). Opens in
     // a new tab; the MIME type is declared so the browser renders, not
     // downloads, it.
     paper: 'Read the paper: Pensamiento Cósmico (PDF) ↗',
-    // §IX paper showcase plate: the citable form (PDF) plus the concept DOI —
-    // the DOI to cite (per Intelligence 8a70c979).
+    // Paper showcase plate: the citable form (PDF) plus the concept DOI — the
+    // DOI to cite (per Intelligence 8a70c979).
     paperShowcaseBlurb:
-      'The published, citable form of this argument: the full paper, references and DOI included.',
+      'The published, citable form of this argument: the full essay, references and DOI included.',
     paperDoiLabel: 'Concept DOI — cite this one: 10.5281/zenodo.23503658',
     description:
-      'Pensamiento Cósmico: a philosophy of the continuity of consciousness — why consciousness is worth continuing, and the imperatives that follow from it.',
-    epigraph:
-      '«Wonder at the existence of consciousness is the root of all motivation for continuity.»',
+      'Pensamiento Cósmico: we are part of the universe’s material history; from there, an orientation for acting with perspective and revisable heuristics.',
+    epigraph: '«Keep perspective, and strive by heuristics.»',
     // Living-document header data. Version + date are invariant facts, not
     // prose; "living document" is the only localised word. The Sol and the
     // year are computed at render time from `docDate` (mission-time.ts),
-    // never typed into the dictionary.
+    // never typed into the dictionary. v4 follows the 19 October 2026 paper:
+    // it replaces v3's hierarchy, imperatives and pillars, which the paper
+    // corrected.
     docStatus: 'living document',
-    docVersion: '3.0',
-    docDate: '2026-06-17',
-    transitionTitle: 'The transition that matters',
-    transitionBody:
-      'Evolution does not aim at intelligence. But once an intelligence appears that can understand evolution, it no longer depends on evolution alone: it can begin to steer part of its own fate on purpose. That is where technology is born — not as a continuation of natural selection, but as the moment life starts replacing part of chance with conscious decisions. Technology is not the end. It is the instrument with which consciousness, for the first time, takes some responsibility for its own continuity.',
-    purposeTitle: 'What we value',
-    purposeBody:
-      'Of everything we know about the universe, the existence of a perspective able to ask about the universe itself is the most improbable and extraordinary phenomenon there is. It is worth continuing not because it is useful, nor because evolution “wants” it, but because consciousness is astonishing — and that wonder is enough. What we value, then, is not DNA, nor the species, nor the biological substrate, but the capacity to understand the universe. Hence an order of priority, made explicit not as dogma but as a guide when we must choose:',
-    purpose: [
-      'Consciousness — the capacity to hold a perspective.',
-      'Intelligent life — the way that capacity arose and sustains itself.',
-      'Knowledge — what perspectives accumulate and pass on.',
+    docVersion: '4.0',
+    docDate: '2026-10-26',
+    // The folded index's label below 1100px.
+    toc: 'Contents',
+    lead:
+      'Losing a shared explanation of the world does not force the conclusion that life has no orientation. It leaves a practical question: how to act when no one is coming to rescue us and no meaning is guaranteed in advance. This is an answer from the cosmic perspective: the universe is not a stage set in front of us; we are part of its material history, and knowing it is a local possibility that arose within it.',
+    dissipativeTitle: 'Dissipative islands',
+    dissipative: [
+      'A living organism sustains a local order it could not keep in isolation: it takes in matter and energy, transforms them, and returns heat and waste to its surroundings. It is no exception to the second law of thermodynamics; it depends on flows that obey it. Each life is a dissipative island: organised, situated and temporary.',
+      'The membrane — skin, senses, attention — is the boundary that sets a body apart from its surroundings without making it independent of them. It is permeable, active, and dependent on what lies outside it.',
+      'Beneath every deliberation lies the belly: the need to feed, to keep oneself and to reproduce. Reason does not appear outside that condition; it regulates it and sometimes reorders its priorities. Brains, language, tools and collective memory allow a partial escape from the belly: spending energy on what does not meet an immediate need. In that surplus, one part of the universe represents other parts and can revise its own actions.',
     ],
-    imperativesTitle: 'The imperatives',
-    imperatives: [
-      ['Imperative of Continuity', 'Consciousness is the most extraordinary phenomenon we know of. Wherever there is the possibility of increasing its continuity, its expansion, and its capacity to understand the universe, there is the ethical responsibility to do so.'],
-      ['Technological Imperative', 'Since, as far as we know, technology is the only means able to extend that continuity beyond natural limits, developing and sharing it is an ethical duty — a corollary of the first, not a principle of its own.'],
+    dissipativeQuote: 'The cosmos studies itself.',
+    dissipativeGloss:
+      'Not because the universe has a mind, but because those who study it are made of the same matter they study.',
+    // Labels of the membrane plate.
+    membrane: { inflow: 'matter and energy', outflow: 'heat and waste', wall: 'membrane', world: 'surroundings' },
+    otherTitle: 'The other is us',
+    other: [
+      'If there is no human substance set apart from the rest of the universe, each person is a singular configuration of a common reality. But sharing an origin is not sharing an experience: each life receives the world through its own membrane and cannot inhabit another’s perspective.',
+      '“The other is us” expresses that continuity without erasing the difference. The other is not a copy of me, nor a piece of a collective consciousness: it is another instance of the same world, from which that world is felt differently.',
+      'In the egocentric circle, one imagines oneself as the centre and orders everything around oneself. In the ellipse, two foci hold the figure: the self remains, but it is no longer the only point that gives meaning.',
+      'Altruism does not follow from material unity. It takes an explicit premise: the wellbeing and suffering of others count, even when I do not live them. With it, cooperation stops being a slogan and becomes a condition of lives that sustain one another, without dissolving each person’s responsibility for what they do.',
+    ],
+    // Labels of the circle-and-ellipse plate.
+    foci: { circle: 'circle · one centre', ellipse: 'ellipse · two foci', self: 'self', other: 'the other' },
+    ethicsTitle: 'A heuristic ethics',
+    ethicsIntro:
+      'Keeping perspective means placing a decision on more than one scale: the immediate need, the lives of those around us, and the conditions that sustain knowledge and cooperation. Striving by heuristics means acting on revisable rules of thumb when the consequences are uncertain. Three questions to examine an action:',
+    heuristics: [
+      ['H1', 'Self-construction', 'Does this lead me toward the self — or the us — we want to be?'],
+      ['H2', 'Viable technology', 'Does this build tools and capacities that widen our room to act, including, in the long run, not depending on a single planet?'],
+      ['H3', 'Operative altruism', 'Does this improve someone else’s living conditions or reduce suffering?'],
+    ] as [string, string, string][],
+    heuristicsCheck:
+      'The questions correct one another: technology without orientation widens harm; self-construction without others turns into self-absorption; help that cannot sustain itself soon runs out.',
+    nihilismLabel: 'The eraser of nihilism',
+    nihilismQuestion: 'How many people live better because you exist?',
+    nihilismBody:
+      'It turns no one into a number and asks no sacrifice to justify a life. It is a heuristic against paralysing abstraction: look for verifiable effects on the wellbeing of others, from caring for a community to sharing knowledge others can use.',
+    ethicsLimit:
+      'A heuristic can fail: the impact may be ambiguous, unevenly shared, or hide paternalism. The three questions do not replace deliberation, evidence or accountability; they show what is being built and whom it reaches.',
+    partialTitle: 'Transcendence and partial success',
+    partial: [
+      'Earth is not a home guaranteed forever: the Sun has about five billion years left before it swells into a red giant. That horizon does not make space expansion urgent, nor does it guarantee we survive; it does mean that any project that values the continuity of life must acknowledge the planet’s limits.',
+      'Interplanetary transcendence names a technological and political possibility, not a destiny: building, through sustained cooperation, the conditions for life not to depend forever on a single planet. The ethical question comes before the technical feat: which forms of life we want to preserve, and which present costs we are willing to impose.',
+      'Artificial intelligence is an artefact of our history: an instrumental extension and a symbolic memory of a human culture. Changing substrate does not remove fragility; machines fail in their own ways. That is why biological continuity remains the primary goal.',
+      'If that goal failed and machines carrying our memory and our imperatives persisted, it would be a partial success: the continuity of an inheritance, not of those who lived it. The forest that survives the fall of the mother tree keeps something real; it does not bring the tree back.',
+    ],
+    partialQuote: 'Preserving a work is not preserving its authors.',
+    provenanceTitle: 'Where each claim comes from',
+    provenanceIntro:
+      'The argument mixes science, metaphor and values, but does not treat them as interchangeable. Thermodynamics describes conditions of organisation; it deduces no duty. Monism expresses material continuity; it does not prove that all experiences are one. Each statement declares where it comes from, so it can be attacked on its own:',
+    provenance: [
+      ['Empirical base', 'Organisms are open systems that sustain local order through exchanges with their surroundings (Schrödinger; Nicolis and Prigogine). It describes; it does not prescribe.'],
+      ['Postulates O1–O3', 'Material continuity: we are not observers outside the cosmos. The organism as a dissipative organisation with a membrane. Each other as a distinct perspective within a shared reality.'],
+      ['Ethical premises E1–E2', 'E1: the wellbeing and suffering of others count morally. E2: the continuity of biological life takes priority over keeping only its records or artefacts. They are declared values, not conclusions of physics.'],
+      ['Heuristics H1–H3', 'Self-construction, viable technology and operative altruism: questions for applying E1–E2 under uncertainty. They are not laws.'],
+      ['Conclusions', 'The theses on artificial intelligence, interplanetary expansion and partial success depend on all of the above: they are revised if the evidence changes or a premise is rejected.'],
     ] as [string, string][],
-    imperativesNote:
-      'Two precisions, not ornaments. We say “as far as we know”: this turns a present observation into a revisable hypothesis, never a dogma. And the duty is not imposed from outside — it follows from our situation, because as far as we know, no one else will do it for us.',
-    pillarsTitle: 'What the imperative is made of',
-    pillars: [
-      ['Education', 'Multiplies perspectives and passes knowledge between temporary minds. Continuity in time.'],
-      ['Exploration', 'Lowers the odds that a single planetary accident ends everything. Continuity in space.'],
-      ['Artificial intelligence', 'Opens the possibility that consciousness persists in other substrates. Continuity beyond biology.'],
-      ['Cooperation & forgiveness', 'Every conflict that destroys a perspective subtracts from the whole — not sentimentality, but optima of continuity.'],
-      ['Love & community', 'The bonds that sustain and multiply concrete minds, here and now. Continuity at human scale.'],
-    ] as [string, string][],
-    pathTitle: 'What changes',
-    path: [
-      ['From survival', 'to wonder as the root.'],
-      ['From evolutionary chance', 'to deliberate, conscious direction.'],
-      ['From the biological substrate', 'to consciousness, wherever it lives.'],
-      ['From usefulness', 'to responsibility.'],
-      ['From dogma', 'to a hypothesis open to refutation.'],
-    ] as [string, string][],
+    // The plate's dashed arrow: duty does not follow from physics.
+    provenanceGap: 'needs an added premise',
+    limitsTitle: 'What it does not prove',
+    limits: [
+      'Monism does not prove an ethics.',
+      'Heuristics do not settle every conflict.',
+      'Interplanetary exploration remains uncertain.',
+      'Artificial continuity is not human continuity.',
+    ],
+    limitsNote:
+      'Making these limits explicit keeps hope from turning into certainty. An idea that cannot be refuted cannot be upheld either.',
+    practiceTitle: 'The practice',
+    practice: [
+      'Cosmic thinking begins with a location — we are material organisms, sustained by exchanges, with a limited perspective and dependent on other lives — and proposes a modest and demanding task: regulate immediate needs, build relationships where the other counts, and choose tools that increase our collective capacity to understand and act.',
+      'UniverLab is one such practice when it works as an open laboratory. Sharing code, documentation, experiments and tools lets knowledge circulate and be carried on by people other than those who produced it. Open science does not by itself secure justice or transcendence, but it makes one form of altruism operative: pooling cognitive resources and lowering the cost for others to learn and build.',
+    ],
+    practiceQuote: 'Not a laboratory about the universe, but a laboratory of the universe.',
     worksTitle: 'In development',
     worksBody:
-      'The published paper that develops this argument, and one long-term work that traces where the idea came from. The work is early, with no fixed date.',
+      'The published essay that develops this argument, and a long-term work that traces where the idea was born. The work is at a very early stage, with no set date.',
     worksBadge: 'Long-term',
     works: [
       ['Eco del Silencio', 'The lived path, told as a collection of stories — “Un Viaje Introspectivo a la Esencia Humana”. The events and turns (fear, freedom, community) that led to Pensamiento Cósmico. Not the argument, but the experience the argument grew out of.'],
     ] as [string, string][],
     closing:
-      '«Univerlab exists not to write software, nor to learn AI, nor to ship open source — those are all means — but to raise, even infinitesimally, the probability that knowledge and consciousness continue. Not a laboratory about the universe, but a laboratory of the universe.»',
-    note:
-      'A living system: its axioms and derivations are written to be attacked, point by point. An idea that cannot be refuted cannot be held either.',
-    why: 'This is why the laboratory exists.',
+      'Keeping perspective and striving by heuristics means, in the end, working in the present for lives that can be lived better, and for knowledge that does not end with a single person or a single generation.',
+    why: 'This is why the lab exists.',
   },
   // The Fundamentos refutation map's copy — data only: the map left the page
   // with the paper redesign (the citable paper carries the developed
@@ -828,7 +868,13 @@ export const en = {
     } as Record<string, { name: string; statement: string }>,
   },
   cosmos: {
-    kicker: 'Perspective',
+    kicker: 'The cosmic perspective',
+    intro:
+      'Two scales that are usually kept apart. On the physical one, human life takes up a small and brief region of the universe. On the scale of experience, that region holds memory, cooperation and questions about the whole it belongs to. The disproportion does not prove we are irrelevant: it asks what value can be built without mistaking size for importance.',
+    // The animated plate: it pulls back with the scroll, from the observer to
+    // the observable universe, then compresses deep time down to one life.
+    hint: 'Scroll: the plate pulls back.',
+    usScale: 'h ≈ 1.7 m',
     timelineTitle: 'Deep time',
     // Deep time as a list of spans: [duration, what it measures], biggest
     // first, read as typography (mono span over serif name).
@@ -863,7 +909,7 @@ export const en = {
   observatory: {
     kicker: 'Observatory',
     intro:
-      'The Imperative of Continuity is not only philosophy — it is a measurable trajectory. Four series, chosen not for optimism but for honesty: what is growing, and what we are losing.',
+      'Continuity is not only philosophy: it leaves measurable traces. Four series, chosen not for optimism but for honesty: what is growing, and what we are losing.',
     series: {
       wikipedia: {
         title: 'Human knowledge, written in common',

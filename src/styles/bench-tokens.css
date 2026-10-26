@@ -18,7 +18,8 @@
 :root {
   /* ── 1. Palette ─────────────────────────────────────────────────────── */
 
-  /* Parchment: the day ground, under the tile textures/pergamino.webp (background-size 341px).
+  /* Parchment: the day ground, under the tile textures/pergamino.webp (background-size 1024px;
+     drawn at 3072 px so its fibres keep the 341px tile's scale while its clouds never visibly repeat).
      Every day plate's paper was keyed to transparent, so plates sit on it without an edge. */
   --bench-c-parchment: #f4f0ea;
   /* Deeper parchment: second paper for panels and cards. */
@@ -55,6 +56,7 @@
   /* Page ground behind everything; pair it with the parchment tile. */
   --bench-ground: var(--bench-c-parchment);
   --bench-ground-tile: url('/bench/textures/pergamino.webp');
+  --bench-ground-size: 1024px;
   /* Raised surfaces: panels, the spec table. */
   --bench-ground-alt: var(--bench-c-parchment-deep);
   /* Main text and main line. */
@@ -89,6 +91,7 @@
 [data-bench-theme='night'] {
   --bench-ground: var(--bench-c-slate);
   --bench-ground-tile: url('/bench/textures/pizarra.webp');
+  --bench-ground-size: 341px;
   --bench-ground-alt: var(--bench-c-slate-deep);
   --bench-line: var(--bench-c-chalk);
   --bench-line-soft: var(--bench-c-chalk-dim);
@@ -110,6 +113,7 @@
   :root:not([data-bench-theme='day']) {
     --bench-ground: var(--bench-c-slate);
     --bench-ground-tile: url('/bench/textures/pizarra.webp');
+  --bench-ground-size: 341px;
     --bench-ground-alt: var(--bench-c-slate-deep);
     --bench-line: var(--bench-c-chalk);
     --bench-line-soft: var(--bench-c-chalk-dim);

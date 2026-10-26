@@ -120,21 +120,27 @@ describe('Watermark component', () => {
     expect(watermark).toContain('celestial-night-800');
   });
 
-  it('repeats the blueprint tile at 800px/0.5 and covers the celestial chart at 0.45', () => {
+  it('repeats the blueprint tile at 800px/0.5 and prints the celestial chart once across the top at 0.45', () => {
     expect(watermark).toContain('background-size: 800px');
     expect(watermark).toContain('opacity: 0.5');
-    expect(watermark).toContain('background-size: cover');
+    expect(watermark).toContain('background-size: 100% auto');
+    expect(watermark).toContain('background-position: top center');
+    expect(watermark).toMatch(/mask-image: linear-gradient\(to bottom, #000 0, #000 70vh, transparent 130vh\)/);
     expect(watermark).toContain('opacity: 0.45');
   });
 
-  it('sits fixed behind content, aria-hidden and click-through', () => {
+  it('scrolls with the paper behind content, aria-hidden and click-through', () => {
     expect(watermark).toContain('aria-hidden="true"');
     expect(watermark).toContain('pointer-events: none');
     expect(watermark).toContain('z-index: -1');
-    expect(watermark).toContain('position: fixed');
+    // Printed on the paper: a fixed drawing let the ground's mottling slide
+    // across its lines on every scroll.
+    expect(watermark).toContain('position: absolute');
+    expect(watermark).not.toContain('position: fixed');
     // body paints the ground tile over any negative z-index layer unless it owns
-    // the stacking context; without this the drawing is invisible.
-    expect(watermark).toMatch(/:global\(body\)\s*\{\s*isolation:\s*isolate;?\s*\}/);
+    // the stacking context; without this the drawing is invisible. It is also
+    // the watermark's box, so the drawing spans the whole page.
+    expect(watermark).toMatch(/:global\(body\)\s*\{\s*isolation:\s*isolate;\s*position:\s*relative;?\s*\}/);
   });
 
   it('lands on the manifesto (celestial) and on people, status, roadmap (blueprint)', () => {

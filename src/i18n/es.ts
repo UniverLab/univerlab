@@ -696,68 +696,108 @@ export const es: Dict = {
     title: 'Pensamiento Cósmico',
     // Solo para `<title>`/og:title — `title` de arriba es el <h1> visible.
     metaTitle: 'Pensamiento Cósmico — el manifiesto de UniverLab',
-    sub: 'Una filosofía de la continuidad de la conciencia',
+    sub: 'Filosofía para el hoy y heurística de trascendencia',
     // El paper mismo, citable: un PDF en papers.univerlab.org (R2). Abre en
     // una pestaña nueva; el tipo MIME está declarado para que el navegador lo
     // renderice, no lo descargue.
     paper: 'Lee el paper: Pensamiento Cósmico (PDF) ↗',
-    // §IX placa del paper: la forma citable (PDF) más el DOI de concepto —
-    // el DOI que hay que citar (Intelligence 8a70c979).
+    // Placa del paper: la forma citable (PDF) más el DOI de concepto — el DOI
+    // que hay que citar (Intelligence 8a70c979).
     paperShowcaseBlurb:
-      'Forma publicada y citable de este argumento: el paper completo, con sus referencias y su DOI.',
+      'Forma publicada y citable de este argumento: el ensayo completo, con sus referencias y su DOI.',
     paperDoiLabel: 'DOI del concepto — cita este: 10.5281/zenodo.23503658',
     description:
-      'Pensamiento Cósmico: una filosofía de la continuidad de la conciencia — por qué vale la pena continuarla y los imperativos que de ahí nacen.',
-    epigraph:
-      '«El asombro por la existencia de la conciencia es la raíz de toda motivación de continuidad.»',
+      'Pensamiento Cósmico: somos parte de la historia material del universo; desde ahí, una orientación para actuar con perspectiva y heurísticas revisables.',
+    epigraph: '«Tener perspectiva y procurar con heurística.»',
+    // La v4 sigue al paper del 19 de octubre de 2026: reemplaza la jerarquía,
+    // los imperativos y los pilares de la v3, que el paper corrigió.
     docStatus: 'documento vivo',
-    docVersion: '3.0',
-    docDate: '2026-06-17',
-    transitionTitle: 'La transición que importa',
-    transitionBody:
-      'La evolución no apunta hacia la inteligencia. Pero una vez que aparece una inteligencia capaz de comprender la evolución, ya no depende sólo de ella: puede empezar a dirigir deliberadamente parte de su propio destino. Ahí nace la tecnología: no como continuación de la selección natural, sino como el momento en que la vida empieza a sustituir parte del azar por decisiones conscientes. La tecnología no es el fin. Es el instrumento con el que la conciencia toma, por primera vez, algo de responsabilidad sobre su propia continuidad.',
-    purposeTitle: 'Qué valoramos',
-    purposeBody:
-      'De todo lo que conocemos del universo, la existencia de una perspectiva capaz de preguntarse por el propio universo es el fenómeno más improbable y extraordinario que existe. No vale la pena continuar porque sea útil, ni porque la evolución “lo quiera”, sino porque la conciencia es asombrosa — y ese asombro es suficiente. Lo que valoramos, entonces, no es el ADN, ni la especie, ni el sustrato biológico, sino la capacidad de comprender el universo. De ahí una jerarquía, hecha explícita no como dogma sino como orden de prioridad cuando hay que elegir:',
-    purpose: [
-      'La conciencia — la capacidad de tener una perspectiva.',
-      'La vida inteligente — la forma en que esa capacidad surgió y se sostiene.',
-      'El conocimiento — lo que las perspectivas acumulan y transmiten.',
+    docVersion: '4.0',
+    docDate: '2026-10-26',
+    // Rótulo del índice plegado, por debajo de 1100px.
+    toc: 'Índice',
+    lead:
+      'La pérdida de una explicación compartida del mundo no obliga a concluir que la vida carezca de orientación. Deja una pregunta práctica: cómo actuar cuando nadie vendrá a rescatarnos y ningún sentido está garantizado de antemano. Esta es una respuesta desde la perspectiva cósmica: el universo no es un escenario frente a nosotros; somos parte de su historia material, y conocerlo es una posibilidad local surgida dentro de ella.',
+    dissipativeTitle: 'Islas disipativas',
+    dissipative: [
+      'Un organismo vivo sostiene un orden local que no podría mantener aislado: toma materia y energía, las transforma y devuelve calor y residuos al entorno. No es una excepción a la segunda ley de la termodinámica; depende de flujos que la cumplen. Cada vida es una isla disipativa: organizada, situada y temporal.',
+      'La membrana —la piel, los sentidos, la atención— es el límite que separa un cuerpo de su entorno sin volverlo independiente. Es permeable, activa y depende de lo que queda fuera de ella.',
+      'Debajo de toda deliberación está la panza: la necesidad de alimentarse, conservarse y reproducirse. La razón no aparece fuera de esa condición; la regula y a veces reordena sus prioridades. Cerebros, lenguaje, herramientas y memoria colectiva permiten una fuga parcial de la panza: dedicar energía a lo que no resuelve una necesidad inmediata. En ese excedente, una parte del universo representa a otras partes y puede revisar sus propias acciones.',
     ],
-    imperativesTitle: 'Los imperativos',
-    imperatives: [
-      ['Imperativo de la Continuidad', 'La conciencia es el fenómeno más extraordinario que conocemos. Allí donde exista la posibilidad de aumentar su continuidad, su expansión y su capacidad de comprender el universo, existe la responsabilidad ética de hacerlo.'],
-      ['Imperativo Tecnológico', 'Dado que, hasta donde sabemos, la tecnología es el único medio capaz de extender esa continuidad más allá de los límites naturales, desarrollarla y compartirla es un deber ético — un corolario del primero, no un principio aparte.'],
+    dissipativeQuote: 'El cosmos se estudia a sí mismo.',
+    dissipativeGloss:
+      'No porque el universo tenga una mente, sino porque quienes lo investigan están hechos de la misma materia que investigan.',
+    // Rótulos de la lámina de la membrana.
+    membrane: { inflow: 'materia y energía', outflow: 'calor y residuos', wall: 'membrana', world: 'entorno' },
+    otherTitle: 'El otro es nosotros',
+    other: [
+      'Si no hay una sustancia humana separada del resto del universo, cada persona es una configuración singular de una realidad común. Pero compartir origen no es compartir experiencia: cada vida recibe el mundo desde su propia membrana y no puede habitar la perspectiva de otra.',
+      '«El otro es nosotros» expresa esa continuidad sin borrar la diferencia. El otro no es una copia de mí ni una pieza de una conciencia colectiva: es otra instancia del mismo mundo, desde la cual ese mundo se siente de otro modo.',
+      'En la circunferencia egocéntrica, uno se imagina centro y ordena todo en función de sí. En la elipse, dos focos sostienen la figura: el yo permanece, pero deja de ser el único punto que da sentido.',
+      'De la unidad material no se deduce el altruismo. Hace falta una premisa explícita: el bienestar y el sufrimiento de otros cuentan, aunque no los viva yo. Con ella, la cooperación deja de ser consigna y se vuelve condición de vidas que se sostienen mutuamente, sin disolver la responsabilidad de cada quien por sus actos.',
+    ],
+    // Rótulos de la lámina de la circunferencia y la elipse.
+    foci: { circle: 'circunferencia · un centro', ellipse: 'elipse · dos focos', self: 'yo', other: 'el otro' },
+    ethicsTitle: 'Ética heurística',
+    ethicsIntro:
+      'Tener perspectiva es ubicar una decisión en más de una escala: la necesidad inmediata, la vida de quienes nos rodean y las condiciones que sostienen el conocimiento y la cooperación. Procurar con heurística es actuar con reglas prácticas revisables cuando no hay certeza sobre las consecuencias. Tres preguntas para examinar una acción:',
+    heuristics: [
+      ['H1', 'Autoconstrucción', '¿Esto me dirige hacia el yo —o el nosotros— que queremos ser?'],
+      ['H2', 'Tecnología viable', '¿Esto construye herramientas y capacidades que amplían nuestro margen de acción, incluida, a largo plazo, la de no depender de un solo planeta?'],
+      ['H3', 'Altruismo operativo', '¿Esto mejora las condiciones de vida de alguien más o reduce sufrimiento?'],
+    ] as [string, string, string][],
+    heuristicsCheck:
+      'Las preguntas se corrigen entre sí: la tecnología sin orientación amplía daños; la autoconstrucción sin los otros se vuelve autoabsorción; la ayuda que no puede sostenerse se agota pronto.',
+    nihilismLabel: 'El borrador del nihilismo',
+    nihilismQuestion: '¿Cuántas personas viven mejor gracias a que existes?',
+    nihilismBody:
+      'No convierte a nadie en una cifra ni exige sacrificios para justificar una vida. Es una heurística contra la abstracción que paraliza: buscar efectos comprobables en el bienestar de otros, desde cuidar una comunidad hasta compartir conocimiento que otros puedan usar.',
+    ethicsLimit:
+      'Una heurística puede fallar: el impacto puede ser ambiguo, repartirse de forma desigual o esconder paternalismo. Las tres preguntas no sustituyen la deliberación, la evidencia ni la rendición de cuentas; sirven para ver qué se intenta construir y a quién alcanza.',
+    partialTitle: 'Trascendencia y éxito parcial',
+    partial: [
+      'La Tierra no es un hogar garantizado para siempre: al Sol le quedan unos cinco mil millones de años antes de expandirse como gigante roja. Ese horizonte no vuelve urgente la expansión espacial ni garantiza que sobrevivamos; sí establece que cualquier proyecto que valore la continuidad de la vida debe reconocer los límites del planeta.',
+      'La trascendencia interplanetaria nombra una posibilidad tecnológica y política, no un destino: construir, con cooperación sostenida, condiciones para que la vida no dependa siempre de un solo planeta. La pregunta ética va antes que el logro técnico: qué formas de vida queremos preservar y qué costes presentes estamos dispuestos a imponer.',
+      'La inteligencia artificial es un artefacto de nuestra historia: extensión instrumental y memoria simbólica de una cultura humana. Cambiar de sustrato no elimina la fragilidad; las máquinas fallan a su manera. Por eso la continuidad biológica sigue siendo la meta primaria.',
+      'Si esa meta fracasara y persistieran máquinas que transportan nuestra memoria y nuestros imperativos, sería un éxito parcial: continuidad de una herencia, no de quienes la vivieron. El bosque que sobrevive a la caída del árbol madre conserva algo real; no devuelve el árbol.',
+    ],
+    partialQuote: 'Preservar una obra no es preservar a sus autores.',
+    provenanceTitle: 'De dónde sale cada afirmación',
+    provenanceIntro:
+      'El argumento mezcla ciencia, metáfora y valores, pero no los trata como intercambiables. La termodinámica describe condiciones de organización; no deduce un deber. El monismo expresa continuidad material; no prueba que todas las experiencias sean una. Cada enunciado declara su procedencia, para que pueda atacarse por separado:',
+    provenance: [
+      ['Base empírica', 'Los organismos son sistemas abiertos que sostienen orden local mediante intercambios con su entorno (Schrödinger; Nicolis y Prigogine). Describe; no prescribe.'],
+      ['Postulados O1–O3', 'Continuidad material: no somos observadores externos al cosmos. El organismo como organización disipativa con membrana. Cada otro como una perspectiva distinta dentro de una realidad compartida.'],
+      ['Premisas éticas E1–E2', 'E1: el bienestar y el sufrimiento de otros cuentan moralmente. E2: la continuidad de la vida biológica tiene prioridad sobre conservar solo sus registros o artefactos. Son valores declarados, no conclusiones de la física.'],
+      ['Heurísticas H1–H3', 'Autoconstrucción, tecnología viable y altruismo operativo: preguntas para aplicar E1–E2 bajo incertidumbre. No son leyes.'],
+      ['Conclusiones', 'Las tesis sobre inteligencia artificial, expansión interplanetaria y éxito parcial dependen de lo anterior: se revisan si cambia la evidencia o si se rechaza una premisa.'],
     ] as [string, string][],
-    imperativesNote:
-      'Dos precisiones, no adornos. Decimos “hasta donde sabemos”: eso convierte una observación actual en una hipótesis revisable, nunca en un dogma. Y el deber no viene impuesto desde afuera — nace de nuestra situación, porque, hasta donde sabemos, nadie más lo hará por nosotros.',
-    pillarsTitle: 'De qué está hecho el imperativo',
-    pillars: [
-      ['Educación', 'Multiplica perspectivas y transmite conocimiento entre conciencias temporales. Continuidad en el tiempo.'],
-      ['Exploración', 'Reduce la probabilidad de que un único accidente planetario termine con todo. Continuidad en el espacio.'],
-      ['Inteligencia artificial', 'Abre la posibilidad de que la conciencia persista en otros sustratos. Continuidad más allá de la biología.'],
-      ['Cooperación y perdón', 'Cada conflicto que destruye una perspectiva resta valor al total — no sentimentalismo, sino óptimos de continuidad.'],
-      ['Amor y comunidad', 'Los vínculos que sostienen y multiplican conciencias concretas, aquí y ahora. Continuidad a escala humana.'],
-    ] as [string, string][],
-    pathTitle: 'Qué cambia',
-    path: [
-      ['De la supervivencia', 'al asombro como raíz.'],
-      ['Del azar evolutivo', 'a la dirección consciente y deliberada.'],
-      ['Del sustrato biológico', 'a la conciencia, viva donde viva.'],
-      ['De la utilidad', 'a la responsabilidad.'],
-      ['Del dogma', 'a una hipótesis abierta a la refutación.'],
-    ] as [string, string][],
+    // La flecha discontinua de la lámina: el deber no sale de la física.
+    provenanceGap: 'requiere una premisa añadida',
+    limitsTitle: 'Lo que no prueba',
+    limits: [
+      'El monismo no prueba una ética.',
+      'La heurística no resuelve todo conflicto.',
+      'La exploración interplanetaria sigue siendo incierta.',
+      'La continuidad artificial no equivale a continuidad humana.',
+    ],
+    limitsNote:
+      'Hacer explícitos esos límites evita convertir la esperanza en certeza. Una idea que no se puede refutar tampoco se puede sostener.',
+    practiceTitle: 'La práctica',
+    practice: [
+      'El pensamiento cósmico empieza con una ubicación —somos organismos materiales, sostenidos por intercambios, con una perspectiva limitada y dependientes de otras vidas— y propone una tarea modesta y exigente: regular las necesidades inmediatas, construir relaciones donde el otro cuente y elegir herramientas que aumenten la capacidad colectiva de comprender y actuar.',
+      'UniverLab es una de esas prácticas cuando funciona como laboratorio abierto. Compartir código, documentación, experimentos y herramientas deja que el conocimiento circule y lo continúen personas distintas de quienes lo produjeron. La ciencia abierta no asegura por sí sola justicia ni trascendencia, pero hace operativa una forma de altruismo: poner en común recursos cognitivos y abaratar que otros aprendan y construyan.',
+    ],
+    practiceQuote: 'No es un laboratorio sobre el universo, sino un laboratorio del universo.',
     worksTitle: 'En desarrollo',
     worksBody:
-      'El paper publicado que desarrolla este argumento, y una obra de largo plazo que recorre de dónde nació la idea. La obra está en una etapa muy temprana, sin fecha definida.',
+      'El ensayo publicado que desarrolla este argumento, y una obra de largo plazo que recorre de dónde nació la idea. La obra está en una etapa muy temprana, sin fecha definida.',
     worksBadge: 'Largo plazo',
     works: [
       ['Eco del Silencio', 'El camino vivido, contado como un conjunto de relatos — “Un Viaje Introspectivo a la Esencia Humana”. Los sucesos y giros (el miedo, la libertad, la comunidad) que llevaron al Pensamiento Cósmico. No el argumento, sino la experiencia de la que nació.'],
     ] as [string, string][],
     closing:
-      '«Univerlab no existe para escribir software, ni para aprender IA, ni para hacer open source — todo eso son medios —, sino para aumentar, aunque sea de forma infinitesimal, la probabilidad de continuidad del conocimiento y de la conciencia. No es un laboratorio sobre el universo, sino un laboratorio del universo.»',
-    note:
-      'Un sistema vivo: sus axiomas y derivaciones están escritos para ser atacados, pieza por pieza. Una idea que no se puede refutar tampoco se puede sostener.',
+      'Tener perspectiva y procurar con heurística significa, al final, trabajar en el presente por vidas que puedan vivir mejor y por un conocimiento que no termine en una sola persona ni en una generación.',
     why: 'Por esto existe el laboratorio.',
   },
   // Copia del mapa de refutación de los Fundamentos — sólo datos: el mapa
@@ -821,7 +861,13 @@ export const es: Dict = {
   // Perspectiva cósmica — línea de tiempo profundo + dirección espacial, solo en
   // el manifiesto. Cada cifra vive aquí una vez; nada se repite en el sitio.
   cosmos: {
-    kicker: 'Perspectiva',
+    kicker: 'La perspectiva cósmica',
+    intro:
+      'Dos escalas que suelen separarse. En la física, la vida humana ocupa una región pequeña y breve del universo. En la de la experiencia, esa región contiene memoria, cooperación y preguntas sobre el todo del que forma parte. La desproporción no prueba que seamos irrelevantes: pregunta qué valor puede construirse sin confundir tamaño con importancia.',
+    // La lámina animada: se aleja con el scroll, del observador al universo
+    // observable, y luego comprime el tiempo profundo hasta una vida humana.
+    hint: 'Desplázate: la lámina se aleja.',
+    usScale: 'h ≈ 1,7 m',
     timelineTitle: 'Tiempo profundo',
     // El tiempo profundo como una lista de tramos: [duración, qué mide], de
     // mayor a menor, leída como tipografía (tramo mono sobre nombre serif).
@@ -856,7 +902,7 @@ export const es: Dict = {
   observatory: {
     kicker: 'Observatorio',
     intro:
-      'El Imperativo de Continuidad no es solo filosofía — es una trayectoria medible. Cuatro series, elegidas no por optimismo sino por honestidad: lo que crece, y lo que estamos perdiendo.',
+      'La continuidad no es solo filosofía: deja rastros medibles. Cuatro series, elegidas no por optimismo sino por honestidad: lo que crece, y lo que estamos perdiendo.',
     series: {
       wikipedia: {
         title: 'El conocimiento humano, escrito en común',

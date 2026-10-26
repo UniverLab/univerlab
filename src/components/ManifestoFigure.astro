@@ -1,0 +1,132 @@
+---
+// The manifesto's small engraved plates, drawn inline in currentColor so they
+// ink themselves for day and night: the membrane of a dissipative island (II),
+// the egocentric circle against the two-focus ellipse (III) and the heuristic
+// triangle (IV). Motion is slow and decorative, and stops under reduced motion.
+interface Props {
+  kind: 'membrane' | 'foci' | 'triangle';
+  numeral: string;
+  labels: Record<string, string>;
+  /** Triangle only: the three heuristics as [code, name, question]. */
+  heuristics?: [string, string, string][];
+}
+const { kind, numeral, labels, heuristics = [] } = Astro.props;
+const S = 'fill="none" stroke="currentColor" vector-effect="non-scaling-stroke"';
+
+// The organism's outline: a closed, slightly irregular blob.
+const blob = (r: number) => {
+  const pts = Array.from({ length: 48 }, (_, k) => {
+    const a = (k / 48) * Math.PI * 2;
+    const w = r * (1 + 0.05 * Math.sin(a * 2 + 0.6) + 0.025 * Math.cos(a * 3));
+    return [Math.cos(a) * w * 1.25, Math.sin(a) * w];
+  });
+  const d = pts.map(([x, y], k) => {
+    const [nx, ny] = pts[(k + 1) % pts.length];
+    return `${k ? '' : `M${x.toFixed(1)} ${y.toFixed(1)}`} Q${x.toFixed(1)} ${y.toFixed(1)} ${((x + nx) / 2).toFixed(1)} ${((y + ny) / 2).toFixed(1)}`;
+  });
+  return d.join(' ') + ' Z';
+};
+// Hatching inside the organism, for the engraved body.
+const hatch = Array.from({ length: 15 }, (_, k) => `M${-95 + k * 13} -70 l40 140`).join(' ');
+// The gardener's construction: strings from both foci to points on the ellipse.
+const ellipse = { a: 120, b: 78 };
+const focus = Math.sqrt(ellipse.a ** 2 - ellipse.b ** 2);
+const strings = [0.35, 1.2, 2.1, 2.9, 3.8, 4.6, 5.5]
+  .map((t) => {
+    const x = Math.cos(t) * ellipse.a;
+    const y = Math.sin(t) * ellipse.b;
+    return `M${-focus} 0 L${x.toFixed(1)} ${y.toFixed(1)} L${focus} 0`;
+  })
+  .join(' ');
+const spokes = Array.from({ length: 10 }, (_, k) => {
+  const a = (k / 10) * Math.PI * 2;
+  return `M0 0 L${(Math.cos(a) * 92).toFixed(1)} ${(Math.sin(a) * 92).toFixed(1)}`;
+}).join(' ');
+const tri = [
+  [0, -128],
+  [-122, 82],
+  [122, 82],
+];
+---
+<figure class={`mfig mfig-${kind}`}>
+  {kind === 'membrane' && (
+    <svg viewBox="-330 -150 660 300" role="img" aria-label={`${labels.world}: ${labels.inflow} → ${labels.wall} → ${labels.outflow}`}>
+      <defs>
+        <clipPath id="mf-body"><path d={blob(96)} /></clipPath>
+        <marker id="mf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10" fill="none" stroke="currentColor" />
+        </marker>
+      </defs>
+      <g clip-path="url(#mf-body)"><path d={hatch} fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.45" /></g>
+      <path d={blob(96)} fill="none" stroke="currentColor" stroke-width="1.4" />
+      <path d={blob(104)} fill="none" stroke="currentColor" stroke-width="0.7" stroke-dasharray="3 4" />
+      <g class="flow flow-in" set:html={`<path d="M-310 -40 C-250 -50 -200 -30 -140 -20" ${S} stroke-width="1" marker-end="url(#mf-arrow)"/><path d="M-310 30 C-250 40 -200 25 -140 14" ${S} stroke-width="1" marker-end="url(#mf-arrow)"/>`} />
+      <g class="flow flow-out" set:html={`<path d="M140 -16 C200 -40 250 -60 310 -70" ${S} stroke-width="1" stroke-dasharray="2 5" marker-end="url(#mf-arrow)"/><path d="M140 22 C200 40 250 60 310 74" ${S} stroke-width="1" stroke-dasharray="2 5" marker-end="url(#mf-arrow)"/>`} />
+      <text x="-310" y="-58" class="lbl">{labels.inflow}</text>
+      <text x="310" y="104" class="lbl" text-anchor="end">{labels.outflow}</text>
+      <text x="0" y="-122" class="lbl" text-anchor="middle">{labels.wall}</text>
+      <path d="M0 -114 V-100" fill="none" stroke="currentColor" stroke-width="0.6" />
+      <text x="-310" y="128" class="lbl dim">{labels.world}</text>
+    </svg>
+  )}
+  {kind === 'foci' && (
+    <svg viewBox="-330 -130 660 260" role="img" aria-label={`${labels.circle} · ${labels.ellipse}`}>
+      <g transform="translate(-170 0)">
+        <circle r="92" fill="none" stroke="currentColor" stroke-width="1.3" />
+        <path d={spokes} fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.55" />
+        <circle r="4" fill="currentColor" />
+        <text y="20" class="lbl" text-anchor="middle">{labels.self}</text>
+        <text y="122" class="lbl dim" text-anchor="middle">{labels.circle}</text>
+      </g>
+      <g transform="translate(150 0)" class="ellipse">
+        <ellipse rx={ellipse.a} ry={ellipse.b} fill="none" stroke="currentColor" stroke-width="1.3" />
+        <path class="strings" d={strings} fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.55" />
+        <circle cx={-focus} r="4" fill="currentColor" />
+        <circle cx={focus} r="4" fill="currentColor" />
+        <text x={-focus} y="20" class="lbl" text-anchor="middle">{labels.self}</text>
+        <text x={focus} y="20" class="lbl" text-anchor="middle">{labels.other}</text>
+        <text y="122" class="lbl dim" text-anchor="middle">{labels.ellipse}</text>
+      </g>
+    </svg>
+  )}
+  {kind === 'triangle' && (
+    <svg viewBox="-210 -185 420 330" role="img" aria-label={heuristics.map(([c, n]) => `${c} ${n}`).join(' · ')}>
+      <path d={`M${tri[0].join(' ')} L${tri[1].join(' ')} L${tri[2].join(' ')} Z`} fill="none" stroke="currentColor" stroke-width="1.3" />
+      <path d={`M${tri[0].join(' ')} L0 12 M${tri[1].join(' ')} L0 12 M${tri[2].join(' ')} L0 12`} fill="none" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.7" />
+      <circle cx="0" cy="12" r="4" fill="currentColor" />
+      {heuristics.map(([code, name], k) => {
+        const [x, y] = tri[k];
+        const below = y > 0;
+        return (
+          <g>
+            <circle cx={x} cy={y} r="5" fill="none" stroke="currentColor" stroke-width="1.2" />
+            <text x={x} y={below ? y + 30 : y - 30} class="code" text-anchor="middle">{code}</text>
+            <text x={x} y={below ? y + 48 : y - 14} class="lbl" text-anchor="middle">{name}</text>
+          </g>
+        );
+      })}
+    </svg>
+  )}
+  <span class="mfig-num" aria-hidden="true">{numeral}</span>
+</figure>
+
+<style>
+  .mfig { position: relative; margin: 2.2rem 0; padding: 1.4rem 1rem 1rem; border-block: 1px solid var(--line); color: var(--ink); }
+  .mfig svg { display: block; width: 100%; height: auto; max-height: 22rem; }
+  .mfig :global(text) { fill: currentColor; }
+  .mfig :global(.lbl) { font-family: var(--font-serif); font-style: italic; font-size: 15px; }
+  .mfig :global(.dim) { opacity: 0.65; }
+  .mfig :global(.code) { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; }
+  .mfig-num { position: absolute; top: 0.5rem; right: 0.6rem; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; color: var(--ink-faint); }
+  @media (prefers-reduced-motion: no-preference) {
+    /* Matter flows in, heat and waste flow out: dashes drift along the arrows. */
+    .mfig-membrane :global(.flow-in path) { stroke-dasharray: 6 6; animation: mf-drift 2.4s linear infinite; }
+    .mfig-membrane :global(.flow-out path) { animation: mf-drift 3.2s linear infinite; }
+    /* The strings of the ellipse draw themselves as the plate comes into view. */
+    @supports (animation-timeline: view()) {
+      .mfig-foci .strings { stroke-dasharray: 2400; animation: mf-draw linear both; animation-timeline: view(); animation-range: entry 10% cover 45%; }
+    }
+  }
+  @keyframes mf-drift { to { stroke-dashoffset: -24; } }
+  @keyframes mf-draw { from { stroke-dashoffset: 2400; } to { stroke-dashoffset: 0; } }
+</style>

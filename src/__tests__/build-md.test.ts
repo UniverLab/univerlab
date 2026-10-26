@@ -16,6 +16,19 @@ describe('htmlToMarkdown', () => {
     expect(md).not.toContain('Nav');
   });
 
+  it('keeps the content after a comment that mentions a stripped tag', () => {
+    // The manifesto's index comment says "<nav> is deliberate": the nav strip
+    // used to start inside the comment, eat its `-->`, and hide every section
+    // up to the next comment's end from the twin.
+    const html = `<!DOCTYPE html><html><head><title>T</title></head><body><main><p>Intro</p><!-- <nav> is deliberate: build-md strips <nav> --><nav><a href="#a">Index</a></nav><h2>First section</h2><p>Kept body</p><!-- later --><p>Tail</p></main></body></html>`;
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('## First section');
+    expect(md).toContain('Kept body');
+    expect(md).toContain('Tail');
+    expect(md).not.toContain('Index');
+    expect(md).not.toContain('deliberate');
+  });
+
   it('includes front-matter with title', () => {
     const html = `<!DOCTYPE html><html><head><title>My Page</title></head><body><main><p>Hi</p></main></body></html>`;
     const md = htmlToMarkdown(html);

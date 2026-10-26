@@ -87,7 +87,8 @@ describe('i18n system', () => {
       for (const k of [
         'docStatus', 'docVersion', 'docDate',
         'paperShowcaseBlurb', 'paperDoiLabel',
-        'transitionTitle', 'transitionBody',
+        'lead', 'dissipativeTitle', 'otherTitle', 'ethicsTitle', 'heuristics',
+        'partialTitle', 'provenanceTitle', 'limits', 'practiceTitle', 'toc',
       ]) {
         expect(en.manifesto).toHaveProperty(k);
         expect(es.manifesto).toHaveProperty(k);
@@ -96,6 +97,7 @@ describe('i18n system', () => {
       for (const gone of [
         'millionYearTestTitle', 'millionYearTestQuestion',
         'millionYearTestAnswer', 'millionYearTestClosing', 'attackLink',
+        'transitionTitle', 'transitionBody', 'imperatives', 'pillars', 'purpose',
       ]) {
         expect(en.manifesto).not.toHaveProperty(gone);
         expect(es.manifesto).not.toHaveProperty(gone);
