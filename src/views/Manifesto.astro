@@ -56,11 +56,13 @@ const PDF = 'https://papers.univerlab.org/pensamiento-cosmico/pensamiento-cosmic
              is localised. NOT aria-hidden: build-md's stripAriaHidden would
              delete the line from the markdown twin, which must keep it. -->
         <p class="doc-header"><time datetime={m.docDate} data-mission>{docHeader}</time></p>
+        <p class="m-lead">{m.lead}</p>
       </div>
       <Postcard page="manifesto" alt={t.postcards.manifesto} />
+      <!-- The epigraph sits under the postcard, so the image column carries as
+           much as the text column beside it. -->
+      <blockquote class="prose epigraph">{m.epigraph}</blockquote>
     </div>
-    <p class="lead">{m.lead}</p>
-    <blockquote class="prose epigraph">{m.epigraph}</blockquote>
   </section>
 
   <div class="m-body wrap">
@@ -287,8 +289,18 @@ const PDF = 'https://papers.univerlab.org/pensamiento-cosmico/pensamiento-cosmic
   h1 { font-size: clamp(2.3rem, 6vw, 3.8rem); }
   .sub { margin: 0; }
   .paper-link { display: inline-block; margin-top: 0.5rem; color: var(--accent); }
-  .lead { max-width: 66ch; margin: 1.6rem 0 0; font-size: clamp(1.12rem, 1.05rem + 0.3vw, 1.3rem); line-height: 1.6; color: var(--ink); }
+  .m-lead { max-width: 62ch; margin: 2rem 0 0; font-size: clamp(1.12rem, 1.05rem + 0.3vw, 1.3rem); line-height: 1.6; color: var(--ink); }
   blockquote { margin: 1.4rem 0 0; font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--ink-dim); border-left: 1px solid var(--ink-faint); padding-left: 1.4rem; }
+  /* The opening as three areas: text beside the postcard, the epigraph under
+     the postcard. One column on phones: postcard, text, epigraph. */
+  .opening .page-open { width: 100%; grid-template-areas: 'card' 'text' 'quote'; }
+  .page-open-text { grid-area: text; }
+  .opening :global(.pc) { grid-area: card; }
+  .epigraph { grid-area: quote; margin: 0; align-self: start; }
+  @media (min-width: 64rem) {
+    .opening .page-open { grid-template-columns: 1fr 42%; grid-template-rows: auto 1fr; grid-template-areas: 'text card' 'text quote'; column-gap: 4rem; }
+    .epigraph { margin-top: 2.2rem; font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.35; }
+  }
 
   /* Body grid: the index beside the text from 1100px. The text column is wide
      (figures and plates use all of it); prose alone keeps a 66ch measure. */
