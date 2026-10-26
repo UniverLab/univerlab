@@ -2,6 +2,9 @@ import {
   enqueue,
   readOpened,
   writeOpened,
+  readLabSeen,
+  writeLabSeen,
+  LAB_SEEN_MAX,
   isSeen,
   markSeen,
   firstParagraph,
@@ -66,6 +69,34 @@ describe('the queue', () => {
     expect(next.map((l) => l.id)).toEqual(['a1', 'past-2026-10-24']);
     // A second arrival of the same id never duplicates the letter.
     expect(enqueue(next, arrival)).toHaveLength(2);
+  });
+});
+
+describe('opened lab letters are remembered across days', () => {
+  it('keeps a release letter out of tomorrow\'s mail once it was opened', () => {
+    localStorage.clear();
+    writeLabSeen(['rel-canopy']);
+    const now = new Date('2026-10-26T12:00:00Z');
+    const entries: Announcement[] = [
+      { id: 'rel-canopy', date: '2026-10-24T10:00:00Z', title: 'canopy', body: 'b' },
+      { id: 'rel-quorum', date: '2026-10-23T10:00:00Z', title: 'quorum', body: 'b' },
+    ];
+    const opened = readOpened('2026-10-26').concat(readLabSeen());
+    expect(labLetters(entries, opened, now, []).map((l) => l.id)).toEqual(['rel-quorum']);
+  });
+
+  it('keeps only the newest ids', () => {
+    localStorage.clear();
+    const ids = Array.from({ length: LAB_SEEN_MAX + 5 }, (_, i) => `e${i}`);
+    writeLabSeen(ids);
+    const kept = readLabSeen();
+    expect(kept).toHaveLength(LAB_SEEN_MAX);
+    expect(kept[kept.length - 1]).toBe(`e${LAB_SEEN_MAX + 4}`);
+  });
+
+  it('survives a corrupted value', () => {
+    localStorage.setItem('univerlab-mail-lab', '{oops');
+    expect(readLabSeen()).toEqual([]);
   });
 });
 

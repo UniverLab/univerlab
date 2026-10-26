@@ -82,6 +82,28 @@ export function writeOpened(ids: string[], day: string = dayKey()): void {
   } catch (e) {}
 }
 
+/** Lab letters opened in this browser, kept across days: a release letter
+ *  opened once never comes back the next morning. Only the newest ids are
+ *  kept — the API's own window (7 days, 5 entries) is far smaller. */
+export const LAB_SEEN_KEY = 'univerlab-mail-lab';
+export const LAB_SEEN_MAX = 50;
+
+export function readLabSeen(): string[] {
+  try {
+    const raw = localStorage.getItem(LAB_SEEN_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === 'string') : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function writeLabSeen(ids: string[]): void {
+  try {
+    localStorage.setItem(LAB_SEEN_KEY, JSON.stringify(ids.slice(-LAB_SEEN_MAX)));
+  } catch (e) {}
+}
+
 export function isSeen(id: string, opened: string[]): boolean {
   return opened.indexOf(id) !== -1;
 }
