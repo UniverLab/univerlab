@@ -196,7 +196,7 @@ describe('circadian override hands back to the clock', () => {
     // Equality, not mere presence: an inverted guard would still remove the
     // key, just at the wrong moment (a hand-back that never happens).
     expect(drop).toContain("s===(nat().day?'day':'night')");
-    expect(drop).toContain("localStorage.removeItem('univerlab-theme')");
+    expect(drop).toContain('T.clear()');
   });
 
   it('drops it on the 60s tick and the visibility pass', () => {

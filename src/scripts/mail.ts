@@ -11,6 +11,8 @@ import {
   enqueue,
   readOpened,
   writeOpened,
+  readLabSeen,
+  writeLabSeen,
   isSeen,
   markSeen,
   labLetters,
@@ -171,7 +173,9 @@ function startMailbox(): void {
 
   let queue: MailLetter[] = [];
   let past: PastLetter | null = null;
-  let opened: string[] = readOpened();
+  // Today's opened ids plus every lab letter ever opened here: the lab list
+  // outlives the day, so a release letter is delivered once, not daily.
+  let opened: string[] = readOpened().concat(readLabSeen());
   let pop: HTMLElement | null = null;
   let opener: HTMLElement | null = null;
 
@@ -202,7 +206,12 @@ function startMailbox(): void {
     const flapH = stageH * 0.565;
     const day = stampDay(now, lang);
     const years = Math.max(0, now.getFullYear() - (parseInt(m.kind === 'past' ? m.year : '', 10) || now.getFullYear()));
-    const mark = `${now.getDate()} ${monthName(now, lang, 'short').toUpperCase()}`;
+    // A lab letter is postmarked the day it was posted, not the day it is
+    // read; a letter from the past carries today's day and its own year.
+    const posted = lab ? new Date(m.date) : now;
+    const sent = Number.isFinite(posted.getTime()) ? posted : now;
+    const sentToday = sent.toDateString() === now.toDateString();
+    const mark = `${sent.getDate()} ${monthName(sent, lang, 'short').toUpperCase()}`;
     const todayHref = lang === 'es' ? '/es/today/' : '/today/';
 
     const el = document.createElement('div');
@@ -215,7 +224,7 @@ function startMailbox(): void {
     const meta = lab
       ? `<span>${esc(
           m.exp ? `${m.exp.number} · ${m.exp.name} · ${m.type}` : m.type,
-        )}</span><span>${esc(copy.today)}</span>`
+        )}</span><span>${esc(sentToday ? copy.today : stampDay(sent, lang))}</span>`
       : `<span id="mail-title">${esc(fmt(copy.headPast, { day, year: (m as { year: string }).year }))}</span><span>${esc(
           fmt(copy.onWay, { years }),
         )}</span>`;
@@ -248,7 +257,7 @@ function startMailbox(): void {
         : `<span>${esc(copy.addrNameLab)}</span><span>univerlab.org</span>`;
       face = `<div class="face lab" aria-hidden="true" style="--accent: ${accent}">
           <span class="via">${esc(copy.bandLab)}</span>
-          <div class="postmark">${postmarkSVG(copy.postmarkLab, mark, String(now.getFullYear()), 'lab')}</div>
+          <div class="postmark">${postmarkSVG(copy.postmarkLab, mark, String(sent.getFullYear()), 'lab')}</div>
           ${stamp}
           <div class="grime"></div>
           <div class="addr">${addr}</div>
@@ -329,6 +338,7 @@ function startMailbox(): void {
     const mode = letterMode(letter, opened, reduced());
     opened = markSeen(letter.id, opened);
     writeOpened(opened);
+    if (letter.kind === 'lab') writeLabSeen(markSeen(letter.id, readLabSeen()));
 
     function offerNext(): void {
       if (!queue.length) return;

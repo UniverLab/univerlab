@@ -190,13 +190,13 @@ const signals = [
     function toggleTheme() {
       var root = document.documentElement;
       var target = root.dataset.celestial === 'moon' ? 'day' : 'night';
-      try { localStorage.removeItem('univerlab-theme'); } catch (e) {}
+      window.univerlabTheme.clear();
       if (window.calc) window.calc();
       var clock = root.dataset.celestial === 'moon' ? 'night' : 'day';
       if (clock === target) {
         if (window.applyTheme) window.applyTheme('circadian');
       } else {
-        try { localStorage.setItem('univerlab-theme', target); } catch (e) {}
+        window.univerlabTheme.set(target);
         if (window.applyTheme) window.applyTheme(target);
         // Pages without the circadian script (no window.applyTheme — e.g.
         // /texforge) still honour the click at once: window.calc is the site's
@@ -238,18 +238,24 @@ const signals = [
     }
     function hideTip() { scrubTip.style.display = 'none'; }
 
+    // Pointer events only: a touch fires its pointer stream once, where the
+    // old touch + mouse pair let the browser's emulated mouseup toggle a
+    // second time and undo every tap after the first on mobile.
+    var scrubbing = false;
     function onPointerDown(e) {
+      if (e.button) return;
       dragging = true;
       moved = false;
-      if (localStorage.getItem('univerlab-theme') || !window.scrubTime) return;
-      startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      scrubbing = !window.univerlabTheme.read() && !!window.scrubTime;
+      startX = e.clientX;
+      if (!scrubbing) return;
       btn.classList.add('scrubbing');
       e.preventDefault();
     }
 
     function onPointerMove(e) {
-      if (!dragging) return;
-      var x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+      if (!dragging || !scrubbing) return;
+      var x = e.clientX;
       var dx = x - startX;
       if (Math.abs(dx) > DRAG_THRESHOLD) moved = true;
       if (!moved) return;
@@ -275,12 +281,17 @@ const signals = [
       toggleTheme();
     }
 
-    btn.addEventListener('mousedown', onPointerDown);
-    btn.addEventListener('touchstart', onPointerDown, { passive: false });
-    document.addEventListener('mousemove', onPointerMove);
-    document.addEventListener('touchmove', onPointerMove, { passive: false });
-    document.addEventListener('mouseup', onPointerUp);
-    document.addEventListener('touchend', onPointerUp);
+    btn.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', function () {
+      if (!dragging) return;
+      dragging = false;
+      btn.classList.remove('scrubbing');
+      hideTip();
+      if (moved && window.resetScrub) window.resetScrub();
+      moved = false;
+    });
     // Keyboard: Enter/Space on the focused body fires a click with detail 0.
     btn.addEventListener('click', function (e) { if (!e.detail) toggleTheme(); });
   })();
@@ -466,6 +477,8 @@ const signals = [
      end, so the position is clamped off it. Fixed colours, never themed:
      sepia sun, chalk moon. */
   .celestial-btn {
+    /* The drag scrubs the clock, so a touch on the body never scrolls. */
+    touch-action: none;
     position: absolute;
     bottom: 4px;
     left: clamp(22px, var(--sun-pos, 50%), calc(100% - 71px));

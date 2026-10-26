@@ -54,11 +54,9 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
           <article class="entry" id={entry.anchor} data-status={status}>
             <div class="plate">
               <a class="plate-link" href={entry.href} aria-label={enc.use.open.replace('{name}', exp.name)}>
-                {entry.archived ? (
-                  <span class="num-frame" aria-hidden="true"><span class="num">{exp.number}</span></span>
-                ) : (
-                  <Machine id={entry.id} ink="theme" height="var(--plate-h)" />
-                )}
+                {/* An archived experiment keeps a plate too: cadSpec's is its
+                    drafting table put away under a dust cloth. */}
+                <Machine id={entry.id} ink="theme" height="var(--plate-h)" />
               </a>
             </div>
             <div class="entry-body">
@@ -168,8 +166,6 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
      a line under the archived entry's EXP number. */
   .plate-link { display: block; text-decoration: none; }
   .plate :global(.machine img) { height: auto; max-height: var(--plate-h); max-width: 100%; }
-  .num-frame { display: grid; place-items: center; width: 100%; height: var(--plate-h); border: 1px dotted var(--bench-rule); }
-  .num { font-family: 'Old Standard TT', serif; font-size: 56px; line-height: 1; white-space: nowrap; color: var(--bench-line-soft); }
 
   .hw { margin: 0; font-family: 'Old Standard TT', serif; font-weight: 400; font-size: 22px; line-height: 1.15; }
   /* The name reads as plain headword until it is hovered or focused, then takes
@@ -218,8 +214,6 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 
   @media (max-width: 40rem) {
     .entry { grid-template-columns: 1fr; gap: 14px; }
-    .num-frame { height: 200px; }
-    .num { font-size: 40px; }
   }
 
   @media (max-width: 520px) {

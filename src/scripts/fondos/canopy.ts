@@ -10,6 +10,12 @@ const HALO = 0.5;
 const COMB_ALPHA = 0.035;
 const REVIVE_IDLE = 4000;
 const REVIVE_GAP = 3000;
+// The cells repaint at most this often: they step every 120ms, so 30fps is
+// already smooth, and a phone's main thread gets half its frames back.
+const DRAW_MS = 33;
+// The glow's blur is a downscale to 1/BLUR_DOWN and a smoothed upscale; a
+// canvas `filter: blur()` cost 20ms a frame on a throttled phone.
+const BLUR_DOWN = 4;
 export const MASK = 'radial-gradient(ellipse 66% 76% at 50% 44%, transparent 0 38%, #000 88%)';
 
 export interface CanopyCell {
@@ -88,10 +94,31 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     };
   }
 
+  // Cost model (measured on a 4x-throttled phone): the comb never moves, so
+  // `canvas` holds it alone and is repainted only on a resize. The lit cells
+  // and their glow are small canvases the compositor scales and blends
+  // (plus-lighter) — a full-screen drawImage with 'lighter' was 15ms a frame.
+  const layer = document.createElement('div');
+  layer.style.cssText = 'position:absolute;inset:0;overflow:hidden;pointer-events:none';
+  layer.style.setProperty('mask-image', MASK);
+  layer.style.setProperty('-webkit-mask-image', MASK);
   const lit = document.createElement('canvas');
   const lc = lit.getContext('2d') as CanvasRenderingContext2D;
   const glow = document.createElement('canvas');
   const gc = glow.getContext('2d') as CanvasRenderingContext2D;
+  for (const el of [lit, glow]) {
+    el.style.position = 'absolute';
+    layer.appendChild(el);
+  }
+  glow.style.opacity = '0.9';
+  glow.style.mixBlendMode = 'screen';
+  glow.style.mixBlendMode = 'plus-lighter';
+  host.appendChild(layer);
+  const tiny = document.createElement('canvas');
+  const tc = tiny.getContext('2d') as CanvasRenderingContext2D;
+  // The comb pre-scaled to the glow's size, so the per-frame mask is a 1:1 copy.
+  const combGlow = document.createElement('canvas');
+  const cg = combGlow.getContext('2d') as CanvasRenderingContext2D;
 
   let dpr = 1;
   let w = 0;
@@ -112,6 +139,8 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   let lastInput = 0;
   let lastRevive = 0;
   let lastCell = -1;
+  let lastDraw = 0;
+  let blank = false;
   let ready = false;
 
   const layout = () => {
@@ -121,11 +150,22 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     h = sz.h;
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
-    if (map) {
-      s = Math.max(w / map.w, h / map.h);
-      ox = (w - map.w * s) / 2;
-      oy = (h - map.h * s) / 2;
+    if (!map || !comb) return;
+    s = Math.max(w / map.w, h / map.h);
+    ox = (w - map.w * s) / 2;
+    oy = (h - map.h * s) / 2;
+    for (const el of [lit, glow]) {
+      el.style.left = ox + 'px';
+      el.style.top = oy + 'px';
+      el.style.width = map.w * s + 'px';
+      el.style.height = map.h * s + 'px';
     }
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    c.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+    c.globalAlpha = COMB_ALPHA;
+    c.drawImage(comb, 0, 0);
+    c.globalAlpha = 1;
   };
 
   const buildSprites = (labels: HTMLImageElement) => {
@@ -213,19 +253,27 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       }
     }
 
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    c.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
-    c.globalAlpha = COMB_ALPHA;
-    c.drawImage(comb, 0, 0);
+    if (now - lastDraw < DRAW_MS) return;
+    // Fades are rated per 60fps frame; scale them to the real gap.
+    const steps = lastDraw ? Math.min((now - lastDraw) / 16.7, 6) : 1;
+    lastDraw = now;
+
+    let litAny = false;
+    for (let k = 0; k < cells.length; k++) {
+      if (!sprites[k]) continue;
+      const target = state[k] === ON ? 0.55 : state[k] === DYING ? 0.18 : 0;
+      const rate = target > vis[k] ? 0.5 : 0.08;
+      vis[k] += (target - vis[k]) * (1 - Math.pow(1 - rate, steps));
+      if (vis[k] >= 0.01) litAny = true;
+    }
+    // Nothing glows: clear once and leave both canvases alone until a cell lights.
+    if (!litAny && blank) return;
+    blank = !litAny;
 
     lc.globalCompositeOperation = 'source-over';
     lc.clearRect(0, 0, lit.width, lit.height);
     for (let k = 0; k < cells.length; k++) {
-      if (!sprites[k]) continue;
-      const target = state[k] === ON ? 0.55 : state[k] === DYING ? 0.18 : 0;
-      vis[k] += (target - vis[k]) * (target > vis[k] ? 0.5 : 0.08);
-      if (vis[k] < 0.01) continue;
+      if (!sprites[k] || vis[k] < 0.01) continue;
       lc.globalAlpha = vis[k];
       lc.drawImage(
         sprites[k] as HTMLCanvasElement,
@@ -237,21 +285,12 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     }
     lc.globalAlpha = 1;
 
-    c.globalAlpha = 1;
-    c.drawImage(lit, 0, 0, map.w, map.h);
-
+    tc.globalCompositeOperation = 'copy';
+    tc.drawImage(lit, 0, 0, tiny.width, tiny.height);
     gc.globalCompositeOperation = 'copy';
-    gc.filter = 'blur(5px)';
-    gc.drawImage(lit, 0, 0);
-    gc.filter = 'none';
+    gc.drawImage(tiny, 0, 0, glow.width, glow.height);
     gc.globalCompositeOperation = 'source-in';
-    gc.drawImage(comb, 0, 0, glow.width, glow.height);
-
-    c.globalCompositeOperation = 'lighter';
-    c.globalAlpha = 0.9;
-    c.drawImage(glow, 0, 0, map.w, map.h);
-    c.globalCompositeOperation = 'source-over';
-    c.globalAlpha = 1;
+    gc.drawImage(combGlow, 0, 0);
   };
 
   const unsubPointer = pointerIn(
@@ -276,9 +315,12 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
     next = new Uint8Array(cells.length);
     vis = new Float32Array(cells.length);
     buildSprites(labels);
+    lit.width = glow.width = combGlow.width = Math.round(map!.w * HALO);
+    lit.height = glow.height = combGlow.height = Math.round(map!.h * HALO);
+    tiny.width = Math.max(1, Math.round(lit.width / BLUR_DOWN));
+    tiny.height = Math.max(1, Math.round(lit.height / BLUR_DOWN));
+    cg.drawImage(img, 0, 0, combGlow.width, combGlow.height);
     layout();
-    lit.width = glow.width = Math.round(map!.w * HALO);
-    lit.height = glow.height = Math.round(map!.h * HALO);
     for (let i = 0; i < 6; i++) seed((Math.random() * cells.length) | 0);
     ready = true;
   });
@@ -290,6 +332,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       stopLoop();
       (canvas as any).__ro?.disconnect?.();
       canvas.remove();
+      layer.remove();
     },
   };
 };
