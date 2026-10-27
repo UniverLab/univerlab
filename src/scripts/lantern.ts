@@ -406,23 +406,6 @@ export function startLantern(): void {
     g.putImageData(data, 0, 0);
     return tile;
   })();
-  // The static a tuning screen shows before its experiment opens (tune.ts):
-  // the same tile size, opaque greys instead of a faint grain.
-  const snow = (() => {
-    const tile = document.createElement('canvas');
-    tile.width = tile.height = 128;
-    const g = tile.getContext('2d');
-    if (!g) return tile;
-    const data = g.createImageData(128, 128);
-    for (let i = 0; i < data.data.length; i += 4) {
-      const v = Math.random() * 255;
-      data.data[i] = data.data[i + 1] = data.data[i + 2] = v;
-      data.data[i + 3] = 255;
-    }
-    g.putImageData(data, 0, 0);
-    return tile;
-  })();
-
   // Cost model (measured with a 4x-throttled CPU): every fill on this canvas
   // is raster work on the main thread — redrawn at full size each frame, and
   // resized each frame, the film alone took a third of it. So it runs at half
@@ -434,7 +417,6 @@ export function startLantern(): void {
   let fw = 0;
   let fh = 0;
   let pattern: CanvasPattern | null = null;
-  let snowPattern: CanvasPattern | null = null;
   let vignette: CanvasGradient | null = null;
   let lastFilm = 0;
   let onView = true;
@@ -446,7 +428,6 @@ export function startLantern(): void {
     film.width = fw;
     film.height = fh;
     pattern = ctx.createPattern(grain, 'repeat');
-    snowPattern = ctx.createPattern(snow, 'repeat');
     vignette = ctx.createRadialGradient(
       fw / 2,
       fh / 2,
@@ -464,33 +445,8 @@ export function startLantern(): void {
     onView = entry?.isIntersecting ?? true;
   }).observe(screen);
 
-  /** Tuning: dense static that swells in, with a bright band rolling down. */
-  let tuneAt = 0;
-  const drawSnow = (now: number): void => {
-    if (!ctx) return;
-    tuneAt ||= now;
-    const k = Math.min(1, (now - tuneAt) / 90);
-    ctx.save();
-    ctx.translate(-Math.random() * 128, -Math.random() * 128);
-    ctx.globalAlpha = 0.25 + 0.6 * k;
-    ctx.fillStyle = snowPattern ?? '#888';
-    ctx.fillRect(0, 0, fw + 128, fh + 128);
-    ctx.restore();
-    const band = fh * 0.22;
-    const y = (((now - tuneAt) / 170) * (fh + band)) % (fh + band) - band;
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, y, fw, band);
-    ctx.globalAlpha = 1;
-  };
-
   const drawFilm = (now: number): void => {
     if (!ctx || !onView || fw === 0 || fh === 0) return;
-    if (screen.classList.contains('is-tuning')) {
-      drawSnow(now);
-      return;
-    }
-    tuneAt = 0;
     if (now - lastFilm < FILM_MS) return;
     lastFilm = now;
     const w = fw;
