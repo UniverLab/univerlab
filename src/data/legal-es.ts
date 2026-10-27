@@ -119,7 +119,7 @@ export const privacyEs: LegalDoc = {
       title: 'Seguridad, menores, cambios',
       paras: [
         '<strong>Seguridad.</strong> Los servicios se apoyan en las protecciones de Cloudflare y GitHub, la cookie de sesión firmada y sesiones de relay cifradas de extremo a extremo. Ningún servicio de internet puede garantizar la seguridad, y no debes enviar datos sensibles por reportes o issues, que son públicos.',
-        '<strong>Menores.</strong> Los servicios no están dirigidos a menores de 18 años.',
+        '<strong>Menores.</strong> Los servicios no piden edad ni recogen a sabiendas datos de menores. Si crees que un menor nos dejó datos, escríbenos y los borramos.',
         '<strong>Cambios.</strong> Esta política cambia por revisión fechada: la fecha de arriba se mueve y la vigencia se mueve con ella.',
       ],
     },
@@ -145,7 +145,7 @@ export const termsEs: LegalDoc = {
       id: 'using-the-services',
       title: 'Uso de los servicios',
       paras: [
-        'UniverLab te concede una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar los servicios con tus propios fines lícitos. Debes tener al menos 18 años.',
+        'UniverLab te concede una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar los servicios con tus propios fines lícitos.',
         'UniverLab puede modificar, suspender o descontinuar cualquier servicio, o tu acceso a él, en cualquier momento, con o sin aviso. No hay obligación de soporte: los servicios se operan como un laboratorio abierto, no como un producto contratado.',
         'Tu uso también se rige por la <a href="/es/privacy/">Política de Privacidad</a>, que describe qué datos registra cada servicio. Si estos términos y la política difieren sobre datos, manda la política.',
       ],
@@ -159,7 +159,6 @@ export const termsEs: LegalDoc = {
         'Examinar, perturbar o sobrecargar los servicios: nada de rastrear el catálogo evadiendo sus límites, inundar el relay ni falsificar cookies de sesión.',
         'Suplantar a UniverLab, a sus mantenedores o a otro usuario, ni presentar un grafo comunitario como revisado por el laboratorio.',
         'Publicar contenido ilícito o abusivo en reportes e issues públicos.',
-        'Usar los servicios para construir un catálogo o relay competidor copiándolos por completo.',
       ],
     },
     {
@@ -198,7 +197,7 @@ export const termsEs: LegalDoc = {
       id: 'liability',
       title: 'Limitación de responsabilidad',
       paras: [
-        'En la máxima medida permitida por la ley, UniverLab no responde por lucro cesante ni pérdida de datos, costos de sustitutos, ni daños indirectos, incidentales, especiales o consecuenciales derivados de tu uso de los servicios. Nuestra responsabilidad total por cualquier reclamo tiene un tope de USD 50.',
+        'En la máxima medida permitida por la ley, UniverLab no responde por lucro cesante ni pérdida de datos, costos de sustitutos, ni daños indirectos, incidentales, especiales o consecuenciales derivados de tu uso de los servicios.',
         'Nada en estos términos limita los derechos que la ley de consumo (Ley 1480 de 2011) o la ley de protección de datos declaran irrenunciables.',
       ],
     },

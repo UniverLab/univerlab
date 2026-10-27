@@ -121,7 +121,7 @@ export const privacyEn: LegalDoc = {
       title: 'Security, children, changes',
       paras: [
         '<strong>Security.</strong> The services rely on Cloudflare and GitHub safeguards, the signed session cookie and end-to-end encrypted relay sessions. No internet service can guarantee security, and you should not send sensitive data through reports or issues, which are public.',
-        '<strong>Children.</strong> The services are not directed to anyone under 18.',
+        '<strong>Children.</strong> The services ask no one their age and do not knowingly collect data from minors. If you believe a minor left data with us, write to us and we will delete it.',
         '<strong>Changes.</strong> This policy changes by dated revision: the date above moves and the effective date moves with it.',
       ],
     },
@@ -147,7 +147,7 @@ export const termsEn: LegalDoc = {
       id: 'using-the-services',
       title: 'Using the services',
       paras: [
-        'UniverLab grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the services for your own lawful purposes. You must be at least 18 years old.',
+        'UniverLab grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the services for your own lawful purposes.',
         'UniverLab may modify, suspend or discontinue any service, or your access to it, at any time, with or without notice. There is no support obligation: the services are run as an open laboratory, not a contracted product.',
         'Your use of the services is also governed by the <a href="/privacy/">Privacy Policy</a>, which describes what data each service records. If these terms and the policy disagree about data, the policy controls.',
       ],
@@ -161,7 +161,6 @@ export const termsEn: LegalDoc = {
         'Probe, disrupt or overload the services: no scraping the catalogue to evade its limits, no flooding the relay, no forging session cookies.',
         'Impersonate UniverLab, its maintainers or another user, or misrepresent a community graph as lab-reviewed.',
         'Post unlawful or abusive content in public reports and issues.',
-        'Use the services to build a competing catalogue or relay by copying them wholesale.',
       ],
     },
     {
@@ -200,7 +199,7 @@ export const termsEn: LegalDoc = {
       id: 'liability',
       title: 'Limitation of liability',
       paras: [
-        'To the maximum extent permitted by law, UniverLab is not liable for lost profits or data, the cost of substitutes, or any indirect, incidental, special or consequential damages arising from your use of the services. Our total liability for any claim is capped at USD 50.',
+        'To the maximum extent permitted by law, UniverLab is not liable for lost profits or data, the cost of substitutes, or any indirect, incidental, special or consequential damages arising from your use of the services.',
         'Nothing in these terms limits rights that consumer law (Ley 1480 de 2011) or data-protection law makes non-waivable.',
       ],
     },
