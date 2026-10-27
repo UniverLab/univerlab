@@ -16,6 +16,9 @@ import { composeAbout } from './lab-about';
 import { liveExperiments } from './experiments';
 import { en } from '../i18n/en';
 
+/** The founder's contact address, the single source the legal pages render. */
+export const founderEmail: string = en.people.founder.email;
+
 export function buildSiteAbout(site: URL): string {
   return composeAbout({
     llmsText: readFileSync(resolve(process.cwd(), 'public/llms.txt'), 'utf8'),
