@@ -287,15 +287,14 @@ describe('Home — tuning into an experiment', () => {
     expect(GLOBAL).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none !important/);
   });
 
-  it('shows static on the screen while it tunes', () => {
-    expect(TUNE).toContain("classList.add('is-tuning')");
-    expect(LANTERN).toMatch(/screen\.classList\.contains\('is-tuning'\)/);
-    expect(LANTERN).toContain('drawSnow(now)');
+  it('navigates at once, with no static on the screen', () => {
+    expect(TUNE).not.toContain('is-tuning');
+    expect(TUNE).not.toContain('setTimeout');
+    expect(LANTERN).not.toMatch(/snow|is-tuning/i);
   });
 
-  it('clears the static and the shared name on Back restore', () => {
+  it('clears the shared name on Back restore', () => {
     expect(HOME).toContain("addEventListener('pageshow', untune)");
-    expect(TUNE).toContain("classList.remove('is-tuning')");
     expect(TUNE).toContain("removeProperty('view-transition-name')");
     expect(LAYOUT).not.toContain('crt-restore');
   });

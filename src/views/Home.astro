@@ -582,7 +582,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   import { shouldScreenNavigate } from '../lib/lantern-navigate';
 
   // A machine opens its experiment page by tuning the screen in (tune.ts):
-  // static, then the screen zooms into the page's hero. Pointing at a machine
+  // the screen zooms into the page's hero. Pointing at a machine
   // already projects it, so the screen is the source while it is on view; a
   // machine clicked with the screen scrolled away zooms from itself.
   const screen = document.getElementById('screen');
