@@ -38,12 +38,19 @@ const plateWidths: Record<string, number> = {
 
 // The lantern engraving's sources, day and night: the frame behind the screen
 // and its front copy over it share them (lantern.ts flips the media per phase).
+// /bench/ is cached for 30 days: bump a phase's `v` whenever its engraving is
+// redrawn, or returning visitors keep the old one.
+const lanternVersion = { day: '?v=2', night: '' } as const;
+const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;
 const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
-  (['avif', 'webp'] as const).map((type) => ({
-    phase,
-    type: `image/${type}`,
-    srcset: `/bench/live/lantern-${phase}-450.${type} 450w, /bench/live/lantern-${phase}-900.${type} 900w`,
-  })),
+  (['avif', 'webp'] as const).map((type) => {
+    const v = lanternVersion[phase];
+    return {
+      phase,
+      type: `image/${type}`,
+      srcset: `/bench/live/lantern-${phase}-450.${type}${v} 450w, /bench/live/lantern-${phase}-900.${type}${v} 900w`,
+    };
+  }),
 );
 
 // Engraved sea lines for the horizon separator (drawHorizon in the mockup):
@@ -145,12 +152,12 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
           ))}
           <img
             id="lantern-img"
-            src="/bench/live/lantern-day-900.webp"
+            src={lanternDaySrc}
             width="1068"
             height="900"
             alt={t.home.lantern.alt}
             fetchpriority="high"
-            data-day-src="/bench/live/lantern-day-900.webp"
+            data-day-src={lanternDaySrc}
             data-night-src="/bench/live/lantern-night-900.webp"
           />
         </picture>
@@ -168,11 +175,11 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
             />
           ))}
           <img
-            src="/bench/live/lantern-day-900.webp"
+            src={lanternDaySrc}
             width="1068"
             height="900"
             alt=""
-            data-day-src="/bench/live/lantern-day-900.webp"
+            data-day-src={lanternDaySrc}
             data-night-src="/bench/live/lantern-night-900.webp"
           />
         </picture>

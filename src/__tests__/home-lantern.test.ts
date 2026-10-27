@@ -102,7 +102,12 @@ describe('Home — Plate I, the lantern', () => {
     expect(HOME).toContain("(['day', 'night'] as const).flatMap");
     expect(HOME).toContain("(['avif', 'webp'] as const).map");
     expect(HOME).toContain(
-      'srcset: `/bench/live/lantern-${phase}-450.${type} 450w, /bench/live/lantern-${phase}-900.${type} 900w`',
+      'srcset: `/bench/live/lantern-${phase}-450.${type}${v} 450w, /bench/live/lantern-${phase}-900.${type}${v} 900w`',
+    );
+    // The day engraving was redrawn (its posts had faded mid-height): its URL is versioned.
+    expect(HOME).toContain("const lanternVersion = { day: '?v=2', night: '' } as const;");
+    expect(HOME).toContain(
+      'const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;',
     );
     expect(HOME).toContain('data-phase={src.phase}');
     expect(HOME).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
