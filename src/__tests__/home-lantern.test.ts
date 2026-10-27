@@ -105,13 +105,13 @@ describe('Home — Plate I, the lantern', () => {
       'srcset: `/bench/live/lantern-${phase}-450.${type}${v} 450w, /bench/live/lantern-${phase}-900.${type}${v} 900w`',
     );
     // The day engraving was redrawn (its posts had faded mid-height): its URL is versioned.
-    expect(HOME).toContain("const lanternVersion = { day: '?v=2', night: '' } as const;");
+    expect(HOME).toContain("const lanternVersion = { day: '?v=3', night: '' } as const;");
     expect(HOME).toContain(
       'const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;',
     );
     expect(HOME).toContain('data-phase={src.phase}');
     expect(HOME).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
-    expect(HOME).toMatch(/width="1068"/);
+    expect(HOME).toMatch(/width="1178"/);
     expect(HOME).toMatch(/height="900"/);
     expect(HOME).toContain('{t.home.lantern.alt}');
   });
@@ -121,13 +121,15 @@ describe('Home — Plate I, the lantern', () => {
     expect(HOME).toMatch(/<picture class="lantern-front" aria-hidden="true">/);
     expect(HOME).toMatch(/\.lantern-front \{[^}]*z-index: 4;[^}]*pointer-events: none;/);
     expect(HOME).not.toMatch(/\.screen\[data-phase=[^\]]*\] \{\s*clip-path/);
-    expect(LANTERN).toContain("'#lantern-img, .lantern-front img'");
+    // Day and night share one 1178x900 canvas, so the frame never resizes on a theme flip.
+    expect(HOME.match(/width="1178"/g)).toHaveLength(2);
+    expect(LANTERN).not.toMatch(/img\.width = /);
   });
 
   it('places the screen exactly on the manifest viewer rectangle', () => {
     expect(fractions(homeViewer('day'))).toEqual(fractions(manifestViewer('day')));
     expect(fractions(homeViewer('night'))).toEqual(fractions(manifestViewer('night')));
-    expect(fractions(homeViewer('day'))).toEqual([0.143, 0.078, 0.78, 0.694]);
+    expect(fractions(homeViewer('day'))).toEqual([0.155, 0.078, 0.707, 0.694]);
     expect(fractions(homeViewer('night'))).toEqual([0.163, 0.068, 0.678, 0.7]);
   });
 

@@ -1638,14 +1638,14 @@
       "kind": "live-frame",
       "experiment": null,
       "variant": "day",
-      "width": 534,
+      "width": 589,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/vista/linterna.png",
       "alt": "Engraved magic lantern projecting onto a stretched cloth screen on a wooden stand.",
       "viewer": {
-        "x": 0.143,
+        "x": 0.155,
         "y": 0.078,
-        "w": 0.78,
+        "w": 0.707,
         "h": 0.694
       },
       "notes": "Home live view (Intelligence 6d07dd49). The screen is transparent: place the slide layer (SVG animation + caption + old-film canvas) behind the image, positioned by `viewer` (fractions of the image box). The screen itself always reads dark (a projection), day and night."
@@ -1656,14 +1656,14 @@
       "kind": "live-frame",
       "experiment": null,
       "variant": "day",
-      "width": 534,
+      "width": 589,
       "height": 450,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/vista/linterna.png",
       "alt": "Engraved magic lantern projecting onto a stretched cloth screen on a wooden stand.",
       "viewer": {
-        "x": 0.143,
+        "x": 0.155,
         "y": 0.078,
-        "w": 0.78,
+        "w": 0.707,
         "h": 0.694
       },
       "notes": "Home live view (Intelligence 6d07dd49). The screen is transparent: place the slide layer (SVG animation + caption + old-film canvas) behind the image, positioned by `viewer` (fractions of the image box). The screen itself always reads dark (a projection), day and night."
@@ -1674,14 +1674,14 @@
       "kind": "live-frame",
       "experiment": null,
       "variant": "day",
-      "width": 1068,
+      "width": 1178,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/vista/linterna.png",
       "alt": "Engraved magic lantern projecting onto a stretched cloth screen on a wooden stand.",
       "viewer": {
-        "x": 0.143,
+        "x": 0.155,
         "y": 0.078,
-        "w": 0.78,
+        "w": 0.707,
         "h": 0.694
       },
       "notes": "Home live view (Intelligence 6d07dd49). The screen is transparent: place the slide layer (SVG animation + caption + old-film canvas) behind the image, positioned by `viewer` (fractions of the image box). The screen itself always reads dark (a projection), day and night."
@@ -1692,14 +1692,14 @@
       "kind": "live-frame",
       "experiment": null,
       "variant": "day",
-      "width": 1068,
+      "width": 1178,
       "height": 900,
       "source": "/home/jheisonmblivecom/Academic/Deriverables/Grafics/projects/univerlab-redesign/laminas-v2/vista/linterna.png",
       "alt": "Engraved magic lantern projecting onto a stretched cloth screen on a wooden stand.",
       "viewer": {
-        "x": 0.143,
+        "x": 0.155,
         "y": 0.078,
-        "w": 0.78,
+        "w": 0.707,
         "h": 0.694
       },
       "notes": "Home live view (Intelligence 6d07dd49). The screen is transparent: place the slide layer (SVG animation + caption + old-film canvas) behind the image, positioned by `viewer` (fractions of the image box). The screen itself always reads dark (a projection), day and night."

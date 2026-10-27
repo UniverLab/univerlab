@@ -221,12 +221,6 @@ export function startLantern(): void {
       const src = phase === 'night' ? img.dataset.nightSrc : img.dataset.daySrc;
       if (src) img.src = src;
     });
-    // The frame and its front copy over the screen share one box.
-    document.querySelectorAll<HTMLImageElement>('#lantern-img, .lantern-front img').forEach((img) => {
-      img.width = phase === 'night' ? 1178 : 1068;
-      img.height = 900;
-    });
-
     // The screen sits over the frame's viewer rectangle, in fractions.
     const viewer =
       (phase === 'night' ? screen.dataset.viewerNight : screen.dataset.viewerDay) ?? '';
