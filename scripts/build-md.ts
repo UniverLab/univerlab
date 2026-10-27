@@ -261,8 +261,7 @@ async function statusBuildBody(): Promise<string> {
   }
 }
 
-async function main(): Promise<void> {
-  const distDir = resolve(process.cwd(), 'dist');
+export async function main(distDir = resolve(process.cwd(), 'dist')): Promise<void> {
   if (!existsSync(distDir)) {
     console.log('build-md: dist/ not found, skipping markdown generation.');
     return;
