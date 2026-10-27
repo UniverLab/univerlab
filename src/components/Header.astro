@@ -131,7 +131,7 @@ const signals = [
 
 <script>
   import { moonSVG } from '../lib/moon-svg';
-  // Engraved sky body — the sepia sun by day, the chalk moon at tonight's real
+  // Engraved sky body — the muted sepia sun by day, the chalk moon at tonight's real
   // phase by night, riding the hour ruler like the horizon. The circadian
   // script already sets data-celestial; re-render on load and on every flip.
   (function () {
@@ -524,10 +524,11 @@ const signals = [
   html[data-celestial='sun'] .celestial :global(img) {
     filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
   }
-  /* Low sun: dawn and dusk redden the engraved icon the way the ruler dot
-     already reddens, leaving the plain-day shadow above as the default. */
+  /* Low sun: dawn and dusk warm the engraved icon towards a soft reddish
+     gold — a hint of the hour, never a colour change you notice first. The
+     plain-day shadow above stays the default. */
   html[data-celestial='sun'][data-sunlow] .celestial :global(img) {
-    filter: sepia(1) saturate(3.4) hue-rotate(-24deg) brightness(0.97) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 7px rgb(191 52 23 / 0.35));
+    filter: sepia(0.6) saturate(1.6) hue-rotate(-14deg) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 5px rgb(191 110 52 / 0.22));
   }
   html[data-celestial='moon'] .celestial :global(svg) {
     filter: drop-shadow(0 0 6px #ecebe455);
