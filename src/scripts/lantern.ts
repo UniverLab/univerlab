@@ -412,12 +412,95 @@ export function startLantern(): void {
     g.putImageData(data, 0, 0);
     return tile;
   })();
+  // The static a tuning screen shows before its experiment opens (tune.ts):
+  // the same tile size, opaque greys instead of a faint grain.
+  const snow = (() => {
+    const tile = document.createElement('canvas');
+    tile.width = tile.height = 128;
+    const g = tile.getContext('2d');
+    if (!g) return tile;
+    const data = g.createImageData(128, 128);
+    for (let i = 0; i < data.data.length; i += 4) {
+      const v = Math.random() * 255;
+      data.data[i] = data.data[i + 1] = data.data[i + 2] = v;
+      data.data[i + 3] = 255;
+    }
+    g.putImageData(data, 0, 0);
+    return tile;
+  })();
+
+  // Cost model (measured with a 4x-throttled CPU): every fill on this canvas
+  // is raster work on the main thread — redrawn at full size each frame, and
+  // resized each frame, the film alone took a third of it. So it runs at half
+  // resolution (the compositor scales it up and the grain coarsens like real
+  // stock), at the projector's 24 frames a second, is sized only on a resize,
+  // and stops drawing while the screen is off view.
+  const FILM_SCALE = 0.5;
+  const FILM_MS = 1000 / 24;
+  let fw = 0;
+  let fh = 0;
+  let pattern: CanvasPattern | null = null;
+  let snowPattern: CanvasPattern | null = null;
+  let vignette: CanvasGradient | null = null;
+  let lastFilm = 0;
+  let onView = true;
+
+  const sizeFilm = (): void => {
+    if (!ctx) return;
+    fw = Math.round(film.clientWidth * FILM_SCALE);
+    fh = Math.round(film.clientHeight * FILM_SCALE);
+    film.width = fw;
+    film.height = fh;
+    pattern = ctx.createPattern(grain, 'repeat');
+    snowPattern = ctx.createPattern(snow, 'repeat');
+    vignette = ctx.createRadialGradient(
+      fw / 2,
+      fh / 2,
+      Math.min(fw, fh) * 0.3,
+      fw / 2,
+      fh / 2,
+      Math.max(fw, fh) * 0.72,
+    );
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,.45)');
+    lastFilm = 0;
+  };
+  new ResizeObserver(sizeFilm).observe(film);
+  new IntersectionObserver(([entry]) => {
+    onView = entry?.isIntersecting ?? true;
+  }).observe(screen);
+
+  /** Tuning: dense static that swells in, with a bright band rolling down. */
+  let tuneAt = 0;
+  const drawSnow = (now: number): void => {
+    if (!ctx) return;
+    tuneAt ||= now;
+    const k = Math.min(1, (now - tuneAt) / 90);
+    ctx.save();
+    ctx.translate(-Math.random() * 128, -Math.random() * 128);
+    ctx.globalAlpha = 0.25 + 0.6 * k;
+    ctx.fillStyle = snowPattern ?? '#888';
+    ctx.fillRect(0, 0, fw + 128, fh + 128);
+    ctx.restore();
+    const band = fh * 0.22;
+    const y = (((now - tuneAt) / 170) * (fh + band)) % (fh + band) - band;
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, y, fw, band);
+    ctx.globalAlpha = 1;
+  };
 
   const drawFilm = (now: number): void => {
-    if (!ctx) return;
-    const w = (film.width = film.clientWidth);
-    const h = (film.height = film.clientHeight);
-    if (w === 0 || h === 0) return;
+    if (!ctx || !onView || fw === 0 || fh === 0) return;
+    if (screen.classList.contains('is-tuning')) {
+      drawSnow(now);
+      return;
+    }
+    tuneAt = 0;
+    if (now - lastFilm < FILM_MS) return;
+    lastFilm = now;
+    const w = fw;
+    const h = fh;
     const t = now / 1000;
     const worldIdNow = inWorld ? (slides[current]?.dataset.exp ?? '') : '';
     const lightScreen = inWorld ? !isDarkWorld(worldIdNow) : phase !== 'night';
@@ -426,7 +509,7 @@ export function startLantern(): void {
     if (!reduce) {
       ctx.save();
       ctx.translate(-Math.random() * 128, -Math.random() * 128);
-      ctx.fillStyle = ctx.createPattern(grain, 'repeat') ?? '#000';
+      ctx.fillStyle = pattern ?? '#000';
       ctx.fillRect(0, 0, w + 128, h + 128);
       ctx.restore();
 
@@ -441,18 +524,8 @@ export function startLantern(): void {
       }
     }
 
-    const vignette = ctx.createRadialGradient(
-      w / 2,
-      h / 2,
-      Math.min(w, h) * 0.3,
-      w / 2,
-      h / 2,
-      Math.max(w, h) * 0.72,
-    );
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, 'rgba(0,0,0,.45)');
     ctx.globalAlpha = 1;
-    ctx.fillStyle = vignette;
+    ctx.fillStyle = vignette ?? 'transparent';
     ctx.fillRect(0, 0, w, h);
 
     if (!reduce) {

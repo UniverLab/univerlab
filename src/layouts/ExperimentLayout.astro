@@ -264,7 +264,24 @@ const ogImage = `/og/${id}.png`;
     padding-block: 2.5rem 2rem;
     padding-inline: var(--page-gutter);
   }
-  .genesis-row:not(.has-demo) { grid-template-columns: 1fr; max-width: 60ch; }
+  .genesis-row:not(.has-demo) { grid-template-columns: 1fr; }
+  /* Without a demo the story would sit in a lone 60ch column with empty
+     margins on both sides: from 52rem it reads as an editorial spread
+     instead — kicker and title on the left, the story beside them. */
+  @media (min-width: 52rem) {
+    .genesis-row:not(.has-demo) .genesis {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+      grid-template-rows: auto 1fr;
+      column-gap: 3.5rem;
+      align-content: start;
+      /* The row already carries the page gutter; .wrap's would double it. */
+      padding-inline: 0;
+    }
+    .genesis-row:not(.has-demo) .genesis > :not(.prose) { grid-column: 1; }
+    .genesis-row:not(.has-demo) .genesis .prose {
+      grid-column: 2; grid-row: 1 / span 2; max-width: 62ch; margin: 0; }
+  }
   @media (max-width: 52rem) {
     .genesis-row.has-demo { grid-template-columns: 1fr; }
     .demo-col { max-width: 85%; margin-inline: auto; }
@@ -337,6 +354,18 @@ const ogImage = `/og/${id}.png`;
     /* The machine floats in the hero's lower right, under the install bench,
        not over it: the hero keeps the room the machine needs at its foot. */
     .hero-frame.has-machine { padding-bottom: calc(240px + 2.5rem); }
+  }
+  /* The observatory's hero is a left-aligned column with no install bench:
+     the telescope stands in the empty sky to its right, not in a band of its
+     own under the hero. */
+  @media (min-width: 64rem) {
+    :global(html[data-surface='observatory']) .hero-frame.has-machine { padding-bottom: 0; }
+    :global(html[data-surface='observatory'] .hero-machine) {
+      top: 50%;
+      bottom: auto;
+      right: max(var(--page-gutter), calc((100% - 72rem) / 2 + 6rem));
+      transform: translateY(-50%);
+    }
   }
   /* On phones the plate is static under the hero; Machine.astro centres it
      (display: block, width: fit-content, margin-inline: auto). */

@@ -38,6 +38,8 @@ import {
 
 const API = 'https://announcements.univerlab.org';
 const SEAL = '/bench/identidad/sello-lacre.svg';
+/** A letter cut to fit the screen keeps at least this many words. */
+const MIN_WORDS = 14;
 const MARK = '/bench/identidad/logo-grabado.svg';
 const SUN = SUN_SRC;
 const SYNODIC = 29.530588853;
@@ -297,16 +299,13 @@ function startMailbox(): void {
       <p class="hint-step" aria-live="polite"></p>`;
 
     const r = box.getBoundingClientRect();
-    // Centred on the screen at every width, as on a phone: horizontally in the
-    // viewport, vertically in the space under the header (never above it, so
-    // the opened flap never covers the bar). The letter still flies out of the
-    // mailbox's slot: `from` below is measured from wherever the popover sits.
+    // Top centre at every width: centred in the viewport, just under the
+    // header (never above it, so the opened flap never covers the bar), which
+    // leaves the most room below for the letter laid out in front. It still
+    // flies out of the mailbox's slot: `from` is measured from the popover.
     const left = Math.round((innerWidth - w) / 2);
-    const below = r.bottom + 22;
-    const height = flapH + stageH;
-    const top = Math.max(below, Math.round(below + (innerHeight - below - height) / 2));
     el.style.left = left + 'px';
-    el.style.top = top + 'px';
+    el.style.top = Math.round(r.bottom + 22) + 'px';
     el.dataset.from = String(r.left + r.width / 2 - left); // the slot, in the popover's x
     return el;
   }
@@ -338,7 +337,39 @@ function startMailbox(): void {
     const letterTop = sheet.offsetTop;
     const up = -(letterTop + sheet.offsetHeight * 0.62);
     const front = Math.round(stageH * 0.4) - letterTop;
-    const text = bodyOf(letter);
+    const nb = $('.next');
+    const text = fitBody(bodyOf(letter));
+
+    /** The letter laid in front must end above the viewport's bottom edge.
+     *  Its top lands at the stage's 40% line, so the body is measured there
+     *  in full (with the "next" button a waiting queue adds) and, if the
+     *  sheet would spill, cut on a word with an ellipsis — never below
+     *  MIN_WORDS: on a very short screen the fact outranks the margin. */
+    function fitBody(full: string): string {
+      const room = innerHeight - 14 - (stage.getBoundingClientRect().top + stageH * 0.4);
+      nb.hidden = queue.length === 0;
+      nb.textContent = fmt(copy.next, { n: queue.length });
+      const fits = (body: string): boolean => {
+        typed.textContent = body;
+        return sheet.offsetHeight <= room;
+      };
+      let out = full;
+      if (!fits(full)) {
+        const words = full.split(/\s+/);
+        let lo = Math.min(MIN_WORDS, words.length);
+        let hi = words.length - 1;
+        const cut = (n: number) => words.slice(0, n).join(' ').replace(/[\s,;:.\u2014-]+$/, '') + '…';
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          if (fits(cut(mid))) lo = mid;
+          else hi = mid - 1;
+        }
+        out = cut(lo);
+      }
+      typed.textContent = '';
+      nb.hidden = true;
+      return out;
+    }
 
     // Remembered per day: a reload does not raise the flag again. The mode
     // is decided with the ids as they were *before* this open marked it.
@@ -356,7 +387,6 @@ function startMailbox(): void {
         openLetter(box);
       });
     }
-    const nb = $('.next');
 
     // A letter already opened today, and every letter under reduced motion,
     // skips the ritual: it opens straight onto the letter.

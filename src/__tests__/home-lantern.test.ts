@@ -1,6 +1,6 @@
 /**
  * Tests for the home redesign — the frontispiece, Plate I (the magic lantern),
- * the bench and the CRT transition to an experiment page.
+ * the bench and the tuning transition to an experiment page.
  *
  * Astro components are not renderable in Jest, so these read the source files
  * as text (hero-scale.test.ts style) and parse the asset manifest that the
@@ -18,8 +18,7 @@ const HOME = readFileSync(resolve(SRC, 'views', 'Home.astro'), 'utf8');
 const LAYOUT = readFileSync(resolve(SRC, 'layouts', 'BaseLayout.astro'), 'utf8');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const LANTERN = readFileSync(resolve(SRC, 'scripts', 'lantern.ts'), 'utf8');
-const CRT = readFileSync(resolve(SRC, 'scripts', 'crt.ts'), 'utf8');
-const CRT_RESTORE = readFileSync(resolve(SRC, 'scripts', 'crt-restore.ts'), 'utf8');
+const TUNE = readFileSync(resolve(SRC, 'scripts', 'tune.ts'), 'utf8');
 const FONDOS_INDEX = readFileSync(resolve(SRC, 'scripts', 'fondos', 'index.ts'), 'utf8');
 const LIVE_BG = readFileSync(resolve(SRC, 'components', 'LiveBackground.astro'), 'utf8');
 
@@ -264,51 +263,28 @@ describe('Home — the bench', () => {
   });
 });
 
-describe('Home — CRT power-off', () => {
-  it('navigates through the CRT keyframes and the handshake key', () => {
-    expect(GLOBAL).toContain('@keyframes crt-off');
-    expect(GLOBAL).toContain('@keyframes crt-on');
-    expect(GLOBAL).toContain('@keyframes crt-dot-flash');
-    expect(GLOBAL).toMatch(/\.crt-view\.off \{ animation: crt-off/);
-    // The power-on must run on <body> itself: the destination pages have no
-    // .crt-view wrapper, so a descendant selector would never fire there.
-    expect(GLOBAL).toMatch(/body\.crt-on \{[^}]*animation: crt-on/);
-    expect(GLOBAL).not.toMatch(/body\.crt-on \.crt-view/);
-    expect(GLOBAL).toMatch(/\.crt-dot\.flash \{ animation: crt-dot-flash/);
+describe('Home — tuning into an experiment', () => {
+  it('zooms the source into the hero through a shared exp-<id> name', () => {
+    expect(TUNE).toContain("source.style.setProperty('view-transition-name', `exp-${exp}`)");
+    expect(TUNE).toContain("source.style.setProperty('view-transition-class', 'exp-zoom')");
+    expect(TUNE).toMatch(/if \(window\.matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches\) \{\s*window\.location\.assign\(href\);\s*return;/);
+    expect(GLOBAL).toMatch(/::view-transition-group\(\.exp-zoom\) \{\s*animation-duration: 420ms/);
+    expect(GLOBAL).toContain('@keyframes tune-in');
+    expect(GLOBAL).not.toContain('crt-');
     expect(GLOBAL).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none !important/);
   });
 
-  it('sets sessionStorage on the home and reads it in BaseLayout', () => {
-    expect(HOME).toContain('univerlab-crt');
-    expect(LAYOUT).toMatch(/import \{ restoreCrtOn \} from '\.\.\/scripts\/crt-restore'/);
-    expect(LAYOUT).toContain('restoreCrtOn()');
-    expect(CRT_RESTORE).toContain("const CRT_KEY = 'univerlab-crt'");
-    expect(CRT_RESTORE).toContain('sessionStorage.getItem(CRT_KEY)');
-    expect(CRT_RESTORE).toContain('sessionStorage.removeItem(CRT_KEY)');
-    expect(CRT_RESTORE).toContain("classList.add('crt-on')");
-    // …and the class is cleared when <body>'s own power-on finishes, not only
-    // when the home's wrapper (which destination pages lack) animates.
-    expect(CRT_RESTORE).toMatch(/e\.target === body/);
-    expect(CRT_RESTORE).toContain('window.setTimeout(clear, 1400)');
-    expect(CRT).toContain("const CRT_KEY = 'univerlab-crt'");
-    expect(CRT).toContain('sessionStorage.setItem(CRT_KEY');
+  it('shows static on the screen while it tunes', () => {
+    expect(TUNE).toContain("classList.add('is-tuning')");
+    expect(LANTERN).toMatch(/screen\.classList\.contains\('is-tuning'\)/);
+    expect(LANTERN).toContain('drawSnow(now)');
   });
 
-  it('shows the home again on Back restore', () => {
-    expect(HOME).toMatch(/addEventListener\('pageshow', \(\) => \{\s*view\?\.classList\.remove\('off'\);\s*\}\)/);
-  });
-
-  it('collapses the view, flashes the dot and navigates; instant under reduced motion', () => {
-    expect(HOME).toMatch(/class="crt-view" id="home-view"/);
-    expect(HOME).toMatch(/class="crt-dot" id="crt-dot"/);
-    expect(CRT).toMatch(/view\.classList\.add\('off'\)/);
-    expect(CRT).toMatch(/dot\.classList\.add\('flash'\)/);
-    expect(CRT).toMatch(/window\.location\.assign\(href\)/);
-    expect(CRT).toMatch(/if \(reduce\) \{[\s\S]*?window\.location\.assign\(href\);[\s\S]*?return;/);
-    // The collapse converges on the dot's fixed 40% line, not on 40% of the
-    // whole (very tall) home view — that point is off-screen from the bench.
-    expect(CRT).toMatch(/window\.innerHeight \* 0\.4 - box\.top/);
-    expect(CRT).toMatch(/const box = view\.getBoundingClientRect\(\)/);
+  it('clears the static and the shared name on Back restore', () => {
+    expect(HOME).toContain("addEventListener('pageshow', untune)");
+    expect(TUNE).toContain("classList.remove('is-tuning')");
+    expect(TUNE).toContain("removeProperty('view-transition-name')");
+    expect(LAYOUT).not.toContain('crt-restore');
   });
 
   it('keeps Enter on a focused machine working through the native button', () => {
@@ -553,15 +529,14 @@ describe('Home — clicking the screen opens the projected experiment', () => {
     expect(HOME).toMatch(/dataset\.currentExp/);
   });
 
-  it('wires the catcher click through the helper and the CRT power-off', () => {
+  it('wires the catcher click through the helper and the tuning', () => {
     expect(HOME).toContain('shouldScreenNavigate');
     expect(HOME).toMatch(/catcher\?\.addEventListener\('click'/);
     expect(HOME).toMatch(/dx: upX - downX/);
     expect(HOME).toMatch(/dy: upY - downY/);
     expect(HOME).toMatch(/pointerType: pointerKind/);
     expect(HOME).toMatch(/worldOpen: worldOpenAtDown/);
-    expect(HOME).toMatch(/crtNavigate\(href, view, dot\)/);
-    expect(HOME).toMatch(/window\.location\.assign\(href\)/);
+    expect(HOME).toMatch(/tuneNavigate\(href, currentExp, screen\)/);
     // The href is the localized path the matching plate already carries.
     expect(HOME).toMatch(/\.plate\[data-exp="\$\{currentExp\}"\]/);
     // The world state must be read before startLantern()'s own pointerdown
