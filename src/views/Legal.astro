@@ -14,6 +14,8 @@ const doc = legalDoc(kind, lang);
 
 /** The contact address comes from the site-about module, never retyped. */
 const withEmail = (s: string): string => s.replaceAll('{email}', founderEmail);
+/** Off-site links leave the site in a new tab, as every other page does. */
+const isExternal = (href: string): boolean => /^https?:/i.test(href);
 ---
 <BaseLayout title={doc.title} description={doc.description} circadian>
   <section class="wrap legal">
@@ -40,7 +42,17 @@ const withEmail = (s: string): string => s.replaceAll('{email}', founderEmail);
         {s.links && (
           <p class="links">
             {s.links.map((l, j) => (
-              <>{j > 0 && ' · '}<a href={withEmail(l.href)}>{withEmail(l.label)}</a></>
+              <>
+                {j > 0 && ' · '}
+                <a
+                  href={withEmail(l.href)}
+                  {...(isExternal(l.href)
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {withEmail(l.label)}
+                </a>
+              </>
             ))}
           </p>
         )}
@@ -78,11 +90,13 @@ const withEmail = (s: string): string => s.replaceAll('{email}', founderEmail);
     font-size: 0.95rem;
     line-height: 1.65;
   }
+  /* The dates and the prevails sentence are legal content, not site chrome:
+     ink-faint lands at 3.7:1 over the paper, so they use the body ink. */
   .legal .dates,
   .legal .prevails {
     font-family: var(--font-mono);
     font-size: 0.78rem;
-    color: var(--ink-faint);
+    color: var(--ink-dim);
     line-height: 1.7;
   }
   .legal .prevails {
@@ -108,7 +122,9 @@ const withEmail = (s: string): string => s.replaceAll('{email}', founderEmail);
     font-size: 0.9rem;
     line-height: 1.7;
   }
-  .legal .sec a,
+  /* Paragraphs and items arrive through set:html, so injected anchors carry
+     no scope attribute: reach them globally, following the site's convention. */
+  .legal .sec :global(a),
   .legal .links a {
     color: var(--accent);
   }
@@ -118,7 +134,8 @@ const withEmail = (s: string): string => s.replaceAll('{email}', founderEmail);
     padding-top: 1.4rem;
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    color: var(--ink-faint);
+    /* The attribution is content too, so it stays above 4.5:1. */
+    color: var(--ink-dim);
     line-height: 1.7;
   }
 </style>

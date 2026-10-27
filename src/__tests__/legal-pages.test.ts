@@ -10,7 +10,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { en } from '../i18n/en';
-import { LEGAL_DATE, legalDoc } from '../data/legal';
+import { LEGAL_DATE, legalDoc, type LegalDoc } from '../data/legal';
 import { legalNav } from '../data/legal-nav';
 import { privacyEn, termsEn } from '../data/legal-en';
 import { privacyEs, termsEs } from '../data/legal-es';
@@ -88,10 +88,23 @@ describe('the contact address comes from the site-about module', () => {
 });
 
 describe('the Spanish-prevails sentence is present on all four pages', () => {
-  it('every document carries a non-empty prevails line', () => {
-    for (const doc of [privacyEn, termsEn, privacyEs, termsEs]) {
-      expect(doc.prevails.length).toBeGreaterThan(0);
-    }
+  // Non-empty is not enough: the sentence has to say which version wins, in
+  // the language of the page. A rewrite that drops the claim must fail here.
+  const EN_DOCS: Array<[string, LegalDoc]> = [
+    ['English privacy', privacyEn],
+    ['English terms', termsEn],
+  ];
+  const ES_DOCS: Array<[string, LegalDoc]> = [
+    ['Spanish privacy', privacyEs],
+    ['Spanish terms', termsEs],
+  ];
+
+  it.each(EN_DOCS)('%s says the Spanish version prevails', (_name, doc) => {
+    expect(doc.prevails).toMatch(/Spanish version prevails/i);
+  });
+
+  it.each(ES_DOCS)('%s says the Spanish version prevails', (_name, doc) => {
+    expect(doc.prevails).toMatch(/prevalece la versión en español/i);
   });
 
   it('the view renders it', () => {
@@ -210,6 +223,80 @@ describe('the built pages render with their markdown twins', () => {
         const text = readFileSync(resolve(DIST, file), 'utf8');
         for (const banned of BANNED) expect(text).not.toContain(banned);
       }
+    }
+  });
+});
+
+describe('the credit line and the facts the spec pins', () => {
+  const text = (doc: LegalDoc): string =>
+    [doc.prevails, doc.intro, doc.credit, ...doc.sections.flatMap((s) => [s.title, ...s.paras, ...(s.items ?? [])])].join(' ');
+
+  it('all four documents credit General Legal under CC0 1.0', () => {
+    for (const doc of [privacyEn, termsEn, privacyEs, termsEs]) {
+      expect(doc.credit).toContain('General Legal');
+      expect(doc.credit).toContain('general.legal');
+      expect(doc.credit).toContain('CC0 1.0');
+    }
+  });
+
+  it('the view prints the credit after the last section, as the templates ask', () => {
+    const sectionsAt = VIEW.indexOf('doc.sections.map');
+    const creditAt = VIEW.indexOf('doc.credit');
+    expect(sectionsAt).toBeGreaterThan(-1);
+    expect(creditAt).toBeGreaterThan(sectionsAt);
+  });
+
+  // Every figure below mirrors a canopy-web constant (see the comments next to
+  // it in the data modules). A rewrite that loses one changes a promise.
+  const FIGURES: Array<[string, RegExp, RegExp]> = [
+    ['30-minute catalogue bound', /within 30 minutes/, /dentro de los 30 minutos/],
+    ['12-hour session cookie', /expires after 12 hours/, /vence a las 12 horas/],
+    ['90-day install totals', /90-day totals/, /90 días/],
+    ['10 business days + 5', /10 business days[^.]*5/, /10 días hábiles[^.]*5/],
+    ['15 business days + 8', /15 business days[^.]*8/, /15 días hábiles[^.]*8/],
+    ['SIC complaint', /Superintendencia de Industria y Comercio \(SIC\)/, /Superintendencia de Industria y Comercio \(SIC\)/],
+  ];
+
+  it.each(FIGURES)('%s appears in both privacy pages', (_what, enRe, esRe) => {
+    expect(text(privacyEn)).toMatch(enRe);
+    expect(text(privacyEs)).toMatch(esRe);
+  });
+
+  it('the terms keep the licence, law and community-graph promises', () => {
+    const en = text(termsEn);
+    const es = text(termsEs);
+    expect(en).toContain('Apache-2.0');
+    expect(en).toContain('MIT');
+    expect(en).toContain('Ley 1480 de 2011');
+    expect(en).toMatch(/Republic of Colombia[^.]*competent courts/);
+    expect(en).toContain('canopy-graph');
+    expect(en).toContain('UniverLab/canopy-web');
+    expect(es).toContain('Apache-2.0');
+    expect(es).toContain('MIT');
+    expect(es).toContain('Ley 1480 de 2011');
+    expect(es).toMatch(/República de Colombia[^.]*jueces competentes/);
+    expect(es).toContain('canopy-graph');
+    expect(es).toContain('UniverLab/canopy-web');
+  });
+});
+
+describe('links behave the way the rest of the site does', () => {
+  const builtPrivacy = resolve(__dirname, '..', '..', 'dist', 'privacy', 'index.html');
+  const itBuilt = existsSync(builtPrivacy) ? it : it.skip;
+
+  it('off-site statements open in a new tab with rel=noopener noreferrer', () => {
+    expect(VIEW).toMatch(/target: '_blank'/);
+    expect(VIEW).toContain('noopener noreferrer');
+    expect(VIEW).toMatch(/\^https\?:/);
+  });
+
+  itBuilt('the built privacy page opens the provider statements off-site', () => {
+    const html = readFileSync(builtPrivacy, 'utf8');
+    const links = html.match(/<a[^>]+href="https:\/\/[^"]+"[^>]*>/g) ?? [];
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    for (const link of links) {
+      expect(link).toContain('target="_blank"');
+      expect(link).toContain('rel="noopener noreferrer"');
     }
   });
 });
