@@ -130,7 +130,7 @@ const signals = [
 </header>
 
 <script>
-  import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
+  import { moonSVG, SUN_DISC_R, SUN_SRC } from '../lib/moon-svg';
   // Engraved sky body — the muted sepia sun by day, the chalk moon at tonight's real
   // phase by night, riding the hour ruler like the horizon. The circadian
   // script already sets data-celestial; re-render on load and on every flip.
@@ -174,7 +174,7 @@ const signals = [
         btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
         btn.setAttribute('title', btn.dataset.skyToDay || 'day');
       } else {
-        mount.innerHTML = '<img src="/bench/identidad/sol.svg" alt="" width="34" height="34">';
+        mount.innerHTML = '<img src="' + SUN_SRC + '" alt="" width="34" height="34">';
         // The sun is showing: the click will switch to the night theme.
         btn.setAttribute('aria-label', btn.dataset.skyToNight || 'night');
         btn.setAttribute('title', btn.dataset.skyToNight || 'night');

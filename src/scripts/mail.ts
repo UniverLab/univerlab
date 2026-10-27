@@ -5,7 +5,7 @@
 // html, view "Header y buzón"). A letter already opened today — and every
 // letter under prefers-reduced-motion — opens straight onto the letter.
 
-import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
+import { moonSVG, SUN_DISC_R, SUN_SRC } from '../lib/moon-svg';
 import { ENVELOPE, FRONT, FLAP, postmarkSVG, spots, deckle, anim } from './mail-svg';
 import {
   enqueue,
@@ -39,7 +39,7 @@ import {
 const API = 'https://announcements.univerlab.org';
 const SEAL = '/bench/identidad/sello-lacre.svg';
 const MARK = '/bench/identidad/logo-grabado.svg';
-const SUN = '/bench/identidad/sol.svg';
+const SUN = SUN_SRC;
 const SYNODIC = 29.530588853;
 const EPOCH = Date.UTC(2000, 0, 6, 18, 14);
 
