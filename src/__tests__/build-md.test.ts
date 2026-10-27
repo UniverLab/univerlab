@@ -1,4 +1,16 @@
-import { htmlToMarkdown, injectLatestRelease, stripAriaHidden } from '../../scripts/build-md';
+import {
+  htmlToMarkdown,
+  injectLatestRelease,
+  main,
+  statusOfflineBody,
+  statusSnapshotBody,
+  stripAriaHidden,
+  withStatusSnapshot,
+} from '../../scripts/build-md';
+import { entryLine, type Entry } from '../../src/lib/lab-feed';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 describe('htmlToMarkdown', () => {
   it('converts main content with heading and paragraph', () => {
@@ -195,5 +207,168 @@ describe('mission-date ISO suffix in markdown twin', () => {
     ].join('');
     const md = htmlToMarkdown(html);
     expect(md).toContain('TERRA 2026 · Sol 282 · 14:00 UTC (2026-10-09T14:00Z)');
+  });
+});
+
+describe('status snapshot twin (build-md)', () => {
+  const entries: Entry[] = [
+    {
+      id: 'e1',
+      date: '2026-10-06T01:09:26.735Z',
+      title: 'Newest entry',
+      body: 'First paragraph.\n\nSecond paragraph that must not survive.',
+      type: 'launch',
+      topic: 'canopy',
+      link: null,
+    },
+    {
+      id: 'e2',
+      date: '2026-10-05T10:00:00.000Z',
+      title: 'Older entry',
+      body: 'Older body.',
+      type: 'note',
+      topic: null,
+      link: 'https://example.com/o',
+    },
+  ];
+  const NOW = '2026-10-27T09:30:00.000Z';
+
+  it('renders the logbook rows with the shared entryLine and the exact FR3 line', () => {
+    const body = statusSnapshotBody(entries, NOW);
+    expect(body.split('\n')).toEqual([
+      '## Logbook',
+      '',
+      entryLine(entries[0]),
+      entryLine(entries[1]),
+      '',
+      `Snapshot taken at build time (${NOW}); the live version is served at this same address.`,
+    ]);
+  });
+
+  it('never renders an empty body: an empty log still carries heading and marker', () => {
+    const body = statusSnapshotBody([], NOW);
+    expect(body).toContain('## Logbook');
+    expect(body).toContain('Nothing in the logbook at build time.');
+    expect(body).toContain(
+      `Snapshot taken at build time (${NOW}); the live version is served at this same address.`,
+    );
+    expect(body.trim()).not.toBe('## Logbook');
+  });
+
+  it('names the Atom feed and the roadmap twin when the API is down', () => {
+    const body = statusOfflineBody();
+    expect(body.startsWith('## Logbook\n\n')).toBe(true);
+    expect(body).toContain('https://announcements.univerlab.org/feed.atom');
+    expect(body).toContain('https://univerlab.org/roadmap/index.md');
+    expect(body).toContain('this same address');
+    expect(body).not.toContain('Snapshot taken at build time');
+  });
+
+  it('keeps the page front matter and replaces the body with the snapshot', () => {
+    const html =
+      '<!DOCTYPE html><html><head><title>Logbook — live status of every UniverLab experiment</title>' +
+      '<link rel="canonical" href="https://univerlab.org/status/"></head>' +
+      '<body><main><h1>Logbook</h1><p>The logbook now lives in the API, not here.</p></main></body></html>';
+    const body = statusSnapshotBody(entries, NOW);
+    const md = withStatusSnapshot(html, body);
+    expect(md).toBe(
+      '---\n' +
+        'title: "Logbook — live status of every UniverLab experiment"\n' +
+        'source: "https://univerlab.org/status/"\n' +
+        '---\n\n' +
+        `${body}\n`,
+    );
+  });
+});
+
+// ------------------------------------------------- main(): the wiring itself
+// The helpers above are only as good as main()'s use of them: if the
+// `status/index.html` branch ever disappears, every other test in this file
+// stays green while dist/status/index.md regresses to the bare front matter
+// this spec exists to replace (FR3 "never empty").
+
+describe('main() — status/index.html gets the snapshot, other pages do not', () => {
+  const entries: Entry[] = [
+    {
+      id: 'w1',
+      date: '2026-10-26T12:00:00.000Z',
+      title: 'Wired through main',
+      body: 'Rendered from the API by the real build path.',
+      type: 'launch',
+      topic: 'canopy',
+      link: null,
+    },
+  ];
+  const STATUS_HTML =
+    '<!DOCTYPE html><html><head><title>Logbook — live status of every UniverLab experiment</title>' +
+    '<link rel="canonical" href="https://univerlab.org/status/"></head>' +
+    '<body><main><p>The logbook lives in the API, not here.</p></main></body></html>';
+  const ABOUT_HTML =
+    '<!DOCTYPE html><html><head><title>About</title>' +
+    '<link rel="canonical" href="https://univerlab.org/about/"></head>' +
+    '<body><main><h1>About</h1><p>Ordinary page body.</p></main></body></html>';
+
+  let dist: string;
+  const realFetch = global.fetch;
+
+  beforeEach(() => {
+    dist = join(mkdtempSync(join(tmpdir(), 'build-md-')), 'dist');
+    mkdirSync(join(dist, 'status'), { recursive: true });
+    mkdirSync(join(dist, 'about'), { recursive: true });
+    writeFileSync(join(dist, 'status', 'index.html'), STATUS_HTML, 'utf-8');
+    writeFileSync(join(dist, 'about', 'index.html'), ABOUT_HTML, 'utf-8');
+  });
+
+  afterEach(() => {
+    global.fetch = realFetch;
+    rmSync(join(dist, '..'), { recursive: true, force: true });
+  });
+
+  const apiUp = () => {
+    global.fetch = jest.fn(async () =>
+      ({ ok: true, json: async () => ({ entries }) }) as unknown as Response,
+    ) as unknown as typeof fetch;
+  };
+  const apiDown = () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('offline')) as unknown as typeof fetch;
+  };
+
+  it('renders the status twin from the API and never the page shell (API up)', async () => {
+    apiUp();
+    await main(dist);
+    const md = readFileSync(join(dist, 'status', 'index.md'), 'utf-8');
+
+    expect(md).toContain('## Logbook');
+    expect(md).toContain(entryLine(entries[0]));
+    expect(md).toMatch(
+      /^Snapshot taken at build time \(\d{4}-\d{2}-\d{2}T[\d:.]+Z\); the live version is served at this same address\.$/m,
+    );
+    // The page's own body must not leak in: only its front matter is kept.
+    expect(md).not.toContain('The logbook lives in the API, not here.');
+    expect(md.trim().split('\n').length).toBeGreaterThan(5);
+  });
+
+  it('writes the offline pointers when the API is unreachable', async () => {
+    apiDown();
+    await main(dist);
+    const md = readFileSync(join(dist, 'status', 'index.md'), 'utf-8');
+
+    expect(md).toContain('## Logbook');
+    expect(md).toContain('https://announcements.univerlab.org/feed.atom');
+    expect(md).toContain('https://univerlab.org/roadmap/index.md');
+    expect(md).toContain('this same address');
+    expect(md).not.toContain('Snapshot taken at build time');
+    expect(md).not.toContain('The logbook lives in the API, not here.');
+  });
+
+  it('leaves every other page on the generic conversion', async () => {
+    apiUp();
+    await main(dist);
+    const md = readFileSync(join(dist, 'about', 'index.md'), 'utf-8');
+
+    expect(md).toContain('# About');
+    expect(md).toContain('Ordinary page body.');
+    expect(md).not.toContain('## Logbook');
+    expect(md).not.toContain('Snapshot taken at build time');
   });
 });

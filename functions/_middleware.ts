@@ -113,17 +113,15 @@ async function liveTodayEdition(
   };
 }
 
-/** Both public endpoints, in parallel, rendered for `lang`. Rejects on any
- *  failure — the caller's catch is what degrades to the static twin. The two
- *  reads share one 3 s deadline and one edge-cache policy. */
+/** One public read for the log, rendered for `lang`. Rejects on any failure —
+ *  the caller's catch is what degrades to the static twin. The read is
+ *  edge-cached behind the shared 3 s deadline. The roadmap is not fetched:
+ *  the twin only points at `/roadmap/index.md`, which renders the board. */
 async function liveStatusTwin(lang: Lang): Promise<string> {
   const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
   try {
-    const [roadmap, log] = await Promise.all([
-      loadRoadmap({ init: apiInit(), signal }),
-      loadEntries({ init: apiInit(), signal, limit: 20 }),
-    ]);
-    return renderStatusTwin({ lang, roadmap, entries: log });
+    const entries = await loadEntries({ init: apiInit(), signal, limit: 20 });
+    return renderStatusTwin({ lang, entries });
   } finally {
     clear();
   }
@@ -207,7 +205,11 @@ export async function onRequest(context: {
     }
   }
 
-  if (!wantsMarkdown(accept)) {
+  // A path ending in /index.md asks for the markdown twin whatever the Accept
+  // header says — an agent that GETs /status/index.md with `Accept: */*` is
+  // reading the twin, and a bare next() would hand it the raw build artifact
+  // with no live render. Every other path still needs text/markdown in Accept.
+  if (!wantsMarkdown(accept) && !pathname.endsWith('/index.md')) {
     return next();
   }
 
