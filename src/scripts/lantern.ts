@@ -33,7 +33,6 @@ export function startLantern(): void {
   const slides = Array.from(screen.querySelectorAll<HTMLElement>('.slide'));
   if (slides.length === 0) return;
   const plates = Array.from(document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]'));
-  const lanternImg = document.getElementById('lantern-img') as HTMLImageElement | null;
   const pauseBtn = document.getElementById('lantern-pause') as HTMLElement | null;
   const pausedPlate = document.getElementById('lantern-paused');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -222,10 +221,11 @@ export function startLantern(): void {
       const src = phase === 'night' ? img.dataset.nightSrc : img.dataset.daySrc;
       if (src) img.src = src;
     });
-    if (lanternImg) {
-      lanternImg.width = phase === 'night' ? 1178 : 1068;
-      lanternImg.height = 900;
-    }
+    // The frame and its front copy over the screen share one box.
+    document.querySelectorAll<HTMLImageElement>('#lantern-img, .lantern-front img').forEach((img) => {
+      img.width = phase === 'night' ? 1178 : 1068;
+      img.height = 900;
+    });
 
     // The screen sits over the frame's viewer rectangle, in fractions.
     const viewer =

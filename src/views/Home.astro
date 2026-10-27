@@ -36,6 +36,16 @@ const plateWidths: Record<string, number> = {
   quorum: 392,
 };
 
+// The lantern engraving's sources, day and night: the frame behind the screen
+// and its front copy over it share them (lantern.ts flips the media per phase).
+const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
+  (['avif', 'webp'] as const).map((type) => ({
+    phase,
+    type: `image/${type}`,
+    srcset: `/bench/live/lantern-${phase}-450.${type} 450w, /bench/live/lantern-${phase}-900.${type} 900w`,
+  })),
+);
+
 // Engraved sea lines for the horizon separator (drawHorizon in the mockup):
 // sixteen closing in on the waterline, five fading above it.
 const seaLines = Array.from({ length: 16 }, (_, i) => ({
@@ -69,9 +79,9 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
         <div
           class="screen"
           id="screen"
-          data-viewer-day="0.135 0.078 0.8 0.694"
-          data-viewer-night="0.16 0.068 0.69 0.70"
-          style="left: 13.5%; top: 7.8%; width: 80%; height: 69.4%"
+          data-viewer-day="0.143 0.078 0.78 0.694"
+          data-viewer-night="0.163 0.068 0.678 0.70"
+          style="left: 14.3%; top: 7.8%; width: 78%; height: 69.4%"
           aria-hidden="true"
         >
           <div class="slide title-slide is-on">
@@ -124,32 +134,15 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
           data-pause-label={t.home.lantern.pause}
           data-resume-label={t.home.lantern.resume}
         >
-          <source
-            data-phase="day"
-            type="image/avif"
-            srcset="/bench/live/lantern-day-450.avif 450w, /bench/live/lantern-day-900.avif 900w"
-            sizes="(min-width: 50rem) 760px, 100vw"
-          />
-          <source
-            data-phase="day"
-            type="image/webp"
-            srcset="/bench/live/lantern-day-450.webp 450w, /bench/live/lantern-day-900.webp 900w"
-            sizes="(min-width: 50rem) 760px, 100vw"
-          />
-          <source
-            data-phase="night"
-            type="image/avif"
-            media="not all"
-            srcset="/bench/live/lantern-night-450.avif 450w, /bench/live/lantern-night-900.avif 900w"
-            sizes="(min-width: 50rem) 760px, 100vw"
-          />
-          <source
-            data-phase="night"
-            type="image/webp"
-            media="not all"
-            srcset="/bench/live/lantern-night-450.webp 450w, /bench/live/lantern-night-900.webp 900w"
-            sizes="(min-width: 50rem) 760px, 100vw"
-          />
+          {lanternSources.map((src) => (
+            <source
+              data-phase={src.phase}
+              type={src.type}
+              media={src.phase === 'night' ? 'not all' : undefined}
+              srcset={src.srcset}
+              sizes="(min-width: 50rem) 760px, 100vw"
+            />
+          ))}
           <img
             id="lantern-img"
             src="/bench/live/lantern-day-900.webp"
@@ -157,6 +150,28 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
             height="900"
             alt={t.home.lantern.alt}
             fetchpriority="high"
+            data-day-src="/bench/live/lantern-day-900.webp"
+            data-night-src="/bench/live/lantern-night-900.webp"
+          />
+        </picture>
+        <!-- The same engraving again, over the screen: its cloth is transparent,
+             so the projection shows whole behind the frame and the cap, as in
+             the profile banner. Decorative and click-through. -->
+        <picture class="lantern-front" aria-hidden="true">
+          {lanternSources.map((src) => (
+            <source
+              data-phase={src.phase}
+              type={src.type}
+              media={src.phase === 'night' ? 'not all' : undefined}
+              srcset={src.srcset}
+              sizes="(min-width: 50rem) 760px, 100vw"
+            />
+          ))}
+          <img
+            src="/bench/live/lantern-day-900.webp"
+            width="1068"
+            height="900"
+            alt=""
             data-day-src="/bench/live/lantern-day-900.webp"
             data-night-src="/bench/live/lantern-night-900.webp"
           />
@@ -351,20 +366,13 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .lantern { position: relative; width: min(100%, 780px); }
   .lantern-pic { position: relative; z-index: 2; display: block; cursor: pointer; }
   .lantern-pic img { display: block; width: 100%; height: auto; }
+  .lantern-front { position: absolute; inset: 0 auto auto 0; z-index: 4; width: 100%;
+                   pointer-events: none; }
+  .lantern-front img { display: block; width: 100%; height: auto; }
   .lantern-pic:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
   .screen { position: absolute; z-index: 3; overflow: hidden;
             background: var(--bench-c-parchment); }
   :global(html[data-bench-theme='night']) .screen { background: #15110c; }
-  /* The lantern's cap rises above the bottom rail, in front of the cloth:
-     the screen leaves a notch for it (measured on each frame, in the screen's
-     own fractions) instead of painting over it. */
-  .screen[data-phase='day'] {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 13% 100%, 13% 96.8%, 11.4% 95.8%,
-      10.4% 95%, 10.4% 94.2%, 8.4% 94.2%, 8.4% 95%, 7.6% 95.8%, 6.2% 96.8%, 6.2% 100%, 0 100%); }
-  .screen[data-phase='night'] {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 13.4% 100%, 13.4% 96.4%, 10.4% 95.4%,
-      9.6% 94.6%, 9.6% 94%, 7.8% 94%, 7.8% 94.6%, 7.2% 95.4%, 6.2% 96.4%, 6.2% 100%, 0 100%); }
-
   /* Each slide fills the screen; the clip is letterboxed inside it (`contain`)
      and the caption rides along the bottom edge, over the clip, as in the
      mockup — never a band that shrinks the projection. */

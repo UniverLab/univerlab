@@ -99,25 +99,31 @@ describe('Home — frontispiece', () => {
 
 describe('Home — Plate I, the lantern', () => {
   it('ships the day and night frames as AVIF/WebP srcsets at 450 and 900', () => {
-    for (const phase of ['day', 'night']) {
-      for (const type of ['avif', 'webp']) {
-        expect(HOME).toContain(`data-phase="${phase}"`);
-        expect(HOME).toMatch(
-          new RegExp(`/bench/live/lantern-${phase}-450\\.${type} 450w, /bench/live/lantern-${phase}-900\\.${type} 900w`),
-        );
-      }
-    }
+    expect(HOME).toContain("(['day', 'night'] as const).flatMap");
+    expect(HOME).toContain("(['avif', 'webp'] as const).map");
+    expect(HOME).toContain(
+      'srcset: `/bench/live/lantern-${phase}-450.${type} 450w, /bench/live/lantern-${phase}-900.${type} 900w`',
+    );
+    expect(HOME).toContain('data-phase={src.phase}');
     expect(HOME).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
     expect(HOME).toMatch(/width="1068"/);
     expect(HOME).toMatch(/height="900"/);
     expect(HOME).toContain('{t.home.lantern.alt}');
   });
 
+  it('draws the engraving again over the screen, so the cloth shows whole behind the frame', () => {
+    expect(HOME.match(/\{lanternSources\.map/g)).toHaveLength(2);
+    expect(HOME).toMatch(/<picture class="lantern-front" aria-hidden="true">/);
+    expect(HOME).toMatch(/\.lantern-front \{[^}]*z-index: 4;[^}]*pointer-events: none;/);
+    expect(HOME).not.toMatch(/\.screen\[data-phase=[^\]]*\] \{\s*clip-path/);
+    expect(LANTERN).toContain("'#lantern-img, .lantern-front img'");
+  });
+
   it('places the screen exactly on the manifest viewer rectangle', () => {
     expect(fractions(homeViewer('day'))).toEqual(fractions(manifestViewer('day')));
     expect(fractions(homeViewer('night'))).toEqual(fractions(manifestViewer('night')));
-    expect(fractions(homeViewer('day'))).toEqual([0.135, 0.078, 0.8, 0.694]);
-    expect(fractions(homeViewer('night'))).toEqual([0.16, 0.068, 0.69, 0.7]);
+    expect(fractions(homeViewer('day'))).toEqual([0.143, 0.078, 0.78, 0.694]);
+    expect(fractions(homeViewer('night'))).toEqual([0.163, 0.068, 0.678, 0.7]);
   });
 
   it('keeps the image behind the screen, but hands it the clicks as the projector', () => {
