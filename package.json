@@ -1,6 +1,6 @@
 {
   "name": "univerlab-web",
-  "version": "1.19.4",
+  "version": "1.19.5",
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
