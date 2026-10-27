@@ -289,7 +289,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
             <ul>{t.home.directions.nextItems.map((i) => <li>{i}</li>)}</ul>
           </div>
         </div>
-        <a class="dir-roadmap" href="/roadmap/">{t.home.directions.roadmap}</a>
+        <a class="btn dir-roadmap" href="/roadmap/">{t.home.directions.roadmap}</a>
       </div>
     </section>
 
@@ -542,7 +542,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
                  border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
   @media (max-width: 40rem) { .directions { grid-template-columns: 1fr; } }
 
-  .dir-roadmap { display: inline-block; margin-top: 1rem; color: var(--ink); }
+  .dir-roadmap { display: inline-block; margin-top: 1.2rem; }
 
   .axis { color: var(--ink-dim); margin: 0 0 1rem; max-width: 60ch; }
 

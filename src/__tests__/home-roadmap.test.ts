@@ -102,7 +102,7 @@ describe('home: no dotted background anywhere', () => {
 describe('home: the roadmap link', () => {
   /** The anchor of the directions section in one built page. */
   const roadmapAnchor = (html: string) => {
-    const start = html.indexOf('class="dir-roadmap"');
+    const start = html.indexOf('btn dir-roadmap');
     expect(start).toBeGreaterThan(-1);
     const end = html.indexOf('</a>', start);
     return html.slice(start, end);
@@ -121,13 +121,11 @@ describe('home: the roadmap link', () => {
       expect(anchor).toContain(text);
     }
     // And the link really is part of the directions section source.
-    expect(home).toMatch(/<a class="dir-roadmap" href="\/roadmap\/">\{t\.home\.directions\.roadmap\}<\/a>/);
+    expect(home).toMatch(/<a class="btn dir-roadmap" href="\/roadmap\/">\{t\.home\.directions\.roadmap\}<\/a>/);
   });
 
-  it('is styled by the scoped rule: under the lists, the section link ink, no new tokens', () => {
-    expect(home).toContain(
-      '.dir-roadmap { display: inline-block; margin-top: 1rem; color: var(--ink); }',
-    );
+  it('is a button like the hero and closing calls to action, spaced under the lists', () => {
+    expect(home).toContain('.dir-roadmap { display: inline-block; margin-top: 1.2rem; }');
   });
 
   it('keeps en/es key parity in the directions block', () => {
