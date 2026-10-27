@@ -15,27 +15,32 @@ import { resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
 import { isoDate } from '../../src/lib/lab-feed';
 import {
-  DONE_CAP,
   FEED_URL,
+  ROADMAP_TWIN_URL,
   renderStatusTwin,
   statusTwinRoute,
   type Entry,
-  type RoadmapItem,
 } from '../../functions/status-twin';
 
 const ROOT = resolve(__dirname, '../..');
 const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
 
-/** The static twin an outage falls back to — the built 116-byte front matter. */
+/**
+ * The static twin an API outage falls back to — what `scripts/build-md.ts`
+ * writes into `dist/status/index.md`: the page's front matter over a real
+ * logbook snapshot. Never the empty shell (FR3).
+ */
 const STATIC_TWIN =
   '---\n' +
   'title: "Logbook — live status of every UniverLab experiment"\n' +
   'source: "https://univerlab.org/status/"\n' +
-  '---\n\n';
+  '---\n\n' +
+  '## Logbook\n\n' +
+  '- **2026 · Sol 280 · 01:09 UTC** (2026-10-06T01:09Z) · launch · general — **A built snapshot entry**: First paragraph.\n\n' +
+  'Snapshot taken at build time (2026-10-26T12:00:00.000Z); the live version is served at this same address.\n';
 
-function item(over: Partial<RoadmapItem> & { id: string; title: string; state: string }): RoadmapItem {
-  return { pos: 0, topic: 'general', ...over };
-}
+/** The one line that points at the roadmap twin instead of a Roadmap section. */
+const ROADMAP_POINTER = 'Roadmap: https://univerlab.org/roadmap/index.md';
 
 function entry(over: Partial<Entry> & { id: string; title: string }): Entry {
   return {
@@ -57,24 +62,11 @@ function entryHead(date: string): string {
   return `**${d.getFullYear()} \u00b7 Sol ${sol} \u00b7 ${hh}:${mm} UTC** (${isoDate(date)}T${hh}:${mm}Z)`;
 }
 
-/** Every `##`/`###` heading in order — lane order is asserted on this. */
+/** Every `##`/`###` heading in order. */
 const headings = (md: string) => md.match(/^#{2,3} .*$/gm) ?? [];
 
 /** The body after the front matter: first line is the live-data sentence. */
 const bodyOf = (md: string) => md.split('---\n')[2].trim().split('\n');
-
-/** How many `- ` bullets a section carries (up to the next `##`). */
-const bulletCount = (md: string, heading: string): number => {
-  const lines = md.split('\n');
-  const start = lines.indexOf(heading);
-  expect(start).toBeGreaterThanOrEqual(0);
-  let count = 0;
-  for (let i = start + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('## ')) break;
-    if (lines[i].startsWith('- ')) count++;
-  }
-  return count;
-};
 
 // ------------------------------------------------------------------ routes
 
@@ -101,114 +93,69 @@ describe('statusTwinRoute', () => {
 
 // ---------------------------------------------------------------- renderer
 
-describe('renderStatusTwin — roadmap lanes', () => {
-  const roadmap = [
-    item({ id: 'n1', title: 'Now one', state: 'now', pos: 1, blocked_reason: 'waiting on review' }),
-    item({ id: 'x1', title: 'Archived one', state: 'now', pos: 0, archived_at: 1758000000000 }),
-    item({ id: 'x2', title: 'Archived done', state: 'done', pos: 9, archived_at: 1758000000000, shipped_at: '2026-09-09T00:00:00Z' }),
-    item({ id: 'x3', title: 'Archived idea', state: 'idea', pos: 9, archived_at: 1758000000000 }),
-    item({ id: 'x4', title: 'Archived later', state: 'later', pos: 9, archived_at: 1758000000000 }),
-    item({ id: 'x5', title: 'Archived next', state: 'next', pos: 9, archived_at: 1758000000000 }),
-    item({ id: 'x6', title: 'Archived done 2', state: 'done', pos: 10, archived_at: 1758000000000 }),
-    item({ id: 'nn', title: 'Next one', state: 'next', pos: 5 }),
-    item({ id: 'l1', title: 'Later one', state: 'later', pos: 2 }),
-    item({ id: 'i1', title: 'Idea one', state: 'idea', pos: 4 }),
-    item({ id: 'd1', title: 'Shipped second', state: 'done', pos: 3, shipped_at: '2026-09-02T00:00:00Z' }),
-    item({ id: 'd0', title: 'Shipped first', state: 'done', pos: 2, shipped_at: '2026-09-01T00:00:00Z' }),
-  ];
-  const md = renderStatusTwin({ lang: 'en', roadmap, entries: [] });
-
-  it('groups the lanes in board order, now → done', () => {
-    expect(headings(md)).toEqual([
-      '## Roadmap',
-      '### Now',
-      '### Next',
-      '### Later',
-      '### Idea',
-      '### Done',
-      '## Logbook',
-    ]);
+describe('renderStatusTwin — logbook only', () => {
+  const md = renderStatusTwin({
+    lang: 'en',
+    entries: [
+      entry({ id: 'e1', title: 'Ships the logbook', link: 'https://example.com/x' }),
+      entry({ id: 'e2', title: 'Second entry', date: '2026-10-05T10:00:00.000Z', type: 'note', topic: null }),
+    ],
   });
 
-  it('drops every archived item, in every lane', () => {
-    for (const gone of [
-      'Archived one',
-      'Archived done',
-      'Archived idea',
-      'Archived later',
-      'Archived next',
-      'Archived done 2',
-    ]) {
-      expect(md).not.toContain(gone);
-    }
-    expect(md).toContain('Now one');
-    expect(md).toContain('Next one');
-    expect(md).toContain('Later one');
-    expect(md).toContain('Idea one');
+  it('renders exactly one section — the Logbook, never a Roadmap', () => {
+    expect(headings(md)).toEqual(['## Logbook']);
+    expect(md).not.toContain('## Roadmap');
+    expect(md).not.toContain('### ');
   });
 
-  it('prints title, topic and the blocked reason on one line', () => {
-    expect(md).toContain('- **Now one** · general — hold: waiting on review');
-    expect(md).toContain('- **Later one** · general');
+  it('points at the roadmap twin instead of duplicating the board', () => {
+    expect(md).toContain(ROADMAP_POINTER);
+    // One pointer line, not a section: nothing but the pointer may name the URL.
+    expect(md.split(ROADMAP_POINTER).length - 1).toBe(1);
   });
 
-  it('lists done newest-first by shipped_at', () => {
-    const done = md.slice(md.indexOf('### Done'), md.indexOf('## Logbook'));
-    expect(done.indexOf('Shipped second')).toBeLessThan(done.indexOf('Shipped first'));
-  });
-
-  it('caps done at the 10 most recent shipments, dropping the oldest', () => {
-    const many = Array.from({ length: 12 }, (_, i) =>
-      item({
-        id: `d${i}`,
-        title: `Shipment ${i}`,
-        state: 'done',
-        pos: i,
-        // One shipment per January day, so the newest is the last built.
-        shipped_at: `2026-01-${String(1 + i).padStart(2, '0')}T00:00:00Z`,
-        topic: i % 2 ? 'canopy' : 'gitkit',
-      }),
+  it('renders each entry in the shared one-line format, API order kept', () => {
+    expect(md.split('\n')).toContain(
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · general — **Ships the logbook**: First paragraph. [link](https://example.com/x)`,
     );
-    const out = renderStatusTwin({ lang: 'en', roadmap: many, entries: [] });
-    expect(DONE_CAP).toBe(10);
-    expect(bulletCount(out, '### Done')).toBe(DONE_CAP);
-    expect(out).toContain('**Shipment 11**');
-    expect(out).toContain('**Shipment 2**');
-    expect(out).not.toContain('**Shipment 1**');
-    expect(out).not.toContain('**Shipment 0**');
+    expect(md).toContain('- **2026');
+    expect(md.indexOf('Ships the logbook')).toBeLessThan(md.indexOf('Second entry'));
   });
 
-  it('sorts done by date, not by pos, and keeps an item with no date last', () => {
-    const rows = [
-      item({ id: 'a', title: 'Dated', state: 'done', pos: 0, shipped_at: '2026-05-01T00:00:00Z' }),
-      item({ id: 'b', title: 'Undated', state: 'done', pos: 1, shipped_at: null }),
-      item({ id: 'c', title: 'Newest', state: 'done', pos: 2, shipped_at: '2026-06-01T00:00:00Z' }),
-    ];
-    const out = renderStatusTwin({ lang: 'en', roadmap: rows, entries: [] });
-    const lines = out.split('\n').filter((l) => l.startsWith('- **'));
-    expect(lines.map((l) => l.slice(4, l.indexOf('**', 4)))).toEqual(['Newest', 'Dated', 'Undated']);
+  it('starts the body with the live-data sentence and the feed URL', () => {
+    const sentence = bodyOf(md)[0];
+    expect(sentence).toMatch(/^This page is rendered live /);
+    expect(sentence).toContain(FEED_URL);
+    expect(sentence.endsWith('.')).toBe(true);
+  });
+
+  it('keeps the twin front-matter shape', () => {
+    expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/status\/"\n---\n/);
   });
 });
 
 describe('renderStatusTwin — Spanish', () => {
   const md = renderStatusTwin({
     lang: 'es',
-    roadmap: [
-      item({ id: 'a', title: 'En curso', state: 'now', pos: 0, blocked_reason: 'en revisión' }),
-      item({ id: 'b', title: 'Entregado', state: 'done', pos: 1, shipped_at: '2026-09-01T00:00:00Z' }),
-    ],
     entries: [entry({ id: 'e1', title: 'Lanzamiento', topic: 'texforge', link: 'https://example.com/x' })],
   });
 
-  it('takes the lane headings and the hold label from es.roadmap', () => {
-    expect(headings(md)).toEqual(['## Roadmap', '### Ahora', '### Hecho', '## Cuaderno de bitácora']);
-    expect(md).toContain('— en espera: en revisión');
+  it('takes the section heading from the Spanish label', () => {
+    expect(headings(md)).toEqual(['## Cuaderno de bitácora']);
   });
 
   it('keeps the entry content exactly as the API returned it', () => {
     expect(md).toContain(
       `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · texforge — **Lanzamiento**: First paragraph. [link](https://example.com/x)`,
     );
+  });
+
+  it('points at the English roadmap twin — /es/roadmap/ only redirects', () => {
+    // public/_redirects 301s /es/roadmap/ to /roadmap/; the pointer names the
+    // URL that actually answers rather than the redirect on the way to it.
+    expect(ROADMAP_TWIN_URL.es).toBe('https://univerlab.org/roadmap/index.md');
+    expect(ROADMAP_TWIN_URL.en).toBe('https://univerlab.org/roadmap/index.md');
+    expect(md).toContain(ROADMAP_POINTER);
   });
 
   it('says the data is live, in Spanish, and names the feed', () => {
@@ -222,7 +169,6 @@ describe('renderStatusTwin — mission log entries', () => {
   it('renders an entry without a link as plain text', () => {
     const md = renderStatusTwin({
       lang: 'en',
-      roadmap: [],
       entries: [entry({ id: 'e2', title: 'No link here', link: null, type: 'note', topic: null })],
     });
     expect(md.split('\n')).toContain(
@@ -232,7 +178,7 @@ describe('renderStatusTwin — mission log entries', () => {
   });
 
   it('takes only the first paragraph of the body', () => {
-    const md = renderStatusTwin({ lang: 'en', roadmap: [], entries: [entry({ id: 'e3', title: 'T' })] });
+    const md = renderStatusTwin({ lang: 'en', entries: [entry({ id: 'e3', title: 'T' })] });
     expect(md).toContain('First paragraph.');
     expect(md).not.toContain('Second paragraph');
   });
@@ -242,7 +188,6 @@ describe('renderStatusTwin — mission log entries', () => {
     // endpoint, it does not second-guess it. A WebMCP tool sorts; this must not.
     const md = renderStatusTwin({
       lang: 'en',
-      roadmap: [],
       entries: [
         entry({ id: 'a', title: 'Served first' }),
         entry({ id: 'z', title: 'Served second' }),
@@ -258,23 +203,10 @@ describe('renderStatusTwin — mission log entries', () => {
   it('flattens a body whose first paragraph spans lines', () => {
     const md = renderStatusTwin({
       lang: 'en',
-      roadmap: [],
       entries: [entry({ id: 'e4', title: 'T', body: 'one\n  two\n\nrest' })],
     });
     expect(md).toContain(': one two');
     expect(md).not.toContain('rest');
-  });
-
-  it('starts the body with the live-data sentence and the feed URL', () => {
-    const sentence = bodyOf(renderStatusTwin({ lang: 'en', roadmap: [], entries: [] }))[0];
-    expect(sentence).toMatch(/^This page is rendered live /);
-    expect(sentence).toContain(FEED_URL);
-    expect(sentence.endsWith('.')).toBe(true);
-  });
-
-  it('keeps the twin front-matter shape', () => {
-    const md = renderStatusTwin({ lang: 'en', roadmap: [], entries: [] });
-    expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/status\/"\n---\n/);
   });
 });
 
@@ -312,27 +244,12 @@ const asMock = (fn: unknown) => fn as jest.Mock;
 
 const realFetch = global.fetch;
 
-/** The two public payloads, dispatched the way the middleware calls them. */
+/** The logbook payload, dispatched the way the middleware calls it. The twin
+ *  never asks for the roadmap — `/roadmap/index.md` is the board's own twin —
+ *  so a roadmap fetch here is a bug and throws. */
 function apiMock(): jest.Mock {
   return jest.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
-    if (url === 'https://announcements.univerlab.org/roadmap?limit=100') {
-      return {
-        ok: true,
-        json: async () => ({
-          items: [
-            item({ id: 'r1', title: 'Ship the live twin', state: 'now', pos: 0 }),
-            item({
-              id: 'r2',
-              title: 'Shipped the feed',
-              state: 'done',
-              pos: 1,
-              shipped_at: '2026-10-01T00:00:00Z',
-            }),
-          ],
-        }),
-      } as Response;
-    }
     if (url === 'https://announcements.univerlab.org/?limit=20') {
       return {
         ok: true,
@@ -366,15 +283,15 @@ describe('middleware — live twin', () => {
     expect(res.headers.get('Content-Type')).toBe('text/markdown; charset=utf-8');
     expect(res.headers.get('Vary')).toBe('Accept');
     const body = await res.text();
-    expect(body).toContain('## Roadmap');
-    expect(body).toContain('### Now');
-    expect(body).toContain('Ship the live twin');
     expect(body).toContain('## Logbook');
+    expect(body).toContain(ROADMAP_POINTER);
     expect(body).toContain('The live twin ships');
+    expect(body).not.toContain('## Roadmap');
     expect(body).toContain(FEED_URL);
     expect(asMock(ctx.env.ASSETS.fetch)).not.toHaveBeenCalled();
     expect(asMock(ctx.next)).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // One read, the logbook — the roadmap fetch is gone with the section.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('asks the API read-only, edge-cached for 300 s, behind a signal', async () => {
@@ -382,7 +299,7 @@ describe('middleware — live twin', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
     await onRequest(context('/status/'));
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const calls = fetchMock.mock.calls as [string, RequestInit & { cf?: unknown }][];
     for (const [url, init] of calls) {
       expect(url).toMatch(/^https:\/\/announcements\.univerlab\.org\//);
@@ -395,9 +312,45 @@ describe('middleware — live twin', () => {
   it('renders the Spanish route with Spanish headings', async () => {
     global.fetch = apiMock() as unknown as typeof fetch;
     const body = await (await onRequest(context('/es/status/'))).text();
-    expect(body).toContain('### Ahora');
     expect(body).toContain('## Cuaderno de bitácora');
+    expect(body).not.toContain('## Logbook');
     expect(body).toContain('The live twin ships');
+    expect(body).toContain(ROADMAP_POINTER);
+  });
+
+  it('serves the live twin to Accept: */* on /status/index.md', async () => {
+    // An agent GETs the twin by its file path with the default Accept; the
+    // path itself says "markdown", so the twin must render live.
+    const fetchMock = apiMock();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const ctx = context('/status/index.md', '*/*');
+
+    const res = await onRequest(ctx);
+
+    expect(res.headers.get('Content-Type')).toBe('text/markdown; charset=utf-8');
+    const body = await res.text();
+    expect(body).toContain('## Logbook');
+    expect(body).toContain('The live twin ships');
+    expect(body).toContain(ROADMAP_POINTER);
+    expect(body).not.toContain('## Roadmap');
+    expect(asMock(ctx.env.ASSETS.fetch)).not.toHaveBeenCalled();
+    expect(asMock(ctx.next)).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves the Spanish live twin to Accept: */* on /es/status/index.md', async () => {
+    const fetchMock = apiMock();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const ctx = context('/es/status/index.md', '*/*');
+
+    const res = await onRequest(ctx);
+
+    const body = await res.text();
+    expect(body).toContain('## Cuaderno de bitácora');
+    expect(body).not.toContain('## Logbook');
+    expect(body).toContain('The live twin ships');
+    expect(asMock(ctx.next)).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('ignores HTML requests entirely', async () => {
@@ -419,7 +372,12 @@ describe('middleware — falls back to the static twin', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('text/markdown; charset=utf-8');
     expect(res.headers.get('Vary')).toBe('Accept');
-    expect(await res.text()).toBe(STATIC_TWIN);
+    const body = await res.text();
+    expect(body).toBe(STATIC_TWIN);
+    // Non-empty: the fallback is a real logbook snapshot, never the bare
+    // front matter (FR3/FR6).
+    expect(body).toContain('## Logbook');
+    expect(body).toContain('Snapshot taken at build time');
   };
 
   const apiDown = () => {
@@ -434,6 +392,19 @@ describe('middleware — falls back to the static twin', () => {
       'https://univerlab.org/status/index.md',
     );
     expect(asMock(ctx.next)).not.toHaveBeenCalled();
+  });
+
+  it('when the API fetch rejects under Accept: */*, serves the built twin via next()', async () => {
+    // `/status/index.md` with `*/*` is a path-says-markdown request: the live
+    // render is attempted, and on failure next() serves the built snapshot
+    // twin from dist (non-empty, per build-md).
+    apiDown();
+    const ctx = context('/status/index.md', '*/*');
+    const res = await onRequest(ctx);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('next');
+    expect(asMock(ctx.next)).toHaveBeenCalled();
+    expect(asMock(ctx.env.ASSETS.fetch)).not.toHaveBeenCalled();
   });
 
   it('when the API returns non-OK', async () => {
@@ -472,6 +443,36 @@ describe('middleware — falls back to the static twin', () => {
       'https://univerlab.org/es/status/index.md',
     );
     expect(asMock(ctx.next)).toHaveBeenCalled();
+  });
+});
+
+// ------------------------------------------- /roadmap/index.md with */*
+
+describe('middleware — roadmap twin by path', () => {
+  it('serves the live roadmap twin to Accept: */* on /roadmap/index.md', async () => {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === 'https://announcements.univerlab.org/roadmap?limit=100') {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [{ id: 'r1', title: 'Ship the live twin', state: 'now', pos: 0, topic: 'general' }],
+          }),
+        } as Response;
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    }) as unknown as typeof fetch;
+    const ctx = context('/roadmap/index.md', '*/*');
+
+    const res = await onRequest(ctx);
+
+    expect(res.headers.get('Content-Type')).toBe('text/markdown; charset=utf-8');
+    const body = await res.text();
+    expect(body).toContain('### Now');
+    expect(body).toContain('Ship the live twin');
+    expect(body).not.toContain('Logbook');
+    expect(asMock(ctx.env.ASSETS.fetch)).not.toHaveBeenCalled();
+    expect(asMock(ctx.next)).not.toHaveBeenCalled();
   });
 });
 
@@ -515,10 +516,20 @@ describe('public/llms.txt', () => {
     expect(head).toContain('https://announcements.univerlab.org/feed.atom');
   });
 
+  it('describes the logbook and the roadmap as their own live twins', () => {
+    const live = head.slice(head.indexOf('## Live'));
+    expect(live).toMatch(
+      /^- Logbook: https:\/\/univerlab\.org\/status\/index\.md — the latest lab entries, rendered live from the announcements API on every request\.$/m,
+    );
+    expect(live).toMatch(
+      /^- Roadmap: https:\/\/univerlab\.org\/roadmap\/index\.md — every roadmap item by lane \(now, next, later, ideas, recently shipped\), rendered live from the announcements API on every request\.$/m,
+    );
+    // The old "Logbook and roadmap" line, which described /status as both, is gone.
+    expect(live).not.toContain('Logbook and roadmap');
+  });
+
   it('writes the live lines as prose, so the docs-line count cannot drift', () => {
     const live = head.slice(head.indexOf('## Live'));
-    expect(live).toMatch(/^- Logbook and roadmap: https:\/\/univerlab\.org\/status\/index\.md /m);
-    expect(live).toMatch(/^- Atom feed: https:\/\/announcements\.univerlab\.org\/feed\.atom /m);
     expect(live).not.toMatch(/^- \[[^\]]*\]\(https:\/\/univerlab\.org\/[^)]*index\.md\): /m);
   });
 

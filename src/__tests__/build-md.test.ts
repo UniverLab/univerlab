@@ -1,4 +1,12 @@
-import { htmlToMarkdown, injectLatestRelease, stripAriaHidden } from '../../scripts/build-md';
+import {
+  htmlToMarkdown,
+  injectLatestRelease,
+  statusOfflineBody,
+  statusSnapshotBody,
+  stripAriaHidden,
+  withStatusSnapshot,
+} from '../../scripts/build-md';
+import { entryLine, type Entry } from '../../src/lib/lab-feed';
 
 describe('htmlToMarkdown', () => {
   it('converts main content with heading and paragraph', () => {
@@ -195,5 +203,76 @@ describe('mission-date ISO suffix in markdown twin', () => {
     ].join('');
     const md = htmlToMarkdown(html);
     expect(md).toContain('TERRA 2026 · Sol 282 · 14:00 UTC (2026-10-09T14:00Z)');
+  });
+});
+
+describe('status snapshot twin (build-md)', () => {
+  const entries: Entry[] = [
+    {
+      id: 'e1',
+      date: '2026-10-06T01:09:26.735Z',
+      title: 'Newest entry',
+      body: 'First paragraph.\n\nSecond paragraph that must not survive.',
+      type: 'launch',
+      topic: 'canopy',
+      link: null,
+    },
+    {
+      id: 'e2',
+      date: '2026-10-05T10:00:00.000Z',
+      title: 'Older entry',
+      body: 'Older body.',
+      type: 'note',
+      topic: null,
+      link: 'https://example.com/o',
+    },
+  ];
+  const NOW = '2026-10-27T09:30:00.000Z';
+
+  it('renders the logbook rows with the shared entryLine and the exact FR3 line', () => {
+    const body = statusSnapshotBody(entries, NOW);
+    expect(body.split('\n')).toEqual([
+      '## Logbook',
+      '',
+      entryLine(entries[0]),
+      entryLine(entries[1]),
+      '',
+      `Snapshot taken at build time (${NOW}); the live version is served at this same address.`,
+    ]);
+  });
+
+  it('never renders an empty body: an empty log still carries heading and marker', () => {
+    const body = statusSnapshotBody([], NOW);
+    expect(body).toContain('## Logbook');
+    expect(body).toContain('Nothing in the logbook at build time.');
+    expect(body).toContain(
+      `Snapshot taken at build time (${NOW}); the live version is served at this same address.`,
+    );
+    expect(body.trim()).not.toBe('## Logbook');
+  });
+
+  it('names the Atom feed and the roadmap twin when the API is down', () => {
+    const body = statusOfflineBody();
+    expect(body.startsWith('## Logbook\n\n')).toBe(true);
+    expect(body).toContain('https://announcements.univerlab.org/feed.atom');
+    expect(body).toContain('https://univerlab.org/roadmap/index.md');
+    expect(body).toContain('this same address');
+    expect(body).not.toContain('Snapshot taken at build time');
+  });
+
+  it('keeps the page front matter and replaces the body with the snapshot', () => {
+    const html =
+      '<!DOCTYPE html><html><head><title>Logbook — live status of every UniverLab experiment</title>' +
+      '<link rel="canonical" href="https://univerlab.org/status/"></head>' +
+      '<body><main><h1>Logbook</h1><p>The logbook now lives in the API, not here.</p></main></body></html>';
+    const body = statusSnapshotBody(entries, NOW);
+    const md = withStatusSnapshot(html, body);
+    expect(md).toBe(
+      '---\n' +
+        'title: "Logbook — live status of every UniverLab experiment"\n' +
+        'source: "https://univerlab.org/status/"\n' +
+        '---\n\n' +
+        `${body}\n`,
+    );
   });
 });
