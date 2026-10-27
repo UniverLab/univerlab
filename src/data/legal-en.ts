@@ -15,7 +15,7 @@ export const privacyEn: LegalDoc = {
   kicker: 'Legal',
   heading: 'Privacy Policy',
   intro:
-    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else.',
+    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, Quorum at quorum.univerlab.org, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else, and Quorum keeps nothing outside your browser.',
   updatedLabel: 'Last updated',
   effectiveLabel: 'Effective from',
   prevails:
@@ -35,8 +35,9 @@ export const privacyEn: LegalDoc = {
       id: 'what-we-collect',
       title: 'What we collect, per service',
       paras: [
-        'Each service below collects only what it needs to work. Nothing here is used for advertising or marketing, nothing trains models, and nothing is sold.',
+        'Each service below collects only what it needs to work. Nothing we collect is used for advertising or marketing or to train models, and nothing is sold.',
         '<strong>univerlab.org and the announcements feed.</strong> No accounts, no sign-in, no tracking cookies. Reading pages or the feed leaves no profile of you. Like every site, requests pass through the host infrastructure, so Cloudflare keeps its own request logs of the connections it serves.',
+        'The site\u2019s public content (its texts, documentation and logbook, never personal data) is offered to search engines and AI systems, training included, through the content signal in <code>robots.txt</code> (<code>Content-Signal: search=yes, ai-input=yes, ai-train=yes</code>).',
         '<strong>graphs.univerlab.org.</strong> The catalogue shows only public repositories that carry the <code>canopy-graph</code> topic: the owner login, the repository name, its description, stars, last update date, and the published graph and node documents with their READMEs.',
         'It reads that data from GitHub and keeps temporary copies at Cloudflare only to serve the catalogue. A document or repository removed from GitHub, or stripped of the topic, leaves the catalogue within 30 minutes.',
         // 30-minute upper bound vs TTL in canopy-web apps/graphs/src/github.ts
@@ -45,6 +46,7 @@ export const privacyEn: LegalDoc = {
         // 90-day totals vs DOWNLOAD_WINDOW_DAYS in canopy-web apps/graphs/src/analytics.ts.
         '<strong>remote.univerlab.org.</strong> Signing in with GitHub stores your GitHub numeric id and login in a signed session cookie that expires after 12 hours. The GitHub sign-in token is discarded at once. The relay stores nothing and only forwards the signalling that connects a browser to its owner\u2019s canopy host. Sessions travel peer to peer, encrypted end to end (WebRTC DTLS), with Cloudflare TURN relaying ciphertext when a direct path fails. Device keys stay in the browser and on the host.',
         // 12-hour cookie vs SESSION_TTL_S in canopy-web apps/remote/worker/src/auth.ts.
+        '<strong>quorum.univerlab.org.</strong> Peer-to-peer planning poker: no accounts, no cookies and no analytics. Your display name, theme and each room\u2019s stories stay in your browser. To let the browsers of a room find each other, Quorum uses public WebTorrent trackers run by third parties: they see your IP address and an identifier derived from the room, never your votes. After that, data travels straight between browsers over WebRTC, so the people in your room see your name, your votes and your IP address. UniverLab receives none of it: it only serves the app\u2019s files from Cloudflare.',
         '<strong>canopy CLI and daemon.</strong> Your data stays local in <code>~/.canopy</code> on your own machine. UniverLab services are contacted only when you use them: fetching a graph from the catalogue, or pairing through the relay. Agent harnesses (Claude, Codex and the rest) are governed by their own providers\u2019 terms.',
         '<strong>Reports.</strong> Bug reports and catalogue reports are GitHub issues in public repositories: whatever you write there is public under GitHub\u2019s terms.',
       ],
@@ -57,6 +59,7 @@ export const privacyEn: LegalDoc = {
         'univerlab.org and the feed: publishing the lab\u2019s pages and logbook.',
         'graphs.univerlab.org: serving a catalogue of public community graphs and counting installs in aggregate.',
         'remote.univerlab.org: keeping you signed in for 12 hours so your browser can reach your own canopy host.',
+        'quorum.univerlab.org: serving the app; each room is held up by its participants\u2019 own browsers.',
         'canopy CLI and daemon: running your graphs on your machine; contacting UniverLab services only for the fetch or pairing you asked for.',
       ],
     },
@@ -74,7 +77,7 @@ export const privacyEn: LegalDoc = {
       id: 'processors-transfer',
       title: 'Processors and international transfer',
       paras: [
-        'Two providers process data on our behalf, both in the United States, so your data leaves Colombia when you use the services:',
+        'Two providers process data on our behalf, both in the United States, so your data leaves Colombia when you use the services (the public WebTorrent trackers Quorum uses are not our processors: independent third parties run them, and they only introduce the browsers of a room to each other):',
       ],
       items: [
         'Cloudflare: hosting, caching, Analytics Engine install counts and TURN relaying.',
@@ -96,6 +99,7 @@ export const privacyEn: LegalDoc = {
         // 90 days vs DOWNLOAD_WINDOW_DAYS in canopy-web apps/graphs/src/analytics.ts.
         'Install counts: 90-day totals, with no IP address, no full user-agent and no cookie behind them.',
         // 12 hours vs SESSION_TTL_S in canopy-web apps/remote/worker/src/auth.ts.
+        'Quorum: your name, theme and stories stay in your browser until you clear them; UniverLab keeps nothing.',
         'Remote session cookie: 12 hours, then it expires; the sign-in token is discarded at once and the relay stores nothing.',
         'canopy CLI and daemon: your data stays in ~/.canopy until you remove it.',
       ],
@@ -135,7 +139,7 @@ export const termsEn: LegalDoc = {
   kicker: 'Legal',
   heading: 'Terms of Use',
   intro:
-    'These terms govern univerlab.org, the announcements feed, the graphs catalogue, the remote relay and the canopy tools. They are written in plain language: use the services lawfully, install community graphs at your own judgement, and know what UniverLab does and does not promise.',
+    'These terms govern univerlab.org, the announcements feed, the graphs catalogue, the remote relay, Quorum and the canopy tools. They are written in plain language: use the services lawfully, install community graphs at your own judgement, and know what UniverLab does and does not promise.',
   updatedLabel: 'Last updated',
   effectiveLabel: 'Effective from',
   prevails:

@@ -13,7 +13,7 @@ export const privacyEs: LegalDoc = {
   kicker: 'Legal',
   heading: 'Política de Privacidad',
   intro:
-    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, y el relay guarda una cookie de sesión de 12 horas y nada más.',
+    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org, Quorum en quorum.univerlab.org y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, el relay guarda una cookie de sesión de 12 horas y nada más, y Quorum no guarda nada fuera de tu navegador.',
   updatedLabel: 'Última actualización',
   effectiveLabel: 'Vigente desde',
   prevails:
@@ -33,8 +33,9 @@ export const privacyEs: LegalDoc = {
       id: 'what-we-collect',
       title: 'Qué recogemos, por servicio',
       paras: [
-        'Cada servicio recoge solo lo que necesita para funcionar. Nada aquí se usa para publicidad ni mercadeo, nada entrena modelos y nada se vende.',
+        'Cada servicio recoge solo lo que necesita para funcionar. Nada de lo que recogemos se usa para publicidad ni mercadeo, ni para entrenar modelos, y nada se vende.',
         '<strong>univerlab.org y el canal de anuncios.</strong> Sin cuentas, sin inicio de sesión, sin cookies de rastreo. Leer las páginas o el canal no deja ningún perfil de ti. Como en todo sitio, las peticiones pasan por la infraestructura del hosting, así que Cloudflare conserva sus propios registros de las conexiones que atiende.',
+        'El contenido público del sitio (sus textos, la documentación y la bitácora, nunca datos personales) sí se ofrece a buscadores y a sistemas de IA, incluido su entrenamiento, mediante la señal de contenido de <code>robots.txt</code> (<code>Content-Signal: search=yes, ai-input=yes, ai-train=yes</code>).',
         '<strong>graphs.univerlab.org.</strong> El catálogo muestra solo repositorios públicos que llevan el tópico <code>canopy-graph</code>: el usuario del dueño, el nombre del repositorio, su descripción, estrellas, fecha de actualización y los documentos de grafos y nodos publicados con sus READMEs.',
         'Lee esos datos de GitHub y guarda copias temporales en Cloudflare solo para servir el catálogo. Un documento o repositorio eliminado de GitHub, o al que le quiten el tópico, sale del catálogo dentro de los 30 minutos siguientes.',
         // Límite superior de 30 minutos frente a TTL en canopy-web apps/graphs/src/github.ts
@@ -43,6 +44,7 @@ export const privacyEs: LegalDoc = {
         // Totales de 90 días frente a DOWNLOAD_WINDOW_DAYS en canopy-web apps/graphs/src/analytics.ts.
         '<strong>remote.univerlab.org.</strong> Iniciar sesión con GitHub guarda tu id numérico y tu usuario de GitHub en una cookie de sesión firmada que vence a las 12 horas. El token de acceso de GitHub se descarta de inmediato. El relay no almacena nada y solo reenvía la señalización que conecta un navegador con el canopy de su dueño. Las sesiones viajan de par a par, cifradas de extremo a extremo (WebRTC DTLS), con Cloudflare TURN retransmitiendo cifrado cuando falla la ruta directa. Las claves de dispositivo se quedan en el navegador y en el host.',
         // Cookie de 12 horas frente a SESSION_TTL_S en canopy-web apps/remote/worker/src/auth.ts.
+        '<strong>quorum.univerlab.org.</strong> Planning poker de par a par: sin cuentas, sin cookies y sin analítica. Tu nombre visible, el tema y las historias de cada sala se guardan solo en tu navegador. Para que los navegadores de una sala se encuentren, Quorum usa trackers públicos de WebTorrent operados por terceros: ven tu dirección IP y un identificador derivado de la sala, nunca tus votos. Después, los datos viajan directo entre navegadores por WebRTC, así que quienes están en tu sala ven tu nombre, tus votos y tu dirección IP. UniverLab no recibe nada de eso: solo sirve los archivos de la app desde Cloudflare.',
         '<strong>CLI y daemon de canopy.</strong> Tus datos se quedan en local, en <code>~/.canopy</code> de tu propia máquina. Los servicios de UniverLab solo reciben contacto cuando los usas: al traer un grafo del catálogo o al emparejar por el relay. Los harnesses de agentes (Claude, Codex y demás) se rigen por los términos de sus propios proveedores.',
         '<strong>Reportes.</strong> Los reportes de errores y del catálogo son issues de GitHub en repositorios públicos: lo que escribas ahí es público bajo los términos de GitHub.',
       ],
@@ -55,6 +57,7 @@ export const privacyEs: LegalDoc = {
         'univerlab.org y el canal: publicar las páginas del laboratorio y su bitácora.',
         'graphs.univerlab.org: servir un catálogo de grafos comunitarios públicos y contar instalaciones en agregado.',
         'remote.univerlab.org: mantener tu sesión 12 horas para que tu navegador alcance tu propio host canopy.',
+        'quorum.univerlab.org: servir la app; cada sala la sostienen los propios navegadores de sus participantes.',
         'CLI y daemon de canopy: correr tus grafos en tu máquina; contactar servicios de UniverLab solo para la descarga o el emparejamiento que pediste.',
       ],
     },
@@ -72,7 +75,7 @@ export const privacyEs: LegalDoc = {
       id: 'processors-transfer',
       title: 'Encargados y transferencia internacional',
       paras: [
-        'Dos proveedores tratan datos por nuestra cuenta, ambos en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios:',
+        'Dos proveedores tratan datos por nuestra cuenta, ambos en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios (los trackers públicos de WebTorrent que usa Quorum no son encargados nuestros: los operan terceros independientes y solo presentan entre sí a los navegadores de una sala):',
       ],
       items: [
         'Cloudflare: hosting, caché, conteos de Analytics Engine y retransmisión TURN.',
@@ -94,6 +97,7 @@ export const privacyEs: LegalDoc = {
         // 90 días frente a DOWNLOAD_WINDOW_DAYS en canopy-web apps/graphs/src/analytics.ts.
         'Conteos de instalación: totales de 90 días, sin dirección IP, sin user-agent completo y sin cookie detrás.',
         // 12 horas frente a SESSION_TTL_S en canopy-web apps/remote/worker/src/auth.ts.
+        'Quorum: tu nombre, el tema y las historias quedan en tu navegador hasta que los borres; UniverLab no conserva nada.',
         'Cookie de sesión del relay: 12 horas y vence; el token de acceso se descarta de inmediato y el relay no almacena nada.',
         'CLI y daemon de canopy: tus datos se quedan en ~/.canopy hasta que los borres.',
       ],
@@ -133,7 +137,7 @@ export const termsEs: LegalDoc = {
   kicker: 'Legal',
   heading: 'Términos de Uso',
   intro:
-    'Estos términos rigen univerlab.org, el canal de anuncios, el catálogo de grafos, el relay remoto y las herramientas de canopy. Están escritos en lenguaje claro: usa los servicios dentro de la ley, instala grafos comunitarios bajo tu propio criterio, y conoce qué promete y qué no promete UniverLab.',
+    'Estos términos rigen univerlab.org, el canal de anuncios, el catálogo de grafos, el relay remoto, Quorum y las herramientas de canopy. Están escritos en lenguaje claro: usa los servicios dentro de la ley, instala grafos comunitarios bajo tu propio criterio, y conoce qué promete y qué no promete UniverLab.',
   updatedLabel: 'Última actualización',
   effectiveLabel: 'Vigente desde',
   prevails:
