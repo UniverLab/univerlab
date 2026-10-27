@@ -373,8 +373,9 @@ strong { color: var(--essence, var(--accent)); font-weight: 500; }
    the whole transition. The site chrome alone is shared so it stays put. */
 body > header { view-transition-name: site-header; }
 
-/* The zoom: every experiment group (`exp-<id>`, on the card AND on the
-   destination hero) morphs for 550 ms on the expo-out curve. The family is
+/* The zoom: every experiment group (`exp-<id>`, on the home's lantern screen
+   or machine AND on the destination hero) morphs for 420 ms on the expo-out
+   curve, and the hero comes up like a tube warming: over-bright, then settled. The family is
    carried by `view-transition-class` — NOT by the literal wildcard
    `::view-transition-group(exp-*)`: <pt-name-selector> is only `*` |
    <custom-ident>, so Chrome parses that as `exp-` + a stray `*`, drops the
@@ -382,8 +383,34 @@ body > header { view-transition-name: site-header; }
    (verified in Chrome 149). Class support (Chrome 125 / Firefox 144 /
    Safari 18.2) covers every engine with cross-document view transitions. */
 ::view-transition-group(.exp-zoom) {
-  animation-duration: 550ms;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+::view-transition-old(.exp-zoom) { animation-duration: 160ms; }
+::view-transition-new(.exp-zoom) {
+  animation: 420ms ease-out both tune-in;
+}
+@keyframes tune-in {
+  0%   { opacity: 0; filter: brightness(1.9) contrast(1.4); }
+  30%  { opacity: 1; }
+  100% { opacity: 1; filter: none; }
+}
+
+/* Tuning in from the home (type `tune`, set on pagereveal in BaseLayout):
+   the screen fills less of the viewport than the old cards did, so its morph
+   alone barely reads. The whole old page dives forward into the screen while
+   the experiment page settles from slightly behind. */
+:active-view-transition-type(tune)::view-transition-old(root) {
+  animation: 300ms cubic-bezier(0.5, 0, 0.9, 0.5) both tune-dive;
+}
+:active-view-transition-type(tune)::view-transition-new(root) {
+  animation: 380ms cubic-bezier(0.16, 0.84, 0.44, 1) 60ms both tune-settle;
+}
+@keyframes tune-dive {
+  to { transform: scale(1.6); opacity: 0; }
+}
+@keyframes tune-settle {
+  from { transform: scale(0.96); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -776,45 +803,6 @@ time[data-mission]:focus {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
-}
-
-/* ── CRT power-off / power-on (home → experiment page) ─────────────────────
-   The home view collapses to a line, then a point; a white dot flashes and
-   the browser navigates. BaseLayout adds `crt-on` to <body> when the
-   destination loads with sessionStorage['univerlab-crt'] set. */
-.crt-view { transform-origin: 50% 40%; }
-.crt-view.off { animation: crt-off 0.55s cubic-bezier(0.6, 0, 0.9, 0.4) forwards; }
-.crt-view.on { animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
-/* The destination page has no .crt-view wrapper — only the home does — so the
-   power-on plays on <body> itself: every page the bench opens lights up, not
-   just the ones that happen to wrap their content. The origin sits at the
-   viewport's 40% line (fresh load = scroll 0) where .crt-dot flashes. */
-body.crt-on { transform-origin: 50% 40vh;
-              animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
-
-@keyframes crt-off {
-  0%   { transform: scale(1, 1); filter: brightness(1); }
-  45%  { transform: scale(1, 0.006); filter: brightness(3); }
-  80%  { transform: scale(0.004, 0.006); filter: brightness(6); }
-  100% { transform: scale(0, 0); filter: brightness(8); opacity: 0; }
-}
-
-@keyframes crt-on {
-  0%   { transform: scale(0, 0.006); filter: brightness(6); opacity: 1; }
-  35%  { transform: scale(1, 0.006); filter: brightness(3); }
-  100% { transform: scale(1, 1); filter: brightness(1); }
-}
-
-.crt-dot {
-  position: fixed; left: 50%; top: 40%; width: 6px; height: 6px; margin: -3px;
-  border-radius: 50%; background: #fff; box-shadow: 0 0 18px 6px #fff8;
-  opacity: 0; pointer-events: none; z-index: 20;
-}
-.crt-dot.flash { animation: crt-dot-flash 0.5s ease-out; }
-
-@keyframes crt-dot-flash {
-  0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.2); }
 }
 
 /* ── Page opening with engraved postcard ─────────────────────────────

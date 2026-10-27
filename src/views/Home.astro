@@ -49,7 +49,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 ---
 
 <BaseLayout title={t.meta.title} circadian structuredData={webSite}>
-  <div class="crt-view" id="home-view">
+  <div id="home-view">
     <section class="wrap hall" aria-labelledby="frontis-title">
       <!-- Frontispiece: the title page of an old encyclopedia. -->
       <header class="frontis">
@@ -307,7 +307,6 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
     </section>
   </div>
 
-  <div class="crt-dot" id="crt-dot" aria-hidden="true"></div>
 </BaseLayout>
 
 <style>
@@ -356,6 +355,15 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .screen { position: absolute; z-index: 3; overflow: hidden;
             background: var(--bench-c-parchment); }
   :global(html[data-bench-theme='night']) .screen { background: #15110c; }
+  /* The lantern's cap rises above the bottom rail, in front of the cloth:
+     the screen leaves a notch for it (measured on each frame, in the screen's
+     own fractions) instead of painting over it. */
+  .screen[data-phase='day'] {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 13% 100%, 13% 96.8%, 11.4% 95.8%,
+      10.4% 95%, 10.4% 94.2%, 8.4% 94.2%, 8.4% 95%, 7.6% 95.8%, 6.2% 96.8%, 6.2% 100%, 0 100%); }
+  .screen[data-phase='night'] {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 13.4% 100%, 13.4% 96.4%, 10.4% 95.4%,
+      9.6% 94.6%, 9.6% 94%, 7.8% 94%, 7.8% 94.6%, 7.2% 95.4%, 6.2% 96.4%, 6.2% 100%, 0 100%); }
 
   /* Each slide fills the screen; the clip is letterboxed inside it (`contain`)
      and the caption rides along the bottom edge, over the clip, as in the
@@ -555,31 +563,34 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 
 <script>
   import { startLantern } from '../scripts/lantern';
-  import { crtNavigate } from '../scripts/crt';
+  import { tuneNavigate, untune } from '../scripts/tune';
   import { shouldScreenNavigate } from '../lib/lantern-navigate';
 
-  // A machine opens its experiment page through the CRT power-off. The key
-  // `sessionStorage['univerlab-crt']` tells BaseLayout to play crt-on once the
-  // destination has loaded; crt.ts owns that handshake.
-  const view = document.getElementById('home-view');
-  const dot = document.getElementById('crt-dot');
+  // A machine opens its experiment page by tuning the screen in (tune.ts):
+  // static, then the screen zooms into the page's hero. Pointing at a machine
+  // already projects it, so the screen is the source while it is on view; a
+  // machine clicked with the screen scrolled away zooms from itself.
+  const screen = document.getElementById('screen');
+  const screenOnView = (): boolean => {
+    const r = screen?.getBoundingClientRect();
+    return !!r && r.bottom > 0 && r.top < window.innerHeight;
+  };
   document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const href = btn.dataset.href;
-      if (!href) return;
-      if (view && dot) crtNavigate(href, view, dot);
-      else window.location.assign(href);
+      const exp = btn.dataset.exp;
+      if (!href || !exp) return;
+      tuneNavigate(href, exp, screen && screenOnView() ? screen : btn);
     });
   });
 
-  // The screen opens the experiment it projects, through the same CRT power-off.
+  // The screen opens the experiment it projects, through the same tuning.
   // The gesture lives here, not in lantern.ts, which only publishes the
   // projection (`#screen[data-current-exp]`, "" on the title slide) and opens
   // worlds on hover/tap. These listeners register before the lantern starts, on
   // purpose: lantern's own pointerdown opens the world on the first tap, so the
   // world state must be read before that happens — otherwise the very tap that
   // only opens the world would already look like "world open" and navigate.
-  const screen = document.getElementById('screen');
   const catcher = document.getElementById('catch');
   let downX = 0;
   let downY = 0;
@@ -618,14 +629,9 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
     const href = document.querySelector<HTMLElement>(
       `.plate[data-exp="${currentExp}"]`,
     )?.dataset.href;
-    if (!href) return;
-    if (view && dot) crtNavigate(href, view, dot);
-    else window.location.assign(href);
+    if (!href || !screen) return;
+    tuneNavigate(href, currentExp, screen);
   });
 
-  // Back restores the bfcache snapshot with the power-off class still on and
-  // .crt-view.off fills forwards to opacity 0: the home came back blank.
-  addEventListener('pageshow', () => {
-    view?.classList.remove('off');
-  });
+  addEventListener('pageshow', untune);
 </script>
