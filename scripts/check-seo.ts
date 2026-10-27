@@ -484,7 +484,7 @@ const UPDATED_LINE = /<p class="doc-updated">/g;
 /** A docs page: `/<id>/docs/…/index.html` — the index included. */
 const DOCS_FILE = /^([^/]+)\/docs\/(?:.*\/)?index\.html$/;
 /** What to say when a date disagrees with itself: the render cache is stale. */
-const STALE_HINT = ' — stale .astro cache? `rm -rf .astro && npm run build`';
+const STALE_HINT = ' — stale Astro cache? `rm -rf .astro node_modules/.astro && npm run build`';
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);

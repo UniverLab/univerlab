@@ -1026,7 +1026,7 @@ export const en = {
       body:
         'Electronic engineer and software-development specialist, now a master’s student in Artificial Intelligence. Reflective by nature — stoicism and positive nihilism, astronomy and biology — with his family as his greatest joy and the hope of teaching one day. For now he builds UniverLab’s open experiments and tools. If you read this far and feel like talking, write to him: the address below reaches him directly.',
       link: 'github.com/JheisonMB ↗',
-      email: 'jheison.mb@univerlab.org',
+      email: 'hola@univerlab.org',
     },
     ai: {
       role: 'AI collaborators',

@@ -3,6 +3,7 @@ import Mark from './Mark.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { byId, type ExperimentId } from '../lib/experiments';
 import { BRAILLE_SENTENCE, toBraille } from '../lib/braille';
+import { legalNav } from '../data/legal-nav';
 
 interface Props {
   /** Experiment pages: the id whose name opens the forged colophon line. */
@@ -19,6 +20,9 @@ const forged = expId ? byId(expId) : null;
 const brailleCells = toBraille(BRAILLE_SENTENCE);
 
 const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathname.endsWith('/manifesto/');
+// The legal labels come from the legal module with the rest of that copy; both
+// dictionaries already sit at the 1 200-line cap (see src/data/legal-nav.ts).
+const legal = legalNav[lang];
 const footNav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments },
   { href: localizePath('/archive', lang), label: t.nav.archive },
@@ -26,6 +30,8 @@ const footNav = [
   { href: '/roadmap/', label: t.nav.roadmap },
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: localizePath('/api', lang), label: t.nav.api },
+  { href: localizePath('/privacy', lang), label: legal.privacy },
+  { href: localizePath('/terms', lang), label: legal.terms },
   { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
   { href: 'https://github.com/sponsors/JheisonMB', label: 'heart', ext: true, sponsor: true },
 ];

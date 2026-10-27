@@ -75,24 +75,24 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
   });
 
   it('renders the sun image by day and the real-phase moon by night', () => {
-    expect(src).toMatch(/import \{ moonSVG \} from '\.\.\/lib\/moon-svg'/);
+    expect(src).toMatch(/import \{ moonSVG, SUN_DISC_R \} from '\.\.\/lib\/moon-svg'/);
     // Sun: the approved engraved file, 34px, decorative.
     expect(src).toMatch(/<img src="\/bench\/identidad\/sol\.svg" alt="" width="34" height="34">/);
     // The plain-day shadow stays the default…
     expect(src).toMatch(/html\[data-celestial='sun'\] \.celestial :global\(img\)/);
-    // …and the circadian script's data-sunlow flag reddens the icon at dawn/dusk.
+    // …and the circadian script's data-sunlow flag warms the icon softly at dawn/dusk.
     expect(src).toMatch(/html\[data-celestial='sun'\]\[data-sunlow\] \.celestial :global\(img\)/);
     const sunlowRule = src.match(
       /html\[data-celestial='sun'\]\[data-sunlow\] \.celestial :global\(img\) \{([\s\S]*?)\n  \}/,
     );
     expect(sunlowRule).not.toBeNull();
-    expect(sunlowRule![1]).toMatch(/sepia\(1\) saturate\(3\.4\)/);
-    expect(sunlowRule![1]).toMatch(/hue-rotate\(-24deg\)/);
-    expect(sunlowRule![1]).toMatch(/rgb\(191 52 23 \/ 0\.35\)/);
+    expect(sunlowRule![1]).toMatch(/sepia\(0\.6\) saturate\(1\.6\)/);
+    expect(sunlowRule![1]).toMatch(/hue-rotate\(-14deg\)/);
+    expect(sunlowRule![1]).toMatch(/rgb\(191 110 52 \/ 0\.22\)/);
     // Moon: same synodic computation the circadian script uses for --moon-offset.
     expect(src).toMatch(/Date\.UTC\(2000, 0, 6, 18, 14\)/);
     expect(src).toMatch(/29\.530588853/);
-    expect(src).toMatch(/moonSVG\(synodicPhase\(\), 'hdr', 31\)/);
+    expect(src).toMatch(/moonSVG\(synodicPhase\(\), 'hdr', SUN_DISC_R\)/);
     // Watches the flip the circadian script already publishes.
     expect(src).toMatch(/readCelestial|renderCelestial/);
     expect(src).toMatch(/new MutationObserver\(/);

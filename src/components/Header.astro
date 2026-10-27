@@ -130,8 +130,8 @@ const signals = [
 </header>
 
 <script>
-  import { moonSVG } from '../lib/moon-svg';
-  // Engraved sky body — the sepia sun by day, the chalk moon at tonight's real
+  import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
+  // Engraved sky body — the muted sepia sun by day, the chalk moon at tonight's real
   // phase by night, riding the hour ruler like the horizon. The circadian
   // script already sets data-celestial; re-render on load and on every flip.
   (function () {
@@ -169,7 +169,7 @@ const signals = [
     function renderCelestial() {
       var isMoon = document.documentElement.dataset.celestial === 'moon';
       if (isMoon) {
-        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', 31);
+        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', SUN_DISC_R);
         // The moon is showing: the click will switch to the day theme.
         btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
         btn.setAttribute('title', btn.dataset.skyToDay || 'day');
@@ -364,6 +364,12 @@ const signals = [
        carries the 1px so the header keeps the total height it had. */
     padding-top: 1.1rem;
     padding-bottom: calc(1.1rem + 1px);
+    /* The mailbox stands at the viewport's right edge (mail.css), outside
+       this column. Between the burger breakpoint and a viewport wide enough
+       for the column's own gutter to hold it, keep the nav clear of it: the
+       right padding grows to 58px minus whatever gutter the centred column
+       already has, and never drops below the column's usual padding. */
+    padding-right: max(var(--space), calc(58px - max(0px, (100vw - 72rem) / 2)));
   }
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {
@@ -524,10 +530,11 @@ const signals = [
   html[data-celestial='sun'] .celestial :global(img) {
     filter: drop-shadow(0 1px 1px rgb(32 22 12 / .18));
   }
-  /* Low sun: dawn and dusk redden the engraved icon the way the ruler dot
-     already reddens, leaving the plain-day shadow above as the default. */
+  /* Low sun: dawn and dusk warm the engraved icon towards a soft reddish
+     gold — a hint of the hour, never a colour change you notice first. The
+     plain-day shadow above stays the default. */
   html[data-celestial='sun'][data-sunlow] .celestial :global(img) {
-    filter: sepia(1) saturate(3.4) hue-rotate(-24deg) brightness(0.97) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 7px rgb(191 52 23 / 0.35));
+    filter: sepia(0.6) saturate(1.6) hue-rotate(-14deg) drop-shadow(0 1px 1px rgb(32 22 12 / 0.18)) drop-shadow(0 0 5px rgb(191 110 52 / 0.22));
   }
   html[data-celestial='moon'] .celestial :global(svg) {
     filter: drop-shadow(0 0 6px #ecebe455);

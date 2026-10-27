@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLang } from '../i18n';
+import { LEGAL_DATE, legalDoc, type LegalKind } from '../data/legal';
+import { contactEmail } from '../lib/site-about';
+
+interface Props {
+  kind: LegalKind;
+}
+
+const { kind } = Astro.props;
+const lang = getLang(Astro.url);
+const doc = legalDoc(kind, lang);
+
+/** The contact address comes from the site-about module, never retyped. */
+const withEmail = (s: string): string => s.replaceAll('{email}', contactEmail);
+/** Off-site links leave the site in a new tab, as every other page does. */
+const isExternal = (href: string): boolean => /^https?:/i.test(href);
+---
+<BaseLayout title={doc.title} description={doc.description} circadian>
+  <section class="wrap legal">
+    <span class="label">{doc.kicker}</span>
+    <h1>{doc.heading}</h1>
+    <p class="intro">{doc.intro}</p>
+    <p class="dates">
+      {doc.updatedLabel}: {LEGAL_DATE} · {doc.effectiveLabel}: {LEGAL_DATE}
+    </p>
+    <p class="prevails">{doc.prevails}</p>
+    {doc.sections.map((s, i) => (
+      <section class="sec" id={s.id}>
+        <h2>{i + 1}. {s.title}</h2>
+        {s.paras.map((p) => (
+          <p set:html={withEmail(p)} />
+        ))}
+        {s.items && (
+          <ul>
+            {s.items.map((item) => (
+              <li set:html={withEmail(item)} />
+            ))}
+          </ul>
+        )}
+        {s.links && (
+          <p class="links">
+            {s.links.map((l, j) => (
+              <>
+                {j > 0 && ' · '}
+                <a
+                  href={withEmail(l.href)}
+                  {...(isExternal(l.href)
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {withEmail(l.label)}
+                </a>
+              </>
+            ))}
+          </p>
+        )}
+      </section>
+    ))}
+    <p class="credit">{doc.credit}</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 46rem;
+    padding-block: 4rem 6rem;
+  }
+  .legal .label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 1.2rem;
+  }
+  .legal h1 {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  .legal .intro,
+  .legal .sec p {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  /* The dates and the prevails sentence are legal content, not site chrome:
+     ink-faint lands at 3.7:1 over the paper, so they use the body ink. */
+  .legal .dates,
+  .legal .prevails {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    line-height: 1.7;
+  }
+  .legal .prevails {
+    border-left: 2px solid var(--line);
+    padding-left: 0.8rem;
+  }
+  .legal .sec {
+    border-top: 1px solid var(--line);
+    margin-top: 2rem;
+    padding-top: 1.4rem;
+  }
+  .legal .sec h2 {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    margin: 0 0 0.8rem;
+  }
+  .legal .sec ul {
+    margin: 0.6rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  /* Paragraphs and items arrive through set:html, so injected anchors carry
+     no scope attribute: reach them globally, following the site's convention. */
+  .legal .sec :global(a),
+  .legal .links a {
+    color: var(--accent);
+  }
+  .legal .credit {
+    margin-top: 2.6rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    /* The attribution is content too, so it stays above 4.5:1. */
+    color: var(--ink-dim);
+    line-height: 1.7;
+  }
+</style>

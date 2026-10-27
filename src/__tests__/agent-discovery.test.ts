@@ -158,7 +158,7 @@ describe('auth.md says there is nothing to obtain', () => {
   });
 
   it('names the contact address already published on /contributors/', () => {
-    expect(body).toContain('jheison.mb@univerlab.org');
+    expect(body).toContain('hola@univerlab.org');
   });
 
   it('is served as markdown, so a browser reads it instead of downloading it', () => {

@@ -7,7 +7,7 @@
     "description": "The public, read-only half of the UniverLab announcements API — the Logbook and the roadmap that https://univerlab.org/status/ renders. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: https://univerlab.org`, so a page on univerlab.org can call them straight from the browser. Writing to the Logbook or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
     "contact": {
       "name": "Jheison Martinez Bolivar",
-      "email": "jheison.mb@univerlab.org"
+      "email": "hola@univerlab.org"
     }
   },
   "servers": [
