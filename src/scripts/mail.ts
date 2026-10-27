@@ -5,7 +5,7 @@
 // html, view "Header y buzón"). A letter already opened today — and every
 // letter under prefers-reduced-motion — opens straight onto the letter.
 
-import { moonSVG } from '../lib/moon-svg';
+import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
 import { ENVELOPE, FRONT, FLAP, postmarkSVG, spots, deckle, anim } from './mail-svg';
 import {
   enqueue,
@@ -106,7 +106,7 @@ function coarse(): boolean {
 
 /** Today's sky body on the stamp: the engraved sun by day, tonight's moon. */
 function stampArt(): string {
-  return isNight() ? moonSVG(synodicPhase(), 'stamp') : `<img src="${SUN}" alt="">`;
+  return isNight() ? moonSVG(synodicPhase(), 'stamp', SUN_DISC_R) : `<img src="${SUN}" alt="">`;
 }
 
 function monthName(now: Date, lang: FilterLang, style: 'long' | 'short'): string {
@@ -297,9 +297,16 @@ function startMailbox(): void {
       <p class="hint-step" aria-live="polite"></p>`;
 
     const r = box.getBoundingClientRect();
-    const left = Math.max(16, Math.min(r.right - w + 6, innerWidth - w - 16));
+    // Centred on the screen at every width, as on a phone: horizontally in the
+    // viewport, vertically in the space under the header (never above it, so
+    // the opened flap never covers the bar). The letter still flies out of the
+    // mailbox's slot: `from` below is measured from wherever the popover sits.
+    const left = Math.round((innerWidth - w) / 2);
+    const below = r.bottom + 22;
+    const height = flapH + stageH;
+    const top = Math.max(below, Math.round(below + (innerHeight - below - height) / 2));
     el.style.left = left + 'px';
-    el.style.top = r.bottom + 22 + 'px'; // below the header: the opened flap never covers it
+    el.style.top = top + 'px';
     el.dataset.from = String(r.left + r.width / 2 - left); // the slot, in the popover's x
     return el;
   }

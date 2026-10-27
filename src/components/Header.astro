@@ -130,7 +130,7 @@ const signals = [
 </header>
 
 <script>
-  import { moonSVG } from '../lib/moon-svg';
+  import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
   // Engraved sky body — the muted sepia sun by day, the chalk moon at tonight's real
   // phase by night, riding the hour ruler like the horizon. The circadian
   // script already sets data-celestial; re-render on load and on every flip.
@@ -169,7 +169,7 @@ const signals = [
     function renderCelestial() {
       var isMoon = document.documentElement.dataset.celestial === 'moon';
       if (isMoon) {
-        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', 31);
+        mount.innerHTML = moonSVG(synodicPhase(), 'hdr', SUN_DISC_R);
         // The moon is showing: the click will switch to the day theme.
         btn.setAttribute('aria-label', btn.dataset.skyToDay || 'day');
         btn.setAttribute('title', btn.dataset.skyToDay || 'day');
@@ -364,6 +364,12 @@ const signals = [
        carries the 1px so the header keeps the total height it had. */
     padding-top: 1.1rem;
     padding-bottom: calc(1.1rem + 1px);
+    /* The mailbox stands at the viewport's right edge (mail.css), outside
+       this column. Between the burger breakpoint and a viewport wide enough
+       for the column's own gutter to hold it, keep the nav clear of it: the
+       right padding grows to 58px minus whatever gutter the centred column
+       already has, and never drops below the column's usual padding. */
+    padding-right: max(var(--space), calc(58px - max(0px, (100vw - 72rem) / 2)));
   }
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { moonSVG } from '../lib/moon-svg';
+import { moonSVG, SUN_DISC_R } from '../lib/moon-svg';
 
 // The reference implementation the port must match byte-for-byte in output.
 const LUNA_SRC = readFileSync(
@@ -40,15 +40,20 @@ describe('moonSVG (engraved moon port)', () => {
   });
 
   it('takes a disc radius so the header moon matches the sun disc', () => {
-    // Header mounts at r=31 — the sun icon's disc radius in the same 120 box —
-    // so the two bodies read as one size while the halo keeps r+10.
-    const svg = moonSVG(0.25, 'hdr', 31);
+    // Header and stamp mount at SUN_DISC_R (25) — the sun icon's disc radius in
+    // the same 120 box — so the two bodies read as one size; the halo keeps r+10.
+    expect(SUN_DISC_R).toBe(25);
+    const sun = readFileSync(resolve(__dirname, '../../public/bench/identidad/sol.svg'), 'utf8');
+    expect(sun).toMatch(new RegExp(`<circle cx="60" cy="60" r="${SUN_DISC_R}"`));
+    const svg = moonSVG(0.25, 'hdr', SUN_DISC_R);
     expect(svg.match(/<svg/g)).toHaveLength(1);
     expect(svg).toMatch(/<\/svg>$/);
-    expect(svg).toContain('r="31"');
-    expect(svg).toContain('r="41"');
-    expect(svg).toContain('<clipPath id="hdr-c"><circle cx="60" cy="60" r="31"/></clipPath>');
-    expect(litD(svg)).toMatch(/^M60 29 A31 31 0 0 1 60 91 /);
+    expect(svg).toContain('r="25"');
+    expect(svg).toContain('r="35"');
+    expect(svg).toContain('<clipPath id="hdr-c"><circle cx="60" cy="60" r="25"/></clipPath>');
+    expect(litD(svg)).toMatch(/^M60 35 A25 25 0 0 1 60 85 /);
+    // The craters scale with the disc: the biggest one is 7 * 25/40.
+    expect(svg).toContain('r="4.38"');
     // Everything still derives from the one radius: no stray 40 anywhere.
     expect(svg).not.toContain('40');
   });

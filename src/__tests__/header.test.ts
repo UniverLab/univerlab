@@ -75,7 +75,7 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
   });
 
   it('renders the sun image by day and the real-phase moon by night', () => {
-    expect(src).toMatch(/import \{ moonSVG \} from '\.\.\/lib\/moon-svg'/);
+    expect(src).toMatch(/import \{ moonSVG, SUN_DISC_R \} from '\.\.\/lib\/moon-svg'/);
     // Sun: the approved engraved file, 34px, decorative.
     expect(src).toMatch(/<img src="\/bench\/identidad\/sol\.svg" alt="" width="34" height="34">/);
     // The plain-day shadow stays the default…
@@ -92,7 +92,7 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
     // Moon: same synodic computation the circadian script uses for --moon-offset.
     expect(src).toMatch(/Date\.UTC\(2000, 0, 6, 18, 14\)/);
     expect(src).toMatch(/29\.530588853/);
-    expect(src).toMatch(/moonSVG\(synodicPhase\(\), 'hdr', 31\)/);
+    expect(src).toMatch(/moonSVG\(synodicPhase\(\), 'hdr', SUN_DISC_R\)/);
     // Watches the flip the circadian script already publishes.
     expect(src).toMatch(/readCelestial|renderCelestial/);
     expect(src).toMatch(/new MutationObserver\(/);
