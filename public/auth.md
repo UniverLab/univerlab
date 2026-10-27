@@ -53,6 +53,6 @@ Two expectations, neither enforced:
 
 ## Contact
 
-Jheison Martinez Bolivar — `jheison.mb@univerlab.org`, the address published on
+Jheison Martinez Bolivar — `hola@univerlab.org`, the address published on
 `/contributors/`. Write for a question, a correction, or an integration this file does not
 cover.

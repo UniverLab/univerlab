@@ -62,7 +62,7 @@ describe('composeAbout — the founder', () => {
     expect(about).toContain('## Founder');
     expect(about).toContain(`**${en.people.founder.name}** — ${en.people.founder.role}`);
     expect(about).toContain(en.people.founder.email);
-    expect(en.people.founder.email).toBe('jheison.mb@univerlab.org');
+    expect(en.people.founder.email).toBe('hola@univerlab.org');
   });
 });
 
