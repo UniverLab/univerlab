@@ -1,7 +1,7 @@
 /**
  * Versiones en español de la política de privacidad y los términos.
  * Mismos `id` y mismo orden que en `legal-en.ts`. El token `{email}` se
- * reemplaza al renderizar con `founderEmail`: el correo nunca se reescribe
+ * reemplaza al renderizar con `contactEmail`: el correo nunca se reescribe
  * aquí. Sin marcadores mark de las plantillas.
  */
 import type { LegalDoc } from './legal';

@@ -14,7 +14,7 @@ import { LEGAL_DATE, legalDoc, type LegalDoc } from '../data/legal';
 import { legalNav } from '../data/legal-nav';
 import { privacyEn, termsEn } from '../data/legal-en';
 import { privacyEs, termsEs } from '../data/legal-es';
-import { founderEmail } from '../lib/site-about';
+import { contactEmail } from '../lib/site-about';
 
 const ROOT = resolve(__dirname, '..');
 const PAGES: Record<string, string> = {
@@ -72,18 +72,23 @@ describe('no template placeholder or dropped-claim survives', () => {
 });
 
 describe('the contact address comes from the site-about module', () => {
-  it('the view imports founderEmail and resolves it at render', () => {
-    expect(VIEW).toMatch(/import\s*\{\s*founderEmail\s*\}\s*from\s*['"]\.\.\/lib\/site-about['"]/);
+  it('the view imports contactEmail and resolves it at render', () => {
+    expect(VIEW).toMatch(/import\s*\{\s*contactEmail\s*\}\s*from\s*['"]\.\.\/lib\/site-about['"]/);
     expect(VIEW).toContain('{email}');
   });
 
   it('no email literal sits in the view or the legal data', () => {
-    const literal = en.people.founder.email;
-    expect(literal).toContain('@');
-    expect(VIEW).not.toContain(literal);
-    for (const src of DATA_SRCS) {
-      expect(src).not.toContain(literal);
+    for (const literal of [contactEmail, en.people.founder.email]) {
+      expect(literal).toContain('@');
+      expect(VIEW).not.toContain(literal);
+      for (const src of DATA_SRCS) {
+        expect(src).not.toContain(literal);
+      }
     }
+  });
+
+  it('the legal contact is the lab address, not the founder card address', () => {
+    expect(contactEmail).toBe('hola@univerlab.org');
   });
 });
 
@@ -214,7 +219,7 @@ describe('the built pages render with their markdown twins', () => {
 
   itBuilt('the rendered pages carry the address from the site-about module', () => {
     const html = readFileSync(resolve(DIST, 'privacy/index.html'), 'utf8');
-    expect(html).toContain(`mailto:${founderEmail}`);
+    expect(html).toContain(`mailto:${contactEmail}`);
   });
 
   itBuilt('no banned template claim reaches the rendered pages or twins', () => {

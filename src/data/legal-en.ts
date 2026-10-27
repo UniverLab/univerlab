@@ -3,7 +3,7 @@
  *
  * Facts mirror the code; each figure carries a comment naming the
  * canopy-web constant it must stay consistent with. The `{email}` token is
- * replaced at render time with `founderEmail` — the address is never typed
+ * replaced at render time with `contactEmail` — the address is never typed
  * here. No template mark placeholders remain.
  */
 import type { LegalDoc } from './legal';

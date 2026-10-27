@@ -6,7 +6,7 @@
  *
  * Paragraphs are small HTML strings (`<a>`, `<strong>`, `<code>` only) so
  * both languages can carry the same links. The `{email}` token in a
- * paragraph, item or link is replaced at render time with `founderEmail`
+ * paragraph, item or link is replaced at render time with `contactEmail`
  * from `lib/site-about` — the address is never retyped into the copy.
  */
 export type LegalKind = 'privacy' | 'terms';

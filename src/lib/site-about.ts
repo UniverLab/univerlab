@@ -16,8 +16,10 @@ import { composeAbout } from './lab-about';
 import { liveExperiments } from './experiments';
 import { en } from '../i18n/en';
 
-/** The founder's contact address, the single source the legal pages render. */
-export const founderEmail: string = en.people.founder.email;
+/** The lab's contact address (Cloudflare Email Routing to the founder's inbox,
+ *  sent through SMTP2GO): the single source the legal pages render. The
+ *  founder card keeps the founder's own address (`en.people.founder.email`). */
+export const contactEmail: string = 'hola@univerlab.org';
 
 export function buildSiteAbout(site: URL): string {
   return composeAbout({
