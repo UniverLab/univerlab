@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { localizePath } from '../i18n';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
-import { moonSVG } from '../lib/moon-svg';
+import { moonSVG, SUN_SRC } from '../lib/moon-svg';
 
 const HEADER = resolve(__dirname, '..', 'components', 'Header.astro');
 const src = readFileSync(HEADER, 'utf8');
@@ -75,9 +75,10 @@ describe('Header engraved sky body (sun by day, moon by night)', () => {
   });
 
   it('renders the sun image by day and the real-phase moon by night', () => {
-    expect(src).toMatch(/import \{ moonSVG, SUN_DISC_R \} from '\.\.\/lib\/moon-svg'/);
-    // Sun: the approved engraved file, 34px, decorative.
-    expect(src).toMatch(/<img src="\/bench\/identidad\/sol\.svg" alt="" width="34" height="34">/);
+    expect(src).toMatch(/import \{ moonSVG, SUN_DISC_R, SUN_SRC \} from '\.\.\/lib\/moon-svg'/);
+    // Sun: the approved engraved file through its versioned URL, 34px, decorative.
+    expect(src).toContain(`'<img src="' + SUN_SRC + '" alt="" width="34" height="34">'`);
+    expect(SUN_SRC).toMatch(/^\/bench\/identidad\/sol\.svg\?v=\d+$/);
     // The plain-day shadow stays the default…
     expect(src).toMatch(/html\[data-celestial='sun'\] \.celestial :global\(img\)/);
     // …and the circadian script's data-sunlow flag warms the icon softly at dawn/dusk.

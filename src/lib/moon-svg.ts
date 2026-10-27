@@ -8,6 +8,11 @@
  *  sky bodies read as one size, rays aside. */
 export const SUN_DISC_R = 25;
 
+/** The sun icon's URL, versioned: /bench/ assets are cached for 30 days, so a
+ *  redrawn sun needs a new URL or returning visitors keep the old drawing next
+ *  to a moon sized for the new one. Bump `v` whenever sol.svg changes. */
+export const SUN_SRC = '/bench/identidad/sol.svg?v=2';
+
 export function moonSVG(phase: number, id: string, r = 40): string {
   const c = 60,
     p = ((phase % 1) + 1) % 1;
