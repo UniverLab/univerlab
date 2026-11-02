@@ -68,6 +68,11 @@ const gradColor = (i: number) => {
   .banner {
     margin: 0;
     padding: 0;
+    /* 9 art lines of 10px each; DejaVu's block ink runs ~1px past each line box
+       and both this box and the code box clip. Two pixels of block padding give
+       the first and last rows their ink back without touching the horizontal
+       clip (scrollWidth still equals clientWidth). */
+    padding-block: 2px;
     width: auto;
     max-width: 100%;
     min-width: 0;
@@ -97,6 +102,7 @@ const gradColor = (i: number) => {
   .banner::-webkit-scrollbar { display: none; }
   .banner code {
     display: block;
+    padding-block: 2px;
     max-width: 100%;
     overflow: hidden;
     font-family: inherit;

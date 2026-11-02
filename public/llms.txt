@@ -52,10 +52,16 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Agents](https://univerlab.org/canopy/docs/agents/index.md): Interactive PTY agents, background cron/watcher agents, terminal sessions and seed identities. Canopy documentation — A graph engine for AI coding agents
 - [Intelligence & Sync](https://univerlab.org/canopy/docs/intelligence-and-sync/index.md): The project-scoped knowledge graph and multi-agent workspace coordination. Canopy documentation — A graph engine for AI coding agents — every harness, one
 - [Graphs](https://univerlab.org/canopy/docs/graphs/index.md): The DAG graph engine — specs, nodes, edges, gates and lifecycle. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
-- [Usage Patterns](https://univerlab.org/canopy/docs/usage-patterns/index.md): The shapes a graph can take, what each one is good at, and where each one breaks. Canopy documentation — A graph engine for AI coding agents — every harness
-- [Recipes](https://univerlab.org/canopy/docs/recipes/index.md): Graphs built end to end — the actual calls, the actual prompts, and what breaks. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [Template Variables](https://univerlab.org/canopy/docs/graphs-templates/index.md): Placeholders in agent prompts and check commands. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Ensembles](https://univerlab.org/canopy/docs/graphs-ensembles/index.md): Parallel, cascade and round-robin member groups, crews, and availability. Canopy documentation — A graph engine for AI coding agents — every harness, one
+- [Execution](https://univerlab.org/canopy/docs/graphs-execution/index.md): Commit rights, self-reports, retries, the execution limit, lifecycle, deterministic commits and spec notes. Canopy documentation — A graph engine for AI coding
+- [Isolation](https://univerlab.org/canopy/docs/graphs-isolation/index.md): Sandboxes, concurrency, and named mutexes. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Hooks and Queues](https://univerlab.org/canopy/docs/graphs-hooks-and-queues/index.md): Event-keyed hooks, the standalone spec backlog, and spec queues. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Sharing Graphs](https://univerlab.org/canopy/docs/graphs-sharing/index.md): Export and import, validate before you share, and install a graph. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Node Documents](https://univerlab.org/canopy/docs/graphs-nodes/index.md): Reusable node documents: install, list, add, remove. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [Graph Operations](https://univerlab.org/canopy/docs/graphs-operations/index.md): Archive and restore, node run history, the event log, and engine tuning. Canopy documentation — A graph engine for AI coding agents — every harness, one
 - [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
-- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 117 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 34 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 
 ### TeXForge

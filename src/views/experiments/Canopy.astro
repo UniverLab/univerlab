@@ -5,6 +5,7 @@ import { byId } from '../../lib/experiments';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import GraphMorph from '../../components/GraphMorph.astro';
+import CataloguePlate from '../../components/CataloguePlate.astro';
 import { GEOM, PALETTE, TYPE, edgePath, type Kind } from '../../lib/canopy-graph';
 
 const lang = getLang(Astro.url);
@@ -136,7 +137,16 @@ const morphColors: Record<string, string> = {
   muse: '#e7b04b',
 };
 ---
-<ExperimentLayout id="canopy">
+<ExperimentLayout id="canopy" hideGithub>
+  <Fragment slot="cta-first">
+    <a class="btn btn-primary" href="#install">{t.common.install}</a>
+    <a class="btn ghost" href="https://graphs.univerlab.org"
+      target="_blank" rel="noopener noreferrer">{e.cta.catalogue}</a>
+    <a class="btn ghost" href="https://remote.univerlab.org"
+      target="_blank" rel="noopener noreferrer">{e.cta.remote}</a>
+  </Fragment>
+  <a slot="cta" class="tertiary-link" href={exp.github}
+    target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <div slot="hero-visual" class="morph-stage">
     <GraphMorph colors={morphColors} captions={e.morph} />
@@ -171,6 +181,40 @@ const morphColors: Record<string, string> = {
         <div class="col"><h3>{h}</h3><p>{b}</p></div>
       ))}
     </div>
+  </section>
+
+  <!-- Remote: sessions and graphs from a phone, paired with one command. -->
+  <section class="wrap section remote-section">
+    <span class="label">{e.remote.kicker}</span>
+    <h2 class="section-title">{e.remote.title}</h2>
+    <div class="cols">
+      {e.remote.cols.map(([h, b]) => (
+        <div class="col"><h3>{h}</h3><p>{b}</p></div>
+      ))}
+    </div>
+    <div class="pair" data-remote-pair>
+      <code class="pair-command" translate="no">canopy remote pair</code>
+      <button type="button" class="pair-copy" data-remote-copy
+        title={t.common.copy} aria-label={t.common.copy}>
+        <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+      </button>
+    </div>
+    <a class="remote-cta" href="https://remote.univerlab.org"
+      target="_blank" rel="noopener noreferrer">{e.remote.button}</a>
+  </section>
+
+  <!-- Catalogue: one real plate of the live pattern catalogue, then the ways in. -->
+  <section class="wrap section catalogue-section">
+    <span class="label">{e.catalogue.kicker}</span>
+    <CataloguePlate caption={e.catalogue.caption} colors={morphColors} />
+    <p class="cat-links">
+      <a class="cat-explore" href="https://graphs.univerlab.org"
+        target="_blank" rel="noopener noreferrer">{e.catalogue.explore}</a>
+      <a href="https://graphs.univerlab.org/patterns"
+        target="_blank" rel="noopener noreferrer">{e.catalogue.patterns}</a>
+      <a href="https://graphs.univerlab.org/transparency"
+        target="_blank" rel="noopener noreferrer">{e.catalogue.transparency}</a>
+    </p>
   </section>
 
   <!-- One spec survives the graph — a single spec runs the whole engine on a
@@ -266,12 +310,112 @@ const morphColors: Record<string, string> = {
   </section>
 </ExperimentLayout>
 
+<script>
+  // Remote pairing: copy the command, same feedback as the install bar's copy.
+  // Query only the pair row so the layout's install handler stays untouched.
+  document.querySelectorAll<HTMLElement>('[data-remote-pair]').forEach((row) => {
+    const code = row.querySelector<HTMLElement>('.pair-command');
+    const copy = row.querySelector<HTMLButtonElement>('[data-remote-copy]');
+    copy?.addEventListener('click', async () => {
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code.textContent || '');
+        copy.classList.add('done');
+        setTimeout(() => copy.classList.remove('done'), 1600);
+      } catch {
+        // Clipboard API unavailable or denied — leave the button untouched.
+      }
+    });
+  });
+</script>
+
 <style>
   .section { padding-block: 2rem; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.4rem; }
   .col { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 1.5rem 1.5rem 1.4rem; }
   .col h3 { color: var(--ink-hi, #ffffff); font-size: 1.05rem; margin-bottom: 0.5rem; }
   .col p { margin: 0; color: var(--ink-dim); font-size: 0.95rem; }
+
+  /* ── Remote & catalogue ─────────────────────────────────────────────────
+     Section-local headings and controls. The layout's .btn/.cmd/.copy styles
+     are layout-scoped and never reach slotted/section markup, so each control
+     is styled from this view. */
+  .section-title { font-size: 1.6rem; margin: 0.5rem 0 0; }
+
+  .pair {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 42rem;
+    width: 100%;
+    margin-top: 1.6rem;
+    border: 1px solid var(--line);
+    background: var(--bg-raise);
+    border-radius: var(--radius-ctl);
+    font-family: var(--font-mono);
+    overflow: hidden;
+  }
+  .pair-command {
+    flex: 1;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pair-command::-webkit-scrollbar { display: none; }
+  .pair-command::before { content: '$ '; color: var(--canopy); }
+  .pair-copy {
+    border: 0;
+    border-left: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-dim);
+    cursor: pointer;
+    padding: 0 0.9rem;
+    font-size: 0.95rem;
+    font-family: var(--font-mono);
+    transition: color 0.15s ease;
+  }
+  .pair-copy:hover { color: var(--canopy); }
+  .pair-copy .copy-done { display: none; color: var(--canopy); }
+  .pair-copy.done .copy-idle { display: none; }
+  .pair-copy.done .copy-done { display: inline; }
+
+  /* The feature primary is Remote's own solid teal (#3fb8b0 / #011d1c). */
+  .remote-cta,
+  .cat-explore {
+    display: inline-block;
+    margin-top: 1.6rem;
+    background: #3fb8b0;
+    color: #011d1c;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: var(--radius-ctl);
+    text-decoration: none;
+    transition: filter 0.15s ease;
+  }
+  .remote-cta:hover,
+  .cat-explore:hover { filter: brightness(1.05); }
+
+  .cat-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1.4rem;
+    margin: 1.6rem 0 0;
+  }
+  .cat-links .cat-explore { margin-top: 0; }
+  .cat-links a:not(.cat-explore) {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+  }
+  .cat-links a:not(.cat-explore):hover {
+    color: var(--canopy);
+    text-decoration: underline;
+  }
 
   /* The recorded-demo frame in the genesis row is a card here too, but
      DemoFigure ships it at 12px with a 22/60px drop shadow — 12px is outside
@@ -284,27 +428,55 @@ const morphColors: Record<string, string> = {
     box-shadow: none;
   }
 
-  /* ── Primary CTA ────────────────────────────────────────────────────────
-     global.css declares this surface's Aurora gradient (--cta-gradient: cyan →
-     white → pink) as the install/primary CTA's fill, but the preserved POC
-     block in surfaces.css paints the hero button from `:root` (0,4,0) with the
-     older teal→aqua sweep — a bare `.btn` rule here can't outrank it. Name the
-     surface and the wrapper: this beats (0,4,0) on specificity and matches
-     auros.md's Gradient Pill Button (aurora fill, 6px, dark label). The Docs
-     button keeps its outline — `.btn.ghost` in surfaces.css is more specific
-     still and still sets background: transparent. The hover sets only `filter`
-     (no competing rule sets one), because ExperimentLayout's `.btn:hover`
-     background loses to this rule and would otherwise leave the CTA with no
-     hover feedback. */
-  :global(html[data-surface='tui'] .exp .actions .btn:not(.ghost)) {
-    background: var(--cta-gradient);
-    color: #222222;
+  /* ── Hero CTAs ──────────────────────────────────────────────────────────
+     Remote already replaced the pastel --cta-gradient with a solid teal, so
+     the primary Install carries that same fill: #3fb8b0 with the dark
+     #011d1c label (the value Remote uses). The preserved POC block in
+     surfaces.css paints the hero button from `:root` at (0,4,0); naming the
+     surface, the wrapper and the modifier takes these rules to (0,4,1)/(0,5,1)
+     and wins. The tui POC still supplies padding/font/radius. text-decoration
+     is added here because the POC block never sets one and the view's own
+     anchor would otherwise render underlined. */
+  :global(html[data-surface='tui'] .exp .actions .btn-primary) {
+    background: #3fb8b0;
+    color: #011d1c;
     border: 0;
     border-radius: var(--radius-ctl);
+    text-decoration: none;
   }
-  :global(html[data-surface='tui'] .exp .actions .btn:not(.ghost):hover) {
+  :global(html[data-surface='tui'] .exp .actions .btn-primary:hover) {
     filter: brightness(1.05);
   }
+  :global(html[data-surface='tui'] .exp .actions .btn.ghost) {
+    text-decoration: none;
+  }
+  :global(html[data-surface='tui'] .exp .actions .btn.ghost:hover) {
+    background: color-mix(in srgb, var(--canopy) 12%, transparent);
+    border-color: var(--canopy);
+    color: #edfffe;
+  }
+
+  /* GitHub is demoted to a tertiary link, not a button: no frame, dim ink. */
+  .tertiary-link {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tertiary-link:hover {
+    color: var(--canopy);
+    border-bottom-color: currentColor;
+  }
+
+  /* Put the CTAs above the morph so both new links clear the fold at
+     1280×800. The hero children are layout-authored (their cids are not this
+     view's), so these selectors must be :global or they silently no-op. Every
+     other hero child keeps order 0, so only the painted order moves. */
+  :global(html[data-surface='tui'] .exp .hero .actions) { order: 1; }
+  :global(html[data-surface='tui'] .exp .hero .hero-visual) { order: 2; }
+  :global(html[data-surface='tui'] .exp .hero .install) { order: 3; }
 
   /* The install bar is a control, so it takes the 6px control radius —
      neither layout nor surfaces.css gives the tui install bar any radius
