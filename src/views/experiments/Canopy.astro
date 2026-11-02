@@ -6,7 +6,8 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import GraphMorph from '../../components/GraphMorph.astro';
 import CataloguePlate from '../../components/CataloguePlate.astro';
-import { GEOM, PALETTE, TYPE, edgePath, type Kind } from '../../lib/canopy-graph';
+import SiteNav from '../../components/SiteNav.astro';
+import { GEOM, PALETTE, TYPE, flowPath, markerFor, markerDefs, type Kind } from '../../lib/canopy-graph';
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -78,7 +79,7 @@ const gbEdges: { from: string; to: string; cond: 'pass' | 'fail'; lift: number }
 const gbNode = (id: string) => gbNodes.find((n) => n.id === id)!;
 const gbPath = (from: string, to: string) => {
   const e = gbEdges.find((x) => x.from === from && x.to === to)!;
-  return edgePath(gbNode(from), gbNode(to), e.cond === 'fail', e.lift);
+  return flowPath(gbNode(from), gbNode(to), e.cond === 'fail', gbNode(to).kind, e.lift);
 };
 // Loop schedule (fractions of the 18s cycle). A hop takes HOP of the loop
 // (~0.6s, the hero's token). Caption beats: 0-.20 drafts · .20-.38 implement ·
@@ -138,6 +139,7 @@ const morphColors: Record<string, string> = {
 };
 ---
 <ExperimentLayout id="canopy" hideGithub>
+  <SiteNav slot="site-nav" current="canopy" />
   <Fragment slot="cta-first">
     <a class="btn btn-primary" href="#install">{t.common.install}</a>
     <a class="btn ghost" href="https://graphs.univerlab.org"
@@ -234,6 +236,7 @@ const morphColors: Record<string, string> = {
         style={`--c-chip:${PALETTE.chipFill}; --c-gate:${PALETTE.gateFill}; --c-gate-stroke:${PALETTE.gateStroke}; --c-label:${PALETTE.label}; --c-deep:${PALETTE.deep}; --c-red:${PALETTE.red}; --c-token:${PALETTE.token}; --t-label:${TYPE.label}px; --t-harness:${TYPE.harness}px`}
       >
         <defs>
+          <Fragment set:html={markerDefs('ag')} />
           <linearGradient id="ag-aurora" x1="0" x2="1">
             <stop offset="0" stop-color="rgb(203,255,252)" />
             <stop offset=".2625" stop-color="rgb(237,255,254)" />
@@ -242,7 +245,8 @@ const morphColors: Record<string, string> = {
           </linearGradient>
         </defs>
         {gbEdges.map((edge) => (
-          <path class={`ag-edge ag-edge-${edge.cond}`} d={gbPath(edge.from, edge.to)} />
+          <path class={`ag-edge ag-edge-${edge.cond}`} d={gbPath(edge.from, edge.to)}
+            marker-end={markerFor(edge.cond, 'ag') ?? undefined} />
         ))}
         <g class="ag-pulses">
           {gbPulses.map((p) => (
@@ -589,12 +593,13 @@ const morphColors: Record<string, string> = {
   /* Edges — the hero's curves: pass routes glow essence, failures in the
      hero's red dashes. Paths need fill: none. */
   .ag-edge { fill: none; stroke-width: 0.45; }
-  .ag-edge-pass { stroke: color-mix(in srgb, var(--canopy) 70%, transparent); opacity: 0.85; }
+  .ag-edge-pass { stroke: var(--canopy); opacity: 0.85; }
   .ag-edge-fail {
     stroke: var(--c-red);
     stroke-dasharray: 1.4 1.1;
     opacity: 0.7;
   }
+  .ag-edge-error { stroke: currentColor; stroke-width: 0.3; stroke-dasharray: 0.4 0.8; opacity: 0.45; }
 
   /* Travelling tokens — the hero's pale-cyan token with its halo, riding the
      same bezier the edge draws (offset-path). Browsers without offset-path

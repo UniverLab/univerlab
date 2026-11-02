@@ -599,6 +599,7 @@ export const en = {
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · open laboratory' },
+  sites: { nav: 'UniverLab sites' },
   plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—', release: 'release' },
   // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the
   // experiment's registry builtWith list, joined with dim ' · ' separators.
@@ -610,7 +611,6 @@ export const en = {
   },
   notes: {
     heading: 'Field notes',
-    empty: 'No field notes yet — this is where the log will speak.',
     statusLink: 'Logbook →',
   },
   feed: {

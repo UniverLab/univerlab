@@ -8,14 +8,16 @@
 interface Props {
   /** Harness accent colours keyed by platform stem (from canopy-registry). */
   colors: Record<string, string>;
-  /** Shape captions, in the order of SHAPES below: [name, line]. */
+  /** Shape captions, in the order of HERO_SHAPES: [name, line]. */
   captions: [string, string][];
 }
 const { colors, captions } = Astro.props;
 const SLOTS = 9;
+import { markerDefs } from '../lib/canopy-graph';
 ---
 <figure class="gm" data-colors={JSON.stringify(colors)} data-captions={JSON.stringify(captions)}>
   <svg class="gm-svg" viewBox="0 0 100 62" role="img" aria-label={captions.map((c) => c[0]).join(', ')}>
+    <defs set:html={markerDefs('gm')} />
     <g class="gm-edges">
       {Array.from({ length: 12 }, () => <path class="gm-edge" d="M50 31 L50 31" />)}
     </g>
@@ -43,84 +45,7 @@ const SLOTS = 9;
 </figure>
 
 <script>
-  import { GEOM, edgePath, type Kind } from '../lib/canopy-graph';
-
-  type N = { s: number; x: number; y: number; k: Kind; l: string; h?: string };
-  // 'order' = the try-next-member sequence inside an ensemble group (not a route).
-  type E = [number, number, 'pass' | 'fail' | 'order'];
-  // An ensemble group: a labelled outline around its members, tried in `members` order.
-  type Group = { x: number; y: number; w: number; h: number; label: string; members: number[] };
-  type Leg = [number, number, boolean, ('red' | 'ok' | 'none')?];
-  // Edge/leg endpoints >= 100 are the shape's free points (`pts`), e.g. a group's exit.
-  type Shape = { nodes: N[]; edges: E[]; walk: Leg[]; group?: Group; pts?: { x: number; y: number }[] };
-
-  // Slots: 0 spec · 1 main agent · 2 gate/check · 3 reviewer/third · 4 commit ·
-  // 5,6 extra members · 7 designer · 8 resilience.
-  const SHAPES: Shape[] = [
-    { // gated implement
-      nodes: [
-        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
-        { s: 1, x: 28, y: 31, k: 'agent', l: 'implement', h: 'claude' },
-        { s: 2, x: 49, y: 31, k: 'check', l: 'gates' },
-        { s: 3, x: 70, y: 31, k: 'agent', l: 'review', h: 'opencode' },
-        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
-      ],
-      edges: [[0, 1, 'pass'], [1, 2, 'pass'], [2, 1, 'fail'], [2, 3, 'pass'], [3, 1, 'fail'], [3, 4, 'pass']],
-      walk: [[0, 1, false], [1, 2, false], [2, 1, true], [1, 2, false], [2, 3, false], [3, 4, false]],
-    },
-    { // ensemble quorum
-      nodes: [
-        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
-        { s: 5, x: 34, y: 11, k: 'agent', l: 'propose', h: 'codex' },
-        { s: 1, x: 34, y: 31, k: 'agent', l: 'propose', h: 'gemini' },
-        { s: 6, x: 34, y: 51, k: 'agent', l: 'propose', h: 'copilot' },
-        { s: 2, x: 62, y: 31, k: 'gate', l: 'quorum 2/3' },
-        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
-      ],
-      edges: [[0, 5, 'pass'], [0, 1, 'pass'], [0, 6, 'pass'], [5, 2, 'pass'], [1, 2, 'pass'], [6, 2, 'pass'], [2, 4, 'pass']],
-      walk: [[0, 5, false], [5, 2, false], [0, 1, false], [1, 2, false], [0, 6, false], [6, 2, true], [2, 4, false]],
-    },
-    { // cascade: standby alternatives — #1 runs; on failure #2 takes the spec cold; #3 never runs
-      nodes: [
-        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
-        { s: 1, x: 47, y: 13, k: 'agent', l: 'first', h: 'kiro' },
-        { s: 2, x: 47, y: 31, k: 'agent', l: 'fallback', h: 'mimo' },
-        { s: 3, x: 47, y: 49, k: 'agent', l: 'last resort', h: 'qwen' },
-        { s: 4, x: 91, y: 31, k: 'commit', l: 'commit' },
-      ],
-      // Entry only to #1; a single exit leaves the group (point 100, its right edge).
-      edges: [[0, 1, 'pass'], [1, 2, 'order'], [2, 3, 'order'], [100, 4, 'pass']],
-      // [from, to, red token, impact on arrival]
-      walk: [[0, 1, false, 'red'], [1, 2, false, 'ok'], [2, 100, false, 'none'], [100, 4, false, 'ok']],
-      group: { x: 31, y: 2, w: 32, h: 58, label: 'cascade', members: [1, 2, 3] },
-      pts: [{ x: 63, y: 31 }],
-    },
-    { // router
-      nodes: [
-        { s: 0, x: 7, y: 31, k: 'chip', l: 'spec' },
-        { s: 2, x: 27, y: 31, k: 'gate', l: 'router' },
-        { s: 5, x: 52, y: 11, k: 'agent', l: 'bugfix', h: 'claude' },
-        { s: 1, x: 52, y: 31, k: 'agent', l: 'feature', h: 'codex' },
-        { s: 6, x: 52, y: 51, k: 'agent', l: 'docs', h: 'gemini' },
-        { s: 4, x: 88, y: 31, k: 'commit', l: 'commit' },
-      ],
-      edges: [[0, 2, 'pass'], [2, 5, 'pass'], [2, 1, 'pass'], [2, 6, 'pass'], [5, 4, 'pass'], [1, 4, 'pass'], [6, 4, 'pass']],
-      walk: [[0, 2, false], [2, 5, false], [5, 4, false]],
-    },
-    { // rq pipeline + resilience
-      nodes: [
-        { s: 0, x: 6, y: 24, k: 'chip', l: 'spec' },
-        { s: 7, x: 21, y: 24, k: 'agent', l: 'design', h: 'claude' },
-        { s: 1, x: 37, y: 24, k: 'agent', l: 'implement', h: 'deepseek' },
-        { s: 2, x: 53, y: 24, k: 'check', l: 'gates' },
-        { s: 3, x: 69, y: 24, k: 'agent', l: 'review ×2', h: 'kiro' },
-        { s: 4, x: 90, y: 24, k: 'commit', l: 'commit' },
-        { s: 8, x: 47, y: 52, k: 'agent', l: 'resilience', h: 'muse' },
-      ],
-      edges: [[0, 7, 'pass'], [7, 1, 'pass'], [1, 2, 'pass'], [2, 1, 'fail'], [2, 3, 'pass'], [3, 4, 'pass'], [1, 8, 'fail'], [8, 7, 'pass']],
-      walk: [[0, 7, false], [7, 1, false], [1, 8, true], [8, 7, false], [7, 1, false], [1, 2, false], [2, 3, false], [3, 4, false]],
-    },
-  ];
+  import { GEOM, flowPath, markerFor, HERO_SHAPES, type Shape } from '../lib/canopy-graph';
 
   const HOLD = 5200;
   const MORPH = 1100;
@@ -190,7 +115,11 @@ const SLOTS = 9;
         if (!e) { p.classList.remove('on'); return; }
         const a = pos(shape, e[0]);
         const b = pos(shape, e[1]);
-        p.setAttribute('d', edgePath(a, b, e[2] === 'fail'));
+        // Endpoints >= 100 are free points (no node to stop at the border of).
+        const kind = e[1] < 100 ? shape.nodes.find((n) => n.s === e[1])?.k : undefined;
+        p.setAttribute('d', flowPath(a, b, e[2] === 'fail', kind));
+        const m = markerFor(e[2], 'gm');
+        if (m) p.setAttribute('marker-end', m); else p.removeAttribute('marker-end');
         p.classList.toggle('fail', e[2] === 'fail');
         p.classList.toggle('order', e[2] === 'order');
         p.classList.add('on');
@@ -266,7 +195,7 @@ const SLOTS = 9;
         if (k >= legs.length) { token.style.opacity = '0'; done(); return; }
         const [a, b, red, impact] = legs[k++];
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', edgePath(pos(shape, a), pos(shape, b), red && shape.edges.some((e) => e[0] === a && e[1] === b && e[2] === 'fail')));
+        path.setAttribute('d', flowPath(pos(shape, a), pos(shape, b), red && shape.edges.some((e) => e[0] === a && e[1] === b && e[2] === 'fail'), shape.nodes.find((n) => n.s === b)?.k));
         const len = path.getTotalLength();
         token.classList.toggle('red', red);
         token.style.opacity = '1';
@@ -297,7 +226,7 @@ const SLOTS = 9;
 
     let i = 0;
     const show = (idx: number) => {
-      const shape = SHAPES[idx];
+      const shape = HERO_SHAPES[idx];
       name.textContent = captions[idx]?.[0] ?? '';
       line.textContent = captions[idx]?.[1] ?? '';
       fig.classList.remove('caption-in');
@@ -308,17 +237,17 @@ const SLOTS = 9;
       morph(shape, () => {
         drawEdges(shape);
         drawGroup(shape);
-        setTimeout(() => walk(shape, () => setTimeout(() => show((i = (i + 1) % SHAPES.length)), 500)), 350);
+        setTimeout(() => walk(shape, () => setTimeout(() => show((i = (i + 1) % HERO_SHAPES.length)), 500)), 350);
       });
     };
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      const tgt = target(SHAPES[0]);
+      const tgt = target(HERO_SHAPES[0]);
       st.forEach((s, k) => Object.assign(s, tgt[k] ?? { o: 0, w: 0, h: 0 }));
-      dress(SHAPES[0]);
+      dress(HERO_SHAPES[0]);
       paint();
-      drawEdges(SHAPES[0]);
+      drawEdges(HERO_SHAPES[0]);
       return;
     }
     // Start only when visible; pause work entirely while off-screen.
@@ -335,13 +264,15 @@ const SLOTS = 9;
   .gm { margin: 0.25rem auto 0.5rem; width: 100%; }
   .gm-svg { width: 100%; height: auto; overflow: visible; display: block; }
   .gm-edge {
-    fill: none; stroke: color-mix(in srgb, var(--canopy) 70%, transparent);
+    fill: none; stroke: var(--canopy);
     stroke-width: 0.45; opacity: 0; transition: opacity 0.35s ease;
   }
   .gm-edge.on { opacity: 0.85; }
   .gm-edge.fail { stroke: #ff6b6b; stroke-dasharray: 1.4 1.1; }
   .gm-edge.fail.on { opacity: 0.7; }
-  .gm-edge.order { stroke: var(--ink-dim); stroke-dasharray: 0.5 1.1; stroke-linecap: round; }
+  .gm-edge.error { stroke: currentColor; stroke-width: 0.3; stroke-dasharray: 0.4 0.8; }
+  .gm-edge.error.on { opacity: 0.45; }
+  .gm-edge.order { stroke: currentColor; stroke-dasharray: 0.5 1.1; stroke-linecap: round; }
   .gm-edge.order.on { opacity: 0.9; }
   .gm-group { opacity: 0; transition: opacity 0.35s ease; }
   .gm-group.on { opacity: 1; }

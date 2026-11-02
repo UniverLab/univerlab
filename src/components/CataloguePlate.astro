@@ -4,7 +4,7 @@
 // chip → implement agent → gates check → review agent → commit, with the two
 // fail back-edges into implement. A plate is an exhibit: no animation, which
 // also covers reduced motion for free.
-import { GEOM, PALETTE, TYPE, edgePath, type Kind } from '../lib/canopy-graph';
+import { GEOM, PALETTE, TYPE, flowPath, markerFor, markerDefs, type Kind } from '../lib/canopy-graph';
 
 interface Props {
   /** Figure caption, e.g. "Pattern: Gated implement — one plate…". */
@@ -33,7 +33,7 @@ const edges: { from: string; to: string; cond: 'pass' | 'fail'; lift: number }[]
 const node = (id: string) => nodes.find((n) => n.id === id)!;
 const path = (from: string, to: string) => {
   const e = edges.find((x) => x.from === from && x.to === to)!;
-  return edgePath(node(from), node(to), e.cond === 'fail', e.lift);
+  return flowPath(node(from), node(to), e.cond === 'fail', node(to).kind, e.lift);
 };
 const accent = (n: PlateNode) => (n.harness ? colors[n.harness] ?? 'var(--canopy)' : 'var(--ink-dim)');
 ---
@@ -45,8 +45,10 @@ const accent = (n: PlateNode) => (n.harness ? colors[n.harness] ?? 'var(--canopy
     aria-hidden="true"
     style={`--c-chip:${PALETTE.chipFill}; --c-gate:${PALETTE.gateFill}; --c-gate-stroke:${PALETTE.gateStroke}; --c-label:${PALETTE.label}; --c-deep:${PALETTE.deep}; --c-red:${PALETTE.red}; --t-label:${TYPE.label}px; --t-harness:${TYPE.harness}px`}
   >
+    <defs set:html={markerDefs('cp')} />
     {edges.map((edge) => (
-      <path class={`cp-edge cp-edge-${edge.cond}`} d={path(edge.from, edge.to)} />
+      <path class={`cp-edge cp-edge-${edge.cond}`} d={path(edge.from, edge.to)}
+        marker-end={markerFor(edge.cond, 'cp') ?? undefined} />
     ))}
     {nodes.map((n) => {
       const g = GEOM[n.kind];
@@ -82,8 +84,9 @@ const accent = (n: PlateNode) => (n.harness ? colors[n.harness] ?? 'var(--canopy
   .cp-harness { font-family: var(--font-mono); font-size: var(--t-harness); fill: var(--nc); opacity: 0.9; }
 
   .cp-edge { fill: none; stroke-width: 0.45; }
-  .cp-edge-pass { stroke: color-mix(in srgb, var(--canopy) 70%, transparent); opacity: 0.85; }
+  .cp-edge-pass { stroke: var(--canopy); opacity: 0.85; }
   .cp-edge-fail { stroke: var(--c-red); stroke-dasharray: 1.4 1.1; opacity: 0.7; }
+  .cp-edge-error { stroke: currentColor; stroke-width: 0.3; stroke-dasharray: 0.4 0.8; opacity: 0.45; }
 
   .cp-commitcheck { fill: none; stroke: var(--canopy); stroke-width: 0.5; }
 

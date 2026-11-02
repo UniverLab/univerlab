@@ -595,6 +595,7 @@ export const es: Dict = {
     roadmapLink: 'Roadmap →',
   },
   labStrip: { lab: 'UniverLab · laboratorio abierto' },
+  sites: { nav: 'Sitios de UniverLab' },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
   builtWithSegments: {
     canopy: 'Construido con',
@@ -604,7 +605,6 @@ export const es: Dict = {
   },
   notes: {
     heading: 'Notas de campo',
-    empty: 'Aún no hay notas de campo — aquí hablará la bitácora.',
     statusLink: 'Bitácora →',
   },
   feed: {

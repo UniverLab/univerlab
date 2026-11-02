@@ -89,6 +89,7 @@ const ogImage = `/og/${id}.png`;
       <a href={localizePath('/', lang)}>{t.labStrip.lab}</a>
       <span>{exp.number}</span>
     </p>
+    {Astro.slots.has('site-nav') && <slot name="site-nav" />}
     <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       {hasHeroMark && <slot name="hero-mark" />}
