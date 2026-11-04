@@ -49,7 +49,7 @@ describe.each([
     expect(nav).toContain(`href="${canopyHref}"`);
     expect(nav).toContain('href="https://graphs.univerlab.org"');
     expect(nav).toContain('href="https://remote.univerlab.org"');
-    const here = nav.match(new RegExp(`<a href="${canopyHref.replace(/\//g, '\\/')}"[^>]*aria-current="page"`));
+    const here = nav.match(new RegExp(`<a href="${canopyHref.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}"[^>]*aria-current="page"`));
     expect(here).not.toBeNull();
   });
 
