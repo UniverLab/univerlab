@@ -2,7 +2,7 @@
 // Renders an experiment's README ASCII banner. The art is each project's own
 // signature — representative, and on-brand for the lab. Most surfaces print it
 // in ink (dark on light, light on dark). Canopy is the exception: it uses the
-// same green gradient the CLI wizard prints line by line.
+// same teal gradient the Canopy CLI/TUI prints line by line.
 //
 // Metrics: banners are drawn for DejaVu Sans Mono (same font embedded in the
 // CLIs). Sometype Mono — the site mono — may have different block-glyph widths
@@ -13,15 +13,27 @@ interface Props { id: string; color: string; }
 const { id, color } = Astro.props;
 const art = banners[id]?.replace(/^\r?\n/, '');
 
-// Canopy's wizard gradient — 8 greens from light to dark, matching the CLI.
-const canopyGradient = [
-  '#9dcfa1', '#84be89', '#6cae71', '#559d5a',
-  '#3f8d44', '#2b7a30', '#1a6620', '#0c5212',
-];
+// Canopy's teal gradient — the five stops of harness-canopy's
+// `BANNER_GRADIENT` (src/shared/banner.rs), light at the top to dark at the
+// bottom, exactly as the CLI/TUI prints them.
+//
+// No light-surface variant, on purpose: the banner only renders inside the
+// hero's install plate, which ExperimentLayout paints the same dark #16130f on
+// every surface (light ones included — surfaces.css keeps the ink banners light
+// there via `.install .banner { color: inherit }`). On that plate the stops
+// measure 15.0 / 14.7 / 11.1 / 6.3 / 2.7:1; darkening them for a light page
+// would sink them into the plate.
+const canopyGradient = ['#52fff6', '#1ffff3', '#00e0d4', '#00a9a0', '#006661'];
 const useGradient = id === 'canopy';
 const lines = art?.split('\n') ?? [];
+// Port of `gradient_rgb`: index / line_count (not line_count - 1), rounded,
+// clamped to the last stop. The CLI's BANNER opens with one blank row that the
+// site's art drops, so visible line i is CLI line i + 1 of lines.length + 1;
+// feeding that geometry in gives each line the stop the terminal paints it in.
+const CLI_LEAD = 1;
 const gradColor = (i: number) => {
-  const idx = Math.round((i / Math.max(1, lines.length - 1)) * (canopyGradient.length - 1));
+  const lineCount = Math.max(1, lines.length + CLI_LEAD);
+  const idx = Math.round(((i + CLI_LEAD) / lineCount) * (canopyGradient.length - 1));
   return canopyGradient[Math.min(idx, canopyGradient.length - 1)];
 };
 ---
