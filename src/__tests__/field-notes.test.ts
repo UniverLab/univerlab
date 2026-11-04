@@ -124,13 +124,14 @@ describe('topics', () => {
 });
 
 describe('i18n', () => {
-  it('en and es carry plate and notes with the same keys', () => {
+  it('en and es carry plate and notes with the same keys, and notes has no empty string', () => {
     expect(en).toHaveProperty('plate');
     expect(es).toHaveProperty('plate');
     expect(en).toHaveProperty('notes');
     expect(es).toHaveProperty('notes');
     expect(Object.keys(en.plate).sort()).toEqual(Object.keys(es.plate).sort());
     expect(Object.keys(en.notes).sort()).toEqual(Object.keys(es.notes).sort());
+    expect(en.notes).not.toHaveProperty('empty');
     expect(en.notes.heading).toBe('Field notes');
     expect(es.notes.heading).toBe('Notas de campo');
   });
@@ -174,12 +175,14 @@ describe('source guards', () => {
     expect(plate).toContain('lp-doi');
   });
 
-  it('notes use heading/empty strings, one status link, and the shared loader', () => {
-    expect(notes).toContain('notes.empty');
+  it('notes use heading/statusLink strings, one status link, the shared loader, and never an empty section', () => {
     expect(notes).toContain('notes.heading');
+    expect(notes).toContain('notes.statusLink');
     expect(notes).toContain('loadBoardData');
+    expect(notes).not.toContain('notes.empty');
     expect(notes.match(/href=/g)?.length ?? 0).toBeLessThanOrEqual(1);
     expect(notes).toContain('/status');
+    expect(notes).toContain('section.remove()');
   });
 
   it('client issues exactly two fetches and memoises on window', () => {

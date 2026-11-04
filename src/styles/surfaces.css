@@ -24,7 +24,8 @@
 
 /* All surfaces except canopy print the banner in ink — light on dark, dark on
    light — no terminal phosphor glow. Canopy (tui) is the exception: its banner
-   uses the wizard's green gradient, applied per-line in the Banner component. */
+   uses the teal gradient the Canopy CLI/TUI prints line by line, applied
+   per-line in the Banner component. */
 html[data-surface='paper'] .banner,
 html[data-surface='industrial'] .banner,
 html[data-surface='quorum'] .banner,

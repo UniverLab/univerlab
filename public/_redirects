@@ -33,6 +33,14 @@
 /canopy/docs/adr/0001-recipes/index.md /canopy/docs/ 301
 /canopy/docs/agents.md /canopy/docs/agents/ 301
 /canopy/docs/cli-reference.md /canopy/docs/cli-reference/ 301
+/canopy/docs/graphs-ensembles.md /canopy/docs/graphs-ensembles/ 301
+/canopy/docs/graphs-execution.md /canopy/docs/graphs-execution/ 301
+/canopy/docs/graphs-hooks-and-queues.md /canopy/docs/graphs-hooks-and-queues/ 301
+/canopy/docs/graphs-isolation.md /canopy/docs/graphs-isolation/ 301
+/canopy/docs/graphs-nodes.md /canopy/docs/graphs-nodes/ 301
+/canopy/docs/graphs-operations.md /canopy/docs/graphs-operations/ 301
+/canopy/docs/graphs-sharing.md /canopy/docs/graphs-sharing/ 301
+/canopy/docs/graphs-templates.md /canopy/docs/graphs-templates/ 301
 /canopy/docs/graphs.md /canopy/docs/graphs/ 301
 /canopy/docs/index.md /canopy/docs/ 301
 /canopy/docs/installation.md /canopy/docs/installation/ 301
@@ -41,9 +49,7 @@
 /canopy/docs/mcp-tools.md /canopy/docs/mcp-tools/ 301
 /canopy/docs/quickstart.md /canopy/docs/quickstart/ 301
 /canopy/docs/rag.md /canopy/docs/rag/ 301
-/canopy/docs/recipes.md /canopy/docs/recipes/ 301
 /canopy/docs/tui.md /canopy/docs/tui/ 301
-/canopy/docs/usage-patterns.md /canopy/docs/usage-patterns/ 301
 /canopy/docs/workflows/ /canopy/docs/graphs/ 301
 /demostage/docs/commands.md /demostage/docs/commands/ 301
 /demostage/docs/decisions/browser-events.md /demostage/docs/ 301

@@ -1,0 +1,94 @@
+---
+// A static plate of the real "Gated implement" pattern — the catalogue's first
+// exhibit, drawn with the same vocabulary as the hero (canopy-graph.ts): spec
+// chip → implement agent → gates check → review agent → commit, with the two
+// fail back-edges into implement. A plate is an exhibit: no animation, which
+// also covers reduced motion for free.
+import { GEOM, PALETTE, TYPE, flowPath, markerFor, markerDefs, type Kind } from '../lib/canopy-graph';
+
+interface Props {
+  /** Figure caption, e.g. "Pattern: Gated implement — one plate…". */
+  caption: string;
+  /** Harness accent colours keyed by platform stem (from canopy-registry). */
+  colors: Record<string, string>;
+}
+const { caption, colors } = Astro.props;
+
+type PlateNode = { id: string; kind: Kind; x: number; y: number; label: string; harness?: string };
+const nodes: PlateNode[] = [
+  { id: 'spec', kind: 'chip', x: 7, y: 31, label: 'spec' },
+  { id: 'implement', kind: 'agent', x: 28, y: 31, label: 'implement', harness: 'claude' },
+  { id: 'gates', kind: 'check', x: 49, y: 31, label: 'gates' },
+  { id: 'review', kind: 'agent', x: 70, y: 31, label: 'review', harness: 'opencode' },
+  { id: 'commit', kind: 'commit', x: 91, y: 31, label: 'commit' },
+];
+const edges: { from: string; to: string; cond: 'pass' | 'fail'; lift: number }[] = [
+  { from: 'spec', to: 'implement', cond: 'pass', lift: 0 },
+  { from: 'implement', to: 'gates', cond: 'pass', lift: 0 },
+  { from: 'gates', to: 'review', cond: 'pass', lift: 0 },
+  { from: 'review', to: 'commit', cond: 'pass', lift: 0 },
+  { from: 'gates', to: 'implement', cond: 'fail', lift: 0 },
+  { from: 'review', to: 'implement', cond: 'fail', lift: 7 },
+];
+const node = (id: string) => nodes.find((n) => n.id === id)!;
+const path = (from: string, to: string) => {
+  const e = edges.find((x) => x.from === from && x.to === to)!;
+  return flowPath(node(from), node(to), e.cond === 'fail', node(to).kind, e.lift);
+};
+const accent = (n: PlateNode) => (n.harness ? colors[n.harness] ?? 'var(--canopy)' : 'var(--ink-dim)');
+---
+<figure class="cp" data-catalogue-plate>
+  <svg
+    class="cp-svg"
+    viewBox="0 0 100 62"
+    preserveAspectRatio="xMidYMid meet"
+    aria-hidden="true"
+    style={`--c-chip:${PALETTE.chipFill}; --c-gate:${PALETTE.gateFill}; --c-gate-stroke:${PALETTE.gateStroke}; --c-label:${PALETTE.label}; --c-deep:${PALETTE.deep}; --c-red:${PALETTE.red}; --t-label:${TYPE.label}px; --t-harness:${TYPE.harness}px`}
+  >
+    <defs set:html={markerDefs('cp')} />
+    {edges.map((edge) => (
+      <path class={`cp-edge cp-edge-${edge.cond}`} d={path(edge.from, edge.to)}
+        marker-end={markerFor(edge.cond, 'cp') ?? undefined} />
+    ))}
+    {nodes.map((n) => {
+      const g = GEOM[n.kind];
+      return (
+        <g class={`cp-node cp-${n.kind}`} style={`--nc:${accent(n)}`} transform={`translate(${n.x}, ${n.y})`}>
+          <rect
+            class="cp-shape"
+            x={-g.w / 2} y={-g.h / 2} width={g.w} height={g.h} rx={g.rx}
+            transform={g.rot ? `rotate(${g.rot})` : undefined}
+          />
+          {n.kind === 'commit' && <path class="cp-commitcheck" d="M-1.3 0 L-0.3 1.1 L1.5 -1.2" />}
+          <text class="cp-label" dy={n.kind === 'chip' ? TYPE.chipLabelDy : TYPE.labelDy} text-anchor="middle">{n.label}</text>
+          {n.harness && <text class="cp-harness" dy={TYPE.harnessDy} text-anchor="middle">{n.harness}</text>}
+        </g>
+      );
+    })}
+  </svg>
+  <figcaption class="cp-caption mono">{caption}</figcaption>
+</figure>
+
+<style>
+  .cp { margin: 0; width: min(100%, 38rem); }
+  .cp-svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+  .cp-shape {
+    fill: color-mix(in srgb, var(--nc) 22%, var(--c-deep));
+    stroke: var(--nc); stroke-width: 0.45;
+  }
+  .cp-chip .cp-shape { fill: var(--c-chip); stroke: var(--ink-dim); }
+  .cp-check .cp-shape, .cp-gate .cp-shape { fill: var(--c-gate); stroke: var(--c-gate-stroke); }
+  .cp-commit .cp-shape { fill: color-mix(in srgb, var(--canopy) 35%, var(--c-deep)); stroke: var(--canopy); }
+  .cp-label { font-family: var(--font-mono); font-size: var(--t-label); fill: var(--c-label); letter-spacing: 0.02em; }
+  .cp-harness { font-family: var(--font-mono); font-size: var(--t-harness); fill: var(--nc); opacity: 0.9; }
+
+  .cp-edge { fill: none; stroke-width: 0.45; }
+  .cp-edge-pass { stroke: var(--canopy); opacity: 0.85; }
+  .cp-edge-fail { stroke: var(--c-red); stroke-dasharray: 1.4 1.1; opacity: 0.7; }
+  .cp-edge-error { stroke: currentColor; stroke-width: 0.3; stroke-dasharray: 0.4 0.8; opacity: 0.45; }
+
+  .cp-commitcheck { fill: none; stroke: var(--canopy); stroke-width: 0.5; }
+
+  .cp-caption { margin-top: 0.8rem; text-align: center; color: var(--ink-dim); font-size: 0.78rem; letter-spacing: 0.04em; }
+</style>

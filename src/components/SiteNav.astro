@@ -1,0 +1,32 @@
+---
+// The three UniverLab sites, one quiet row. A shared partial: a page mounts it
+// with `<SiteNav slot="site-nav" current="canopy" />` and the layout renders
+// the slot under the lab strip — later pages reuse it without duplicating the
+// links. Labels are proper nouns, identical in both languages; the only
+// localized string is the aria-label.
+import { getLang, useTranslations, localizePath } from '../i18n';
+
+interface Props { current?: 'canopy' | 'graphs' | 'remote' }
+const { current } = Astro.props;
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const links = [
+  { label: 'Canopy', href: localizePath('/canopy/', lang), here: current === 'canopy', external: false },
+  { label: 'Graphs', href: 'https://graphs.univerlab.org', here: current === 'graphs', external: true },
+  { label: 'Remote', href: 'https://remote.univerlab.org', here: current === 'remote', external: true },
+];
+---
+<nav class="site-nav" aria-label={t.sites.nav}>
+  {links.map(({ label, href, here, external }) => (
+    <a href={href} aria-current={here ? 'page' : undefined}
+       target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{label}</a>
+  ))}
+</nav>
+<style>
+  .site-nav { max-width: var(--max-w, 70rem); margin: 0 auto; padding-inline: var(--page-gutter);
+    display: flex; justify-content: flex-end; align-items: center;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; }
+  .site-nav a { color: var(--ink-dim); text-decoration: none; transition: color 0.15s ease; }
+  .site-nav a:hover, .site-nav a[aria-current='page'] { color: var(--canopy); }
+  .site-nav a + a::before { content: '·'; color: var(--ink-faint); margin-inline: 0.7rem; }
+</style>
