@@ -1,4 +1,6 @@
-<h1 align="center">UniverLab — landing</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/UniverLab/.github/main/assets/banner-univerlab-web.svg" alt="univerlab.org"/>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Astro-static-FF5D01?style=for-the-badge&logo=astro&logoColor=white" alt="Astro"/>
@@ -7,7 +9,13 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2E8B57?style=for-the-badge" alt="License"/></a>
 </p>
 
-The public site for UniverLab (→ univerlab.org): an Astro static site, bilingual
+<p align="center">
+  <a href="https://univerlab.org">univerlab.org</a> ·
+  <a href="https://univerlab.org/canopy/">Canopy</a> ·
+  <a href="https://github.com/UniverLab">All the experiments</a>
+</p>
+
+The public site for UniverLab ([univerlab.org](https://univerlab.org)): an Astro static site, bilingual
 (EN at the root, ES under `/es`), that aggregates the lab's experiments, their
 documentation, the manifesto, and the collaborators.
 
