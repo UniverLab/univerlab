@@ -9,6 +9,7 @@
 import {
   todayRoute,
   todayEditionHtml,
+  todayEditionMarkdown,
   todayLead,
   todayAside,
   todayLabBox,
@@ -92,7 +93,7 @@ describe('todayEditionHtml prints every branch', () => {
     expect(html).toContain('width="320"'); // dims print when known
     expect(html).not.toContain('width="undefined"');
     expect(html).toContain('Wikipedia'); // link column
-    expect(html).toContain('0 years on its way'); // the un-parseable year
+    expect(html).toContain('0 years ago'); // the un-parseable year
     expect(html).toContain('A launch'); // the newest lab letter of the day
     expect(html).toContain('launch'); // known type in the page language
     expect(html).toContain('Canopy'); // its topic spelled as a name
@@ -110,7 +111,7 @@ describe('todayEditionHtml prints every branch', () => {
     expect(html).toContain('Berchtold');
     expect(html).toContain('Nacimientos');
     expect(html).toContain('Leer en Wikipedia');
-    expect(html).toContain('años en camino');
+    expect(html).toContain('hace ');
   });
   it('an empty feed still prints the paper', () => {
     const html = todayEditionHtml({ facts: [], lab: [] }, 'en', DATE);
@@ -124,5 +125,20 @@ describe('todayEditionHtml prints every branch', () => {
     const d = editionDate(DATE);
     expect(d.getHours()).toBe(12);
     expect(editionYmd(d)).toBe(ymd);
+  });
+  it('each kind is worded by what happened', () => {
+    const Y = DATE.getFullYear();
+    const mk = (kind: Fact['kind'], year: number): Fact => ({ year: String(year), text: 'x', link: '', kind, page: 'X' });
+    const kindsFeed: TodayFeed = { facts: [mk('event', Y - 59), mk('born', Y - 446), mk('died', Y - 13)], lab: [] };
+    expect(todayLead(kindsFeed.facts, DATE)).toBe(kindsFeed.facts[0]);
+    const en = todayEditionHtml(kindsFeed, 'en', DATE);
+    expect(en).toContain(`born 446 years ago`);
+    expect(en).toContain(`died 13 years ago`);
+    const es = todayEditionHtml(kindsFeed, 'es', DATE);
+    expect(es).toContain('nació hace 446 años');
+    expect(es).toContain('murió hace 13 años');
+    const md = todayEditionMarkdown(kindsFeed, 'en', DATE);
+    expect(md).toContain('(born 446 years ago)');
+    expect(md).toContain('(died 13 years ago)');
   });
 });

@@ -185,7 +185,7 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
     : '';
   return (
     `<article class="${cls}">${img}` +
-    `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.yearsWay, { years }))}</span></div>` +
+    `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
     `<p>${esc(text)}</p>${link}</article>`
   );
 }
@@ -344,7 +344,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
       const years = yearsOnWay(f, date);
       const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
       const link = f.link ? ` ([${t.wikiLink.trim()}](${f.link}))` : '';
-      lines.push(`- **${f.year}** (${fmt(t.yearsWay, { years })}): ${text}${link}`);
+      lines.push(`- **${f.year}** (${fmt(t.ago[f.kind], { years })}): ${text}${link}`);
     }
     lines.push('');
   }

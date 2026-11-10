@@ -702,7 +702,7 @@ export const es: Dict = {
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
     labLink: 'Leer el anuncio completo →',
-    leadKicker: 'Carta del día · {years} años en camino',
+    leadKicker: 'Carta del día · hace {years} años',
     readOn: 'Leer en Wikipedia →',
     wikiLink: 'Wikipedia →',
     events: 'Acontecimientos',
@@ -710,7 +710,11 @@ export const es: Dict = {
     deaths: 'Defunciones',
     aside: 'También en este día',
     types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
-    yearsWay: '{years} años en camino',
+    ago: {
+      event: 'hace {years} años',
+      born: 'nació hace {years} años',
+      died: 'murió hace {years} años',
+    },
     caption: '{name} · Wikimedia Commons',
     colophon:
       'Los datos vienen de «Un día como hoy» de Wikipedia, filtrados a la ciencia; las fotos, de Wikimedia Commons, impresas en trama. Cada carta lleva su año como matasellos.',

@@ -133,7 +133,7 @@ describe('todayEditionHtml (en)', () => {
   });
 
   it('leads with the day’s event as its own headline, never a page title or a photo', () => {
-    expect(html).toContain(`Letter of the day · ${Y - 1928} years on its way`);
+    expect(html).toContain(`Letter of the day · ${Y - 1928} years ago`);
     // The event's line is the headline: the Wikipedia page behind it
     // ("Boston") is a place, not this story.
     const story =
@@ -217,7 +217,7 @@ describe('todayEditionHtml (es)', () => {
 
   it('speaks Spanish: masthead copy lives in the component, edition copy here', () => {
     expect(html).toContain('Carta del día');
-    expect(html).toContain('años en camino');
+    expect(html).toContain('Carta del día · hace ');
     expect(html).toContain('<h3>Acontecimientos</h3>');
     expect(html).toContain('<h3>Nacimientos</h3>');
     expect(html).toContain('<h3>Defunciones</h3>');

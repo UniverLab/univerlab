@@ -708,7 +708,7 @@ export const en = {
     counts: '{n} letters from the past · {m} from the lab',
     labKicker: 'Lab mail · today',
     labLink: 'Read the full announcement →',
-    leadKicker: 'Letter of the day · {years} years on its way',
+    leadKicker: 'Letter of the day · {years} years ago',
     readOn: 'Read on Wikipedia →',
     wikiLink: 'Wikipedia →',
     events: 'Events',
@@ -716,7 +716,11 @@ export const en = {
     deaths: 'Deaths',
     aside: 'Also on this day',
     types: { launch: 'launch', note: 'note', update: 'update' },
-    yearsWay: '{years} years on its way',
+    ago: {
+      event: '{years} years ago',
+      born: 'born {years} years ago',
+      died: 'died {years} years ago',
+    },
     caption: '{name} · Wikimedia Commons',
     colophon:
       'Data comes from Wikipedia’s “On this day”, filtered to science; photos from Wikimedia Commons, printed in halftone. Each letter carries its year as a postmark.',
