@@ -23,6 +23,7 @@ export const en = {
     api: 'API',
     archive: 'Archive',
     roadmap: 'Roadmap',
+    workbench: 'Workbench',
   },
   header: {
     // The sky body's click names the action it will do: the body showing now
@@ -733,6 +734,28 @@ export const en = {
     empty: 'No science events for today.',
     error: 'Failed to load the day’s letters.',
     pick: { label: 'Edition of', go: 'Print' },
+  },
+  workbench: {
+    title: 'The Workbench — UniverLab consulting on AI agents and automation',
+    description: 'Book the bench of the people who built Canopy and facetMedia: consulting on AI agents, workflow automation and audits. The work funds the open lab.',
+    label: 'THE WORKBENCH',
+    head: 'The Workbench',
+    intro: 'The tools are open. The hands that built them can be booked: bring your system to the bench and we work on it together.',
+    who: { kicker: 'Who comes to the bench', items: [
+      ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
+      ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
+    ] as [string, string][] },
+    how: { kicker: 'How it works', steps: [
+      ['A first call, free · 15 minutes', 'We look at what you need and whether the bench is the right place for it.'],
+      ['Consultation · COP 150,000 an hour', 'Screen shared, on your own system: graph design, choosing harnesses and models, a review of your pipeline. You leave with written notes. Paid when you book: Bre-B or Nequi in Colombia; from abroad, USD 45 by PayPal. The slot is held with your payment proof and confirmed once the payment is checked.'],
+      ['Audits · priced per scope', 'A fixed-scope audit of your agents: where they fail in silence, what they cost, what to fix first. Quoted after a consultation, once the scope is clear.'],
+      ['Agentic flows built for you · priced per scope', 'We design the flow, with agents only where a judgement is needed and everything else checked, and install it with Canopy on a server or an always-on machine of yours, run from the browser. Thirty days of support are included; after that the flow stays yours, and further support is billed by the hour.'],
+    ] as [string, string][] },
+    money: { kicker: 'Where the money goes', text: 'What comes in at the bench pays for the lab: AI models, compute and infrastructure. The tools, the experiments and what we learn stay open.' },
+    principles: { kicker: 'How we work', items: ['Everything is a script and lives in version control: no closed magic.', 'The code is yours: it ends up in your repository.', 'One heavy job at a time: we work in focus, not in parallel.'] },
+    cta: 'Write to the bench on WhatsApp →',
+    ctaMessage: 'Hi, I come from the Workbench page.',
+    alt: 'Or by email:',
   },
 };
 

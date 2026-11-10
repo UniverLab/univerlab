@@ -24,6 +24,7 @@ export const es: Dict = {
     api: 'API',
     archive: 'Archivo',
     roadmap: 'Hoja de ruta',
+    workbench: 'Banco de trabajo',
   },
   header: {
     skyToNight: 'Cambiar al tema de noche',
@@ -727,5 +728,27 @@ export const es: Dict = {
     empty: 'No hay eventos científicos para hoy.',
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir' },
+  },
+  workbench: {
+    title: 'El Banco de trabajo — consultoría de UniverLab en agentes de IA',
+    description: 'Reserva el banco de quienes construyeron Canopy y facetMedia: consultoría en agentes de IA, automatización y auditorías. El trabajo financia el laboratorio.',
+    label: 'EL BANCO DE TRABAJO',
+    head: 'El Banco de trabajo',
+    intro: 'Las herramientas son abiertas. Las manos que las construyeron se pueden reservar: trae tu sistema al banco y trabajamos en él juntos.',
+    who: { kicker: 'Quién llega al banco', items: [
+      ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
+      ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
+    ] as [string, string][] },
+    how: { kicker: 'Cómo funciona', steps: [
+      ['Una primera llamada, gratis · 15 minutos', 'Vemos qué necesitas y si el banco es el lugar indicado.'],
+      ['Consulta · 150.000 COP la hora', 'Pantalla compartida, sobre tu propio sistema: diseño de grafos, elección de harness y modelos, revisión de tu pipeline. Te llevas notas escritas. Se paga al agendar: Bre-B o Nequi en Colombia; desde el exterior, USD 45 por PayPal. El espacio se reserva con el comprobante y queda confirmado al verificar el pago.'],
+      ['Auditorías · según alcance', 'Una auditoría de alcance fijo a tus agentes: dónde fallan en silencio, cuánto cuestan, qué arreglar primero. Se cotiza después de una consulta, cuando el alcance está claro.'],
+      ['Flujos agénticos a medida · según alcance', 'Diseñamos el flujo, con agentes solo donde hace falta juicio y todo lo demás verificado, y lo instalamos con Canopy en un servidor o un equipo siempre encendido tuyo, operado desde el navegador. Incluye treinta días de soporte; después el flujo sigue siendo tuyo y el soporte adicional se cobra por horas.'],
+    ] as [string, string][] },
+    money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al banco paga el laboratorio: modelos de IA, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
+    principles: { kicker: 'Cómo trabajamos', items: ['Todo es un script y vive en control de versiones: nada de magia cerrada.', 'El código es tuyo: termina en tu repositorio.', 'Un trabajo pesado a la vez: trabajamos en foco, no en paralelo.'] },
+    cta: 'Escribir al banco por WhatsApp →',
+    ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
+    alt: 'O por correo:',
   },
 };

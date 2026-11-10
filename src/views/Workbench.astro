@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Watermark from '../components/Watermark.astro';
+import Machine from '../components/Machine.astro';
+import { getLang, useTranslations } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const w = t.workbench;
+const WHATSAPP = 'https://wa.me/573053892323';
+const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
+---
+<BaseLayout title={w.title} description={w.description} circadian>
+  <Watermark kind="blueprint" />
+  <section class="wrap workbench">
+    <header class="page-open">
+      <div class="page-open-text">
+        <span class="label">{w.label}</span>
+        <h1>{w.head}</h1>
+        <p class="intro">{w.intro}</p>
+      </div>
+      <Machine id="workbench" ink="theme" height="260px" class="wb-machine" />
+    </header>
+    <section class="wb-block">
+      <span class="label">{w.who.kicker}</span>
+      <div class="cols">
+        {w.who.items.map(([title, body]) => (
+          <div class="col"><h2>{title}</h2><p>{body}</p></div>
+        ))}
+      </div>
+    </section>
+    <section class="wb-block">
+      <span class="label">{w.how.kicker}</span>
+      <ol class="steps">
+        {w.how.steps.map(([title, body]) => (
+          <li><h3>{title}</h3><p>{body}</p></li>
+        ))}
+      </ol>
+    </section>
+    <section class="wb-block wb-money">
+      <span class="label">{w.money.kicker}</span>
+      <p>{w.money.text}</p>
+    </section>
+    <section class="wb-block">
+      <span class="label">{w.principles.kicker}</span>
+      <ul class="principles">
+        {w.principles.items.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </section>
+    <p class="wb-cta"><a class="btn" href={waHref} target="_blank" rel="noopener">{w.cta}</a></p>
+    <p class="wb-alt">{w.alt} <a href="mailto:hola@univerlab.org?subject=Workbench">hola@univerlab.org</a> · WhatsApp <span class="wb-phone">+57 305 389 2323</span></p>
+  </section>
+</BaseLayout>
+
+<style>
+  .workbench { max-width: 64rem; padding-block: 4rem 6rem; }
+  .wb-block { margin-top: 4rem; }
+  .intro { max-width: 46rem; color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0; }
+  .btn { text-decoration: none; border: 1px solid var(--accent);
+         color: var(--accent); padding: 0.55rem 1.1rem;
+         font-family: var(--font-mono); font-size: 0.85rem;
+         transition: background 0.15s ease, color 0.15s ease; }
+  .btn:hover { background: var(--accent); color: var(--bg); }
+  .wb-machine { justify-self: center; width: min(22rem, 100%); }
+  .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  .steps { list-style: none; padding: 0; display: grid; gap: 1.4rem; counter-reset: step; }
+  .steps li { counter-increment: step; padding-left: 2.6rem; position: relative; }
+  .steps li::before { content: counter(step, upper-roman) '.'; position: absolute; left: 0; font-family: var(--font-serif); color: var(--accent); }
+  .principles { display: grid; gap: 0.6rem; }
+  .wb-money p { font-family: var(--font-serif); font-size: 1.3rem; max-width: 42rem; }
+  .wb-cta { margin-top: 4rem; text-align: center; }
+  .wb-alt { margin-top: 1rem; text-align: center; font-size: 0.95rem; opacity: 0.8; }
+  .wb-phone { white-space: nowrap; }
+  @media (max-width: 47.99rem) {
+    .cols { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 63.99rem) {
+    .wb-machine { order: -1; }
+  }
+</style>
