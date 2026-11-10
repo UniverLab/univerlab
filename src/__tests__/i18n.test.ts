@@ -256,5 +256,21 @@ describe('i18n system', () => {
         expect(sense.glosses.length).toBeGreaterThan(0);
       });
     });
+
+    it('the home title names AI agents and not CAD', () => {
+      // Given: The home meta titles and descriptions in both languages
+      // When: We check who they name and how long they are
+      // Then: They name AI agents, never CAD, and fit the SEO length bounds
+      expect(en.meta.title).toMatch(/AI agents|agentes de IA/);
+      expect(es.meta.title).toMatch(/AI agents|agentes de IA/);
+
+      for (const meta of [en.meta, es.meta]) {
+        expect(meta.title).not.toContain('CAD');
+        expect(meta.description).not.toContain('CAD');
+        expect(meta.title.length).toBeLessThanOrEqual(60);
+        expect(meta.description.length).toBeGreaterThanOrEqual(120);
+        expect(meta.description.length).toBeLessThanOrEqual(160);
+      }
+    });
   });
 });

@@ -9,9 +9,9 @@ export const en = {
     // query "univerlab". Its title still names what the lab makes, so a reader
     // arriving from anywhere learns it in the tab, and so title and description
     // agree instead of describing two different things.
-    title: 'Open-source CLI tools for LaTeX, git, CAD — UniverLab',
+    title: 'Open-source tools for AI agents, LaTeX and git — UniverLab',
     description:
-      'Open-source CLI tools for LaTeX, git, CAD and AI agents — one binary each, installable today, reproducible, with docs that ship alongside the code.',
+      'Open-source CLI tools for AI coding agents, LaTeX and git — one binary each, installable today, reproducible, with docs that ship alongside the code.',
   },
   nav: {
     experiments: 'Experiments',

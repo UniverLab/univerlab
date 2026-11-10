@@ -6,13 +6,13 @@ import { experiments } from './es-experiments.ts';
 
 export const es: Dict = {
   meta: {
-    // 54 chars: "de código abierto" is the site's own term for open-source
+    // 60 chars: "de código abierto" is the site's own term for open-source
     // (hero h1, description) — "abiertas" alone does not say open-source, and
     // the literal "Herramientas CLI de código abierto …" is 67 chars, so the
     // noun goes and the topics stay, mirroring the English title's shape.
-    title: 'CLI de código abierto para LaTeX, git, CAD — UniverLab',
+    title: 'CLI de código abierto para agentes de IA y LaTeX — UniverLab',
     description:
-      'Herramientas CLI de código abierto para LaTeX, git, CAD y agentes de IA — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
+      'Herramientas CLI de código abierto para agentes de IA, LaTeX y git — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
   },
   nav: {
     experiments: 'Experimentos',
