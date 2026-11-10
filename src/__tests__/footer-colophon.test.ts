@@ -225,11 +225,18 @@ describe('Footer — three grouped link headings', () => {
     expect(src).toContain('legalLinks');
   });
 
-  it('the footer keeps its ten links', () => {
-    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB']) {
+  it('the footer keeps its links', () => {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
       expect(src).toContain(href);
     }
     expect(src).not.toContain('/status/');
+  });
+
+  it('the footer links the lab on X and Bluesky', () => {
+    expect(src).toContain('https://x.com/UniverLab');
+    expect(src).toContain('https://bsky.app/profile/univerlab.bsky.social');
+    expect(src.indexOf('https://x.com/UniverLab')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
+    expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
   });
 
   it('both dictionaries name the three groups', () => {
