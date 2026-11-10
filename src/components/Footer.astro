@@ -23,18 +23,32 @@ const isManifesto = Astro.url.pathname.endsWith('/manifesto') || Astro.url.pathn
 // The legal labels come from the legal module with the rest of that copy; both
 // dictionaries already sit at the 1 200-line cap (see src/data/legal-nav.ts).
 const legal = legalNav[lang];
-const footNav = [
-  { href: localizePath('/experiments', lang), label: t.nav.experiments },
-  { href: localizePath('/archive', lang), label: t.nav.archive },
-  { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
-  { href: '/roadmap/', label: t.nav.roadmap },
-  { href: localizePath('/contributors', lang), label: t.nav.people },
-  { href: localizePath('/api', lang), label: t.nav.api },
-  { href: localizePath('/privacy', lang), label: legal.privacy },
-  { href: localizePath('/terms', lang), label: legal.terms },
-  { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
-  { href: 'https://github.com/sponsors/JheisonMB', label: 'heart', ext: true, sponsor: true },
+const footGroups = [
+  {
+    head: t.footer.groups.work,
+    links: [
+      { href: localizePath('/experiments', lang), label: t.nav.experiments },
+      { href: localizePath('/archive', lang), label: t.nav.archive },
+      { href: '/roadmap/', label: t.nav.roadmap },
+    ],
+  },
+  {
+    head: t.footer.groups.lab,
+    links: [
+      { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
+      { href: localizePath('/contributors', lang), label: t.nav.people },
+    ],
+  },
+  {
+    head: t.footer.groups.open,
+    links: [
+      { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+      { href: localizePath('/api', lang), label: t.nav.api },
+      { href: 'https://github.com/sponsors/JheisonMB', label: 'heart', ext: true, sponsor: true },
+    ],
+  },
 ];
+const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy }, { href: localizePath('/terms', lang), label: legal.terms }];
 ---
 <footer>
   <!-- The engraved frieze: decorative band across the top of the footer,
@@ -57,13 +71,15 @@ const footNav = [
       {!isManifesto && <p class="quote">{t.footer.quote}</p>}
     </div>
     <nav class="foot-nav" aria-label={t.nav.experiments}>
-      {footNav.map((item) => (
-        <a
-          href={item.href}
-          target={item.ext ? '_blank' : undefined}
-          rel={item.ext ? 'noopener noreferrer' : undefined}
-          class:list={{ sponsor: item.sponsor }}
-        >{item.sponsor ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> : item.label}</a>
+      {footGroups.map((group) => (
+        <div class="foot-group"><span class="foot-head">{group.head}</span>{group.links.map((item) => (
+          <a
+            href={item.href}
+            target={item.ext ? '_blank' : undefined}
+            rel={item.ext ? 'noopener noreferrer' : undefined}
+            class:list={{ sponsor: item.sponsor }}
+          >{item.sponsor ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> : item.label}</a>
+        ))}</div>
       ))}
     </nav>
   </div>
@@ -112,6 +128,7 @@ Date:   now
   <div class="wrap colophon-credits">
     <img src="/bench/colophon/sello-lacre.svg" width="28" height="28" alt="" aria-hidden="true">
     <p class="privacy">{t.footer.privacy}</p>
+    <p class="legal">{legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}</p>
   </div>
 </footer>
 
@@ -172,7 +189,9 @@ Date:   now
   .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: 0.95rem; line-height: 1.55; }
   /* Nav links in the colophon face (Quorum's rule: serif links, mono labels);
      every target keeps a 32px tap reach on touch screens. */
-  .foot-nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
+  .foot-nav { display: grid; grid-template-columns: repeat(3, max-content); gap: 0.4rem 3rem; align-items: start; }
+  .foot-group { display: flex; flex-direction: column; gap: 0.15rem; }
+  .foot-head { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; margin-bottom: 0.35rem; }
   .foot-nav a {
     text-decoration: none; color: var(--f-ink-dim);
     font-family: var(--font-serif); font-size: 1.05rem;
@@ -266,7 +285,7 @@ Date:   now
 
   @media (max-width: 40rem) {
     .inner { flex-direction: column; gap: 1.6rem; padding-top: 9rem; }
-    .foot-nav { gap: 1.2rem; }
+    .foot-nav { grid-template-columns: repeat(2, max-content); gap: 1.2rem 2.4rem; }
     footer { padding-bottom: 4.5rem; }
   }
   /* The page-corner language switch sits at the bottom right at every width; the
@@ -299,6 +318,8 @@ Date:   now
     letter-spacing: 0.12em;
     color: var(--f-ink-faint); text-align: center;
   }
+  .legal { margin: 0; font-family: var(--font-mono); font-size: 0.72rem; }
+  .legal a { color: inherit; }
 
   @media (prefers-reduced-motion: reduce) {
     .foot-nav a.sponsor { animation: none !important; }

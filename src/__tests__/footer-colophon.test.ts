@@ -210,6 +210,34 @@ describe('Layouts — expId plumbing', () => {
   });
 });
 
+describe('Footer — three grouped link headings', () => {
+  it('the footer groups its links under three headings', () => {
+    expect(src).toContain('t.footer.groups.work');
+    expect(src).toContain('t.footer.groups.lab');
+    expect(src).toContain('t.footer.groups.open');
+    expect(src).toContain('class="foot-group"');
+    expect(src).toContain('class="foot-head"');
+    expect(src).not.toContain('const footNav');
+  });
+
+  it('the legal links sit in the colophon line', () => {
+    expect(src.indexOf('class="legal"')).toBeGreaterThan(src.indexOf('class="privacy"'));
+    expect(src).toContain('legalLinks');
+  });
+
+  it('the footer keeps its ten links', () => {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB']) {
+      expect(src).toContain(href);
+    }
+    expect(src).not.toContain('/status/');
+  });
+
+  it('both dictionaries name the three groups', () => {
+    expect(Object.keys(en.footer.groups).sort()).toEqual(['lab', 'open', 'work']);
+    expect(Object.keys(es.footer.groups).sort()).toEqual(['lab', 'open', 'work']);
+  });
+});
+
 describe('i18n — footer.forged in both languages', () => {
   it('carries the exact spec strings', () => {
     expect(en.footer.forged).toBe('Artifact conceived and forged at UniverLab');

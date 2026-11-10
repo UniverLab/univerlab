@@ -89,6 +89,7 @@ export const es: Dict = {
     // Solo en páginas de experimento: la línea de créditos sobre el sello.
     forged: 'Artefacto concebido y forjado en UniverLab',
     privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
+    groups: { work: 'Experimentos', lab: 'El laboratorio', open: 'Abierto' },
   },
   common: {
     repo: 'Star en GitHub ↗',
