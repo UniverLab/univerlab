@@ -35,10 +35,12 @@ const t = useTranslations(lang);
     // plana (#edition sigue vacío), trae el acopio del día y los anuncios del
     // laboratorio y la llena con el mismo renderer que usa el edge.
     import { readOtdCache, fetchPool, FULL_POOL } from '../../lib/science-filter';
-    import { todayEditionHtml, editionDate } from '../../lib/today-edition';
+    import { todayEditionHtml, editionDateFor } from '../../lib/today-edition';
 
     (function () {
       var lang = 'es';
+      var day = editionDateFor(window.location.search);
+      var picked = /[?&]d=/.test(window.location.search);
       var ed = document.getElementById('edition');
       if (!ed || (ed.textContent || '').replace(/\s/g, '')) return;
 
@@ -53,12 +55,12 @@ const t = useTranslations(lang);
         }
       };
 
-      var facts = readOtdCache(lang);
+      var facts = !picked && readOtdCache(lang);
       var factsP = facts && facts.length
         ? Promise.resolve(facts)
         // El mismo día que pide el edge: la fecha del laboratorio (UTC−5), no
         // la del visitante, para no imprimir las cartas de otro día.
-        : fetchPool(fetch, lang, editionDate(), FULL_POOL);
+        : fetchPool(fetch, lang, day, FULL_POOL);
       // El buzón del laboratorio es opcional: si su lectura falla (CORS, una
       // caída) igual se imprimen las cartas del día, sin ese recuadro.
       var labP = fetch('https://announcements.univerlab.org/?limit=10')
@@ -74,7 +76,7 @@ const t = useTranslations(lang);
       Promise.all([factsP, labP]).then(
         function (parts) {
           if (!parts[0] || !parts[0].length) { failed(); return; }
-          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, editionDate());
+          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, day);
         },
         function () { failed(); },
       );

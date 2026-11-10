@@ -279,7 +279,7 @@ describe('the newspaper pages ask for the whole day', () => {
     ['pages/es/today.astro'],
   ])('%s fetches with FULL_POOL, never a limited pool', (p) => {
     const src = read(p);
-    expect(src).toMatch(/fetchPool\(fetch, lang, editionDate\(\), FULL_POOL\)/);
+    expect(src).toMatch(/fetchPool\(fetch, lang, day, FULL_POOL\)/);
   });
 
   it('the mailbox letter shapes its pool with letterPool instead', () => {

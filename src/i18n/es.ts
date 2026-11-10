@@ -722,5 +722,6 @@ export const es: Dict = {
     loading: 'Componiendo la plana…',
     empty: 'No hay eventos científicos para hoy.',
     error: 'No se pudieron cargar las cartas del día.',
+    pick: { label: 'Edición del', go: 'Imprimir' },
   },
 };

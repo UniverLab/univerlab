@@ -4,6 +4,7 @@ import { buildPool, collectFacts, letterPool, summaryText, type Fact } from '../
 import { dailyFact } from '../lib/mail';
 import {
   editionDate,
+  editionDateFor,
   editionYmd,
   otdUrl,
   todayAside,
@@ -415,5 +416,34 @@ describe('the lead prints the long body when the fact carries one', () => {
     expect(html).toContain('<p class="dropcap">Short.</p>');
     const md = todayEditionMarkdown({ facts: [short], lab: [] }, 'es', date);
     expect(md).toContain('Short.');
+  });
+});
+
+describe('editionDateFor', () => {
+  // 2026-11-09T18:00:00Z is 13:00 in Bogotá: the edition is 2026-11-09.
+  const NOW = new Date('2026-11-09T18:00:00Z');
+  const today = () => editionDate(NOW);
+
+  it('no parameter gives today’s edition', () => {
+    expect(editionDateFor('', NOW)).toEqual(today());
+    expect(editionDateFor('?x=1', NOW)).toEqual(today());
+  });
+
+  it('a past day is honoured', () => {
+    const d = editionDateFor('?d=2024-07-20', NOW);
+    expect(d.getFullYear()).toBe(2024);
+    expect(d.getMonth()).toBe(6);
+    expect(d.getDate()).toBe(20);
+    expect(d.getHours()).toBe(12);
+  });
+
+  it('a future day falls back to today', () => {
+    expect(editionDateFor('?d=2026-11-10', NOW)).toEqual(today());
+  });
+
+  it('a malformed or impossible day falls back to today', () => {
+    expect(editionDateFor('?d=11-09', NOW)).toEqual(today());
+    expect(editionDateFor('?d=2026-02-30', NOW)).toEqual(today());
+    expect(editionDateFor('?d=abc', NOW)).toEqual(today());
   });
 });

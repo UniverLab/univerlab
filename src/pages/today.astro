@@ -35,10 +35,12 @@ const t = useTranslations(lang);
     // type (#edition is still empty), fetch the day's pool and the lab's
     // announcements and fill it with the same renderer the edge uses.
     import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
-    import { todayEditionHtml, editionDate } from '../lib/today-edition';
+    import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
 
     (function () {
       var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+      var day = editionDateFor(window.location.search);
+      var picked = /[?&]d=/.test(window.location.search);
       var ed = document.getElementById('edition');
       if (!ed || (ed.textContent || '').replace(/\s/g, '')) return;
 
@@ -53,12 +55,12 @@ const t = useTranslations(lang);
         }
       };
 
-      var facts = readOtdCache(lang);
+      var facts = !picked && readOtdCache(lang);
       var factsP = facts && facts.length
         ? Promise.resolve(facts)
         // The same day the edge asks for: the lab's date (UTC−5), not the
         // visitor's, so a reader abroad never prints another day's letters.
-        : fetchPool(fetch, lang, editionDate(), FULL_POOL);
+        : fetchPool(fetch, lang, day, FULL_POOL);
       // The lab mailbox is optional: a failed announcements read (CORS, an
       // outage) still prints the day's letters, just without that box.
       var labP = fetch('https://announcements.univerlab.org/?limit=10')
@@ -74,7 +76,7 @@ const t = useTranslations(lang);
       Promise.all([factsP, labP]).then(
         function (parts) {
           if (!parts[0] || !parts[0].length) { failed(); return; }
-          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, editionDate());
+          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, day);
         },
         function () { failed(); },
       );

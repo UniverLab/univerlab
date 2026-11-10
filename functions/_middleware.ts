@@ -3,7 +3,7 @@ import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
 import { buildPool } from '../src/lib/science-filter';
 import {
-  editionDate,
+  editionDateFor,
   otdUrl,
   todayEditionHtml,
   todayEditionMarkdown,
@@ -92,8 +92,8 @@ async function liveTodayEdition(
   lang: 'en' | 'es',
   fetchImpl: typeof fetch,
   signal: AbortSignal,
+  date: Date,
 ): Promise<{ html: string; markdown: string }> {
-  const date = editionDate();
   // Both reads run together: the shared 3 s deadline must not be spent twice,
   // and a slow Wikipedia response must not push the lab mail past it.
   const otd = fetchImpl(otdUrl(lang, date), {
@@ -182,7 +182,7 @@ export async function onRequest(context: {
     try {
       const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
       try {
-        const { html } = await liveTodayEdition(todayLang, fetch, signal);
+        const { html } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
         const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
         if (typeof RW === 'function') {
           const rewriter = new (RW as new () => {
@@ -249,7 +249,7 @@ export async function onRequest(context: {
       try {
         const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
         try {
-          const { markdown } = await liveTodayEdition(todayMdLang, fetch, signal);
+          const { markdown } = await liveTodayEdition(todayMdLang, fetch, signal, editionDateFor(url.search));
           return new Response(markdown, { headers: MARKDOWN_HEADERS });
         } finally {
           clear();

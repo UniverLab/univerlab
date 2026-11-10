@@ -52,6 +52,24 @@ export function editionDate(now: Date = new Date()): Date {
   return new Date(y, m - 1, d, 12, 0, 0);
 }
 
+/** The edition picked by `?d=YYYY-MM-DD`: that day at local noon when the
+ *  parameter is a real calendar day no later than today's edition, otherwise
+ *  today's edition. */
+export function editionDateFor(search: string, now: Date = new Date()): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(new URLSearchParams(search).get('d') || '');
+  if (m) {
+    const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+    if (
+      dt.getMonth() === Number(m[2]) - 1 &&
+      dt.getDate() === Number(m[3]) &&
+      editionYmd(dt) <= editionYmd(now)
+    ) {
+      return dt;
+    }
+  }
+  return editionDate(now);
+}
+
 /** The day's Wikipedia feed in the page language. */
 export function otdUrl(lang: TodayLang, date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');

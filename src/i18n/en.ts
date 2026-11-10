@@ -728,6 +728,7 @@ export const en = {
     loading: 'Setting the type…',
     empty: 'No science events for today.',
     error: 'Failed to load the day’s letters.',
+    pick: { label: 'Edition of', go: 'Print' },
   },
 };
 

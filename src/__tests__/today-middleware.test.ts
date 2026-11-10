@@ -153,3 +153,40 @@ describe('middleware — /today/ HTML', () => {
     expect(calls.filter((c) => c.url.includes('announcements'))).toHaveLength(1);
   });
 });
+
+describe('middleware — /today/ picked day (?d=)', () => {
+  const stubFetch = (calls: string[]) =>
+    jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('wikipedia.org')) {
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+  it('the edge prints the picked day', async () => {
+    const calls: string[] = [];
+    global.fetch = stubFetch(calls);
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/today/?d=2024-07-20', 'text/html'));
+
+    expect(res.status).toBe(200);
+    const wp = calls.find((u) => u.includes('wikipedia.org'))!;
+    expect(wp.endsWith('/onthisday/all/07/20')).toBe(true);
+    expect(FakeHTMLRewriter.last?.inner).toContain('2024');
+  });
+
+  it('the markdown twin honours the picked day', async () => {
+    const calls: string[] = [];
+    global.fetch = stubFetch(calls);
+
+    const res = await onRequest(context('/today/index.md?d=2024-07-20', 'text/markdown'));
+
+    expect(res.status).toBe(200);
+    const wp = calls.find((u) => u.includes('wikipedia.org'))!;
+    expect(wp.endsWith('/onthisday/all/07/20')).toBe(true);
+    expect(await res.text()).toContain('2024');
+  });
+});
