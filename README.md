@@ -56,7 +56,7 @@ the build fails.
 
 ---
 
-## Add a new experiment to the landing
+## Add a new experiment to the site
 
 Example: a tool with id `widgetforge`, repo `UniverLab/widgetforge`.
 
@@ -122,7 +122,7 @@ Example: a tool with id `widgetforge`, repo `UniverLab/widgetforge`.
 
 ## Keyboard shortcuts
 
-The landing is navigable via keyboard, inspired by Canopy's TUI navigation.
+The site is navigable via keyboard, inspired by Canopy's TUI navigation.
 
 | Shortcut | Action |
 |---|---|
