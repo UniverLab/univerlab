@@ -18,6 +18,8 @@ export const experiments = {
         'An open-source graph engine for AI coding agents: specs walk agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
+        'AI coding agents write code nobody is watching. <strong>Canopy</strong> puts every change through your own tests and reviewers before it is committed.',
+      how:
         'A Rust daemon and terminal UI with a <strong>graph engine</strong> at its core. Work enters as a spec and walks a graph you design: <strong>agent</strong> nodes on any harness, <strong>check</strong> nodes that run your real commands, <strong>ensembles</strong> that fan out to several models and keep a quorum, <strong>routers</strong> that pick the branch, and a <strong>resilience</strong> node that turns a quota death into a scheduled wake-up. Underneath: memory, scheduling and sync for every agent.',
       morph: [
         ['Gated implement', 'checks run your real commands — red routes the work back, never to you'],

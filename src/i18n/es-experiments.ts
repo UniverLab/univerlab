@@ -20,6 +20,8 @@ export const experiments: Dict['experiments'] = {
         'Motor de grafos de código abierto para agentes de IA: los specs recorren nodos de agente, chequeo y gate, los ensembles votan y los fallos vuelven solos.',
       koan: 'En un bosque, el dosel es donde las copas se tocan — árboles separados, una sola capa viva.',
       lede:
+        'Los agentes de IA escriben código sin que nadie los vigile. <strong>Canopy</strong> pasa cada cambio por tus propias pruebas y revisores antes de commitearlo.',
+      how:
         'Un daemon en Rust y una interfaz de terminal con un <strong>motor de grafos</strong> en el centro. El trabajo entra como spec y recorre un grafo que tú diseñas: nodos de <strong>agente</strong> en cualquier harness, nodos de <strong>chequeo</strong> que corren tus comandos reales, <strong>ensembles</strong> que reparten un paso entre varios modelos y exigen quórum, <strong>routers</strong> que eligen la rama, y un nodo de <strong>resiliencia</strong> que convierte una cuota agotada en un despertar programado. Por debajo: memoria, scheduling y sync para todos tus agentes.',
       morph: [
         ['Implementación con gates', 'los chequeos corren tus comandos reales — el rojo devuelve el trabajo, nunca a ti'],

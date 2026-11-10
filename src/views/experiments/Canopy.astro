@@ -155,6 +155,7 @@ const morphColors: Record<string, string> = {
   </div>
   <Fragment slot="before-genesis">
     <div class="wrap section">
+      <p class="how prose" set:html={e.how} />
       <p class="mono-kicker">
         <span class="kicker-badge">daemon</span>
         <span class="kicker-sep" aria-hidden="true">·</span>
@@ -334,6 +335,8 @@ const morphColors: Record<string, string> = {
 </script>
 
 <style>
+  .how { max-width: 42rem; margin: 0 auto 1.6rem; text-align: center; color: var(--ink-dim); }
+  .how :global(strong) { color: var(--ink); font-weight: 500; }
   .section { padding-block: 2rem; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.4rem; }
   .col { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 1.5rem 1.5rem 1.4rem; }
