@@ -77,4 +77,27 @@ describe('workbench', () => {
     expect(FOOTER).toContain("localizePath('/services', lang)");
     expect(FOOTER).toContain('t.nav.workbench');
   });
+
+  it('both languages carry the same cancellation policy', () => {
+    expect(en.workbench.policy.items).toHaveLength(9);
+    expect(es.workbench.policy.items).toHaveLength(9);
+  });
+
+  it('the policy states the 24-hour line, the no-show rule and the right of retraction', () => {
+    expect(en.workbench.policy.items[0]).toContain('24 hours');
+    expect(en.workbench.policy.items[0]).toContain('in full');
+    expect(en.workbench.policy.items[2]).toContain('15 minutes');
+    expect(en.workbench.policy.items[8]).toContain('Right of retraction');
+    expect(en.workbench.policy.items[8]).toContain('5 business days');
+    expect(en.workbench.policy.items[8]).toContain('Ley 1480 de 2011, art. 47');
+    expect(es.workbench.policy.items[0]).toContain('24 horas');
+    expect(es.workbench.policy.items[8]).toContain('Derecho de retracto');
+    expect(es.workbench.policy.items[8]).toContain('5 días hábiles');
+    expect(es.workbench.policy.items[8]).toContain('Ley 1480 de 2011, art. 47');
+  });
+
+  it('the view renders the policy before the money block', () => {
+    expect(VIEW.indexOf('w.policy.kicker')).toBeGreaterThan(VIEW.indexOf('w.how.kicker'));
+    expect(VIEW.indexOf('w.policy.kicker')).toBeLessThan(VIEW.indexOf('w.money.kicker'));
+  });
 });

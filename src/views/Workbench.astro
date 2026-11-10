@@ -36,6 +36,14 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
         ))}
       </ol>
     </section>
+    <section class="wb-block wb-policy">
+      <span class="label">{w.policy.kicker}</span>
+      <ul class="policy">
+        {w.policy.items.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </section>
     <section class="wb-block wb-money">
       <span class="label">{w.money.kicker}</span>
       <p>{w.money.text}</p>
@@ -68,6 +76,7 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
   .steps li { counter-increment: step; padding-left: 2.6rem; position: relative; }
   .steps li::before { content: counter(step, upper-roman) '.'; position: absolute; left: 0; font-family: var(--font-serif); color: var(--accent); }
   .principles { display: grid; gap: 0.6rem; }
+  .policy { display: grid; gap: 0.6rem; max-width: 46rem; }
   .wb-money p { font-family: var(--font-serif); font-size: 1.3rem; max-width: 42rem; }
   .wb-cta { margin-top: 4rem; text-align: center; }
   .wb-alt { margin-top: 1rem; text-align: center; font-size: 0.95rem; opacity: 0.8; }
