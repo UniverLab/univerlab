@@ -433,9 +433,9 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
     </main>
     <Footer expId={expId} />
     <GhostHint hints={[
-      { id: 'cmd-palette', msg: 'Press <kbd>/</kbd> for commands', first: true },
-      { id: 'today-science', msg: 'The celestial marker hides a fact from today in science', prob: 0.16 },
-      { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
+      { id: 'cmd-palette', msg: t.hints.palette, first: true },
+      { id: 'theme-mark', msg: t.hints.themeMark, prob: 0.16 },
+      { id: 'footer-commit', msg: t.hints.branch, prob: 0.1 },
     ]} />
     {/* The palette reads its strings (drawer labels, foot line, theme names,
         the 42 answer) from this JSON at runtime: one source, the i18n

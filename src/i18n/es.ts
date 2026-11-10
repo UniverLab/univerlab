@@ -597,6 +597,7 @@ export const es: Dict = {
   labStrip: { lab: 'UniverLab · laboratorio abierto' },
   sites: { nav: 'Sitios de UniverLab' },
   plate: { roadmap: 'roadmap', lastLog: 'último registro', none: '—', release: 'versión' },
+  hints: { palette: 'Pulsa <kbd>/</kbd> para ver los comandos', themeMark: 'El sol y la luna de arriba cambian entre día y noche', branch: 'La etiqueta de la rama abre un pequeño rastro de terminal' },
   builtWithSegments: {
     canopy: 'Construido con',
     ghscaff: 'Repositorio configurado con',

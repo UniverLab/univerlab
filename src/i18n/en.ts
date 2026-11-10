@@ -601,6 +601,7 @@ export const en = {
   labStrip: { lab: 'UniverLab · open laboratory' },
   sites: { nav: 'UniverLab sites' },
   plate: { roadmap: 'roadmap', lastLog: 'last log', none: '—', release: 'release' },
+  hints: { palette: 'Press <kbd>/</kbd> for commands', themeMark: 'The sun and the moon at the top switch between day and night', branch: 'The branch label opens a small terminal trace' },
   // The plate-area "built with" segments — rendered as `<segment> <tool link>` per the
   // experiment's registry builtWith list, joined with dim ' · ' separators.
   builtWithSegments: {
