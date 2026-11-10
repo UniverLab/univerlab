@@ -59,7 +59,7 @@ describe('canopy i18n: Remote and catalogue strings in both languages', () => {
     expect(es.experiments.canopy.catalogue.explore).toBe('Explora el catálogo →');
     expect(es.experiments.canopy.catalogue.patterns).toBe('Patrones →');
     expect(es.experiments.canopy.catalogue.transparency).toBe('Transparencia →');
-    expect(en.experiments.canopy.cta).toEqual({ catalogue: 'Graph catalogue', remote: 'Remote' });
+    expect(en.experiments.canopy.cta).toEqual({ catalogue: 'Catalogue' });
   });
 
   it('has three columns and the same keys in es as in en', () => {
@@ -70,7 +70,7 @@ describe('canopy i18n: Remote and catalogue strings in both languages', () => {
       expect(Object.keys(c.catalogue).sort()).toEqual([
         'caption', 'explore', 'kicker', 'patterns', 'transparency',
       ]);
-      expect(Object.keys(c.cta).sort()).toEqual(['catalogue', 'remote']);
+      expect(Object.keys(c.cta).sort()).toEqual(['catalogue']);
     }
   });
 });
@@ -82,11 +82,14 @@ describe.each([
   const actions = actionsOf(html);
   const c = lang === 'en' ? en.experiments.canopy : es.experiments.canopy;
 
-  it('puts both site links in the hero actions, above the fold', () => {
-    expect(actions).toContain('href="https://remote.univerlab.org"');
+  it('puts the catalogue link in the hero actions, above the fold', () => {
     expect(actions).toContain('href="https://graphs.univerlab.org"');
-    expect(actions).toContain(c.cta.remote);
     expect(actions).toContain(c.cta.catalogue);
+    expect(actions).not.toContain('href="https://remote.univerlab.org"');
+  });
+
+  it('the catalogue button is one word', () => {
+    expect(c.cta.catalogue).toMatch(/^\S+$/);
   });
 
   it('leads with the Install anchor and a label', () => {
@@ -146,5 +149,16 @@ describe('source pins: hero CTAs, fold order and the banner clip fix', () => {
   it('pads both banner boxes so the first and last ink rows survive the clip', () => {
     expect(banner).toMatch(/\.banner \{[^}]*padding-block: 2px/);
     expect(banner).toMatch(/\.banner code \{[^}]*padding-block: 2px/);
+  });
+
+  it('the banner is centred on the Canopy page only', () => {
+    expect(view).toContain(':global(.exp .install .banner)');
+    expect(view).toContain('margin: 0 auto');
+    expect(banner).toContain('width: auto');
+    expect(banner).not.toContain('margin: 0 auto');
+  });
+
+  it('the catalogue section is centred', () => {
+    expect(view).toContain('.catalogue-section { text-align: center; }');
   });
 });

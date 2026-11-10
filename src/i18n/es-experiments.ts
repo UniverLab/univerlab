@@ -55,10 +55,7 @@ export const experiments: Dict['experiments'] = {
           ['Sincronización multiagente', 'Los agentes declaran su misión, reportan su estado y se mandan mensajes, para que varias sesiones compartan un espacio de trabajo sin pisarse.'],
         ],
       },
-      cta: {
-        catalogue: 'Catálogo de grafos',
-        remote: 'Remote',
-      },
+      cta: { catalogue: 'Catálogo' },
       remote: {
         kicker: 'Remote',
         title: 'Tus sesiones y tus grafos desde el teléfono',

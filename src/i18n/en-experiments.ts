@@ -53,10 +53,7 @@ export const experiments = {
           ['Multi-agent sync', 'Agents declare their mission, report status and message each other, so several sessions can share one workspace without stepping on each other.'],
         ] as [string, string][],
       },
-      cta: {
-        catalogue: 'Graph catalogue',
-        remote: 'Remote',
-      },
+      cta: { catalogue: 'Catalogue' },
       remote: {
         kicker: 'Remote',
         title: 'Your sessions and graphs from your phone',

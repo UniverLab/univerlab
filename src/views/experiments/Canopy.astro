@@ -144,8 +144,6 @@ const morphColors: Record<string, string> = {
     <a class="btn btn-primary" href="#install">{t.common.install}</a>
     <a class="btn ghost" href="https://graphs.univerlab.org"
       target="_blank" rel="noopener noreferrer">{e.cta.catalogue}</a>
-    <a class="btn ghost" href="https://remote.univerlab.org"
-      target="_blank" rel="noopener noreferrer">{e.cta.remote}</a>
   </Fragment>
   <a slot="cta" class="tertiary-link" href={exp.github}
     target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
@@ -409,6 +407,7 @@ const morphColors: Record<string, string> = {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
+    justify-content: center;
     gap: 1.4rem;
     margin: 1.6rem 0 0;
   }
@@ -423,6 +422,10 @@ const morphColors: Record<string, string> = {
     color: var(--canopy);
     text-decoration: underline;
   }
+  .catalogue-section { text-align: center; }
+  .catalogue-section :global(.cp) { margin-inline: auto; }
+  /* Canopy only: the install banner is centred as a block, its lines stay left-aligned inside it (Banner.astro keeps the shared left-flow rule). */
+  :global(.exp .install .banner) { width: fit-content; margin: 0 auto; }
 
   /* The recorded-demo frame in the genesis row is a card here too, but
      DemoFigure ships it at 12px with a 22/60px drop shadow — 12px is outside
