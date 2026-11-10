@@ -9,7 +9,7 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
 const VIEW = readFileSync(resolve(__dirname, '../views/experiments/FacetMedia.astro'), 'utf8');
-const ENC = readFileSync(resolve(__dirname, '../views/Experiments.astro'), 'utf8');
+const ENC = readFileSync(resolve(__dirname, '../components/Encyclopedia.astro'), 'utf8');
 const BASE = readFileSync(resolve(__dirname, '../layouts/BaseLayout.astro'), 'utf8');
 const ROUTE = readFileSync(resolve(__dirname, '../pages/facetmedia.astro'), 'utf8');
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/facetmedia.astro'), 'utf8');
