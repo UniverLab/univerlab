@@ -5,12 +5,12 @@ const t = useTranslations(lang);
 ---
 <!-- The newspaper: the masthead is static, #edition is set at the edge by
   functions/_middleware.ts (HTMLRewriter) or, on failure, by the client script
-  in pages/today.astro with the same renderer. The page-open above keeps the
-  only h1, so the masthead name is a paragraph set like one. -->
+  in pages/today.astro with the same renderer. The masthead name is the
+  page's h1. -->
 <div class="paper">
   <header class="masthead">
     <div class="ear"><span>{t.today.path}</span><span>{t.today.edition}</span></div>
-    <p class="masthead-name">{t.today.name}</p>
+    <h1 class="masthead-name">{t.today.name}</h1>
     <p class="motto">{t.today.motto}</p>
   </header>
   <div id="edition"></div>
@@ -43,7 +43,9 @@ const t = useTranslations(lang);
   .paper .lead a, .paper .item a { font-family: var(--font-mono); font-size: 12px; color: var(--bench-emphasis); text-underline-offset: 3px; }
   .paper .lead aside { border-left: 1px solid var(--bench-rule); padding-left: 22px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--bench-line-soft); }
   .paper .lead aside b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--bench-line); display: block; line-height: 1.1; }
-  .paper .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .paper .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .paper .more { display: grid; gap: 14px; }
+  .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--bench-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
   .paper .col + .col { border-left: 1px solid var(--bench-rule); }
   .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
@@ -80,7 +82,7 @@ const t = useTranslations(lang);
   @media (max-width: 47.99rem) {
     .paper .lead { grid-template-columns: 1fr; }
     .paper .lead aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--bench-rule); padding-top: 12px; }
-    .paper .cols { grid-template-columns: 1fr; }
+    .paper .cols { grid-auto-flow: row; }
     .paper .col, .paper .col:first-child, .paper .col:last-child { padding-inline: 0; }
     .paper .col + .col { border-left: 0; border-top: 1px solid var(--bench-line); padding-top: 14px; margin-top: 8px; }
   }

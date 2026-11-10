@@ -715,6 +715,7 @@ export const en = {
     births: 'Births',
     deaths: 'Deaths',
     aside: 'Also on this day',
+    more: 'Show {n} more',
     types: { launch: 'launch', note: 'note', update: 'update' },
     ago: {
       event: '{years} years ago',

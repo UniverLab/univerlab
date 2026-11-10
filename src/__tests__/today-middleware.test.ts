@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
-import { editionDate } from '../lib/today-edition';
+import { editionDate, todayAside, todayLead } from '../lib/today-edition';
 import { buildPool } from '../lib/science-filter';
 
 const FIX = JSON.parse(
@@ -135,7 +135,9 @@ describe('middleware — /today/ HTML', () => {
     // The edition itself: dateline, columns, and the same count the pool has.
     const facts = buildPool(FIX, 'en');
     expect(inner).toContain('class="dateline"');
-    expect(inner.match(/class="item/g) ?? []).toHaveLength(facts.length - 1);
+    expect(inner.match(/class="item/g) ?? []).toHaveLength(
+      facts.length - 1 - todayAside(facts, todayLead(facts, editionDate())).length,
+    );
     expect(inner).toContain('<h3>Births</h3>');
 
     // One read per source, the Wikipedia one carrying the project's UA and an

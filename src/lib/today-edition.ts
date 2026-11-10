@@ -191,12 +191,19 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
   );
 }
 
+/** A column shows this many letters before the rest fold under "show more". */
+export const COLUMN_FOLD = 6;
+
 function columnHtml(title: string, items: Fact[], t: Dict, date: Date): string {
-  return (
-    `<section class="col"><h3>${esc(title)}</h3>` +
-    items.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('') +
-    `</section>`
-  );
+  const head = items.slice(0, COLUMN_FOLD);
+  const extra = items.slice(COLUMN_FOLD);
+  const headHtml = head.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('');
+  const extraHtml = extra.length
+    ? `<details class="more"><summary>${esc(fmt(t.more, { n: extra.length }))}</summary>` +
+      extra.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('') +
+      `</details>`
+    : '';
+  return `<section class="col"><h3>${esc(title)}</h3>` + headHtml + extraHtml + `</section>`;
 }
 
 /** The edition's inner HTML: everything inside `#edition`. */
@@ -260,13 +267,15 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   }
 
   const rest = (kind: Fact['kind']) =>
-    facts.filter((f) => f.kind === kind && f !== lead).sort(byYearAsc);
-  out +=
-    `<div class="cols">` +
-    columnHtml(t.events, rest('event'), t, date) +
-    columnHtml(t.births, rest('born'), t, date) +
-    columnHtml(t.deaths, rest('died'), t, date) +
-    `</div>`;
+    facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
+  const pairs: Array<[string, Fact[]]> = [
+    [t.events, rest('event')],
+    [t.births, rest('born')],
+    [t.deaths, rest('died')],
+  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[]]>;
+  if (pairs.length) {
+    out += `<div class="cols">` + pairs.map(([title, items]) => columnHtml(title, items, t, date)).join('') + `</div>`;
+  }
 
   out += `<p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
@@ -332,7 +341,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   }
 
   const rest = (kind: Fact['kind']) =>
-    facts.filter((f) => f.kind === kind && f !== lead).sort(byYearAsc);
+    facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
   const cols: Array<[string, Fact[]]> = [
     [t.events, rest('event')],
     [t.births, rest('born')],

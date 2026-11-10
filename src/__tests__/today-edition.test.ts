@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildPool, collectFacts, letterPool, summaryText } from '../lib/science-filter';
+import { buildPool, collectFacts, letterPool, summaryText, type Fact } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
 import {
   editionDate,
@@ -165,12 +165,76 @@ describe('todayEditionHtml (en)', () => {
   });
 
   it('lists every other fact once across the three columns', () => {
-    expect(countItems(html)).toBe(FACTS.length - 1);
+    expect(countItems(html)).toBe(FACTS.length - 1 - todayAside(FACTS, todayLead(FACTS, DATE)).length);
     expect(html).toContain('<h3>Events</h3>');
     expect(html).toContain('<h3>Births</h3>');
     expect(html).toContain('<h3>Deaths</h3>');
     // Capitalized text and a Wikipedia link per item.
     expect(html).toContain('Thomas Edison invents a practical incandescent lamp');
+  });
+
+  it('a letter beside the lead is not printed again in the columns', () => {
+    const facts: Fact[] = ['1901', '1912', '1923'].map((year) => ({
+      year,
+      text: `event of ${year} happened here`,
+      link: '',
+      kind: 'event',
+      page: '',
+    }));
+    const lead = todayLead(facts, DATE);
+    const aside = todayAside(facts, lead);
+    expect(aside).toHaveLength(2);
+    const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
+    const md = todayEditionMarkdown({ facts, lab: [] }, 'en', DATE);
+    for (const f of aside) {
+      const text = f.text.charAt(0).toUpperCase() + f.text.slice(1);
+      expect(html.split(text)).toHaveLength(2);
+      expect(md.split(text)).toHaveLength(2);
+    }
+  });
+
+  it('a kind with no letters prints no column', () => {
+    const events: Fact[] = ['1901', '1912', '1923', '1934'].map((year) => ({
+      year,
+      text: `event of ${year} happened here`,
+      link: '',
+      kind: 'event',
+      page: '',
+    }));
+    const four = todayEditionHtml({ facts: events, lab: [] }, 'en', DATE);
+    expect(four.match(/<section class="col">/g)).toHaveLength(1);
+    const one = todayEditionHtml({ facts: events.slice(0, 1), lab: [] }, 'en', DATE);
+    expect(one).not.toContain('<div class="cols">');
+  });
+
+  it('a column folds after six letters', () => {
+    const births: Fact[] = Array.from({ length: 9 }, (_, i) => ({
+      year: String(1800 + i),
+      text: `notable person ${i} was born`,
+      link: '',
+      kind: 'born',
+      page: `Person ${i}`,
+    }));
+    const html = todayEditionHtml({ facts: births, lab: [] }, 'en', DATE);
+    const at = html.indexOf('<details class="more">');
+    expect(at).toBeGreaterThan(-1);
+    expect(html.slice(0, at).match(/class="item/g)).toHaveLength(6);
+    expect(html.slice(at).match(/class="item/g)).toHaveLength(3);
+    expect(html).toContain('Show 3 more');
+    const es = todayEditionHtml({ facts: births, lab: [] }, 'es', DATE);
+    expect(es).toContain('Ver 3 más');
+  });
+
+  it('the markdown twin lists every letter', () => {
+    const births: Fact[] = Array.from({ length: 9 }, (_, i) => ({
+      year: String(1800 + i),
+      text: `notable person ${i} was born`,
+      link: '',
+      kind: 'born',
+      page: `Person ${i}`,
+    }));
+    const md = todayEditionMarkdown({ facts: births, lab: [] }, 'en', DATE);
+    expect(md.match(/^- \*\*/gm)).toHaveLength(9);
   });
 
   it('omits the .lead block and starts at the columns when the day has no event', () => {

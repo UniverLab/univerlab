@@ -115,7 +115,7 @@ describe('todayEditionHtml prints every branch', () => {
   });
   it('an empty feed still prints the paper', () => {
     const html = todayEditionHtml({ facts: [], lab: [] }, 'en', DATE);
-    expect(html).toContain('<h3>Events</h3>');
+    expect(html).not.toContain('<div class="cols">');
     expect(html).toContain('0 letters from the past');
   });
   it('a feed field missing entirely degrades to empty', () => {

@@ -16,7 +16,6 @@ const t = useTranslations(lang);
     <div class="page-open">
       <div class="page-open-text">
         <span class="label">TODAY IN SCIENCE</span>
-        <h1>Today</h1>
         <p class="intro">Scientific events that happened on this day in history.</p>
       </div>
       <Postcard page="today" alt={t.postcards.today} />
@@ -28,7 +27,6 @@ const t = useTranslations(lang);
     /* The newspaper needs the full wrap: three columns from 48rem, as in the
        mockup. The old list layout capped the page at 42rem. */
     .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
-    h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 0.3rem; }
     .intro { color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0 0 0.5rem; }
   </style>
 

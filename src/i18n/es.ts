@@ -709,6 +709,7 @@ export const es: Dict = {
     births: 'Nacimientos',
     deaths: 'Defunciones',
     aside: 'También en este día',
+    more: 'Ver {n} más',
     types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
     ago: {
       event: 'hace {years} años',
