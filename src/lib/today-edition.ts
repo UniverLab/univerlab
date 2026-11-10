@@ -194,13 +194,16 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
 /** A column shows this many letters before the rest fold under "show more". */
 export const COLUMN_FOLD = 6;
 
-function columnHtml(title: string, items: Fact[], t: Dict, date: Date): string {
+/** Events that may print a photo in one edition, the lead included. */
+export const EVENT_PHOTOS = 3;
+
+function columnHtml(title: string, items: Fact[], t: Dict, date: Date, photo: (f: Fact) => boolean): string {
   const head = items.slice(0, COLUMN_FOLD);
   const extra = items.slice(COLUMN_FOLD);
-  const headHtml = head.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('');
+  const headHtml = head.map((f) => itemHtml(f, t, date, photo(f))).join('');
   const extraHtml = extra.length
     ? `<details class="more"><summary>${esc(fmt(t.more, { n: extra.length }))}</summary>` +
-      extra.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('') +
+      extra.map((f) => itemHtml(f, t, date, photo(f))).join('') +
       `</details>`
     : '';
   return `<section class="col"><h3>${esc(title)}</h3>` + headHtml + extraHtml + `</section>`;
@@ -248,7 +251,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<article class="lead"><div class="story">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
-      (lead.kind !== 'event' ? photoFigure(lead, t, { eager: true, caption: true }) : '') +
+      photoFigure(lead, t, { eager: true, caption: true }) +
       (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
@@ -268,13 +271,19 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
-  const pairs: Array<[string, Fact[]]> = [
-    [t.events, rest('event')],
-    [t.births, rest('born')],
-    [t.deaths, rest('died')],
-  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[]]>;
+  let left = EVENT_PHOTOS - (lead?.thumb ? 1 : 0);
+  const eventPhoto = (f: Fact): boolean => {
+    if (left <= 0 || !f.thumb) return false;
+    left -= 1;
+    return true;
+  };
+  const pairs: Array<[string, Fact[], (f: Fact) => boolean]> = [
+    [t.events, rest('event'), eventPhoto],
+    [t.births, rest('born'), () => true],
+    [t.deaths, rest('died'), () => true],
+  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[], (f: Fact) => boolean]>;
   if (pairs.length) {
-    out += `<div class="cols">` + pairs.map(([title, items]) => columnHtml(title, items, t, date)).join('') + `</div>`;
+    out += `<div class="cols">` + pairs.map(([title, items, photo]) => columnHtml(title, items, t, date, photo)).join('') + `</div>`;
   }
 
   out += `<p class="colophon-note">${esc(t.colophon)}</p>`;

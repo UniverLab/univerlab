@@ -95,9 +95,8 @@ export interface Fact {
   /** True when the extract held more than `long` shows. */
   longCut?: boolean;
   /** The entry's photo, kept only when it is a real Commons image (a
-   *  `/wikipedia/commons/` URL that is not an `.svg`): events never print
-   *  photos — theirs are generic or wrong — so the newspaper only reads this
-   *  for the lead story and for people. */
+   *  `/wikipedia/commons/` URL that is not an `.svg`). The newspaper prints
+   *  it for people, for the lead and for at most EVENT_PHOTOS events per edition. */
   thumb?: { src: string; w?: number; h?: number };
 }
 

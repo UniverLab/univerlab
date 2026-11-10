@@ -142,3 +142,41 @@ describe('todayEditionHtml prints every branch', () => {
     expect(md).toContain('(died 13 years ago)');
   });
 });
+
+describe('event photos print up to three per edition', () => {
+  const thumbedEvent = (year: string): Fact =>
+    fact({ kind: 'event', year, page: `Event of ${year}`, text: `something happened in ${year}`, thumb: { src: `https://upload.wikimedia.org/wikipedia/commons/${year}.jpg`, w: 320, h: 200 } });
+
+  it('the lead event prints its photo', () => {
+    const ev = thumbedEvent('1945');
+    const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
+    expect(todayLead([ev], DATE)).toBe(ev);
+    expect(html).toContain('<article class="lead">');
+    expect(html).toContain('<figure class="photo">');
+    expect(html).not.toContain('loading="lazy"');
+  });
+  it('a lead without a thumb prints no figure', () => {
+    const ev = fact({ kind: 'event', year: '1945', page: 'United Nations', text: 'charter signed' });
+    const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
+    expect(todayLead([ev], DATE)).toBe(ev);
+    expect(html).toContain('<article class="lead">');
+    expect(html).not.toContain('<figure');
+  });
+  it('events print at most three photos, the lead included', () => {
+    const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);
+    const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
+    expect((html.match(/<figure class="photo">/g) ?? []).length).toBe(3);
+  });
+  it('events without a thumb do not use up the allowance', () => {
+    const noThumb = fact({ kind: 'event', year: '1800', page: 'Old event', text: 'something old happened' });
+    const facts = [noThumb, '1901', '1902', '1903', '1904', '1905'].map((f) =>
+      typeof f === 'string' ? thumbedEvent(f) : f,
+    );
+    let d = DATE;
+    for (let i = 0; i < 370 && todayLead(facts, d) !== noThumb; i++) d = new Date(d.getTime() + 86400000);
+    expect(todayLead(facts, d)).toBe(noThumb);
+    const html = todayEditionHtml({ facts, lab: [] }, 'en', d);
+    expect(html).toContain('<article class="lead">');
+    expect((html.match(/<figure class="photo">/g) ?? []).length).toBe(3);
+  });
+});
