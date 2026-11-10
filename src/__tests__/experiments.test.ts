@@ -2,6 +2,8 @@
  * Tests for experiments.ts - the core experiment registry
  * Using Given-When-Then (GWT) pattern for clear test documentation
  */
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { experiments, byId, Status } from '../lib/experiments';
 
 describe('experiments.ts', () => {
@@ -131,6 +133,22 @@ describe('experiments.ts', () => {
   describe('fondo opt-in', () => {
     it('demostage opts into the live fondo', () => {
       expect(byId('demostage').fondo).toBe(true);
+    });
+  });
+
+  describe('citation', () => {
+    it('astro-denoise carries its Zenodo concept DOI', () => {
+      // Given: the astro-denoise registry entry and its badge file
+      const exp = byId('astro-denoise');
+      const badgePath = join(__dirname, '../../public/badges/doi-zenodo.23989629.svg');
+
+      // When: we read the citation and the badge file
+      // Then: the DOI, badge path and badge contents match the concept DOI
+      expect(exp.citation?.doi).toBe('10.5281/zenodo.23989629');
+      expect(exp.citation?.badge).toBe('/badges/doi-zenodo.23989629.svg');
+      const badge = readFileSync(badgePath, 'utf8');
+      expect(badge).toContain('10.5281/zenodo.23989629');
+      expect(badge).not.toContain('23607434');
     });
   });
 

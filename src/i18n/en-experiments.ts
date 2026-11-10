@@ -352,23 +352,19 @@ export const experiments = {
         items: [
           {
             state: 'complete',
-            text: 'A modular, extensible ecosystem with a common command-line protocol, where each method is packaged separately with its own environment and a new method joins without changing the orchestrator.',
+            text: 'Design a modular, reproducible platform to integrate, run and compare noise-reduction methods on simulated Vera C. Rubin Observatory images, so that new techniques can be added without changing its structure.',
           },
           {
             state: 'in progress',
-            text: 'Reliable source-recovery metrics (completeness, purity, completeness by magnitude and photometric accuracy, by one-to-one matching against the DC2 truth catalogue) and image-quality metrics (PSNR, SSIM and background noise), each checked against at least two independent sources in the literature.',
+            text: 'Define a set of evaluation metrics, grounded in the literature, to analyse how well methods recover faint astronomical sources, preserve image quality and keep scientific measurements accurate, as well as their computational cost under comparable conditions.',
           },
           {
             state: 'in progress',
-            text: "Tools that measure each method's computational cost (time per region, peak memory and regions per unit of time) from outside its process, reported with a description of the hardware.",
-          },
-          {
-            state: 'in progress',
-            text: 'The methods under test: BM3D, and a U-Net trained only on DC2 regions outside the evaluation set, with its training recipe and weights published.',
+            text: 'Integrate into the platform two representative noise-reduction methods, one based on classical image-processing techniques and one on deep learning.',
           },
           {
             state: 'pending',
-            text: 'A reproducible benchmark on a curated, versioned DESC DC2 dataset of multiband regions from several sky areas; each version is identified by checksums and declares its regions, and every result is reported against one version.',
+            text: 'Evaluate the integrated methods on a documented, versioned dataset built from the DC2 simulation images and reference catalogues, so that experiments can be repeated and results compared under the same conditions.',
           },
         ],
       },

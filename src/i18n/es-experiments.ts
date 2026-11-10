@@ -354,23 +354,19 @@ export const experiments: Dict['experiments'] = {
         items: [
           {
             state: 'completo',
-            text: 'Un ecosistema modular y extensible con un protocolo común de línea de comandos, en el que cada método se empaqueta por separado con su propio entorno y un método nuevo se incorpora sin modificar el orquestador.',
+            text: 'Diseñar una plataforma modular y reproducible que permita integrar, ejecutar y comparar métodos de reducción de ruido en imágenes simuladas del Vera C. Rubin Observatory, de modo que nuevas técnicas puedan incorporarse sin modificar su estructura.',
           },
           {
             state: 'en curso',
-            text: 'Métricas confiables de recuperación de fuentes (completitud, pureza, completitud por magnitud y precisión fotométrica, por cruce uno a uno con el catálogo de verdad de DC2) y de calidad de imagen (PSNR, SSIM y ruido de fondo), cada una verificada contra al menos dos fuentes independientes de la literatura.',
+            text: 'Definir un conjunto de métricas de evaluación, sustentadas en la literatura, que permita analizar la capacidad de los métodos para recuperar fuentes astronómicas débiles, conservar la calidad de la imagen y mantener la precisión de las mediciones científicas, así como su coste computacional bajo condiciones comparables.',
           },
           {
             state: 'en curso',
-            text: 'Herramientas que miden el coste computacional de cada método (tiempo por región, memoria máxima y regiones por unidad de tiempo) desde fuera de su proceso, reportadas con la descripción del equipo.',
-          },
-          {
-            state: 'en curso',
-            text: 'Los métodos evaluados: BM3D y una U-Net entrenada solo con regiones de DC2 que no están en el conjunto de evaluación, con su receta de entrenamiento y sus pesos publicados.',
+            text: 'Integrar a la plataforma dos métodos representativos de reducción de ruido, uno basado en técnicas clásicas de procesamiento de imágenes y otro en aprendizaje profundo.',
           },
           {
             state: 'pendiente',
-            text: 'Un benchmark reproducible sobre un conjunto de datos curado y versionado de DESC DC2, con regiones multibanda de varias zonas del cielo; cada versión se identifica por checksums y declara sus regiones, y todo resultado se reporta contra una versión concreta.',
+            text: 'Evaluar los métodos integrados sobre un conjunto de datos documentado y versionado, construido a partir de las imágenes y los catálogos de referencia de la simulación DC2, que permita repetir los experimentos y comparar los resultados bajo las mismas condiciones.',
           },
         ],
       },
