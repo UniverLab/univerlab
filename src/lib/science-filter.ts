@@ -14,7 +14,7 @@ export const SCIENCE_EN = [
   'cosmonaut', 'galaxy', 'supernova', 'eclipse', 'nasa', 'space station',
   'mathematic', 'theorem', 'invent', 'patent', 'discover', 'experiment',
   'laborator', 'vaccine', 'antibiotic', 'medicine', 'surgery', 'genome',
-  'dna', 'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
+  'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
   'evolution', 'fossil', 'dinosaur', 'geolog', 'microscope', 'electricity',
   'transistor', 'computer', 'internet', 'engineer', 'particle', 'x-ray',
   'periodic table', 'nobel prize in physics', 'nobel prize in chemistry',
@@ -28,13 +28,17 @@ export const SCIENCE_ES = [
   'astronauta', 'cosmonauta', 'galaxia', 'supernova', 'eclipse',
   'estación espacial', 'matemátic', 'teorema', 'invent', 'patente',
   'descubr', 'experimento', 'laboratorio', 'vacuna', 'antibiótic',
-  'medicina', 'cirugía', 'genoma', 'adn', 'átomo', 'reactor nuclear',
+  'medicina', 'cirugía', 'genoma', 'átomo', 'reactor nuclear',
   'electrón', 'cuántic', 'relatividad', 'evolución', 'fósil',
   'dinosaurio', 'geolog', 'microscopio', 'electricidad', 'transistor',
   'computador', 'ordenador', 'internet', 'ingenier', 'partícula',
   'rayos x', 'tabla periódica', 'naturalista', 'premio nobel de física',
   'premio nobel de química', 'premio nobel de medicina',
 ];
+
+/** Stems short enough to hide inside a name ("Edna"): matched as whole words only. */
+export const SCIENCE_WORDS_EN = ['dna'];
+export const SCIENCE_WORDS_ES = ['adn'];
 
 // War, politics, religion and sport terms that veto an event even if it also
 // trips a science word (e.g. "nuclear weapon" in a war, a royal coronation).
@@ -44,7 +48,7 @@ export const POLITICS_EN = [
   'troops', 'invasion', 'coup', 'revolution', 'independence', 'empire',
   'dynasty', 'siege', 'rebellion', 'riot', 'massacre', 'genocide',
   'dictator', 'assassinat', 'weapon', 'bombing', 'pope', 'bishop',
-  'saint', 'church', 'politician', 'senator', 'governor', 'minister',
+  'saint', 'church', 'politician', 'political', 'senator', 'governor', 'minister',
   // Sport & entertainment (substrings chosen to avoid collisions like
   // 'cup'→occupied, 'league'→colleague, 'sport'→transport).
   'championship', 'tournament', 'olympic', 'football', 'soccer',
@@ -60,7 +64,7 @@ export const POLITICS_ES = [
   'revolución', 'independencia', 'imperio', 'dinastía', 'asedio',
   'rebelión', 'disturbio', 'masacre', 'genocidio', 'dictador',
   'asesinat', 'arma', 'bombardeo', 'papa', 'obispo', 'santo', 'iglesia',
-  'político', 'política', 'senador', 'gobernador', 'ministro',
+  'político', 'politólog', 'política', 'senador', 'gobernador', 'ministro',
   // Deporte y espectáculo. 'deportiv' cubre deportivo/deportiva; evito
   // 'liga' (obliga), 'gol' (golfo) y 'copa' suelto por colisiones.
   'campeonato', 'torneo', 'olímpic', 'deportiv', 'fútbol', 'futbol',
@@ -101,11 +105,15 @@ function politicsFor(lang: FilterLang): string[] {
   return lang === 'es' ? POLITICS_ES : POLITICS_EN;
 }
 
+function wordsFor(lang: FilterLang): string[] {
+  return lang === 'es' ? SCIENCE_WORDS_ES : SCIENCE_WORDS_EN;
+}
+
 /** True when the entry's text is science and not war/politics/sport. */
 export function passesScience(text: string, lang: FilterLang): boolean {
   if (!text || text.length > MAX_LEN) return false;
   const low = text.toLowerCase();
-  const hasScience = keywordsFor(lang).some((k) => low.includes(k));
+  const hasScience = keywordsFor(lang).some((k) => low.includes(k)) || wordsFor(lang).some((w) => new RegExp('(^|[^\\p{L}])' + w + '([^\\p{L}]|$)', 'u').test(low));
   const hasPolitics = politicsFor(lang).some((k) => low.includes(k));
   return hasScience && !hasPolitics;
 }

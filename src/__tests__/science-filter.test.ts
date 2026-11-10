@@ -67,6 +67,24 @@ describe('passesScience', () => {
   it('drops empty text', () => {
     expect(passesScience('', 'en')).toBe(false);
   });
+
+  it('a name that contains dna is not science', () => {
+    expect(passesScience('Edna May Oliver, American actress (died 1942)', 'en')).toBe(false);
+  });
+
+  it('dna as a word is science', () => {
+    expect(passesScience('The structure of DNA is published in Nature.', 'en')).toBe(true);
+    expect(passesScience('Se publica la estructura del ADN.', 'es')).toBe(true);
+  });
+
+  it('adn inside a word is not science', () => {
+    expect(passesScience('Muere el cantante Ladner.', 'es')).toBe(false);
+  });
+
+  it('a political scientist is vetoed', () => {
+    expect(passesScience('Colin Hay, English political scientist, author, and academic', 'en')).toBe(false);
+    expect(passesScience('Fulano, politólogo y científico social', 'es')).toBe(false);
+  });
 });
 
 const FEED = {
