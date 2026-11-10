@@ -507,7 +507,7 @@ export const en = {
       {
         name: 'Canopy Remote',
         what: 'A cross-platform mobile app for controlling Canopy from a phone — starting, stopping, and monitoring agents on the go.',
-        why: 'The attack surface is too wide. Exposing a daemon to the network — even on localhost — requires auth, encryption, and a considered threat model. None of that exists. Building the feature before the security layer is the wrong order.',
+        why: 'Shelved at first: exposing a daemon to the network — even on localhost — needs auth, encryption and a considered threat model, and none of that existed. It came back in the right order. Canopy now ships remote control built peer to peer: one pairing command, sessions over WebRTC with end-to-end encryption, and a relay that only carries signalling. No mobile app was needed — it runs in the phone’s browser.',
       },
       {
         name: 'UniverLab Newsletter & Download Metrics',

@@ -503,7 +503,7 @@ export const es: Dict = {
       {
         name: 'Canopy Remote',
         what: 'Una app móvil multiplataforma para controlar Canopy desde el teléfono — iniciar, detener y monitorear agentes en movimiento.',
-        why: 'La superficie de ataque es demasiado amplia. Exponer un daemon a la red — incluso en local — requiere auth, cifrado y un modelo de amenaza cuidadoso. Nada de eso existe. Construir la funcionalidad antes que la capa de seguridad es el orden equivocado.',
+        why: 'Se archivó al principio: exponer un daemon a la red — incluso en local — exige auth, cifrado y un modelo de amenaza cuidadoso, y nada de eso existía. Volvió en el orden correcto. Canopy ya trae control remoto construido de par a par: un comando de emparejamiento, sesiones por WebRTC con cifrado de extremo a extremo y un relay que solo lleva la señalización. No hizo falta una app móvil: corre en el navegador del teléfono.',
       },
       {
         name: 'Newsletter y métricas de descargas',
