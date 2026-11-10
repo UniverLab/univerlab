@@ -6,7 +6,6 @@
  *  frame, the screen's viewer rectangle and the machine plates. The screen
  *  itself is decorative; every string it shows also exists in the page.
  */
-import { formatSolLabel } from '../lib/mission-time';
 import { liveExperiments, type Experiment } from '../lib/experiments';
 import { fondoLoaders } from './fondos/index';
 import type { Fondo } from './fondos/runtime';
@@ -244,30 +243,6 @@ export function startLantern(): void {
     attributeFilter: ['data-bench-theme'],
   });
   window.addEventListener('univerlab:themechange', applyPhase);
-
-  // ── Imprint: the build's Sol, refreshed on load ──────────────────────────
-  const imprint = document.getElementById('imprint');
-  if (imprint) {
-    const now = new Date();
-    imprint.textContent = `${now.getFullYear()} · ${formatSolLabel(now.toISOString())} · univerlab.org`;
-  }
-
-  // ── Horizon: cut the sea lines to the motto's measured width ─────────────
-  const measureHorizon = (): void => {
-    const text = document.getElementById('horizon-text') as SVGTextElement | null;
-    const gap = document.getElementById('horizon-gap');
-    if (!text || !gap) return;
-    try {
-      const box = text.getBBox();
-      gap.setAttribute('x', (box.x - 26).toFixed(1));
-      gap.setAttribute('width', (box.width + 52).toFixed(1));
-    } catch (_) {
-      /* not laid out yet */
-    }
-  };
-  requestAnimationFrame(measureHorizon);
-  if (document.fonts?.ready) void document.fonts.ready.then(measureHorizon);
-  window.addEventListener('resize', measureHorizon);
 
   // ── Slides ───────────────────────────────────────────────────────────────
   const videos = slides.map((slide) => slide.querySelector('video'));

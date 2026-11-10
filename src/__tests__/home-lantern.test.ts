@@ -19,6 +19,7 @@ const LAB_LANTERN = readFileSync(resolve(SRC, 'components', 'LabLantern.astro'),
 const LAYOUT = readFileSync(resolve(SRC, 'layouts', 'BaseLayout.astro'), 'utf8');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const LANTERN = readFileSync(resolve(SRC, 'scripts', 'lantern.ts'), 'utf8');
+const HOME_CHROME = readFileSync(resolve(SRC, 'scripts', 'home-chrome.ts'), 'utf8');
 const TUNE = readFileSync(resolve(SRC, 'scripts', 'tune.ts'), 'utf8');
 const FONDOS_INDEX = readFileSync(resolve(SRC, 'scripts', 'fondos', 'index.ts'), 'utf8');
 const LIVE_BG = readFileSync(resolve(SRC, 'components', 'LiveBackground.astro'), 'utf8');
@@ -88,12 +89,12 @@ describe('Home — frontispiece', () => {
     expect(HOME).toContain("import { formatSolLabel } from '../lib/mission-time'");
     expect(HOME).toMatch(/formatSolLabel\(builtAt\.toISOString\(\)\)/);
     expect(HOME).toMatch(/id="imprint"/);
-    expect(LANTERN).toMatch(/formatSolLabel\(now\.toISOString\(\)\)/);
+    expect(HOME).toContain('startHomeChrome');
+    expect(HOME_CHROME).toMatch(/formatSolLabel\(now\.toISOString\(\)\)/);
   });
 
-  it('labels the lantern as Plate I', () => {
-    expect(HOME).toContain('{t.home.plate.lead}');
-    expect(HOME).toContain('{t.home.plate.title}');
+  it('labels the encyclopedia on the home', () => {
+    expect(HOME).toContain('{t.encyclopedia.tome}');
     expect(HOME).toMatch(/class="plate-label"/);
   });
 });
@@ -264,9 +265,10 @@ describe('Home — the bench', () => {
     expect(LAB_LANTERN).toMatch(/\.row \{[^}]*min-width:\s*max-content/);
   });
 
-  it('keeps plates out of the LCP path without lazy-loading them', () => {
+  it('keeps the first plates eager and lazy-loads the bench past the second', () => {
     expect(LAB_LANTERN).toMatch(/<img[\s\S]*?fetchpriority="low"/);
-    expect(LAB_LANTERN).not.toContain('loading="lazy"');
+    expect(LAB_LANTERN).toContain('liveExperiments.map((exp, i)');
+    expect(LAB_LANTERN).toContain("loading={i >= 2 ? 'lazy' : undefined}");
   });
 
   it('marks only the projected machine current and names every button', () => {
@@ -315,7 +317,7 @@ describe('Home — separators', () => {
     );
     expect(HOME).toContain('SCI · CLI · BIO');
     expect(HOME).toContain('id="horizon-mask"');
-    expect(LANTERN).toMatch(/box\.width \+ 52/);
+    expect(HOME_CHROME).toMatch(/box\.width \+ 52/);
   });
 
   it('uses the asterism dinkus between the lower sections', () => {
@@ -593,9 +595,11 @@ describe('Home — clicking the screen opens the projected experiment', () => {
 });
 
 describe('Home — the lantern lives in its component', () => {
-  it('the home renders the lantern through its component', () => {
-    expect(HOME).toContain('<LabLantern />');
-    expect(HOME).not.toContain('id="screen"');
+  it('the home carries the encyclopedia under the frontispiece', () => {
+    expect(HOME.indexOf('<Encyclopedia />')).toBeGreaterThan(HOME.indexOf('class="frontis"'));
+    expect(HOME.indexOf('<Encyclopedia />')).toBeLessThan(HOME.indexOf('two-col about'));
+    expect(HOME).toContain('t.home.lanternLink');
+    expect(HOME).not.toContain('<LabLantern');
     expect(LAB_LANTERN).toContain('id="screen"');
     expect(LAB_LANTERN).toContain('id="lantern-pause"');
     expect(LAB_LANTERN).toContain('startLantern');

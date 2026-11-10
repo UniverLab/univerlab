@@ -147,7 +147,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
       <!-- The bench: the seven machines, all the same height. -->
       <div class="row-wrap">
         <div class="row" role="group" aria-label={t.home.lantern.benchLabel}>
-          {liveExperiments.map((exp) => {
+          {liveExperiments.map((exp, i) => {
             const e = t.experiments[exp.id];
             return (
               <button
@@ -168,6 +168,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
                     height="450"
                     alt=""
                     fetchpriority="low"
+                    loading={i >= 2 ? 'lazy' : undefined}
                     data-day-src={`/bench/machines/${exp.id}-day-450.webp`}
                     data-night-src={`/bench/machines/${exp.id}-night-450.webp`}
                   />

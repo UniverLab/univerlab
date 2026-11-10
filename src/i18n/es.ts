@@ -144,6 +144,7 @@ export const es: Dict = {
       lead: 'Lámina I',
       title: 'La linterna del laboratorio',
     },
+    lanternLink: 'Verlos proyectados en la linterna →',
     about: {
       kicker: 'Acerca del laboratorio',
     },
@@ -656,11 +657,14 @@ export const es: Dict = {
     mcpCardLabel: 'Server Card',
     mcpCardNote: 'La Server Card de MCP (SEP-2127) que anuncia este servidor a los agentes.',
   },
-  encyclopedia: {
-    title: 'Experimentos — la enciclopedia de herramientas e investigación abiertas de UniverLab',
+  lanternRoom: {
+    title: 'Experimentos — la linterna de UniverLab, cada herramienta proyectada',
     description:
-      'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
-    head: 'La enciclopedia',
+      'La linterna mágica del laboratorio: señala una máquina para proyectar su experimento y abre su página. Cada herramienta abierta e investigación de UniverLab.',
+    head: 'La sala de proyección',
+    intro: 'Señala una máquina y la linterna la proyecta. Haz clic para abrir su página.',
+  },
+  encyclopedia: {
     tome: 'Tomo I · Los experimentos del laboratorio',
     intro: 'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
     tabs: {

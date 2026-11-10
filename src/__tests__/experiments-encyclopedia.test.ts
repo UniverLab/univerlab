@@ -12,7 +12,6 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
 const VIEW = readFileSync(resolve(__dirname, '../components/Encyclopedia.astro'), 'utf8');
-const PAGE = readFileSync(resolve(__dirname, '../views/Experiments.astro'), 'utf8');
 const entries = entryModels((path) => path);
 
 /** The pronunciation every entry shows right after its headword, slashes included. */
@@ -303,11 +302,3 @@ describe('experiments encyclopedia links under each entry', () => {
   });
 });
 
-describe('experiments page renders the encyclopedia through its component', () => {
-  it('the experiments page renders the encyclopedia through its component', () => {
-    expect(PAGE).toContain('<Encyclopedia />');
-    expect(PAGE).not.toContain('class="entries"');
-    expect(VIEW).toContain('class="entries"');
-    expect(VIEW).toContain('class="thumbs"');
-  });
-});

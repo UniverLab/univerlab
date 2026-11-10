@@ -1,28 +1,28 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Postcard from '../components/Postcard.astro';
-import Encyclopedia from '../components/Encyclopedia.astro';
+import LabLantern from '../components/LabLantern.astro';
 import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-const enc = t.encyclopedia;
+const room = t.lanternRoom;
 ---
 <BaseLayout
-  title={enc.title}
-  description={enc.description}
+  title={room.title}
+  description={room.description}
   circadian
 >
   <section class="enc" aria-labelledby="t-enc">
     <header class="enc-head page-open">
       <div class="page-open-text">
-        <h1 id="t-enc" class="enc-h1">{enc.head}</h1>
-        <p class="enc-tome">{enc.tome}</p>
-        <p class="enc-intro">{enc.intro}</p>
+        <h1 id="t-enc" class="enc-h1">{room.head}</h1>
+        <p class="enc-tome">{t.home.plate.lead} · {t.home.plate.title}</p>
+        <p class="enc-intro">{room.intro}</p>
       </div>
       <Postcard page="experiments" alt={t.postcards.experiments} />
     </header>
 
-    <Encyclopedia />
+    <div class="wrap hall"><LabLantern /></div>
   </section>
 </BaseLayout>
 

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import LabLantern from '../components/LabLantern.astro';
+import Encyclopedia from '../components/Encyclopedia.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { formatSolLabel } from '../lib/mission-time';
 // The engraved mark is inlined so it takes `currentColor` (and therefore the
@@ -20,7 +20,7 @@ const webSite = {
   publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
 };
 
-// The imprint is engraved at build time and refreshed on load by lantern.ts.
+// The imprint is engraved at build time and refreshed on load by home-chrome.ts.
 const builtAt = new Date();
 const imprint = `${builtAt.getFullYear()} · ${formatSolLabel(builtAt.toISOString())} · univerlab.org`;
 
@@ -50,9 +50,10 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
         <p class="fr-imprint" id="imprint">{imprint}</p>
       </header>
 
-      <p class="plate-label">{t.home.plate.lead} · <i>{t.home.plate.title}</i></p>
-
-      <LabLantern />
+      <p class="plate-label">{t.encyclopedia.tome}</p>
+      <p class="enc-intro">{t.encyclopedia.intro}</p>
+      <Encyclopedia />
+      <p class="lantern-link"><a href={localizePath('/experiments/', lang)}>{t.home.lanternLink}</a></p>
     </section>
 
     <!-- About the lab: the former hero, now below the plate. -->
@@ -194,9 +195,8 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .plate-label { margin: 18px 0 0; text-align: center; font-family: var(--font-mono);
                  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
                  color: var(--bench-line-soft); }
-  .plate-label i { font-family: var(--font-serif); font-style: italic;
-                   text-transform: none; letter-spacing: 0; font-size: 15px;
-                   color: var(--bench-line); }
+  .enc-intro { max-width: 42rem; margin: 0 auto 1.5rem; text-align: center; color: var(--ink-dim); }
+  .lantern-link { text-align: center; margin: 2rem 0 0; font-family: var(--font-mono); font-size: 0.85rem; }
 
   /* ── Separators ───────────────────────────────────────────────────────── */
   .sep { color: var(--bench-line); margin-block: 2.25rem; }
@@ -264,4 +264,9 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .closing-cta { display: flex; gap: 1.2rem; align-items: center;
                  flex-wrap: wrap; margin-top: 1.4rem; }
 </style>
+
+<script>
+  import { startHomeChrome } from '../scripts/home-chrome';
+  startHomeChrome();
+</script>
 

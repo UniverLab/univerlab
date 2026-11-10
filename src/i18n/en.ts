@@ -146,6 +146,7 @@ export const en = {
       lead: 'Plate I',
       title: 'The lab’s lantern',
     },
+    lanternLink: 'See them projected in the lantern →',
     about: {
       kicker: 'About the lab',
     },
@@ -662,11 +663,14 @@ export const en = {
     mcpCardLabel: 'Server Card',
     mcpCardNote: 'The MCP Server Card (SEP-2127) that advertises this server to agents.',
   },
-  encyclopedia: {
-    title: 'Experiments — the UniverLab encyclopedia of open tools and research',
+  lanternRoom: {
+    title: 'Experiments — the UniverLab lantern, every tool projected',
     description:
-      'Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.',
-    head: 'The encyclopedia',
+      'The lab’s magic lantern: point at a machine to project its experiment on the screen, then open its page. Every open tool and research project of UniverLab.',
+    head: 'The projection room',
+    intro: 'Point at a machine and the lantern projects it. Click it to open its page.',
+  },
+  encyclopedia: {
     tome: 'Volume I · The lab’s experiments',
     intro: 'Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.',
     tabs: {

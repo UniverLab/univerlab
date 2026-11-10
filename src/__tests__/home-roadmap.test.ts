@@ -57,8 +57,11 @@ describe('home: no dotted background anywhere', () => {
   it('the built home (en and es) ships no background canvas element', () => {
     for (const html of [builtEn, builtEs]) {
       expect(html).not.toContain(BG_ELEMENT);
-      // The lantern's film grain is a different, wanted canvas.
-      expect(html).toContain('<canvas class="film"');
+      // The lantern moved to the projection room, and its film grain with it.
+      expect(html).not.toContain('<canvas class="film"');
+    }
+    for (const p of ['experiments/index.html', 'es/experiments/index.html']) {
+      expect(readFileSync(join(root, 'dist', p), 'utf8')).toContain('<canvas class="film"');
     }
   });
 
