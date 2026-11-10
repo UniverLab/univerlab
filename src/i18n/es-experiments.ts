@@ -457,6 +457,47 @@ export const experiments: Dict['experiments'] = {
           'Sin cuentas, sin límites de usuarios, sin datos almacenados en un servidor. Quorum es open-source y corre completamente en el navegador vía WebRTC. Tus datos de estimación nunca salen de los dispositivos de tu equipo.'],
       ] as [string, string][],
     },
+    'facetmedia': {
+      need: 'Un agente puede pedir una voz, un modelo o una imagen, pero no puede oír, ver ni medir lo que recibió. La herramienta tiene que decirle si el resultado pasó.',
+      tagline: 'Herramientas de creación para agentes, cada una en su propio entorno fijado y con cada resultado verificado.',
+      etymology: '(Del fr. <em>facette</em>, ‘cara pequeña de una piedra tallada’, y el lat. <em>media</em>.)',
+      figure: 'Una faceteadora de gemas: la piedra en bruto entra y sale tallada cara por cara, y cada cara se mide antes de pulir la siguiente.',
+      thread: {
+        problem: 'agentes que crean a ciegas',
+        method: 'un contrato --json verificable sobre cada herramienta',
+        artifact: 'activos que llevan su propio registro',
+      },
+      title: 'facetMedia — herramientas de creación para agentes, verificadas',
+      description: 'Herramientas de voz, audio, imagen y CAD para agentes de IA, cada una en su entorno fijado y ejecutada por un contrato --json que verifica cada activo.',
+      koan: 'Una piedra no se talla de una vez: una cara, una medida, y luego la siguiente.',
+      lede: 'facet instala cada herramienta de creación en su propio entorno fijado, la ejecuta por un solo contrato <strong>--json</strong> y deja junto a cada archivo su <strong>registro</strong>: qué lo hizo, bajo qué licencia y si <strong>pasó</strong>.',
+      genesis: {
+        kicker: 'Génesis',
+        title: 'De los scripts del laboratorio a un contrato.',
+        body: 'facet nació el 22 de octubre de 2026 en el laboratorio de gráficos de UniverLab, donde cada herramienta (una voz, un CAD, un banner) vivía en su propio script y había que rehacer su entorno en cada máquina. La pregunta era la de siempre: ¿cómo sabe un agente que lo que hizo sirve? La respuesta de facet es que cada capacidad trae su propia verificación, y cada activo, su registro.',
+      },
+      headline: '— Herramientas de creación para agentes, cada una con su resultado verificado',
+      facets: 'Voz / Audio / Imagen / CAD / Texto',
+      release: 'En desarrollo · llega con la 0.1.0b1',
+      capabilities: {
+        kicker: 'Capacidades ↳',
+        columns: ['N.º', 'Capacidad', 'Faceta', 'Qué hace', 'Se verifica'] as string[],
+        rows: [['kokoro.speak', 'voz', 'Narración desde un guion, en CPU', 'WER ≤ 5 %'], ['whisper.transcribe', 'voz', 'Transcripción y subtítulos con tiempos', 'confianza / WER'], ['comfy.still / edit', 'imagen', 'Una imagen desde un prompt, o la edición de otra', 'tamaño / hash'], ['cad.solid / drawing', 'cad', 'Pieza 3D y plano 2D desde un script', 'volumen / auditoría'], ['ffmpeg.normalize', 'audio', 'Sonoridad y la música bajo la voz', '±1 LU']] as [string, string, string, string][],
+      },
+      record: {
+        title: '— Cada activo deja su registro',
+        body: 'Junto a cada archivo queda un .facet.json: la capacidad, el paquete, los modelos, los parámetros, la verificación y las licencias. Lo amarillo es lo verificado; nada más lleva ese color.',
+        caption: 'Fig. 1 / el registro de la lámina de esta página',
+      },
+      verbs: {
+        title: '— Seis verbos, nada instalado en el agente',
+        items: [['skill', 'aprende cada herramienta de su skill, servida al momento'], ['list', 've las capacidades por faceta, con su peso'], ['doctor', 'revisa la herramienta y la máquina; cada falla trae su arreglo'], ['run', 'fabrica desde una pieza y verifica cada activo'], ['preview', 'lee los datos de lo que falló y lo corrige sin oídos ni ojos'], ['check', 'vuelve a juzgar un activo contra su registro']] as [string, string][],
+      },
+      faq: {
+        title: '— Preguntas',
+        items: [['¿Ya se puede usar?', 'Todavía no fuera del laboratorio. La 0.1.0b1 sale cuando pase su prueba de aceptación: un clip de voz verificado, con un solo comando, en menos de cinco minutos y sin GPU, en una máquina limpia.'], ['¿Qué es una faceta?', 'Un dominio de creación: voz, audio, imagen, video, CAD, texto o presentación. Una faceta nueva entra con una versión revisada de facet; una herramienta nueva dentro de una faceta llega por el registro.'], ['¿Por qué no Docker?', 'Cada herramienta cabe en un entorno de uv con su lock fijado, sin nada instalado en el sistema. Es más liviano, sobre todo en WSL.'], ['¿Quién acepta las licencias?', 'Una persona, una vez, con facet license accept. El registro guarda quién y cuándo, y una restricción no comercial se hereda a lo que se haga con ese activo.'], ['¿Necesita GPU?', 'No para voz, audio, CAD ni texto. La generación de imágenes sí, un trabajo a la vez.']] as [string, string][],
+      },
+    },
     'demostage': {
       need: 'Grabar demos a mano es tedioso: errores, ritmo desigual, tiempos muertos y un terminal que expone tu hostname.',
       tagline:

@@ -617,7 +617,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto/' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors/' },
           { cmd: '/random', label: 'Surprise me', action: function () {
-            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
+            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum', 'facetmedia'];
             var pages = ['/', '/manifesto/', '/contributors/', '/archive/'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
             var history = [];
@@ -719,7 +719,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
 
         // Experiment IDs — auto-generated from the registry.
         // Keep this list in sync with experiments.ts (add new IDs here).
-        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
+        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum', 'facetmedia'];
         var experimentGithub = {
           canopy: 'https://github.com/UniverLab/harness-canopy',
           texforge: 'https://github.com/UniverLab/texforge',
@@ -728,6 +728,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           'astro-denoise': 'https://github.com/UniverLab',
           demostage: 'https://github.com/UniverLab/demostage',
           quorum: 'https://github.com/UniverLab/quorum',
+          facetmedia: 'https://github.com/UniverLab/facetmedia',
         };
         function currentExpId() {
           var m = window.location.pathname.match(/\/(?:es\/)?(\w[\w-]*)\/?$/);

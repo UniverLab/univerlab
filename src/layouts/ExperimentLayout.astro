@@ -13,8 +13,8 @@ import { latestRelease } from '../lib/releases';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
 
-interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; }
-const { id, hideGithub = false, hideDemo = false } = Astro.props;
+interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; hideMachine?: boolean; }
+const { id, hideGithub = false, hideDemo = false, hideMachine = false } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -90,7 +90,7 @@ const ogImage = `/og/${id}.png`;
       <span>{exp.number}</span>
     </p>
     {Astro.slots.has('site-nav') && <slot name="site-nav" />}
-    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
+    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' && !hideMachine }]}>
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
@@ -135,7 +135,7 @@ const ogImage = `/og/${id}.png`;
         </div>
       )}
     </section>
-    {exp.status !== 'archived' && (
+    {exp.status !== 'archived' && !hideMachine && (
       <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
     )}
     </div>

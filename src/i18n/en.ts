@@ -163,6 +163,7 @@ export const en = {
         'astro-denoise': 'the sky turns; the cursor shifts it',
         demostage: 'the cursor is the gallop crank',
         quorum: 'the cursor reveals the draughtsman’s plate',
+        facetmedia: 'rest the cursor and the arm cuts a gem',
       },
     },
     lineage: {
@@ -676,6 +677,7 @@ export const en = {
     },
     statuses: {
       active: 'active',
+      beta: 'beta',
       research: 'research',
       archived: 'archived',
     },
@@ -693,9 +695,10 @@ export const en = {
       quorum: 'open the table → quorum.univerlab.org',
       research: 'research state',
     },
-    key: '§ active · ¶ research · † archived',
+    key: '§ active · ‡ beta · ¶ research · † archived',
     titleStatus: {
       active: 'active',
+      beta: 'beta',
       research: 'research',
       archived: 'archived',
     },

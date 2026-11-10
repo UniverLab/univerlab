@@ -28,6 +28,7 @@
   /* Experiment essences */
   --canopy: #00a9a0;
   --astro-denoise: #a78bfa;
+  --facetmedia: #e8c547;
 
   --font-mono: 'Sometype Mono', ui-monospace, Menlo, monospace;
   --font-body: 'EB Garamond', Garamond, Georgia, serif;
@@ -145,6 +146,16 @@
   --surface-ink-dim: #b8a583;
   --surface-ink-faint: #948365;
   --surface-line: #40331f;
+}
+
+/* facetmedia — a terminal in a gallery at night: static ground, bone ink, yellow only for what is verified. */
+[data-surface='facet'] {
+  --surface-bg: #161616;
+  --surface-bg-raise: #1e1d1b;
+  --surface-ink: #e7ded1;
+  --surface-ink-dim: #9a938a;
+  --surface-ink-faint: #6f6a63;
+  --surface-line: #3a3733;
 }
 
 /* demostage — Altius thermal command room (docs/landing-poc/styles/altius.md).

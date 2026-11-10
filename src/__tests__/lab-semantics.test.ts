@@ -18,6 +18,7 @@ const EXPECTED: Record<string, string[]> = {
   cadspec: ['ghscaff', 'gitkit'],
   quorum: ['ghscaff', 'gitkit'],
   'astro-denoise': [],
+  facetmedia: ['canopy'],
 };
 
 describe('lab semantics', () => {

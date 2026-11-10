@@ -24,6 +24,7 @@ const IPA: Record<string, string> = {
   'astro-denoise': '/ˈæs.troʊ diːˈnɔɪz/',
   demostage: '/ˈdɛm.oʊ.steɪdʒ/',
   quorum: '/ˈkwɔː.rəm/',
+  facetmedia: '/ˈfæs.ɪt ˈmiː.di.ə/',
 };
 
 /** GitKit's figurative sense, copied from the spec for both languages. */

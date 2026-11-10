@@ -455,6 +455,47 @@ export const experiments = {
           'No accounts, no user limits, no data stored on a server. Quorum is open-source and runs entirely in the browser via WebRTC. Your estimation data never leaves your team\'s devices.'],
       ] as [string, string][],
     },
+    'facetmedia': {
+      need: 'An agent can ask for a voice, a model or an image, but it cannot hear, see or measure what came back. The tool has to say whether the result passed.',
+      tagline: 'Creation tools for agents, each in its own pinned environment, with every result verified.',
+      etymology: '(From French <em>facette</em>, the small face of a cut stone, and Latin <em>media</em>.)',
+      figure: 'A gem faceting machine: the rough stone goes in and comes out cut face by face, and each face is measured before the next one is polished.',
+      thread: {
+        problem: 'agents that make media blind',
+        method: 'one verifiable --json contract over every tool',
+        artifact: 'assets that carry their own record',
+      },
+      title: 'facetMedia — creation tools for AI agents, every result verified',
+      description: 'Voice, audio, image and CAD tools for AI agents, each in its own pinned environment and run through one --json contract that verifies every asset.',
+      koan: 'A stone is not cut all at once: one face, a measure, then the next.',
+      lede: 'facet installs each creation tool in its own pinned environment, runs it through one <strong>--json</strong> contract and leaves beside every file its <strong>record</strong>: what made it, under which licence and whether it <strong>passed</strong>.',
+      genesis: {
+        kicker: 'Genesis',
+        title: 'From the lab’s scripts to one contract.',
+        body: 'facet began on 22 October 2026 in UniverLab’s graphics lab, where every tool (a voice, a CAD part, a banner) lived in its own script and its environment had to be rebuilt on every machine. The question was the usual one: how does an agent know that what it made is any good? facet’s answer is that every capability brings its own check, and every asset its record.',
+      },
+      headline: '— Creation tools for agents, each with its result verified',
+      facets: 'Voice / Audio / Image / CAD / Text',
+      release: 'In development · arrives with 0.1.0b1',
+      capabilities: {
+        kicker: 'Capabilities ↳',
+        columns: ['No.', 'Capability', 'Facet', 'What it does', 'Verified by'] as string[],
+        rows: [['kokoro.speak', 'voice', 'Narration from a script, on CPU', 'WER ≤ 5 %'], ['whisper.transcribe', 'voice', 'Transcription and timed subtitles', 'confidence / WER'], ['comfy.still / edit', 'image', 'An image from a prompt, or an edit of another', 'size / hash'], ['cad.solid / drawing', 'cad', 'A 3D part and a 2D drawing from a script', 'volume / audit'], ['ffmpeg.normalize', 'audio', 'Loudness and the music bed under the voice', '±1 LU']] as [string, string, string, string][],
+      },
+      record: {
+        title: '— Every asset leaves its record',
+        body: 'Beside every file stays a .facet.json: the capability, the package, the models, the parameters, the check and the licences. Yellow marks what was verified; nothing else carries that colour.',
+        caption: 'Fig. 1 / the record of the plate on this page',
+      },
+      verbs: {
+        title: '— Six verbs, nothing installed in the agent',
+        items: [['skill', 'learns each tool from its skill, served on demand'], ['list', 'sees the capabilities by facet, with their weight'], ['doctor', 'checks the tool and the machine; every failure brings its fix'], ['run', 'makes from a piece and verifies every asset'], ['preview', 'reads the data of what failed and corrects it without ears or eyes'], ['check', 'judges an asset again against its record']] as [string, string][],
+      },
+      faq: {
+        title: '— Questions',
+        items: [['Can I use it yet?', 'Not outside the lab. 0.1.0b1 ships when it passes its acceptance test: a verified voice clip, in one command, in under five minutes and without a GPU, on a clean machine.'], ['What is a facet?', 'A field of creation: voice, audio, image, video, CAD, text or slides. A new facet arrives with a reviewed version of facet; a new tool inside a facet arrives through the registry.'], ['Why not Docker?', 'Each tool fits in a uv environment with its lock pinned and nothing installed on the system. It is lighter, especially on WSL.'], ['Who accepts the licences?', 'A person, once, with facet license accept. The record keeps who and when, and a non-commercial restriction carries over to whatever is made with that asset.'], ['Does it need a GPU?', 'Not for voice, audio, CAD or text. Image generation does, one job at a time.']] as [string, string][],
+      },
+    },
     'demostage': {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:

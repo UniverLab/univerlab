@@ -161,6 +161,7 @@ export const es: Dict = {
         'astro-denoise': 'el cielo gira; el cursor lo desplaza',
         demostage: 'el cursor es la manivela del galope',
         quorum: 'el cursor revela la lámina del dibujante',
+        facetmedia: 'deja quieto el cursor y el brazo talla una gema',
       },
     },
     lineage: {
@@ -670,6 +671,7 @@ export const es: Dict = {
     },
     statuses: {
       active: 'activo',
+      beta: 'beta',
       research: 'investigación',
       archived: 'archivado',
     },
@@ -687,9 +689,10 @@ export const es: Dict = {
       quorum: 'abre la mesa → quorum.univerlab.org',
       research: 'estado de investigación',
     },
-    key: '§ activo · ¶ en investigación · † archivado',
+    key: '§ activo · ‡ beta · ¶ en investigación · † archivado',
     titleStatus: {
       active: 'activo',
+      beta: 'beta',
       research: 'investigación',
       archived: 'archivado',
     },

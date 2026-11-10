@@ -112,9 +112,10 @@ export function firstViewItems(html: string): string[] {
  *  the two homes 1,100; each experiment landing page 1,200 — its live
  *  background loads after `load` and is not counted — except `/canopy/` and
  *  `/texforge/`, whose approved designs embed an autoplay demo mp4 the first
- *  view really loads, at 6,000; `/experiments/` 1,200 for its eager
- *  encyclopedia postcard and machine plates; the remaining static sections
- *  800. */
+ *  view really loads, at 6,000; `/experiments/` 1,210 for its eager
+ *  encyclopedia postcard and machine plates (re-reviewed 2026-11-10: the
+ *  ninth plate, facetmedia EXP-009, added ~44 KB); the remaining static
+ *  sections 800. */
 export interface BudgetedPage {
   route: string;
   /** Path inside dist/, relative. */
@@ -133,7 +134,7 @@ export function budgetedPages(): BudgetedPage[] {
     pages.push({ route: `/es/${e.id}/`, file: `es/${e.id}/index.html`, budgetBytes: budget });
   }
   for (const r of ['experiments', 'roadmap', 'manifesto', 'contributors', 'status']) {
-    const budget = r === 'experiments' ? 1200 * KB : 800 * KB;
+    const budget = r === 'experiments' ? 1210 * KB : 800 * KB;
     pages.push({ route: `/${r}/`, file: `${r}/index.html`, budgetBytes: budget });
     pages.push({ route: `/es/${r}/`, file: `es/${r}/index.html`, budgetBytes: budget });
   }

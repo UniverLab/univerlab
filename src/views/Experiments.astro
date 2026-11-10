@@ -11,6 +11,7 @@ const enc = t.encyclopedia;
 
 const statusMark: Record<string, string> = {
   active: '§',
+  beta: '‡',
   research: '¶',
   archived: '†',
 };
@@ -105,7 +106,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
       })}
     </div>
 
-    <p class="enc-key" set:html={enc.key.replace(/§/g, '<span>§</span>').replace(/¶/g, '<span>¶</span>').replace(/†/g, '<span>†</span>')} />
+    <p class="enc-key" set:html={enc.key.replace(/§/g, '<span>§</span>').replace(/‡/g, '<span>‡</span>').replace(/¶/g, '<span>¶</span>').replace(/†/g, '<span>†</span>')} />
   </section>
 
   <script is:inline>
@@ -118,7 +119,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
           var f = btn.getAttribute('data-f');
           tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
           entries.forEach(function (e) {
-            var show = f === 'all' || e.getAttribute('data-status') === f;
+            var show = f === 'all' || e.getAttribute('data-status') === f || (f === 'active' && e.getAttribute('data-status') === 'beta');
             if (show) e.removeAttribute('hidden');
             else e.setAttribute('hidden', '');
           });

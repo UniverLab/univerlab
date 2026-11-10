@@ -1,0 +1,226 @@
+---
+import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
+import Machine from '../../components/Machine.astro';
+import { getLang, useTranslations } from '../../i18n';
+import { byId } from '../../lib/experiments';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const e = t.experiments['facetmedia'];
+const exp = byId('facetmedia');
+
+// The record beside every asset, laid out over 10 lines as in the mockup.
+// Yellow (span.ok) marks only what was verified: the status and the metrics.
+const recordHtml = [
+  '{',
+  '  "capability": "comfy.still",',
+  '  "package": { "name": "comfy",',
+  '    "version": "0.1.0" },',
+  '  "models": [ "flux2-klein-4b" ],',
+  '  "params": { "seed": 300, "width": 1344, "height": 768 },',
+  '  "verification": { "status": <span class="ok">"passed"</span>,',
+  '    "metrics": { "width": <span class="ok">1344</span>, "height": <span class="ok">768</span> } },',
+  '  "licenses": [ { "spdx": "Apache-2.0", "commercial_use": true } ]',
+  '}',
+].join('\n');
+---
+
+<ExperimentLayout id="facetmedia" hideMachine>
+  <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
+  <Fragment slot="hero-visual">
+    <p class="fm-headline">{e.headline}</p>
+    <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{e.facets}</span></p>
+    <section class="fm-arch" aria-label={exp.name}>
+      <Machine id="facetmedia" ink="night" height="360px" />
+      <span class="fm-count">0/{e.capabilities.rows.length}</span>
+      <a class="fm-more" href="#capacidades">{e.capabilities.kicker}</a>
+    </section>
+  </Fragment>
+
+  <section id="capacidades" class="wrap section fm-index">
+    <div class="fm-row fm-head">
+      {e.capabilities.columns.map((c) => <span>{c}</span>)}
+    </div>
+    {e.capabilities.rows.map((row, i) => (
+      <div class="fm-row">
+        <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
+        <span>{row[0]}</span>
+        <span>{row[1]}</span>
+        <span>{row[2]}</span>
+        <span class="ok">{row[3]}</span>
+      </div>
+    ))}
+  </section>
+
+  <section class="wrap section fm-record">
+    <h2>{e.record.title}</h2>
+    <p>{e.record.body}</p>
+    <figure class="fm-figure">
+      <pre class="fm-pre" translate="no" set:html={recordHtml} />
+      <figcaption>{e.record.caption}</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap section fm-verbs">
+    <h2>{e.verbs.title}</h2>
+    <ol class="fm-verb-list">
+      {e.verbs.items.map(([verb, gloss]) => (
+        <li>
+          <span class="fm-verb">{verb}</span>
+          <span class="fm-gloss">{gloss}</span>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="wrap section fm-faq">
+    <h2>{e.faq.title}</h2>
+    <dl class="fm-faq-list">
+      {e.faq.items.map(([q, a]) => (
+        <div class="fm-faq-item">
+          <dt>{q}</dt>
+          <dd>{a}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+</ExperimentLayout>
+
+<style>
+  .fm-headline {
+    font-family: var(--font-serif);
+    text-transform: uppercase;
+    font-size: clamp(42px, 7.2vw, 108px);
+    line-height: 0.92;
+    text-wrap: balance;
+    color: var(--surface-ink);
+    border-radius: 0;
+  }
+  .fm-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+    border-radius: 0;
+  }
+  .fm-arch {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    max-width: 100%;
+    max-height: 720px;
+    border: 1px solid var(--surface-line);
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .fm-count {
+    position: absolute;
+    left: 1rem;
+    bottom: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+  }
+  .fm-more {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+  }
+  .fm-index .fm-row {
+    display: grid;
+    grid-template-columns: 3rem 1.4fr 0.8fr 1.6fr 1fr;
+    gap: 0 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--surface-line);
+    color: var(--surface-ink);
+    border-radius: 0;
+  }
+  .fm-index .fm-head {
+    font-family: var(--font-mono);
+    color: var(--surface-ink-faint);
+    border-bottom: 1px solid var(--surface-line);
+  }
+  .fm-index .fm-no {
+    font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+  }
+  .ok {
+    color: var(--essence);
+  }
+  .fm-record {
+    color: var(--surface-ink);
+    border-radius: 0;
+  }
+  .fm-record p {
+    color: var(--surface-ink-dim);
+  }
+  .fm-figure {
+    margin: 1.5rem 0 0;
+    border-radius: 0;
+  }
+  .fm-pre {
+    font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+    border: 1px solid var(--surface-line);
+    border-radius: 0;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+  }
+  .fm-figure figcaption {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    color: var(--surface-ink-faint);
+  }
+  .fm-verbs {
+    color: var(--surface-ink);
+    border-radius: 0;
+  }
+  .fm-verb-list {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+  }
+  .fm-verb-list li {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--surface-line);
+    border-radius: 0;
+  }
+  .fm-verb {
+    font-family: var(--font-mono);
+    color: var(--surface-ink);
+  }
+  .fm-gloss {
+    color: var(--surface-ink-dim);
+  }
+  .fm-faq {
+    color: var(--surface-ink);
+    border-radius: 0;
+  }
+  .fm-faq-list {
+    margin: 1.5rem 0 0;
+  }
+  .fm-faq-item {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--surface-line);
+    border-radius: 0;
+  }
+  .fm-faq-item dt {
+    font-family: var(--font-mono);
+    color: var(--surface-ink);
+  }
+  .fm-faq-item dd {
+    margin: 0.4rem 0 0;
+    color: var(--surface-ink-dim);
+  }
+  @media (max-width: 47.99rem) {
+    .fm-index .fm-row {
+      grid-template-columns: 3rem 1fr;
+    }
+  }
+</style>

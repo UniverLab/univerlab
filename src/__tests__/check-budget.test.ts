@@ -147,9 +147,10 @@ describe('budgetedPages', () => {
     }
   });
 
-  it('gives /experiments/ 1,200 KB and the static sections 800 KB', () => {
-    expect(byRoute.get('/experiments/')).toBe(1200 * KB);
-    expect(byRoute.get('/es/experiments/')).toBe(1200 * KB);
+  it('gives /experiments/ 1,210 KB and the static sections 800 KB', () => {
+    // Re-reviewed 2026-11-10: the ninth plate (facetmedia EXP-009) added ~44 KB.
+    expect(byRoute.get('/experiments/')).toBe(1210 * KB);
+    expect(byRoute.get('/es/experiments/')).toBe(1210 * KB);
     for (const route of ['/roadmap/', '/manifesto/', '/contributors/', '/status/']) {
       expect(byRoute.get(route)).toBe(800 * KB);
     }
