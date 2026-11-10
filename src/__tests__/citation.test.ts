@@ -1,5 +1,9 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { citationTexts } from '../lib/citation';
-import type { Citation } from '../lib/experiments';
+import { byId, experiments, type Citation } from '../lib/experiments';
+
+const REPO = resolve(__dirname, '..', '..');
 
 const canopy: Citation = {
   doi: '10.5281/zenodo.23607434',
@@ -50,5 +54,29 @@ describe('citationTexts', () => {
     expect(apa.startsWith('Doe, J. (2026).')).toBe(true);
     expect(apa).not.toContain('&');
     expect(bibtex).toContain('author = {Doe, Jane},');
+  });
+});
+
+describe('DOI badge', () => {
+  it('canopy declares a self-hosted badge', () => {
+    expect(byId('canopy').citation?.badge).toBe('/badges/doi-zenodo.23607434.svg');
+    const badgePath = resolve(REPO, 'public/badges/doi-zenodo.23607434.svg');
+    expect(existsSync(badgePath)).toBe(true);
+    expect(readFileSync(badgePath, 'utf8')).toContain('10.5281/zenodo.23607434');
+  });
+
+  it('no badge is loaded from another origin', () => {
+    for (const exp of experiments) {
+      if (exp.citation?.badge) {
+        expect(exp.citation.badge.startsWith('/badges/')).toBe(true);
+      }
+    }
+  });
+
+  it('the layout renders the badge only when declared', () => {
+    const layout = readFileSync(resolve(REPO, 'src/layouts/ExperimentLayout.astro'), 'utf8');
+    expect(layout).toContain('exp.citation?.badge &&');
+    expect(layout).toContain('class="doi-badge"');
+    expect(layout).toContain('https://doi.org/${exp.citation.doi}');
   });
 });

@@ -14,6 +14,8 @@ export interface Citation {
   doi: string;
   authors: { family: string; given: string; orcid?: string }[];
   title: string;
+  /** Site path of the DOI badge shown under the hero actions; omitted when there is none. */
+  badge?: string;
 }
 
 export interface Experiment {
@@ -110,7 +112,7 @@ const unix = (slug: string) => ({ unix: sh(slug) });
 const both = (slug: string) => ({ unix: sh(slug), windows: ps(slug) });
 
 export const experiments: Experiment[] = [
-  { id: 'canopy', name: 'Canopy', ipa: '/ˈkæn.ə.pi/', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], citation: { doi: '10.5281/zenodo.23607434', title: 'canopy (harness-canopy)', authors: [{ family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' }, { family: 'Solorzano', given: 'Lina' }] } },
+  { id: 'canopy', name: 'Canopy', ipa: '/ˈkæn.ə.pi/', number: 'EXP-001', status: 'active', essenceHex: '#00a9a0', github: 'https://github.com/UniverLab/harness-canopy', motif: '⠿⠶⠦⠤ · ⠤⠦⠶⠿', surface: 'tui', startDate: '2026-03-20', install: unix('canopy'), hasDocs: true, fondo: true, demo: '/demos/canopy.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], citation: { doi: '10.5281/zenodo.23607434', title: 'canopy (harness-canopy)', badge: '/badges/doi-zenodo.23607434.svg', authors: [{ family: 'Martinez Bolivar', given: 'Jheison', orcid: '0009-0007-3668-102X' }, { family: 'Solorzano', given: 'Lina' }] } },
   { id: 'texforge', name: 'TeXForge', ipa: '/ˈtɛk.fɔːrdʒ/', number: 'EXP-002', status: 'active', essenceHex: '#d34e5b', essenceTextHex: '#87222c', github: 'https://github.com/UniverLab/texforge', motif: '.tex ──→ lint ──→ typeset ──→ PDF', surface: 'paper', startDate: '2026-03-28', install: both('texforge'), hasDocs: true, fondo: true, demo: '/demos/texforge.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
   { id: 'gitkit', name: 'GitKit', ipa: '/ˈɡɪt.kɪt/', number: 'EXP-003', status: 'active', essenceHex: '#e06fc0', essenceTextHex: '#d12da2', github: 'https://github.com/UniverLab/gitkit', motif: 'o──o──◆ origin/main · 3 hooks · idempotent', surface: 'pastel', startDate: '2026-04-01', install: both('gitkit'), hasDocs: true, demo: '/demos/gitkit.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'], fondo: true },
   { id: 'ghscaff', name: 'ghScaff', ipa: '/ˌdʒiː.eɪtʃ ˈskæf/', number: 'EXP-004', status: 'active', essenceHex: '#62c4ec', github: 'https://github.com/UniverLab/ghscaff', motif: '+--+ 07 lifts · idempotent +--+', surface: 'industrial', startDate: '2026-04-03', install: both('ghscaff'), hasDocs: true, fondo: true, demo: '/demos/ghscaff.mp4', thread: '@i18n', builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'] },
