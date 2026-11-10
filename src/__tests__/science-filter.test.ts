@@ -7,6 +7,8 @@ import {
   POLITICS_ES,
   MAX_LEN,
   SUMMARY_MAX,
+  LEAD_SENTENCES,
+  LEAD_MAX,
   passesScience,
   mainPage,
   shortSummary,
@@ -467,6 +469,88 @@ describe('collectFacts with the chosen page and its summary', () => {
     expect(summaryText(facts[0])).toBe('Una sonda lunar china. Orbitó la Luna.');
   });
 
+});
+
+describe('shortSummary budgets', () => {
+  // Six sentences, about 900 characters: the letter keeps at most two of
+  // them, the lead up to five.
+  const EXTRACT = [
+    'The national laboratory published its full report on the particle accelerator experiment after ten years of careful measurement and calibration work',
+    'The research team recorded millions of collisions inside the detector and compared every signal against the predictions of the standard model of physics',
+    'A second group of scientists repeated the whole measurement in an independent laboratory and confirmed the same unexpected resonance in the new data set',
+    'The engineers then rebuilt the cooling system of the accelerator magnets so the next run could reach even higher energies with far less background noise',
+    'University observatories joined the analysis to rule out cosmic interference, sharing telescope time and detector expertise across three continents',
+    'The final paper lists every author and data source so other laboratories can reproduce the result and extend the search to still heavier particles',
+  ].join('. ') + '.';
+
+  it('two arguments keep the letter budget', () => {
+    expect(EXTRACT.length).toBeGreaterThan(800);
+    const out = shortSummary(EXTRACT, 'A different headline');
+    expect(out).not.toBeNull();
+    expect((out!.summary.match(/\./g) || []).length).toBeLessThanOrEqual(2);
+    expect(out!.summary.length).toBeLessThanOrEqual(SUMMARY_MAX);
+    expect(out!.cut).toBe(true);
+  });
+
+  it('the lead budget keeps up to five whole sentences within 700 characters', () => {
+    const out = shortSummary(EXTRACT, 'A different headline', LEAD_SENTENCES, LEAD_MAX);
+    expect(out).not.toBeNull();
+    expect(out!.summary.length).toBeGreaterThan(SUMMARY_MAX);
+    expect(out!.summary.length).toBeLessThanOrEqual(LEAD_MAX);
+    expect(out!.summary.endsWith('.')).toBe(true);
+    expect((out!.summary.match(/\./g) || []).length).toBeLessThanOrEqual(LEAD_SENTENCES);
+    expect(out!.cut).toBe(true);
+  });
+
+  it('collectFacts gives an event both bodies', () => {
+    const facts = collectFacts(
+      [
+        {
+          year: 2007,
+          text: 'The national laboratory in Geneva opens a new particle accelerator for physics research.',
+          pages: [
+            {
+              titles: { normalized: 'Geneva' },
+              content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Geneva' } },
+              extract: EXTRACT,
+            },
+          ],
+        },
+      ],
+      'event',
+      'en',
+    );
+    expect(facts).toHaveLength(1);
+    expect(facts[0].summary).toBeDefined();
+    expect(facts[0].long).toBeDefined();
+    expect(facts[0].long!.length).toBeGreaterThan(facts[0].summary!.length);
+  });
+
+  it('births carry no long body', () => {
+    const born = collectFacts(
+      [
+        {
+          year: 1867,
+          text: 'The chemist Marie Curie is born and later wins the Nobel prize in chemistry.',
+          pages: [
+            {
+              titles: { normalized: 'Marie Curie' },
+              content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Marie_Curie' } },
+              extract: EXTRACT,
+            },
+          ],
+        },
+      ],
+      'born',
+      'en',
+    );
+    expect(born).toHaveLength(1);
+    expect(born[0].long).toBeUndefined();
+    expect(born[0].longCut).toBeUndefined();
+  });
+});
+
+describe('collectFacts cache key', () => {
   it('a v1 cache is ignored and the pool is written under the v2 key', async () => {
     localStorage.clear();
     localStorage.setItem(

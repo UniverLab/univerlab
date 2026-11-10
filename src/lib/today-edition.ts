@@ -101,6 +101,7 @@ function leadHeadline(lead: Fact): string {
  *  drop-cap paragraph; without one, an event keeps its old silence (its one
  *  line is already the headline) and a person prints their line. */
 function leadBody(lead: Fact): string {
+  if (lead.long) return summaryText({ summary: lead.long, summaryCut: lead.longCut });
   if (lead.summary) return summaryText(lead);
   return lead.kind === 'event' ? '' : lead.text;
 }

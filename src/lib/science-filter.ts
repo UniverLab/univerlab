@@ -90,6 +90,10 @@ export interface Fact {
   summary?: string;
   /** True when the extract held more than `summary` shows. */
   summaryCut?: boolean;
+  /** The lead story's longer body, at most LEAD_SENTENCES and LEAD_MAX chars. */
+  long?: string;
+  /** True when the extract held more than `long` shows. */
+  longCut?: boolean;
   /** The entry's photo, kept only when it is a real Commons image (a
    *  `/wikipedia/commons/` URL that is not an `.svg`): events never print
    *  photos — theirs are generic or wrong — so the newspaper only reads this
@@ -133,6 +137,10 @@ export interface FeedEntry {
 
 /** The summary budget: whole sentences, at most two, at most this long. */
 export const SUMMARY_MAX = 260;
+
+/** The newspaper lead's own budget. */
+export const LEAD_SENTENCES = 5;
+export const LEAD_MAX = 700;
 
 function stripTags(s: string): string {
   return (s || '').replace(/<[^>]*>/g, '');
@@ -180,14 +188,17 @@ export function mainPage(entry: FeedEntry): FeedPage | undefined {
   return pages[0];
 }
 
-/** Shorten an extract to a letter body: whole sentences from the start, at
- *  most 2 and at most SUMMARY_MAX chars. A sentence ends at `.`, `!` or `?`
- *  followed by a space or the end — never inside a number, never after a
- *  single capital initial. Returns null when there is nothing to carry
- *  (empty, or only repeating the headline). */
+/** Shorten an extract to a body: whole sentences from the start, at most
+ *  `maxSentences` and at most `maxChars` chars — the letter's defaults are 2
+ *  and SUMMARY_MAX, the newspaper lead's are LEAD_SENTENCES and LEAD_MAX.
+ *  A sentence ends at `.`, `!` or `?` followed by a space or the end — never
+ *  inside a number, never after a single capital initial. Returns null when
+ *  there is nothing to carry (empty, or only repeating the headline). */
 export function shortSummary(
   extract: string | undefined,
   headline: string,
+  maxSentences = 2,
+  maxChars = SUMMARY_MAX,
 ): { summary: string; cut: boolean } | null {
   const flat = (extract || '').replace(/\s+/g, ' ').trim();
   if (!flat) return null;
@@ -209,9 +220,9 @@ export function shortSummary(
     ends.push(i);
   }
   if (!ends.length) {
-    if (flat.length <= SUMMARY_MAX) return { summary: flat, cut: false };
-    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
-    const summary = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    if (flat.length <= maxChars) return { summary: flat, cut: false };
+    const cutAt = flat.slice(0, maxChars).lastIndexOf(' ');
+    const summary = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, maxChars);
     return { summary, cut: true };
   }
   const sentences: string[] = [];
@@ -221,14 +232,14 @@ export function shortSummary(
     start = e + 1;
   }
   let summary = '';
-  for (let k = 0; k < Math.min(2, sentences.length); k++) {
+  for (let k = 0; k < Math.min(maxSentences, sentences.length); k++) {
     const cand = summary ? summary + ' ' + sentences[k] : sentences[k];
-    if (cand.length <= SUMMARY_MAX) summary = cand;
+    if (cand.length <= maxChars) summary = cand;
     else break;
   }
   if (!summary) {
-    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
-    const s = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    const cutAt = flat.slice(0, maxChars).lastIndexOf(' ');
+    const s = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, maxChars);
     return { summary: s, cut: true };
   }
   const rest = flat.slice(summary.length).trim();
@@ -282,11 +293,18 @@ export function collectFacts(
       } catch (x) {}
       let summary: string | undefined;
       let summaryCut: boolean | undefined;
+      let long: string | undefined;
+      let longCut: boolean | undefined;
       if (kind === 'event' && chosen?.extract) {
         const short = shortSummary(chosen.extract, e.text || '');
         if (short) {
           summary = short.summary;
           summaryCut = short.cut;
+        }
+        const lead = shortSummary(chosen.extract, e.text || '', LEAD_SENTENCES, LEAD_MAX);
+        if (lead) {
+          long = lead.summary;
+          longCut = lead.cut;
         }
       }
       return {
@@ -297,6 +315,8 @@ export function collectFacts(
         page: title,
         ...(summary !== undefined ? { summary } : {}),
         ...(summaryCut !== undefined ? { summaryCut } : {}),
+        ...(long !== undefined ? { long } : {}),
+        ...(longCut !== undefined ? { longCut } : {}),
         ...(thumb ? { thumb } : {}),
       };
     });

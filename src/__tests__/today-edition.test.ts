@@ -315,3 +315,41 @@ describe('the lead carries the summary (es fixture)', () => {
     expect(html).not.toContain('class="dropcap"');
   });
 });
+
+describe('the lead prints the long body when the fact carries one', () => {
+  const date = new Date(2026, 9, 24, 12);
+  const withLong = {
+    year: '2007',
+    text: 'China lanza la sonda lunar.',
+    link: 'https://es.wikipedia.org/wiki/X',
+    kind: 'event' as const,
+    page: 'X',
+    summary: 'Short.',
+    summaryCut: false,
+    long: 'First. Second. Third.',
+    longCut: false,
+  };
+
+  it('renders the long body inside the drop-cap paragraph and the markdown twin', () => {
+    const html = todayEditionHtml({ facts: [withLong], lab: [] }, 'es', date);
+    expect(html).toContain('<p class="dropcap">First. Second. Third.</p>');
+    const md = todayEditionMarkdown({ facts: [withLong], lab: [] }, 'es', date);
+    expect(md).toContain('First. Second. Third.');
+  });
+
+  it('a fact without long still prints its summary', () => {
+    const short = {
+      year: '2007',
+      text: 'China lanza la sonda lunar.',
+      link: 'https://es.wikipedia.org/wiki/X',
+      kind: 'event' as const,
+      page: 'X',
+      summary: 'Short.',
+      summaryCut: false,
+    };
+    const html = todayEditionHtml({ facts: [short], lab: [] }, 'es', date);
+    expect(html).toContain('<p class="dropcap">Short.</p>');
+    const md = todayEditionMarkdown({ facts: [short], lab: [] }, 'es', date);
+    expect(md).toContain('Short.');
+  });
+});
