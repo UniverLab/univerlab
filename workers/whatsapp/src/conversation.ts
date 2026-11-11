@@ -40,9 +40,11 @@ import {
   getEvent,
   insertEvent,
   listEvents,
+  patchEvent,
   HOLD_PREFIX,
   type GoogleOAuth,
 } from './google';
+import { register, release } from './registry';
 import {
   CALENDAR_DOWN,
   CANCELLED,
@@ -62,6 +64,8 @@ import {
 
 /** A consultation hold expires 24 hours after it was created. */
 const HOLD_MS = 24 * 3600 * 1000;
+/** A taken conversation returns to the agent after 24 hours without operator messages. */
+const TAKEN_MS = 24 * 3600 * 1000;
 /** While a hold is pending the alarm re-checks the calendar at least hourly. */
 const HOLD_CHECK_MS = 3600 * 1000;
 
@@ -178,6 +182,160 @@ export class Conversation extends DurableObject<Env> {
     );
   }
 
+  /** The taken flag's short code, '' when absent or corrupt. */
+  private takenCode(): string {
+    try {
+      const raw = this.state('taken');
+      if (!raw) return '';
+      return ((JSON.parse(raw) as { code?: unknown }).code as string) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Drop the client from the operator registry; never throws. */
+  private async deregister(phone: string): Promise<void> {
+    try {
+      await release(this.env, phone);
+    } catch {
+      /* the registry is best effort */
+    }
+  }
+
+  /** Operator control entry over HTTP (the Operator DO POSTs JSON here). */
+  async fetch(req: Request): Promise<Response> {
+    this.ensureSchema();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return Response.json({ ok: false }, { status: 400 });
+    }
+    if (typeof body !== 'object' || body === null) {
+      return Response.json({ ok: false }, { status: 400 });
+    }
+    return Response.json(await this.control(body as { action?: unknown }));
+  }
+
+  /** Run one operator command against this conversation. */
+  async control(action: { action?: unknown; code?: unknown; text?: unknown }): Promise<{ ok: boolean }> {
+    this.ensureSchema();
+    if (action.action === 'take') {
+      if (typeof action.code !== 'string' || !action.code) return { ok: false };
+      this.state('taken', JSON.stringify({ code: action.code, at: Date.now() }));
+      await this.armNext(Date.now());
+      return { ok: true };
+    }
+    if (action.action === 'releaseTake') {
+      this.state('taken', null);
+      await this.armNext(Date.now());
+      return { ok: true };
+    }
+    if (action.action === 'operatorMessage') {
+      if (typeof action.text !== 'string' || !action.text.trim()) return { ok: false };
+      const at = Date.now();
+      this.ctx.storage.sql.exec(
+        'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
+        'op-' + at + '-' + Math.floor(Math.random() * 1000000),
+        Math.floor(at / 1000),
+        'operator',
+        'text',
+        (action.text as string).slice(0, 1000),
+        null
+      );
+      // An operator message restarts the 24-hour taken clock.
+      const takenRaw = this.state('taken');
+      if (takenRaw) {
+        try {
+          const taken = JSON.parse(takenRaw) as { code?: string };
+          this.state('taken', JSON.stringify({ code: taken.code ?? '', at }));
+        } catch {
+          /* a corrupt taken flag is left alone */
+        }
+      }
+      await this.armNext(at);
+      return { ok: true };
+    }
+    if (action.action === 'operatorConfirm') {
+      return await this.operatorConfirm();
+    }
+    if (action.action === 'operatorCancel') {
+      return await this.operatorCancel();
+    }
+    return { ok: false };
+  }
+
+  /** Confirm a held paid booking, the same as removing [Por confirmar] in the calendar. */
+  private async operatorConfirm(): Promise<{ ok: boolean }> {
+    try {
+      const raw = this.state('booking');
+      if (!raw) return { ok: false };
+      const st = JSON.parse(raw) as BookingState;
+      if (st.phase !== 'held' || !st.eventId) return { ok: false };
+      const oauth = googleOAuth(this.env);
+      const wbId = this.env.WORKBENCH_CALENDAR_ID;
+      if (!oauth || !wbId) return { ok: false };
+      const token = await accessToken(oauth);
+      await patchEvent(token, wbId, st.eventId, {
+        summary: serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone),
+      });
+      st.phase = 'booked';
+      this.state('booking', JSON.stringify(st));
+      const at = Date.now();
+      const text = renderBooking(CONFIRMED[st.lang], {
+        slot: formatSlot(st.start ?? '', st.lang),
+      });
+      try {
+        await sendText(this.env, st.phone, text);
+      } catch {
+        /* the hold is confirmed even when the client notice fails */
+      }
+      this.storeAssistant(Math.floor(at / 1000), 'a-op-confirm-' + st.eventId, text);
+      await this.deregister(st.phone);
+      await this.armNext(at);
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  /** Cancel a booking and tell the client, applying the cancellation policy text. */
+  private async operatorCancel(): Promise<{ ok: boolean }> {
+    try {
+      const raw = this.state('booking');
+      if (!raw) return { ok: false };
+      const st = JSON.parse(raw) as BookingState;
+      // The operator cancel always straight-cancels: no MOVE_ONCE reoffer.
+      if (!st.eventId || !st.start) return { ok: false };
+      const oauth = googleOAuth(this.env);
+      const wbId = this.env.WORKBENCH_CALENDAR_ID;
+      if (!oauth || !wbId) return { ok: false };
+      const token = await accessToken(oauth);
+      try {
+        await deleteEvent(token, wbId, st.eventId);
+      } catch {
+        /* already gone */
+      }
+      this.state('booking', null);
+      const at = Date.now();
+      const text = renderBooking(CANCELLED[st.lang], {
+        service: serviceLabel(st.lang, st.service),
+        slot: formatSlot(st.start, st.lang),
+      });
+      try {
+        await sendText(this.env, st.phone, text);
+      } catch {
+        /* the booking is cancelled even when the client notice fails */
+      }
+      this.storeAssistant(Math.floor(at / 1000), 'a-op-cancel-' + st.eventId, text);
+      await this.deregister(st.phone);
+      await this.armNext(at);
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
+  }
+
   private async erase(m: Inbound, lang: Lang): Promise<void> {
     try {
       const raw = this.state('booking');
@@ -197,6 +355,7 @@ export class Conversation extends DurableObject<Env> {
     }
     const handedOff = this.state('handoff') !== null;
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    await this.deregister(m.from);
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.deleteAlarm();
     try {
@@ -217,6 +376,30 @@ export class Conversation extends DurableObject<Env> {
   async alarm(): Promise<void> {
     this.ensureSchema();
     let now = Date.now();
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    // A taken conversation returns to the agent on its own after 24 hours
+    // without operator messages, and the operator is told.
+    const takenRaw = this.state('taken');
+    if (takenRaw) {
+      try {
+        const taken = JSON.parse(takenRaw) as { code?: string; at?: number };
+        if (typeof taken.at === 'number' && now >= taken.at + TAKEN_MS) {
+          this.state('taken', null);
+          const text =
+            'UniverLab [' + (taken.code ?? '') + '] · pasaron 24 horas sin mensajes del operador: retomé la conversación.';
+          try {
+            await sendText(this.env, operator, text);
+          } catch {
+            /* ignored */
+          }
+          // The notice is for the operator: it never enters the client's
+          // history as an assistant turn.
+        }
+      } catch {
+        this.state('taken', null);
+      }
+      now = Date.now();
+    }
     // The one alarm fires for the earliest pending deadline: when the burst
     // window has closed the burst is answered first, then the other work.
     const burstRaw = this.state('burst');
@@ -270,6 +453,7 @@ export class Conversation extends DurableObject<Env> {
               });
               await sendText(this.env, st.phone, text);
               this.storeAssistant(Math.floor(now / 1000), 'a-alarm-confirm-' + st.eventId, text);
+              await this.deregister(st.phone);
             } else if (now >= deadline) {
               if (ev !== null) {
                 try {
@@ -282,6 +466,7 @@ export class Conversation extends DurableObject<Env> {
               const text = EXPIRED[st.lang];
               await sendText(this.env, st.phone, text);
               this.storeAssistant(Math.floor(now / 1000), 'a-alarm-expire-' + st.eventId, text);
+              await this.deregister(st.phone);
             }
           } catch {
             /* transient calendar failure: re-arm below and retry */
@@ -306,13 +491,21 @@ export class Conversation extends DurableObject<Env> {
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const b = await brief(this.env.AI, st, modelConfig(this.env));
     this.briefs(1, m.timestamp, m.from, m.name ?? '', st.lang, st.service, JSON.stringify(b.bullets));
+    const code = await register(this.env, {
+      phone: m.from,
+      name: m.name ?? '',
+      lang: st.lang,
+      kind: 'handoff',
+      service: st.service,
+    });
+    this.state('code', code);
     const note = formatBrief({
       name: m.name ?? '',
       phone: m.from,
       lang: st.lang,
       service: st.service,
       bullets: b.bullets,
-    });
+    }).replace('UniverLab ·', 'UniverLab [' + code + '] ·');
     await sendText(this.env, operator, note);
     const confirm = CONFIRM_SLOT[st.lang];
     await sendText(this.env, m.from, confirm);
@@ -330,7 +523,18 @@ export class Conversation extends DurableObject<Env> {
     this.state('booking', null);
     this.state('handoff', '1');
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    const note = formatBrief({ name, phone: m.from, lang, service, bullets });
+    const code = await register(this.env, {
+      phone: m.from,
+      name,
+      lang,
+      kind: 'handoff',
+      service,
+    });
+    this.state('code', code);
+    const note = formatBrief({ name, phone: m.from, lang, service, bullets }).replace(
+      'UniverLab ·',
+      'UniverLab [' + code + '] ·'
+    );
     try {
       await sendText(this.env, operator, 'La agenda falló: agendar a mano.\n' + note);
     } catch {
@@ -438,6 +642,18 @@ export class Conversation extends DurableObject<Env> {
       st.start = startIso;
       if (hold) st.createdAt = now;
       this.state('booking', JSON.stringify(st));
+      if (hold) {
+        const code = await register(this.env, {
+          phone: st.phone,
+          name: st.name,
+          lang: st.lang,
+          kind: 'hold',
+          service: st.service,
+          start: startIso,
+          eventId: ev.id,
+        });
+        this.state('code', code);
+      }
       const slotText = formatSlot(startIso, st.lang);
       const text = hold
         ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang) })
@@ -496,10 +712,21 @@ export class Conversation extends DurableObject<Env> {
       this.state('booking', null);
       this.state('handoff', '1');
       const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+      const code = await register(this.env, {
+        phone: st.phone,
+        name: st.name,
+        lang: st.lang,
+        kind: 'handoff',
+        service: st.service,
+      });
+      this.state('code', code);
       await sendText(
         this.env,
         operator,
-        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief })
+        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
+          'UniverLab ·',
+          'UniverLab [' + code + '] ·'
+        )
       );
       const text = renderBooking(CANCELLED[st.lang], {
         service: serviceLabel(st.lang, st.service),
@@ -635,6 +862,22 @@ export class Conversation extends DurableObject<Env> {
       await this.ctx.storage.setAlarm(alarm);
       return;
     }
+    // While taken, the agent stays silent and the client's messages are
+    // relayed to the operator with the short code.
+    const takenRaw = this.state('taken');
+    if (takenRaw) {
+      const code = this.takenCode();
+      const relay = (
+        'UniverLab [' + code + '] · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
+      ).slice(0, 900);
+      try {
+        await sendText(this.env, operator, relay);
+      } catch {
+        /* ignored */
+      }
+      await this.armNext(Date.now());
+      return;
+    }
     // The message joins the open burst and is answered when the client pauses:
     // the burst timer never pushes the retention or hold deadlines out.
     const cfg = burstConfig(this.env);
@@ -707,7 +950,9 @@ export class Conversation extends DurableObject<Env> {
         const burst = JSON.parse(raw) as Partial<BurstState>;
         if (typeof burst.quietDue === 'number' && typeof burst.maxDue === 'number') {
           const due = Math.min(burst.quietDue, burst.maxDue);
-          if (due > now) deadlines.push(due);
+          // An overdue burst (its window closed while the conversation was
+          // taken) flushes as soon as the object wakes, not at retention.
+          deadlines.push(due > now ? due : now);
         }
       }
     } catch {
@@ -717,6 +962,17 @@ export class Conversation extends DurableObject<Env> {
     if (ret > now) deadlines.push(ret);
     const hold = this.holdDue(now);
     if (hold !== undefined && hold > now) deadlines.push(hold);
+    try {
+      const raw = this.state('taken');
+      if (raw) {
+        const taken = JSON.parse(raw) as Partial<{ at: number }>;
+        if (typeof taken.at === 'number' && Number.isFinite(taken.at) && taken.at + TAKEN_MS > now) {
+          deadlines.push(taken.at + TAKEN_MS);
+        }
+      }
+    } catch {
+      /* a corrupt taken flag never re-arms */
+    }
     if (deadlines.length === 0) {
       await this.ctx.storage.deleteAll();
       await this.ctx.storage.deleteAlarm();
@@ -747,6 +1003,23 @@ export class Conversation extends DurableObject<Env> {
     }
     const rows = ids.length > 0 ? this.burstRows(ids) : [];
     if (rows.length === 0 || from === '') return;
+    // While taken the agent stays silent: messages already queued in the
+    // burst before tomar are relayed to the operator, never answered.
+    if (this.state('taken')) {
+      const code = this.takenCode();
+      const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+      for (const r of rows) {
+        const relay = (
+          'UniverLab [' + code + '] · ' + (name ? name + ' ' : '') + '+' + from + ': ' + (r.text ?? '[' + r.type + ']')
+        ).slice(0, 900);
+        try {
+          await sendText(this.env, operator, relay);
+        } catch {
+          /* ignored */
+        }
+      }
+      return;
+    }
     const last = rows[rows.length - 1];
     const texts = rows.filter((r) => r.type === 'text' && r.text !== null);
     const m: Inbound = {
@@ -845,7 +1118,7 @@ export class Conversation extends DurableObject<Env> {
         .toArray() as Array<{ role: string; text: string }>;
       const history = rows
         .reverse()
-        .map((r) => ({ role: r.role as Turn['role'], text: r.text }));
+        .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: r.text }));
       const a = await answer(this.env.AI, history, lang, modelConfig(this.env));
       if (a.booking) {
         const ask = INTAKE_ASK[lang];
@@ -876,8 +1149,16 @@ export class Conversation extends DurableObject<Env> {
   private async notify(m: Inbound): Promise<void> {
     this.state('handoff', '1');
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const code = await register(this.env, {
+      phone: m.from,
+      name: m.name ?? '',
+      lang: detectLang(m.text ?? ''),
+      kind: 'handoff',
+      service: '',
+    });
+    this.state('code', code);
     const text = (
-      'UniverLab · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
+      'UniverLab [' + code + '] · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
     ).slice(0, 900);
     try {
       await sendText(this.env, operator, text);

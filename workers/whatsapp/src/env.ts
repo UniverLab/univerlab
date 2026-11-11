@@ -1,6 +1,7 @@
 export interface Env {
   AI: Ai;
   CONVERSATION: DurableObjectNamespace<import('./conversation').Conversation>;
+  REGISTRY?: DurableObjectNamespace<import('./operator').Operator>;
   WA_APP_SECRET: string;
   WA_VERIFY_TOKEN: string;
   WA_ACCESS_TOKEN: string;

@@ -83,7 +83,7 @@ import { answer, runModel } from '../src/brain';
 import { brief, intake } from '../src/intake';
 import { markRead, sendText } from '../src/meta';
 import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retentionDeadline } from '../src/erase';
-import { accessToken, deleteEvent, freeBusy, getEvent, insertEvent, listEvents } from '../src/google';
+import { accessToken, deleteEvent, freeBusy, getEvent, insertEvent, listEvents, patchEvent } from '../src/google';
 import { freeSlots } from '../src/schedule';
 import { decide } from '../src/booking';
 import { Conversation } from '../src/conversation';
@@ -692,4 +692,195 @@ test('erasing releases the held event', async () => {
   expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev1');
   expect(storage.deleteAll).toHaveBeenCalled();
   expect(clientTexts().some((t) => t.includes('borré'))).toBe(true);
+});
+
+function seedTaken(ctx: unknown, code: string, at: number): void {
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'taken',
+    JSON.stringify({ code, at })
+  );
+}
+
+function seedMessage(
+  ctx: unknown,
+  id: string,
+  role: string,
+  text: string,
+  at: number
+): void {
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
+    id,
+    at,
+    role,
+    'text',
+    text,
+    null
+  );
+}
+
+const REGISTRY_ENV = (fetchMock: jest.Mock) => ({
+  ...env,
+  REGISTRY: {
+    idFromName: (name: string) => name,
+    get: jest.fn(() => ({ fetch: fetchMock })),
+  },
+});
+
+test('a taken conversation relays the client message instead of answering', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedTaken(ctx, 'ab12', Date.now());
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.t1', text: 'hola?', name: 'Ana' }));
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[ab12]'));
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('+573001112222'));
+  expect(clientTexts()).toEqual([]);
+});
+
+test('an operator message reads as assistant history', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedMessage(ctx, 'wamid.h1', 'user', 'cuánto cuesta', AT);
+  seedMessage(ctx, 'op-1', 'operator', 'Hola Ana, te confirmo el precio', AT + 1);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'listo', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.h2', text: 'gracias' }));
+
+  expect(answer).toHaveBeenCalled();
+  const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
+  expect(history).toContainEqual({ role: 'assistant', text: 'Hola Ana, te confirmo el precio' });
+  expect(history.some((h) => h.role === 'operator')).toBe(false);
+});
+
+test('a taken conversation returns to the agent after 24 hours and tells the operator', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedTaken(ctx, 'ab12', Date.now() - 25 * 3600 * 1000);
+
+  await c.alarm();
+
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('retomé'));
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola de nuevo', booking: false, handoff: false });
+  await say(c, inbound({ id: 'wamid.t2', text: 'sigues ahí?' }));
+  expect(answer).toHaveBeenCalled();
+});
+
+test('a handoff registers the client and carries the code', async () => {
+  const fetchMock = jest.fn(async () => new Response(JSON.stringify({ code: 'zz99' }), { status: 200 }));
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  (answer as jest.Mock).mockResolvedValue({
+    reply: 'Te paso con una persona',
+    booking: false,
+    handoff: true,
+  });
+
+  await say(c, inbound({ id: 'wamid.n1', text: 'quiero hablar con una persona' }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const req = fetchMock.mock.calls[0][0] as Request;
+  expect(await req.json()).toMatchObject({ action: 'register', phone: CLIENT, kind: 'handoff' });
+  const bodies = (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+  expect(bodies.some((b) => b.includes('[zz99]'))).toBe(true);
+});
+
+test('erasing also releases the client from the registry', async () => {
+  const fetchMock = jest.fn(async () => new Response(JSON.stringify({ code: 'zz99' }), { status: 200 }));
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+
+  await c.receive(inbound({ id: 'wamid.n2', text: 'BORRAR MIS DATOS' }));
+
+  const payloads = await Promise.all(
+    fetchMock.mock.calls.map(async (call) => ((await (call[0] as Request).json()) as { action: string }))
+  );
+  expect(payloads).toContainEqual({ action: 'release', phone: CLIENT });
+});
+
+test('an operator confirm patches the hold and tells the client', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+
+  const res = await c.control({ action: 'operatorConfirm' });
+
+  expect(res).toEqual({ ok: true });
+  expect(patchEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev1', expect.objectContaining({ summary: expect.not.stringContaining('[Por confirmar]') }));
+  expect(clientTexts().some((t) => t.includes('confirmada'))).toBe(true);
+});
+
+test('an operator cancel straight-cancels without the move-once reoffer', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev9', summary: '', start: SLOT_A, end: SLOT_B });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+
+  const res = await c.control({ action: 'operatorCancel' });
+
+  expect(res).toEqual({ ok: true });
+  expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev9');
+  expect(clientTexts().some((t) => t.includes('cancelé'))).toBe(true);
+  expect(clientTexts().some((t) => t.includes('una vez sin costo'))).toBe(false);
+});
+
+test('a burst queued before tomar is relayed, not answered, while taken', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+  await c.receive(inbound({ id: 'wamid.t3', text: 'hola?', name: 'Ana' }));
+  seedTaken(ctx, 'ab12', Date.now());
+
+  await c.alarm();
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[ab12]'));
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('Ana +573001112222'));
+  expect(clientTexts()).toEqual([]);
+});
+
+test('tomar on an overdue burst flushes it as a relay right away', async () => {
+  const burstEnv = { ...env, BURST_QUIET_MS: '60000' };
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, burstEnv as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+  await c.receive(inbound({ id: 'wamid.t4', text: 'hola?', name: 'Ana' }));
+  // The burst window closes while the conversation is taken.
+  jest.spyOn(Date, 'now').mockReturnValue(AT * 1000 + 3600 * 1000 + 120000);
+  await c.control({ action: 'take', code: 'ab12' });
+
+  await c.alarm();
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(burstEnv, OPERATOR, expect.stringContaining('[ab12]'));
+  expect(clientTexts()).toEqual([]);
+});
+
+test('an operator confirm still lands when the client notice fails', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev2', summary: '', start: SLOT_A, end: SLOT_B });
+  await say(c, inbound({ id: 'wamid.b4', text: 'el primero' }));
+  (sendText as jest.Mock).mockImplementationOnce(async () => {
+    throw new Error('whatsapp down');
+  });
+
+  const res = await c.control({ action: 'operatorConfirm' });
+
+  expect(res).toEqual({ ok: true });
+  expect(patchEvent).toHaveBeenCalledWith(
+    'tok',
+    'workbench-id',
+    'ev2',
+    expect.objectContaining({ summary: expect.not.stringContaining('[Por confirmar]') })
+  );
 });

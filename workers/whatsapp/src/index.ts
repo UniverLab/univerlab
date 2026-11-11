@@ -2,6 +2,7 @@ import { parseInbound, verifySignature } from './meta';
 import type { Env } from './env';
 
 export { Conversation } from './conversation';
+export { Operator } from './operator';
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -27,7 +28,14 @@ export default {
         return new Response('bad request', { status: 400 });
       }
       for (const m of parseInbound(payload)) {
-        ctx.waitUntil(env.CONVERSATION.get(env.CONVERSATION.idFromName(m.from)).receive(m));
+        // Messages from the operator's own number are commands, never
+        // client conversations; every other number never runs commands.
+        const operator = (env.OPERATOR_PHONE ?? '').replace(/\D/g, '');
+        if (m.from !== '' && m.from === operator && env.REGISTRY) {
+          ctx.waitUntil(env.REGISTRY.get(env.REGISTRY.idFromName('operator')).command(m));
+        } else {
+          ctx.waitUntil(env.CONVERSATION.get(env.CONVERSATION.idFromName(m.from)).receive(m));
+        }
       }
       return new Response('ok', { status: 200 });
     }

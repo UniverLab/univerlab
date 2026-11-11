@@ -10,10 +10,18 @@ binding = "AI"
 name = "CONVERSATION"
 class_name = "Conversation"
 
+[[durable_objects.bindings]]
+name = "REGISTRY"
+class_name = "Operator"
+
 # SQLite-backed is required on the Workers Free plan.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Conversation"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Operator"]
 
 [observability]
 enabled = true
