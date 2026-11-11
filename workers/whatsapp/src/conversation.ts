@@ -11,7 +11,8 @@ import {
   INTAKE_FOLLOWUP,
   type IntakeState,
 } from './intake';
-import { detectLang } from './lang';
+import { detectLang, type Lang } from './lang';
+import { alarmAt, deletionRequest, ERASED, operatorErased } from './erase';
 
 export const NON_TEXT = {
   es: 'Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.',
@@ -22,34 +23,38 @@ export class Conversation extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     ctx.blockConcurrencyWhile(async () => {
-      this.ctx.storage.sql.exec(`
-        CREATE TABLE IF NOT EXISTS messages (
-          id TEXT PRIMARY KEY,
-          at INTEGER NOT NULL,
-          role TEXT NOT NULL,
-          type TEXT NOT NULL,
-          text TEXT,
-          media_id TEXT
-        )
-      `);
-      this.ctx.storage.sql.exec(`
-        CREATE TABLE IF NOT EXISTS state (
-          key TEXT PRIMARY KEY,
-          value TEXT NOT NULL
-        )
-      `);
-      this.ctx.storage.sql.exec(`
-        CREATE TABLE IF NOT EXISTS briefs (
-          id INTEGER PRIMARY KEY,
-          at INTEGER NOT NULL,
-          phone TEXT NOT NULL,
-          name TEXT NOT NULL,
-          lang TEXT NOT NULL,
-          service TEXT NOT NULL,
-          bullets TEXT NOT NULL
-        )
-      `);
+      this.ensureSchema();
     });
+  }
+
+  private ensureSchema(): void {
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id TEXT PRIMARY KEY,
+        at INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        type TEXT NOT NULL,
+        text TEXT,
+        media_id TEXT
+      )
+    `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS state (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS briefs (
+        id INTEGER PRIMARY KEY,
+        at INTEGER NOT NULL,
+        phone TEXT NOT NULL,
+        name TEXT NOT NULL,
+        lang TEXT NOT NULL,
+        service TEXT NOT NULL,
+        bullets TEXT NOT NULL
+      )
+    `);
   }
 
   private state(key: string): string | null;
@@ -107,7 +112,33 @@ export class Conversation extends DurableObject<Env> {
     );
   }
 
+  private async erase(m: Inbound, lang: Lang): Promise<void> {
+    const handedOff = this.state('handoff') !== null;
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.deleteAlarm();
+    try {
+      await markRead(this.env, m.id);
+    } catch {
+      /* ignored */
+    }
+    await sendText(this.env, m.from, ERASED[lang]);
+    if (handedOff && m.from !== operator) {
+      try {
+        await sendText(this.env, operator, operatorErased(m.from));
+      } catch {
+        /* ignored */
+      }
+    }
+  }
+
+  async alarm(): Promise<void> {
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.deleteAlarm();
+  }
+
   private async finishBooking(m: Inbound, st: IntakeState): Promise<void> {
+    this.state('handoff', '1');
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const b = await brief(this.env.AI, st, modelConfig(this.env));
     this.briefs(1, m.timestamp, m.from, m.name ?? '', st.lang, st.service, JSON.stringify(b.bullets));
@@ -126,6 +157,14 @@ export class Conversation extends DurableObject<Env> {
   }
 
   async receive(m: Inbound): Promise<void> {
+    this.ensureSchema();
+    if (m.type === 'text') {
+      const erased = deletionRequest(m.text ?? '');
+      if (erased) {
+        await this.erase(m, erased);
+        return;
+      }
+    }
     const existing = this.ctx.storage.sql
       .exec('SELECT 1 FROM messages WHERE id = ? LIMIT 1', m.id)
       .toArray();
@@ -139,6 +178,7 @@ export class Conversation extends DurableObject<Env> {
       m.text ?? null,
       m.mediaId ?? null
     );
+    await this.ctx.storage.setAlarm(alarmAt(m.timestamp));
     await markRead(this.env, m.id);
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     if (m.from === operator) return;
@@ -203,6 +243,7 @@ export class Conversation extends DurableObject<Env> {
   }
 
   private async notify(m: Inbound): Promise<void> {
+    this.state('handoff', '1');
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const text = (
       'UniverLab · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')

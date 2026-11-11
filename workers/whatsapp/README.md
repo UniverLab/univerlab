@@ -42,3 +42,12 @@ instead; its schema has no `reasoning_effort`.
 
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
+
+A client who writes BORRAR MIS DATOS or DELETE MY DATA has
+everything their number's Durable Object stores erased at
+once, and gets a same-chat confirmation noting that what
+they sent stays in their own WhatsApp; after a handoff the
+operator is told to delete that chat too. Every incoming
+message also sets an alarm for six months later, so silence
+erases the object on its own, and writing again after any
+erasure starts a fresh conversation.
