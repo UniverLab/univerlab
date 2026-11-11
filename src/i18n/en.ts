@@ -93,6 +93,7 @@ export const en = {
     // Experiment pages only: the colophon credits line above the seal.
     forged: 'Artifact conceived and forged at UniverLab',
     cta: 'Workbench · free first call →',
+    operator: 'UniverLab is run by Jheison Martinez Bolivar, Colombia.',
     privacy: "no external tracking. theme preferences stay in your browser's local storage.",
     groups: { work: 'Experiments', lab: 'The lab', open: 'Open' },
   },
@@ -779,7 +780,7 @@ export const en = {
     tags: { kicker: 'Services and prices', items: [
       ['First call', 'Free · 15 min', 'We look at what you need and whether the Workbench is the right place for it.'],
       ['Consultation', 'COP 150,000 / hour', 'An hour with the people who build Canopy. Bring anything AI: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab. From abroad, USD 45.'],
-      ['Audits and flows', 'From COP 900,000', 'We evaluate how you use AI with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support.'],
+      ['Audits and flows', 'From COP 900,000', 'We evaluate how you use AI with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support. From abroad, from USD 250.'],
     ] as [string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
       ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],

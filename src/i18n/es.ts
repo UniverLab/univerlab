@@ -90,6 +90,7 @@ export const es: Dict = {
     // Solo en páginas de experimento: la línea de créditos sobre el sello.
     forged: 'Artefacto concebido y forjado en UniverLab',
     cta: 'Banco de trabajo · primera llamada gratis →',
+    operator: 'UniverLab es operado por Jheison Martinez Bolivar, Colombia.',
     privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
     groups: { work: 'Experimentos', lab: 'El laboratorio', open: 'Abierto' },
   },
@@ -773,7 +774,7 @@ export const es: Dict = {
     tags: { kicker: 'Servicios y precios', items: [
       ['Primera llamada', 'Gratis · 15 min', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
       ['Consulta', '150.000 COP / hora', 'Una hora con quienes construyen Canopy. Trae lo que sea de IA: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio. Desde el exterior, USD 45.'],
-      ['Auditorías y flujos', 'Desde 900.000 COP', 'Evaluamos con rigor cómo usas la IA: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte.'],
+      ['Auditorías y flujos', 'Desde 900.000 COP', 'Evaluamos con rigor cómo usas la IA: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte. Desde el exterior, desde USD 250.'],
     ] as [string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
       ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
