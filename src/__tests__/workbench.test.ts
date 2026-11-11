@@ -88,7 +88,7 @@ describe('workbench', () => {
   it('a consultation is paid when booked and confirmed once checked', () => {
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.how.steps[1][1]).toContain('Bre-B');
-      expect(dict.how.steps[1][1]).toContain('Nequi');
+      expect(dict.how.steps[1][1]).toContain('Bre-B');
       expect(dict.how.steps[1][1]).toContain('PayPal');
     }
     expect(en.workbench.how.steps[1][1]).toContain('once the payment is checked');

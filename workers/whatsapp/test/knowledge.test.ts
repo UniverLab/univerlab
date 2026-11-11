@@ -8,7 +8,6 @@ test('spanish knowledge carries workbench copy', () => {
     'Desde 900.000 COP',
     'USD 45',
     'Bre-B',
-    'Nequi',
     'PayPal',
     'Reservas y pagas',
     'Trabajamos tu caso',

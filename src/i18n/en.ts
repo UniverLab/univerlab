@@ -784,7 +784,7 @@ export const en = {
     ] as [string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
       ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],
-      ['You book and pay', 'Bre-B or Nequi in Colombia, PayPal from abroad. The slot is yours once the payment is checked.'],
+      ['You book and pay', 'Bre-B in Colombia, PayPal from abroad. The slot is yours once the payment is checked.'],
       ['We work your case', 'Live or in writing, as you ask. You leave with written notes; what we build stays yours.'],
     ] as [string, string][] },
     who: { kicker: 'Who comes to the bench', items: [

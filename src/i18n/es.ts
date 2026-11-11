@@ -778,7 +778,7 @@ export const es: Dict = {
     ] as [string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
       ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
-      ['Reservas y pagas', 'Bre-B o Nequi en Colombia, PayPal desde afuera. El espacio queda tuyo al verificar el pago.'],
+      ['Reservas y pagas', 'Bre-B en Colombia, PayPal desde afuera. El espacio queda tuyo al verificar el pago.'],
       ['Trabajamos tu caso', 'En vivo o por escrito, según lo que pidas. Te llevas notas escritas; lo que construyamos queda tuyo.'],
     ] as [string, string][] },
     who: { kicker: 'Quién llega al Banco de trabajo', items: [
