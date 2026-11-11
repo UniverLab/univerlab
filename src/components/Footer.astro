@@ -54,25 +54,25 @@ const footGroups = [
 const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy }, { href: localizePath('/terms', lang), label: legal.terms }];
 ---
 <footer>
-  <!-- The engraved frieze: decorative band across the top of the footer,
-       sinking into the ink before the text (Quorum's colophon band). -->
-  <picture class="colophon-band" aria-hidden="true">
-    <source type="image/avif" srcset="/bench/colophon/frieze-960.avif 960w, /bench/colophon/frieze-1920.avif 1920w" sizes="100vw">
-    <img src="/bench/colophon/frieze-1920.webp" srcset="/bench/colophon/frieze-960.webp 960w, /bench/colophon/frieze-1920.webp 1920w" sizes="100vw" width="1920" height="608" alt="" loading="lazy" decoding="async">
-  </picture>
-  <div class="wrap inner">
-    <div class="left">
-      <!-- Quiet click target: the mark links to this site's own repository. No
-           hover affordance — you only find it if you try it. -->
-      <a
-        class="mark-link"
-        href="https://github.com/UniverLab/univerlab"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="UniverLab website repository"
-      ><Mark size={32} /></a>
-      {!isManifesto && <p class="quote">{t.footer.quote}</p>}
-    </div>
+  <!-- The engraved frieze: gear band full width, sinking into the ink, with
+       the lab's seal (the real Mark) riding its lower edge. -->
+  <div class="frieze">
+    <picture class="colophon-band" aria-hidden="true">
+      <source type="image/avif" srcset="/bench/colophon/frieze-960.avif 960w, /bench/colophon/frieze-1920.avif 1920w" sizes="100vw">
+      <img src="/bench/colophon/frieze-1920.webp" srcset="/bench/colophon/frieze-960.webp 960w, /bench/colophon/frieze-1920.webp 1920w" sizes="100vw" width="1920" height="608" alt="" loading="lazy" decoding="async">
+    </picture>
+    <!-- Quiet click target: the seal links to this site's own repository. No
+         hover affordance — you only find it if you try it. -->
+    <a
+      class="seal"
+      href="https://github.com/UniverLab/univerlab"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="UniverLab website repository"
+    ><Mark size={24} /></a>
+  </div>
+  <div class="wrap colophon">
+    {!isManifesto && <p class="quote">{t.footer.quote}</p>}
     <nav class="foot-nav" aria-label={t.nav.experiments}>
       {footGroups.map((group) => (
         <div class="foot-group"><span class="foot-head">{group.head}</span>{group.links.map((item) => (
@@ -85,24 +85,24 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
         ))}</div>
       ))}
     </nav>
+    <a class="cta" href={localizePath('/workbench', lang)}>{t.footer.cta}</a>
+    <p class="word-rule"><span class="word" translate="no">UNIVERLAB</span></p>
+    <!-- Braille easter egg (user, 2026-10-21): one faint line of real grade-1
+         cells, the same sentence in every language, never translated and
+         never reacting. The element carries role="img" + aria-label so a
+         screen reader speaks the sentence; the glyph text itself is hidden
+         so it isn't read letter by letter. -->
+    <span class="braille" role="img" aria-label={BRAILLE_SENTENCE}>
+      <span aria-hidden="true">{brailleCells}</span>
+    </span>
   </div>
-  <p class="wrap lab-built">
-    {t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a>
-  </p>
   <div class="wrap base">
-    <div class="word-block">
-      <span class="word" translate="no">UNIVERLAB</span>
-      <!-- Braille easter egg (user, 2026-10-21): one faint line of real grade-1
-           cells, the same sentence in every language, never translated and
-           never reacting. The element carries role="img" + aria-label so a
-           screen reader speaks the sentence; the glyph text itself is hidden
-           so it isn't read letter by letter. -->
-      <span class="braille" role="img" aria-label={BRAILLE_SENTENCE}>
-        <span aria-hidden="true">{brailleCells}</span>
-      </span>
-    </div>
-    <span class="meta">
-      <button
+    <p class="small">
+      {legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}
+      <span class="sep"> · </span><span class="privacy">{t.footer.privacy}</span>
+      <span class="sep"> · </span><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span>
+      {forged && (<><span class="sep"> · </span><span class="forged"><span class="forged-name" translate="no">{forged.name}</span>{' · '}{t.footer.forged}</span></>)}
+      <span class="sep"> · </span><button
         type="button"
         class="branch mono"
         translate="no"
@@ -110,8 +110,7 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
         aria-expanded="false"
         aria-controls="cosmic-commit"
       >{t.cosmos.branch}</button>
-      <span class="tag">SCI · CLI · BIO</span>
-    </span>
+    </p>
     <!-- Easter egg: the universe's latest commit. Terminal output stays English
          in every locale (git always is), toggled by the branch button. -->
     <div id="cosmic-commit" class="commit-panel" hidden translate="no">
@@ -121,17 +120,6 @@ Date:   now
 
     observing itself</pre>
     </div>
-  </div>
-  {forged && (
-    <p class="wrap forged">
-      <span class="forged-name" translate="no">{forged.name}</span>
-      <span class="sep">{' · '}</span>{t.footer.forged}
-    </p>
-  )}
-  <div class="wrap colophon-credits">
-    <img src="/bench/colophon/sello-lacre.svg" width="28" height="28" alt="" aria-hidden="true">
-    <p class="privacy">{t.footer.privacy}</p>
-    <p class="legal">{legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}</p>
   </div>
 </footer>
 
@@ -155,18 +143,19 @@ Date:   now
   footer :global(svg) { color: var(--f-ink-faint); }
   footer :focus-visible { outline-color: var(--f-ink); }
 
-  /* The engraved machinery frieze (Quorum's colophon band): absolutely over
-     the dark ink at the very top of the footer, sinking into it through a
-     mask so the text below never competes with it. Aria-hidden and lazy —
-     the fixed width/height keep it from shifting layout. */
+  /* The engraved machinery frieze (Quorum's colophon band): full width at the
+     very top of the footer, sinking into the ink through a mask. Aria-hidden
+     and lazy — the fixed width/height keep it from shifting layout. */
+  .frieze {
+    position: relative;
+  }
   .colophon-band {
-    position: absolute;
-    top: 0;
-    left: 0;
+    display: block;
     width: 100%;
-    height: 16rem;
-    -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 90%);
-    mask-image: linear-gradient(180deg, #000 30%, transparent 90%);
+    height: clamp(6rem, 14vw, 11.875rem);
+    opacity: 0.6;
+    -webkit-mask-image: linear-gradient(#000 35%, transparent 96%);
+    mask-image: linear-gradient(#000 35%, transparent 96%);
   }
   .colophon-band img {
     display: block;
@@ -175,25 +164,38 @@ Date:   now
     object-fit: cover;
     object-position: 50% 45%;
   }
-
-  .inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2.5rem;
-    flex-wrap: wrap;
-    /* 12rem of headroom clear the 16rem band's densest third; the mask starts
-       fading before the first line of content. */
-    padding-block: 12rem 2rem;
+  /* The lab's seal on the frieze's lower edge: a small round seal (48px)
+     with the real Mark (24px) inside. A quiet, discoverable click target. */
+  .seal {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--f-bg);
+    border: 1px solid var(--f-line);
+    display: grid;
+    place-items: center;
+    color: var(--f-ink);
+    line-height: 0;
   }
-  .left { display: flex; gap: 1rem; align-items: flex-start; max-width: 34rem; }
-  /* No hover, no underline — a quiet, discoverable click target. */
-  .mark-link { display: inline-flex; line-height: 0; flex: none; }
-  .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: 0.95rem; line-height: 1.55; }
+  .seal :global(svg) { color: var(--f-ink); }
+
+  /* The centred book colophon below the frieze. */
+  .colophon {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 1.125rem;
+    padding-block: 2.5rem 1.5rem;
+  }
+  .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: clamp(1.0625rem, 1.6vw, 1.25rem); line-height: 1.55; max-width: 46ch; }
   /* Nav links in the colophon face (Quorum's rule: serif links, mono labels);
      every target keeps a 32px tap reach on touch screens. */
-  .foot-nav { display: grid; grid-template-columns: repeat(3, max-content); gap: 0.4rem 3rem; align-items: start; }
-  .foot-group { display: flex; flex-direction: column; gap: 0.15rem; }
+  .foot-nav { display: grid; gap: 0.875rem; justify-items: center; width: 100%; }
+  .foot-group { display: grid; gap: 0.375rem; justify-items: center; }
   .foot-head { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; margin-bottom: 0.35rem; }
   .foot-nav a {
     text-decoration: none; color: var(--f-ink-dim);
@@ -217,22 +219,33 @@ Date:   now
     42% { transform: scale(1.1); }
     56% { transform: scale(1); }
   }
-
-  .base {
-    position: relative;
+  .cta {
+    display: inline-block;
+    border: 1px solid var(--f-line);
+    padding: 0.625rem 1rem;
+    font-family: var(--font-mono); font-size: 0.8125rem;
+    color: var(--accent, #c9a227);
+    text-decoration: none;
+  }
+  .cta:hover { color: var(--f-ink); }
+  .word-rule {
+    width: min(32.5rem, 100%);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding-block: 1.2rem 1.6rem;
-    border-top: 1px solid var(--f-line);
+    gap: 0.875rem;
+    margin-block: 0;
+    color: var(--f-ink-dim);
+  }
+  .word-rule::before, .word-rule::after {
+    content: "";
+    height: 1px;
+    background: var(--f-line);
+    flex: 1;
   }
   .word { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.32em; color: var(--f-ink-dim); }
   /* The braille easter egg sits quietly under the word: no hover, no
      translation, just plain grade-1 cells at a faint opacity. The font stack
      is chosen only for having braille glyphs. */
-  .word-block { display: flex; flex-direction: column; gap: 0.45rem; }
   .braille {
     opacity: 0.45;
     font-family: "DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace;
@@ -241,17 +254,38 @@ Date:   now
     color: var(--f-ink-dim);
     line-height: 1;
   }
-  /* The site's own built-with — one line above the base rule, footer's dark palette. */
-  .lab-built {
-    margin-block: 0; padding-block: 0 1.6rem;
+
+  .base {
+    position: relative;
+    padding-block: 1.2rem 1.6rem;
+  }
+  .small {
+    margin-block: 0;
+    text-align: center;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
+    line-height: 2;
+    color: var(--f-ink-dim);
+    overflow-wrap: anywhere;
+  }
+  .small .sep { color: var(--f-ink-faint); }
+  .small a { color: inherit; }
+  .built a { text-decoration-color: var(--f-line); }
+  .built a:hover { color: var(--f-ink); }
+  .privacy {
+    margin: 0;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--f-ink-faint); text-align: center;
+  }
+  /* The forged colophon line — experiment pages only: the artifact's name in
+     the mono face, then the dictionary line. */
+  .forged {
+    margin-block: 0;
     font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
     color: var(--f-ink-dim);
   }
-  .lab-built .sep { color: var(--f-ink-faint); }
-  .lab-built a { color: var(--f-ink-dim); text-decoration-color: var(--f-line); }
-  .lab-built a:hover { color: var(--f-ink); }
-  .meta { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
-  .tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; color: var(--f-ink-dim); }
+  .forged-name { font-family: var(--font-mono); }
+  .forged .sep { color: var(--f-ink-faint); }
   /* A quiet easter egg: the lab's one software-as-cosmos metaphor. Dimmer than
      everything around it; hover reveals its meaning, click reveals the commit. */
   .branch {
@@ -286,43 +320,16 @@ Date:   now
     to { opacity: 1; transform: none; }
   }
 
+  @media (min-width: 40rem) {
+    .foot-nav { grid-template-columns: repeat(3, auto); justify-content: center; column-gap: clamp(1.75rem, 5vw, 4.5rem); }
+  }
   @media (max-width: 40rem) {
-    .inner { flex-direction: column; gap: 1.6rem; padding-top: 9rem; }
-    .foot-nav { grid-template-columns: repeat(2, max-content); gap: 1.2rem 2.4rem; }
+    .colophon { padding-block-start: 2.25rem; }
     footer { padding-bottom: 4.5rem; }
   }
   /* The page-corner language switch sits at the bottom right at every width; the
      branch button shares that line, so the base keeps it clear of the fold. */
   .base { padding-bottom: 4.5rem; }
-  /* The forged colophon line — experiment pages only: the artifact's name in
-     the mono face, then the dictionary line. One line above the credits rule. */
-  .forged {
-    margin-block: 0; padding-bottom: 0.9rem;
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
-    color: var(--f-ink-dim); text-align: center;
-  }
-  .forged-name { font-family: var(--font-mono); }
-  .forged .sep { color: var(--f-ink-faint); }
-
-  /* Quorum's colophon credits: the garnet seal ahead of the privacy line,
-     below a 25% currentColor rule. */
-  .colophon-credits {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    padding: 1.2rem 0 1.4rem;
-    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  }
-  .colophon-credits img { flex: none; }
-  .privacy {
-    margin: 0;
-    font-family: var(--font-mono); font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    color: var(--f-ink-faint); text-align: center;
-  }
-  .legal { margin: 0; font-family: var(--font-mono); font-size: 0.72rem; }
-  .legal a { color: inherit; }
 
   @media (prefers-reduced-motion: reduce) {
     .foot-nav a.sponsor { animation: none !important; }

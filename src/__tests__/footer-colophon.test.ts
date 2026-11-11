@@ -1,6 +1,6 @@
 /**
- * Tests for the footer colophon: the engraved frieze band, the wax seal on
- * the credits line, the per-experiment forged line, and the braille easter egg.
+ * Tests for the footer colophon: the frieze with the logo seal, the centred
+ * book colophon, and the braille easter egg.
  *
  * Astro components aren't directly renderable in Jest, so the markup and
  * style contracts are verified at source level (the level the component's
@@ -54,9 +54,14 @@ describe('braille — Spanish grade 1, one cell per letter', () => {
   });
 });
 
-describe('Footer — the engraved frieze band', () => {
-  it('opens the footer with an aria-hidden picture as its first child', () => {
-    expect(src).toMatch(/<footer>\s*<!--[^>]*-->\s*<picture class="colophon-band" aria-hidden="true">/);
+describe('Footer — the frieze with the logo seal', () => {
+  it('wraps the picture in the .frieze band as its first child', () => {
+    expect(src).toMatch(/<footer>\s*<!--[^>]*-->\s*<div class="frieze">/);
+    const friezeAt = markup.indexOf('class="frieze"');
+    const pictureAt = markup.indexOf('class="colophon-band"');
+    expect(friezeAt).toBeGreaterThan(-1);
+    expect(pictureAt).toBeGreaterThan(friezeAt);
+    expect(markup).toMatch(/<div class="frieze">\s*<picture class="colophon-band" aria-hidden="true">/);
   });
 
   it('loads the lab frieze in the exact AVIF/WebP ladder from /bench/colophon', () => {
@@ -67,85 +72,122 @@ describe('Footer — the engraved frieze band', () => {
   });
 
   it('the assets really exist on disk', () => {
-    for (const f of ['frieze-960.avif', 'frieze-1920.avif', 'frieze-960.webp', 'frieze-1920.webp', 'sello-lacre.svg']) {
+    for (const f of ['frieze-960.avif', 'frieze-1920.avif', 'frieze-960.webp', 'frieze-1920.webp']) {
       expect(existsSync(resolve(__dirname, '..', '..', 'public', 'bench', 'colophon', f))).toBe(true);
     }
   });
 
-  it('styles the band like Quorum: absolute top, 16rem, sinking mask', () => {
-    expect(src).toMatch(/\.colophon-band\s*\{[^}]*position:\s*absolute/);
-    expect(src).toMatch(/\.colophon-band\s*\{[^}]*height:\s*16rem/);
-    expect(src).toContain('mask-image: linear-gradient(180deg, #000 30%, transparent 90%)');
-    expect(src).toContain('-webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 90%)');
-    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-fit:\s*cover/);
-    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-position:\s*50% 45%/);
+  it('seals the band with the real Mark at 24px, linking the site repository', () => {
+    expect(markup).toContain('class="seal"');
+    expect(markup).toContain('href="https://github.com/UniverLab/univerlab"');
+    expect(markup).toContain('aria-label="UniverLab website repository"');
+    expect(markup).toContain('<Mark size={24} />');
+    const friezeAt = markup.indexOf('class="frieze"');
+    const sealAt = markup.indexOf('class="seal"');
+    const colophonAt = markup.indexOf('wrap colophon');
+    expect(sealAt).toBeGreaterThan(friezeAt);
+    expect(sealAt).toBeLessThan(colophonAt);
   });
 
-  it('the footer is relative and starts below the band', () => {
-    expect(src).toMatch(/footer\s*\{[^}]*position:\s*relative/);
-    expect(src).toMatch(/\.inner\s*\{[^}]*padding-block:\s*12rem/);
-    // Under 40rem the headroom shrinks to 9rem so mobile content starts lower
-    // but still clears the band.
-    expect(src).toMatch(/max-width:\s*40rem[^{]*\{[^}]*\.inner\s*\{[^}]*padding-top:\s*9rem/s);
+  it('rides the seal on the frieze lower edge: 48px round seal, top 100%', () => {
+    expect(src).toMatch(/\.seal\s*\{[^}]*width:\s*48px/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*height:\s*48px/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*top:\s*100%/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*border-radius:\s*50%/s);
+  });
+
+  it('sinks the band into the ink through a mask, covering at 50% 45%', () => {
+    expect(src).toMatch(/\.colophon-band\s*\{[^}]*mask-image:\s*linear-gradient/s);
+    expect(src).toContain('-webkit-mask-image: linear-gradient(#000 35%, transparent 96%)');
+    expect(src).toContain('mask-image: linear-gradient(#000 35%, transparent 96%)');
+    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-fit:\s*cover/s);
+    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-position:\s*50% 45%/s);
   });
 });
 
-describe('Footer — everything it already held stays, in order', () => {
-  it('the wrap column follows the band directly (the flight bar is gone)', () => {
-    const bandAt = markup.indexOf('colophon-band');
-    const innerAt = markup.indexOf('wrap inner');
-    expect(bandAt).toBeGreaterThan(-1);
-    expect(innerAt).toBeGreaterThan(bandAt);
-    expect(markup).not.toContain('flight');
-  });
-
-  it('keeps mark link, quote, footer nav, built-with, word + branch, privacy — in that order', () => {
+describe('Footer — the centred colophon order', () => {
+  it('reads frieze, quote, nav, cta, word, braille, small, branch, panel — in that order', () => {
     const order = [
-      'class="mark-link"',
+      'class="frieze"',
       'class="quote"',
       'class="foot-nav"',
-      'class="wrap lab-built"',
-      '>UNIVERLAB</span>',
+      'class="cta"',
+      'class="word-rule"',
+      'class="braille"',
+      'class="small"',
       'class="branch mono"',
       'id="cosmic-commit"',
-      'class="privacy"',
     ];
     const at = order.map((s) => markup.indexOf(s));
     expect(at.every((i) => i > -1)).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
   });
+
+  it('hides the quote on the manifesto, as today', () => {
+    expect(src).toMatch(/const isManifesto = Astro\.url\.pathname\.endsWith\('\/manifesto'\)/);
+    expect(markup).toContain('{!isManifesto && <p class="quote">{t.footer.quote}</p>}');
+  });
+
+  it('invites to the workbench with the dictionary CTA', () => {
+    expect(markup).toContain("{t.footer.cta}");
+    expect(src).toContain("localizePath('/workbench', lang)");
+    expect(markup).toMatch(/<a class="cta" href=\{localizePath\('\/workbench', lang\)\}>/);
+  });
+
+  it('rules the UNIVERLAB word across the colophon', () => {
+    expect(markup).toContain('<p class="word-rule">');
+    expect(markup).toContain('<span class="word" translate="no">UNIVERLAB</span>');
+    expect(src).toMatch(/\.word-rule::before,\s*\.word-rule::after/);
+  });
+
+  it('stacks the groups in one column, then opens three columns at 40rem', () => {
+    expect(src).toMatch(/\.foot-nav\s*\{[^}]*display:\s*grid/s);
+    const at = src.indexOf('.foot-nav {');
+    expect(src.slice(at, src.indexOf('}', at))).not.toMatch(/grid-template-columns/);
+    expect(src).toMatch(/@media \(min-width:\s*40rem\)[^{]*\{[^}]*\.foot-nav\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*auto\)/s);
+  });
 });
 
-describe('Footer — wax seal and the forged line', () => {
-  it('prepends the garnet seal to the privacy line', () => {
-    expect(markup).toContain('<img src="/bench/colophon/sello-lacre.svg" width="28" height="28" alt="" aria-hidden="true">');
+describe('Footer — the wax seal and the easter eggs are gone from the old lines', () => {
+  it('carries no wax seal, sello-lacre, tag, lab-built or credits row', () => {
+    expect(markup).not.toContain('sello-lacre');
+    expect(markup).not.toContain('class="tag"');
+    expect(markup).not.toContain('lab-built');
+    expect(markup).not.toContain('colophon-credits');
+    expect(markup).not.toContain('mark-link');
   });
+});
 
-  it('styles the credits like Quorum: flex row, 0.6rem gap, 25% currentColor rule', () => {
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*display:\s*flex/);
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*gap:\s*0\.6rem/);
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*border-top:\s*1px solid color-mix\(in srgb, currentColor 25%, transparent\)/);
-    expect(src).toMatch(/\.colophon-credits img\s*\{[^}]*flex:\s*none/);
-  });
-
-  it('renders the forged line only when an expId prop is passed, before the privacy line', () => {
+describe('Footer — forged line inside the small legal line', () => {
+  it('renders the forged line only when an expId prop is passed', () => {
     expect(src).toMatch(/interface Props\s*\{[^}]*expId\?:\s*ExperimentId/s);
     expect(src).toMatch(/forged && \(|forged \?/);
     expect(src).toContain('t.footer.forged');
-    const forgedAt = markup.indexOf('class="wrap forged"');
-    const privacyAt = markup.indexOf('class="wrap colophon-credits"');
-    // The forged line is behind the privacy/credits block in the document,
-    // and is conditional — a non-experiment page renders neither line nor prop plumbing.
-    expect(forgedAt).toBeGreaterThan(-1);
-    expect(forgedAt).toBeLessThan(privacyAt);
     expect(src).toContain('{forged && (');
   });
 
-  it('uses the experiment registry for the name in the mono face', () => {
+  it('nests the forged sentence in .small with the experiment registry name', () => {
     expect(src).toMatch(/const forged = expId \? byId\(expId\) : null/);
-    expect(src).toMatch(/class="forged-name"/);
+    const smallAt = markup.indexOf('class="small"');
+    const forgedAt = markup.indexOf('class="forged"');
+    expect(smallAt).toBeGreaterThan(-1);
+    expect(forgedAt).toBeGreaterThan(smallAt);
+    expect(markup).toMatch(/class="forged-name"/);
     expect(src).toMatch(/\.forged-name\s*\{\s*font-family:\s*var\(--font-mono\)/);
-    expect(src).toMatch(/\.forged\s*\{[^}]*font-family:\s*var\(--font-mono\)/s);
+  });
+
+  it('keeps the privacy notice and the built-with credits in the same small line', () => {
+    expect(markup).toContain('{t.footer.privacy}');
+    expect(markup).toContain('class="privacy"');
+    expect(markup).toContain('class="built"');
+    expect(markup).toContain('t.footer.built.label');
+    const smallAt = markup.indexOf('class="small"');
+    const privacyAt = markup.indexOf('class="privacy"');
+    const builtAt = markup.indexOf('class="built"');
+    const branchAt = markup.indexOf('class="branch mono"');
+    expect(privacyAt).toBeGreaterThan(smallAt);
+    expect(builtAt).toBeGreaterThan(privacyAt);
+    expect(branchAt).toBeGreaterThan(builtAt);
   });
 });
 
@@ -153,10 +195,10 @@ describe('Footer — the braille easter egg', () => {
   it('sits under the UNIVERLAB word as role=img with the sentence as its label', () => {
     const wordAt = markup.indexOf('>UNIVERLAB</span>');
     const brailleAt = markup.indexOf('class="braille"');
-    const metaAt = markup.indexOf('class="meta"');
+    const smallAt = markup.indexOf('class="small"');
     expect(wordAt).toBeGreaterThan(-1);
     expect(brailleAt).toBeGreaterThan(wordAt);
-    expect(brailleAt).toBeLessThan(metaAt);
+    expect(brailleAt).toBeLessThan(smallAt);
     expect(markup).toMatch(/class="braille" role="img" aria-label=\{BRAILLE_SENTENCE\}/);
   });
 
@@ -165,7 +207,7 @@ describe('Footer — the braille easter egg', () => {
   });
 
   it('encrypts the sentence at build time through the lib, not a pasted literal', () => {
-    expect(src).toContain('import { BRAILLE_SENTENCE, toBraille } from \'../lib/braille\'');
+    expect(src).toContain("import { BRAILLE_SENTENCE, toBraille } from '../lib/braille'");
     expect(src).toContain('const brailleCells = toBraille(BRAILLE_SENTENCE);');
     // No visible translation and no hover affordance: the sentence text must
     // not be hardcoded in the footer, and the braille class must not react.
@@ -189,6 +231,10 @@ describe('Footer — the lab faces', () => {
 
   it('nav targets stay tappable at 32px', () => {
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
+  });
+
+  it('the CTA reads in the accent', () => {
+    expect(src).toMatch(/\.cta\s*\{[^}]*color:\s*var\(--accent,\s*#c9a227\)/s);
   });
 });
 
@@ -220,13 +266,8 @@ describe('Footer — three grouped link headings', () => {
     expect(src).not.toContain('const footNav');
   });
 
-  it('the legal links sit in the colophon line', () => {
-    expect(src.indexOf('class="legal"')).toBeGreaterThan(src.indexOf('class="privacy"'));
-    expect(src).toContain('legalLinks');
-  });
-
   it('the footer keeps its links', () => {
-    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
       expect(src).toContain(href);
     }
     expect(src).not.toContain('/status/');
@@ -245,13 +286,15 @@ describe('Footer — three grouped link headings', () => {
   });
 });
 
-describe('i18n — footer.forged in both languages', () => {
+describe('i18n — footer.cta and footer.forged in both languages', () => {
   it('carries the exact spec strings', () => {
+    expect(en.footer.cta).toBe('Workbench · free first call →');
+    expect(es.footer.cta).toBe('Banco de trabajo · primera llamada gratis →');
     expect(en.footer.forged).toBe('Artifact conceived and forged at UniverLab');
     expect(es.footer.forged).toBe('Artefacto concebido y forjado en UniverLab');
   });
 
-  it('keeps the footer dictionaries in parity (forged exists in both, nothing else moved)', () => {
+  it('keeps the footer dictionaries in parity (cta and forged exist in both, nothing else moved)', () => {
     expect(Object.keys(en.footer).sort()).toEqual(Object.keys(es.footer).sort());
     expect(Object.keys(en.footer.built).sort()).toEqual(Object.keys(es.footer.built).sort());
   });
@@ -259,9 +302,9 @@ describe('i18n — footer.forged in both languages', () => {
 
 describe('Footer — the wrap lines sit inside the centred column', () => {
   // A scoped `.margin: 0` is more specific than `.wrap { margin-inline: auto }`,
-  // so the built-with and forged lines drifted to the viewport's left edge at
-  // wide widths instead of lining up with the nav above them. Only the block
-  // axis may be zeroed: the inline margins belong to `.wrap`.
+  // so a zeroed margin drifts the line to the viewport's left edge at wide
+  // widths instead of lining up with the column above. Only the block axis may
+  // be zeroed: the inline margins belong to `.wrap`.
   const GLOBAL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'global.css'), 'utf8');
 
   /** The declaration list of the first `selector {` rule in the component. */
@@ -276,27 +319,28 @@ describe('Footer — the wrap lines sit inside the centred column', () => {
     expect(GLOBAL_CSS).toMatch(/\.wrap\s*\{[^}]*margin-inline:\s*auto/);
   });
 
-  it('.lab-built and .forged zero the block axis only — never the shorthand', () => {
-    for (const sel of ['.lab-built', '.forged']) {
+  it('.small, .word-rule and .forged zero the block axis only — never the shorthand', () => {
+    for (const sel of ['.small', '.word-rule', '.forged']) {
       const decls = rule(sel);
-      expect(decls).toMatch(/margin-block:\s*0/);
+      expect(decls).toMatch(/margin(-block)?:\s*0/);
       expect(decls).not.toMatch(/\bmargin:\s*0/);
     }
   });
 
-  it('neither line narrows its .wrap width', () => {
-    for (const sel of ['.lab-built', '.forged']) {
-      expect(rule(sel)).not.toMatch(/max-width/);
+  it('no .wrap block narrows its width', () => {
+    for (const sel of ['.colophon', '.base']) {
+      const at = src.indexOf(`${sel} {`);
+      if (at > -1) expect(src.slice(at, src.indexOf('}', at))).not.toMatch(/max-width/);
     }
+    expect(rule('.word-rule')).toMatch(/width:\s*min\(/);
   });
 
-  it('.forged stays centred and .lab-built stays left-aligned in the column', () => {
-    expect(rule('.forged')).toMatch(/text-align:\s*center/);
-    expect(rule('.lab-built')).not.toMatch(/text-align:\s*center/);
+  it('.small stays centred', () => {
+    expect(rule('.small')).toMatch(/text-align:\s*center/);
   });
 
   it('the other .wrap blocks carry no margin override of their own', () => {
-    for (const sel of ['.inner', '.base', '.colophon-credits']) {
+    for (const sel of ['.colophon', '.base']) {
       expect(rule(sel)).not.toMatch(/\bmargin[a-z-]*\s*:/);
     }
   });
