@@ -132,11 +132,11 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
      and `grid-template-rows: auto auto` — which would keep drawing a line between these
      entries and leave an empty second row (its row-gap) under every body. The scoped
      selector outranks it (the attribute raises the specificity). */
-  .entry { display: grid; grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding-block: 2.25rem; margin: 0; border: 0; grid-template-rows: none; }
+  .entry { display: grid; grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: 2rem; align-items: start; padding-block: 1.25rem; margin: 0; border: 0; grid-template-rows: none; }
   .entry[hidden] { display: none; }
   .entry[data-status="archived"] { opacity: 0.7; }
 
-  .plate { --machine-h-phone: 200px; --plate-h: clamp(180px, 19vw, 260px); }
+  .plate { --machine-h-phone: 200px; --plate-h: clamp(150px, 13vw, 190px); }
   /* The whole plate is the entry link; block keeps the machine's size unchanged.
      No text decoration: the link wraps art, and the default underline would draw
      a line under the archived entry's EXP number. */
@@ -158,7 +158,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   .def { margin: 4px 0 0; font-size: 18px; line-height: 1.55; max-width: 60ch; }
   .def .ety { color: var(--bench-line-soft); }
   .def .n { font-family: var(--font-mono); font-size: 12px; }
-  .def.fig { margin-top: 2px; }
+  .def.fig { font-size: 0.92em; color: var(--bench-line-soft); margin-top: 0.15rem; }
 
   .entry-body { min-width: 0; }
   /* status.astro builds its board markup by script, so its board styles are
@@ -185,7 +185,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   :global(html[data-bench-theme='night']) .enc-key :global(span) { color: #e0a2a6; }
 
   @media (max-width: 56.25rem) {
-    .plate { --plate-h: 200px; }
+    .plate { --plate-h: 170px; }
   }
 
   @media (max-width: 40rem) {
@@ -198,6 +198,6 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
   }
 
   @media (min-width: 900px) {
-    .entry { grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr); align-items: center; }
+    .entry { grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr); align-items: center; }
   }
 </style>

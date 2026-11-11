@@ -129,8 +129,9 @@ describe('experiments encyclopedia pronunciation and second sense', () => {
     expect(first).toBeGreaterThan(-1);
     expect(second).toBeGreaterThan(first);
     expect(second - first).toBeLessThan(600);
-    // Both senses share the .def style so they read as one entry.
-    expect(VIEW).toContain('.def.fig { margin-top: 2px; }');
+    // Both senses share the .def style so they read as one entry, the second
+    // set smaller and dimmer as a secondary line.
+    expect(VIEW).toContain('.def.fig { font-size: 0.92em; color: var(--bench-line-soft); margin-top: 0.15rem; }');
   });
 
   it('labels the second sense the same way in both languages', () => {
@@ -171,7 +172,8 @@ describe('experiments encyclopedia plate', () => {
     // The plate is the large engraving, sized by --plate-h so the machine and
     // the archived number frame always share one height.
     expect(VIEW).toContain('height="var(--plate-h)"');
-    expect(VIEW).toContain('clamp(180px, 19vw, 260px)');
+    expect(VIEW).toContain('clamp(150px, 13vw, 190px)');
+    expect(VIEW).not.toContain('clamp(180px, 19vw, 260px)');
     expect(VIEW).not.toContain('<video');
     expect(VIEW).not.toContain('IntersectionObserver');
   });
@@ -202,7 +204,7 @@ describe('experiments encyclopedia plate', () => {
     // Neither this view nor status.astro's global `.entry` may draw a line.
     expect(VIEW).not.toMatch(/\.(entry|plate) \{[^}]*border-bottom/);
     expect(VIEW).toMatch(/\.entry \{[^}]*border: 0;/);
-    expect(VIEW).toContain('padding-block: 2.25rem');
+    expect(VIEW).toContain('padding-block: 1.25rem');
   });
 
   it('leaves no phantom board row under the entry body', () => {
@@ -213,9 +215,9 @@ describe('experiments encyclopedia plate', () => {
 
   it('centres the text block against a smaller plate from 900px up', () => {
     expect(VIEW).toMatch(
-      /@media \(min-width: 900px\) \{\s*\.entry \{ grid-template-columns: minmax\(12rem, 17rem\) minmax\(0, 1fr\); align-items: center; \}/,
+      /@media \(min-width: 900px\) \{\s*\.entry \{ grid-template-columns: minmax\(10rem, 13rem\) minmax\(0, 1fr\); align-items: center; \}/,
     );
-    expect(VIEW).toContain('--plate-h: clamp(180px, 19vw, 260px)');
+    expect(VIEW).toContain('--plate-h: clamp(150px, 13vw, 190px)');
   });
 
   it('gives the archived entry its own covered plate, dimmed like the rest of the entry', () => {
