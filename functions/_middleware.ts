@@ -185,10 +185,11 @@ function safeAuditAssetPath(path: string): boolean {
   return path.split('/').every((s) => s !== '' && s !== '.' && s !== '..');
 }
 
-/** A public, valid audit document, or null when the route must answer 404:
- *  no binding, no file, invalid JSON, a contract violation or anything but
- *  `visibility: 'public'`. Private audits answer as if they did not exist. */
-async function loadPublicAudit(
+/** A valid audit document of any visibility, or null when the route must
+ *  answer 404: no binding, no file, invalid JSON or a contract violation.
+ *  Visibility is gated by the caller: public audits serve to anyone, private
+ *  audits only after `auditRequestAllowed` passes. */
+async function loadAuditDoc(
   env: { AUDITS?: AuditR2Bucket },
   slug: string,
 ): Promise<AuditDocument | null> {
@@ -198,12 +199,171 @@ async function loadPublicAudit(
     if (!obj) return null;
     const doc = JSON.parse(await obj.text()) as AuditDocument;
     if (validateAuditDocument(doc).errors.length > 0) return null;
-    if (typeof doc !== 'object' || doc === null || doc.visibility !== 'public') return null;
+    if (typeof doc !== 'object' || doc === null) return null;
+    if (doc.visibility !== 'public' && doc.visibility !== 'private') return null;
     if (!doc.assets.every((a) => safeAuditAssetPath(a.path))) return null;
     return doc;
   } catch {
     return null;
   }
+}
+
+/** Environment the private-audit gate reads. `ACCESS_TEAM_DOMAIN` is the
+ *  Cloudflare Access team domain (`<team>.cloudflareaccess.com`) whose keys
+ *  sign the JWT; `ACCESS_AUD` is the application AUD tag the token must
+ *  carry. Both are operator dashboard values, never committed. */
+export interface AuditAccessEnv {
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+}
+
+const ACCESS_CERT_TTL_MS = 5 * 60 * 1000;
+
+let accessKeys: { fetchedAt: number; keys: Map<string, CryptoKey> } | null = null;
+
+/** Test-only: drop the cached Access public keys so tests start cold. */
+export function resetAccessKeyCacheForTests(): void {
+  accessKeys = null;
+}
+
+function base64UrlToBytes(s: string): Uint8Array | null {
+  try {
+    let b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = b64.length % 4;
+    if (pad > 0) b64 += '='.repeat(4 - pad);
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+function base64UrlToJson(s: string): Record<string, unknown> | null {
+  const bytes = base64UrlToBytes(s);
+  if (!bytes) return null;
+  try {
+    const text = new TextDecoder().decode(bytes);
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch the team's Access public keys and import the RSA ones for RS256.
+ *  Throws on any failure — the caller fails closed. */
+async function fetchAccessKeys(teamDomain: string): Promise<Map<string, CryptoKey>> {
+  const res = await fetch(`https://${teamDomain}/cdn-cgi/access/certs`);
+  if (!res.ok) throw new Error(`certs ${res.status}`);
+  const jwks = (await res.json()) as { keys?: unknown };
+  const out = new Map<string, CryptoKey>();
+  if (!Array.isArray(jwks.keys)) return out;
+  for (const entry of jwks.keys) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const k = entry as Record<string, unknown>;
+    if (k['kty'] !== 'RSA' || typeof k['kid'] !== 'string' || typeof k['n'] !== 'string' || typeof k['e'] !== 'string') continue;
+    try {
+      const key = await crypto.subtle.importKey(
+        'jwk',
+        { kty: 'RSA', n: k['n'] as string, e: k['e'] as string, alg: 'RS256', ext: true },
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['verify'],
+      );
+      out.set(k['kid'] as string, key);
+    } catch {
+      // One unusable key never blocks the usable ones.
+    }
+  }
+  return out;
+}
+
+/** The cached Access public key for `kid`, refetching once when the token
+ *  names a key id the cache does not hold. Null on any failure. */
+async function accessPublicKey(teamDomain: string, kid: string): Promise<CryptoKey | null> {
+  const now = Date.now();
+  const fresh = accessKeys && now - accessKeys.fetchedAt <= ACCESS_CERT_TTL_MS;
+  if (fresh) {
+    const hit = accessKeys!.keys.get(kid);
+    if (hit) return hit;
+  } else {
+    accessKeys = { fetchedAt: now, keys: new Map() };
+  }
+  try {
+    accessKeys = { fetchedAt: Date.now(), keys: await fetchAccessKeys(teamDomain) };
+  } catch {
+    return null;
+  }
+  return accessKeys.keys.get(kid) ?? null;
+}
+
+/** Verify the `Cf-Access-Jwt-Assertion` JWT against the team's keys: RS256
+ *  signature, `aud` equal to `ACCESS_AUD`, issuer, and expiry. Returns the
+ *  reader's email on success, null on any failure — fail closed. */
+export async function verifyAccessToken(
+  token: string,
+  env: AuditAccessEnv,
+): Promise<string | null> {
+  try {
+    const team = env.ACCESS_TEAM_DOMAIN;
+    const aud = env.ACCESS_AUD;
+    if (!team || !aud) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const header = base64UrlToJson(parts[0]);
+    const payload = base64UrlToJson(parts[1]);
+    const signature = base64UrlToBytes(parts[2]);
+    if (!header || !payload || !signature) return null;
+    if (header['alg'] !== 'RS256' || typeof header['kid'] !== 'string') return null;
+    const tokenAud = payload['aud'];
+    const audOk = Array.isArray(tokenAud) ? tokenAud.includes(aud) : tokenAud === aud;
+    if (!audOk) return null;
+    const iss = payload['iss'];
+    if (typeof iss !== 'string' || (iss !== `https://${team}` && iss !== `https://${team}/`)) return null;
+    if (typeof payload['exp'] !== 'number' || payload['exp'] * 1000 <= Date.now()) return null;
+    const email = payload['email'];
+    if (typeof email !== 'string' || email === '') return null;
+    const key = await accessPublicKey(team, header['kid'] as string);
+    if (!key) return null;
+    const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+    const ok = await crypto.subtle.verify(
+      { name: 'RSASSA-PKCS1-v1_5' },
+      key,
+      new Uint8Array(signature),
+      data,
+    );
+    if (!ok) return null;
+    return email;
+  } catch {
+    return null;
+  }
+}
+
+/** The reader's email against the document's own allowlist, compared without
+ *  case. Anything else — including a missing list — denies. */
+export function auditAllowed(doc: AuditDocument, email: string): boolean {
+  const list = doc.access?.emails;
+  if (!Array.isArray(list)) return false;
+  const want = email.toLowerCase();
+  return list.some((e) => typeof e === 'string' && e.toLowerCase() === want);
+}
+
+/** A private audit serves only when the configuration is present, the
+ *  request carries a valid Access JWT, and its email is on the document's
+ *  own list. Never relies on Access alone; never reveals why it denied. */
+async function auditRequestAllowed(
+  request: Request,
+  env: AuditAccessEnv,
+  doc: AuditDocument,
+): Promise<boolean> {
+  const token = request.headers.get('Cf-Access-Jwt-Assertion');
+  if (!token) return false;
+  const email = await verifyAccessToken(token, env);
+  if (!email) return false;
+  return auditAllowed(doc, email);
 }
 
 /** `bytes=start-end`, `bytes=start-` or a `bytes=-suffix` tail. Null means
@@ -232,7 +392,7 @@ export async function onRequest(context: {
   env: {
     ASSETS: { fetch: (input: string | Request) => Promise<Response> };
     AUDITS?: AuditR2Bucket;
-  };
+  } & AuditAccessEnv;
   next: () => Promise<Response>;
 }): Promise<Response> {
   const { request, env, next } = context;
@@ -253,8 +413,11 @@ export async function onRequest(context: {
     const page = !wantsMarkdown(accept) ? AUDIT_PAGE_RE.exec(pathname) : null;
     if (page) {
       const slug = page[1];
-      const doc = await loadPublicAudit(env, slug);
+      const doc = await loadAuditDoc(env, slug);
       if (!doc) return next();
+      // A private audit answers as if it did not exist unless the request
+      // carries a valid Access JWT for an email on its own list.
+      if (doc.visibility === 'private' && !(await auditRequestAllowed(request, env, doc))) return next();
       const url = new URL(request.url);
       const shell = await env.ASSETS.fetch(new URL('/audits/', url.origin).href);
       if (!shell.ok) return next();
@@ -318,9 +481,10 @@ export async function onRequest(context: {
       } catch {
         // A malformed escape cannot name a catalogue path; leave it encoded.
       }
-      const doc = await loadPublicAudit(env, slug);
+      const doc = await loadAuditDoc(env, slug);
       const entry = doc?.assets.find((a) => a.path === `assets/${rest}` || a.path === rest) ?? null;
       if (!doc || !entry || !env.AUDITS) return next();
+      if (doc.visibility === 'private' && !(await auditRequestAllowed(request, env, doc))) return next();
       try {
         const full = await env.AUDITS.get(`${slug}/${entry.path}`);
         if (!full) return next();

@@ -164,3 +164,23 @@ To add a new experiment command: add its ID to the `experimentIds` array in
   drop in `public/demos/<id>.mp4`, set `demo` in `experiments.ts`.
 - **`get.univerlab.org`** → the Worker in `workers/get/`, deployed by the
   **Deploy get worker** Action when `workers/get/**` changes. See its README.
+- **Private audits** → audit pages render at `/audits/<slug>/` from the
+  private R2 bucket bound as `AUDITS` (dashboard-side binding; the physical
+  bucket is `univerlab-audits`). Cloudflare Access sits in front of
+  `/audits/*` (one application, one-time PIN by email; public audits are
+  bypassed). The function verifies the `Cf-Access-Jwt-Assertion` JWT itself —
+  signature against `https://<ACCESS_TEAM_DOMAIN>/cdn-cgi/access/certs`,
+  `aud` equal to `ACCESS_AUD`, issuer and expiry — and only serves a private
+  audit when the token email is on the audit's own allowlist. Configure in
+  the Pages dashboard: `ACCESS_TEAM_DOMAIN` (e.g.
+  `<team>.cloudflareaccess.com`), `ACCESS_AUD` (the application AUD tag),
+  and the `AUDITS` R2 binding. A missing token, an unlisted email or missing
+  configuration answers the site 404, like an audit that does not exist.
+- **Audit operator commands** (run locally with your own Wrangler login;
+  audits are never committed to the repo):
+  `node scripts/audit.ts validate <folder>` checks the folder against the
+  contract; `node scripts/audit.ts push <folder> [--slug <slug>]` validates
+  first, then uploads `audit.json` plus every declared asset to
+  `univerlab-audits/<slug>/` and prints the page URL;
+  `node scripts/audit.ts remove <slug>` lists the audit's remote objects,
+  asks for confirmation, then deletes them.
