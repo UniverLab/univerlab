@@ -121,14 +121,36 @@ export async function sendText(env: SendEnv, to: string, body: string): Promise<
   return res.ok;
 }
 
-export async function markRead(env: SendEnv, messageId: string): Promise<boolean> {
+async function postRead(env: SendEnv, messageId: string, withTyping: boolean): Promise<boolean> {
+  const body: Record<string, unknown> = {
+    messaging_product: 'whatsapp',
+    status: 'read',
+    message_id: messageId,
+  };
+  if (withTyping) body.typing_indicator = { type: 'text' };
   const res = await fetch(`${GRAPH}/${env.WA_PHONE_NUMBER_ID}/messages`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${env.WA_ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId }),
+    body: JSON.stringify(body),
   });
   return res.ok;
+}
+
+export async function markRead(env: SendEnv, messageId: string): Promise<boolean> {
+  // The typing indicator rides on the read receipt when the Cloud API offers
+  // it. When the API rejects the field, the plain receipt is retried so the
+  // message is still marked as read and nothing changes for the client.
+  try {
+    if (await postRead(env, messageId, true)) return true;
+  } catch {
+    return false;
+  }
+  try {
+    return await postRead(env, messageId, false);
+  } catch {
+    return false;
+  }
 }

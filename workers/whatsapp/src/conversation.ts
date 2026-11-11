@@ -1,5 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
+import { burstConfig } from './env';
+import { burstDue, joinBurst, nextAlarm, type BurstState } from './burst';
 import { markRead, sendText, type Inbound } from './meta';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
 import {
@@ -214,7 +216,33 @@ export class Conversation extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     this.ensureSchema();
-    const now = Date.now();
+    let now = Date.now();
+    // The one alarm fires for the earliest pending deadline: when the burst
+    // window has closed the burst is answered first, then the other work.
+    const burstRaw = this.state('burst');
+    if (burstRaw) {
+      let open: BurstState | null = null;
+      try {
+        const parsed = JSON.parse(burstRaw) as Partial<BurstState>;
+        if (
+          typeof parsed.firstAt === 'number' &&
+          typeof parsed.quietDue === 'number' &&
+          typeof parsed.maxDue === 'number' &&
+          Array.isArray(parsed.ids) &&
+          typeof parsed.from === 'string'
+        ) {
+          open = parsed as BurstState;
+        }
+      } catch {
+        open = null;
+      }
+      if (open === null) {
+        this.state('burst', null);
+      } else if (burstDue(open, now)) {
+        await this.flushBurst();
+        now = Date.now();
+      }
+    }
     const raw = this.state('booking');
     const ret = Number(this.state('retention') ?? '0');
     if (raw && !(ret > 0 && now >= ret)) {
@@ -231,7 +259,6 @@ export class Conversation extends DurableObject<Env> {
         const wbId = this.env.WORKBENCH_CALENDAR_ID;
         if (oauth && wbId) {
           const deadline = st.createdAt + HOLD_MS;
-          let settled = false;
           try {
             const token = await accessToken(oauth);
             const ev = await getEvent(token, wbId, st.eventId);
@@ -243,7 +270,6 @@ export class Conversation extends DurableObject<Env> {
               });
               await sendText(this.env, st.phone, text);
               this.storeAssistant(Math.floor(now / 1000), 'a-alarm-confirm-' + st.eventId, text);
-              settled = true;
             } else if (now >= deadline) {
               if (ev !== null) {
                 try {
@@ -256,28 +282,23 @@ export class Conversation extends DurableObject<Env> {
               const text = EXPIRED[st.lang];
               await sendText(this.env, st.phone, text);
               this.storeAssistant(Math.floor(now / 1000), 'a-alarm-expire-' + st.eventId, text);
-              settled = true;
             }
           } catch {
             /* transient calendar failure: re-arm below and retry */
           }
-          if (settled) {
-            if (ret > now) await this.ctx.storage.setAlarm(ret);
-            else await this.ctx.storage.deleteAlarm();
-          } else {
-            const next = Math.min(deadline, now + HOLD_CHECK_MS);
-            await this.ctx.storage.setAlarm(ret > 0 ? Math.min(next, ret) : next);
-          }
+          await this.armNext(now);
           return;
         }
       }
-      if (ret > now) {
-        await this.ctx.storage.setAlarm(ret);
-        return;
-      }
+      await this.armNext(now);
+      return;
     }
-    await this.ctx.storage.deleteAll();
-    await this.ctx.storage.deleteAlarm();
+    if (ret > 0 && now >= ret) {
+      await this.ctx.storage.deleteAll();
+      await this.ctx.storage.deleteAlarm();
+      return;
+    }
+    await this.armNext(now);
   }
 
   private async finishBooking(m: Inbound, st: IntakeState): Promise<void> {
@@ -577,6 +598,178 @@ export class Conversation extends DurableObject<Env> {
         await this.erase(m, erased);
         return;
       }
+    }
+    const existing = this.ctx.storage.sql
+      .exec('SELECT 1 FROM messages WHERE id = ? LIMIT 1', m.id)
+      .toArray();
+    if (existing.length > 0) return;
+    this.ctx.storage.sql.exec(
+      'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
+      m.id,
+      m.timestamp,
+      'user',
+      m.type,
+      m.text ?? null,
+      m.mediaId ?? null
+    );
+    const retention = alarmAt(m.timestamp);
+    this.state('retention', String(retention));
+    await markRead(this.env, m.id);
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    if (m.from === operator) {
+      // The operator's own messages are stored and read, never answered.
+      let alarm = retention;
+      try {
+        const raw = this.state('booking');
+        if (raw) {
+          const b = JSON.parse(raw) as BookingState;
+          if (b.phase === 'held' && Number.isFinite(b.createdAt)) {
+            // A pending hold keeps its own deadline/check alarm; retention must
+            // not push it months out or the 24h expiry never runs.
+            alarm = Math.min(alarm, b.createdAt + HOLD_MS, Date.now() + HOLD_CHECK_MS);
+          }
+        }
+      } catch {
+        /* corrupt booking state: the retention alarm stands */
+      }
+      await this.ctx.storage.setAlarm(alarm);
+      return;
+    }
+    // The message joins the open burst and is answered when the client pauses:
+    // the burst timer never pushes the retention or hold deadlines out.
+    const cfg = burstConfig(this.env);
+    const now = Date.now();
+    let firstAt = now;
+    let ids: string[] = [];
+    try {
+      const prev = this.state('burst');
+      if (prev) {
+        const parsed = JSON.parse(prev) as Partial<BurstState>;
+        if (typeof parsed.firstAt === 'number' && Number.isFinite(parsed.firstAt)) {
+          firstAt = parsed.firstAt;
+        }
+        if (Array.isArray(parsed.ids)) {
+          ids = parsed.ids.filter((id): id is string => typeof id === 'string');
+        }
+      }
+    } catch {
+      firstAt = now;
+      ids = [];
+    }
+    ids.push(m.id);
+    const burst: BurstState = {
+      firstAt,
+      quietDue: now + cfg.quietMs,
+      maxDue: firstAt + cfg.maxMs,
+      ids,
+      from: m.from,
+    };
+    if (m.name !== undefined) burst.name = m.name;
+    this.state('burst', JSON.stringify(burst));
+    await this.ctx.storage.setAlarm(
+      nextAlarm(Math.min(burst.quietDue, burst.maxDue), retention, this.holdDue(now))
+    );
+    return;
+  }
+
+  /** The next pending hold deadline, if a consultation hold is open. */
+  private holdDue(now: number): number | undefined {
+    try {
+      const raw = this.state('booking');
+      if (!raw) return undefined;
+      const b = JSON.parse(raw) as Partial<BookingState>;
+      if (b.phase === 'held' && typeof b.createdAt === 'number' && Number.isFinite(b.createdAt)) {
+        return Math.min(b.createdAt + HOLD_MS, now + HOLD_CHECK_MS);
+      }
+    } catch {
+      /* corrupt booking state: no hold deadline */
+    }
+    return undefined;
+  }
+
+  private burstRows(
+    ids: string[]
+  ): Array<{ id: string; at: number; type: string; text: string | null }> {
+    const rows = this.ctx.storage.sql
+      .exec("SELECT id, at, type, text FROM messages WHERE role = 'user' ORDER BY at ASC, rowid ASC")
+      .toArray() as Array<{ id: string; at: number; type: string; text: string | null }>;
+    const wanted = new Set(ids);
+    return rows.filter((r) => wanted.has(r.id));
+  }
+
+  /** Re-arm the one alarm for the earliest still-pending deadline. When
+   *  nothing is pending the object sleeps with nothing stored. */
+  private async armNext(now: number): Promise<void> {
+    const deadlines: number[] = [];
+    try {
+      const raw = this.state('burst');
+      if (raw) {
+        const burst = JSON.parse(raw) as Partial<BurstState>;
+        if (typeof burst.quietDue === 'number' && typeof burst.maxDue === 'number') {
+          const due = Math.min(burst.quietDue, burst.maxDue);
+          if (due > now) deadlines.push(due);
+        }
+      }
+    } catch {
+      /* a corrupt burst never re-arms */
+    }
+    const ret = Number(this.state('retention') ?? '0');
+    if (ret > now) deadlines.push(ret);
+    const hold = this.holdDue(now);
+    if (hold !== undefined && hold > now) deadlines.push(hold);
+    if (deadlines.length === 0) {
+      await this.ctx.storage.deleteAll();
+      await this.ctx.storage.deleteAlarm();
+      return;
+    }
+    await this.ctx.storage.setAlarm(Math.min(...deadlines));
+  }
+
+  /** Answer the open burst as one client turn: every message of the burst,
+   *  oldest first, is the input to the usual pipeline. */
+  private async flushBurst(): Promise<void> {
+    const raw = this.state('burst');
+    this.state('burst', null);
+    let ids: string[] = [];
+    let from = '';
+    let name: string | undefined;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as Partial<BurstState>;
+        if (Array.isArray(parsed.ids)) {
+          ids = parsed.ids.filter((id): id is string => typeof id === 'string');
+        }
+        if (typeof parsed.from === 'string') from = parsed.from;
+        if (typeof parsed.name === 'string') name = parsed.name;
+      } catch {
+        ids = [];
+      }
+    }
+    const rows = ids.length > 0 ? this.burstRows(ids) : [];
+    if (rows.length === 0 || from === '') return;
+    const last = rows[rows.length - 1];
+    const texts = rows.filter((r) => r.type === 'text' && r.text !== null);
+    const m: Inbound = {
+      id: last.id,
+      from,
+      timestamp: last.at,
+      type: texts.length > 0 ? 'text' : last.type,
+    };
+    if (name !== undefined) m.name = name;
+    const joined = joinBurst(texts.map((r) => ({ at: r.at, text: r.text as string })));
+    if (joined !== '') m.text = joined;
+    const firstMedia = rows.find((r) => r.type !== 'text');
+    if (texts.length > 0 && firstMedia !== undefined) {
+      // A burst mixing text and media: the text is answered below as one
+      // turn, and the media keeps today's handoff exactly once per burst.
+      const mediaLang = detectLang(joined);
+      await sendText(this.env, from, NON_TEXT[mediaLang]);
+      this.storeAssistant(firstMedia.at, 'a-' + firstMedia.id + '-nontext', NON_TEXT[mediaLang]);
+      const mediaIn: Inbound = { id: firstMedia.id, from, timestamp: firstMedia.at, type: firstMedia.type };
+      if (name !== undefined) mediaIn.name = name;
+      await this.notify(mediaIn);
+    }
+    if (m.type === 'text') {
       const pendingRaw = this.state('pendingErase');
       if (pendingRaw) {
         let pendingLang: Lang = 'es';
@@ -606,42 +799,6 @@ export class Conversation extends DurableObject<Env> {
         this.storeAssistant(m.timestamp, 'a-' + m.id + '-pending', PENDING_ERASE[lang]);
         return;
       }
-    }
-    const existing = this.ctx.storage.sql
-      .exec('SELECT 1 FROM messages WHERE id = ? LIMIT 1', m.id)
-      .toArray();
-    if (existing.length > 0) return;
-    this.ctx.storage.sql.exec(
-      'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
-      m.id,
-      m.timestamp,
-      'user',
-      m.type,
-      m.text ?? null,
-      m.mediaId ?? null
-    );
-    const retention = alarmAt(m.timestamp);
-    let alarm = retention;
-    try {
-      const raw = this.state('booking');
-      if (raw) {
-        const b = JSON.parse(raw) as BookingState;
-        if (b.phase === 'held' && Number.isFinite(b.createdAt)) {
-          // A pending hold keeps its own deadline/check alarm; retention must
-          // not push it months out or the 24h expiry never runs.
-          alarm = Math.min(alarm, b.createdAt + HOLD_MS, Date.now() + HOLD_CHECK_MS);
-        }
-      }
-    } catch {
-      /* corrupt booking state: the retention alarm stands */
-    }
-    await this.ctx.storage.setAlarm(alarm);
-    this.state('retention', String(retention));
-    await markRead(this.env, m.id);
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    if (m.from === operator) return;
-    if (m.type === 'text') {
-      const lang = detectLang(m.text ?? '');
       const booked = this.state('booking');
       if (booked) {
         try {

@@ -93,6 +93,9 @@ const env = {
   AI: {},
   WA_ACCESS_TOKEN: 'token',
   WA_PHONE_NUMBER_ID: 'phone-id',
+  // The burst window closes at once, so each receive is answered by the
+  // alarm that follows it; the waiting itself is covered in burst.test.ts.
+  BURST_QUIET_MS: '0',
 };
 
 const BOOKING_ENV = {
@@ -114,9 +117,42 @@ function makeCtx(handoff = false) {
   const state = new Map<string, string>();
   if (handoff) state.set('handoff', '1');
   const inserts: unknown[] = [];
+  const rows: Array<{ id: string; at: number; role: string; type: string; text: string | null }> = [];
   const sql = {
     exec: jest.fn((query: string, ...params: unknown[]) => {
-      if (query.startsWith('INSERT INTO messages')) inserts.push(params[0]);
+      if (query.startsWith('SELECT 1 FROM messages WHERE id')) {
+        const found = rows.some((r) => r.id === params[0]);
+        return { toArray: () => (found ? [1] : []) };
+      }
+      if (query.startsWith('SELECT id, at, type, text FROM messages WHERE role')) {
+        return {
+          toArray: () =>
+            rows
+              .filter((r) => r.role === 'user')
+              .map((r) => ({ id: r.id, at: r.at, type: r.type, text: r.text })),
+        };
+      }
+      if (query.startsWith('SELECT role, text FROM messages WHERE text IS NOT NULL')) {
+        return {
+          toArray: () =>
+            rows
+              .filter((r) => r.text !== null)
+              .reverse()
+              .slice(0, 12)
+              .map((r) => ({ role: r.role, text: r.text })),
+        };
+      }
+      if (query.startsWith('INSERT INTO messages')) {
+        inserts.push(params[0]);
+        rows.push({
+          id: String(params[0]),
+          at: Number(params[1]),
+          role: String(params[2]),
+          type: String(params[3]),
+          text: params[4] as string | null,
+        });
+        return { toArray: () => [] };
+      }
       if (query.startsWith('INSERT INTO state')) state.set(String(params[0]), String(params[1]));
       if (query.startsWith('DELETE FROM state')) state.delete(String(params[0]));
       if (query.startsWith('SELECT value FROM state')) {
@@ -154,13 +190,26 @@ function inbound(overrides: Partial<Inbound> = {}): Inbound {
   };
 }
 
+// A client message is stored on receive and answered when the burst window
+// closes; with BURST_QUIET_MS '0' the alarm right after answers it.
+async function say(c: Conversation, msg: Inbound): Promise<void> {
+  await c.receive(msg);
+  await c.alarm();
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
+  // Pin the clock near the fixture timestamp so the stored six-month
+  // retention still lies in the future while the burst is handled.
+  jest.spyOn(Date, 'now').mockReturnValue(AT * 1000 + 3600 * 1000);
   (runModel as jest.Mock).mockResolvedValue('{"delete": false}');
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
   (accessToken as jest.Mock).mockResolvedValue('tok');
   (freeBusy as jest.Mock).mockResolvedValue([]);
   (listEvents as jest.Mock).mockResolvedValue([]);
+  // A hold the test does not confirm stays a hold: the alarm after every
+  // message must not settle it on a previous test's calendar state.
+  (getEvent as jest.Mock).mockResolvedValue(null);
   (brief as jest.Mock).mockResolvedValue({ bullets: ['goal x'] });
 });
 
@@ -219,7 +268,7 @@ test('a handoff is remembered, so a later deletion notices the operator', async 
     handoff: true,
   });
 
-  await c.receive(inbound({ id: 'wamid.7', text: 'quiero hablar con una persona' }));
+  await say(c, inbound({ id: 'wamid.7', text: 'quiero hablar con una persona' }));
   await c.receive(inbound({ id: 'wamid.8', text: 'DELETE MY DATA' }));
 
   expect(sendText).toHaveBeenCalledWith(env, OPERATOR, operatorErased(CLIENT));
@@ -240,7 +289,7 @@ test('an incoming message schedules deletion six months after it', async () => {
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
 
-  await c.receive(inbound({ id: 'wamid.4' }));
+  await say(c, inbound({ id: 'wamid.4' }));
 
   expect(storage.setAlarm).toHaveBeenCalledWith(retentionDeadline(AT * 1000));
   expect(storage.deleteAll).not.toHaveBeenCalled();
@@ -256,7 +305,7 @@ test('a number that writes again after an erasure starts a fresh conversation', 
   expect(storage.deleteAll).toHaveBeenCalledTimes(1);
 
   (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
-  await c.receive(inbound({ id: 'wamid.6', text: 'hola de nuevo', timestamp: AT + 60 }));
+  await say(c, inbound({ id: 'wamid.6', text: 'hola de nuevo', timestamp: AT + 60 }));
 
   expect(answer).toHaveBeenCalled();
   expect(storage.setAlarm).toHaveBeenCalledWith(retentionDeadline((AT + 60) * 1000));
@@ -283,7 +332,7 @@ test('a fuzzy deletion request asks for confirmation without erasing', async () 
   const c = new Conversation(ctx as never, env as never);
   (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
 
-  await c.receive(inbound({ id: 'wamid.f1', text: 'quiero que borren mis datos' }));
+  await say(c, inbound({ id: 'wamid.f1', text: 'quiero que borren mis datos' }));
 
   expect(storage.deleteAll).not.toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, PENDING_ERASE.es);
@@ -296,9 +345,10 @@ test('confirming a pending request erases like the exact phrase', async () => {
   seedPending(ctx, 'es', Date.now() + CONFIRM_MS);
   const c = new Conversation(ctx as never, env as never);
 
-  await c.receive(inbound({ id: 'wamid.f2', text: 'SÍ' }));
+  await say(c, inbound({ id: 'wamid.f2', text: 'SÍ' }));
 
-  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  // The flush erases; the alarm after finds nothing pending and sleeps wiped.
+  expect(storage.deleteAll).toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledTimes(1);
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
 });
@@ -309,7 +359,7 @@ test('any other answer cancels the request and continues normally', async () => 
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'hola hola', booking: false, handoff: false });
 
-  await c.receive(inbound({ id: 'wamid.f3', text: 'ya no quiero' }));
+  await say(c, inbound({ id: 'wamid.f3', text: 'ya no quiero' }));
 
   expect(storage.deleteAll).not.toHaveBeenCalled();
   expect(clientTexts()).toContain(NOT_DELETED.es);
@@ -317,7 +367,7 @@ test('any other answer cancels the request and continues normally', async () => 
   expect(clientTexts()).toContain('hola hola');
 
   // The request is cleared: a later SÍ is just another message.
-  await c.receive(inbound({ id: 'wamid.f4', text: 'SÍ' }));
+  await say(c, inbound({ id: 'wamid.f4', text: 'SÍ' }));
   expect(storage.deleteAll).not.toHaveBeenCalled();
 });
 
@@ -327,7 +377,7 @@ test('an expired pending confirmation is ignored', async () => {
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'hola hola', booking: false, handoff: false });
 
-  await c.receive(inbound({ id: 'wamid.f5', text: 'SÍ' }));
+  await say(c, inbound({ id: 'wamid.f5', text: 'SÍ' }));
 
   expect(storage.deleteAll).not.toHaveBeenCalled();
   expect(clientTexts()).not.toContain(NOT_DELETED.es);
@@ -350,7 +400,7 @@ test('a question about stored data is answered, not treated as deletion', async 
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'guardamos X', booking: false, handoff: false });
 
-  await c.receive(inbound({ id: 'wamid.f7', text: '¿qué datos guardan?' }));
+  await say(c, inbound({ id: 'wamid.f7', text: '¿qué datos guardan?' }));
 
   expect(storage.deleteAll).not.toHaveBeenCalled();
   expect(clientTexts()).not.toContain(PENDING_ERASE.es);
@@ -363,14 +413,14 @@ test('a fuzzy deletion request in english confirms in english', async () => {
   const c = new Conversation(ctx as never, env as never);
   (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
 
-  await c.receive(inbound({ id: 'wamid.f8', text: 'please delete all my data, thanks' }));
+  await say(c, inbound({ id: 'wamid.f8', text: 'please delete all my data, thanks' }));
 
   expect(storage.deleteAll).not.toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, PENDING_ERASE.en);
 
-  await c.receive(inbound({ id: 'wamid.f9', text: 'YES' }));
+  await say(c, inbound({ id: 'wamid.f9', text: 'YES' }));
 
-  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  expect(storage.deleteAll).toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.en);
 });
 
@@ -378,7 +428,7 @@ test('a fuzzy deletion request wins over an active booking flow', async () => {
   const { c } = await offerSlots('first-call');
   (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
 
-  await c.receive(inbound({ id: 'wamid.bf', text: 'mejor borren toda mi información' }));
+  await say(c, inbound({ id: 'wamid.bf', text: 'mejor borren toda mi información' }));
 
   expect(clientTexts()).toContain(PENDING_ERASE.es);
   expect(decide).not.toHaveBeenCalled();
@@ -397,8 +447,8 @@ async function offerSlots(service: string) {
   (answer as jest.Mock).mockResolvedValue({ reply: 'x', booking: true, handoff: true, service });
   (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
   (freeSlots as jest.Mock).mockReturnValue([SLOT_A, SLOT_B]);
-  await c.receive(inbound({ id: 'wamid.b1', text: 'quiero agendar una llamada' }));
-  await c.receive(inbound({ id: 'wamid.b2', text: 'quiero lograr X, uso Y' }));
+  await say(c, inbound({ id: 'wamid.b1', text: 'quiero agendar una llamada' }));
+  await say(c, inbound({ id: 'wamid.b2', text: 'quiero lograr X, uso Y' }));
   return { ctx, storage, c };
 }
 
@@ -417,8 +467,8 @@ test('hands over as today when no slot fits', async () => {
   (answer as jest.Mock).mockResolvedValue({ reply: 'x', booking: true, handoff: true, service: 'first-call' });
   (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
   (freeSlots as jest.Mock).mockReturnValue([]);
-  await c.receive(inbound({ id: 'wamid.e1', text: 'quiero agendar una llamada' }));
-  await c.receive(inbound({ id: 'wamid.e2', text: 'quiero lograr X, uso Y' }));
+  await say(c, inbound({ id: 'wamid.e1', text: 'quiero agendar una llamada' }));
+  await say(c, inbound({ id: 'wamid.e2', text: 'quiero lograr X, uso Y' }));
 
   // No offer, no event: the brief went to the operator like before.
   expect(insertEvent).not.toHaveBeenCalled();
@@ -431,7 +481,7 @@ test('books a consultation as a hold and tells the client how to pay', async () 
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
 
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
 
   expect(insertEvent).toHaveBeenCalledTimes(1);
   const [, calendarId, body] = (insertEvent as jest.Mock).mock.calls[0] as [string, string, { summary: string }];
@@ -450,7 +500,7 @@ test('books a first call without a hold prefix', async () => {
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev2', summary: '', start: SLOT_B, end: SLOT_B });
 
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el segundo' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el segundo' }));
 
   const [, , body] = (insertEvent as jest.Mock).mock.calls[0] as [string, string, { summary: string }];
   expect(body.summary.startsWith('[Por confirmar] ')).toBe(false);
@@ -465,7 +515,7 @@ test('deletes an expired hold and tells the client', async () => {
   const { c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (getEvent as jest.Mock).mockResolvedValue({
     id: 'ev1',
     summary: '[Por confirmar] Consultoría · Ana',
@@ -489,7 +539,7 @@ test('tells the client when the operator confirmed the hold', async () => {
   const { c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (getEvent as jest.Mock).mockResolvedValue({
     id: 'ev1',
     summary: 'Consultoría · Ana',
@@ -507,7 +557,7 @@ test('a calendar failure apologises, notifies the operator and books nothing', a
   const { c } = await offerSlots('first-call');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (accessToken as jest.Mock).mockRejectedValue(new Error('revoked'));
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
 
   expect(insertEvent).not.toHaveBeenCalled();
   expect(clientTexts().some((t) => t.includes('agenda no responde'))).toBe(true);
@@ -515,7 +565,7 @@ test('a calendar failure apologises, notifies the operator and books nothing', a
 
   // The booking is cleared: the next message starts over instead of deciding.
   (answer as jest.Mock).mockResolvedValue({ reply: 'hola', booking: false, handoff: false });
-  await c.receive(inbound({ id: 'wamid.b4', text: 'hola de nuevo' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'hola de nuevo' }));
   expect(answer).toHaveBeenCalledTimes(2);
 });
 
@@ -523,10 +573,10 @@ test('cancelling a first call deletes the event and tells the client', async () 
   const { c } = await offerSlots('first-call');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev9', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
 
-  await c.receive(inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
 
   expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev9');
   expect(clientTexts().some((t) => t.includes('cancelé'))).toBe(true);
@@ -537,7 +587,7 @@ test('a paid consultation inside 24 hours is moved instead of refunded', async (
   const { c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev7', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   // The operator confirmed the hold: the alarm marks the booking as paid.
   (getEvent as jest.Mock).mockResolvedValue({
     id: 'ev7',
@@ -549,7 +599,7 @@ test('a paid consultation inside 24 hours is moved instead of refunded', async (
   (Date.now as jest.Mock).mockReturnValue(Date.parse(SLOT_A) - 2 * 3600 * 1000);
   (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
 
-  await c.receive(inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
 
   expect(deleteEvent).not.toHaveBeenCalled();
   expect(clientTexts().some((t) => t.includes('una vez sin costo'))).toBe(true);
@@ -559,11 +609,11 @@ test('cancelling an unpaid hold inside 24 hours just releases it', async () => {
   const { c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev8', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (Date.now as jest.Mock).mockReturnValue(Date.parse(SLOT_A) - 2 * 3600 * 1000);
   (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
 
-  await c.receive(inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
 
   expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev8');
   expect(clientTexts().some((t) => t.includes('cancelé'))).toBe(true);
@@ -574,10 +624,10 @@ test('a client message during a hold keeps the hold alarm ahead of retention', a
   const { storage, c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
 
-  await c.receive(inbound({ id: 'wamid.b4', text: 'ya realicé el pago' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'ya realicé el pago' }));
 
   const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
   expect(alarms[alarms.length - 1]).toBeLessThan(retentionDeadline(AT * 1000));
@@ -587,7 +637,7 @@ test('an unconfirmed hold re-arms the alarm before the 24h deadline', async () =
   const { storage, c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (getEvent as jest.Mock).mockResolvedValue({
     id: 'ev1',
     summary: '[Por confirmar] Consultoría · Ana',
@@ -610,7 +660,7 @@ test('moving a confirmed consultation keeps it confirmed', async () => {
   (insertEvent as jest.Mock)
     .mockResolvedValueOnce({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B })
     .mockResolvedValue({ id: 'ev2', summary: '', start: SLOT_B, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
   (getEvent as jest.Mock).mockResolvedValue({
     id: 'ev1',
     summary: 'Consultoría · Ana',
@@ -620,9 +670,9 @@ test('moving a confirmed consultation keeps it confirmed', async () => {
   await c.alarm();
 
   (decide as jest.Mock).mockResolvedValue({ action: 'move', slot: -1, date: '' });
-  await c.receive(inbound({ id: 'wamid.b4', text: 'mejor otro horario' }));
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor otro horario' }));
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
-  await c.receive(inbound({ id: 'wamid.b5', text: 'el segundo' }));
+  await say(c, inbound({ id: 'wamid.b5', text: 'el segundo' }));
 
   expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev1');
   const calls = (insertEvent as jest.Mock).mock.calls as Array<[string, string, { summary: string }]>;
@@ -635,7 +685,7 @@ test('erasing releases the held event', async () => {
   const { storage, c } = await offerSlots('consultation');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
   (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
-  await c.receive(inbound({ id: 'wamid.b3', text: 'el primero' }));
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
 
   await c.receive(inbound({ id: 'wamid.b5', text: 'BORRAR MIS DATOS' }));
 
