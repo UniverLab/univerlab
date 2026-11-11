@@ -16,7 +16,7 @@ export const privacyEn: LegalDoc = {
   kicker: 'Legal',
   heading: 'Privacy Policy',
   intro:
-    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, Quorum at quorum.univerlab.org, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else, and Quorum keeps nothing outside your browser.',
+    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, Quorum at quorum.univerlab.org, the Workbench WhatsApp agent, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else, Quorum keeps nothing outside your browser, and the Workbench keeps your WhatsApp conversation for up to 6 months, or until you ask us to delete it.',
   updatedLabel: 'Last updated',
   effectiveLabel: 'Effective from',
   prevails:
@@ -49,6 +49,7 @@ export const privacyEn: LegalDoc = {
         // 12-hour cookie vs SESSION_TTL_S in canopy-web apps/remote/worker/src/auth.ts.
         '<strong>quorum.univerlab.org.</strong> Peer-to-peer planning poker: no accounts, no cookies and no analytics. Your display name, theme and each room\u2019s stories stay in your browser. To let the browsers of a room find each other, Quorum uses public WebTorrent trackers run by third parties: they see your IP address and an identifier derived from the room, never your votes. After that, data travels straight between browsers over WebRTC, so the people in your room see your name, your votes and your IP address. UniverLab receives none of it: it only serves the app\u2019s files from Cloudflare.',
         '<strong>canopy CLI and daemon.</strong> Your data stays local in <code>~/.canopy</code> on your own machine. UniverLab services are contacted only when you use them: fetching a graph from the catalogue, or pairing through the relay. Agent harnesses (Claude, Codex and the rest) are governed by their own providers\u2019 terms.',
+        '<strong>Workbench on WhatsApp.</strong> When you write to the Workbench WhatsApp number, an automated agent answers. We keep your phone number, your WhatsApp profile name, the messages of the conversation, the service you are interested in, and the notes the agent prepares for the person at the lab who confirms your session. The text of your messages is processed by a language model on Cloudflare Workers AI, which does not use it to train models. When the agent hands you over to a person, those notes reach the lab\u2019s WhatsApp.',
         '<strong>Reports.</strong> Bug reports and catalogue reports are GitHub issues in public repositories: whatever you write there is public under GitHub\u2019s terms.',
       ],
     },
@@ -62,6 +63,7 @@ export const privacyEn: LegalDoc = {
         'remote.univerlab.org: keeping you signed in for 12 hours so your browser can reach your own canopy host.',
         'quorum.univerlab.org: serving the app; each room is held up by its participants\u2019 own browsers.',
         'canopy CLI and daemon: running your graphs on your machine; contacting UniverLab services only for the fetch or pairing you asked for.',
+        'Workbench on WhatsApp: answering your questions about the services, preparing and booking your session, and handing your case to a person at the lab.',
       ],
     },
     {
@@ -71,6 +73,7 @@ export const privacyEn: LegalDoc = {
         'Under Ley 1581 de 2012, we process your data on these bases. For readers under the GDPR, the equivalent basis follows in brackets.',
         'The sign-in is your authorisation (<em>autorizaci\u00f3n</em>): signing in with GitHub authorises the 12-hour session cookie [GDPR: consent].',
         'Catalogue data is data of a public nature published by its author (Ley 1581, article 10): public repositories its owners chose to tag, processed for the catalogue only [GDPR: legitimate interest in running a public catalogue of public data].',
+        'Writing to the Workbench is your authorisation for us to process that conversation for the purposes above; if you book a session, processing is also necessary to provide the service [GDPR: consent and performance of a contract].',
         'The install counter is the lab\u2019s legitimate interest in aggregate, non-identifying statistics about which documents get installed [GDPR: legitimate interest].',
       ],
     },
@@ -78,15 +81,17 @@ export const privacyEn: LegalDoc = {
       id: 'processors-transfer',
       title: 'Processors and international transfer',
       paras: [
-        'Two providers process data on our behalf, both in the United States, so your data leaves Colombia when you use the services (the public WebTorrent trackers Quorum uses are not our processors: independent third parties run them, and they only introduce the browsers of a room to each other):',
+        'Three providers process data on our behalf, all three based in the United States, so your data leaves Colombia when you use the services (the public WebTorrent trackers Quorum uses are not our processors: independent third parties run them, and they only introduce the browsers of a room to each other):',
       ],
       items: [
         'Cloudflare: hosting, caching, Analytics Engine install counts and TURN relaying.',
         'GitHub: sign-in identity and the public source data the catalogue reads.',
+        'Meta (WhatsApp Business Platform): delivering the messages between you and the Workbench.',
       ],
       links: [
         { label: 'Cloudflare privacy statement', href: 'https://www.cloudflare.com/privacypolicy/' },
         { label: 'GitHub privacy statement', href: 'https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement' },
+        { label: 'WhatsApp privacy policy', href: 'https://www.whatsapp.com/legal/privacy-policy' },
       ],
     },
     {
@@ -103,6 +108,7 @@ export const privacyEn: LegalDoc = {
         'Quorum: your name, theme and stories stay in your browser until you clear them; UniverLab keeps nothing.',
         'Remote session cookie: 12 hours, then it expires; the sign-in token is discarded at once and the relay stores nothing.',
         'canopy CLI and daemon: your data stays in ~/.canopy until you remove it.',
+        'Workbench on WhatsApp: the conversation and the notes are deleted automatically 6 months after your last message, or sooner if you ask. Records of a payment are kept for as long as Colombian accounting and tax law requires.',
       ],
     },
     {
@@ -119,6 +125,16 @@ export const privacyEn: LegalDoc = {
       paras: [
         'Write to <a href="mailto:{email}">{email}</a>. Queries (<em>consultas</em>) are answered within 10 business days, extendable once by 5; claims (<em>reclamos</em>) within 15 business days, extendable once by 8 (Ley 1581, articles 14 and 15).',
         'Catalogue data has a shorter path too: the author removes a document by dropping the <code>canopy-graph</code> topic or the repository, or anyone may report a document by opening an issue in UniverLab/canopy-web.',
+      ],
+    },
+    {
+      id: 'data-deletion',
+      title: 'Deleting your data',
+      paras: [
+        'You can ask us to delete your data at any time, without giving a reason.',
+        '<strong>On the Workbench WhatsApp</strong>, write <strong>DELETE MY DATA</strong> in the conversation. The agent deletes your messages, your conversation state and the stored notes right away, and confirms in the same chat.',
+        '<strong>For any other service</strong>, or if you prefer a person to do it, write to <a href="mailto:{email}">{email}</a> with the subject \u201cDelete my data\u201d and the phone number or account it concerns. We confirm the deletion within 15 business days (Ley 1581, article 15).',
+        'We keep only what the law requires us to keep, such as the accounting records of a payment, and in that case we tell you what remains and for how long. Messages you already sent stay in your own WhatsApp and with Meta under WhatsApp\u2019s policy.',
       ],
     },
     {

@@ -14,7 +14,7 @@ export const privacyEs: LegalDoc = {
   kicker: 'Legal',
   heading: 'Política de Privacidad',
   intro:
-    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org, Quorum en quorum.univerlab.org y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, el relay guarda una cookie de sesión de 12 horas y nada más, y Quorum no guarda nada fuera de tu navegador.',
+    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org, Quorum en quorum.univerlab.org, el agente de WhatsApp del Banco de trabajo y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, el relay guarda una cookie de sesión de 12 horas y nada más, Quorum no guarda nada fuera de tu navegador y el Banco de trabajo guarda tu conversación de WhatsApp hasta 6 meses, o hasta que pidas borrarla.',
   updatedLabel: 'Última actualización',
   effectiveLabel: 'Vigente desde',
   prevails:
@@ -47,6 +47,7 @@ export const privacyEs: LegalDoc = {
         // Cookie de 12 horas frente a SESSION_TTL_S en canopy-web apps/remote/worker/src/auth.ts.
         '<strong>quorum.univerlab.org.</strong> Planning poker de par a par: sin cuentas, sin cookies y sin analítica. Tu nombre visible, el tema y las historias de cada sala se guardan solo en tu navegador. Para que los navegadores de una sala se encuentren, Quorum usa trackers públicos de WebTorrent operados por terceros: ven tu dirección IP y un identificador derivado de la sala, nunca tus votos. Después, los datos viajan directo entre navegadores por WebRTC, así que quienes están en tu sala ven tu nombre, tus votos y tu dirección IP. UniverLab no recibe nada de eso: solo sirve los archivos de la app desde Cloudflare.',
         '<strong>CLI y daemon de canopy.</strong> Tus datos se quedan en local, en <code>~/.canopy</code> de tu propia máquina. Los servicios de UniverLab solo reciben contacto cuando los usas: al traer un grafo del catálogo o al emparejar por el relay. Los harnesses de agentes (Claude, Codex y demás) se rigen por los términos de sus propios proveedores.',
+        '<strong>Banco de trabajo por WhatsApp.</strong> Cuando escribes al WhatsApp del Banco de trabajo te responde un agente automático. Guardamos tu número de teléfono, el nombre de tu perfil de WhatsApp, los mensajes de la conversación, el servicio que te interesa y las notas que el agente prepara para la persona del laboratorio que confirma tu sesión. El texto de tus mensajes lo procesa un modelo de lenguaje en Cloudflare Workers AI, que no lo usa para entrenar modelos. Cuando el agente te pasa con una persona, esas notas llegan al WhatsApp del laboratorio.',
         '<strong>Reportes.</strong> Los reportes de errores y del catálogo son issues de GitHub en repositorios públicos: lo que escribas ahí es público bajo los términos de GitHub.',
       ],
     },
@@ -60,6 +61,7 @@ export const privacyEs: LegalDoc = {
         'remote.univerlab.org: mantener tu sesión 12 horas para que tu navegador alcance tu propio host canopy.',
         'quorum.univerlab.org: servir la app; cada sala la sostienen los propios navegadores de sus participantes.',
         'CLI y daemon de canopy: correr tus grafos en tu máquina; contactar servicios de UniverLab solo para la descarga o el emparejamiento que pediste.',
+        'Banco de trabajo por WhatsApp: responder tus preguntas sobre los servicios, preparar y agendar tu sesión y pasarle tu caso a una persona del laboratorio.',
       ],
     },
     {
@@ -69,6 +71,7 @@ export const privacyEs: LegalDoc = {
         'Bajo la Ley 1581 de 2012, tratamos tus datos con estas bases. Para lectores bajo el RGPD, la base equivalente va entre corchetes.',
         'El inicio de sesión es tu autorización: entrar con GitHub autoriza la cookie de sesión de 12 horas [RGPD: consentimiento].',
         'Los datos del catálogo son datos de naturaleza pública publicados por su autor (Ley 1581, artículo 10): repositorios públicos que sus dueños eligieron etiquetar, tratados solo para el catálogo [RGPD: interés legítimo en operar un catálogo público de datos públicos].',
+        'Escribir al Banco de trabajo es tu autorización para que tratemos esa conversación con las finalidades de arriba; si reservas una sesión, el tratamiento es además necesario para prestarte el servicio [RGPD: consentimiento y ejecución de un contrato].',
         'El contador de instalaciones es el interés legítimo del laboratorio en estadísticas agregadas y no identificables sobre qué documentos se instalan [RGPD: interés legítimo].',
       ],
     },
@@ -76,15 +79,17 @@ export const privacyEs: LegalDoc = {
       id: 'processors-transfer',
       title: 'Encargados y transferencia internacional',
       paras: [
-        'Dos proveedores tratan datos por nuestra cuenta, ambos en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios (los trackers públicos de WebTorrent que usa Quorum no son encargados nuestros: los operan terceros independientes y solo presentan entre sí a los navegadores de una sala):',
+        'Tres proveedores tratan datos por nuestra cuenta, los tres con sede en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios (los trackers públicos de WebTorrent que usa Quorum no son encargados nuestros: los operan terceros independientes y solo presentan entre sí a los navegadores de una sala):',
       ],
       items: [
         'Cloudflare: hosting, caché, conteos de Analytics Engine y retransmisión TURN.',
         'GitHub: identidad del inicio de sesión y los datos públicos de origen que lee el catálogo.',
+        'Meta (WhatsApp Business Platform): entrega los mensajes entre tú y el Banco de trabajo.',
       ],
       links: [
         { label: 'Política de privacidad de Cloudflare', href: 'https://www.cloudflare.com/privacypolicy/' },
         { label: 'Política de privacidad de GitHub', href: 'https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement' },
+        { label: 'Política de privacidad de WhatsApp', href: 'https://www.whatsapp.com/legal/privacy-policy' },
       ],
     },
     {
@@ -101,6 +106,7 @@ export const privacyEs: LegalDoc = {
         'Quorum: tu nombre, el tema y las historias quedan en tu navegador hasta que los borres; UniverLab no conserva nada.',
         'Cookie de sesión del relay: 12 horas y vence; el token de acceso se descarta de inmediato y el relay no almacena nada.',
         'CLI y daemon de canopy: tus datos se quedan en ~/.canopy hasta que los borres.',
+        'Banco de trabajo por WhatsApp: la conversación y las notas se borran solas 6 meses después de tu último mensaje, o antes si lo pides. Los soportes de un pago se conservan el tiempo que exige la ley contable y tributaria colombiana.',
       ],
     },
     {
@@ -117,6 +123,16 @@ export const privacyEs: LegalDoc = {
       paras: [
         'Escríbenos a <a href="mailto:{email}">{email}</a>. Las consultas se responden dentro de los 10 días hábiles siguientes, prorrogables una vez por 5; los reclamos dentro de los 15 días hábiles siguientes, prorrogables una vez por 8 (Ley 1581, artículos 14 y 15).',
         'Los datos del catálogo tienen además un camino corto: el autor retira un documento quitando el tópico <code>canopy-graph</code> o el repositorio, y cualquiera puede reportar un documento abriendo un issue en UniverLab/canopy-web.',
+      ],
+    },
+    {
+      id: 'data-deletion',
+      title: 'Borrar tus datos',
+      paras: [
+        'Puedes pedir que borremos tus datos cuando quieras, sin dar razones.',
+        '<strong>En el Banco de trabajo por WhatsApp</strong>, escribe <strong>BORRAR MIS DATOS</strong> en la conversación. El agente borra en ese momento tus mensajes, el estado de tu conversación y las notas guardadas, y te lo confirma en el mismo chat.',
+        '<strong>Para cualquier otro servicio</strong>, o si prefieres que lo haga una persona, escribe a <a href="mailto:{email}">{email}</a> con el asunto «Borrar mis datos» y el número de teléfono o la cuenta a la que se refiere. Confirmamos el borrado dentro de los 15 días hábiles siguientes (Ley 1581, artículo 15).',
+        'Solo conservamos lo que la ley nos obliga a guardar, como los soportes contables de un pago, y en ese caso te decimos qué queda y por cuánto tiempo. Los mensajes que ya enviaste siguen en tu propio WhatsApp y en Meta según la política de WhatsApp.',
       ],
     },
     {
