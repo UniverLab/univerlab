@@ -25,7 +25,7 @@ export const privacyEs: LegalDoc = {
       id: 'responsible-party',
       title: 'Responsable del tratamiento',
       paras: [
-        'El responsable del tratamiento de tus datos (Ley 1581 de 2012) es <strong>UniverLab</strong>, un laboratorio independiente operado desde <strong>Colombia</strong>.',
+        'El responsable del tratamiento de tus datos (Ley 1581 de 2012) es <strong>UniverLab</strong>, un laboratorio independiente operado desde <strong>Colombia</strong> por <strong>Jheison Martinez Bolivar</strong>, persona natural.',
         'Para ejercer cualquier derecho de esta política, escribe a <a href="mailto:{email}">{email}</a>. Esa dirección llega directo al laboratorio.',
       ],
     },

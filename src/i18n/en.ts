@@ -91,6 +91,7 @@ export const en = {
     },
     // Experiment pages only: the colophon credits line above the seal.
     forged: 'Artifact conceived and forged at UniverLab',
+    operator: 'UniverLab is run by Jheison Martinez Bolivar, Colombia.',
     privacy: "no external tracking. theme preferences stay in your browser's local storage.",
   },
   common: {

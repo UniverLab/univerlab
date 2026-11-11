@@ -49,7 +49,7 @@ export interface LegalDoc {
  * The only YYYY-MM-DD literal the legal surface carries: the copy names no
  * other dates, so a policy change moves this one line.
  */
-export const LEGAL_DATE = '2026-10-27';
+export const LEGAL_DATE = '2026-11-11';
 
 import { privacyEn, termsEn } from './legal-en';
 import { privacyEs, termsEs } from './legal-es';
