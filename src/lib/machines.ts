@@ -61,6 +61,19 @@ export function srcsetFor(id: string, ink: MachineInk, ext: 'avif' | 'webp'): st
   );
 }
 
+/** Silhouette of a plate: the filled shape the page ground paints through. */
+export function plateMask(id: string, ink: MachineInk): string {
+  const file = `machines/${id}-${ink}-mask-450.webp`;
+  const asset = loadManifest().assets.find((a) => a.kind === 'machine-mask' && a.file === file);
+  if (!asset) throw new Error(`Unknown machine mask: ${file}`);
+  return `/bench/${file}`;
+}
+
+/** Large plate variant for the hero engraving. */
+export function plateLarge(id: string, ink: MachineInk): string {
+  return `/bench/${machineFile(id, ink, 900, 'webp').file}`;
+}
+
 /** Sizes derived from the plate's aspect ratio: 240 px tall from 40rem up. */
 export function plateSizes(p: Plate): string {
   const wide = Math.round((240 * p.w) / p.h);

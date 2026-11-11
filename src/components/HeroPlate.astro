@@ -1,0 +1,67 @@
+---
+import { plate, plateMask, plateLarge, srcsetFor, type MachineInk, type MachineTheme } from '../lib/machines';
+
+interface Props {
+  id: string;
+  ink: MachineTheme;
+}
+const { id, ink } = Astro.props;
+const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
+---
+<div class="hero-plate" data-hero-plate data-pair={inks.length === 2 ? '' : undefined} aria-hidden="true">
+  {inks.map((which, i) => {
+    const p = plate(id, which);
+    return (
+      <div class:list={['hp', `hp-${which}`]} style={`--hp-mask: url(${plateMask(id, which)}); --hp-ink: url(${plateLarge(id, which)}); aspect-ratio: ${p.w} / ${p.h};`}>
+        <span class="hp-ground"></span>
+        <img class="hp-plate" src={plateLarge(id, which)} srcset={srcsetFor(id, which, 'webp')} sizes="(min-width: 40rem) 560px, 300px" width={p.w} height={p.h} alt="" decoding="async" loading={i === 0 ? undefined : 'lazy'} />
+        <span class="hp-light"></span>
+      </div>
+    );
+  })}
+</div>
+
+<style>
+  .hero-plate { position: absolute; inset-block: 1rem; right: var(--page-gutter); left: 40%; z-index: 0; pointer-events: none; --hp-base-a: 0.38; }
+  .hp { position: absolute; top: 50%; right: 0; height: min(100%, 640px); max-width: 100%; transform: translateY(-50%); }
+  .hp > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* The page ground painted through the machine's filled silhouette: the live background never shows inside the machine. */
+  .hp-ground { background: var(--bg); -webkit-mask: var(--hp-mask) center / 100% 100% no-repeat; mask: var(--hp-mask) center / 100% 100% no-repeat; }
+  .hp-plate { -webkit-mask-image: radial-gradient(circle 230px at var(--mx, -9999px) var(--my, -9999px), #000 40%, rgba(0, 0, 0, var(--hp-base-a)) 100%); mask-image: radial-gradient(circle 230px at var(--mx, -9999px) var(--my, -9999px), #000 40%, rgba(0, 0, 0, var(--hp-base-a)) 100%); }
+  .hp-light { background: radial-gradient(circle 140px at var(--mx, -9999px) var(--my, -9999px), var(--essence), transparent 100%); opacity: 0.55; -webkit-mask: var(--hp-ink) center / 100% 100% no-repeat; mask: var(--hp-ink) center / 100% 100% no-repeat; }
+  :global(html[data-bench-theme='night']) .hero-plate[data-pair] .hp-day { display: none; }
+  :global(html:not([data-bench-theme='night'])) .hero-plate[data-pair] .hp-night { display: none; }
+  @media (max-width: 39.999rem) {
+    .hero-plate { inset-block: 0.5rem auto; height: 320px; left: 30%; right: 0; --hp-base-a: 0.28; }
+  }
+</style>
+
+<script type="module">
+  import { pointerIn } from '../scripts/fondos/runtime';
+  const root = document.querySelector<HTMLElement>('[data-hero-plate]');
+  const frame = root?.parentElement;
+  if (root && frame) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.style.setProperty('--hp-base-a', '0.5');
+    } else {
+      const layers = () => Array.from(root.querySelectorAll<HTMLElement>('.hp'));
+      pointerIn(
+        frame,
+        (x, y) => {
+          const f = frame.getBoundingClientRect();
+          for (const hp of layers()) {
+            const r = hp.getBoundingClientRect();
+            hp.style.setProperty('--mx', `${x + f.left - r.left}px`);
+            hp.style.setProperty('--my', `${y + f.top - r.top}px`);
+          }
+        },
+        () => {
+          for (const hp of layers()) {
+            hp.style.removeProperty('--mx');
+            hp.style.removeProperty('--my');
+          }
+        },
+      );
+    }
+  }
+</script>

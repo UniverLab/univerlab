@@ -3,6 +3,7 @@ import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
+import HeroPlate from '../components/HeroPlate.astro';
 import Machine from '../components/Machine.astro';
 import { machineInk } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
@@ -22,6 +23,8 @@ const hasHeroMark = Astro.slots.has('hero-mark');
 const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
 const surface = exp.surface;
+const heroPlate = exp.status !== 'archived' && !hideMachine && exp.surface !== 'observatory';
+const floatingMachine = exp.status !== 'archived' && !hideMachine && exp.surface === 'observatory';
 
 // Cyclical prev/next so you can browse experiments without going back home.
 const idx = liveExperiments.findIndex((x) => x.id === id);
@@ -90,7 +93,8 @@ const ogImage = `/og/${id}.png`;
       <span>{exp.number}</span>
     </p>
     {Astro.slots.has('site-nav') && <slot name="site-nav" />}
-    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' && !hideMachine }]}>
+    <div class:list={['hero-frame', { 'has-machine': floatingMachine }]}>
+    {heroPlate && <HeroPlate id={id} ink={machineInk(exp)} />}
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
@@ -135,7 +139,7 @@ const ogImage = `/og/${id}.png`;
         </div>
       )}
     </section>
-    {exp.status !== 'archived' && !hideMachine && (
+    {floatingMachine && (
       <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
     )}
     </div>
@@ -253,6 +257,7 @@ const ogImage = `/og/${id}.png`;
      transition name makes it an isolated group, and a blend inside it has no
      page behind it to mix with. The frame is the machine's containing block. */
   .hero-frame { position: relative; }
+  .hero-frame > .hero { position: relative; z-index: 1; }
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .hero-visual { width: 100%; }
