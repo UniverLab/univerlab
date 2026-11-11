@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { answer, FALLBACK, parseAnswer } from '../src/brain';
+import { answer, DEFAULT_MODEL, FALLBACK, modelConfig, parseAnswer } from '../src/brain';
 
 test('parseAnswer accepts a bare object', () => {
   expect(parseAnswer('{"reply":"Hola","handoff":false}', 'es')).toEqual({
@@ -68,4 +68,32 @@ test('system prompt carries knowledge in spanish', async () => {
   const system = messages[0].content;
   expect(system).toContain('KNOWLEDGE:');
   expect(system).toContain('150.000 COP');
+});
+
+test('modelConfig falls back to the default model and no options', () => {
+  expect(modelConfig({})).toEqual({ model: DEFAULT_MODEL, options: {} });
+  expect(modelConfig({ TEXT_MODEL: '  ', TEXT_MODEL_OPTIONS: '' })).toEqual({ model: DEFAULT_MODEL, options: {} });
+  expect(modelConfig({ TEXT_MODEL_OPTIONS: 'not json' }).options).toEqual({});
+  expect(modelConfig({ TEXT_MODEL_OPTIONS: '[1]' }).options).toEqual({});
+});
+
+test('answer sends the configured model and its options, never overriding messages', async () => {
+  let model = '';
+  let sent: Record<string, unknown> = {};
+  const ai = {
+    run: async (m: string, input: unknown) => {
+      model = m;
+      sent = input as Record<string, unknown>;
+      return { response: '{"reply":"Hi","handoff":false}' };
+    },
+  };
+  const cfg = modelConfig({
+    TEXT_MODEL: '@cf/qwen/qwen3.8-27b',
+    TEXT_MODEL_OPTIONS: '{"reasoning_effort":"low","max_tokens":800,"messages":[]}',
+  });
+  await answer(ai, [{ role: 'user', text: 'hola' }], 'es', cfg);
+  expect(model).toBe('@cf/qwen/qwen3.8-27b');
+  expect(sent.reasoning_effort).toBe('low');
+  expect(sent.max_tokens).toBe(800);
+  expect((sent.messages as unknown[]).length).toBe(2);
 });

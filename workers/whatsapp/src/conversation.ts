@@ -1,7 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { markRead, sendText, type Inbound } from './meta';
-import { answer, type Turn } from './brain';
+import { answer, modelConfig, type Turn } from './brain';
 import { detectLang } from './lang';
 
 export const NON_TEXT = {
@@ -51,7 +51,7 @@ export class Conversation extends DurableObject<Env> {
         .reverse()
         .map((r) => ({ role: r.role as Turn['role'], text: r.text }));
       const lang = detectLang(m.text ?? '');
-      const a = await answer(this.env.AI, history, lang);
+      const a = await answer(this.env.AI, history, lang, modelConfig(this.env));
       await sendText(this.env, m.from, a.reply);
       this.ctx.storage.sql.exec(
         'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',

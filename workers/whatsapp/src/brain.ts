@@ -1,7 +1,30 @@
 import { systemPrompt } from './prompt';
 import type { Lang } from './lang';
 
-export const MODEL = '@cf/qwen/qwen3.8-27b';
+/** Used when the deploy sets no TEXT_MODEL. The model is configuration: the
+ *  production environment's WA_TEXT_MODEL / WA_TEXT_MODEL_OPTIONS variables
+ *  reach the Worker as TEXT_MODEL / TEXT_MODEL_OPTIONS (see README). */
+export const DEFAULT_MODEL = '@cf/zai-org/glm-4.7-flash';
+
+export interface ModelConfig {
+  model: string;
+  /** Extra request fields for this model, e.g. {"reasoning_effort":"low"}. */
+  options: Record<string, unknown>;
+}
+
+export function modelConfig(env: { TEXT_MODEL?: string; TEXT_MODEL_OPTIONS?: string }): ModelConfig {
+  const model = env.TEXT_MODEL?.trim() || DEFAULT_MODEL;
+  let options: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(env.TEXT_MODEL_OPTIONS?.trim() || '{}') as unknown;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      options = parsed as Record<string, unknown>;
+    }
+  } catch {
+    // A malformed value falls back to no options rather than breaking replies.
+  }
+  return { model, options };
+}
 
 export interface Turn {
   role: 'user' | 'assistant';
@@ -39,18 +62,18 @@ export function parseAnswer(raw: string, lang: Lang): Answer {
 export async function answer(
   ai: { run(model: string, input: unknown): Promise<unknown> },
   history: Turn[],
-  lang: Lang
+  lang: Lang,
+  cfg: ModelConfig = modelConfig({})
 ): Promise<Answer> {
   try {
-    const res = (await ai.run(MODEL, {
+    const res = (await ai.run(cfg.model, {
+      response_format: { type: 'json_object' },
+      max_tokens: 1200,
+      ...cfg.options,
       messages: [
         { role: 'system', content: systemPrompt(lang) },
         ...history.map((t) => ({ role: t.role, content: t.text })),
       ],
-      // The model reasons at xhigh by default; low keeps replies fast and inside the free tier.
-      reasoning_effort: 'low',
-      response_format: { type: 'json_object' },
-      max_tokens: 1200,
     })) as {
       choices?: Array<{ message?: { content?: string } }>;
       response?: string;

@@ -6,4 +6,6 @@ export interface Env {
   WA_ACCESS_TOKEN: string;
   WA_PHONE_NUMBER_ID: string;
   OPERATOR_PHONE: string;
+  TEXT_MODEL?: string;
+  TEXT_MODEL_OPTIONS?: string;
 }
