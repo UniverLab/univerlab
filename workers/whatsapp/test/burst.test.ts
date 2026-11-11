@@ -28,6 +28,17 @@ jest.mock('../src/brain', () => ({
   modelConfig: () => ({}),
 }));
 
+jest.mock('../src/audio', () => ({
+  transcribe: jest.fn(),
+  voiceConfig: jest.fn(() => ({ model: 'voice-model', options: {}, maxSeconds: 180 })),
+  VOICE_HANDOFF: {
+    es: 'No pude escuchar tu nota de voz. Una persona del laboratorio la escuchará y te responde pronto.',
+    en: 'I could not listen to your voice note. Someone at the lab will listen to it and reply soon.',
+  },
+  DEFAULT_VOICE_MODEL: '@cf/openai/whisper',
+  DEFAULT_VOICE_MAX_SECONDS: 180,
+}));
+
 jest.mock('../src/intake', () => ({
   intake: jest.fn(),
   brief: jest.fn(),
@@ -80,6 +91,7 @@ jest.mock('../src/booking', () => {
 });
 
 import { answer, runModel } from '../src/brain';
+import { transcribe } from '../src/audio';
 import { markRead, sendText } from '../src/meta';
 import { ERASED, retentionDeadline } from '../src/erase';
 import { burstConfig } from '../src/env';
@@ -207,6 +219,8 @@ beforeEach(() => {
   (accessToken as jest.Mock).mockResolvedValue('tok');
   (freeBusy as jest.Mock).mockResolvedValue([]);
   (listEvents as jest.Mock).mockResolvedValue([]);
+  // A voice note hands off unless the test transcribes it.
+  (transcribe as jest.Mock).mockResolvedValue({ ok: false });
 });
 
 afterEach(() => {
@@ -280,11 +294,66 @@ test('a client who keeps typing is answered at the 25-second cap', async () => {
   expect(history.filter((t) => t.role === 'user').map((t) => t.text)).toEqual(texts);
 });
 
+test('a voice note that fails transcription hands off at receive, outside the burst', async () => {
+  const OPERATOR = '573009998888';
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (transcribe as jest.Mock).mockResolvedValue({ ok: false });
+  (answer as jest.Mock).mockResolvedValue({ reply: 'claro que sí', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.m1', text: 'hola, una pregunta', timestamp: AT }));
+  await c.receive(
+    inbound({ id: 'wamid.m2', type: 'audio', text: undefined, timestamp: AT + 1, mediaId: 'media-1' })
+  );
+
+  // The failed note hands off at once; the text still waits for its burst.
+  expect(answer).not.toHaveBeenCalled();
+  expect(clientTexts()).toEqual([
+    'No pude escuchar tu nota de voz. Una persona del laboratorio la escuchará y te responde pronto.',
+  ]);
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
+
+  nowMs += 7000;
+  await c.alarm();
+
+  // One model call for the text burst, no second handoff for the audio.
+  expect(answer).toHaveBeenCalledTimes(1);
+  expect(clientTexts()).toContain('claro que sí');
+  expect(clientTexts()).toHaveLength(2);
+});
+
 test('a burst mixing text and audio answers the text and hands the media off once', async () => {
   const OPERATOR = '573009998888';
   const { ctx } = makeCtx();
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'claro que sí', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.m1', text: 'hola, una pregunta', timestamp: AT }));
+  await c.receive(
+    inbound({ id: 'wamid.m2', type: 'image', text: undefined, timestamp: AT + 1, mediaId: 'media-1' })
+  );
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(clientTexts()).toEqual([]);
+
+  nowMs += 7000;
+  await c.alarm();
+
+  // One model call for the whole burst, the text reply plus today's media
+  // handoff, and one operator note about the image.
+  expect(answer).toHaveBeenCalledTimes(1);
+  expect(clientTexts()).toHaveLength(2);
+  expect(clientTexts()).toContain('claro que sí');
+  expect(clientTexts()).toContain('Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.');
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[image]'));
+});
+
+test('a transcribed voice note joins the burst as one answer with no handoff', async () => {
+  const OPERATOR = '573009998888';
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (transcribe as jest.Mock).mockResolvedValue({ ok: true, text: 'qué precio tiene' });
+  (answer as jest.Mock).mockResolvedValue({ reply: 'cuesta tanto', booking: false, handoff: false });
 
   await c.receive(inbound({ id: 'wamid.m1', text: 'hola, una pregunta', timestamp: AT }));
   await c.receive(
@@ -297,13 +366,15 @@ test('a burst mixing text and audio answers the text and hands the media off onc
   nowMs += 7000;
   await c.alarm();
 
-  // One model call for the whole burst, the text reply plus today's media
-  // handoff, and one operator note about the audio.
+  // One model call for the whole burst, one reply, no handoff anywhere.
   expect(answer).toHaveBeenCalledTimes(1);
-  expect(clientTexts()).toHaveLength(2);
-  expect(clientTexts()).toContain('claro que sí');
-  expect(clientTexts()).toContain('Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.');
-  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
+  const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
+  expect(history.filter((t) => t.role === 'user').map((t) => t.text)).toEqual([
+    'hola, una pregunta',
+    'qué precio tiene',
+  ]);
+  expect(clientTexts()).toEqual(['cuesta tanto']);
+  expect(sendText).not.toHaveBeenCalledWith(env, OPERATOR, expect.anything());
 });
 
 test('the exact deletion phrase mid-burst discards the burst with no answer', async () => {

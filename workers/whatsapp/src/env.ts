@@ -9,6 +9,9 @@ export interface Env {
   OPERATOR_PHONE: string;
   TEXT_MODEL?: string;
   TEXT_MODEL_OPTIONS?: string;
+  VOICE_MODEL?: string;
+  VOICE_MODEL_OPTIONS?: string;
+  VOICE_MAX_SECONDS?: string;
   BURST_QUIET_MS?: string;
   BURST_MAX_MS?: string;
   GOOGLE_CLIENT_ID?: string;

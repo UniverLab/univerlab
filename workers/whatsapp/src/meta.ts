@@ -37,6 +37,7 @@ export interface Inbound {
   text?: string;
   mediaId?: string;
   mime?: string;
+  duration?: number;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -82,6 +83,13 @@ export function parseInbound(payload: unknown): Inbound[] {
             if (isPlainObject(media) && typeof media['id'] === 'string') {
               inbound.mediaId = media['id'] as string;
               if (typeof media['mime_type'] === 'string') inbound.mime = media['mime_type'] as string;
+              const duration = media['duration'];
+              if (typeof duration === 'number' && Number.isFinite(duration)) {
+                inbound.duration = duration;
+              } else if (typeof duration === 'string' && duration.trim() !== '') {
+                const parsed = Number(duration);
+                if (Number.isFinite(parsed)) inbound.duration = parsed;
+              }
               break;
             }
           }

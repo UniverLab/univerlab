@@ -106,6 +106,34 @@ test('markRead reports failure when the network does', async () => {
   await expect(markRead(SEND_ENV, 'wamid.3')).resolves.toBe(false);
 });
 
+test('an audio payload keeps its duration', () => {
+  const payload = {
+    object: 'whatsapp_business_account',
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              messages: [
+                {
+                  id: 'wamid.9',
+                  from: '15551234567',
+                  timestamp: '1700000009',
+                  type: 'audio',
+                  audio: { id: 'media-7', mime_type: 'audio/ogg; codecs=opus', duration: 5.4 },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const inbound = parseInbound(payload);
+  expect(inbound).toHaveLength(1);
+  expect(inbound[0]).toMatchObject({ id: 'wamid.9', type: 'audio', mediaId: 'media-7', duration: 5.4 });
+});
+
 test('ignores status updates and malformed payloads', () => {
   const statuses = { entry: [{ changes: [{ value: { statuses: [{ id: 'wamid.3' }] } }] }] };
   expect(parseInbound(statuses)).toEqual([]);

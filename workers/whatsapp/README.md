@@ -87,6 +87,26 @@ unless `reasoning_effort` is set; GLM-4.7 Flash takes
 `{"chat_template_kwargs":{"enable_thinking":false}}`
 instead; its schema has no `reasoning_effort`.
 
+Voice model (configuration, not code): a voice note is downloaded
+from the WhatsApp media endpoint and transcribed by a
+speech-to-text model on Cloudflare Workers AI, and the transcript
+is processed exactly as if the client had typed it. The
+`production` environment's variables `WA_VOICE_MODEL`,
+`WA_VOICE_MODEL_OPTIONS` (a JSON object merged into the request)
+and `WA_VOICE_MAX_SECONDS` reach the Worker as `VOICE_MODEL`,
+`VOICE_MODEL_OPTIONS` and `VOICE_MAX_SECONDS`. Unset, it uses
+`@cf/openai/whisper` with a 180-second limit. A note longer than
+the limit, or one that fails to download or transcribe, goes to a
+person at the lab untranscribed, like any other non-text message.
+To switch, set them and re-run the deploy workflow:
+
+```sh
+gh variable set WA_VOICE_MODEL --env production --body '@cf/openai/whisper-large-v3-turbo'
+gh variable set WA_VOICE_MODEL_OPTIONS --env production --body '{}'
+gh variable set WA_VOICE_MAX_SECONDS --env production --body '180'
+gh workflow run deploy-whatsapp.yml --ref main
+```
+
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
 

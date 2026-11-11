@@ -28,6 +28,17 @@ jest.mock('../src/brain', () => ({
   modelConfig: () => ({}),
 }));
 
+jest.mock('../src/audio', () => ({
+  transcribe: jest.fn(),
+  voiceConfig: jest.fn(() => ({ model: 'voice-model', options: {}, maxSeconds: 180 })),
+  VOICE_HANDOFF: {
+    es: 'No pude escuchar tu nota de voz. Una persona del laboratorio la escuchará y te responde pronto.',
+    en: 'I could not listen to your voice note. Someone at the lab will listen to it and reply soon.',
+  },
+  DEFAULT_VOICE_MODEL: '@cf/openai/whisper',
+  DEFAULT_VOICE_MAX_SECONDS: 180,
+}));
+
 jest.mock('../src/intake', () => ({
   intake: jest.fn(),
   brief: jest.fn(),
@@ -80,6 +91,7 @@ jest.mock('../src/booking', () => {
 });
 
 import { answer, runModel } from '../src/brain';
+import { transcribe } from '../src/audio';
 import { brief, intake } from '../src/intake';
 import { markRead, sendText } from '../src/meta';
 import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retentionDeadline } from '../src/erase';
@@ -117,7 +129,14 @@ function makeCtx(handoff = false) {
   const state = new Map<string, string>();
   if (handoff) state.set('handoff', '1');
   const inserts: unknown[] = [];
-  const rows: Array<{ id: string; at: number; role: string; type: string; text: string | null }> = [];
+  const rows: Array<{
+    id: string;
+    at: number;
+    role: string;
+    type: string;
+    text: string | null;
+    mediaId: string | null;
+  }> = [];
   const sql = {
     exec: jest.fn((query: string, ...params: unknown[]) => {
       if (query.startsWith('SELECT 1 FROM messages WHERE id')) {
@@ -150,6 +169,7 @@ function makeCtx(handoff = false) {
           role: String(params[2]),
           type: String(params[3]),
           text: params[4] as string | null,
+          mediaId: (params[5] as string | null) ?? null,
         });
         return { toArray: () => [] };
       }
@@ -176,7 +196,7 @@ function makeCtx(handoff = false) {
       fn();
     },
   };
-  return { ctx, storage, inserts };
+  return { ctx, storage, inserts, rows };
 }
 
 function inbound(overrides: Partial<Inbound> = {}): Inbound {
@@ -211,6 +231,8 @@ beforeEach(() => {
   // message must not settle it on a previous test's calendar state.
   (getEvent as jest.Mock).mockResolvedValue(null);
   (brief as jest.Mock).mockResolvedValue({ bullets: ['goal x'] });
+  // A voice note hands off unless the test transcribes it.
+  (transcribe as jest.Mock).mockResolvedValue({ ok: false });
 });
 
 test('deletion request erases storage before any model call and stores nothing', async () => {
@@ -863,6 +885,80 @@ test('tomar on an overdue burst flushes it as a relay right away', async () => {
   expect(answer).not.toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledWith(burstEnv, OPERATOR, expect.stringContaining('[ab12]'));
   expect(clientTexts()).toEqual([]);
+});
+
+test('a transcribed voice note is stored and answered like typed text', async () => {
+  const { ctx, rows } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (transcribe as jest.Mock).mockResolvedValue({ ok: true, text: 'qué precio tiene' });
+  (answer as jest.Mock).mockResolvedValue({ reply: 'cuesta tanto', booking: false, handoff: false });
+
+  await say(
+    c,
+    inbound({ id: 'wamid.v1', type: 'audio', text: undefined, mediaId: 'media-1', duration: 5.4 })
+  );
+
+  // The history keeps the transcript marked as a voice note; the audio is gone.
+  expect(rows.find((r) => r.id === 'wamid.v1')).toMatchObject({
+    type: 'audio',
+    text: 'qué precio tiene',
+    mediaId: null,
+  });
+  expect(answer).toHaveBeenCalledTimes(1);
+  const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
+  expect(history.filter((t) => t.role === 'user').map((t) => t.text)).toEqual(['qué precio tiene']);
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, 'cuesta tanto');
+});
+
+test('a voice note that fails transcription goes to the operator', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (transcribe as jest.Mock).mockResolvedValue({ ok: false });
+
+  await c.receive(inbound({ id: 'wamid.v2', type: 'audio', text: undefined, mediaId: 'media-2' }));
+
+  expect(transcribe).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledWith(
+    env,
+    CLIENT,
+    expect.stringContaining('No pude escuchar tu nota de voz')
+  );
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
+  expect(answer).not.toHaveBeenCalled();
+
+  await c.alarm();
+  expect(answer).not.toHaveBeenCalled();
+});
+
+test('a voice note longer than the limit goes to the operator untranscribed', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+
+  await c.receive(
+    inbound({ id: 'wamid.v3', type: 'audio', text: undefined, mediaId: 'media-3', duration: 181 })
+  );
+
+  expect(transcribe).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(
+    env,
+    CLIENT,
+    expect.stringContaining('No pude escuchar tu nota de voz')
+  );
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
+  expect(answer).not.toHaveBeenCalled();
+});
+
+test('a voice note saying the deletion phrase erases everything', async () => {
+  const { ctx, storage, inserts } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (transcribe as jest.Mock).mockResolvedValue({ ok: true, text: 'borrar mis datos' });
+
+  await c.receive(inbound({ id: 'wamid.v4', type: 'audio', text: undefined, mediaId: 'media-4' }));
+
+  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+  expect(answer).not.toHaveBeenCalled();
+  expect(inserts).toEqual([]);
 });
 
 test('an operator confirm still lands when the client notice fails', async () => {

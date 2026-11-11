@@ -3,6 +3,7 @@ import type { Env } from './env';
 import { burstConfig } from './env';
 import { burstDue, joinBurst, nextAlarm, type BurstState } from './burst';
 import { markRead, sendText, type Inbound } from './meta';
+import { transcribe, voiceConfig, VOICE_HANDOFF } from './audio';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
 import {
   brief,
@@ -819,17 +820,33 @@ export class Conversation extends DurableObject<Env> {
 
   async receive(m: Inbound): Promise<void> {
     this.ensureSchema();
-    if (m.type === 'text') {
-      const erased = deletionRequest(m.text ?? '');
+    const existing = this.ctx.storage.sql
+      .exec('SELECT 1 FROM messages WHERE id = ? LIMIT 1', m.id)
+      .toArray();
+    if (existing.length > 0) return;
+    // A voice note is transcribed first and processed exactly as if the
+    // client had typed the transcript; the audio itself is never stored.
+    let voiceFailed = false;
+    if ((m.type === 'audio' || m.type === 'voice') && m.text === undefined) {
+      const cfg = voiceConfig(this.env);
+      const t =
+        !(m.duration !== undefined && m.duration > cfg.maxSeconds) && m.mediaId !== undefined
+          ? await transcribe(this.env, cfg, m.mediaId)
+          : { ok: false as const };
+      if (t.ok) {
+        m.text = t.text;
+        m.mediaId = undefined;
+      } else {
+        voiceFailed = true;
+      }
+    }
+    if (m.text !== undefined) {
+      const erased = deletionRequest(m.text);
       if (erased) {
         await this.erase(m, erased);
         return;
       }
     }
-    const existing = this.ctx.storage.sql
-      .exec('SELECT 1 FROM messages WHERE id = ? LIMIT 1', m.id)
-      .toArray();
-    if (existing.length > 0) return;
     this.ctx.storage.sql.exec(
       'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
       m.id,
@@ -875,6 +892,15 @@ export class Conversation extends DurableObject<Env> {
       } catch {
         /* ignored */
       }
+      await this.armNext(Date.now());
+      return;
+    }
+    // A voice note that could not be transcribed goes to a person, like
+    // every other non-text message, and the client is told who listens.
+    if (voiceFailed) {
+      await sendText(this.env, m.from, VOICE_HANDOFF['es']);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-voice', VOICE_HANDOFF['es']);
+      await this.notify(m);
       await this.armNext(Date.now());
       return;
     }
@@ -1021,7 +1047,9 @@ export class Conversation extends DurableObject<Env> {
       return;
     }
     const last = rows[rows.length - 1];
-    const texts = rows.filter((r) => r.type === 'text' && r.text !== null);
+    // Transcribed voice notes carry their transcript as text and join the
+    // burst like typed messages; only untranscribed media is handed off.
+    const texts = rows.filter((r) => r.text !== null && r.text !== '');
     const m: Inbound = {
       id: last.id,
       from,
@@ -1031,7 +1059,7 @@ export class Conversation extends DurableObject<Env> {
     if (name !== undefined) m.name = name;
     const joined = joinBurst(texts.map((r) => ({ at: r.at, text: r.text as string })));
     if (joined !== '') m.text = joined;
-    const firstMedia = rows.find((r) => r.type !== 'text');
+    const firstMedia = rows.find((r) => r.type !== 'text' && r.text === null);
     if (texts.length > 0 && firstMedia !== undefined) {
       // A burst mixing text and media: the text is answered below as one
       // turn, and the media keeps today's handoff exactly once per burst.
