@@ -38,7 +38,7 @@ gh workflow run deploy-whatsapp.yml --ref main
 Options differ per model: Qwen 3.8 reasons at `xhigh`
 unless `reasoning_effort` is set; GLM-4.7 Flash takes
 `{"chat_template_kwargs":{"enable_thinking":false}}`
-instead and rejects `reasoning_effort`.
+instead; its schema has no `reasoning_effort`.
 
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
