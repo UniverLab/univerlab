@@ -14,7 +14,6 @@ describe('the experiments page is the projection room', () => {
   it('renders the lantern under the room header', () => {
     expect(PAGE).toContain('<LabLantern />');
     expect(PAGE).toContain('room.head');
-    expect(PAGE).toContain('<Postcard page="experiments"');
     expect(PAGE).toContain('{t.home.plate.lead}');
     expect(PAGE).toContain('{t.home.plate.title}');
     expect(PAGE).not.toContain('<Encyclopedia');

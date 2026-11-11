@@ -186,7 +186,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
 
 <style>
   /* ── The lantern and its screen ───────────────────────────────────────── */
-  .lantern { position: relative; width: min(100%, 780px); }
+  .lantern { position: relative; width: min(100%, 780px); margin-inline: auto; }
   .lantern-pic { position: relative; z-index: 2; display: block; cursor: pointer; }
   .lantern-pic img { display: block; width: 100%; height: auto; }
   .lantern-front { position: absolute; inset: 0 auto auto 0; z-index: 4; width: 100%;

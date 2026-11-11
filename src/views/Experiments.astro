@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Postcard from '../components/Postcard.astro';
 import LabLantern from '../components/LabLantern.astro';
 import { getLang, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
@@ -13,13 +12,10 @@ const room = t.lanternRoom;
   circadian
 >
   <section class="enc" aria-labelledby="t-enc">
-    <header class="enc-head page-open">
-      <div class="page-open-text">
-        <h1 id="t-enc" class="enc-h1">{room.head}</h1>
-        <p class="enc-tome">{t.home.plate.lead} · {t.home.plate.title}</p>
-        <p class="enc-intro">{room.intro}</p>
-      </div>
-      <Postcard page="experiments" alt={t.postcards.experiments} />
+    <header class="enc-head">
+      <h1 id="t-enc" class="enc-h1">{room.head}</h1>
+      <p class="enc-tome">{t.home.plate.lead} · {t.home.plate.title}</p>
+      <p class="enc-intro">{room.intro}</p>
     </header>
 
     <div class="wrap hall"><LabLantern /></div>
@@ -31,7 +27,7 @@ const room = t.lanternRoom;
   .enc-head { display: grid; gap: 4px; text-align: center; justify-items: center; }
   .enc-h1 { font-family: 'Old Standard TT', serif; font-size: clamp(32px, 6vw, 54px); letter-spacing: 0.04em; margin: 0; }
   .enc-tome { margin: 0; font-family: 'Old Standard TT', serif; font-variant: small-caps; letter-spacing: 0.12em; color: var(--bench-line-soft); font-size: 15px; }
-  .enc-intro { margin: 6px 0 0; max-width: 56ch; color: var(--bench-line-soft); font-size: 16px; }
+  .enc-intro { margin: 6px auto 0; max-width: 56ch; color: var(--bench-line-soft); font-size: 16px; }
 
   @media (max-width: 520px) {
     .enc-tome { font-size: 15px; }

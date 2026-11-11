@@ -22,7 +22,6 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/archive.astro', 'archive', 't.postcards.archive'],
   ['src/pages/es/archive.astro', 'archive', 't.postcards.archive'],
   ['src/views/People.astro', 'contributors', 't.postcards.contributors'],
-  ['src/views/Experiments.astro', 'experiments', 't.postcards.experiments'],
   ['src/pages/feed.astro', 'feed', 't.postcards.feed'],
   ['src/pages/es/feed.astro', 'feed', 't.postcards.feed'],
   ['src/views/Manifesto.astro', 'manifesto', 't.postcards.manifesto'],
@@ -83,8 +82,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 13 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(13);
+  it('all 12 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(12);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -94,6 +93,12 @@ describe('page openings', () => {
       expect(src).not.toContain('bg="cosmic"');
       expect(src).not.toMatch(/bg=\{/);
     }
+  });
+
+  it('drops the postcard from /experiments so the room shares one centred axis', () => {
+    const src = read('src/views/Experiments.astro');
+    expect(src).not.toContain('Postcard');
+    expect(src).not.toContain('page-open');
   });
 
   it('lays the opening out in global.css: card above h1 on mobile, two columns from 64rem', () => {
@@ -151,7 +156,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(9);
+    expect(others).toHaveLength(8);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
