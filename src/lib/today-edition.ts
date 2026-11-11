@@ -266,7 +266,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const headline = leadHeadline(lead);
     const body = leadBody(lead);
     out +=
-      `<article class="lead"><div class="story">` +
+      `<article class="lead${aside.length ? '' : ' solo'}"><div class="story">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
       photoFigure(lead, t, { eager: true, caption: true }) +

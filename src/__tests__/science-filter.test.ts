@@ -293,11 +293,26 @@ const ES_FIX = JSON.parse(
 );
 
 describe('mainPage picks the event\u2019s own page', () => {
-  it('picks Chang\u2019e 1 over the country, the observatory over the city, Deep Space 1 alone', () => {
+  it('picks Chang\u2019e 1 over the country, the city over the observatory, Deep Space 1 alone', () => {
     const [change, cordoba, deep] = ES_FIX.events;
     expect(mainPage(change)?.titles?.normalized).toBe("Chang'e 1");
-    expect(mainPage(cordoba)?.titles?.normalized).toBe('Observatorio Astronómico de Córdoba');
+    // "Córdoba (Argentina)" also matches through its stripped form
+    // "Córdoba", which starts after the observatory's full title, so the
+    // page whose match starts last is the city.
+    expect(mainPage(cordoba)?.titles?.normalized).toBe('Córdoba (Argentina)');
     expect(mainPage(deep)?.titles?.normalized).toBe('Deep Space 1');
+  });
+
+  it('keeps the last match when a stripped form competes with a full title', () => {
+    const entry = {
+      year: 1,
+      text: 'The Phoenix Lander touched down.',
+      pages: [
+        { titles: { normalized: 'Lander (spacecraft)' } },
+        { titles: { normalized: 'Phoenix Lander' } },
+      ],
+    };
+    expect(mainPage(entry)?.titles?.normalized).toBe('Lander (spacecraft)');
   });
 
   it('matches a title across the non-breaking space the live feed writes', () => {
@@ -336,6 +351,20 @@ describe('mainPage picks the event\u2019s own page', () => {
       ],
     };
     expect(mainPage(entry)?.titles?.display).toBe('<b>Deep</b>_Space_1');
+  });
+
+  it('matches a parenthetical title through its capitalised bare form', () => {
+    const entry = {
+      year: 2008,
+      text: 'Over five months after landing on Mars, NASA declares the Phoenix mission concluded after communications with the lander were lost.',
+      pages: [
+        { titles: { normalized: 'Mars' } },
+        { titles: { normalized: 'NASA' } },
+        { titles: { normalized: 'Phoenix (spacecraft)' } },
+        { titles: { normalized: 'Lander (spacecraft)' } },
+      ],
+    };
+    expect(mainPage(entry)?.titles?.normalized).toBe('Phoenix (spacecraft)');
   });
 
   it('falls back to the first page whose extract holds the year', () => {
@@ -420,9 +449,11 @@ describe('collectFacts with the chosen page and its summary', () => {
     expect(change.summary).toContain("Chang'e 1 fue la primera sonda lunar");
     expect(typeof change.summaryCut).toBe('boolean');
     const cordoba = facts.find((f) => f.year === '1871')!;
-    expect(cordoba.page).toBe('Observatorio Astronómico de Córdoba');
-    expect(cordoba.link).toContain('Observatorio');
-    expect(cordoba.summary).toBeDefined();
+    // The city page matches last through its stripped form, so the fact
+    // carries the city's link and summary.
+    expect(cordoba.page).toBe('Córdoba (Argentina)');
+    expect(cordoba.link).toContain('C%C3%B3rdoba_(Argentina)');
+    expect(cordoba.summary).toContain('Córdoba es una ciudad');
 
     const born = collectFacts(ES_FIX.births, 'born', 'es');
     expect(born).toHaveLength(1);

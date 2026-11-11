@@ -165,12 +165,21 @@ export function mainPage(entry: FeedEntry): FeedPage | undefined {
   const pages = entry?.pages || [];
   if (!pages.length) return undefined;
   const text = comparable(entry.text || '');
+  // Case kept, so a stripped title only counts where the text prints it as
+  // the page does: "Phoenix (spacecraft)" meets "Phoenix", never "the lander".
+  const rawText = (entry.text || '').replace(/\s+/g, ' ').trim();
   let best: FeedPage | undefined;
   let bestIdx = -1;
   for (const p of pages) {
-    const t = comparable(pageTitle(p));
+    const title = pageTitle(p);
+    const t = comparable(title);
     if (!t) continue;
-    const idx = text.lastIndexOf(t);
+    let idx = text.lastIndexOf(t);
+    const collapsed = title.replace(/\s+/g, ' ').trim();
+    if (/\s*\([^)]*\)\s*$/.test(collapsed)) {
+      const bare = collapsed.replace(/\s*\([^)]*\)\s*$/, '');
+      if (bare) idx = Math.max(idx, rawText.lastIndexOf(bare));
+    }
     if (idx >= 0 && idx > bestIdx) {
       best = p;
       bestIdx = idx;

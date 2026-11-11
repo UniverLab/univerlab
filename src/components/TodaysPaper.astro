@@ -1,5 +1,6 @@
 ---
 import { getLang, useTranslations } from '../i18n';
+import Postcard from './Postcard.astro';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 ---
@@ -10,6 +11,7 @@ const t = useTranslations(lang);
 <div class="paper">
   <header class="masthead">
     <div class="ear"><span>{t.today.path}</span><form class="edition-pick" method="get"><label>{t.today.pick.label} <input type="date" name="d" required /></label><button type="submit">{t.today.pick.go}</button></form><span>{t.today.edition}</span></div>
+    <div class="masthead-pc"><Postcard page="today" alt={t.postcards.today} /></div>
     <h1 class="masthead-name">{t.today.name}</h1>
     <p class="motto">{t.today.motto}</p>
   </header>
@@ -49,6 +51,9 @@ const t = useTranslations(lang);
   .paper .edition-pick button { cursor: pointer; }
   .paper .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--bench-line); }
   .paper .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; color: var(--bench-line-soft); }
+  .paper .masthead .masthead-pc { width: min(30rem, 100%); margin-inline: auto; }
+  .paper .lead.solo { grid-template-columns: minmax(0, 1fr); }
+  .paper .lead.solo .story { max-width: 66ch; }
   .paper #edition { display: grid; gap: 18px; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }

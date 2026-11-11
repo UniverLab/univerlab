@@ -151,7 +151,7 @@ describe('event photos print up to three per edition', () => {
     const ev = thumbedEvent('1945');
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
     expect(todayLead([ev], DATE)).toBe(ev);
-    expect(html).toContain('<article class="lead">');
+    expect(html).toContain('<article class="lead solo">');
     expect(html).toContain('<figure class="photo">');
     expect(html).not.toContain('loading="lazy"');
   });
@@ -159,8 +159,16 @@ describe('event photos print up to three per edition', () => {
     const ev = fact({ kind: 'event', year: '1945', page: 'United Nations', text: 'charter signed' });
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
     expect(todayLead([ev], DATE)).toBe(ev);
-    expect(html).toContain('<article class="lead">');
+    expect(html).toContain('<article class="lead solo">');
     expect(html).not.toContain('<figure');
+  });
+  it('a lead with no side column spans the full width, with one it does not', () => {
+    const one = [thumbedEvent('1945')];
+    expect(todayEditionHtml({ facts: one, lab: [] }, 'en', DATE)).toContain('<article class="lead solo">');
+    const three = ['1945', '1946', '1947'].map(thumbedEvent);
+    const threeHtml = todayEditionHtml({ facts: three, lab: [] }, 'en', DATE);
+    expect(threeHtml).toContain('<article class="lead">');
+    expect(threeHtml).not.toContain('lead solo');
   });
   it('events print at most three photos, the lead included', () => {
     const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);

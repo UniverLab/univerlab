@@ -1,10 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Postcard from '../components/Postcard.astro';
 import TodaysPaper from '../components/TodaysPaper.astro';
-import { getLang, useTranslations } from '../i18n';
-const lang = getLang(Astro.url);
-const t = useTranslations(lang);
 ---
 <!-- `noindex` because the built HTML holds only the masthead: the edition is
      set at the edge by functions/_middleware.ts, and the client script below
@@ -13,13 +9,6 @@ const t = useTranslations(lang);
      URL in the sitemap is a reported error. -->
 <BaseLayout title="Today in Science — UniverLab" description="Every science event that happened on this day in history." circadian noindex>
   <section class="wrap today-page">
-    <div class="page-open">
-      <div class="page-open-text">
-        <span class="label">TODAY IN SCIENCE</span>
-        <p class="intro">Scientific events that happened on this day in history.</p>
-      </div>
-      <Postcard page="today" alt={t.postcards.today} />
-    </div>
     <TodaysPaper />
   </section>
 
@@ -27,7 +16,6 @@ const t = useTranslations(lang);
     /* The newspaper needs the full wrap: three columns from 48rem, as in the
        mockup. The old list layout capped the page at 42rem. */
     .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
-    .intro { color: var(--ink-dim); font-size: 1rem; line-height: 1.7; margin: 0 0 0.5rem; }
   </style>
 
   <script>

@@ -14,4 +14,12 @@ describe('the masthead is the only h1 of the page', () => {
     expect(today).not.toContain('<h1');
     expect(todayEs).not.toContain('<h1');
   });
+
+  it('neither today page opens with its own band: the masthead carries the postcard', () => {
+    expect(today).not.toContain('page-open');
+    expect(todayEs).not.toContain('page-open');
+    expect(today).not.toContain('Postcard');
+    expect(todayEs).not.toContain('Postcard');
+    expect(paper).toContain('<Postcard page="today"');
+  });
 });
