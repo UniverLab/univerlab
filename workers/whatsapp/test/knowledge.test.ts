@@ -11,7 +11,7 @@ test('spanish knowledge carries workbench copy', () => {
     'PayPal',
     '24 horas',
     'Ley 1480 de 2011',
-    'hola@univerlab.org',
+    'https://univerlab.org/es/workbench/',
     'canopy:',
   ]) {
     expect(k).toContain(s);
@@ -24,7 +24,7 @@ test('english knowledge carries workbench copy', () => {
     'COP 150,000',
     'USD 45',
     'Right of retraction',
-    'https://univerlab.org/services/',
+    'https://univerlab.org/workbench/',
     'canopy:',
   ]) {
     expect(k).toContain(s);

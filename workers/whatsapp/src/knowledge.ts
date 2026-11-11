@@ -24,6 +24,6 @@ export function knowledge(lang: Lang): string {
     lines.push('- ' + id + ': ' + (d.experiments as Record<string, { tagline: string }>)[id].tagline);
   }
   lines.push('## ' + (lang === 'es' ? 'Contacto' : 'Contact'));
-  lines.push('hola@univerlab.org · https://univerlab.org' + (lang === 'es' ? '/es' : '') + '/services/');
+  lines.push('https://univerlab.org' + (lang === 'es' ? '/es' : '') + '/workbench/');
   return lines.join('\n');
 }
