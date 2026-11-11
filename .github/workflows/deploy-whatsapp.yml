@@ -45,16 +45,27 @@ jobs:
             WA_ACCESS_TOKEN
             WA_PHONE_NUMBER_ID
             OPERATOR_PHONE
-          # The text model is configuration, not code: change the environment
-          # variables and re-run this workflow, no commit or release needed.
+            GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET
+            GOOGLE_REFRESH_TOKEN
+          # The text model and the booking configuration are configuration,
+          # not code: change the environment variables and re-run this
+          # workflow, no commit or release needed.
           vars: |
             TEXT_MODEL
             TEXT_MODEL_OPTIONS
+            WORKBENCH_CALENDAR_ID
+            BOOKING_CONFIG
         env:
           WA_APP_SECRET: ${{ secrets.WA_APP_SECRET }}
           WA_VERIFY_TOKEN: ${{ secrets.WA_VERIFY_TOKEN }}
           WA_ACCESS_TOKEN: ${{ secrets.WA_ACCESS_TOKEN }}
           WA_PHONE_NUMBER_ID: ${{ secrets.WA_PHONE_NUMBER_ID }}
           OPERATOR_PHONE: ${{ secrets.OPERATOR_PHONE }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
           TEXT_MODEL: ${{ vars.WA_TEXT_MODEL }}
           TEXT_MODEL_OPTIONS: ${{ vars.WA_TEXT_MODEL_OPTIONS }}
+          WORKBENCH_CALENDAR_ID: ${{ vars.WA_WORKBENCH_CALENDAR_ID }}
+          BOOKING_CONFIG: ${{ vars.WA_BOOKING_CONFIG }}

@@ -21,6 +21,53 @@ Secrets (set in the deploy workflow, never in code):
 - `WA_ACCESS_TOKEN`
 - `WA_PHONE_NUMBER_ID`
 - `OPERATOR_PHONE`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`:
+  the lab's Google OAuth client and refresh token (calendar events
+  and free/busy scopes). The agent uses them to read the primary
+  calendar's free/busy and to create, read and delete events in the
+  Workbench calendar. Without them booking falls back to today's
+  behavior: the intake brief goes to the operator, who books by hand.
+
+Booking (configuration, not code): the `production` environment's
+variables `WA_WORKBENCH_CALENDAR_ID` and `WA_BOOKING_CONFIG` reach
+the Worker as `WORKBENCH_CALENDAR_ID` and `BOOKING_CONFIG`.
+
+- `WORKBENCH_CALENDAR_ID`: the calendar id where sessions are booked.
+  A slot is free only when it overlaps nothing in the primary
+  calendar, in this calendar, or in another booking still on hold.
+- `BOOKING_CONFIG`: a JSON object with the bookable hours and limits.
+  Unset, the agent uses weekdays 07:00–08:00 and 15:00–19:00
+  America/Bogota (never Colombian holidays), 15 minutes of margin
+  between sessions, at most 3 sessions per day, at least 12 hours of
+  notice, and slots up to 14 days ahead. Example:
+
+```json
+{
+  "windows": [[7, 8], [15, 19]],
+  "marginMin": 15,
+  "maxPerDay": 3,
+  "noticeHours": 12,
+  "horizonDays": 14,
+  "payments": {
+    "es": "Bre-B en Colombia o PayPal desde el exterior",
+    "en": "Bre-B in Colombia or PayPal from abroad"
+  }
+}
+```
+
+`windows` are `[startHour, endHour)` pairs in Bogota wall time;
+`payments` overrides the sentence telling the client how to pay
+(Bre-B in Colombia, PayPal from abroad).
+
+Consultations are created as holds whose title starts with
+`[Por confirmar]`; the operator confirms by removing that prefix in
+the calendar, and the agent notices on its next check. A hold still
+unconfirmed 24 hours after creation is deleted and the client is told
+the hold expired. A client who writes BORRAR MIS DATOS or
+DELETE MY DATA also releases their held or booked event. Every event
+the agent creates has no attendees and sends no notifications; its
+description carries the client's name, number, service, language and
+intake brief.
 
 Text model (configuration, not code): the `production`
 environment's variables `WA_TEXT_MODEL` and

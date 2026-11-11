@@ -8,4 +8,9 @@ export interface Env {
   OPERATOR_PHONE: string;
   TEXT_MODEL?: string;
   TEXT_MODEL_OPTIONS?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_REFRESH_TOKEN?: string;
+  WORKBENCH_CALENDAR_ID?: string;
+  BOOKING_CONFIG?: string;
 }
