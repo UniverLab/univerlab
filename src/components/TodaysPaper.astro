@@ -7,13 +7,15 @@ const t = useTranslations(lang);
 <!-- The newspaper: the masthead is static, #edition is set at the edge by
   functions/_middleware.ts (HTMLRewriter) or, on failure, by the client script
   in pages/today.astro with the same renderer. The masthead name is the
-  page's h1. -->
+  page's h1; the sundial plate is an engraving inside the masthead, not a
+  band above it. The ear's date controls are set by the script below: the
+  built page cannot know ?d=. -->
 <div class="paper">
   <header class="masthead">
-    <div class="ear"><span>{t.today.path}</span><form class="edition-pick" method="get"><label>{t.today.pick.label} <input type="date" name="d" required /></label><button type="submit">{t.today.pick.go}</button></form><span>{t.today.edition}</span></div>
-    <div class="masthead-pc"><Postcard page="today" alt={t.postcards.today} /></div>
+    <div class="ear"><span>{t.today.path}</span><form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./">{t.today.pick.prev}</a><label class="words"><span data-words></span><input type="date" name="d" required /></label><a class="step next" data-next href="./">{t.today.pick.next}</a><button type="submit">{t.today.pick.go}</button></form><span class="edition-label" data-today={t.today.edition} data-past={t.today.editionPast}>{t.today.edition}</span></div>
     <h1 class="masthead-name">{t.today.name}</h1>
     <p class="motto">{t.today.motto}</p>
+    <figure class="masthead-fig"><Postcard page="today" alt={t.postcards.today} /></figure>
   </header>
   <div id="edition"></div>
   <div id="today-loading" class="today-loading" role="status" aria-label={t.today.loading}>
@@ -25,17 +27,64 @@ const t = useTranslations(lang);
 </div>
 
 <script>
-  // The masthead date field: capped at the lab's today, prefilled with the
-  // picked day (?d=) when present so the printed edition stays visible.
-  import { editionYmd } from '../lib/today-edition';
+  // The masthead date controls: the built page cannot know ?d=, so the
+  // edition's words, the prev/next steps and the today/past label are set
+  // here, from the same day key the edition renderer uses.
+  import { editionYmd, editionDateFor } from '../lib/today-edition';
 
   (function () {
-    var input = document.querySelector('.edition-pick input[name="d"]');
-    if (!input) return;
+    var form = document.querySelector('.edition-pick');
+    if (!form) return;
     var today = editionYmd();
-    input.setAttribute('max', today);
-    var d = new URLSearchParams(window.location.search).get('d');
-    input.setAttribute('value', d || today);
+    var d = editionDateFor(window.location.search);
+    var ymd = editionYmd(d);
+    var input = form.querySelector('input[name="d"]');
+    if (input) {
+      input.setAttribute('max', today);
+      input.setAttribute('value', ymd);
+      // Touch: tapping the words label only focuses the 1px input, which
+      // does not reliably open the picker, so open it explicitly.
+      var wordsLabel = form.querySelector('label.words');
+      if (wordsLabel) {
+        wordsLabel.addEventListener('click', function () {
+          try {
+            if (input.showPicker) input.showPicker();
+          } catch (_) {
+            /* the forwarded label click still focuses the input */
+          }
+        });
+      }
+    }
+    var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+    var words = form.querySelector('[data-words]');
+    if (words) {
+      words.textContent = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(d);
+    }
+    var label = document.querySelector('.edition-label');
+    if (label) {
+      if (ymd === today) {
+        label.textContent = label.getAttribute('data-today') || '';
+      } else {
+        // The short date reads day-first in both languages (en-GB).
+        var short = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
+          day: 'numeric',
+          month: 'long',
+        }).format(d);
+        label.textContent = (label.getAttribute('data-past') || '').replace('{date}', short);
+      }
+    }
+    var prev = form.querySelector('[data-prev]');
+    if (prev) prev.setAttribute('href', '?d=' + editionYmd(new Date(d.getTime() - 86400000)));
+    var next = form.querySelector('[data-next]');
+    if (next) {
+      if (ymd === today) next.style.display = 'none';
+      else next.setAttribute('href', '?d=' + editionYmd(new Date(d.getTime() + 86400000)));
+    }
   })();
 </script>
 
@@ -46,12 +95,15 @@ const t = useTranslations(lang);
   .paper { display: grid; gap: 18px; margin-top: 2.5rem; }
   .paper .masthead { text-align: center; display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 3px double var(--bench-line); }
   .paper .masthead .ear { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bench-line-soft); flex-wrap: wrap; }
-  .paper .edition-pick { display: inline-flex; gap: 6px; align-items: center; }
-  .paper .edition-pick input, .paper .edition-pick button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--bench-line); background: transparent; border: 1px solid var(--bench-line-soft); padding: 1px 6px; border-radius: 0; }
-  .paper .edition-pick button { cursor: pointer; }
+  .paper .edition-pick { display: inline-flex; gap: 8px; align-items: center; }
+  .paper .edition-pick .step { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--bench-line); text-decoration: none; border-bottom: 1px solid var(--bench-line-soft); }
+  .paper .edition-pick .words { position: relative; cursor: pointer; border-bottom: 1px dotted var(--bench-line-soft); }
+  .paper .edition-pick .words input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .paper .edition-pick .words:focus-within { outline: 1px solid var(--bench-emphasis); outline-offset: 3px; }
+  .paper .edition-pick button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--bench-line); background: transparent; border: 1px solid var(--bench-line-soft); padding: 1px 6px; border-radius: 0; cursor: pointer; }
   .paper .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--bench-line); }
   .paper .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; color: var(--bench-line-soft); }
-  .paper .masthead .masthead-pc { width: min(30rem, 100%); margin-inline: auto; }
+  .paper .masthead .masthead-fig { width: min(30rem, 100%); margin: 10px auto 0; }
   .paper .lead.solo { grid-template-columns: minmax(0, 1fr); }
   .paper .lead.solo .story { max-width: 66ch; }
   .paper #edition { display: grid; gap: 18px; }
@@ -79,7 +131,9 @@ const t = useTranslations(lang);
   .paper .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--bench-line); }
   .paper .item .yr span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--bench-line-soft); white-space: nowrap; }
   .paper .item p { margin: 0; font-family: var(--font-body); font-size: 16.5px; line-height: 1.45; color: var(--bench-line); }
+  .paper .item .body { font-size: 15px; line-height: 1.5; }
   .paper .item a { justify-self: start; }
+  .paper .lead aside .aside-body { font-size: 14.5px; line-height: 1.5; }
   .paper .labmail { border: 1px solid var(--bench-line); outline: 1px solid var(--bench-line); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
   .paper .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bench-line-soft); margin: 0; }
   .paper .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--bench-line); }

@@ -1,7 +1,7 @@
-// The day's newspaper: El Correo del Pasado. One renderer for the edge
-// (functions/_middleware.ts fills #edition through HTMLRewriter), the client
-// (pages/today.astro fills #edition when the edge did not) and the markdown
-// twin (/today/index.md). Escape every text field from the feed.
+// The day's newspaper: El Almanaque / The Almanac. One renderer for the
+// edge (functions/_middleware.ts fills #edition through HTMLRewriter), the
+// client (pages/today.astro fills #edition when the edge did not) and the
+// markdown twin (/today/index.md). Escape every text field from the feed.
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -70,6 +70,22 @@ export function editionDateFor(search: string, now: Date = new Date()): Date {
   return editionDate(now);
 }
 
+/** Whether the edition's day is the lab's today. */
+export function isToday(date: Date, now: Date = new Date()): boolean {
+  return editionYmd(date) === editionYmd(now);
+}
+
+/** The masthead's edition line: "today" only for today's edition, otherwise
+ *  the edition's own date in words ("Edition of 14 November"). The short
+ *  locale prints day-first in both languages (en-GB, not en-US). */
+export function editionLabel(lang: TodayLang, date: Date, now: Date = new Date()): string {
+  const t = dict(lang);
+  if (isToday(date, now)) return t.edition;
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
+  const words = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date);
+  return fmt(t.editionPast, { date: words });
+}
+
 /** The day's Wikipedia feed in the page language. */
 export function otdUrl(lang: TodayLang, date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -115,13 +131,19 @@ function leadHeadline(lead: Fact): string {
   return lead.kind === 'event' ? text : lead.page || text.slice(0, 72);
 }
 
-/** The lead's body, under the headline. With a summary, the summary is the
- *  drop-cap paragraph; without one, an event keeps its old silence (its one
- *  line is already the headline) and a person prints their line. */
+/** A printed letter's body, under its line. With a summary, the summary is
+ *  the paragraph (trimmed by the same rules the lead uses, so columns keep
+ *  fitting); without one, an event keeps its old silence (its one line is
+ *  already the headline) and a person prints their line. */
+function itemBody(fact: Fact): string {
+  if (fact.long) return summaryText({ summary: fact.long, summaryCut: fact.longCut });
+  if (fact.summary) return summaryText(fact);
+  return fact.kind === 'event' ? '' : fact.text;
+}
+
+/** The lead's body, under the headline: the same rules as every letter. */
 function leadBody(lead: Fact): string {
-  if (lead.long) return summaryText({ summary: lead.long, summaryCut: lead.longCut });
-  if (lead.summary) return summaryText(lead);
-  return lead.kind === 'event' ? '' : lead.text;
+  return itemBody(lead);
 }
 
 /** The edition's lead: the same letter the mailbox delivers, chosen by the
@@ -202,10 +224,14 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
   const link = fact.link
     ? `<a href="${esc(fact.link)}" target="_blank" rel="noopener noreferrer">${esc(t.wikiLink)}</a>`
     : '';
+  // The body's own paragraph: skipped when empty or when it would repeat the
+  // line above (a person with no summary, whose line is already the body).
+  const body = itemBody(fact);
+  const bodyHtml = body && body !== fact.text ? `<p class="body">${esc(body)}</p>` : '';
   return (
     `<article class="${cls}">${img}` +
     `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
-    `<p>${esc(text)}</p>${link}</article>`
+    `<p>${esc(text)}</p>${bodyHtml}${link}</article>`
   );
 }
 
@@ -279,7 +305,10 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       const side = aside
         .map((f) => {
           const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
-          return `<p><b>${esc(f.year)}</b>${esc(text)}</p>`;
+          const body = itemBody(f);
+          const bodyHtml =
+            body && body !== f.text ? `<p class="aside-body">${esc(body)}</p>` : '';
+          return `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}`;
         })
         .join('');
       out += `<aside>${side}</aside>`;
@@ -362,6 +391,8 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
       for (const f of aside) {
         const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
         lines.push(`- **${f.year}**: ${text}`);
+        const body = itemBody(f);
+        if (body && body !== f.text) lines.push(`  ${body}`);
       }
     }
     lines.push('');
@@ -382,6 +413,8 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
       const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
       const link = f.link ? ` ([${t.wikiLink.trim()}](${f.link}))` : '';
       lines.push(`- **${f.year}** (${fmt(t.ago[f.kind], { years })}): ${text}${link}`);
+      const body = itemBody(f);
+      if (body && body !== f.text) lines.push(`  ${body}`);
     }
     lines.push('');
   }

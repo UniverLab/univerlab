@@ -13,12 +13,14 @@ import {
   todayLead,
   todayAside,
   todayLabBox,
+  editionLabel,
   editionYmd,
   editionDate,
+  isToday,
   otdUrl,
   type TodayFeed,
 } from '../lib/today-edition';
-import type { Fact } from '../lib/science-filter';
+import { summaryText, type Fact } from '../lib/science-filter';
 
 const DATE = new Date(2026, 9, 25, 12, 0, 0); // Sun Oct 25 2026, noon
 const ymd = editionYmd(DATE);
@@ -135,8 +137,8 @@ describe('todayEditionHtml prints every branch', () => {
     expect(en).toContain(`born 446 years ago`);
     expect(en).toContain(`died 13 years ago`);
     const es = todayEditionHtml(kindsFeed, 'es', DATE);
-    expect(es).toContain('nació hace 446 años');
-    expect(es).toContain('murió hace 13 años');
+    expect(es).toContain('nace hace 446 años');
+    expect(es).toContain('fallece hace 13 años');
     const md = todayEditionMarkdown(kindsFeed, 'en', DATE);
     expect(md).toContain('(born 446 years ago)');
     expect(md).toContain('(died 13 years ago)');
@@ -186,5 +188,69 @@ describe('event photos print up to three per edition', () => {
     const html = todayEditionHtml({ facts, lab: [] }, 'en', d);
     expect(html).toContain('<article class="lead">');
     expect((html.match(/<figure class="photo">/g) ?? []).length).toBe(3);
+  });
+});
+
+describe('every letter prints its body, not only the lead', () => {
+  const day = new Date(2026, 9, 25, 12, 0, 0);
+  const summarized = fact({
+    kind: 'born',
+    year: '1800',
+    page: 'Ada Byron',
+    text: 'a mathematician was born',
+    summary: 'She wrote the first program.',
+    summaryCut: false,
+  });
+
+  it('a column letter prints its summary body in the html and the twin', () => {
+    const html = todayEditionHtml({ facts: [summarized], lab: [] }, 'en', day);
+    expect(html).toContain('<p class="body">She wrote the first program.</p>');
+    const md = todayEditionMarkdown({ facts: [summarized], lab: [] }, 'en', day);
+    expect(md).toContain('  She wrote the first program.');
+  });
+
+  it('a cut body ends with … in the column, like the lead', () => {
+    const cut = fact({
+      ...summarized,
+      summary: 'First sentence. The rest is cut.',
+      summaryCut: true,
+    });
+    const html = todayEditionHtml({ facts: [cut], lab: [] }, 'es', day);
+    expect(html).toContain(`<p class="body">${summaryText(cut)}</p>`);
+    expect(summaryText(cut).endsWith('…')).toBe(true);
+  });
+
+  it('an event without a summary prints no body', () => {
+    const ev = fact({ kind: 'event', year: '1945', page: 'United Nations', text: 'charter signed' });
+    const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', day);
+    expect(html).toContain('<h2>Charter signed</h2>');
+    expect(html).not.toContain('class="body"');
+    const md = todayEditionMarkdown({ facts: [ev], lab: [] }, 'en', day);
+    expect(md.split('Charter signed')).toHaveLength(2);
+  });
+
+  it('a person without a summary does not print their line twice', () => {
+    const bare = fact({ kind: 'born', year: '1800', page: 'Ada Byron', text: 'a mathematician was born' });
+    const html = todayEditionHtml({ facts: [bare], lab: [] }, 'en', day);
+    expect(html).not.toContain('class="body"');
+    expect(html.split('A mathematician was born')).toHaveLength(2);
+  });
+});
+
+describe('editionLabel', () => {
+  // 2026-11-09T18:00:00Z is 13:00 in Bogotá: the edition is 2026-11-09.
+  const NOW = new Date('2026-11-09T18:00:00Z');
+
+  it('reads today only for today’s edition', () => {
+    expect(isToday(editionDate(NOW), NOW)).toBe(true);
+    expect(editionLabel('en', editionDate(NOW), NOW)).toBe("Today's edition");
+    expect(editionLabel('es', editionDate(NOW), NOW)).toBe('Edición de hoy');
+  });
+
+  it('reads the edition’s date otherwise, day-first in both languages', () => {
+    const past = new Date(2024, 6, 20, 12);
+    expect(isToday(past, NOW)).toBe(false);
+    expect(editionLabel('en', past, NOW)).toBe('Edition of 20 July');
+    expect(editionLabel('es', past, NOW)).toBe('Edición del 20 de julio');
   });
 });

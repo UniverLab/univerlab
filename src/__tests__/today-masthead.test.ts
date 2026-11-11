@@ -22,4 +22,19 @@ describe('the masthead is the only h1 of the page', () => {
     expect(todayEs).not.toContain('Postcard');
     expect(paper).toContain('<Postcard page="today"');
   });
+
+  it('the sundial plate is an engraving inside the masthead, not a band above it', () => {
+    expect(paper).not.toContain('masthead-pc');
+    const header = paper.slice(paper.indexOf('<header class="masthead">'), paper.indexOf('</header>'));
+    expect(header).toContain('<figure class="masthead-fig">');
+    const fig = header.slice(header.indexOf('<figure class="masthead-fig">'));
+    expect(fig).toContain('<Postcard page="today"');
+    // After the name and the motto, never above them.
+    expect(header.indexOf('<h1 class="masthead-name">')).toBeLessThan(
+      header.indexOf('<figure class="masthead-fig">'),
+    );
+    expect(header.indexOf('class="motto"')).toBeLessThan(
+      header.indexOf('<figure class="masthead-fig">'),
+    );
+  });
 });

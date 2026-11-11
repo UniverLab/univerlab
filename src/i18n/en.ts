@@ -718,7 +718,8 @@ export const en = {
   today: {
     path: 'univerlab.org/today',
     edition: "Today's edition",
-    name: 'The Courier of the Past',
+    editionPast: 'Edition of {date}',
+    name: 'The Almanac',
     motto: 'Letters of science arriving today, after years on their way',
     sol: 'Sol',
     counts: '{n} letters from the past · {m} from the lab',
@@ -744,7 +745,7 @@ export const en = {
     loading: 'Setting the type…',
     empty: 'No science events for today.',
     error: 'Failed to load the day’s letters.',
-    pick: { label: 'Edition of', go: 'Print' },
+    pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
   },
   audit: {
     contents: 'Contents',

@@ -712,7 +712,8 @@ export const es: Dict = {
   today: {
     path: 'univerlab.org/today',
     edition: 'Edición de hoy',
-    name: 'El Correo del Pasado',
+    editionPast: 'Edición del {date}',
+    name: 'El Almanaque',
     motto: 'Cartas de la ciencia que llegan hoy, después de años en camino',
     sol: 'Sol',
     counts: '{n} cartas del pasado · {m} del laboratorio',
@@ -729,8 +730,8 @@ export const es: Dict = {
     types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
     ago: {
       event: 'hace {years} años',
-      born: 'nació hace {years} años',
-      died: 'murió hace {years} años',
+      born: 'nace hace {years} años',
+      died: 'fallece hace {years} años',
     },
     caption: '{name} · Wikimedia Commons',
     colophon:
@@ -738,7 +739,7 @@ export const es: Dict = {
     loading: 'Componiendo la plana…',
     empty: 'No hay eventos científicos para hoy.',
     error: 'No se pudieron cargar las cartas del día.',
-    pick: { label: 'Edición del', go: 'Imprimir' },
+    pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
   },
   audit: {
     contents: 'Contenido',
