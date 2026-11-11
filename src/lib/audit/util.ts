@@ -43,11 +43,12 @@ export function md(src: string): string {
 }
 
 /** Public URL of an audit file, served through the assets route. Catalogue
- *  paths are stored as `assets/<file>`; the route mounts them at
- *  `/audits/<slug>/assets/<file>`. */
-export function assetUrl(slug: string, path: string): string {
+ *  paths are stored as `assets/<file>`; the private route mounts them at
+ *  `/audits/<slug>/assets/<file>`, the public one at
+ *  `/workbench/audits/<slug>/assets/<file>`. */
+export function assetUrl(slug: string, path: string, base: string = '/audits'): string {
   const rel = path.replace(/^assets\//, '');
-  return `/audits/${slug}/assets/${rel.split('/').map(encodeURIComponent).join('/')}`;
+  return `${base}/${slug}/assets/${rel.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 export function assetById(doc: AuditDocument, id: string): AuditAsset | null {
@@ -57,6 +58,8 @@ export function assetById(doc: AuditDocument, id: string): AuditAsset | null {
 export interface ProseCtx {
   slug: string;
   doc: AuditDocument;
+  /** Route base for asset URLs: `/audits` private, `/workbench/audits` public. */
+  assetBase?: string;
 }
 
 /** Render prose markdown with its inline references resolved to interactive
@@ -65,6 +68,7 @@ export interface ProseCtx {
  *  render as plain escaped text, never as a broken link. */
 export function proseRefs(markdown: string, ctx: ProseCtx): string {
   const { slug, doc } = ctx;
+  const assetBase = ctx.assetBase ?? '/audits';
   const findings = new Map(doc.findings.map((f) => [f.id, f]));
   const sources = new Map(doc.sources.map((s) => [s.id, s]));
   const glossary = new Map(doc.glossary.map((g) => [g.term, g.definition]));
@@ -95,7 +99,7 @@ export function proseRefs(markdown: string, ctx: ProseCtx): string {
     } else if (kind === 'asset' && assets.has(id)) {
       const a = assets.get(id)!;
       parts.push(
-        `<a class="audit-ref" href="${esc(assetUrl(slug, a.path))}">${esc(a.title)}</a>`,
+        `<a class="audit-ref" href="${esc(assetUrl(slug, a.path, assetBase))}">${esc(a.title)}</a>`,
       );
     } else {
       parts.push(esc(m[0]));

@@ -766,6 +766,14 @@ export const en = {
     chartFallback: 'Chart data is available in the downloadable bundle.',
     codeCopy: 'Copy',
     codeCopied: 'Copied',
+    published: {
+      issued: 'Audit date',
+      validUntil: 'Valid until',
+      expired: 'over 12 months ago',
+      previous: 'Previous audit',
+      next: 'Later audit',
+    },
+    badge: { title: 'Badge for your site', copy: 'Copy the HTML', copied: 'Copied' },
   },
   workbench: {
     title: 'The Workbench — UniverLab consulting on artificial intelligence agents and automation',
@@ -839,6 +847,22 @@ export const en = {
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
       price: { kicker: 'Price', text: 'From COP 900,000; from abroad, from USD 250. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.' },
       cardLink: 'What we review and what you receive →',
+      offers: { kicker: 'Publishing your audit', founding: {
+        title: 'Founding audits',
+        text: 'The first 5 audits: we refund 50 % of the price when the audit is published. A founding spot is taken when the agreement is signed.',
+        spots: 5,
+      }, public: {
+        title: 'Audit in public',
+        text: 'Any other client gets 20 % of the price back when they publish, even if they first chose a private audit.',
+      }, reaudit: {
+        title: 'Re-audit',
+        text: 'Auditing the same system again, to check the fixes and issue a new audit with a new date, costs 30 % less, applied when it is charged.',
+      }, rules: [
+        'Publication happens once critical and high findings are fixed, with your written approval of what is shown.',
+        'The refund must be claimed within 12 months of delivery; after that the audit stays private and the founding spot is not returned.',
+        'Discounts and refunds do not stack: the largest one applies.',
+        'The badge is your choice to display and is never a condition for any refund or discount.',
+      ] },
     },
   },
 };

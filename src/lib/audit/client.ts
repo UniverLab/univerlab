@@ -226,11 +226,37 @@ function wireVideos(root: ParentNode): void {
   });
 }
 
+function wireBadgeCopy(root: ParentNode): void {
+  const timers = new WeakMap<Element, ReturnType<typeof globalThis.setTimeout>>();
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-badge-copy');
+    if (!(btn instanceof HTMLElement)) return;
+    const snippet = btn.getAttribute('data-snippet');
+    if (!snippet || !navigator.clipboard) return;
+    const pending = timers.get(btn);
+    if (pending !== undefined) globalThis.clearTimeout(pending);
+    navigator.clipboard
+      .writeText(snippet)
+      .then(() => {
+        setCopyState(btn, true);
+        timers.set(
+          btn,
+          globalThis.setTimeout(() => {
+            timers.delete(btn);
+            setCopyState(btn, false);
+          }, COPY_DONE_MS),
+        );
+      })
+      .catch(() => {});
+  });
+}
+
 export function initAuditPage(root: ParentNode = document): void {
   if (!readData()) return;
   wireTerms(root);
   wireBack(root);
   wireTables(root);
+  wireBadgeCopy(root);
   wireSteppers(root);
   void wireCharts(root).catch(() => {});
   void wireDiagrams(root).catch(() => {});

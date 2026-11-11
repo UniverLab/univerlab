@@ -17,6 +17,8 @@ export interface BlockCtx {
   slug: string;
   doc: AuditDocument;
   t: AuditStrings;
+  /** Route base for asset URLs: `/audits` private, `/workbench/audits` public. */
+  assetBase?: string;
   /** Position of the block being rendered, set by the section loop so
    *  heading blocks get stable `audit-h-<sec>-<i>` anchors. */
   sec: number;
@@ -68,7 +70,7 @@ function evidenceList(ctx: BlockCtx, f: AuditFinding): string {
       const a = assetById(ctx.doc, e.id);
       const label = a ? a.title : e.id;
       return a
-        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path))}">${esc(label)}</a></li>`
+        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(label)}</a></li>`
         : `<li>${esc(label)}</li>`;
     })
     .join('');
@@ -168,7 +170,7 @@ function chart(ctx: BlockCtx, b: { spec?: Record<string, unknown>; dataAsset?: s
   let dataUrl = '';
   if (typeof b.dataAsset === 'string' && b.dataAsset !== '') {
     const a = assetById(ctx.doc, b.dataAsset);
-    if (a) dataUrl = assetUrl(ctx.slug, a.path);
+    if (a) dataUrl = assetUrl(ctx.slug, a.path, ctx.assetBase);
   }
   const spec = b.spec ?? {};
   return (
@@ -183,7 +185,7 @@ function chart(ctx: BlockCtx, b: { spec?: Record<string, unknown>; dataAsset?: s
 function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: string }): string {
   const a = typeof b.asset === 'string' ? assetById(ctx.doc, b.asset) : null;
   if (!a) return '';
-  const url = assetUrl(ctx.slug, a.path);
+  const url = assetUrl(ctx.slug, a.path, ctx.assetBase);
   let media = '';
   if (a.kind === 'image') {
     media = `<img src="${esc(url)}" alt="${esc(a.alt ?? a.title)}" loading="lazy">`;
@@ -191,7 +193,7 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
     let poster = '';
     if (typeof b.poster === 'string' && b.poster !== '') {
       const p = assetById(ctx.doc, b.poster);
-      if (p?.kind === 'image') poster = ` poster="${esc(assetUrl(ctx.slug, p.path))}"`;
+      if (p?.kind === 'image') poster = ` poster="${esc(assetUrl(ctx.slug, p.path, ctx.assetBase))}"`;
     }
     media =
       `<video controls preload="metadata" loop muted playsinline data-autoplay${poster}>` +
@@ -217,7 +219,7 @@ function code(ctx: BlockCtx, b: { language: string; source?: string; sourceAsset
     return (
       `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
       `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
-      `<pre><code data-lang="${esc(b.language)}" data-src="${esc(assetUrl(ctx.slug, a.path))}"${hlAttr}></code></pre></figure>`
+      `<pre><code data-lang="${esc(b.language)}" data-src="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}"${hlAttr}></code></pre></figure>`
     );
   }
   const src = typeof b.source === 'string' ? b.source : '';
@@ -413,7 +415,7 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
         span,
         `<div class="audit-assetCard"><p class="audit-assetCard-title">${esc(a.title)}</p>` +
           (typeof desc === 'string' && desc !== '' ? `<p>${esc(desc)}</p>` : '') +
-          `<a href="${esc(assetUrl(ctx.slug, a.path))}">${esc(a.title)}</a></div>`,
+          `<a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(a.title)}</a></div>`,
       );
     }
     case 'sources':

@@ -760,6 +760,14 @@ export const es: Dict = {
     chartFallback: 'Los datos del gráfico están en el paquete descargable.',
     codeCopy: 'Copiar',
     codeCopied: 'Copiado',
+    published: {
+      issued: 'Fecha de la auditoría',
+      validUntil: 'Vigencia',
+      expired: 'hace más de 12 meses',
+      previous: 'Auditoría anterior',
+      next: 'Auditoría posterior',
+    },
+    badge: { title: 'Insignia para tu sitio', copy: 'Copiar el HTML', copied: 'Copiado' },
   },
   workbench: {
     title: 'El Banco de trabajo — consultoría de UniverLab en agentes de inteligencia artificial',
@@ -833,6 +841,22 @@ export const es: Dict = {
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
       price: { kicker: 'Precio', text: 'Desde 900.000 COP; desde el exterior, desde USD 250. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.' },
       cardLink: 'Qué revisamos y qué entregamos →',
+      offers: { kicker: 'Publicar tu auditoría', founding: {
+        title: 'Auditorías fundadoras',
+        text: 'Las primeras 5 auditorías: te devolvemos el 50 % del precio cuando la auditoría se publica. El cupo fundador se aparta cuando se firma el acuerdo.',
+        spots: 5,
+      }, public: {
+        title: 'Audita en público',
+        text: 'Cualquier otro cliente recibe el 20 % del precio de vuelta cuando publica, incluso si primero eligió una auditoría privada.',
+      }, reaudit: {
+        title: 'Reauditoría',
+        text: 'Auditar de nuevo el mismo sistema, para revisar las correcciones y emitir una auditoría nueva con una fecha nueva, cuesta 30 % menos, aplicado al cobrar.',
+      }, rules: [
+        'La publicación ocurre cuando los hallazgos críticos y altos están corregidos, con tu aprobación escrita del contenido publicado.',
+        'La devolución se reclama dentro de los 12 meses siguientes a la entrega; después la auditoría sigue privada y el cupo fundador no se devuelve.',
+        'Los descuentos y las devoluciones no se acumulan: aplica el mayor.',
+        'La insignia es tu decisión mostrarla y nunca es condición para una devolución o un descuento.',
+      ] },
     },
   },
 };

@@ -89,6 +89,13 @@ export interface AuditAccess {
   emails: string[];
 }
 
+export interface AuditBadge {
+  issued: string;
+  validUntil?: string;
+  scope: string;
+  previous?: string;
+}
+
 export interface AuditCover {
   layout: AuditLayout;
   background?: string;
@@ -334,6 +341,7 @@ export interface AuditDocument {
   visibility: 'public' | 'private';
   access?: AuditAccess;
   accent?: 'lab' | 'experiment';
+  badge?: AuditBadge;
   cover: AuditCover;
   assets: AuditAsset[];
   deliverables: AuditDeliverables;

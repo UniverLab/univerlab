@@ -84,6 +84,21 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
     }
   }
 
+  // The badge links the re-audit history and dates the audit: the previous
+  // slug must be a valid slug and the validity cannot end before it starts.
+  // The JSON Schema covers shapes; only the date order needs code.
+  if (isRecord(doc['badge'])) {
+    const badge = doc['badge'];
+    if (typeof badge['previous'] === 'string' && !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(badge['previous'])) {
+      errors.push({ path: '$.badge.previous', message: `invalid audit slug '${badge['previous']}'` });
+    }
+    if (typeof badge['issued'] === 'string' && typeof badge['validUntil'] === 'string') {
+      if (badge['validUntil'] < badge['issued']) {
+        errors.push({ path: '$.badge.validUntil', message: 'badge validity cannot end before the issue date' });
+      }
+    }
+  }
+
   // Delivered and final audits ship the TeXForge PDF report (a PDF asset).
   const status = isRecord(doc['meta']) ? doc['meta']['status'] : undefined;
   const deliverables = isRecord(doc['deliverables']) ? doc['deliverables'] : null;

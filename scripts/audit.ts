@@ -50,9 +50,12 @@ function wrangler(args: string[]): string | null {
   return null;
 }
 
-function readAuditJson(folder: string): { assets: { path: string }[] } | null {
+function readAuditJson(folder: string): { assets: { path: string }[]; visibility?: unknown } | null {
   try {
-    return JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as { assets: { path: string }[] };
+    return JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as {
+      assets: { path: string }[];
+      visibility?: unknown;
+    };
   } catch {
     return null;
   }
@@ -84,7 +87,8 @@ function push(folder: string, slugArg: string | undefined): void {
     const out = wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', file, '--remote']);
     if (out === null) process.exit(1);
   }
-  console.log(`Pushed audit '${slug}' (${uploads.length} object(s)): ${SITE}/audits/${slug}/`);
+  const pageUrl = doc.visibility === 'public' ? `${SITE}/workbench/audits/${slug}/` : `${SITE}/audits/${slug}/`;
+  console.log(`Pushed audit '${slug}' (${uploads.length} object(s)): ${pageUrl}`);
 }
 
 function confirm(question: string): boolean {

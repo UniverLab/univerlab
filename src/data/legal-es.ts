@@ -48,7 +48,7 @@ export const privacyEs: LegalDoc = {
         '<strong>quorum.univerlab.org.</strong> Planning poker de par a par: sin cuentas, sin cookies y sin analítica. Tu nombre visible, el tema y las historias de cada sala se guardan solo en tu navegador. Para que los navegadores de una sala se encuentren, Quorum usa trackers públicos de WebTorrent operados por terceros: ven tu dirección IP y un identificador derivado de la sala, nunca tus votos. Después, los datos viajan directo entre navegadores por WebRTC, así que quienes están en tu sala ven tu nombre, tus votos y tu dirección IP. UniverLab no recibe nada de eso: solo sirve los archivos de la app desde Cloudflare.',
         '<strong>CLI y daemon de canopy.</strong> Tus datos se quedan en local, en <code>~/.canopy</code> de tu propia máquina. Los servicios de UniverLab solo reciben contacto cuando los usas: al traer un grafo del catálogo o al emparejar por el relay. Los harnesses de agentes (Claude, Codex y demás) se rigen por los términos de sus propios proveedores.',
         '<strong>Banco de trabajo por WhatsApp.</strong> Cuando escribes al WhatsApp del Banco de trabajo te responde un agente automático. Guardamos tu número de teléfono, el nombre de tu perfil de WhatsApp, los mensajes de la conversación, el servicio que te interesa y las notas que el agente prepara para la persona del laboratorio que confirma tu sesión. El texto de tus mensajes lo procesa un modelo de lenguaje en Cloudflare Workers AI, que no lo usa para entrenar modelos. Las notas de voz las transcribe un modelo de voz a texto en Cloudflare Workers AI, y solo se guarda la transcripción. Cuando el agente te pasa con una persona, esas notas llegan al WhatsApp del laboratorio. Los comprobantes de pago (imágenes o PDF) los lee un modelo de visión en Cloudflare Workers AI: el archivo se reenvía a la persona que revisa tu pago y no se conserva después, solo los datos extraídos (monto, fecha, medio, referencia y beneficiario).',
-        '<strong>Auditorías del Banco de trabajo.</strong> Lo que compartes para la auditoría (repositorios, configuraciones, flujos) y los correos autorizados para leerla. Vive en un bucket privado de Cloudflare R2, servido solo a esos correos tras Cloudflare Access.',
+        '<strong>Auditorías del Banco de trabajo.</strong> Lo que compartes para la auditoría (repositorios, configuraciones, flujos) y los correos autorizados para leerla. Vive en un bucket privado de Cloudflare R2, servido solo a esos correos tras Cloudflare Access. Una auditoría que decides publicar vive en una dirección pública, con su insignia, su fecha y su alcance.',
         '<strong>Reportes.</strong> Los reportes de errores y del catálogo son issues de GitHub en repositorios públicos: lo que escribas ahí es público bajo los términos de GitHub.',
       ],
     },
@@ -182,6 +182,15 @@ export const termsEs: LegalDoc = {
         'Estas condiciones aplican a las sesiones pagadas del Banco de trabajo reservadas por WhatsApp. La primera llamada gratis se puede cancelar en cualquier momento.',
       ],
       items: es.workbench.policy.items,
+    },
+    {
+      id: 'published-audits',
+      title: 'Auditorías publicadas',
+      paras: [
+        'Una auditoría solo se publica con tu aprobación escrita y cuando los hallazgos críticos y altos están corregidos. Lo que se muestra es lo que apruebas: nada de tu auditoría privada se publica sin tu firma.',
+        'La devolución por publicar es un porcentaje del precio pagado y se paga por transferencia: 50 % para las auditorías fundadoras y 20 % para las demás, reclamable dentro de los 12 meses siguientes a la entrega. Auditar de nuevo el mismo sistema, con fecha nueva, cuesta 30 % menos al cobrar.',
+        'Lo que se muestra es la auditoría con su fecha, su vigencia y su alcance, además de la insignia para tu sitio. La insignia acredita que UniverLab auditó un alcance en una fecha: no acredita seguridad continua ni es una certificación. La fecha es cómo el lector juzga qué tan actual es la auditoría, y cada reauditoría emite una insignia nueva.',
+      ],
     },
     {
       id: 'acceptable-use',

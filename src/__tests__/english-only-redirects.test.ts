@@ -35,8 +35,8 @@ const englishOnly = readdirSync(resolve(ROOT, 'src/pages'))
 const spellings = (n: string) => [`/es/${n} /${n}/ 301`, `/es/${n}/ /${n}/ 301`];
 
 describe('English-only pages are never linked with the /es prefix', () => {
-  it('the class today is exactly roadmap and status', () => {
-    expect(englishOnly).toEqual(['roadmap', 'status']);
+  it('the class today is exactly audit-shell, roadmap and status', () => {
+    expect(englishOnly).toEqual(['audit-shell', 'roadmap', 'status']);
   });
 
   it.each(englishOnly)('%s has no Spanish twin', (n) => {

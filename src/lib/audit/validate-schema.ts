@@ -24,6 +24,7 @@ export interface SchemaIssue {
 type Ctx = SchemaIssue[];
 
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const SHA_RE = /^[0-9a-fA-F]{64}$/;
 const CURRENCY_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -461,7 +462,7 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   const ctx: Ctx = [];
   if (
     !enterObject(ctx, doc, '$', 'audit document', [
-      'contract', 'meta', 'visibility', 'access', 'accent', 'cover',
+      'contract', 'meta', 'visibility', 'access', 'accent', 'badge', 'cover',
       'assets', 'deliverables', 'findings', 'sources', 'glossary', 'sections',
     ])
   ) {
@@ -492,6 +493,16 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
     }
   }
   if (doc['accent'] !== undefined) checkEnum(ctx, doc['accent'], '$.accent', 'accent', ['lab', 'experiment']);
+  if (doc['badge'] !== undefined) {
+    const badge = doc['badge'];
+    if (enterObject(ctx, badge, '$.badge', 'badge', ['issued', 'validUntil', 'scope', 'previous'])) {
+      required(ctx, badge, '$.badge', 'badge', ['issued', 'scope']);
+      checkOptionalString(ctx, badge['issued'], '$.badge.issued', 'badge issue date', { format: 'date' });
+      checkOptionalString(ctx, badge['validUntil'], '$.badge.validUntil', 'badge validity end', { format: 'date' });
+      checkOptionalString(ctx, badge['scope'], '$.badge.scope', 'badge scope');
+      checkOptionalString(ctx, badge['previous'], '$.badge.previous', 'previous audit slug', { pattern: SLUG_RE });
+    }
+  }
   if (doc['cover'] !== undefined) {
     const cover = doc['cover'];
     if (enterObject(ctx, cover, '$.cover', 'cover', ['layout', 'background'])) {

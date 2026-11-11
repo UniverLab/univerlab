@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<!-- Published-audit shell: the built HTML holds only the container — the edge
+     fills #audit at request time from the R2 document (functions/_middleware.ts),
+     and the client script hydrates the interactive blocks. Never served
+     directly (the middleware answers 404) and never indexed as a shell. -->
+<BaseLayout title="Published audit — UniverLab" description="A published UniverLab audit." circadian noindex>
+  <link rel="stylesheet" href="/audits/audit.css" />
+  <div class="wrap audit-page">
+    <div id="audit"></div>
+  </div>
+
+  <script>
+    import { initAuditPage } from '../lib/audit/client';
+    initAuditPage();
+  </script>
+</BaseLayout>

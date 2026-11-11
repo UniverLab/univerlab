@@ -22,6 +22,33 @@ test('spanish knowledge carries workbench copy', () => {
   }
 });
 
+test('both languages carry the publishing offers from the same dictionaries', () => {
+  const es = knowledge('es');
+  for (const s of [
+    'Auditorías fundadoras',
+    'Audita en público',
+    'Reauditoría',
+    '50 %',
+    '20 %',
+    '30 % menos',
+    'no se acumulan',
+  ]) {
+    expect(es).toContain(s);
+  }
+  const en = knowledge('en');
+  for (const s of [
+    'Founding audits',
+    'Audit in public',
+    'Re-audit',
+    '50 %',
+    '20 %',
+    '30 % less',
+    'do not stack',
+  ]) {
+    expect(en).toContain(s);
+  }
+});
+
 test('english knowledge carries workbench copy', () => {
   const k = knowledge('en');
   for (const s of [

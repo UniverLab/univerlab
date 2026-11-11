@@ -1,7 +1,7 @@
 // The audit CLI is the contract gate agents run: exit 0 for a valid folder,
 // exit 1 listing each error with its JSON path for a broken one.
 import { execFileSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -137,7 +137,7 @@ describe('audit CLI push', () => {
       const { code, out } = runWithEnv(['push', FIXTURE_DIR, '--slug', 'push-slug'], env);
       expect(code).toBe(0);
       expect(out).toContain('valid audit');
-      expect(out).toContain('https://univerlab.org/audits/push-slug/');
+      expect(out).toContain('https://univerlab.org/workbench/audits/push-slug/');
       const calls = wranglerCalls(dir);
       expect(calls).toContain('r2 object put univerlab-audits/push-slug/audit.json');
       expect(existsSync(join(dir, 'bucket', 'push-slug', 'audit.json'))).toBe(true);
@@ -150,6 +150,25 @@ describe('audit CLI push', () => {
         expect(existsSync(join(dir, 'bucket', 'push-slug', asset.path))).toBe(true);
       }
     } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('prints the private page URL when the document visibility is private', () => {
+    const { dir, env } = fakeWranglerEnv();
+    const folder = mkdtempSync(join(tmpdir(), 'audit-cli-private-'));
+    try {
+      const doc = JSON.parse(readFileSync(join(FIXTURE_DIR, 'audit.json'), 'utf8')) as Record<string, unknown>;
+      doc['visibility'] = 'private';
+      doc['access'] = { emails: ['reader@example.com'] };
+      cpSync(FIXTURE_DIR, folder, { recursive: true });
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+      const { code, out } = runWithEnv(['push', folder, '--slug', 'private-slug'], env);
+      expect(code).toBe(0);
+      expect(out).toContain('https://univerlab.org/audits/private-slug/');
+      expect(out).not.toContain('/workbench/audits/');
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
       rmSync(dir, { recursive: true, force: true });
     }
   });

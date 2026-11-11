@@ -79,6 +79,10 @@ export const STATIC_RULES: readonly string[] = [
   // /roadmap/ is English-only like /status/.
   '/es/roadmap /roadmap/ 301',
   '/es/roadmap/ /roadmap/ 301',
+  // /audit-shell/ is English-only too: the edge fills it at request time and
+  // never serves it directly, so it has no /es twin either.
+  '/es/audit-shell /audit-shell/ 301',
+  '/es/audit-shell/ /audit-shell/ 301',
   // Docs are English-only, so the Spanish spellings Google crawled are a
   // whole-segment mistake: send them to the English page rather than 404.
   '/es/:id/docs/* /:id/docs/:splat 301',

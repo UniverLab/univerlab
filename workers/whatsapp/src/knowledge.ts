@@ -25,6 +25,13 @@ export function knowledge(lang: Lang): string {
   for (const [title, body] of w.audits.deliver.items) lines.push('- ' + title + ': ' + body);
   for (const para of w.audits.impl.paras) lines.push(para);
   lines.push(w.audits.price.text);
+  lines.push('### ' + w.audits.offers.kicker);
+  if (w.audits.offers.founding.spots > 0) {
+    lines.push('- ' + w.audits.offers.founding.title + ': ' + w.audits.offers.founding.text);
+  }
+  lines.push('- ' + w.audits.offers.public.title + ': ' + w.audits.offers.public.text);
+  lines.push('- ' + w.audits.offers.reaudit.title + ': ' + w.audits.offers.reaudit.text);
+  for (const rule of w.audits.offers.rules) lines.push('- ' + rule);
   lines.push('### ' + w.money.kicker);
   lines.push(w.money.text);
   lines.push('### ' + w.principles.kicker);

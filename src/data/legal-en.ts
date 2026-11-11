@@ -50,7 +50,7 @@ export const privacyEn: LegalDoc = {
         '<strong>quorum.univerlab.org.</strong> Peer-to-peer planning poker: no accounts, no cookies and no analytics. Your display name, theme and each room\u2019s stories stay in your browser. To let the browsers of a room find each other, Quorum uses public WebTorrent trackers run by third parties: they see your IP address and an identifier derived from the room, never your votes. After that, data travels straight between browsers over WebRTC, so the people in your room see your name, your votes and your IP address. UniverLab receives none of it: it only serves the app\u2019s files from Cloudflare.',
         '<strong>canopy CLI and daemon.</strong> Your data stays local in <code>~/.canopy</code> on your own machine. UniverLab services are contacted only when you use them: fetching a graph from the catalogue, or pairing through the relay. Agent harnesses (Claude, Codex and the rest) are governed by their own providers\u2019 terms.',
         '<strong>Workbench on WhatsApp.</strong> When you write to the Workbench WhatsApp number, an automated agent answers. We keep your phone number, your WhatsApp profile name, the messages of the conversation, the service you are interested in, and the notes the agent prepares for the person at the lab who confirms your session. The text of your messages is processed by a language model on Cloudflare Workers AI, which does not use it to train models. Voice notes are transcribed by a speech-to-text model on Cloudflare Workers AI, and only the transcript is kept. When the agent hands you over to a person, those notes reach the lab\u2019s WhatsApp. Payment receipts (images or PDFs) are read by a vision model on Cloudflare Workers AI: the file is forwarded to the person who checks your payment and is not kept afterwards, only the extracted details (amount, date, method, reference and payee).',
-        '<strong>Workbench audits.</strong> What you share for the audit (repositories, configurations, flows) and the emails allowed to read it. It lives in a private Cloudflare R2 bucket, served only to those emails behind Cloudflare Access.',
+        '<strong>Workbench audits.</strong> What you share for the audit (repositories, configurations, flows) and the emails allowed to read it. It lives in a private Cloudflare R2 bucket, served only to those emails behind Cloudflare Access. An audit you choose to publish lives at a public address instead, with its badge, its date and its scope.',
         '<strong>Reports.</strong> Bug reports and catalogue reports are GitHub issues in public repositories: whatever you write there is public under GitHub\u2019s terms.',
       ],
     },
@@ -184,6 +184,15 @@ export const termsEn: LegalDoc = {
         'These conditions apply to paid Workbench sessions booked through WhatsApp. The free first call can be cancelled at any time.',
       ],
       items: en.workbench.policy.items,
+    },
+    {
+      id: 'published-audits',
+      title: 'Published audits',
+      paras: [
+        'An audit is only published with your written approval and once critical and high findings are fixed. What is shown is what you approve: nothing from your private audit is published without your signature.',
+        'The refund on publication is a percentage of the price paid, sent by transfer: 50 % for founding audits and 20 % for the rest, claimable within 12 months of delivery. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
+        'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge.',
+      ],
     },
     {
       id: 'acceptable-use',

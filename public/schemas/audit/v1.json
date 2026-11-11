@@ -26,6 +26,10 @@
       "enum": ["lab", "experiment"],
       "description": "Optional accent from the site palette tinting the audit page. Omitted means the renderer default. Part of how two audits look different without new code."
     },
+    "badge": {
+      "$ref": "#/$defs/badge",
+      "description": "Optional badge for a published audit: issue date, validity, a short scope line and an optional link to the previous audit of the same system. Old documents without it stay valid."
+    },
     "cover": {
       "$ref": "#/$defs/cover",
       "description": "The audit cover, which also picks a layout like any section."
@@ -137,6 +141,20 @@
           "description": "Email addresses allowed to read a private audit. Must be non-empty when visibility is private.",
           "items": { "type": "string", "format": "email" }
         }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "badge": {
+      "title": "Badge",
+      "description": "Optional badge for a published audit: issue date, validity, a short scope line and an optional link to the previous audit of the same system.",
+      "type": "object",
+      "required": ["issued", "scope"],
+      "properties": {
+        "issued": { "type": "string", "format": "date", "description": "Badge issue date (YYYY-MM-DD): the date the audit was published." },
+        "validUntil": { "type": "string", "format": "date", "description": "Optional end of the badge validity. Omitted means 12 months after the issue date." },
+        "scope": { "type": "string", "minLength": 1, "description": "Short scope line shown on the badge, e.g. the audited system or flow." },
+        "previous": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$", "description": "Optional slug of the previous audit of the same system, forming the re-audit history." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false

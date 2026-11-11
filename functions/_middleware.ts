@@ -12,7 +12,9 @@ import {
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
 import { validateAuditDocument } from '../src/lib/audit/validate-document';
-import { auditPageHtml } from '../src/lib/audit/render';
+import { auditBadge } from '../src/lib/audit/badge';
+import { auditMarkdown, publicAuditUrl, PUBLIC_AUDIT_BASE } from '../src/lib/audit/markdown';
+import { auditPageHtml, type PublishedAuditLinks } from '../src/lib/audit/render';
 import { esc } from '../src/lib/audit/escape';
 import type { AuditDocument } from '../src/lib/audit/types';
 
@@ -145,16 +147,67 @@ interface AuditR2Bucket {
     key: string,
     opts?: { range?: { offset?: number; length?: number } },
   ): Promise<(AuditR2Object & { range?: { offset: number; length: number } }) | null>;
+  /** Enumerate keys (`<slug>/audit.json` plus assets). Optional so a binding
+   *  that only serves single keys still satisfies the type. */
+  list?: (options?: { prefix?: string }) => Promise<{ objects: { key: string }[] }>;
 }
 
 const AUDIT_PAGE_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/?$/;
 const AUDIT_ASSET_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/assets\/(.+)$/;
 const AUDIT_TWIN_RE = /^\/audits\/[^/]+\/index\.md$/;
 
+const PUBLIC_AUDIT_PAGE_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/?$/;
+const PUBLIC_AUDIT_ASSET_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/assets\/(.+)$/;
+const PUBLIC_AUDIT_BADGE_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/badge\.svg$/;
+const PUBLIC_AUDIT_TWIN_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/index\.md$/;
+
 const AUDIT_NO_STORE: Record<string, string> = {
   'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex',
 };
+
+/** Published audit pages, twins and badges are public and edge-cached. */
+const PUBLIC_AUDIT_CACHE: Record<string, string> = {
+  'Cache-Control': 'public, max-age=300',
+};
+
+/** Every public audit in the R2 bucket: only documents whose visibility is
+ *  public are listed, so a private slug never leaks through an index. An
+ *  unbound bucket or a listing failure yields no entries. */
+export interface PublicAuditEntry {
+  slug: string;
+  doc: AuditDocument;
+}
+
+export async function listPublicAudits(env: { AUDITS?: AuditR2Bucket }): Promise<PublicAuditEntry[]> {
+  try {
+    if (!env.AUDITS?.list) return [];
+    const listed = await env.AUDITS.list();
+    const out: PublicAuditEntry[] = [];
+    for (const obj of listed.objects) {
+      const m = /^([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/audit\.json$/.exec(obj.key);
+      if (!m) continue;
+      const doc = await loadAuditDoc(env, m[1]);
+      if (doc && doc.visibility === 'public') out.push({ slug: m[1], doc });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/** The re-audit history around one published audit: the previous audit only
+ *  when it is public itself, and every public audit naming this one. */
+export function publicAuditHistory(slug: string, doc: AuditDocument, all: PublicAuditEntry[]): PublishedAuditLinks {
+  const slugs = new Set(all.map((e) => e.slug));
+  const previous =
+    typeof doc.badge?.previous === 'string' && slugs.has(doc.badge.previous) ? doc.badge.previous : null;
+  const next = all
+    .filter((e) => e.doc.badge?.previous === slug)
+    .map((e) => e.slug)
+    .sort();
+  return { previous, next };
+}
 
 function auditContentType(path: string): string {
   const ext = path.split('.').pop()!.toLowerCase();
@@ -366,6 +419,213 @@ async function auditRequestAllowed(
   return auditAllowed(doc, email);
 }
 
+/** One audit file from R2 (private or public route): the catalogue entry must
+ *  match, the `allowed` gate must pass, and the cache headers are the
+ *  caller's. Null when the route must answer 404. */
+async function serveAuditAsset(
+  env: { AUDITS?: AuditR2Bucket } & AuditAccessEnv,
+  request: Request,
+  slug: string,
+  rest: string,
+  cache: Record<string, string>,
+  allowed: (doc: AuditDocument) => Promise<boolean>,
+): Promise<Response | null> {
+  let path = rest;
+  try {
+    path = decodeURIComponent(rest);
+  } catch {
+    // A malformed escape cannot name a catalogue path; leave it encoded.
+  }
+  const doc = await loadAuditDoc(env, slug);
+  const entry = doc?.assets.find((a) => a.path === `assets/${path}` || a.path === path) ?? null;
+  if (!doc || !entry || !env.AUDITS) return null;
+  if (!(await allowed(doc))) return null;
+  try {
+    const full = await env.AUDITS.get(`${slug}/${entry.path}`);
+    if (!full) return null;
+    const type = full.httpMetadata?.contentType || auditContentType(entry.path);
+    const headers: Record<string, string> = {
+      'Content-Type': type,
+      'Accept-Ranges': 'bytes',
+      'ETag': full.etag,
+      ...cache,
+    };
+    const range = parseAuditRange(request.headers.get('Range'), full.size);
+    if (range) {
+      const obj = await env.AUDITS.get(`${slug}/${entry.path}`, { range });
+      if (!obj) return null;
+      headers['Content-Range'] = `bytes ${range.offset}-${range.offset + range.length - 1}/${full.size}`;
+      headers['Content-Length'] = String(range.length);
+      return new Response(obj.body as BodyInit, { status: 206, headers });
+    }
+    headers['Content-Length'] = String(full.size);
+    return new Response(full.body as BodyInit, { status: 200, headers });
+  } catch {
+    return null;
+  }
+}
+
+/** Fill the audit shell with the rendered page: language, title,
+ *  description, canonical URL (plus its og: and markdown-twin mirrors) and
+ *  the audit itself. */
+async function rewriteAuditShell(
+  shell: Response,
+  opts: { lang: string; title: string; desc: string; canonical: string; html: string },
+): Promise<Response> {
+  const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
+  if (typeof RW === 'function') {
+    const rewriter = new (RW as new () => {
+      on(s: string, h: unknown): unknown;
+      transform(r: Response): Response;
+    })();
+    const rw = rewriter as unknown as {
+      on(s: string, h: unknown): void;
+      transform(r: Response): Response;
+    };
+    rw.on('html', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('lang', opts.lang);
+      },
+    });
+    rw.on('title', {
+      element(el: { setInnerContent(c: string, o: unknown): void }) {
+        el.setInnerContent(opts.title, { html: false });
+      },
+    });
+    rw.on('meta[name="description"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.desc);
+      },
+    });
+    // The shell is noindex so the gate never sees an indexable shell page;
+    // the published audit it becomes is meant to be indexed (it is in the
+    // sitemap), so the rewrite lifts the robots directive.
+    rw.on('meta[name="robots"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', 'index, follow');
+      },
+    });
+    rw.on('link[rel="canonical"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('href', opts.canonical);
+      },
+    });
+    rw.on('meta[property="og:title"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.title);
+      },
+    });
+    rw.on('meta[property="og:description"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.desc);
+      },
+    });
+    rw.on('meta[property="og:url"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.canonical);
+      },
+    });
+    rw.on('meta[property="og:locale"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.lang === 'es' ? 'es_ES' : 'en_US');
+      },
+    });
+    rw.on('meta[property="og:locale:alternate"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.lang === 'es' ? 'en_US' : 'es_ES');
+      },
+    });
+    rw.on('meta[name="twitter:title"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.title);
+      },
+    });
+    rw.on('meta[name="twitter:description"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.desc);
+      },
+    });
+    rw.on('meta[name="twitter:image:alt"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.title);
+      },
+    });
+    rw.on('meta[property="og:image:alt"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.title);
+      },
+    });
+    // Only the markdown twin: `link[rel="alternate"]` alone would also hit
+    // the Atom feed link and point it at the audit's index.md.
+    rw.on('link[type="text/markdown"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('href', `${opts.canonical}index.md`);
+      },
+    });
+    rw.on('#audit', {
+      element(el: { setInnerContent(c: string, o: unknown): void }) {
+        el.setInnerContent(opts.html, { html: true });
+      },
+    });
+    return rw.transform(shell);
+  }
+  const shellText = await shell.text();
+  return new Response(
+    shellText
+      .replace(/<html([^>]*)>/, (_m, attrs: string) =>
+        `<html${String(attrs).replace(/\s*lang="[^"]*"/, '')} lang="${opts.lang}">`)
+      .replace(/<title>[^<]*<\/title>/, `<title>${esc(opts.title)}</title>`)
+      .replace(/(<meta name="description" content=")[^"]*(")/, `$1${esc(opts.desc)}$2`)
+      .replace(/(<meta name="robots" content=")[^"]*(")/, '$1index, follow$2')
+      .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${esc(opts.canonical)}$2`)
+      .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${esc(opts.title)}$2`)
+      .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${esc(opts.desc)}$2`)
+      .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${esc(opts.canonical)}$2`)
+      .replace(/(<meta property="og:locale" content=")[^"]*(")/, `$1${opts.lang === 'es' ? 'es_ES' : 'en_US'}$2`)
+      .replace(/(<meta property="og:locale:alternate" content=")[^"]*(")/, `$1${opts.lang === 'es' ? 'en_US' : 'es_ES'}$2`)
+      .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${esc(opts.title)}$2`)
+      .replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${esc(opts.desc)}$2`)
+      .replace(/(<link rel="alternate" type="text\/markdown" href=")[^"]*(")/, `$1${esc(opts.canonical)}index.md$2`)
+      .replace('<div id="audit"></div>', `<div id="audit">${opts.html}</div>`),
+    { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+  );
+}
+
+/** Inject the R2-listed public audits into the built indexes: their page URL
+ *  joins the sitemap, their page and markdown-twin URLs join llms.txt. A
+ *  published audit added after a deploy appears at the next request. Null
+ *  for any other path, or when there is nothing to inject. */
+async function servePublicAuditIndex(
+  env: { ASSETS: { fetch: (input: string | Request) => Promise<Response> }; AUDITS?: AuditR2Bucket },
+  request: Request,
+  pathname: string,
+): Promise<Response | null> {
+  if (pathname !== '/sitemap-0.xml' && pathname !== '/llms.txt') return null;
+  const all = await listPublicAudits(env);
+  if (!all.length) return null;
+  const url = new URL(request.url);
+  const staticRes = await env.ASSETS.fetch(new URL(pathname, url.origin).href);
+  if (!staticRes.ok) return null;
+  if (pathname === '/sitemap-0.xml') {
+    const xml = await staticRes.text();
+    const urls = all.map((e) => `<url><loc>https://univerlab.org${publicAuditUrl(e.slug)}</loc></url>`).join('');
+    return new Response(xml.replace('</urlset>', `${urls}</urlset>`), {
+      headers: { 'Content-Type': 'application/xml; charset=utf-8', ...PUBLIC_AUDIT_CACHE },
+    });
+  }
+  const txt = await staticRes.text();
+  const lines = all
+    .map((e) => {
+      const title = e.doc.meta.title.replace(/[\[\]]/g, '(');
+      const page = `https://univerlab.org${publicAuditUrl(e.slug)}`;
+      return `- [${title}](${page}): ${e.doc.meta.scope}\n- [${title} (markdown)](${page}index.md)`;
+    })
+    .join('\n');
+  return new Response(`${txt.replace(/\s*$/, '')}\n\n## Published audits\n\n${lines}\n`, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', ...PUBLIC_AUDIT_CACHE },
+  });
+}
+
 /** `bytes=start-end`, `bytes=start-` or a `bytes=-suffix` tail. Null means
  *  no usable range: serve the whole file. */
 function parseAuditRange(header: string | null, size: number): { offset: number; length: number } | null {
@@ -403,6 +663,12 @@ export async function onRequest(context: {
   // before anything else looks at the request.
   const { pathname } = new URL(request.url);
   if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
+
+  // The published-audit shell is only ever filled at request time: asked for
+  // directly it answers 404, like a missing page.
+  if (pathname === '/audit-shell' || pathname === '/audit-shell/') {
+    return new Response('not found', { status: 404 });
+  }
 
   const accept = request.headers.get('Accept');
 
@@ -474,41 +740,61 @@ export async function onRequest(context: {
     }
     const asset = AUDIT_ASSET_RE.exec(pathname);
     if (asset) {
-      const slug = asset[1];
-      let rest = asset[2];
-      try {
-        rest = decodeURIComponent(rest);
-      } catch {
-        // A malformed escape cannot name a catalogue path; leave it encoded.
-      }
-      const doc = await loadAuditDoc(env, slug);
-      const entry = doc?.assets.find((a) => a.path === `assets/${rest}` || a.path === rest) ?? null;
-      if (!doc || !entry || !env.AUDITS) return next();
-      if (doc.visibility === 'private' && !(await auditRequestAllowed(request, env, doc))) return next();
-      try {
-        const full = await env.AUDITS.get(`${slug}/${entry.path}`);
-        if (!full) return next();
-        const type = full.httpMetadata?.contentType || auditContentType(entry.path);
-        const headers: Record<string, string> = {
-          'Content-Type': type,
-          'Accept-Ranges': 'bytes',
-          'ETag': full.etag,
-          ...AUDIT_NO_STORE,
-        };
-        const range = parseAuditRange(request.headers.get('Range'), full.size);
-        if (range) {
-          const obj = await env.AUDITS.get(`${slug}/${entry.path}`, { range });
-          if (!obj) return next();
-          headers['Content-Range'] = `bytes ${range.offset}-${range.offset + range.length - 1}/${full.size}`;
-          headers['Content-Length'] = String(range.length);
-          return new Response(obj.body as BodyInit, { status: 206, headers });
-        }
-        headers['Content-Length'] = String(full.size);
-        return new Response(full.body as BodyInit, { status: 200, headers });
-      } catch {
-        return next();
-      }
+      const res = await serveAuditAsset(env, request, asset[1], asset[2], AUDIT_NO_STORE, async (doc) =>
+        doc.visibility === 'public' ? true : auditRequestAllowed(request, env, doc),
+      );
+      if (res) return res;
+      return next();
     }
+    const publicAsset = PUBLIC_AUDIT_ASSET_RE.exec(pathname);
+    if (publicAsset) {
+      const res = await serveAuditAsset(env, request, publicAsset[1], publicAsset[2], PUBLIC_AUDIT_CACHE, async (doc) =>
+        doc.visibility === 'public',
+      );
+      if (res) return res;
+      return next();
+    }
+    const badge = PUBLIC_AUDIT_BADGE_RE.exec(pathname);
+    if (badge) {
+      const doc = await loadAuditDoc(env, badge[1]);
+      if (!doc || doc.visibility !== 'public' || !doc.badge) return next();
+      return new Response(auditBadge(doc, badge[1], 'https://univerlab.org'), {
+        headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', ...PUBLIC_AUDIT_CACHE },
+      });
+    }
+    // A published audit's markdown twin, rendered live from the R2 listing —
+    // never from dist/. Private slugs answer 404 here, like missing ones.
+    const twin = PUBLIC_AUDIT_TWIN_RE.exec(pathname) ?? (wantsMarkdown(accept) ? PUBLIC_AUDIT_PAGE_RE.exec(pathname) : null);
+    if (twin) {
+      const doc = await loadAuditDoc(env, twin[1]);
+      if (!doc || doc.visibility !== 'public') return next();
+      return new Response(auditMarkdown(doc, twin[1]), {
+        headers: { ...MARKDOWN_HEADERS, ...PUBLIC_AUDIT_CACHE },
+      });
+    }
+    const publicPage = !wantsMarkdown(accept) ? PUBLIC_AUDIT_PAGE_RE.exec(pathname) : null;
+    if (publicPage) {
+      const slug = publicPage[1];
+      const doc = await loadAuditDoc(env, slug);
+      if (!doc || doc.visibility !== 'public') return next();
+      const url = new URL(request.url);
+      const shell = await env.ASSETS.fetch(new URL('/audit-shell/', url.origin).href);
+      if (!shell.ok) return next();
+      const all = await listPublicAudits(env);
+      const html = auditPageHtml(doc, slug, {
+        assetBase: PUBLIC_AUDIT_BASE,
+        published: publicAuditHistory(slug, doc, all),
+      });
+      const canonical = `https://univerlab.org${publicAuditUrl(slug)}`;
+      const title = `${doc.meta.title} — UniverLab`;
+      const desc = doc.meta.subtitle || doc.meta.title;
+      const lang = doc.meta.language;
+      const res = await rewriteAuditShell(shell, { lang, title, desc, canonical, html });
+      for (const [k, v] of Object.entries(PUBLIC_AUDIT_CACHE)) res.headers.set(k, v);
+      return res;
+    }
+    const sitemap = await servePublicAuditIndex(env, request, pathname);
+    if (sitemap) return sitemap;
   } else if (AUDIT_PAGE_RE.test(pathname) || AUDIT_ASSET_RE.test(pathname)) {
     return next();
   }

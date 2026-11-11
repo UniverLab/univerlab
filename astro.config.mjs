@@ -17,6 +17,8 @@ const SITEMAP_EXCLUDED = new Set([
   '/es/today/',
   '/audits',
   '/audits/',
+  '/audit-shell',
+  '/audit-shell/',
 ]);
 
 export default defineConfig({

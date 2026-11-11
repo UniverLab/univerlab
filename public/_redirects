@@ -24,6 +24,10 @@
 # /roadmap/ is English-only like /status/.
 /es/roadmap /roadmap/ 301
 /es/roadmap/ /roadmap/ 301
+# /audit-shell/ is English-only too: the edge fills it at request time and
+# never serves it directly, so it has no /es twin either.
+/es/audit-shell /audit-shell/ 301
+/es/audit-shell/ /audit-shell/ 301
 /es/:id/docs/* /:id/docs/:splat 301
 /es/:id/docs /:id/docs/ 301
 
