@@ -740,19 +740,28 @@ export const es: Dict = {
   },
   workbench: {
     title: 'El Banco de trabajo — consultoría de UniverLab en agentes de IA',
-    description: 'Reserva el banco de quienes construyeron Canopy y facetMedia: consultoría en agentes de IA, automatización y auditorías. El trabajo financia el laboratorio.',
+    description: 'Reserva una sesión del Banco de trabajo con quienes construyeron Canopy y facetMedia: consultoría en agentes de IA, automatización y auditorías.',
     label: 'EL BANCO DE TRABAJO',
-    head: 'El Banco de trabajo',
-    intro: 'Las herramientas son abiertas. Las manos que las construyeron se pueden reservar: trae tu sistema al banco y trabajamos en él juntos.',
-    who: { kicker: 'Quién llega al banco', items: [
+    head: '¿Tus agentes fallan en silencio? Tráelos al Banco de trabajo.',
+    headEm: 'en silencio',
+    intro: 'Las manos que construyeron Canopy y facetMedia, para lo que necesites de IA: criterio técnico, ideas, agentes o lo último que salió. Sales con notas escritas y el siguiente paso claro.',
+    cta: 'Agendar la llamada gratis · 15 min →',
+    ctaShort: 'Llamada gratis · 15 min →',
+    ctaNote: 'por WhatsApp',
+    ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
+    tags: { kicker: 'Servicios y precios', items: [
+      ['Primera llamada', 'Gratis · 15 min', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
+      ['Consulta', '150.000 COP / hora', 'Una hora con quienes construyen Canopy. Trae lo que sea de IA: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio. Desde el exterior, USD 45.'],
+      ['Auditorías y flujos', 'Desde 900.000 COP', 'Evaluamos con rigor cómo usas la IA: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte.'],
+    ] as [string, string, string][] },
+    how: { kicker: 'Cómo es una sesión', steps: [
+      ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
+      ['Reservas y pagas', 'Bre-B o Nequi en Colombia, PayPal desde afuera. El espacio queda tuyo al verificar el pago.'],
+      ['Trabajamos tu caso', 'En vivo o por escrito, según lo que pidas. Te llevas notas escritas; lo que construyamos queda tuyo.'],
+    ] as [string, string][] },
+    who: { kicker: 'Quién llega al Banco de trabajo', items: [
       ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
       ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
-    ] as [string, string][] },
-    how: { kicker: 'Cómo funciona', steps: [
-      ['Una primera llamada, gratis · 15 minutos', 'Vemos qué necesitas y si el banco es el lugar indicado.'],
-      ['Consulta · 150.000 COP la hora', 'Pantalla compartida, sobre tu propio sistema: diseño de grafos, elección de harness y modelos, revisión de tu pipeline. Te llevas notas escritas. Se paga al agendar: Bre-B o Nequi en Colombia; desde el exterior, USD 45 por PayPal. El espacio se reserva con el comprobante y queda confirmado al verificar el pago.'],
-      ['Auditorías · según alcance', 'Una auditoría de alcance fijo a tus agentes: dónde fallan en silencio, cuánto cuestan, qué arreglar primero. Se cotiza después de una consulta, cuando el alcance está claro.'],
-      ['Flujos agénticos a medida · según alcance', 'Diseñamos el flujo, con agentes solo donde hace falta juicio y todo lo demás verificado, y lo instalamos con Canopy en un servidor o un equipo siempre encendido tuyo, operado desde el navegador. Incluye treinta días de soporte; después el flujo sigue siendo tuyo y el soporte adicional se cobra por horas.'],
     ] as [string, string][] },
     policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva (Ley 1480 de 2011, art. 47).', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
@@ -765,10 +774,9 @@ export const es: Dict = {
       'Las auditorías y los flujos agénticos siguen los términos de su cotización escrita.',
       'Derecho de retracto: si reservas una sesión con más de cinco días de anticipación, puedes retractarte dentro de los 5 días hábiles siguientes a la reserva y recibir todo tu dinero, sin importar la regla de las 24 horas (Ley 1480 de 2011, art. 47).',
     ] },
-    money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al banco paga el laboratorio: modelos de IA, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
+    money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al Banco de trabajo paga el laboratorio: modelos de IA, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
     principles: { kicker: 'Cómo trabajamos', items: ['Todo es un script y vive en control de versiones: nada de magia cerrada.', 'El código es tuyo: termina en tu repositorio.', 'Un trabajo pesado a la vez: trabajamos en foco, no en paralelo.'] },
-    cta: 'Escribir al banco por WhatsApp →',
-    ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
-    alt: 'O por correo:',
+    proof: { kicker: 'Lo que ya salió de este Banco de trabajo', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
+    close: { head: 'Lo que pagas en el Banco de trabajo financia el laboratorio: las herramientas siguen abiertas.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
   },
 };

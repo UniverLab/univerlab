@@ -748,17 +748,26 @@ export const en = {
     title: 'The Workbench — UniverLab consulting on AI agents and automation',
     description: 'Book the bench of the people who built Canopy and facetMedia: consulting on AI agents, workflow automation and audits. The work funds the open lab.',
     label: 'THE WORKBENCH',
-    head: 'The Workbench',
-    intro: 'The tools are open. The hands that built them can be booked: bring your system to the bench and we work on it together.',
+    head: 'Are your agents failing in silence? Bring them to the Workbench.',
+    headEm: 'in silence',
+    intro: 'The hands that built Canopy and facetMedia, for whatever you need in AI: technical judgement, ideas, agents or the latest release. You leave with written notes and a clear next step.',
+    cta: 'Book the free call · 15 min →',
+    ctaShort: 'Free call · 15 min →',
+    ctaNote: 'on WhatsApp',
+    ctaMessage: 'Hi, I come from the Workbench page.',
+    tags: { kicker: 'Services and prices', items: [
+      ['First call', 'Free · 15 min', 'We look at what you need and whether the Workbench is the right place for it.'],
+      ['Consultation', 'COP 150,000 / hour', 'An hour with the people who build Canopy. Bring anything AI: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab. From abroad, USD 45.'],
+      ['Audits and flows', 'From COP 900,000', 'We evaluate how you use AI with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support.'],
+    ] as [string, string, string][] },
+    how: { kicker: 'How a session goes', steps: [
+      ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],
+      ['You book and pay', 'Bre-B or Nequi in Colombia, PayPal from abroad. The slot is yours once the payment is checked.'],
+      ['We work your case', 'Live or in writing, as you ask. You leave with written notes; what we build stays yours.'],
+    ] as [string, string][] },
     who: { kicker: 'Who comes to the bench', items: [
       ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
       ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
-    ] as [string, string][] },
-    how: { kicker: 'How it works', steps: [
-      ['A first call, free · 15 minutes', 'We look at what you need and whether the bench is the right place for it.'],
-      ['Consultation · COP 150,000 an hour', 'Screen shared, on your own system: graph design, choosing harnesses and models, a review of your pipeline. You leave with written notes. Paid when you book: Bre-B or Nequi in Colombia; from abroad, USD 45 by PayPal. The slot is held with your payment proof and confirmed once the payment is checked.'],
-      ['Audits · priced per scope', 'A fixed-scope audit of your agents: where they fail in silence, what they cost, what to fix first. Quoted after a consultation, once the scope is clear.'],
-      ['Agentic flows built for you · priced per scope', 'We design the flow, with agents only where a judgement is needed and everything else checked, and install it with Canopy on a server or an always-on machine of yours, run from the browser. Thirty days of support are included; after that the flow stays yours, and further support is billed by the hour.'],
     ] as [string, string][] },
     policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking (Ley 1480 de 2011, art. 47).', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
@@ -773,9 +782,8 @@ export const en = {
     ] },
     money: { kicker: 'Where the money goes', text: 'What comes in at the bench pays for the lab: AI models, compute and infrastructure. The tools, the experiments and what we learn stay open.' },
     principles: { kicker: 'How we work', items: ['Everything is a script and lives in version control: no closed magic.', 'The code is yours: it ends up in your repository.', 'One heavy job at a time: we work in focus, not in parallel.'] },
-    cta: 'Write to the bench on WhatsApp →',
-    ctaMessage: 'Hi, I come from the Workbench page.',
-    alt: 'Or by email:',
+    proof: { kicker: 'What already came out of this Workbench', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
+    close: { head: 'What you pay at the Workbench funds the lab: the tools stay open.', cta: 'Write to the Workbench on WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
   },
 };
 

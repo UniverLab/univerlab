@@ -159,7 +159,7 @@ export const termsEs: LegalDoc = {
       id: 'workbench-bookings',
       title: es.workbench.policy.terms,
       paras: [
-        'Estas condiciones aplican a las sesiones pagadas del Banco de trabajo reservadas por WhatsApp o correo. La primera llamada gratis se puede cancelar en cualquier momento.',
+        'Estas condiciones aplican a las sesiones pagadas del Banco de trabajo reservadas por WhatsApp. La primera llamada gratis se puede cancelar en cualquier momento.',
       ],
       items: es.workbench.policy.items,
     },

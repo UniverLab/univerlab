@@ -161,7 +161,7 @@ export const termsEn: LegalDoc = {
       id: 'workbench-bookings',
       title: en.workbench.policy.terms,
       paras: [
-        'These conditions apply to paid Workbench sessions booked through WhatsApp or email. The free first call can be cancelled at any time.',
+        'These conditions apply to paid Workbench sessions booked through WhatsApp. The free first call can be cancelled at any time.',
       ],
       items: en.workbench.policy.items,
     },

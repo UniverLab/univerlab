@@ -11,6 +11,8 @@ export function knowledge(lang: Lang): string {
   lines.push('## ' + w.head);
   lines.push('### ' + w.who.kicker);
   for (const [title, body] of w.who.items) lines.push('- ' + title + ': ' + body);
+  lines.push('### ' + w.tags.kicker);
+  for (const [title, price, body] of w.tags.items) lines.push('- ' + title + ' · ' + price + ': ' + body);
   lines.push('### ' + w.how.kicker);
   for (const [title, body] of w.how.steps) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.policy.kicker);
