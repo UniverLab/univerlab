@@ -39,11 +39,9 @@ describe('workbench', () => {
     expect(VIEW).toContain('<em>{w.headEm}</em>');
   });
 
-  it('the lede names the hands behind Canopy and facetMedia', () => {
-    for (const dict of [en.workbench, es.workbench]) {
-      expect(dict.intro).toContain('Canopy');
-      expect(dict.intro).toContain('facetMedia');
-    }
+  it('the lede names the lab builders', () => {
+    expect(en.workbench.intro).toContain('this lab');
+    expect(es.workbench.intro).toContain('este laboratorio');
     expect(VIEW).toContain('{w.intro}');
   });
 

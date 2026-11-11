@@ -97,8 +97,8 @@ describe('404 — Hic sunt dracones', () => {
     expect(page).toContain("localizePath('/experiments', lang)");
     expect(en.notFound.back).toBe('← Back to the hall');
     expect(es.notFound.back).toBe('← Volver a la sala');
-    expect(en.notFound.lantern).toBe('The lantern →');
-    expect(es.notFound.lantern).toBe('La linterna →');
+    expect(en.notFound.lantern).toBe('The projection room →');
+    expect(es.notFound.lantern).toBe('La sala de proyección →');
   });
 
   it('keeps the 404 contract: no postcard, no ASCII globe, no canvas, no twin', () => {
