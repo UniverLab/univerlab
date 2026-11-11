@@ -48,6 +48,7 @@ export const privacyEs: LegalDoc = {
         '<strong>quorum.univerlab.org.</strong> Planning poker de par a par: sin cuentas, sin cookies y sin analítica. Tu nombre visible, el tema y las historias de cada sala se guardan solo en tu navegador. Para que los navegadores de una sala se encuentren, Quorum usa trackers públicos de WebTorrent operados por terceros: ven tu dirección IP y un identificador derivado de la sala, nunca tus votos. Después, los datos viajan directo entre navegadores por WebRTC, así que quienes están en tu sala ven tu nombre, tus votos y tu dirección IP. UniverLab no recibe nada de eso: solo sirve los archivos de la app desde Cloudflare.',
         '<strong>CLI y daemon de canopy.</strong> Tus datos se quedan en local, en <code>~/.canopy</code> de tu propia máquina. Los servicios de UniverLab solo reciben contacto cuando los usas: al traer un grafo del catálogo o al emparejar por el relay. Los harnesses de agentes (Claude, Codex y demás) se rigen por los términos de sus propios proveedores.',
         '<strong>Banco de trabajo por WhatsApp.</strong> Cuando escribes al WhatsApp del Banco de trabajo te responde un agente automático. Guardamos tu número de teléfono, el nombre de tu perfil de WhatsApp, los mensajes de la conversación, el servicio que te interesa y las notas que el agente prepara para la persona del laboratorio que confirma tu sesión. El texto de tus mensajes lo procesa un modelo de lenguaje en Cloudflare Workers AI, que no lo usa para entrenar modelos. Cuando el agente te pasa con una persona, esas notas llegan al WhatsApp del laboratorio.',
+        '<strong>Auditorías del Banco de trabajo.</strong> Lo que compartes para la auditoría (repositorios, configuraciones, flujos) y los correos autorizados para leerla. Vive en un bucket privado de Cloudflare R2, servido solo a esos correos tras Cloudflare Access.',
         '<strong>Reportes.</strong> Los reportes de errores y del catálogo son issues de GitHub en repositorios públicos: lo que escribas ahí es público bajo los términos de GitHub.',
       ],
     },
@@ -62,6 +63,7 @@ export const privacyEs: LegalDoc = {
         'quorum.univerlab.org: servir la app; cada sala la sostienen los propios navegadores de sus participantes.',
         'CLI y daemon de canopy: correr tus grafos en tu máquina; contactar servicios de UniverLab solo para la descarga o el emparejamiento que pediste.',
         'Banco de trabajo por WhatsApp: responder tus preguntas sobre los servicios, preparar y agendar tu sesión y pasarle tu caso a una persona del laboratorio.',
+        'Auditorías del Banco de trabajo: entregar la auditoría contratada.',
       ],
     },
     {
@@ -72,6 +74,7 @@ export const privacyEs: LegalDoc = {
         'El inicio de sesión es tu autorización: entrar con GitHub autoriza la cookie de sesión de 12 horas [RGPD: consentimiento].',
         'Los datos del catálogo son datos de naturaleza pública publicados por su autor (Ley 1581, artículo 10): repositorios públicos que sus dueños eligieron etiquetar, tratados solo para el catálogo [RGPD: interés legítimo en operar un catálogo público de datos públicos].',
         'Escribir al Banco de trabajo es tu autorización para que tratemos esa conversación con las finalidades de arriba; si reservas una sesión, el tratamiento es además necesario para prestarte el servicio [RGPD: consentimiento y ejecución de un contrato].',
+        'Los datos de una auditoría del Banco de trabajo se tratan para cumplir el contrato de la auditoría [RGPD: ejecución de un contrato].',
         'El contador de instalaciones es el interés legítimo del laboratorio en estadísticas agregadas y no identificables sobre qué documentos se instalan [RGPD: interés legítimo].',
       ],
     },
@@ -107,6 +110,7 @@ export const privacyEs: LegalDoc = {
         'Cookie de sesión del relay: 12 horas y vence; el token de acceso se descarta de inmediato y el relay no almacena nada.',
         'CLI y daemon de canopy: tus datos se quedan en ~/.canopy hasta que los borres.',
         'Banco de trabajo por WhatsApp: la conversación y las notas se borran solas 6 meses después de tu último mensaje, o antes si lo pides. Los soportes de un pago se conservan el tiempo que exige la ley contable y tributaria colombiana.',
+        'Auditorías del Banco de trabajo: el informe y las evidencias se conservan 6 meses después de la entrega, o menos si lo pides.',
       ],
     },
     {

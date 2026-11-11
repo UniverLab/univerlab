@@ -59,10 +59,14 @@ describe('workbench', () => {
   it('no booking path by email survives on the page or in the copy', () => {
     expect(VIEW).not.toContain('mailto:');
     expect(VIEW).not.toContain('hola@univerlab.org');
-    const esJson = JSON.stringify(es.workbench);
-    const enJson = JSON.stringify(en.workbench);
-    expect(esJson).not.toContain('mailto:');
-    expect(enJson).not.toContain('mailto:');
+    // The audits copy names the reader emails of the private delivery page,
+    // which is not a booking path: scope the correo/email guard to the rest.
+    const { audits: _esAudits, ...esRest } = es.workbench;
+    const { audits: _enAudits, ...enRest } = en.workbench;
+    const esJson = JSON.stringify(esRest);
+    const enJson = JSON.stringify(enRest);
+    expect(JSON.stringify(es.workbench)).not.toContain('mailto:');
+    expect(JSON.stringify(en.workbench)).not.toContain('mailto:');
     expect(esJson.toLowerCase()).not.toContain('correo');
     expect(enJson.toLowerCase()).not.toContain('email');
     expect(VIEW).not.toContain('O por correo');

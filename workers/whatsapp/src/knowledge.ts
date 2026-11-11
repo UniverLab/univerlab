@@ -17,6 +17,14 @@ export function knowledge(lang: Lang): string {
   for (const [title, body] of w.how.steps) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.policy.kicker);
   for (const item of w.policy.items) lines.push('- ' + item);
+  lines.push('### ' + w.audits.head);
+  lines.push(w.audits.lede);
+  lines.push('### ' + w.audits.scope.kicker);
+  for (const [title, body] of w.audits.scope.items) lines.push('- ' + title + ': ' + body);
+  lines.push('### ' + w.audits.deliver.kicker);
+  for (const [title, body] of w.audits.deliver.items) lines.push('- ' + title + ': ' + body);
+  for (const para of w.audits.impl.paras) lines.push(para);
+  lines.push(w.audits.price.text);
   lines.push('### ' + w.money.kicker);
   lines.push(w.money.text);
   lines.push('### ' + w.principles.kicker);

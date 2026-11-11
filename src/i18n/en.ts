@@ -772,7 +772,7 @@ export const en = {
     label: 'THE WORKBENCH',
     head: 'Are your agents failing in silence? Bring them to the Workbench.',
     headEm: 'in silence',
-    intro: 'The hands that built this lab, for whatever you need in artificial intelligence and agent experience: technical judgement, ideas, agents or the latest release. You leave with written notes and a clear next step.',
+    intro: 'The hands that built this lab, for whatever you need in artificial intelligence and Agent Experience (AX): technical judgement, ideas, agents or the latest release. You leave with written notes and a clear next step.',
     cta: 'Book the free call · 15 min →',
     ctaShort: 'Free call · 15 min →',
     ctaNote: 'on WhatsApp',
@@ -806,6 +806,39 @@ export const en = {
     principles: { kicker: 'How we work', items: ['Everything is a script and lives in version control: no closed magic.', 'The code is yours: it ends up in your repository.', 'One heavy job at a time: we work in focus, not in parallel.'] },
     proof: { kicker: 'What already came out of this Workbench', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
     close: { head: 'What you pay at the Workbench funds the lab: the tools stay open.', cta: 'Write to the Workbench on WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
+    audits: {
+      title: 'Workbench audits — UniverLab consulting on artificial intelligence',
+      description: 'What a Workbench audit reviews, how we work, what you receive and what it costs: findings with evidence, a risk matrix and a roadmap.',
+      head: 'Workbench audits',
+      lede: 'We review how your team uses artificial intelligence and agents, and we deliver what to fix first, what it costs and what risk you run if you do not.',
+      scope: { kicker: 'What we review', items: [
+        ['Agent security', 'What they can read, write and run: secrets, permissions, instruction injection and surfaces open to the internet.'],
+        ['Technical judgement', 'Whether the model, the harness and the architecture fit each task, and what the alternatives are.'],
+        ['Flow depth', 'Where a flow depends on someone reviewing by hand, where it fails silently and how to measure it.'],
+        ['Costs', 'What you pay in models and subscriptions per result, and where to spend less without losing quality.'],
+        ['Data', 'What personal or business information passes through third-party models and what Ley 1581 requires.'],
+        ['Agent Experience (AX)', 'Whether your documentation, your APIs and your repositories serve an agent, not only a person.'],
+      ] as [string, string][] },
+      how: { kicker: 'How we work', steps: [
+        ['Free call', 'A free 15-minute call to agree on the scope.'],
+        ['Read-only access', 'Read-only access to what we agree on (repositories, configurations, flows); nothing in production without your permission.'],
+        ['We review and measure', 'We review, reproduce and measure: every finding carries its evidence.'],
+        ['Delivery and session', 'The delivery and a session to walk through the findings.'],
+      ] as [string, string][] },
+      deliver: { kicker: 'What you receive', items: [
+        ['Private page', 'A private page on univerlab.org, open only to the emails you name, with the findings by severity, their evidence, the risk matrix, the costs and a prioritized roadmap.'],
+        ['PDF report', 'An editorial-style PDF report, composed with TeXForge, with the evidence, the recommendations and the depth of each finding, plus the evidence files to download.'],
+        ['Optional implementation', 'If you ask for it, the implementation of the agentic solution: we set up the agentic tools and graphs the audit recommends, with 30 days of support.'],
+      ] as [string, string][] },
+      impl: { kicker: 'What the implementation covers', paras: [
+        'The implementation covers installing and configuring the agentic tools and graphs the audit recommends, plus 30 days of support.',
+        'It does not cover making the code or product changes the audit recommends: that is a separate development project, quoted apart.',
+        'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
+      ] },
+      privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
+      price: { kicker: 'Price', text: 'From COP 900,000; from abroad, from USD 250. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.' },
+      cardLink: 'What we review and what you receive →',
+    },
   },
 };
 

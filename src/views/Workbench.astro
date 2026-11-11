@@ -35,8 +35,8 @@ const proof = w.proof.items.map((id) => ({
       </figure>
     </header>
     <section class="wb-tags" aria-label={w.tags.kicker}>
-      {w.tags.items.map(([title, price, body]) => (
-        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div><p>{body}</p></div>
+      {w.tags.items.map(([title, price, body], i) => (
+        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div><p>{body}</p>{i === 2 && <p><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a></p>}</div>
       ))}
     </section>
     <section class="wb-block">
@@ -93,6 +93,7 @@ const proof = w.proof.items.map((id) => ({
   .wb-tag h2 { font-family: var(--font-mono); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; color: var(--accent); }
   .wb-tag .wb-price { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1; margin: 0.5rem 0 0.25rem; }
   .wb-tag p { margin: 0.5rem 0 0; font-size: 1rem; color: var(--ink-dim); line-height: 1.6; }
+  .wb-more { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wb-block { margin-top: 3rem; }
   .wb-steps { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; gap: 1.4rem; counter-reset: step; }
   .wb-steps li { counter-increment: step; padding-left: 2.6rem; position: relative; }

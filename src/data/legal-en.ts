@@ -50,6 +50,7 @@ export const privacyEn: LegalDoc = {
         '<strong>quorum.univerlab.org.</strong> Peer-to-peer planning poker: no accounts, no cookies and no analytics. Your display name, theme and each room\u2019s stories stay in your browser. To let the browsers of a room find each other, Quorum uses public WebTorrent trackers run by third parties: they see your IP address and an identifier derived from the room, never your votes. After that, data travels straight between browsers over WebRTC, so the people in your room see your name, your votes and your IP address. UniverLab receives none of it: it only serves the app\u2019s files from Cloudflare.',
         '<strong>canopy CLI and daemon.</strong> Your data stays local in <code>~/.canopy</code> on your own machine. UniverLab services are contacted only when you use them: fetching a graph from the catalogue, or pairing through the relay. Agent harnesses (Claude, Codex and the rest) are governed by their own providers\u2019 terms.',
         '<strong>Workbench on WhatsApp.</strong> When you write to the Workbench WhatsApp number, an automated agent answers. We keep your phone number, your WhatsApp profile name, the messages of the conversation, the service you are interested in, and the notes the agent prepares for the person at the lab who confirms your session. The text of your messages is processed by a language model on Cloudflare Workers AI, which does not use it to train models. When the agent hands you over to a person, those notes reach the lab\u2019s WhatsApp.',
+        '<strong>Workbench audits.</strong> What you share for the audit (repositories, configurations, flows) and the emails allowed to read it. It lives in a private Cloudflare R2 bucket, served only to those emails behind Cloudflare Access.',
         '<strong>Reports.</strong> Bug reports and catalogue reports are GitHub issues in public repositories: whatever you write there is public under GitHub\u2019s terms.',
       ],
     },
@@ -64,6 +65,7 @@ export const privacyEn: LegalDoc = {
         'quorum.univerlab.org: serving the app; each room is held up by its participants\u2019 own browsers.',
         'canopy CLI and daemon: running your graphs on your machine; contacting UniverLab services only for the fetch or pairing you asked for.',
         'Workbench on WhatsApp: answering your questions about the services, preparing and booking your session, and handing your case to a person at the lab.',
+        'Workbench audits: delivering the commissioned audit.',
       ],
     },
     {
@@ -74,6 +76,7 @@ export const privacyEn: LegalDoc = {
         'The sign-in is your authorisation (<em>autorizaci\u00f3n</em>): signing in with GitHub authorises the 12-hour session cookie [GDPR: consent].',
         'Catalogue data is data of a public nature published by its author (Ley 1581, article 10): public repositories its owners chose to tag, processed for the catalogue only [GDPR: legitimate interest in running a public catalogue of public data].',
         'Writing to the Workbench is your authorisation for us to process that conversation for the purposes above; if you book a session, processing is also necessary to provide the service [GDPR: consent and performance of a contract].',
+        'Workbench audit data is processed to perform the audit contract [GDPR: performance of a contract].',
         'The install counter is the lab\u2019s legitimate interest in aggregate, non-identifying statistics about which documents get installed [GDPR: legitimate interest].',
       ],
     },
@@ -109,6 +112,7 @@ export const privacyEn: LegalDoc = {
         'Remote session cookie: 12 hours, then it expires; the sign-in token is discarded at once and the relay stores nothing.',
         'canopy CLI and daemon: your data stays in ~/.canopy until you remove it.',
         'Workbench on WhatsApp: the conversation and the notes are deleted automatically 6 months after your last message, or sooner if you ask. Records of a payment are kept for as long as Colombian accounting and tax law requires.',
+        'Workbench audits: the report and the evidence are kept for 6 months after delivery, or less if you ask.',
       ],
     },
     {
