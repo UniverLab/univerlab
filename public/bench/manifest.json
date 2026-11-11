@@ -3395,6 +3395,30 @@
       "source": "machines/texforge-night-900.webp",
       "alt": "",
       "notes": "Filled silhouette of the machine plate (alpha only, white): the hero paints the page ground through it so the live background never shows inside the machine. Built from the 900 px plate alpha: threshold, close 25/21 px, fill holes, blur 3 px."
+    },
+    {
+      "name": "machine-mask-astro-denoise-day-450",
+      "file": "machines/astro-denoise-day-mask-450.webp",
+      "kind": "machine-mask",
+      "experiment": "astro-denoise",
+      "variant": "day",
+      "width": 344,
+      "height": 450,
+      "source": "machines/astro-denoise-day-900.webp",
+      "alt": "",
+      "notes": "Filled silhouette of the machine plate (alpha only, white): the hero paints the page ground through it so the live background never shows inside the machine. Built from the 900 px plate alpha: threshold, close 25/21 px, fill holes, blur 3 px."
+    },
+    {
+      "name": "machine-mask-astro-denoise-night-450",
+      "file": "machines/astro-denoise-night-mask-450.webp",
+      "kind": "machine-mask",
+      "experiment": "astro-denoise",
+      "variant": "night",
+      "width": 344,
+      "height": 450,
+      "source": "machines/astro-denoise-night-900.webp",
+      "alt": "",
+      "notes": "Filled silhouette of the machine plate (alpha only, white): the hero paints the page ground through it so the live background never shows inside the machine. Built from the 900 px plate alpha: threshold, close 25/21 px, fill holes, blur 3 px."
     }
   ]
 }
