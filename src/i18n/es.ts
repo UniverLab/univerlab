@@ -582,7 +582,7 @@ export const es: Dict = {
     line: 'Esta página no está en ningún mapa. Más allá de aquí, solo monstruos.',
     alt: 'Una carta náutica antigua grabada que se desvanece en papel en blanco, donde un kraken gigante sale de las olas',
     back: '← Volver a la sala',
-    encyclopedia: 'La enciclopedia →',
+    lantern: 'La linterna →',
   },
   roadmap: {
     lanes: { now: 'Ahora', next: 'Siguiente', later: 'Después', idea: 'Idea', done: 'Hecho' },

@@ -92,13 +92,13 @@ describe('404 — Hic sunt dracones', () => {
     expect(page).toContain('{t.notFound.kicker}');
     expect(page).toMatch(/class="kicker mono"/);
     expect(page).toContain("{t.notFound.back}");
-    expect(page).toContain("{t.notFound.encyclopedia}");
+    expect(page).toContain("{t.notFound.lantern}");
     expect(page).toContain("localizePath('/', lang)");
     expect(page).toContain("localizePath('/experiments', lang)");
     expect(en.notFound.back).toBe('← Back to the hall');
     expect(es.notFound.back).toBe('← Volver a la sala');
-    expect(en.notFound.encyclopedia).toBe('The encyclopedia →');
-    expect(es.notFound.encyclopedia).toBe('La enciclopedia →');
+    expect(en.notFound.lantern).toBe('The lantern →');
+    expect(es.notFound.lantern).toBe('La linterna →');
   });
 
   it('keeps the 404 contract: no postcard, no ASCII globe, no canvas, no twin', () => {

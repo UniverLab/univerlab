@@ -586,7 +586,7 @@ export const en = {
     line: 'This page is on no map. Beyond here, only monsters.',
     alt: 'An antique engraved sea chart fading into blank parchment, where a giant kraken rises from the waves',
     back: '← Back to the hall',
-    encyclopedia: 'The encyclopedia →',
+    lantern: 'The lantern →',
   },
   roadmap: {
     lanes: { now: 'Now', next: 'Next', later: 'Later', idea: 'Idea', done: 'Done' },
