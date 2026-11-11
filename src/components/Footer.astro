@@ -98,6 +98,7 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
   </div>
   <div class="wrap base">
     <p class="small">
+      <span class="operator">{t.footer.operator}</span><span class="sep"> · </span>
       {legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}
       <span class="sep"> · </span><span class="privacy">{t.footer.privacy}</span>
       <span class="sep"> · </span><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span>
