@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Watermark from '../components/Watermark.astro';
 import Machine from '../components/Machine.astro';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, localizePath, useTranslations } from '../i18n';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const w = t.workbench;
@@ -38,11 +38,8 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
     </section>
     <section class="wb-block wb-policy">
       <span class="label">{w.policy.kicker}</span>
-      <ul class="policy">
-        {w.policy.items.map((item) => (
-          <li>{item}</li>
-        ))}
-      </ul>
+      <p>{w.policy.summary}</p>
+      <p><a href={localizePath('/terms', lang) + '#workbench-bookings'}>{w.policy.link}</a></p>
     </section>
     <section class="wb-block wb-money">
       <span class="label">{w.money.kicker}</span>

@@ -7,6 +7,7 @@
  * here. No template mark placeholders remain.
  */
 import type { LegalDoc } from './legal';
+import { en } from '../i18n/en';
 
 export const privacyEn: LegalDoc = {
   title: 'Privacy Policy — UniverLab services',
@@ -155,6 +156,14 @@ export const termsEn: LegalDoc = {
         'UniverLab may modify, suspend or discontinue any service, or your access to it, at any time, with or without notice. There is no support obligation: the services are run as an open laboratory, not a contracted product.',
         'Your use of the services is also governed by the <a href="/privacy/">Privacy Policy</a>, which describes what data each service records. If these terms and the policy disagree about data, the policy controls.',
       ],
+    },
+    {
+      id: 'workbench-bookings',
+      title: en.workbench.policy.terms,
+      paras: [
+        'These conditions apply to paid Workbench sessions booked through WhatsApp or email. The free first call can be cancelled at any time.',
+      ],
+      items: en.workbench.policy.items,
     },
     {
       id: 'acceptable-use',

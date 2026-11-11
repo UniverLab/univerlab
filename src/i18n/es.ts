@@ -749,7 +749,7 @@ export const es: Dict = {
       ['Auditorías · según alcance', 'Una auditoría de alcance fijo a tus agentes: dónde fallan en silencio, cuánto cuestan, qué arreglar primero. Se cotiza después de una consulta, cuando el alcance está claro.'],
       ['Flujos agénticos a medida · según alcance', 'Diseñamos el flujo, con agentes solo donde hace falta juicio y todo lo demás verificado, y lo instalamos con Canopy en un servidor o un equipo siempre encendido tuyo, operado desde el navegador. Incluye treinta días de soporte; después el flujo sigue siendo tuyo y el soporte adicional se cobra por horas.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancelaciones y reembolsos', items: [
+    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva (Ley 1480 de 2011, art. 47).', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
       'Con menos de 24 horas, la sesión se puede mover una vez sin costo; no se reembolsa, salvo por el derecho de retracto descrito abajo.',
       'Si llegas tarde, la sesión termina a la hora reservada; si no te conectas en los primeros 15 minutos, cuenta como dada.',

@@ -1,5 +1,5 @@
 /**
- * The Workbench (/services/): the lab sells its hands to fund itself.
+ * The Workbench (/workbench/): the lab sells its hands to fund itself.
  * Bilingual copy, the page with the blueprint watermark and the workbench
  * plate, the WhatsApp call to action and the footer link.
  */
@@ -9,8 +9,8 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
 const VIEW = readFileSync(resolve(__dirname, '../views/Workbench.astro'), 'utf8');
-const ROUTE = readFileSync(resolve(__dirname, '../pages/services.astro'), 'utf8');
-const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/services.astro'), 'utf8');
+const ROUTE = readFileSync(resolve(__dirname, '../pages/workbench.astro'), 'utf8');
+const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/workbench.astro'), 'utf8');
 const FOOTER = readFileSync(resolve(__dirname, '../components/Footer.astro'), 'utf8');
 
 describe('workbench', () => {
@@ -74,7 +74,7 @@ describe('workbench', () => {
   });
 
   it('the footer links the workbench', () => {
-    expect(FOOTER).toContain("localizePath('/services', lang)");
+    expect(FOOTER).toContain("localizePath('/workbench', lang)");
     expect(FOOTER).toContain('t.nav.workbench');
   });
 
@@ -99,5 +99,25 @@ describe('workbench', () => {
   it('the view renders the policy before the money block', () => {
     expect(VIEW.indexOf('w.policy.kicker')).toBeGreaterThan(VIEW.indexOf('w.how.kicker'));
     expect(VIEW.indexOf('w.policy.kicker')).toBeLessThan(VIEW.indexOf('w.money.kicker'));
+  });
+
+  it('both dictionaries carry the policy summary, link and terms title', () => {
+    for (const dict of [en.workbench, es.workbench]) {
+      expect(dict.policy.summary.length).toBeGreaterThan(0);
+      expect(dict.policy.link.length).toBeGreaterThan(0);
+      expect(dict.policy.terms.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('the summaries name the 24-hour rule and the retraction law', () => {
+    expect(en.workbench.policy.summary).toContain('24');
+    expect(en.workbench.policy.summary).toContain('Ley 1480 de 2011');
+    expect(es.workbench.policy.summary).toContain('24');
+    expect(es.workbench.policy.summary).toContain('Ley 1480 de 2011');
+  });
+
+  it('the view links the terms anchor instead of printing the full list', () => {
+    expect(VIEW).toContain('#workbench-bookings');
+    expect(VIEW).not.toContain('class="policy"');
   });
 });

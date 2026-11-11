@@ -5,6 +5,7 @@
  * aquí. Sin marcadores mark de las plantillas.
  */
 import type { LegalDoc } from './legal';
+import { es } from '../i18n/es';
 
 export const privacyEs: LegalDoc = {
   title: 'Política de Privacidad — servicios de UniverLab',
@@ -153,6 +154,14 @@ export const termsEs: LegalDoc = {
         'UniverLab puede modificar, suspender o descontinuar cualquier servicio, o tu acceso a él, en cualquier momento, con o sin aviso. No hay obligación de soporte: los servicios se operan como un laboratorio abierto, no como un producto contratado.',
         'Tu uso también se rige por la <a href="/es/privacy/">Política de Privacidad</a>, que describe qué datos registra cada servicio. Si estos términos y la política difieren sobre datos, manda la política.',
       ],
+    },
+    {
+      id: 'workbench-bookings',
+      title: es.workbench.policy.terms,
+      paras: [
+        'Estas condiciones aplican a las sesiones pagadas del Banco de trabajo reservadas por WhatsApp o correo. La primera llamada gratis se puede cancelar en cualquier momento.',
+      ],
+      items: es.workbench.policy.items,
     },
     {
       id: 'acceptable-use',

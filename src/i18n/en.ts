@@ -755,7 +755,7 @@ export const en = {
       ['Audits · priced per scope', 'A fixed-scope audit of your agents: where they fail in silence, what they cost, what to fix first. Quoted after a consultation, once the scope is clear.'],
       ['Agentic flows built for you · priced per scope', 'We design the flow, with agents only where a judgement is needed and everything else checked, and install it with Canopy on a server or an always-on machine of yours, run from the browser. Thirty days of support are included; after that the flow stays yours, and further support is billed by the hour.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancellations and refunds', items: [
+    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking (Ley 1480 de 2011, art. 47).', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
       'Less than 24 hours before, the session can be moved once at no cost; it is not refunded, except under the right of retraction below.',
       'If you join late, the session still ends at the booked time; if you do not join within 15 minutes of the start, it counts as given.',
