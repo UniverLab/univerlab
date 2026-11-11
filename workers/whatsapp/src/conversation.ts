@@ -1,7 +1,16 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { markRead, sendText, type Inbound } from './meta';
-import { answer, modelConfig, type Turn } from './brain';
+import { answer, FALLBACK, modelConfig, type Turn } from './brain';
+import {
+  brief,
+  CONFIRM_SLOT,
+  formatBrief,
+  intake,
+  INTAKE_ASK,
+  INTAKE_FOLLOWUP,
+  type IntakeState,
+} from './intake';
 import { detectLang } from './lang';
 
 export const NON_TEXT = {
@@ -23,7 +32,97 @@ export class Conversation extends DurableObject<Env> {
           media_id TEXT
         )
       `);
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE IF NOT EXISTS state (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE IF NOT EXISTS briefs (
+          id INTEGER PRIMARY KEY,
+          at INTEGER NOT NULL,
+          phone TEXT NOT NULL,
+          name TEXT NOT NULL,
+          lang TEXT NOT NULL,
+          service TEXT NOT NULL,
+          bullets TEXT NOT NULL
+        )
+      `);
     });
+  }
+
+  private state(key: string): string | null;
+  private state(key: string, value: string | null): void;
+  private state(key: string, value?: string | null): string | null | void {
+    if (value === undefined) {
+      const rows = this.ctx.storage.sql
+        .exec('SELECT value FROM state WHERE key = ? LIMIT 1', key)
+        .toArray() as Array<{ value: string }>;
+      return rows.length > 0 ? rows[0].value : null;
+    }
+    if (value === null) {
+      this.ctx.storage.sql.exec('DELETE FROM state WHERE key = ?', key);
+    } else {
+      this.ctx.storage.sql.exec(
+        'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+        key,
+        value
+      );
+    }
+  }
+
+  private briefs(
+    id: number,
+    at: number,
+    phone: string,
+    name: string,
+    lang: string,
+    service: string,
+    bullets: string
+  ): void {
+    this.ctx.storage.sql.exec(
+      'INSERT INTO briefs (id, at, phone, name, lang, service, bullets) VALUES (?, ?, ?, ?, ?, ?, ?) ' +
+        'ON CONFLICT(id) DO UPDATE SET at = excluded.at, phone = excluded.phone, name = excluded.name, ' +
+        'lang = excluded.lang, service = excluded.service, bullets = excluded.bullets',
+      id,
+      at,
+      phone,
+      name,
+      lang,
+      service,
+      bullets
+    );
+  }
+
+  private storeAssistant(at: number, id: string, text: string): void {
+    this.ctx.storage.sql.exec(
+      'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
+      id,
+      at,
+      'assistant',
+      'text',
+      text,
+      null
+    );
+  }
+
+  private async finishBooking(m: Inbound, st: IntakeState): Promise<void> {
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const b = await brief(this.env.AI, st, modelConfig(this.env));
+    this.briefs(1, m.timestamp, m.from, m.name ?? '', st.lang, st.service, JSON.stringify(b.bullets));
+    const note = formatBrief({
+      name: m.name ?? '',
+      phone: m.from,
+      lang: st.lang,
+      service: st.service,
+      bullets: b.bullets,
+    });
+    await sendText(this.env, operator, note);
+    const confirm = CONFIRM_SLOT[st.lang];
+    await sendText(this.env, m.from, confirm);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-confirm', confirm);
+    this.state('intake', null);
   }
 
   async receive(m: Inbound): Promise<void> {
@@ -44,37 +143,61 @@ export class Conversation extends DurableObject<Env> {
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     if (m.from === operator) return;
     if (m.type === 'text') {
+      const lang = detectLang(m.text ?? '');
+      const saved = this.state('intake');
+      if (saved) {
+        const st = JSON.parse(saved) as IntakeState;
+        const res = await intake(this.env.AI, st, m.text ?? '', modelConfig(this.env));
+        if (res.status === 'handoff') {
+          this.state('intake', null);
+          const fallback = FALLBACK[lang];
+          await sendText(this.env, m.from, fallback);
+          this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
+          await this.notify(m);
+          return;
+        }
+        st.answers.push((m.text ?? '').slice(0, 500));
+        st.answers = st.answers.slice(-8);
+        if (res.status === 'more' && st.asks < 2) {
+          const follow = res.reply || INTAKE_FOLLOWUP[st.lang];
+          await sendText(this.env, m.from, follow);
+          this.storeAssistant(m.timestamp, 'a-' + m.id, follow);
+          st.asks += 1;
+          this.state('intake', JSON.stringify(st));
+          return;
+        }
+        await this.finishBooking(m, st);
+        return;
+      }
       const rows = this.ctx.storage.sql
         .exec('SELECT role, text FROM messages WHERE text IS NOT NULL ORDER BY rowid DESC LIMIT 12')
         .toArray() as Array<{ role: string; text: string }>;
       const history = rows
         .reverse()
         .map((r) => ({ role: r.role as Turn['role'], text: r.text }));
-      const lang = detectLang(m.text ?? '');
       const a = await answer(this.env.AI, history, lang, modelConfig(this.env));
+      if (a.booking) {
+        const ask = INTAKE_ASK[lang];
+        await sendText(this.env, m.from, ask);
+        this.storeAssistant(m.timestamp, 'a-' + m.id, ask);
+        const st: IntakeState = {
+          lang,
+          service: a.service,
+          opening: (m.text ?? '').slice(0, 500),
+          answers: [],
+          asks: 1,
+        };
+        this.state('intake', JSON.stringify(st));
+        return;
+      }
       await sendText(this.env, m.from, a.reply);
-      this.ctx.storage.sql.exec(
-        'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
-        'a-' + m.id,
-        m.timestamp,
-        'assistant',
-        'text',
-        a.reply,
-        null
-      );
+      this.storeAssistant(m.timestamp, 'a-' + m.id, a.reply);
       if (a.handoff) await this.notify(m);
     } else {
+      this.state('intake', null);
       const lang = 'es' as const;
       await sendText(this.env, m.from, NON_TEXT[lang]);
-      this.ctx.storage.sql.exec(
-        'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
-        'a-' + m.id,
-        m.timestamp,
-        'assistant',
-        'text',
-        NON_TEXT[lang],
-        null
-      );
+      this.storeAssistant(m.timestamp, 'a-' + m.id, NON_TEXT[lang]);
       await this.notify(m);
     }
   }
@@ -91,3 +214,4 @@ export class Conversation extends DurableObject<Env> {
     }
   }
 }
+

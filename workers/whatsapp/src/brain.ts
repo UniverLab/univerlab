@@ -34,6 +34,8 @@ export interface Turn {
 export interface Answer {
   reply: string;
   handoff: boolean;
+  booking: boolean;
+  service: string;
 }
 
 export const FALLBACK: Record<Lang, string> = {
@@ -41,7 +43,40 @@ export const FALLBACK: Record<Lang, string> = {
   en: 'Thanks for writing. I am passing your message to someone at the lab, who will reply soon.',
 };
 
+export interface ModelMessage {
+  role: string;
+  content: string;
+}
+
+function extractRaw(res: unknown): string {
+  const r = res as {
+    choices?: Array<{ message?: { content?: string } }>;
+    response?: string;
+  };
+  if (typeof r?.choices?.[0]?.message?.content === 'string') {
+    return r.choices[0].message.content;
+  }
+  if (typeof r?.response === 'string') return r.response;
+  return '';
+}
+
+export async function runModel(
+  ai: { run(model: string, input: unknown): Promise<unknown> },
+  cfg: ModelConfig,
+  messages: ModelMessage[],
+  maxTokens: number
+): Promise<string> {
+  const res = await ai.run(cfg.model, {
+    response_format: { type: 'json_object' },
+    max_tokens: maxTokens,
+    ...cfg.options,
+    messages,
+  });
+  return extractRaw(res);
+}
+
 export function parseAnswer(raw: string, lang: Lang): Answer {
+  const fallback: Answer = { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
   try {
     // Reasoning models may inline their thinking; braces inside it must not be parsed.
     const text = raw.replace(/<think>[\s\S]*?<\/think>/g, '');
@@ -50,12 +85,19 @@ export function parseAnswer(raw: string, lang: Lang): Answer {
     if (start < 0 || end < 0 || end <= start) throw new Error('no-json');
     const parsed = JSON.parse(text.slice(start, end + 1)) as unknown;
     if (typeof parsed !== 'object' || parsed === null) throw new Error('bad-shape');
-    const { reply, handoff } = parsed as { reply?: unknown; handoff?: unknown };
+    const { reply, handoff, booking, service } = parsed as {
+      reply?: unknown;
+      handoff?: unknown;
+      booking?: unknown;
+      service?: unknown;
+    };
     if (typeof reply !== 'string' || reply.length === 0) throw new Error('bad-reply');
     if (typeof handoff !== 'boolean') throw new Error('bad-handoff');
-    return { reply: reply.slice(0, 1000), handoff };
+    if (typeof booking !== 'boolean') throw new Error('bad-booking');
+    if (typeof service !== 'string') throw new Error('bad-service');
+    return { reply: reply.slice(0, 1000), handoff, booking, service: service.slice(0, 40) };
   } catch {
-    return { reply: FALLBACK[lang], handoff: true };
+    return fallback;
   }
 }
 
@@ -66,26 +108,17 @@ export async function answer(
   cfg: ModelConfig = modelConfig({})
 ): Promise<Answer> {
   try {
-    const res = (await ai.run(cfg.model, {
-      response_format: { type: 'json_object' },
-      max_tokens: 1200,
-      ...cfg.options,
-      messages: [
+    const raw = await runModel(
+      ai,
+      cfg,
+      [
         { role: 'system', content: systemPrompt(lang) },
         ...history.map((t) => ({ role: t.role, content: t.text })),
       ],
-    })) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      response?: string;
-    };
-    const raw =
-      typeof res.choices?.[0]?.message?.content === 'string'
-        ? res.choices[0].message.content
-        : typeof res.response === 'string'
-          ? res.response
-          : '';
+      1200
+    );
     return parseAnswer(raw, lang);
   } catch {
-    return { reply: FALLBACK[lang], handoff: true };
+    return { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
   }
 }

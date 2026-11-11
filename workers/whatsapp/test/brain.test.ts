@@ -1,49 +1,89 @@
 /** @jest-environment node */
 import { answer, DEFAULT_MODEL, FALLBACK, modelConfig, parseAnswer } from '../src/brain';
 
-test('parseAnswer accepts a bare object', () => {
-  expect(parseAnswer('{"reply":"Hola","handoff":false}', 'es')).toEqual({
-    reply: 'Hola',
-    handoff: false,
-  });
+test('parseAnswer accepts a bare object with booking fields', () => {
+  expect(
+    parseAnswer('{"reply":"Hola","handoff":false,"booking":false,"service":""}', 'es')
+  ).toEqual({ reply: 'Hola', handoff: false, booking: false, service: '' });
+});
+
+test('parseAnswer accepts a booking answer', () => {
+  expect(
+    parseAnswer('{"reply":"Vamos","handoff":true,"booking":true,"service":"consultation"}', 'es')
+  ).toEqual({ reply: 'Vamos', handoff: true, booking: true, service: 'consultation' });
+});
+
+test('parseAnswer slices a long service to 40 chars', () => {
+  const r = parseAnswer(
+    '{"reply":"Hi","handoff":true,"booking":true,"service":"' + 'x'.repeat(50) + '"}',
+    'en'
+  );
+  expect(r.service).toBe('x'.repeat(40));
 });
 
 test('parseAnswer accepts prose and fenced json', () => {
-  expect(parseAnswer('here you go {"reply":"Hola","handoff":false} bye', 'es')).toEqual({
-    reply: 'Hola',
-    handoff: false,
-  });
   expect(
-    parseAnswer('```json\n{"reply":"Hola","handoff":true}\n```', 'es')
-  ).toEqual({ reply: 'Hola', handoff: true });
+    parseAnswer('here you go {"reply":"Hola","handoff":false,"booking":false,"service":""} bye', 'es')
+  ).toEqual({ reply: 'Hola', handoff: false, booking: false, service: '' });
+  expect(
+    parseAnswer('```json\n{"reply":"Hola","handoff":true,"booking":true,"service":"other"}\n```', 'es')
+  ).toEqual({ reply: 'Hola', handoff: true, booking: true, service: 'other' });
 });
 
-test('parseAnswer falls back on nonsense or empty reply', () => {
-  expect(parseAnswer('nonsense', 'es')).toEqual({ reply: FALLBACK.es, handoff: true });
-  expect(parseAnswer('{"reply":"","handoff":false}', 'es')).toEqual({
+test('parseAnswer falls back on nonsense, empty reply or missing booking', () => {
+  expect(parseAnswer('nonsense', 'es')).toEqual({
     reply: FALLBACK.es,
     handoff: true,
+    booking: false,
+    service: '',
+  });
+  expect(parseAnswer('{"reply":"","handoff":false,"booking":false,"service":""}', 'es')).toEqual({
+    reply: FALLBACK.es,
+    handoff: true,
+    booking: false,
+    service: '',
+  });
+  expect(parseAnswer('{"reply":"Hola","handoff":false}', 'es')).toEqual({
+    reply: FALLBACK.es,
+    handoff: true,
+    booking: false,
+    service: '',
   });
 });
 
 test('parseAnswer ignores braces inside inline thinking', () => {
   expect(
-    parseAnswer('<think>maybe {"reply":"no"} or {x}</think>{"reply":"Hola","handoff":false}', 'es')
-  ).toEqual({ reply: 'Hola', handoff: false });
+    parseAnswer(
+      '<think>maybe {"reply":"no"} or {x}</think>{"reply":"Hola","handoff":false,"booking":false,"service":""}',
+      'es'
+    )
+  ).toEqual({ reply: 'Hola', handoff: false, booking: false, service: '' });
 });
 
 test('answer reads choices content', async () => {
   const ai = {
-    run: async () => ({ choices: [{ message: { content: '{"reply":"Hi","handoff":true}' } }] }),
+    run: async () => ({
+      choices: [{ message: { content: '{"reply":"Hi","handoff":true,"booking":false,"service":""}' } }],
+    }),
   };
-  await expect(answer(ai, [], 'en')).resolves.toEqual({ reply: 'Hi', handoff: true });
+  await expect(answer(ai, [], 'en')).resolves.toEqual({
+    reply: 'Hi',
+    handoff: true,
+    booking: false,
+    service: '',
+  });
 });
 
 test('answer reads response field', async () => {
   const ai = {
-    run: async () => ({ response: '{"reply":"Hi","handoff":false}' }),
+    run: async () => ({ response: '{"reply":"Hi","handoff":false,"booking":false,"service":""}' }),
   };
-  await expect(answer(ai, [], 'en')).resolves.toEqual({ reply: 'Hi', handoff: false });
+  await expect(answer(ai, [], 'en')).resolves.toEqual({
+    reply: 'Hi',
+    handoff: false,
+    booking: false,
+    service: '',
+  });
 });
 
 test('answer falls back when ai throws', async () => {
@@ -52,15 +92,20 @@ test('answer falls back when ai throws', async () => {
       throw new Error('down');
     },
   };
-  await expect(answer(ai, [], 'en')).resolves.toEqual({ reply: FALLBACK.en, handoff: true });
+  await expect(answer(ai, [], 'en')).resolves.toEqual({
+    reply: FALLBACK.en,
+    handoff: true,
+    booking: false,
+    service: '',
+  });
 });
 
-test('system prompt carries knowledge in spanish', async () => {
+test('system prompt carries knowledge in spanish and the booking json shape', async () => {
   let sent: unknown;
   const ai = {
     run: async (_model: string, input: unknown) => {
       sent = input;
-      return { response: '{"reply":"Hola","handoff":false}' };
+      return { response: '{"reply":"Hola","handoff":false,"booking":false,"service":""}' };
     },
   };
   await answer(ai, [], 'es');
@@ -68,6 +113,9 @@ test('system prompt carries knowledge in spanish', async () => {
   const system = messages[0].content;
   expect(system).toContain('KNOWLEDGE:');
   expect(system).toContain('150.000 COP');
+  expect(system).toContain('"booking"');
+  expect(system).toContain('"service"');
+  expect(system).toContain('first-call');
 });
 
 test('modelConfig falls back to the default model and no options', () => {
@@ -84,7 +132,7 @@ test('answer sends the configured model and its options, never overriding messag
     run: async (m: string, input: unknown) => {
       model = m;
       sent = input as Record<string, unknown>;
-      return { response: '{"reply":"Hi","handoff":false}' };
+      return { response: '{"reply":"Hi","handoff":false,"booking":false,"service":""}' };
     },
   };
   const cfg = modelConfig({
