@@ -7,7 +7,7 @@ It answers webhook verification, rejects deliveries
 whose signature does not match the app secret, routes
 each message to a Durable Object named after the
 sender's number, stores it once, marks it read, then
-answers text messages with GLM-4.7 Flash on Workers AI
+answers text messages with Qwen 3.8 27B on Workers AI
 from the Workbench copy in the site's dictionaries
 (src/i18n), in the client's language, and forwards the
 chat to OPERATOR_PHONE when a person is needed

@@ -26,6 +26,12 @@ test('parseAnswer falls back on nonsense or empty reply', () => {
   });
 });
 
+test('parseAnswer ignores braces inside inline thinking', () => {
+  expect(
+    parseAnswer('<think>maybe {"reply":"no"} or {x}</think>{"reply":"Hola","handoff":false}', 'es')
+  ).toEqual({ reply: 'Hola', handoff: false });
+});
+
 test('answer reads choices content', async () => {
   const ai = {
     run: async () => ({ choices: [{ message: { content: '{"reply":"Hi","handoff":true}' } }] }),

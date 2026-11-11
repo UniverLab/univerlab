@@ -1,7 +1,7 @@
 import { systemPrompt } from './prompt';
 import type { Lang } from './lang';
 
-export const MODEL = '@cf/zai-org/glm-4.7-flash';
+export const MODEL = '@cf/qwen/qwen3.8-27b';
 
 export interface Turn {
   role: 'user' | 'assistant';
@@ -20,10 +20,12 @@ export const FALLBACK: Record<Lang, string> = {
 
 export function parseAnswer(raw: string, lang: Lang): Answer {
   try {
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
+    // Reasoning models may inline their thinking; braces inside it must not be parsed.
+    const text = raw.replace(/<think>[\s\S]*?<\/think>/g, '');
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
     if (start < 0 || end < 0 || end <= start) throw new Error('no-json');
-    const parsed = JSON.parse(raw.slice(start, end + 1)) as unknown;
+    const parsed = JSON.parse(text.slice(start, end + 1)) as unknown;
     if (typeof parsed !== 'object' || parsed === null) throw new Error('bad-shape');
     const { reply, handoff } = parsed as { reply?: unknown; handoff?: unknown };
     if (typeof reply !== 'string' || reply.length === 0) throw new Error('bad-reply');
@@ -45,7 +47,10 @@ export async function answer(
         { role: 'system', content: systemPrompt(lang) },
         ...history.map((t) => ({ role: t.role, content: t.text })),
       ],
-      max_tokens: 500,
+      // The model reasons at xhigh by default; low keeps replies fast and inside the free tier.
+      reasoning_effort: 'low',
+      response_format: { type: 'json_object' },
+      max_tokens: 1200,
     })) as {
       choices?: Array<{ message?: { content?: string } }>;
       response?: string;
