@@ -189,7 +189,7 @@ export const termsEs: LegalDoc = {
       paras: [
         'Una auditoría solo se publica con tu aprobación escrita y cuando los hallazgos críticos y altos están corregidos. Lo que se muestra es lo que apruebas: nada de tu auditoría privada se publica sin tu firma.',
         'La devolución por publicar es un porcentaje del precio pagado y se paga por transferencia: 50 % para las auditorías fundadoras y 20 % para las demás, reclamable dentro de los 12 meses siguientes a la entrega. Auditar de nuevo el mismo sistema, con fecha nueva, cuesta 30 % menos al cobrar.',
-        'Lo que se muestra es la auditoría con su fecha, su vigencia y su alcance, además de la insignia para tu sitio. La insignia acredita que UniverLab auditó un alcance en una fecha: no acredita seguridad continua ni es una certificación. La fecha es cómo el lector juzga qué tan actual es la auditoría, y cada reauditoría emite una insignia nueva.',
+        'Lo que se muestra es la auditoría con su fecha, su vigencia y su alcance, además de la insignia para tu sitio. La insignia acredita que UniverLab auditó un alcance en una fecha: no acredita seguridad continua ni es una certificación. La fecha es cómo el lector juzga qué tan actual es la auditoría, y cada reauditoría emite una insignia nueva. Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.',
       ],
     },
     {

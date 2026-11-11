@@ -24,6 +24,7 @@ type Ctx = SchemaIssue[];
 
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+const DOI_RE = /^10\.[0-9]+\/.+/;
 const SHA_RE = /^[0-9a-fA-F]{64}$/;
 const CURRENCY_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -479,7 +480,7 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   const ctx: Ctx = [];
   if (
     !enterObject(ctx, doc, '$', 'audit document', [
-      'contract', 'meta', 'visibility', 'access', 'accent', 'badge', 'cover',
+      'contract', 'meta', 'visibility', 'access', 'accent', 'badge', 'deposit', 'cover',
       'assets', 'annexes', 'deliverables', 'findings', 'sources', 'glossary', 'sections',
     ])
   ) {
@@ -518,6 +519,17 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
       checkOptionalString(ctx, badge['validUntil'], '$.badge.validUntil', 'badge validity end', { format: 'date' });
       checkOptionalString(ctx, badge['scope'], '$.badge.scope', 'badge scope');
       checkOptionalString(ctx, badge['previous'], '$.badge.previous', 'previous audit slug', { pattern: SLUG_RE });
+    }
+  }
+  if (doc['deposit'] !== undefined) {
+    const deposit = doc['deposit'];
+    if (enterObject(ctx, deposit, '$.deposit', 'deposit', ['versionDoi', 'conceptDoi', 'depositedAt', 'consent'])) {
+      checkOptionalString(ctx, deposit['versionDoi'], '$.deposit.versionDoi', 'deposit version DOI', { pattern: DOI_RE });
+      checkOptionalString(ctx, deposit['conceptDoi'], '$.deposit.conceptDoi', 'deposit concept DOI', { pattern: DOI_RE });
+      checkOptionalString(ctx, deposit['depositedAt'], '$.deposit.depositedAt', 'deposit date', { format: 'date' });
+      if (deposit['consent'] !== undefined && deposit['consent'] !== true) {
+        err(ctx, '$.deposit.consent', 'deposit consent must be true');
+      }
     }
   }
   if (doc['cover'] !== undefined) {

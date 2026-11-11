@@ -39,16 +39,21 @@ function monthYear(issued: string, lang: 'es' | 'en'): string {
   return `${name} ${m[1]}`;
 }
 
-/** The badge line: who, when and what scope — plus, past its validity, how
- *  long ago, with no other state change. */
+/** The badge line: who, when and what scope — plus the version DOI when the
+ *  audit is deposited in Zenodo, plus, past its validity, how long ago, with
+ *  no other state change. */
 export function badgeText(doc: AuditDocument, now: Date = new Date()): string {
   const lang = doc.meta.language;
   const badge = doc.badge;
   if (!badge) return '';
   const lead = lang === 'es' ? 'Auditado por UniverLab' : 'Audited by UniverLab';
   const base = `${lead} · ${monthYear(badge.issued, lang)} · ${badge.scope}`;
-  if (!badgeExpired(badge, now)) return base;
-  return `${base} · ${lang === 'es' ? 'hace más de 12 meses' : 'over 12 months ago'}`;
+  const doi =
+    typeof doc.deposit?.versionDoi === 'string' && doc.deposit.versionDoi !== ''
+      ? ` · DOI ${doc.deposit.versionDoi}`
+      : '';
+  if (!badgeExpired(badge, now)) return `${base}${doi}`;
+  return `${base}${doi} · ${lang === 'es' ? 'hace más de 12 meses' : 'over 12 months ago'}`;
 }
 
 /** Accessible name of the badge link: who did the audit, nothing more. */

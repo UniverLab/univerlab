@@ -191,7 +191,7 @@ export const termsEn: LegalDoc = {
       paras: [
         'An audit is only published with your written approval and once critical and high findings are fixed. What is shown is what you approve: nothing from your private audit is published without your signature.',
         'The refund on publication is a percentage of the price paid, sent by transfer: 50 % for founding audits and 20 % for the rest, claimable within 12 months of delivery. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
-        'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge.',
+        'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge. A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.',
       ],
     },
     {

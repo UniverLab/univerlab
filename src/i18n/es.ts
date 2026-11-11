@@ -768,6 +768,10 @@ export const es: Dict = {
       expired: 'hace más de 12 meses',
       previous: 'Auditoría anterior',
       next: 'Auditoría posterior',
+      doi: 'DOI',
+      conceptDoi: 'DOI del concepto',
+      cite: 'Cómo citar',
+      match: 'SHA-256 del PDF {hash} — coincide con el archivo depositado en Zenodo (checksum del registro verificado al depositar).',
     },
     badge: { title: 'Insignia para tu sitio', copy: 'Copiar el HTML', copied: 'Copiado' },
   },
@@ -853,7 +857,7 @@ export const es: Dict = {
       }, reaudit: {
         title: 'Reauditoría',
         text: 'Auditar de nuevo el mismo sistema, para revisar las correcciones y emitir una auditoría nueva con una fecha nueva, cuesta 30 % menos, aplicado al cobrar.',
-      }, rules: [
+      }, zenodoNote: 'Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.', rules: [
         'La publicación ocurre cuando los hallazgos críticos y altos están corregidos, con tu aprobación escrita del contenido publicado.',
         'La devolución se reclama dentro de los 12 meses siguientes a la entrega; después la auditoría sigue privada y el cupo fundador no se devuelve.',
         'Los descuentos y las devoluciones no se acumulan: aplica el mayor.',

@@ -100,6 +100,12 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
     }
   }
 
+  // A recorded deposit consents to permanence: anything but literally
+  // true refuses, so a missing or declined consent never publishes.
+  if (isRecord(doc['deposit']) && (doc['deposit'] as Doc)['consent'] !== true) {
+    errors.push({ path: '$.deposit.consent', message: 'a recorded deposit needs consent true' });
+  }
+
   // Delivered and final audits ship the TeXForge PDF report (a PDF asset).
   const status = isRecord(doc['meta']) ? doc['meta']['status'] : undefined;
   const deliverables = isRecord(doc['deliverables']) ? doc['deliverables'] : null;

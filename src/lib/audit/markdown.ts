@@ -188,6 +188,10 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
       '',
     );
   }
+  if (typeof doc.deposit?.versionDoi === 'string' && doc.deposit.versionDoi !== '') {
+    // "DOI" is language-neutral: the same line serves both twins.
+    head.push(`DOI: ${doc.deposit.versionDoi} (https://doi.org/${doc.deposit.versionDoi}).`, '');
+  }
   const findings = doc.findings.length
     ? [lang === 'es' ? '## Hallazgos' : '## Findings', '', ...doc.findings.map((f) => findingMarkdown(doc, f)), '']
     : [];

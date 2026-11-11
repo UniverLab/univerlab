@@ -189,6 +189,39 @@ describe('audit CLI push', () => {
   });
 });
 
+describe('audit CLI deposit usage', () => {
+  it('prints usage, not an unknown-command error, when deposit has no folder', () => {
+    const { code, out } = run('deposit');
+    expect(code).toBe(2);
+    expect(out).toContain('usage: node scripts/audit.ts validate <folder>');
+    expect(out).toContain('deposit <folder>');
+    expect(out).not.toContain('unknown command');
+  });
+
+  it('rejects an unknown flag without touching the network', () => {
+    const { dir, env } = fakeWranglerEnv();
+    try {
+      const { code, out } = runWithEnv(['deposit', FIXTURE_DIR, '--sandboxx'], env, 'y\n');
+      expect(code).toBe(2);
+      expect(out).toContain('unknown flag');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses the fixture with open critical findings before asking for a token', () => {
+    const { dir, env } = fakeWranglerEnv();
+    try {
+      const { code, out } = runWithEnv(['deposit', FIXTURE_DIR], env, 'y\n');
+      expect(code).toBe(1);
+      expect(out).toContain('open');
+      expect(wranglerCalls(dir)).toBe('');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('audit CLI remove', () => {
   it('lists the audit objects, asks for confirmation, then deletes them', () => {
     const { dir, env } = fakeWranglerEnv();

@@ -115,6 +115,79 @@ describe('audit badge', () => {
   });
 });
 
+describe('audit DOI deposit', () => {
+  function deposited(lang: 'es' | 'en', badge: Record<string, unknown>): Doc {
+    const doc = publicDoc(lang, badge);
+    doc['deposit'] = {
+      versionDoi: '10.5281/zenodo.100',
+      conceptDoi: '10.5281/zenodo.99',
+      depositedAt: '2026-07-01',
+      consent: true,
+    };
+    return doc;
+  }
+
+  function reportSha(doc: Doc): string {
+    return String((doc['assets'] as Doc[]).find((a) => a['id'] === 'report-pdf')!['sha256']);
+  }
+
+  it('appends the version DOI to the badge line and the SVG', () => {
+    const doc = asAuditDocument(deposited('es', { issued: recentIssued(), scope: 'Tienda' }));
+    expect(badgeText(doc)).toContain('DOI 10.5281/zenodo.100');
+    expect(auditBadge(doc, 'tienda', 'https://univerlab.org')).toContain('DOI 10.5281/zenodo.100');
+  });
+
+  it('leaves the badge line alone without a deposit', () => {
+    const doc = asAuditDocument(publicDoc('es', { issued: recentIssued(), scope: 'Tienda' }));
+    expect(badgeText(doc)).not.toContain('DOI');
+  });
+
+  it('shows the DOI, the record link, the citation and the PDF match on the page', () => {
+    const doc = deposited('en', { issued: '2026-06-15', scope: 'Online store' });
+    const html = auditPageHtml(asAuditDocument(doc), 'shop', {
+      assetBase: PUBLIC_AUDIT_BASE,
+      published: { previous: null, next: [] },
+    });
+    expect(html).toContain('class="audit-deposit"');
+    expect(html).toContain('href="https://doi.org/10.5281/zenodo.100"');
+    expect(html).toContain('Concept DOI');
+    expect(html).toContain('href="https://doi.org/10.5281/zenodo.99"');
+    expect(html).toContain('How to cite');
+    expect(html).toContain('[Report]');
+    expect(html).toContain('@techreport');
+    expect(html).toContain(reportSha(doc));
+    expect(html).toContain('matches the file deposited in Zenodo');
+    expect(html).not.toContain('[Computer software]');
+  });
+
+  it('renders the deposit block in the document language', () => {
+    const doc = deposited('es', { issued: '2026-06-15', scope: 'Tienda en línea' });
+    const html = auditPageHtml(asAuditDocument(doc), 'tienda', {
+      assetBase: PUBLIC_AUDIT_BASE,
+      published: { previous: null, next: [] },
+    });
+    expect(html).toContain('Cómo citar');
+    expect(html).toContain('DOI del concepto');
+    expect(html).toContain('coincide con el archivo depositado en Zenodo');
+  });
+
+  it('omits the deposit block without a version DOI', () => {
+    const html = auditPageHtml(asAuditDocument(publicDoc('en', { issued: '2026-06-15', scope: 'Store' })), 'shop', {
+      assetBase: PUBLIC_AUDIT_BASE,
+      published: { previous: null, next: [] },
+    });
+    expect(html).not.toContain('audit-deposit');
+    expect(html).not.toContain('doi.org');
+  });
+
+  it('carries the DOI in the markdown twin', () => {
+    const md = auditMarkdown(asAuditDocument(deposited('es', { issued: '2026-06-15', scope: 'Tienda' })), 'tienda');
+    expect(md).toContain('DOI: 10.5281/zenodo.100 (https://doi.org/10.5281/zenodo.100).');
+    const plain = auditMarkdown(asAuditDocument(publicDoc('es', { issued: '2026-06-15', scope: 'Tienda' })), 'tienda');
+    expect(plain).not.toContain('doi.org');
+  });
+});
+
 describe('audit markdown twin', () => {
   it('carries the canonical source, meta, badge and findings with public asset URLs', () => {
     const doc = asAuditDocument(publicDoc('es', { issued: '2026-06-15', scope: 'Tienda' }));

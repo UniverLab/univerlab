@@ -7,6 +7,8 @@ import { annexEntryHtml, findingEntryHtml, renderBlock, sourcesEntriesHtml, type
 import { assetById, assetUrl, esc, safeExternalUrl, visibleAnnexes } from './util';
 import { auditBadge, badgeExpired, badgeLinkLabel, badgeSnippet, badgeValidUntil } from './badge';
 import { PUBLIC_AUDIT_BASE } from './markdown';
+import { citationTexts } from '../citation';
+import type { Citation } from '../experiments';
 import type { AuditDocument, AuditLayout, AuditSection } from './types';
 
 export interface PublishedAuditLinks {
@@ -145,9 +147,60 @@ function sectionHtml(doc: AuditDocument, sec: AuditSection, si: number, ctx: Blo
   );
 }
 
+/** Split an auditor display name into family/given for the citation: the
+ *  last word is the family name, the rest the given names. */
+function splitAuditorName(name: string): { family: string; given: string } {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { family: name.trim(), given: name.trim() };
+  return { family: parts[parts.length - 1], given: parts.slice(0, -1).join(' ') };
+}
+
+/** The Zenodo deposit block of a published audit: the version DOI linked to
+ *  the record, the concept DOI shared with re-audits, the APA and BibTeX
+ *  citation, and the PDF-match line. Empty when the audit was never
+ *  deposited. The SHA-256 comes from the document's own catalogue; the
+ *  record side (MD5) was verified at deposit time, and the line says
+ *  exactly that — never a literal SHA-256 comparison against the record. */
+function depositHtml(doc: AuditDocument, t: BlockCtx['t']): string {
+  const versionDoi = doc.deposit?.versionDoi;
+  if (typeof versionDoi !== 'string' || versionDoi === '') return '';
+  const recordUrl = `https://doi.org/${versionDoi}`;
+  const conceptDoi = doc.deposit?.conceptDoi;
+  const conceptLine =
+    typeof conceptDoi === 'string' && conceptDoi !== ''
+      ? `<p class="audit-concept-doi">${esc(t.published.conceptDoi)}: ` +
+        `<a href="${esc(`https://doi.org/${conceptDoi}`)}" rel="noopener noreferrer">${esc(conceptDoi)}</a></p>`
+      : '';
+  const cit: Citation = {
+    doi: versionDoi,
+    title: doc.meta.title,
+    authors: doc.meta.auditors.map((a) => splitAuditorName(a.name)),
+  };
+  const release = doc.badge ? { version: doc.meta.version, publishedAt: `${doc.badge.issued}T00:00:00Z` } : null;
+  const now = doc.deposit?.depositedAt ? new Date(`${doc.deposit.depositedAt}T00:00:00Z`) : new Date();
+  const { apa, bibtex } = citationTexts(cit, release, now, 'report');
+  const report = doc.deliverables.report ? assetById(doc, doc.deliverables.report) : null;
+  const match =
+    report && typeof report.sha256 === 'string' && report.sha256 !== ''
+      ? `<p class="audit-pdf-match">${esc(t.published.match.replace('{hash}', report.sha256))}</p>`
+      : '';
+  return (
+    `<div class="audit-deposit">` +
+    `<p class="audit-doi">${esc(t.published.doi)}: ` +
+    `<a href="${esc(recordUrl)}" rel="noopener noreferrer">${esc(versionDoi)}</a></p>` +
+    conceptLine +
+    `<section class="audit-cite" aria-label="${esc(t.published.cite)}"><h3>${esc(t.published.cite)}</h3>` +
+    `<p class="audit-apa">${esc(apa)}</p>` +
+    `<pre class="audit-bibtex"><code>${esc(bibtex)}</code></pre></section>` +
+    match +
+    `</div>`
+  );
+}
+
 /** The published-audit block, right after the cover: the audit date and its
- *  validity, links to earlier and later audits of the same system, and the
- *  badge with the copyable snippet for the client's own site. */
+ *  validity, links to earlier and later audits of the same system, the
+ *  Zenodo deposit with its DOI and citation, and the badge with the copyable
+ *  snippet for the client's own site. */
 function publishedHtml(
   doc: AuditDocument,
   slug: string,
@@ -176,11 +229,13 @@ function publishedHtml(
     );
   }
   const historyHtml = history.length ? `<nav class="audit-history">${history.join('')}</nav>` : '';
+  const deposit = depositHtml(doc, t);
   const snippet = badgeSnippet(doc, slug, 'https://univerlab.org');
   return (
     `<section class="audit-published" aria-label="${esc(badgeLinkLabel(doc))}">` +
     dates +
     historyHtml +
+    deposit +
     `<h2>${esc(t.badge.title)}</h2>` +
     `<p class="audit-badge">${auditBadge(doc, slug, '')}</p>` +
     `<pre class="audit-badge-snippet"><code>${esc(snippet)}</code></pre>` +

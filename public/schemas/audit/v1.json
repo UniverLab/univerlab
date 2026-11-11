@@ -30,6 +30,10 @@
       "$ref": "#/$defs/badge",
       "description": "Optional badge for a published audit: issue date, validity, a short scope line and an optional link to the previous audit of the same system. Old documents without it stay valid."
     },
+    "deposit": {
+      "$ref": "#/$defs/deposit",
+      "description": "Optional Zenodo deposit of a published audit: the version and concept DOIs, the deposit date and the client's recorded consent to a permanent deposit. Old documents without it stay valid."
+    },
     "cover": {
       "$ref": "#/$defs/cover",
       "description": "The audit cover, which also picks a layout like any section."
@@ -160,6 +164,19 @@
         "validUntil": { "type": "string", "format": "date", "description": "Optional end of the badge validity. Omitted means 12 months after the issue date." },
         "scope": { "type": "string", "minLength": 1, "description": "Short scope line shown on the badge, e.g. the audited system or flow." },
         "previous": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$", "description": "Optional slug of the previous audit of the same system, forming the re-audit history." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "deposit": {
+      "title": "Zenodo deposit",
+      "description": "The permanent Zenodo deposit of a published audit: the version DOI of this audit, the concept DOI shared with its re-audits, the deposit date and the client's recorded consent. A Zenodo publication cannot be undone, so consent must be literally true.",
+      "type": "object",
+      "properties": {
+        "versionDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Version DOI of this audit's Zenodo record, e.g. '10.5281/zenodo.1234567'. Written by the deposit command after publication." },
+        "conceptDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Concept DOI shared by every audit of the same system: each re-audit publishes a new version under it. Written by the deposit command after publication." },
+        "depositedAt": { "type": "string", "format": "date", "description": "Deposit date (YYYY-MM-DD): the day the record was published in Zenodo." },
+        "consent": { "const": true, "description": "The client's recorded consent to a permanent public deposit in Zenodo. Must be literally true: the deposit command refuses to publish without it." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false

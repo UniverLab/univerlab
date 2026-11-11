@@ -98,6 +98,18 @@ export interface AuditBadge {
   previous?: string;
 }
 
+/** The permanent Zenodo deposit of a published audit. Every field is
+ *  optional so v1 documents without a deposit stay valid; the deposit
+ *  command writes the DOIs after publication. The license for the Zenodo
+ *  record is not a field here: it rides on the `x-license` extension
+ *  property, valid today via the schema's `^x-` rule. */
+export interface AuditDeposit {
+  versionDoi?: string;
+  conceptDoi?: string;
+  depositedAt?: string;
+  consent?: boolean;
+}
+
 export interface AuditCover {
   layout: AuditLayout;
   background?: string;
@@ -358,6 +370,7 @@ export interface AuditDocument {
   access?: AuditAccess;
   accent?: 'lab' | 'experiment';
   badge?: AuditBadge;
+  deposit?: AuditDeposit;
   cover: AuditCover;
   assets: AuditAsset[];
   annexes?: AuditAnnex[];

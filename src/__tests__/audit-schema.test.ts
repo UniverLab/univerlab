@@ -139,6 +139,51 @@ describe('audit schema identity', () => {
   });
 });
 
+describe('audit deposit contract', () => {
+  it('carries an optional deposit with version DOI, concept DOI, date and consent', () => {
+    const schema = loadAuditSchema() as Record<string, unknown>;
+    const props = schema['properties'] as Record<string, Record<string, unknown>>;
+    expect(props['deposit']['$ref']).toBe('#/$defs/deposit');
+    expect(props['deposit']['description']).toBeTruthy();
+    expect((schema['required'] as string[])).not.toContain('deposit');
+    const deposit = (schema['$defs'] as Record<string, Record<string, unknown>>)['deposit'];
+    expect(deposit['description']).toBeTruthy();
+    for (const prop of Object.values(deposit['properties'] as Record<string, Record<string, unknown>>)) {
+      expect(prop['description']).toBeTruthy();
+    }
+  });
+
+  it('keeps v1 documents without a deposit valid', () => {
+    const doc = JSON.parse(readFileSync(join(__dirname, 'fixtures', 'audit-contract', 'audit.json'), 'utf8')) as Record<string, unknown>;
+    expect('deposit' in doc).toBe(false);
+    expect(validateAuditDocument(doc).errors).toEqual([]);
+  });
+
+  it('accepts a consented deposit and refuses anything but true', () => {
+    const doc = JSON.parse(readFileSync(join(__dirname, 'fixtures', 'audit-contract', 'audit.json'), 'utf8')) as Record<string, unknown>;
+    doc['deposit'] = {
+      versionDoi: '10.5281/zenodo.100',
+      conceptDoi: '10.5281/zenodo.99',
+      depositedAt: '2026-07-01',
+      consent: true,
+    };
+    expect(validateAuditDocument(doc).errors).toEqual([]);
+
+    const declined = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
+    (declined['deposit'] as Record<string, unknown>)['consent'] = false;
+    const { errors } = validateAuditDocument(declined);
+    expect(errors.map((e) => e.path)).toContain('$.deposit.consent');
+
+    const missing = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
+    delete (missing['deposit'] as Record<string, unknown>)['consent'];
+    expect(validateAuditDocument(missing).errors.map((e) => e.path)).toContain('$.deposit.consent');
+
+    const badDoi = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
+    (badDoi['deposit'] as Record<string, unknown>)['versionDoi'] = 'not-a-doi';
+    expect(validateAuditDocument(badDoi).errors.map((e) => e.path)).toContain('$.deposit.versionDoi');
+  });
+});
+
 describe('audit contract fixture', () => {
   const dir = join(__dirname, 'fixtures', 'audit-contract');
 

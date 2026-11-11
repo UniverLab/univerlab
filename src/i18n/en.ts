@@ -774,6 +774,10 @@ export const en = {
       expired: 'over 12 months ago',
       previous: 'Previous audit',
       next: 'Later audit',
+      doi: 'DOI',
+      conceptDoi: 'Concept DOI',
+      cite: 'How to cite',
+      match: 'PDF SHA-256 {hash} — matches the file deposited in Zenodo (record checksum verified at deposit).',
     },
     badge: { title: 'Badge for your site', copy: 'Copy the HTML', copied: 'Copied' },
   },
@@ -859,7 +863,7 @@ export const en = {
       }, reaudit: {
         title: 'Re-audit',
         text: 'Auditing the same system again, to check the fixes and issue a new audit with a new date, costs 30 % less, applied when it is charged.',
-      }, rules: [
+      }, zenodoNote: 'A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.', rules: [
         'Publication happens once critical and high findings are fixed, with your written approval of what is shown.',
         'The refund must be claimed within 12 months of delivery; after that the audit stays private and the founding spot is not returned.',
         'Discounts and refunds do not stack: the largest one applies.',

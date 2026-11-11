@@ -55,6 +55,28 @@ describe('citationTexts', () => {
     expect(apa).not.toContain('&');
     expect(bibtex).toContain('author = {Doe, Jane},');
   });
+
+  it('cites a deposited audit as a report, not software', () => {
+    const audit: Citation = {
+      doi: '10.5281/zenodo.100',
+      title: 'Shop audit',
+      authors: [{ family: 'Team', given: 'Contract Test' }],
+    };
+    const { apa, bibtex } = citationTexts(audit, { version: '1.0', publishedAt: '2026-06-15T00:00:00Z' }, new Date(), 'report');
+    expect(apa).toBe(
+      'Team, C. (2026). Shop audit (Version 1.0) [Report]. Zenodo. https://doi.org/10.5281/zenodo.100',
+    );
+    expect(bibtex).toContain('@techreport{shop,');
+    expect(bibtex).toContain('institution = {Zenodo},');
+    expect(bibtex).not.toContain('@software');
+    expect(bibtex).not.toContain('publisher = {Zenodo},');
+  });
+
+  it('keeps the software default byte-identical without the kind', () => {
+    const { apa, bibtex } = citationTexts(canopy, release);
+    expect(apa).toContain('[Computer software]');
+    expect(bibtex).toContain('@software{canopy,');
+  });
 });
 
 describe('DOI badge', () => {
