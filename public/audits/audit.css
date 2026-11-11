@@ -436,6 +436,28 @@
   position: absolute;
   top: 0.5rem;
   inset-inline-end: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+/* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+.audit-code-copy .copy-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  line-height: 0;
+}
+
+.audit-code-copy .copy-icon > svg,
+.audit-code-copy .copy-icon morph-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.audit-code-copy .copy-icon[data-icon='check'] {
+  color: var(--audit-accent);
 }
 
 .audit-code pre {

@@ -7,6 +7,8 @@ import {
   type AuditFinding,
 } from './types';
 import { assetById, assetUrl, esc, proseRefs, safeExternalUrl } from './util';
+import { iconSvg } from '../icon-svg';
+import { copy } from '../icons';
 import type { en } from '../../i18n/en';
 
 export type AuditStrings = (typeof en)['audit'];
@@ -213,13 +215,15 @@ function code(ctx: BlockCtx, b: { language: string; source?: string; sourceAsset
     const a = assetById(ctx.doc, b.sourceAsset);
     if (!a) return '';
     return (
-      `<figure class="audit-code"><button type="button" class="audit-code-copy">${esc(ctx.t.codeCopy)}</button>` +
+      `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
+      `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
       `<pre><code data-lang="${esc(b.language)}" data-src="${esc(assetUrl(ctx.slug, a.path))}"${hlAttr}></code></pre></figure>`
     );
   }
   const src = typeof b.source === 'string' ? b.source : '';
   return (
-    `<figure class="audit-code"><button type="button" class="audit-code-copy">${esc(ctx.t.codeCopy)}</button>` +
+    `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
+    `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
     `<pre><code data-lang="${esc(b.language)}" data-inline="${esc(src)}"${hlAttr}>${esc(src)}</code></pre></figure>`
   );
 }

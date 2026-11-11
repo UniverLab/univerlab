@@ -62,7 +62,7 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Node Documents](https://univerlab.org/canopy/docs/graphs-nodes/index.md): Reusable node documents: install, list, add, remove. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [Graph Operations](https://univerlab.org/canopy/docs/graphs-operations/index.md): Archive and restore, node run history, the event log, and engine tuning. Canopy documentation — A graph engine for AI coding agents — every harness, one
 - [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
-- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 34 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 36 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 
 ### TeXForge

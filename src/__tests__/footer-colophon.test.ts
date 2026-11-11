@@ -280,6 +280,36 @@ describe('Footer — three grouped link headings', () => {
     expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
   });
 
+  it('the Open shelf reads as icons, not text links', () => {
+    // GitHub, API and the sponsor heart come from the shared Lucide lib at
+    // 20px; X and Bluesky use their official fill marks (Lucide lacks them).
+    expect(src).toContain("import { iconSvg } from '../lib/icon-svg'");
+    expect(src).toMatch(/import \{ codeXml, github, heart \} from '\.\.\/lib\/icons'/);
+    expect(src).toMatch(/iconSvg\(github, \{ size: 20 \}\)/);
+    expect(src).toMatch(/iconSvg\(codeXml, \{ size: 20 \}\)/);
+    expect(src).toMatch(/iconSvg\(heart, \{ size: 20 \}\)/);
+    expect(src).toContain('X_PATH');
+    expect(src).toContain('BLUESKY_PATH');
+    // Every icon keeps its name for assistive tech and hover — no new i18n,
+    // the existing dictionary labels are reused.
+    expect(src).toMatch(/class="icon-link"[\s\S]*?aria-label=\{item\.label\}[\s\S]*?title=\{item\.label\}/);
+    expect(src).toMatch(/aria-label=\{t\.nav\.sponsors\}[\s\S]*?title=\{t\.nav\.sponsors\}/);
+    // The old text links and the hand-drawn heart are gone.
+    expect(src).not.toMatch(/label: 'heart'/);
+    expect(src).not.toContain('M20.84 4.61');
+  });
+
+  it('the colophon type runs smaller and the frieze less faded', () => {
+    expect(src).toMatch(/\.foot-nav a \{[^}]*font-size:\s*0\.85rem/s);
+    expect(src).toMatch(/\.quote \{[^}]*font-size:\s*clamp\(0\.95rem, 1\.4vw, 1\.1rem\)/);
+    expect(src).toMatch(/\.foot-head \{[^}]*font-size:\s*0\.6rem/s);
+    expect(src).toMatch(/\.small \{[^}]*font-size:\s*0\.62rem/s);
+    expect(src).toMatch(/\.colophon-band \{[^}]*opacity:\s*0\.8/s);
+    // …but every target keeps its tap reach.
+    expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
+    expect(src).toMatch(/\.icon-link\s*\{[^}]*min-height:\s*32px/s);
+  });
+
   it('both dictionaries name the three groups', () => {
     expect(Object.keys(en.footer.groups).sort()).toEqual(['lab', 'open', 'work']);
     expect(Object.keys(es.footer.groups).sort()).toEqual(['lab', 'open', 'work']);

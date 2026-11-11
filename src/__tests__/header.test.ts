@@ -60,6 +60,20 @@ describe('Header experiments link', () => {
     expect(src).toContain('@media (max-width: 1024px)');
     expect(src).not.toMatch(/@media \(max-width: 900px\)/);
   });
+
+  it('draws the burger and the sponsor heart from the shared Lucide lib', () => {
+    expect(src).toContain("import { iconSvg } from '../lib/icon-svg'");
+    expect(src).toMatch(/import \{ heart, menu, xIcon \} from '\.\.\/lib\/icons'/);
+    // Stacked marks: the menu shows collapsed, the X open — no hand-drawn bars.
+    expect(src).toMatch(/set:html=\{iconSvg\(menu, \{ size: 20 \}\)\}/);
+    expect(src).toMatch(/set:html=\{iconSvg\(xIcon, \{ size: 20 \}\)\}/);
+    expect(src).not.toContain('class="bars"');
+    expect(src).not.toMatch(/\.bars::before/);
+    expect(src).toMatch(/\.burger\[aria-expanded='true'\] \.burger-close/);
+    // The sponsor mark is the same heart at 12px, not a pasted path.
+    expect(src).toMatch(/set:html=\{iconSvg\(heart, \{ size: 12 \}\)\}/);
+    expect(src).not.toContain('M20.84 4.61');
+  });
 });
 
 describe('Header engraved sky body (sun by day, moon by night)', () => {

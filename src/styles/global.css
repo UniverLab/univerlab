@@ -790,8 +790,15 @@ body > header { view-transition-name: site-header; }
   font-family: var(--font-mono);
   font-size: 0.68rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 .date-t-copy:hover { color: var(--accent); border-color: var(--accent); }
+/* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+.date-t-copy .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+.date-t-copy .copy-icon > svg, .date-t-copy .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+.date-t-copy .copy-icon[data-icon='check'] { color: var(--accent); }
 .date-t-error { color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.78rem; }
 
 /* Mission-date tooltip: one shared element, positioned above the date. */

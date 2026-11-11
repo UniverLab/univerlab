@@ -11,6 +11,8 @@ import {
 } from '../i18n';
 import { experiments } from '../lib/experiments';
 import Mailbox from './Mailbox.astro';
+import { iconSvg } from '../lib/icon-svg';
+import { heart, menu, xIcon } from '../lib/icons';
 
 interface Props {
   /** Only circadian pages honour the celestial disc; the rest never paint it. */
@@ -90,7 +92,8 @@ const signals = [
       aria-expanded="false"
       aria-controls="site-nav"
     >
-      <span class="bars"></span>
+      <span class="burger-icon burger-menu" set:html={iconSvg(menu, { size: 20 })} />
+      <span class="burger-icon burger-close" set:html={iconSvg(xIcon, { size: 20 })} />
     </button>
     <nav id="site-nav">
       {nav.map((item) => (
@@ -100,7 +103,7 @@ const signals = [
           rel={(item as any).ext ? 'noopener noreferrer' : undefined}
           class:list={['label', { active: navActive(item as any), sponsor: (item as any).sponsor }]}
           aria-current={navActive(item as any) ? 'page' : undefined}
-        >{(item as any).sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
+        >{(item as any).sponsor ? <><span class="heart-icon" set:html={iconSvg(heart, { size: 12 })} /><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
       ))}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
@@ -385,6 +388,7 @@ const signals = [
   nav a:hover, nav a.active { color: var(--ink); }
   nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
   nav a.sponsor svg { display: block; }
+  nav a.sponsor .heart-icon { display: inline-flex; line-height: 0; }
   nav a.sponsor .heart-text { display: none; }
   nav a.sponsor:hover { color: color-mix(in srgb, var(--accent, var(--bench-emphasis)) 75%, var(--bench-line)); animation-play-state: paused; }
 
@@ -572,31 +576,18 @@ const signals = [
     color: var(--ink-dim);
   }
   .burger:hover { color: var(--ink); }
-  .burger .bars,
-  .burger .bars::before,
-  .burger .bars::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    width: 1.1rem;
-    height: 1.5px;
-    background: currentColor;
-    transform: translateX(-50%);
-    transition: transform 0.2s ease, opacity 0.2s ease;
-  }
-  .burger .bars { top: 50%; transform: translate(-50%, -50%); }
-  .burger .bars::before { top: -6px; }
-  .burger .bars::after { top: 6px; }
-  /* Morph into an X when open. */
-  .burger[aria-expanded='true'] .bars { background: transparent; }
-  .burger[aria-expanded='true'] .bars::before { top: 0; transform: translateX(-50%) rotate(45deg); }
-  .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
+  /* The menu and close marks stack: the menu shows collapsed, the X open. */
+  .burger-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+  .burger-icon svg { display: block; }
+  .burger .burger-close { display: none; }
+  .burger[aria-expanded='true'] .burger-menu { display: none; }
+  .burger[aria-expanded='true'] .burger-close { display: inline-flex; }
 
   @media (max-width: 1024px) {
     /* The mailbox stands at the rule's right end and rises into the bar:
        keep the burger and menu clear of it. */
     .bar { padding-right: 56px; }
-    .burger { display: inline-flex; }
+    .burger { display: inline-flex; align-items: center; justify-content: center; }
     nav a.sponsor .heart-icon { display: none; }
     nav a.sponsor .heart-text { display: inline; }
     nav {

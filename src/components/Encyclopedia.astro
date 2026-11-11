@@ -3,6 +3,8 @@ import Machine from './Machine.astro';
 import { byId } from '../lib/experiments';
 import { entryModels } from '../lib/experiment-entries';
 import { getLang, useTranslations, localizePath } from '../i18n';
+import { iconSvg } from '../lib/icon-svg';
+import { copy } from '../lib/icons';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const enc = t.encyclopedia;
@@ -64,7 +66,9 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
                   data-cmd={installCmd}
                   data-copy={enc.use.copy}
                   data-copied={enc.use.copied}
-                >{enc.use.copy}</button>
+                  aria-label={enc.use.copy}
+                  title={enc.use.copy}
+                ><span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} /></button>
               </span>
             )}
             {entry.id === 'quorum' && !installCmd && (
@@ -91,7 +95,8 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 
 <p class="enc-key" set:html={enc.key.replace(/§/g, '<span>§</span>').replace(/‡/g, '<span>‡</span>').replace(/¶/g, '<span>¶</span>').replace(/†/g, '<span>†</span>')} />
 
-<script is:inline>
+<script>
+  import { COPY_DONE_MS, setCopyState } from '../lib/copy-morph';
   (function () {
     // Tabs filter entries by status via the `hidden` attribute.
     var tabs = document.querySelectorAll('.thumbs button');
@@ -108,15 +113,20 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
       });
     });
 
-    // Copy install command.
+    // Copy install command. On success the icon morphs to a check and the
+    // accessible name reads "Copied"; the static icon stays for no-JS.
     document.querySelectorAll('.copy-btn').forEach(function (btn) {
+      var label = btn.getAttribute('aria-label') || '';
       btn.addEventListener('click', async function () {
         var cmd = btn.getAttribute('data-cmd') || '';
-        try { await navigator.clipboard.writeText(cmd); } catch (e) {}
-        var copied = btn.getAttribute('data-copied') || btn.textContent;
-        var copy = btn.getAttribute('data-copy') || btn.textContent;
-        btn.textContent = copied;
-        setTimeout(function () { btn.textContent = copy; }, 1500);
+        try { await navigator.clipboard.writeText(cmd); } catch { return; }
+        var copied = btn.getAttribute('data-copied') || '';
+        setCopyState(btn, true);
+        if (copied) btn.setAttribute('aria-label', copied);
+        setTimeout(function () {
+          setCopyState(btn, false);
+          if (label) btn.setAttribute('aria-label', label);
+        }, COPY_DONE_MS);
       });
     });
   })();
@@ -177,7 +187,11 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
      under 520 px, where one line is the only way to keep the row intact. */
   .chip { flex: 0 1 auto; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; display: block; }
   .copy-btn { flex: none; }
-  .copy-btn { font-family: var(--font-mono); font-size: 11px; background: none; border: 1px solid var(--bench-line-soft); color: var(--bench-line); padding: 2px 6px; cursor: pointer; border-radius: 4px; }
+  .copy-btn { font-family: var(--font-mono); font-size: 11px; background: none; border: 1px solid var(--bench-line-soft); color: var(--bench-line); padding: 2px 6px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+  .copy-btn .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .copy-btn .copy-icon > svg, .copy-btn .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .copy-btn .copy-icon[data-icon='check'] { color: var(--bench-copper); }
 
   .enc-key { margin: 0; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--bench-line-soft); }
   /* The key marks come from set:html, so they carry no scope attribute: target them globally. */

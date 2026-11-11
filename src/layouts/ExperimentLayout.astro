@@ -12,6 +12,8 @@ import { citationTexts } from '../lib/citation';
 import { latestRelease } from '../lib/releases';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
+import { iconSvg } from '../lib/icon-svg';
+import { copy } from '../lib/icons';
 
 interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; hideMachine?: boolean; }
 const { id, hideGithub = false, hideDemo = false, hideMachine = false } = Astro.props;
@@ -134,7 +136,7 @@ const ogImage = `/og/${id}.png`;
                   <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
                 )}
                 <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-                  <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+                  <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
                 </button>
               </div>
             </>
@@ -180,7 +182,7 @@ const ogImage = `/og/${id}.png`;
         <div class="cmd cite-cmd" data-cite translate="no">
           <pre class="cite-bib"><code>{cite.bibtex}</code></pre>
           <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-            <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+            <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
           </button>
         </div>
       </section>
@@ -385,9 +387,11 @@ const ogImage = `/og/${id}.png`;
     font-family: var(--font-mono); transition: color 0.15s ease;
   }
   .copy:hover { color: var(--essence); }
-  .copy .copy-done { display: none; color: var(--essence); }
-  .copy.done .copy-idle { display: none; }
-  .copy.done .copy-done { display: inline; }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout;
+     the check takes the essence colour through the slot's data-icon. */
+  .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .copy-icon > svg, .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .copy-icon[data-icon='check'] { color: var(--essence); }
 
   :global(.exp .genesis .prose strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
@@ -477,7 +481,7 @@ const ogImage = `/og/${id}.png`;
   :global(html[data-surface='paper'] .os-tab) { color: var(--ink-faint); }
   :global(html[data-surface='paper'] .os-tab[aria-selected='true']) { color: var(--ink); }
   :global(html[data-surface='paper'] .copy:hover),
-  :global(html[data-surface='paper'] .exp .copy.done .copy-done) { color: var(--ink); }
+  :global(html[data-surface='paper'] .exp .copy-icon[data-icon='check']) { color: var(--ink); }
 
   /* Lede & genesis emphasis and inline code: bistre, no display weight jump
      (400 only) — the essence accent is not this surface's voice. */
@@ -519,6 +523,7 @@ const ogImage = `/og/${id}.png`;
 <script>
   // Install block: pick the platform tab (defaulting to the detected OS) and
   // copy whichever command is currently shown.
+  import { COPY_DONE_MS, setCopyState } from '../lib/copy-morph';
   document.querySelectorAll<HTMLElement>('[data-install]').forEach((box) => {
     const lines = Array.from(box.querySelectorAll<HTMLElement>('.cmd-line'));
     const tabs = Array.from(box.querySelectorAll<HTMLButtonElement>('.os-tab'));
@@ -541,7 +546,11 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(active.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
       }
@@ -557,7 +566,11 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(pre.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied — leave the button untouched.
       }

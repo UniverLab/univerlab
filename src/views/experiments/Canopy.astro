@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 import GraphMorph from '../../components/GraphMorph.astro';
 import CataloguePlate from '../../components/CataloguePlate.astro';
 import SiteNav from '../../components/SiteNav.astro';
+import { iconSvg } from '../../lib/icon-svg';
+import { copy } from '../../lib/icons';
 import { GEOM, PALETTE, TYPE, flowPath, markerFor, markerDefs, type Kind } from '../../lib/canopy-graph';
 
 const lang = getLang(Astro.url);
@@ -197,7 +199,7 @@ const morphColors: Record<string, string> = {
       <code class="pair-command" translate="no">canopy remote pair</code>
       <button type="button" class="pair-copy" data-remote-copy
         title={t.common.copy} aria-label={t.common.copy}>
-        <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+        <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
       </button>
     </div>
     <a class="remote-cta" href="https://remote.univerlab.org"
@@ -314,8 +316,9 @@ const morphColors: Record<string, string> = {
 </ExperimentLayout>
 
 <script>
-  // Remote pairing: copy the command, same feedback as the install bar's copy.
+  // Remote pairing: copy the command, same morph as the install bar's copy.
   // Query only the pair row so the layout's install handler stays untouched.
+  import { COPY_DONE_MS, setCopyState } from '../../lib/copy-morph';
   document.querySelectorAll<HTMLElement>('[data-remote-pair]').forEach((row) => {
     const code = row.querySelector<HTMLElement>('.pair-command');
     const copy = row.querySelector<HTMLButtonElement>('[data-remote-copy]');
@@ -324,7 +327,11 @@ const morphColors: Record<string, string> = {
       try {
         await navigator.clipboard.writeText(code.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied — leave the button untouched.
       }
@@ -382,9 +389,10 @@ const morphColors: Record<string, string> = {
     transition: color 0.15s ease;
   }
   .pair-copy:hover { color: var(--canopy); }
-  .pair-copy .copy-done { display: none; color: var(--canopy); }
-  .pair-copy.done .copy-idle { display: none; }
-  .pair-copy.done .copy-done { display: inline; }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+  .pair-copy .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .pair-copy .copy-icon > svg, .pair-copy .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .pair-copy .copy-icon[data-icon='check'] { color: var(--canopy); }
 
   /* The feature primary is Remote's own solid teal (#3fb8b0 / #011d1c). */
   .remote-cta,

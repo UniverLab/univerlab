@@ -3,6 +3,7 @@
 // diagrams (Mermaid), code highlighting and animation videos. The heavy
 // libraries load only when the page actually uses them.
 import { esc } from './escape';
+import { COPY_DONE_MS, setCopyState } from '../copy-morph';
 
 function readData(): { slug: string; lang: string } | null {
   const el = document.getElementById('audit-data');
@@ -160,13 +161,27 @@ async function wireCode(root: ParentNode): Promise<void> {
   const blocks = Array.from(root.querySelectorAll('.audit-code'));
   if (!blocks.length) return;
   const { default: hljs } = await import('highlight.js');
+  const timers = new WeakMap<Element, ReturnType<typeof globalThis.setTimeout>>();
   root.addEventListener('click', (ev) => {
     const btn = (ev.target as Element).closest?.('.audit-code-copy');
-    if (!btn) return;
+    if (!(btn instanceof HTMLElement)) return;
     const code = btn.parentElement?.querySelector('code');
-    if (code && navigator.clipboard) {
-      navigator.clipboard.writeText(code.textContent || '').catch(() => {});
-    }
+    if (!code || !navigator.clipboard) return;
+    const pending = timers.get(btn);
+    if (pending !== undefined) globalThis.clearTimeout(pending);
+    navigator.clipboard
+      .writeText(code.textContent || '')
+      .then(() => {
+        setCopyState(btn, true);
+        timers.set(
+          btn,
+          globalThis.setTimeout(() => {
+            timers.delete(btn);
+            setCopyState(btn, false);
+          }, COPY_DONE_MS),
+        );
+      })
+      .catch(() => {});
   });
   await Promise.all(
     blocks.map(async (block) => {

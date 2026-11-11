@@ -161,4 +161,17 @@ describe('source pins: hero CTAs, fold order and the banner clip fix', () => {
   it('the catalogue section is centred', () => {
     expect(view).toContain('.catalogue-section { text-align: center; }');
   });
+
+  it('the remote pair copy button morphs like every other copy button', () => {
+    // Req 2 covers EVERY copy button: the pair row ships the static Lucide
+    // slot and morphs through setCopyState — no hand-drawn ⧉/✓ spans.
+    expect(view).toContain('data-remote-copy');
+    expect(view).toContain('copy-icon');
+    expect(view).toMatch(/iconSvg\(copy, \{ size: 16 \}\)/);
+    expect(view).toContain('setCopyState');
+    expect(view).toContain('COPY_DONE_MS');
+    expect(view).not.toContain('copy-idle');
+    expect(view).not.toContain('copy-done');
+    expect(view).not.toContain('⧉');
+  });
 });
