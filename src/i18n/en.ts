@@ -558,7 +558,7 @@ export const en = {
       name: 'Language models',
       body:
         'The laboratory works with open and proprietary language models as co-participants: drafting code, reviewing documentation, and running as agents inside <a href="/canopy/">Canopy</a>. Their role is acknowledged, not hidden.',
-      models: ['Muse Spark', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Composer', 'GLM', 'Kimi', 'Mistral'],
+      models: ['Muse', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Grok', 'Composer', 'GLM', 'Kimi', 'MiniMax', 'Mistral', 'LongCat', 'Nemotron'],
     },
     contributors: {
       role: 'Contributors',

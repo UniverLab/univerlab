@@ -554,7 +554,7 @@ export const es: Dict = {
       name: 'Modelos de lenguaje',
       body:
         'El laboratorio trabaja con modelos de lenguaje abiertos y propietarios como copartícipes: redactando código, revisando documentación y ejecutándose como agentes dentro de <a href="/canopy/">Canopy</a>. Su rol se reconoce, no se oculta.',
-      models: ['Muse Spark', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Composer', 'GLM', 'Kimi', 'Mistral'],
+      models: ['Muse', 'MiMo', 'Claude', 'Qwen', 'DeepSeek', 'Gemini', 'GPT', 'Grok', 'Composer', 'GLM', 'Kimi', 'MiniMax', 'Mistral', 'LongCat', 'Nemotron'],
     },
     contributors: {
       role: 'Colaboradores',
