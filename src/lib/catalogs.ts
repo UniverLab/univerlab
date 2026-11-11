@@ -94,6 +94,97 @@ export function readTemplates(root = resolve(process.cwd(), '../texforge-templat
   }
 }
 
+export interface FacetCapability {
+  id: string;
+  tool: string;
+  kind: string;
+  summary: string;
+}
+
+export function parseFacetIndex(toml: string): string[] {
+  const names: string[] = [];
+  let inPackage = false;
+  for (const raw of toml.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (/^\[\[packages\]\]/.test(line)) {
+      inPackage = true;
+      continue;
+    }
+    if (/^\[/.test(line)) {
+      inPackage = false;
+      continue;
+    }
+    if (!inPackage) continue;
+    const m = line.match(/^name\s*=\s*(["'])(.*?)\1/);
+    if (m) names.push(m[2]);
+  }
+  return names;
+}
+
+export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] {
+  let tool = '';
+  let section = '';
+  let cap: Partial<FacetCapability> | null = null;
+  const caps: FacetCapability[] = [];
+  const flush = () => {
+    if (!cap || !cap.id) {
+      cap = null;
+      return;
+    }
+    caps.push({
+      id: cap.id,
+      tool,
+      kind: cap.kind ?? '',
+      summary: cap.summary ?? '',
+    });
+    cap = null;
+  };
+
+  for (const raw of toml.split(/\r?\n/)) {
+    const line = raw.trim();
+    const sectionMatch = line.match(/^\[([^\]]+)\]$/);
+    if (sectionMatch) {
+      flush();
+      section = sectionMatch[1].trim();
+      const capMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)$/);
+      if (capMatch) cap = { id: `${pkg}.${capMatch[1]}` };
+      continue;
+    }
+    const m = line.match(/^([A-Za-z_-]+)\s*=\s*(["'])(.*?)\2/);
+    if (!m) continue;
+    if (!section && m[1] === 'tool_name') tool = m[3];
+    else if (cap && (m[1] === 'summary' || m[1] === 'kind')) {
+      if (m[1] === 'summary') cap.summary = m[3];
+      else cap.kind = m[3];
+    }
+  }
+  flush();
+
+  return caps;
+}
+
+export function readFacetCapabilities(root = resolve(process.cwd(), '../facetmedia-registry')): FacetCapability[] {
+  const indexPath = resolve(root, 'index.toml');
+  if (!existsSync(indexPath)) return [];
+  let names: string[];
+  try {
+    names = parseFacetIndex(readFileSync(indexPath, 'utf-8'));
+  } catch {
+    return [];
+  }
+  const result: FacetCapability[] = [];
+  for (const name of names) {
+    const file = resolve(root, 'packages', name, 'package.toml');
+    if (!existsSync(file)) continue;
+    try {
+      result.push(...parseFacetPackage(readFileSync(file, 'utf-8'), name));
+    } catch {
+      // skip unreadable packages
+    }
+  }
+  return result.sort((a, b) => a.id.localeCompare(b.id));
+}
+
 export function readBoilerplates(root = resolve(process.cwd(), '../ghscaff-boilerplate')): Boilerplate[] {
   if (!existsSync(root)) return [];
   let entries: any[];

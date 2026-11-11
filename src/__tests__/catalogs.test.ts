@@ -6,6 +6,9 @@ import {
   parseBoilerplate,
   readTemplates,
   readBoilerplates,
+  parseFacetIndex,
+  parseFacetPackage,
+  readFacetCapabilities,
 } from '../lib/catalogs';
 
 describe('catalogs — parseTemplateRegistry', () => {
@@ -111,6 +114,66 @@ name = "Project name"
   });
 });
 
+describe('catalogs — parseFacetIndex', () => {
+  it('lists the package names in order', () => {
+    const toml = `version = 1\n\n[[packages]]\nname = "whisper"\n\n[[packages]]\nname = "kokoro"\n`;
+    expect(parseFacetIndex(toml)).toEqual(['whisper', 'kokoro']);
+  });
+
+  it('ignores keys outside [[packages]] blocks', () => {
+    const toml = `version = 1\nname = "not-a-package"\n\n[[packages]]\nname = "kokoro"\n`;
+    expect(parseFacetIndex(toml)).toEqual(['kokoro']);
+  });
+});
+
+describe('catalogs — parseFacetPackage', () => {
+  it('reads tool, kind and summary per capability, skipping subsections', () => {
+    const toml = `name = "kokoro"
+tool_name = "Kokomo"
+facet = "voice"
+
+[capabilities.speak]
+summary = "Narration from text"
+kind = "audio"
+
+[capabilities.speak.inputs.text]
+type = "string"
+
+[capabilities.speak.preview]
+viewer = "audio"
+`;
+    expect(parseFacetPackage(toml, 'kokoro')).toEqual([
+      { id: 'kokoro.speak', tool: 'Kokomo', kind: 'audio', summary: 'Narration from text' },
+    ]);
+  });
+
+  it('keeps an apostrophe inside a double-quoted summary', () => {
+    const toml = `tool_name = "T"\n\n[capabilities.banner]\nsummary = "A text banner in the lab's figlet font (DOS Rebel by default)."\nkind = "text"\n`;
+    expect(parseFacetPackage(toml, 'ascii')).toEqual([
+      {
+        id: 'ascii.banner',
+        tool: 'T',
+        kind: 'text',
+        summary: "A text banner in the lab's figlet font (DOS Rebel by default).",
+      },
+    ]);
+  });
+
+  it('builds one row per capability as <package>.<cap>', () => {
+    const toml = `tool_name = "T"
+
+[capabilities.b]
+summary = "second"
+kind = "text"
+
+[capabilities.a]
+summary = "first"
+kind = "audio"
+`;
+    expect(parseFacetPackage(toml, 'pkg').map((c) => c.id)).toEqual(['pkg.b', 'pkg.a']);
+  });
+});
+
 describe('catalogs — readers', () => {
   it('readTemplates returns [] for a non-existent root', () => {
     const root = resolve(tmpdir(), 'no-such-root-' + Math.random());
@@ -120,6 +183,31 @@ describe('catalogs — readers', () => {
   it('readBoilerplates returns [] for a non-existent root', () => {
     const root = resolve(tmpdir(), 'no-such-root-' + Math.random());
     expect(readBoilerplates(root)).toEqual([]);
+  });
+
+  it('readFacetCapabilities returns [] for a non-existent root', () => {
+    const root = resolve(tmpdir(), 'no-such-root-' + Math.random());
+    expect(readFacetCapabilities(root)).toEqual([]);
+  });
+
+  it('readFacetCapabilities reads the real registry sorted, one row per capability', () => {
+    const caps = readFacetCapabilities();
+    expect(caps.length).toBeGreaterThan(0);
+    expect(caps.map((c) => c.id)).toEqual([...caps.map((c) => c.id)].sort());
+    for (const cap of caps) {
+      expect(cap.id).toMatch(/^[a-z0-9-]+\.[a-z0-9-]+$/);
+      expect(cap.tool.length).toBeGreaterThan(0);
+      expect(cap.kind.length).toBeGreaterThan(0);
+      expect(cap.summary.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('every registry capability resolves to a non-empty page summary', async () => {
+    const { es } = await import('../i18n/es');
+    const summaries = es.experiments.facetmedia.capabilities.summaries;
+    for (const cap of readFacetCapabilities()) {
+      expect(summaries[cap.id] ?? cap.summary).not.toBe('');
+    }
   });
 
   it('readTemplates reads from a temp root', () => {

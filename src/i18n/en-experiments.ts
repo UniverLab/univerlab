@@ -479,9 +479,16 @@ export const experiments = {
       release: 'In development · arrives with 0.1.0b1',
       capabilities: {
         kicker: 'Capabilities ↳',
-        columns: ['No.', 'Capability', 'Facet', 'What it does', 'Verified by'] as string[],
-        rows: [['kokoro.speak', 'voice', 'Narration from a script, on CPU', 'WER ≤ 5 %'], ['whisper.transcribe', 'voice', 'Transcription and timed subtitles', 'confidence / WER'], ['comfy.still / edit', 'image', 'An image from a prompt, or an edit of another', 'size / hash'], ['cad.solid / drawing', 'cad', 'A 3D part and a 2D drawing from a script', 'volume / audit'], ['ffmpeg.normalize', 'audio', 'Loudness and the music bed under the voice', '±1 LU']] as [string, string, string, string][],
+        columns: ['No.', 'Capability', 'Tool', 'Output', 'What it does'] as string[],
+        summaries: {} as Record<string, string>,
       },
+      subproject: {
+        kicker: 'Subproject',
+        name: 'facetmedia-registry',
+        body: 'The table above reads this open registry at build time, one row per capability. When the checkout is missing, the page shows this note instead of an empty table.',
+        link: 'https://github.com/UniverLab/facetmedia-registry',
+      },
+      installNote: 'Runs on Linux and inside WSL on Windows.',
       record: {
         title: '— Every asset leaves its record',
         body: 'Beside every file stays a .facet.json: the capability, the package, the models, the parameters, the check and the licences. Yellow marks what was verified; nothing else carries that colour.',

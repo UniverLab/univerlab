@@ -2,10 +2,14 @@
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
+import { readFacetCapabilities } from '../../lib/catalogs';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['facetmedia'];
 const exp = byId('facetmedia');
+const caps = readFacetCapabilities();
+const summaryFor = (id: string, fallback: string) =>
+  lang === 'es' ? (e.capabilities.summaries[id] ?? fallback) : fallback;
 
 // The record beside every asset, laid out over 10 lines as in the mockup.
 // Yellow (span.ok) marks only what was verified: the status and the metrics.
@@ -29,24 +33,34 @@ const recordHtml = [
     <p class="fm-headline">{e.headline}</p>
     <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{e.facets}</span></p>
     <section class="fm-arch" aria-label={exp.name}>
-      <span class="fm-count">0/{e.capabilities.rows.length}</span>
+      <span class="fm-count">0/{caps.length}</span>
       <a class="fm-more" href="#capacidades">{e.capabilities.kicker}</a>
     </section>
   </Fragment>
 
   <section id="capacidades" class="wrap section fm-index">
-    <div class="fm-row fm-head">
-      {e.capabilities.columns.map((c) => <span>{c}</span>)}
-    </div>
-    {e.capabilities.rows.map((row, i) => (
-      <div class="fm-row">
-        <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
-        <span>{row[0]}</span>
-        <span>{row[1]}</span>
-        <span>{row[2]}</span>
-        <span class="ok">{row[3]}</span>
+    {caps.length > 0 ? (
+      <>
+        <div class="fm-row fm-head">
+          {e.capabilities.columns.map((c) => <span>{c}</span>)}
+        </div>
+        {caps.map((cap, i) => (
+          <div class="fm-row">
+            <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
+            <span translate="no">{cap.id}</span>
+            <span>{cap.tool}</span>
+            <span>{cap.kind}</span>
+            <span>{summaryFor(cap.id, cap.summary)}</span>
+          </div>
+        ))}
+      </>
+    ) : (
+      <div class="sub">
+        <span class="label">{e.subproject.kicker}</span>
+        <h3><a href={e.subproject.link}>{e.subproject.name}</a></h3>
+        <p>{e.subproject.body}</p>
       </div>
-    ))}
+    )}
   </section>
 
   <section class="wrap section fm-record">
@@ -151,6 +165,9 @@ const recordHtml = [
   .fm-record {
     color: var(--surface-ink);
     border-radius: 0;
+  }
+  .fm-record h2 {
+    margin-block: 2.2rem 1rem;
   }
   .fm-record p {
     color: var(--surface-ink-dim);

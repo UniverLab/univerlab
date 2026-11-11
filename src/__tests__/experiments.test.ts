@@ -115,16 +115,22 @@ describe('experiments.ts', () => {
     it('should have valid install commands for experiments that ship binaries', () => {
       // Given: Experiments that have install commands
       const experimentsWithInstall = experiments.filter(exp => exp.install);
-      
+
       // When: We validate each install command
       experimentsWithInstall.forEach(exp => {
         // Then: Install should be defined and have unix command
         expect(exp.install).toBeDefined();
-        expect(exp.install!.unix).toContain('install.univerlab.org');
+        if (exp.id === 'facetmedia') {
+          // facetMedia ships on PyPI, not through the install worker.
+          expect(exp.install!.unix).toBe('uv tool install facetmedia');
+          expect(exp.install!.windows).toBeUndefined();
+        } else {
+          expect(exp.install!.unix).toContain('install.univerlab.org');
 
-        // And: Windows command should also be valid if present
-        if (exp.install!.windows) {
-          expect(exp.install!.windows).toContain('install.univerlab.org');
+          // And: Windows command should also be valid if present
+          if (exp.install!.windows) {
+            expect(exp.install!.windows).toContain('install.univerlab.org');
+          }
         }
       });
     });

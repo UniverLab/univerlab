@@ -18,21 +18,32 @@ const enFm = en.experiments.facetmedia;
 const esFm = es.experiments.facetmedia;
 
 describe('facetmedia EXP-009', () => {
-  it('facetMedia is EXP-009 in beta without an install line', () => {
+  it('facetMedia is EXP-009 in beta with the single uv install line', () => {
     const exp = byId('facetmedia');
     expect(exp.number).toBe('EXP-009');
     expect(exp.status).toBe('beta');
     expect(exp.surface).toBe('facet');
-    expect(exp.install).toBeUndefined();
+    expect(exp.install).toEqual({ unix: 'uv tool install facetmedia' });
   });
 
   it('both dictionaries carry the same facetmedia keys', () => {
     expect(Object.keys(enFm).sort()).toEqual(Object.keys(esFm).sort());
     for (const dict of [enFm, esFm]) {
-      expect(dict.capabilities.rows).toHaveLength(5);
+      expect(dict.capabilities.columns).toHaveLength(5);
       expect(dict.verbs.items).toHaveLength(6);
       expect(dict.faq.items).toHaveLength(5);
     }
+    expect(Object.keys(enFm.capabilities.summaries)).toHaveLength(0);
+    expect(Object.keys(esFm.capabilities.summaries).length).toBeGreaterThan(0);
+    for (const id of Object.keys(esFm.capabilities.summaries)) {
+      expect(id).toContain('.');
+    }
+  });
+
+  it('falls back to the registry English summary without a Spanish text', () => {
+    expect(esFm.capabilities.summaries['kokoro.speak']).toContain('Narración');
+    // The page prefers the Spanish text and falls back to the registry summary.
+    expect(VIEW).toContain('summaries[id] ?? fallback');
   });
 
   it('titles and descriptions fit the SEO limits', () => {
@@ -54,10 +65,19 @@ describe('facetmedia EXP-009', () => {
     expect(ROUTE_ES).toContain('FacetMedia');
   });
 
+  it('reads the capability table from the registry and never ships it empty', () => {
+    expect(VIEW).toContain('readFacetCapabilities');
+    expect(VIEW).toContain('caps.map((cap, i)');
+    expect(VIEW).toContain('caps.length');
+    expect(VIEW).toContain('{e.subproject.kicker}');
+    expect(VIEW).toContain('{e.subproject.body}');
+  });
+
   it('only verified values are yellow', () => {
-    // Last index cell plus exactly the three record values.
-    expect(VIEW).toContain('<span class="ok">{row[3]}</span>');
-    expect(VIEW.match(/class="ok"/g)).toHaveLength(4);
+    // Capability rows carry no .ok: the summary is not a verified value.
+    // The three .ok spans left are exactly the record JSON values.
+    expect(VIEW).not.toContain('<span class="ok">{');
+    expect(VIEW.match(/class="ok"/g)).toHaveLength(3);
     // var(--essence) is used only by .ok.
     expect(VIEW.match(/var\(--essence\)/g)).toHaveLength(1);
   });
