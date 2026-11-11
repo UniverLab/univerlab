@@ -159,7 +159,9 @@ async function wireDiagrams(root: ParentNode): Promise<void> {
 
 async function wireCode(root: ParentNode): Promise<void> {
   const blocks = Array.from(root.querySelectorAll('.audit-code'));
-  if (!blocks.length) return;
+  // Annex file rows reuse the copy button for their SHA-256; the button
+  // copies the `code` in its own row, so it works with no code block.
+  if (!blocks.length && !root.querySelector('.audit-code-copy')) return;
   const { default: hljs } = await import('highlight.js');
   const timers = new WeakMap<Element, ReturnType<typeof globalThis.setTimeout>>();
   root.addEventListener('click', (ev) => {

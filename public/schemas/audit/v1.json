@@ -36,8 +36,13 @@
     },
     "assets": {
       "type": "array",
-      "description": "Asset catalogue: every file the document references, each with an id, a path inside the audit folder, a kind, a title, alt text where it applies, and its size and SHA-256 so the validator can confirm the file.",
+      "description": "Asset catalogue: every file the document references, each with an id, a path inside the audit folder, a kind, a title, alt text where it applies, and its size and SHA-256 so the validator can confirm the file. Annex files are catalogue assets too, referenced by id from the annex.",
       "items": { "$ref": "#/$defs/asset" }
+    },
+    "annexes": {
+      "type": "array",
+      "description": "Optional annexes: described deliverables with instructions, each bundling one or more catalogue asset files and carrying its own visibility. Private annexes stay off the public page and its files answer 404 on the public route.",
+      "items": { "$ref": "#/$defs/annex" }
     },
     "deliverables": {
       "$ref": "#/$defs/deliverables",
@@ -177,9 +182,9 @@
       "type": "object",
       "required": ["id", "path", "kind", "title", "bytes", "sha256"],
       "properties": {
-        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique asset id used by blocks, evidence and deliverables to reference this file." },
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique asset id used by blocks, evidence, deliverables and annexes to reference this file." },
         "path": { "type": "string", "minLength": 1, "description": "File path relative to the audit folder, e.g. 'assets/report.pdf'." },
-        "kind": { "enum": ["pdf", "image", "video", "audio", "data", "code", "archive"], "description": "Asset kind. Media kinds (image, video, audio) require alt text." },
+        "kind": { "type": "string", "minLength": 1, "description": "Asset kind. Conveniences the renderer knows: pdf, image, video, audio, data, code, archive. Media kinds (image, video, audio) require alt text. Any other non-empty kind is valid: the page shows it by file extension and media type." },
         "title": { "type": "string", "minLength": 1, "description": "Human-readable asset title for download cards and captions." },
         "alt": { "type": "string", "minLength": 1, "description": "Alt text for media assets (image, video, audio). Required by the validator for those kinds." },
         "bytes": { "type": "integer", "minimum": 0, "description": "Exact file size in bytes; the validator compares it against the file on disk." },
@@ -211,14 +216,35 @@
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false
     },
+    "annex": {
+      "title": "Annex",
+      "description": "One described annex: a title, a Markdown description, optional Markdown usage instructions, one or more catalogue asset files by id, and its own visibility. Omitted visibility means private: the annex is hidden from the public page and its files answer 404 on the public route.",
+      "type": "object",
+      "required": ["id", "title", "description", "assets"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique annex id referenced by evidence entries and prose as {{annex:id}}." },
+        "title": { "type": "string", "minLength": 1, "description": "Annex title shown in the annexes section." },
+        "description": { "type": "string", "minLength": 1, "description": "What the annex is, as Markdown without raw HTML." },
+        "instructions": { "type": "string", "minLength": 1, "description": "Optional usage instructions as Markdown without raw HTML, e.g. how to run a sandbox." },
+        "assets": {
+          "type": "array",
+          "description": "Catalogue asset ids bundled in this annex; the validator checks each one exists.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "visibility": { "enum": ["public", "private"], "description": "Who sees this annex. Omitted means private: it stays off the public page and its files answer 404 on the public route." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
     "evidence": {
       "title": "Evidence",
-      "description": "One pointer backing a finding: an asset file or a cited source.",
+      "description": "One pointer backing a finding: an asset file, a cited source or a described annex.",
       "type": "object",
       "required": ["type", "id"],
       "properties": {
-        "type": { "enum": ["asset", "source"], "description": "Whether the evidence id names an asset or a source." },
-        "id": { "type": "string", "minLength": 1, "description": "The referenced asset id or source id; the validator checks it exists." }
+        "type": { "enum": ["asset", "source", "annex"], "description": "Whether the evidence id names an asset, a source or an annex." },
+        "id": { "type": "string", "minLength": 1, "description": "The referenced asset id, source id or annex id; the validator checks it exists." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false
@@ -360,7 +386,7 @@
     },
     "proseBlock": {
       "title": "Prose block",
-      "description": "Markdown prose without raw HTML. Inline {{finding:ID}}, {{source:ID}}, {{term:term}} and {{asset:ID}} references become interactive in the renderer.",
+      "description": "Markdown prose without raw HTML. Inline {{finding:ID}}, {{source:ID}}, {{term:term}}, {{asset:ID}} and {{annex:ID}} references become interactive in the renderer.",
       "type": "object",
       "required": ["type", "markdown"],
       "properties": {

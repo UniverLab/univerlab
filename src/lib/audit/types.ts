@@ -36,7 +36,9 @@ export const KNOWN_BLOCK_TYPES = [
 export type KnownBlockType = (typeof KNOWN_BLOCK_TYPES)[number];
 
 export const ASSET_KINDS = ['pdf', 'image', 'video', 'audio', 'data', 'code', 'archive'] as const;
-export type AssetKind = (typeof ASSET_KINDS)[number];
+// Conveniences the renderer knows; any other non-empty kind stays valid and
+// is shown by file extension and media type (see the v1 schema).
+export type AssetKind = (typeof ASSET_KINDS)[number] | (string & {});
 
 export const MEDIA_KINDS: readonly AssetKind[] = ['image', 'video', 'audio'];
 
@@ -53,10 +55,10 @@ export const CALLOUT_TONES = ['info', 'success', 'warning', 'danger'] as const;
 export type CalloutTone = (typeof CALLOUT_TONES)[number];
 
 // Inline prose references the renderer makes interactive: {{finding:F-01}},
-// {{source:owasp}}, {{term:token}} or {{asset:diagram}}.
-export const PROSE_REF = /\{\{(finding|source|term|asset):([^}]+)\}\}/g;
+// {{source:owasp}}, {{term:token}}, {{asset:diagram}} or {{annex:sandbox}}.
+export const PROSE_REF = /\{\{(finding|source|term|asset|annex):([^}]+)\}\}/g;
 
-export type ProseRefKind = 'finding' | 'source' | 'term' | 'asset';
+export type ProseRefKind = 'finding' | 'source' | 'term' | 'asset' | 'annex';
 
 export interface AuditClient {
   name: string;
@@ -128,8 +130,22 @@ export interface AuditCost {
 }
 
 export interface AuditEvidence {
-  type: 'asset' | 'source';
+  type: 'asset' | 'source' | 'annex';
   id: string;
+}
+
+export interface AuditAnnex {
+  id: string;
+  title: string;
+  /** What the annex is, as Markdown without raw HTML. */
+  description: string;
+  /** Optional usage instructions as Markdown, e.g. how to run a sandbox. */
+  instructions?: string;
+  /** Catalogue asset ids bundled in this annex. */
+  assets: string[];
+  /** Who sees this annex. Omitted means private: hidden from the public
+   *  page, and its files answer 404 on the public route. */
+  visibility?: 'public' | 'private';
 }
 
 export interface AuditFinding {
@@ -344,6 +360,7 @@ export interface AuditDocument {
   badge?: AuditBadge;
   cover: AuditCover;
   assets: AuditAsset[];
+  annexes?: AuditAnnex[];
   deliverables: AuditDeliverables;
   findings: AuditFinding[];
   sources: AuditSource[];

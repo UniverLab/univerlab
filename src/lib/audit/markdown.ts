@@ -140,7 +140,23 @@ function blockMarkdown(doc: AuditDocument, slug: string, b: AuditBlock): string 
   }
 }
 
-/** The markdown twin of a published audit. Public only: the caller gates. */
+function annexMarkdown(doc: AuditDocument, slug: string, a: NonNullable<AuditDocument['annexes']>[number]): string {
+  const lang = doc.meta.language;
+  const usage = lang === 'es' ? 'Uso' : 'Usage';
+  const lines = [`### ${a.title}`, '', a.description, ''];
+  if (typeof a.instructions === 'string' && a.instructions !== '') {
+    lines.push(`${usage}: ${a.instructions}`, '');
+  }
+  for (const id of a.assets) {
+    const asset = doc.assets.find((x) => x.id === id);
+    if (!asset) continue;
+    lines.push(`- [${asset.title}](${assetHref(slug, asset.path)})`);
+  }
+  return lines.join('\n');
+}
+
+/** The markdown twin of a published audit. Public only: the caller gates,
+ *  and only public annexes travel with it — a private annex stays out. */
 export function auditMarkdown(doc: AuditDocument, slug: string): string {
   const canonical = `https://univerlab.org${publicAuditUrl(slug)}`;
   const m = doc.meta;
@@ -175,6 +191,10 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
   const findings = doc.findings.length
     ? [lang === 'es' ? '## Hallazgos' : '## Findings', '', ...doc.findings.map((f) => findingMarkdown(doc, f)), '']
     : [];
+  const annexes = (doc.annexes ?? []).filter((a) => a.visibility === 'public');
+  const annexLines = annexes.length
+    ? [lang === 'es' ? '## Anexos' : '## Annexes', '', ...annexes.map((a) => annexMarkdown(doc, slug, a)), '']
+    : [];
   const sources = doc.sources.length
     ? [
         lang === 'es' ? '## Fuentes' : '## Sources',
@@ -189,5 +209,5 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
     ...s.blocks.map((b) => blockMarkdown(doc, slug, b)).filter((x) => x !== ''),
     '',
   ]);
-  return [...head, ...findings, ...sources, ...sections].join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+  return [...head, ...findings, ...annexLines, ...sources, ...sections].join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
 }

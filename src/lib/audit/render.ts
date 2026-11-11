@@ -3,8 +3,8 @@
 // (functions/_middleware.ts) from the validated R2 document.
 import { en } from '../../i18n/en';
 import { es } from '../../i18n/es';
-import { findingEntryHtml, renderBlock, sourcesEntriesHtml, type BlockCtx } from './blocks';
-import { assetById, assetUrl, esc, safeExternalUrl } from './util';
+import { annexEntryHtml, findingEntryHtml, renderBlock, sourcesEntriesHtml, type BlockCtx } from './blocks';
+import { assetById, assetUrl, esc, safeExternalUrl, visibleAnnexes } from './util';
 import { auditBadge, badgeExpired, badgeLinkLabel, badgeSnippet, badgeValidUntil } from './badge';
 import { PUBLIC_AUDIT_BASE } from './markdown';
 import type { AuditDocument, AuditLayout, AuditSection } from './types';
@@ -199,6 +199,7 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
     doc,
     t,
     assetBase: opts.assetBase,
+    published: opts.published !== undefined,
     sec: 0,
     i: 0,
     renderedFindings: new Set<string>(),
@@ -208,9 +209,16 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   const sectionsHtml = doc.sections.map((s, si) => sectionHtml(doc, s, si, ctx)).join('');
   const missingFindings = doc.findings.filter((f) => !ctx.renderedFindings?.has(f.id));
   const missingSources = doc.sources.map((s) => s.id).filter((id) => !ctx.renderedSources?.has(id));
+  // The published page lists only public annexes; the private page lists all.
+  const annexes = visibleAnnexes(doc, Boolean(opts.published));
   const findingsEntries = missingFindings.length
     ? `<section class="audit-auto-findings" aria-label="${esc(t.findings)}"><h2>${esc(t.findings)}</h2>` +
       missingFindings.map((f) => findingEntryHtml(ctx, f)).join('') +
+      `</section>`
+    : '';
+  const annexEntries = annexes.length
+    ? `<section class="audit-auto-annexes" aria-label="${esc(t.annexes)}"><h2>${esc(t.annexes)}</h2>` +
+      annexes.map((a) => annexEntryHtml(ctx, a)).join('') +
       `</section>`
     : '';
   const sourceEntries = missingSources.length
@@ -228,6 +236,7 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
     tocHtml(doc, t) +
     sectionsHtml +
     findingsEntries +
+    annexEntries +
     sourceEntries +
     `</div>`
   );

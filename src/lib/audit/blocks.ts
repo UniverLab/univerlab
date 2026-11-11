@@ -2,11 +2,12 @@
 // (see ./util.ts); unknown block types render as nothing.
 import {
   KNOWN_BLOCK_TYPES,
+  type AuditAnnex,
   type AuditBlock,
   type AuditDocument,
   type AuditFinding,
 } from './types';
-import { assetById, assetUrl, esc, proseRefs, safeExternalUrl } from './util';
+import { assetById, assetUrl, esc, formatBytes, md, proseRefs, safeExternalUrl } from './util';
 import { iconSvg } from '../icon-svg';
 import { copy } from '../icons';
 import type { en } from '../../i18n/en';
@@ -19,6 +20,9 @@ export interface BlockCtx {
   t: AuditStrings;
   /** Route base for asset URLs: `/audits` private, `/workbench/audits` public. */
   assetBase?: string;
+  /** True on the published page: private annexes stay unlinked, like
+   *  unknown targets, so their titles never leak into public markup. */
+  published?: boolean;
   /** Position of the block being rendered, set by the section loop so
    *  heading blocks get stable `audit-h-<sec>-<i>` anchors. */
   sec: number;
@@ -65,6 +69,14 @@ function evidenceList(ctx: BlockCtx, f: AuditFinding): string {
         const label = s ? s.title : e.id;
         return s
           ? `<li><a class="audit-ref" href="#audit-source-${esc(e.id)}">${esc(label)}</a></li>`
+          : `<li>${esc(label)}</li>`;
+      }
+      if (e.type === 'annex') {
+        const a = (ctx.doc.annexes ?? []).find((x) => x.id === e.id);
+        const visible = a && (!ctx.published || a.visibility === 'public');
+        const label = visible ? a.title : e.id;
+        return visible
+          ? `<li><a class="audit-ref" href="#audit-annex-${esc(e.id)}">${esc(label)}</a></li>`
           : `<li>${esc(label)}</li>`;
       }
       const a = assetById(ctx.doc, e.id);
@@ -277,6 +289,39 @@ function sources(ctx: BlockCtx, ids: string[]): string {
 
 export function findingEntryHtml(ctx: BlockCtx, f: AuditFinding): string {
   return findingCard(ctx, f);
+}
+
+/** One annex entry: title, description, usage instructions and its file
+ *  rows with name, size, SHA-256 and a copy button for the hash. */
+export function annexEntryHtml(ctx: BlockCtx, a: AuditAnnex): string {
+  const files = a.assets
+    .map((id) => {
+      const asset = assetById(ctx.doc, id);
+      if (!asset) return '';
+      const file = asset.path.split('/').pop() ?? asset.path;
+      return (
+        `<li class="audit-annex-file">` +
+        `<a href="${esc(assetUrl(ctx.slug, asset.path, ctx.assetBase))}">${esc(asset.title)}</a> ` +
+        `<span class="audit-annex-file-name">${esc(file)}</span> ` +
+        `<span class="audit-annex-size">${esc(formatBytes(asset.bytes))}</span> ` +
+        `<code>${esc(asset.sha256)}</code>` +
+        `<button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
+        `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
+        `</li>`
+      );
+    })
+    .join('');
+  return (
+    `<article class="audit-annex" id="audit-annex-${esc(a.id)}">` +
+    `<h3>${esc(a.title)}</h3>` +
+    md(a.description) +
+    (typeof a.instructions === 'string' && a.instructions !== ''
+      ? `<p class="audit-annex-usage">${esc(ctx.t.annexUsage)}</p>` + md(a.instructions)
+      : '') +
+    (files !== '' ? `<ul class="audit-annex-files">${files}</ul>` : '') +
+    backButton(ctx.t) +
+    `</article>`
+  );
 }
 
 export function sourcesEntriesHtml(ctx: BlockCtx, ids: string[]): string {

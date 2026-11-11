@@ -5,7 +5,6 @@
 // Unknown block types are VALID here (extensionBlock); validate.ts reports
 // them as warnings. Properties prefixed 'x-' are always allowed.
 import {
-  ASSET_KINDS,
   AUDIT_CONTRACT,
   CALLOUT_TONES,
   EFFORTS,
@@ -187,11 +186,29 @@ function checkAsset(ctx: Ctx, v: unknown, path: string): void {
   required(ctx, v, path, 'asset', ['id', 'path', 'kind', 'title', 'bytes', 'sha256']);
   checkOptionalString(ctx, v['id'], `${path}.id`, 'asset id', { pattern: ID_RE });
   checkOptionalString(ctx, v['path'], `${path}.path`, 'asset path');
-  if (v['kind'] !== undefined) checkEnum(ctx, v['kind'], `${path}.kind`, 'asset kind', ASSET_KINDS);
+  // Open kind: the conveniences are known names, but any non-empty kind is valid.
+  checkOptionalString(ctx, v['kind'], `${path}.kind`, 'asset kind');
   checkOptionalString(ctx, v['title'], `${path}.title`, 'asset title');
   checkOptionalString(ctx, v['alt'], `${path}.alt`, 'asset alt text');
   if (v['bytes'] !== undefined) checkInt(ctx, v['bytes'], `${path}.bytes`, 'asset bytes', 0, Number.MAX_SAFE_INTEGER);
   checkOptionalString(ctx, v['sha256'], `${path}.sha256`, 'asset SHA-256', { pattern: SHA_RE });
+}
+
+function checkAnnex(ctx: Ctx, v: unknown, path: string): void {
+  if (!enterObject(ctx, v, path, 'annex', ['id', 'title', 'description', 'instructions', 'assets', 'visibility'])) return;
+  required(ctx, v, path, 'annex', ['id', 'title', 'description', 'assets']);
+  checkOptionalString(ctx, v['id'], `${path}.id`, 'annex id', { pattern: ID_RE });
+  checkOptionalString(ctx, v['title'], `${path}.title`, 'annex title');
+  checkOptionalString(ctx, v['description'], `${path}.description`, 'annex description');
+  checkOptionalString(ctx, v['instructions'], `${path}.instructions`, 'annex instructions');
+  if (v['assets'] !== undefined) {
+    if (!Array.isArray(v['assets']) || v['assets'].length === 0) {
+      err(ctx, `${path}.assets`, 'annex assets must be a non-empty array');
+    } else {
+      v['assets'].forEach((id, i) => checkString(ctx, id, `${path}.assets[${i}]`, `annex asset ${i}`));
+    }
+  }
+  if (v['visibility'] !== undefined) checkEnum(ctx, v['visibility'], `${path}.visibility`, 'annex visibility', ['public', 'private']);
 }
 
 function checkFinding(ctx: Ctx, v: unknown, path: string): void {
@@ -219,7 +236,7 @@ function checkFinding(ctx: Ctx, v: unknown, path: string): void {
       v['evidence'].forEach((e, i) => {
         if (enterObject(ctx, e, `${path}.evidence[${i}]`, 'evidence', ['type', 'id'])) {
           required(ctx, e, `${path}.evidence[${i}]`, 'evidence', ['type', 'id']);
-          if (e['type'] !== undefined) checkEnum(ctx, e['type'], `${path}.evidence[${i}].type`, 'evidence type', ['asset', 'source']);
+          if (e['type'] !== undefined) checkEnum(ctx, e['type'], `${path}.evidence[${i}].type`, 'evidence type', ['asset', 'source', 'annex']);
           checkOptionalString(ctx, e['id'], `${path}.evidence[${i}].id`, 'evidence id');
         }
       });
@@ -463,7 +480,7 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   if (
     !enterObject(ctx, doc, '$', 'audit document', [
       'contract', 'meta', 'visibility', 'access', 'accent', 'badge', 'cover',
-      'assets', 'deliverables', 'findings', 'sources', 'glossary', 'sections',
+      'assets', 'annexes', 'deliverables', 'findings', 'sources', 'glossary', 'sections',
     ])
   ) {
     return ctx;
@@ -516,6 +533,13 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
       err(ctx, '$.assets', 'assets must be an array');
     } else {
       doc['assets'].forEach((a, i) => checkAsset(ctx, a, `$.assets[${i}]`));
+    }
+  }
+  if (doc['annexes'] !== undefined) {
+    if (!Array.isArray(doc['annexes'])) {
+      err(ctx, '$.annexes', 'annexes must be an array');
+    } else {
+      doc['annexes'].forEach((a, i) => checkAnnex(ctx, a, `$.annexes[${i}]`));
     }
   }
   if (doc['deliverables'] !== undefined) {

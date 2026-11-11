@@ -747,6 +747,8 @@ export const es: Dict = {
     downloadPdf: 'Descargar el informe (PDF)',
     downloadBundle: 'Descargar el paquete de archivos',
     findings: 'Hallazgos',
+    annexes: 'Anexos',
+    annexUsage: 'Uso',
     meta: { client: 'Cliente', auditors: 'Auditores', period: 'Periodo', version: 'Versión', status: 'Estado' },
     status: { draft: 'borrador', delivered: 'entregada', final: 'final' },
     filters: { all: 'Todos', severity: 'Severidad', status: 'Estado' },

@@ -419,9 +419,26 @@ async function auditRequestAllowed(
   return auditAllowed(doc, email);
 }
 
+/** The visibility of the annex owning an asset file, when an annex bundles
+ *  it. Omitted annex visibility means private; when several annexes bundle
+ *  the same file, one non-public owner keeps it private. */
+function assetAnnexVisibility(doc: AuditDocument, assetId: string): 'public' | 'private' | null {
+  const annexes = doc.annexes ?? [];
+  let found = false;
+  for (const a of annexes) {
+    if (Array.isArray(a.assets) && a.assets.includes(assetId)) {
+      found = true;
+      if (a.visibility !== 'public') return 'private';
+    }
+  }
+  return found ? 'public' : null;
+}
+
 /** One audit file from R2 (private or public route): the catalogue entry must
  *  match, the `allowed` gate must pass, and the cache headers are the
- *  caller's. Null when the route must answer 404. */
+ *  caller's. Annex files are always downloaded, never rendered in the page,
+ *  and a private annex file answers 404 on the public route. Null when the
+ *  route must answer 404. */
 async function serveAuditAsset(
   env: { AUDITS?: AuditR2Bucket } & AuditAccessEnv,
   request: Request,
@@ -429,6 +446,7 @@ async function serveAuditAsset(
   rest: string,
   cache: Record<string, string>,
   allowed: (doc: AuditDocument) => Promise<boolean>,
+  opts?: { publicRoute?: boolean },
 ): Promise<Response | null> {
   let path = rest;
   try {
@@ -440,6 +458,10 @@ async function serveAuditAsset(
   const entry = doc?.assets.find((a) => a.path === `assets/${path}` || a.path === path) ?? null;
   if (!doc || !entry || !env.AUDITS) return null;
   if (!(await allowed(doc))) return null;
+  const annexVis = assetAnnexVisibility(doc, entry.id);
+  // A private annex never leaks through the public route, even when the
+  // audit itself is public.
+  if (annexVis === 'private' && opts?.publicRoute) return null;
   try {
     const full = await env.AUDITS.get(`${slug}/${entry.path}`);
     if (!full) return null;
@@ -450,6 +472,11 @@ async function serveAuditAsset(
       'ETag': full.etag,
       ...cache,
     };
+    if (annexVis !== null) {
+      const file = (entry.path.split('/').pop() ?? 'file').replace(/["\r\n]/g, '_');
+      headers['Content-Disposition'] = `attachment; filename="${file}"`;
+      headers['X-Content-Type-Options'] = 'nosniff';
+    }
     const range = parseAuditRange(request.headers.get('Range'), full.size);
     if (range) {
       const obj = await env.AUDITS.get(`${slug}/${entry.path}`, { range });
@@ -750,6 +777,7 @@ export async function onRequest(context: {
     if (publicAsset) {
       const res = await serveAuditAsset(env, request, publicAsset[1], publicAsset[2], PUBLIC_AUDIT_CACHE, async (doc) =>
         doc.visibility === 'public',
+        { publicRoute: true },
       );
       if (res) return res;
       return next();

@@ -165,6 +165,26 @@ describe('cross-reference failures', () => {
     expect(errors.find((e) => e.path === '$.assets[1]')?.message).toContain("duplicate asset id 'd1'");
   });
 
+  it('rejects duplicate annex ids', () => {
+    const folder = setup((doc) => {
+      const annex = { id: 'sandbox', title: 'S', description: 'D', assets: ['d1'] };
+      doc['annexes'] = [annex, { ...annex }];
+    });
+    const errors = errorsOf(folder);
+    expect(errors.map((e) => e.path)).toContain('$.annexes[1]');
+    expect(errors.find((e) => e.path === '$.annexes[1]')?.message).toContain("duplicate annex id 'sandbox'");
+  });
+
+  it('rejects an annex pointing at a missing asset', () => {
+    const folder = setup((doc) => {
+      doc['annexes'] = [{ id: 'sandbox', title: 'S', description: 'D', assets: ['ghost'] }];
+    });
+    const errors = errorsOf(folder);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].path).toBe('$.annexes[0].assets[0]');
+    expect(errors[0].message).toContain("unknown asset 'ghost'");
+  });
+
   it('rejects a finding card pointing at a missing finding', () => {
     const folder = setup((doc) => {
       (((doc['sections'] as unknown[])[0] as Record<string, unknown>)['blocks'] as unknown[]) = [{ type: 'finding', findingId: 'F-99' }];

@@ -8,6 +8,7 @@
  * Node rather than jsdom: the middleware is exercised end to end and needs
  * `Request` / `Response`, which jsdom does not ship.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { listPublicAudits, onRequest, publicAuditHistory } from '../../functions/_middleware';
@@ -336,6 +337,129 @@ describe('middleware — published audit page', () => {
     expect((await onRequest(privTwin)).status).toBe(404);
   });
 
+  const ANNEX_SLUG = 'annex-audit';
+  const ZIP_BYTES = Buffer.from('PK\x03\x04sandbox-bytes');
+  const ZIP_SHA = createHash('sha256').update(ZIP_BYTES).digest('hex');
+
+  function annexDoc(): Doc {
+    const doc = publicDoc('es', { issued: recentIssued(), scope: 'Tienda en línea' });
+    (doc['assets'] as Doc[]).push({
+      id: 'sandbox-zip',
+      path: 'assets/sandbox.zip',
+      kind: 'repro-sandbox',
+      title: 'Repro sandbox',
+      bytes: ZIP_BYTES.length,
+      sha256: ZIP_SHA,
+    });
+    doc['annexes'] = [
+      {
+        id: 'open-data',
+        title: 'Datos abiertos',
+        description: 'Datos de mentira.',
+        assets: ['chart-data'],
+        visibility: 'public',
+      },
+      {
+        id: 'closed-box',
+        title: 'Caja cerrada',
+        description: 'Secreto.',
+        instructions: 'No lo abras.',
+        assets: ['sandbox-zip'],
+      },
+    ];
+    return doc;
+  }
+
+  function annexBucket(doc: Doc) {
+    const files = new Map<string, Uint8Array>();
+    files.set(`${ANNEX_SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
+    files.set(`${ANNEX_SLUG}/assets/chart-data.json`, new Uint8Array(readFileSync(join(FIXTURE_DIR, 'assets', 'chart-data.json'))));
+    files.set(`${ANNEX_SLUG}/assets/sandbox.zip`, new Uint8Array(ZIP_BYTES));
+    return {
+      async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
+        const bytes = files.get(key);
+        if (!bytes) return null;
+        let body = bytes;
+        if (opts?.range) {
+          const { offset = 0, length = bytes.length } = opts.range;
+          body = bytes.slice(offset, offset + length);
+        }
+        return {
+          body,
+          size: bytes.length,
+          etag: '"annex-fixture"',
+          httpMetadata: {},
+          text: async () => Buffer.from(bytes).toString('utf8'),
+        };
+      },
+      async list() {
+        return { objects: [...files.keys()].map((key) => ({ key })) };
+      },
+    };
+  }
+
+  function annexContext(pathname: string, opts?: { accept?: string; range?: string; method?: string }) {
+    const headers: Record<string, string> = { Accept: opts?.accept ?? 'text/html' };
+    if (opts?.range) headers['Range'] = opts.range;
+    return {
+      request: new Request(`https://univerlab.org${pathname}`, { method: opts?.method ?? 'GET', headers }),
+      env: {
+        ASSETS: {
+          fetch: jest.fn(async (input: string | Request) => {
+            const url = String(input);
+            if (url.endsWith('/audit-shell/')) return new Response(SHELL, { status: 200 });
+            return new Response('not found', { status: 404 });
+          }),
+        },
+        AUDITS: annexBucket(annexDoc()),
+      },
+      next: jest.fn(async () => new Response('site 404', { status: 404 })),
+    };
+  }
+
+  it('keeps a private annex off the public route but serves it privately, always as a download', async () => {
+    const priv = await onRequest(annexContext(`/workbench/audits/${ANNEX_SLUG}/assets/sandbox.zip`));
+    expect(priv.status).toBe(404);
+
+    const pub = await onRequest(annexContext(`/workbench/audits/${ANNEX_SLUG}/assets/chart-data.json`));
+    expect(pub.status).toBe(200);
+    expect(pub.headers.get('Content-Disposition')).toContain('attachment');
+    expect(pub.headers.get('X-Content-Type-Options')).toBe('nosniff');
+
+    const range = await onRequest(annexContext(`/workbench/audits/${ANNEX_SLUG}/assets/chart-data.json`, { range: 'bytes=0-3' }));
+    expect(range.status).toBe(206);
+    expect(range.headers.get('Content-Disposition')).toContain('attachment');
+    expect(range.headers.get('X-Content-Type-Options')).toBe('nosniff');
+
+    const direct = await onRequest(annexContext(`/audits/${ANNEX_SLUG}/assets/sandbox.zip`));
+    expect(direct.status).toBe(200);
+    expect(direct.headers.get('Content-Disposition')).toContain('attachment');
+    expect(direct.headers.get('X-Content-Type-Options')).toBe('nosniff');
+  });
+
+  it('lists only the public annex on the published page and in the twin', async () => {
+    const page = await onRequest(annexContext(`/workbench/audits/${ANNEX_SLUG}/`));
+    const body = await page.text();
+    expect(page.status).toBe(200);
+    expect(body).toContain('Anexos');
+    expect(body).toContain('id="audit-annex-open-data"');
+    expect(body).toContain('Datos abiertos');
+    expect(body).not.toContain('audit-annex-closed-box');
+    expect(body).not.toContain('Caja cerrada');
+
+    const twin = await onRequest(annexContext(`/workbench/audits/${ANNEX_SLUG}/index.md`));
+    const mdText = await twin.text();
+    expect(twin.status).toBe(200);
+    const fi = mdText.indexOf('## Hallazgos');
+    const ai = mdText.indexOf('## Anexos');
+    const si = mdText.indexOf('## Fuentes');
+    expect(fi).toBeGreaterThanOrEqual(0);
+    expect(ai).toBeGreaterThan(fi);
+    expect(si).toBeGreaterThan(ai);
+    expect(mdText).toContain('Datos abiertos');
+    expect(mdText).not.toContain('Caja cerrada');
+  });
+
   it('answers 404 for the shell asked directly', async () => {
     expect((await onRequest(context('/audit-shell/'))).status).toBe(404);
     expect((await onRequest(context('/audit-shell'))).status).toBe(404);
@@ -392,6 +516,50 @@ describe('published audit renderer', () => {
     const plain = auditPageHtml(badged('es'), 'tienda');
     expect(plain).not.toContain('audit-published');
     expect(plain).toContain('/audits/tienda/assets/report.pdf');
+  });
+
+  it('shows only public annexes on the published page, all of them privately', () => {
+    const base = publicDoc('es', { issued: '2026-06-15', scope: 'Tienda' });
+    base['annexes'] = [
+      { id: 'open-data', title: 'Datos abiertos', description: 'D.', assets: ['chart-data'], visibility: 'public' },
+      { id: 'closed-box', title: 'Caja cerrada', description: 'S.', assets: ['figure-svg'] },
+    ];
+    const doc = asAuditDocument(base);
+    const priv = auditPageHtml(doc, 'tienda');
+    expect(priv).toContain('id="audit-annex-open-data"');
+    expect(priv).toContain('id="audit-annex-closed-box"');
+    const pub = auditPageHtml(doc, 'tienda', {
+      assetBase: PUBLIC_AUDIT_BASE,
+      published: { previous: null, next: [] },
+    });
+    expect(pub).toContain('Anexos');
+    expect(pub).toContain('id="audit-annex-open-data"');
+    expect(pub).toContain('/workbench/audits/tienda/assets/chart-data.json');
+    expect(pub).not.toContain('audit-annex-closed-box');
+    expect(pub).not.toContain('Caja cerrada');
+  });
+
+  it('hides private annex references from evidence and prose on the published page', () => {
+    const base = publicDoc('es', { issued: '2026-06-15', scope: 'Tienda' });
+    base['annexes'] = [
+      { id: 'open-data', title: 'Datos abiertos', description: 'D.', assets: ['chart-data'], visibility: 'public' },
+      { id: 'closed-box', title: 'Caja cerrada', description: 'S.', assets: ['figure-svg'] },
+    ];
+    const findings = base['findings'] as Doc[];
+    (findings[0]['evidence'] as unknown[]).push({ type: 'annex', id: 'closed-box' });
+    const firstSection = (base['sections'] as Doc[])[0];
+    const prose = ((firstSection['blocks'] as Doc[]).find((b) => typeof b['markdown'] === 'string') as Doc);
+    prose['markdown'] = `${prose['markdown']} Ver {{annex:closed-box}}.`;
+    const doc = asAuditDocument(base);
+    const pub = auditPageHtml(doc, 'tienda', {
+      assetBase: PUBLIC_AUDIT_BASE,
+      published: { previous: null, next: [] },
+    });
+    expect(pub).not.toContain('Caja cerrada');
+    expect(pub).not.toContain('audit-annex-closed-box');
+    const priv = auditPageHtml(doc, 'tienda');
+    expect(priv).toContain('href="#audit-annex-closed-box"');
+    expect(priv).toContain('Caja cerrada');
   });
 
   it('marks an expired badge on the page', () => {

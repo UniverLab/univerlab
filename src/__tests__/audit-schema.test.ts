@@ -16,6 +16,7 @@ import {
   SEVERITIES,
 } from '../lib/audit/types.ts';
 import { AUDIT_SCHEMA_URL, loadAuditSchema } from '../lib/audit/schema.ts';
+import { validateAuditDocument } from '../lib/audit/validate-document.ts';
 
 const schema = loadAuditSchema() as Record<string, unknown>;
 const defs = (schema['$defs'] ?? {}) as Record<string, Record<string, unknown>>;
@@ -76,7 +77,6 @@ describe('audit schema identity', () => {
     const enums = new Set<string>();
     collectEnums(schema, enums);
     for (const t of LAYOUT_TYPES) expect(enums.has(t)).toBe(true);
-    for (const k of ASSET_KINDS) expect(enums.has(k)).toBe(true);
     for (const s of SEVERITIES) expect(enums.has(s)).toBe(true);
     for (const s of FINDING_STATUSES) expect(enums.has(s)).toBe(true);
     for (const e of EFFORTS) expect(enums.has(e)).toBe(true);
@@ -93,7 +93,6 @@ describe('audit schema identity', () => {
     const exact: [string, readonly string[], string[]][] = [
       ['layout.type', LAYOUT_TYPES, ['$defs', 'layout', 'properties', 'type', 'enum']],
       ['layout.ratio', LAYOUT_RATIOS, ['$defs', 'layout', 'properties', 'ratio', 'enum']],
-      ['asset.kind', ASSET_KINDS, ['$defs', 'asset', 'properties', 'kind', 'enum']],
       ['finding.severity', SEVERITIES, ['$defs', 'finding', 'properties', 'severity', 'enum']],
       ['finding.status', FINDING_STATUSES, ['$defs', 'finding', 'properties', 'status', 'enum']],
       ['finding.effort', EFFORTS, ['$defs', 'finding', 'properties', 'effort', 'enum']],
@@ -104,7 +103,7 @@ describe('audit schema identity', () => {
       ['meta.language', ['es', 'en'], ['$defs', 'meta', 'properties', 'language', 'enum']],
       ['meta.status', ['draft', 'delivered', 'final'], ['$defs', 'meta', 'properties', 'status', 'enum']],
       ['accent', ['lab', 'experiment'], ['properties', 'accent', 'enum']],
-      ['evidence.type', ['asset', 'source'], ['$defs', 'evidence', 'properties', 'type', 'enum']],
+      ['evidence.type', ['asset', 'source', 'annex'], ['$defs', 'evidence', 'properties', 'type', 'enum']],
       ['extensionBlock excludes the catalogue', KNOWN_BLOCK_TYPES, ['$defs', 'extensionBlock', 'properties', 'type', 'not', 'enum']],
     ];
     for (const [name, expected, path] of exact) {
@@ -149,6 +148,27 @@ describe('audit contract fixture', () => {
     };
     expect(doc.meta.title.toLowerCase()).toContain('fixture');
     expect(doc.meta.client.name.toLowerCase()).toContain('fixture');
+  });
+
+  it('keeps asset.kind open with the conveniences named, never a closed enum', () => {
+    const kind = ((defs['asset'] as Record<string, unknown>)['properties'] as Record<string, Record<string, unknown>>)['kind'];
+    expect(kind['type']).toBe('string');
+    expect(kind['enum']).toBeUndefined();
+    for (const k of ASSET_KINDS) expect(kind['description']).toContain(k);
+  });
+
+  it('accepts an unknown asset kind with an annexed catalogue file', () => {
+    const doc = JSON.parse(readFileSync(join(dir, 'audit.json'), 'utf8')) as Record<string, unknown>;
+    const assets = doc['assets'] as Record<string, unknown>[];
+    const data = assets.find((a) => a['id'] === 'chart-data')!;
+    data['kind'] = 'repro-sandbox';
+    doc['annexes'] = [{
+      id: 'sandbox',
+      title: 'Repro sandbox',
+      description: 'Runs the finding.',
+      assets: [data['id']],
+    }];
+    expect(validateAuditDocument(doc).errors).toEqual([]);
   });
 
   it('is never published as a page', () => {

@@ -49,6 +49,7 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
   const assets = uniqueIds(errors, asArray(doc['assets']), '$.assets', 'asset', idOf);
   const findings = uniqueIds(errors, asArray(doc['findings']), '$.findings', 'finding', idOf);
   const sources = uniqueIds(errors, asArray(doc['sources']), '$.sources', 'source', idOf);
+  const annexes = uniqueIds(errors, asArray(doc['annexes']), '$.annexes', 'annex', idOf);
   uniqueIds(errors, asArray(doc['sections']), '$.sections', 'section', idOf);
   const glossaryItems = asArray(doc['glossary']);
   const terms = new Set<string>();
@@ -122,7 +123,18 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
     }
   }
 
-  // Finding evidence resolves to an asset or a source.
+  // Annex files name catalogue assets by id.
+  asArray(doc['annexes']).forEach((a, i) => {
+    if (!isRecord(a)) return;
+    const base = `$.annexes[${i}]`;
+    asArray(a['assets']).forEach((id, k) => {
+      if (typeof id === 'string' && id !== '' && !assets.has(id)) {
+        errors.push({ path: `${base}.assets[${k}]`, message: `unknown asset '${id}'` });
+      }
+    });
+  });
+
+  // Finding evidence resolves to an asset, a source or an annex.
   asArray(doc['findings']).forEach((f, i) => {
     if (!isRecord(f)) return;
     asArray(f['evidence']).forEach((e, j) => {
@@ -136,11 +148,15 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
         if (typeof e['id'] === 'string' && e['id'] !== '' && !sources.has(e['id'])) {
           errors.push({ path: `${base}.id`, message: `unknown source '${e['id']}'` });
         }
+      } else if (e['type'] === 'annex') {
+        if (typeof e['id'] === 'string' && e['id'] !== '' && !annexes.has(e['id'])) {
+          errors.push({ path: `${base}.id`, message: `unknown annex '${e['id']}'` });
+        }
       }
     });
   });
 
-  // Prose references resolve to a finding, source, glossary term or asset.
+  // Prose references resolve to a finding, source, glossary term, asset or annex.
   const checkProseRefs = (markdown: unknown, path: string): void => {
     if (typeof markdown !== 'string') return;
     PROSE_REF.lastIndex = 0;
@@ -152,6 +168,7 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
       if (kind === 'source' && !sources.has(ref)) errors.push({ path: at, message: `unknown source '${ref}'` });
       if (kind === 'term' && !terms.has(ref)) errors.push({ path: at, message: `unknown glossary term '${ref}'` });
       if (kind === 'asset' && !assets.has(ref)) errors.push({ path: at, message: `unknown asset '${ref}'` });
+      if (kind === 'annex' && !annexes.has(ref)) errors.push({ path: at, message: `unknown annex '${ref}'` });
     }
     PROSE_REF.lastIndex = 0;
   };

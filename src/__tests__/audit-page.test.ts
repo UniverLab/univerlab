@@ -175,6 +175,48 @@ describe('middleware — audit page', () => {
     expect(body).toContain('id="audit-data"');
   });
 
+  it('lists annexes between findings and sources, referenced like evidence', async () => {
+    const doc = fixtureDoc();
+    for (const s of (doc['sections'] as Doc[])) {
+      s['blocks'] = ((s['blocks'] as Doc[]) ?? []).filter((b) => b['type'] !== 'sources');
+    }
+    doc['annexes'] = [{
+      id: 'sandbox',
+      title: 'Repro sandbox',
+      description: 'Runs the finding end to end.',
+      instructions: 'Run `sh repro.sh`.',
+      assets: ['chart-data'],
+    }];
+    const findings = doc['findings'] as Doc[];
+    (findings[0]['evidence'] as unknown[]).push({ type: 'annex', id: 'sandbox' });
+    const overview = ((doc['sections'] as Doc[])[0]['blocks'] as Doc[])[1];
+    overview['markdown'] = `${overview['markdown']} See {{annex:sandbox}}.`;
+    const ctx = context(`/audits/${SLUG}/`, { audits: makeAudits(doc) });
+    const res = await onRequest(ctx);
+    const body = await res.text();
+
+    expect(res.status).toBe(200);
+    const fi = body.indexOf('audit-auto-findings');
+    const ai = body.indexOf('audit-auto-annexes');
+    const si = body.indexOf('audit-auto-sources');
+    expect(fi).toBeGreaterThanOrEqual(0);
+    expect(ai).toBeGreaterThan(0);
+    expect(si).toBeGreaterThan(0);
+    expect(fi).toBeLessThan(ai);
+    expect(ai).toBeLessThan(si);
+    expect(body).toContain('id="audit-annex-sandbox"');
+    expect(body).toContain('Repro sandbox');
+    expect(body).toContain('Runs the finding end to end.');
+    expect(body).toContain('Usage');
+    expect(body).toContain(`href="/audits/${SLUG}/assets/chart-data.json"`);
+    expect(body).toContain('class="audit-annex-file-name">chart-data.json<');
+    const chart = (doc['assets'] as Doc[]).find((a) => a['id'] === 'chart-data')!;
+    expect(body).toContain(chart['sha256'] as string);
+    expect(body).toContain('class="audit-annex-size"');
+    expect(body).toContain('Copy');
+    expect(body).toContain('href="#audit-annex-sandbox"');
+  });
+
   it('carries no-store, noindex and the audit title', async () => {
     const { res, body } = await pageBody();
 

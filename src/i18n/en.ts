@@ -753,6 +753,8 @@ export const en = {
     downloadPdf: 'Download the report (PDF)',
     downloadBundle: 'Download the asset bundle',
     findings: 'Findings',
+    annexes: 'Annexes',
+    annexUsage: 'Usage',
     meta: { client: 'Client', auditors: 'Auditors', period: 'Period', version: 'Version', status: 'Status' },
     status: { draft: 'draft', delivered: 'delivered', final: 'final' },
     filters: { all: 'All', severity: 'Severity', status: 'Status' },
