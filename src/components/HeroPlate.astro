@@ -22,17 +22,18 @@ const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
 </div>
 
 <style>
-  .hero-plate { position: absolute; inset-block: 1rem; right: var(--page-gutter); left: 40%; z-index: 0; pointer-events: none; --hp-base-a: 0.38; }
-  .hp { position: absolute; top: 50%; right: 0; height: min(100%, 640px); max-width: 100%; transform: translateY(-50%); }
+  .hero-plate { position: absolute; inset-block: 1rem; left: 0; right: 0; margin-inline: auto; max-width: 72rem; z-index: 0; pointer-events: none; --hp-base-a: 0.38; }
+  .hp { position: absolute; top: 0; right: var(--space); left: auto; height: min(100%, 560px); max-width: 58%; }
   .hp > * { position: absolute; inset: 0; width: 100%; height: 100%; }
   /* The page ground painted through the machine's filled silhouette: the live background never shows inside the machine. */
   .hp-ground { background: var(--bg); -webkit-mask: var(--hp-mask) center / 100% 100% no-repeat; mask: var(--hp-mask) center / 100% 100% no-repeat; }
-  .hp-plate { -webkit-mask-image: radial-gradient(circle 230px at var(--mx, -9999px) var(--my, -9999px), #000 40%, rgba(0, 0, 0, var(--hp-base-a)) 100%); mask-image: radial-gradient(circle 230px at var(--mx, -9999px) var(--my, -9999px), #000 40%, rgba(0, 0, 0, var(--hp-base-a)) 100%); }
-  .hp-light { background: radial-gradient(circle 140px at var(--mx, -9999px) var(--my, -9999px), var(--essence), transparent 100%); opacity: 0.55; -webkit-mask: var(--hp-ink) center / 100% 100% no-repeat; mask: var(--hp-ink) center / 100% 100% no-repeat; }
+  .hp-plate { -webkit-mask-image: radial-gradient(ellipse 150px 120px at var(--mx, -9999px) var(--my, -9999px), #000 0%, rgba(0, 0, 0, 0.82) 30%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, var(--hp-base-a)) 100%); mask-image: radial-gradient(ellipse 150px 120px at var(--mx, -9999px) var(--my, -9999px), #000 0%, rgba(0, 0, 0, 0.82) 30%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, var(--hp-base-a)) 100%); }
+  .hp-light { background: radial-gradient(ellipse 90px 70px at var(--mx, -9999px) var(--my, -9999px), color-mix(in srgb, var(--essence) 70%, transparent) 0%, color-mix(in srgb, var(--essence) 25%, transparent) 55%, transparent 100%); opacity: 0.35; -webkit-mask: var(--hp-ink) center / 100% 100% no-repeat; mask: var(--hp-ink) center / 100% 100% no-repeat; }
   :global(html[data-bench-theme='night']) .hero-plate[data-pair] .hp-day { display: none; }
   :global(html:not([data-bench-theme='night'])) .hero-plate[data-pair] .hp-night { display: none; }
   @media (max-width: 39.999rem) {
     .hero-plate { inset-block: 0.5rem auto; height: 320px; left: 30%; right: 0; --hp-base-a: 0.28; }
+    .hp { right: 0; }
   }
 </style>
 

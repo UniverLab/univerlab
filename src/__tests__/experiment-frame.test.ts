@@ -1,6 +1,6 @@
 /**
- * Experiment frame (lab strip, caption block, terminal bench, floating machine)
- * and DemoStage's removals — source guards plus i18n keys. No network.
+ * Experiment frame (lab strip, caption block, terminal bench) and
+ * DemoStage's removals — source guards plus i18n keys. No network.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -89,50 +89,10 @@ describe('experiment frame: terminal bench', () => {
   });
 });
 
-describe('experiment frame: floating machine', () => {
-  it('renders the engraved plate through the Machine component', () => {
-    expect(layout).toContain('<Machine');
-    expect(layout).toContain('machineInk(exp)');
-    expect(layout).toContain('class="hero-machine"');
-    expect(layout).toContain('height="240px"');
-  });
-
-  it('renders no plate for archived pages', () => {
-    expect(layout).toContain("exp.status !== 'archived'");
-  });
-
-  it('drops the clip, its recolouring and its play-on-visible script', () => {
-    expect(layout).not.toContain('<video');
-    expect(layout).not.toContain('/bench/clips/${id}.mp4');
-    expect(layout).not.toContain('mix-blend-mode');
-    expect(layout).not.toContain('invert(100%)');
-    expect(layout).not.toContain('new IntersectionObserver');
-    expect(layout).not.toContain('io.observe(hero)');
-    expect(layout).not.toContain('v.preload');
-  });
-
-  it('sits beside the hero, not inside it, with room kept at the frame foot', () => {
-    // The hero carries a view-transition-name, making it an isolated group:
-    // the plate stays a sibling so it never blends against a transparent hero.
-    const frame = layout.indexOf('hero-frame');
-    const section = layout.indexOf('<section class="wrap hero"');
-    const sectionEnd = layout.indexOf('</section>', section);
-    const machine = layout.indexOf('<Machine');
-    expect(frame).toBeGreaterThan(-1);
-    expect(section).toBeGreaterThan(frame);
-    expect(machine).toBeGreaterThan(sectionEnd);
-    expect(layout).toContain('.hero-frame { position: relative; }');
-    expect(layout).toContain('has-machine');
-    expect(layout).toContain('padding-bottom: calc(240px + 2.5rem)');
-  });
-
-  it('floats the plate lower-right on wide screens, static on phones', () => {
-    expect(layout).toContain(':global(.hero-machine)');
-    expect(layout).toContain('right: var(--page-gutter)');
-    expect(layout).toContain('bottom: 1.5rem');
-    const phone = layout.slice(layout.indexOf('@media (max-width: 39.999rem)'));
-    expect(phone).toContain('position: static');
-    expect(phone).toContain('margin-bottom: 1.5rem');
+describe('experiment frame: no floating machine', () => {
+  it('has no floating-machine markup, classes or rules', () => {
+    expect(layout).not.toContain('hero-machine');
+    expect(layout).not.toContain('has-machine');
   });
 });
 

@@ -4,7 +4,6 @@ import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
 import HeroPlate from '../components/HeroPlate.astro';
-import Machine from '../components/Machine.astro';
 import { machineInk } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
@@ -23,8 +22,7 @@ const hasHeroMark = Astro.slots.has('hero-mark');
 const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
 const surface = exp.surface;
-const heroPlate = exp.status !== 'archived' && !hideMachine && exp.surface !== 'observatory';
-const floatingMachine = exp.status !== 'archived' && !hideMachine && exp.surface === 'observatory';
+const heroPlate = exp.status !== 'archived' && !hideMachine;
 
 // Cyclical prev/next so you can browse experiments without going back home.
 const idx = liveExperiments.findIndex((x) => x.id === id);
@@ -93,7 +91,7 @@ const ogImage = `/og/${id}.png`;
       <span>{exp.number}</span>
     </p>
     {Astro.slots.has('site-nav') && <slot name="site-nav" />}
-    <div class:list={['hero-frame', { 'has-machine': floatingMachine }]}>
+    <div class="hero-frame">
     {heroPlate && <HeroPlate id={id} ink={machineInk(exp)} />}
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
       {hasHeroMark && <slot name="hero-mark" />}
@@ -139,9 +137,6 @@ const ogImage = `/og/${id}.png`;
         </div>
       )}
     </section>
-    {floatingMachine && (
-      <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
-    )}
     </div>
 
     <LabPlate id={id} />
@@ -352,38 +347,6 @@ const ogImage = `/og/${id}.png`;
   .install .cmd-line { color: #ecebe4; }
   .doi-badge { margin: 1rem 0 0; text-align: center; align-self: stretch; }
   .doi-badge img { display: inline-block; height: 20px; width: auto; }
-  /* The machine is an engraved plate with a transparent ground, already
-     inked for its surface: no recolouring, it shows as engraved. */
-  @media (min-width: 40rem) {
-    :global(.hero-machine) {
-      position: absolute;
-      right: var(--page-gutter);
-      bottom: 1.5rem;
-    }
-    /* The machine floats in the hero's lower right, under the install bench,
-       not over it: the hero keeps the room the machine needs at its foot. */
-    .hero-frame.has-machine { padding-bottom: calc(240px + 2.5rem); }
-  }
-  /* The observatory's hero is a left-aligned column with no install bench:
-     the telescope stands in the empty sky to its right, not in a band of its
-     own under the hero. */
-  @media (min-width: 64rem) {
-    :global(html[data-surface='observatory']) .hero-frame.has-machine { padding-bottom: 0; }
-    :global(html[data-surface='observatory'] .hero-machine) {
-      top: 50%;
-      bottom: auto;
-      right: max(var(--page-gutter), calc((100% - 72rem) / 2 + 6rem));
-      transform: translateY(-50%);
-    }
-  }
-  /* On phones the plate is static under the hero; Machine.astro centres it
-     (display: block, width: fit-content, margin-inline: auto). */
-  @media (max-width: 39.999rem) {
-    :global(.hero-machine) {
-      position: static;
-      margin-bottom: 1.5rem;
-    }
-  }
   .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .os-tabs { display: inline-flex; gap: 0.9rem; }
   .os-tab {

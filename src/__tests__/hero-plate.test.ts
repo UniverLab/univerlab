@@ -19,7 +19,7 @@ describe('hero plate: mask helper', () => {
   });
 
   it('every live hero plate has both silhouettes', () => {
-    const plates = experiments.filter((e) => e.status !== 'archived' && e.surface !== 'observatory');
+    const plates = experiments.filter((e) => e.status !== 'archived');
     expect(plates.length).toBeGreaterThan(0);
     for (const e of plates) {
       expect(() => plateMask(e.id, 'day')).not.toThrow();
@@ -29,12 +29,10 @@ describe('hero plate: mask helper', () => {
 });
 
 describe('hero plate: layout wiring', () => {
-  it("the layout sets the plate behind the hero and keeps the observatory machine", () => {
+  it('the layout sets the plate behind the hero with no floating machine', () => {
     expect(LAYOUT).toContain('<HeroPlate');
-    expect(LAYOUT).toContain("exp.surface === 'observatory'");
-    expect(LAYOUT).toContain('class="hero-machine"');
     expect(LAYOUT).toContain('.hero-frame > .hero { position: relative; z-index: 1; }');
-    expect(LAYOUT).not.toContain("'has-machine': exp.status !== 'archived'");
+    expect(LAYOUT).not.toContain('hero-machine');
   });
 });
 
@@ -45,5 +43,16 @@ describe('hero plate: ground and light', () => {
     expect(PLATE).toContain('pointerIn(');
     expect(PLATE).toContain('prefers-reduced-motion');
     expect(PLATE).toContain('var(--essence)');
+  });
+});
+
+describe('hero plate: column geometry and soft light', () => {
+  it('lives inside the content column with small elliptical masks', () => {
+    expect(PLATE).toContain('max-width: 72rem');
+    expect(PLATE).toContain('margin-inline: auto');
+    expect(PLATE).toContain('ellipse 150px 120px');
+    expect(PLATE).toContain('ellipse 90px 70px');
+    expect(PLATE).not.toContain('circle 230px');
+    expect(PLATE).not.toContain('circle 140px');
   });
 });
