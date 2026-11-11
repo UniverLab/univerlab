@@ -11,6 +11,10 @@ import {
 } from '../src/lib/today-edition';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
+import { validateAuditDocument } from '../src/lib/audit/validate-document';
+import { auditPageHtml } from '../src/lib/audit/render';
+import { esc } from '../src/lib/audit/escape';
+import type { AuditDocument } from '../src/lib/audit/types';
 
 const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4']);
 
@@ -127,9 +131,108 @@ async function liveStatusTwin(lang: Lang): Promise<string> {
   }
 }
 
+/** The R2 surface the audit routes need: reads only, never writes. */
+interface AuditR2Object {
+  body: ReadableStream | Uint8Array | string | null;
+  size: number;
+  etag: string;
+  httpMetadata?: { contentType?: string };
+  text(): Promise<string>;
+}
+
+interface AuditR2Bucket {
+  get(
+    key: string,
+    opts?: { range?: { offset?: number; length?: number } },
+  ): Promise<(AuditR2Object & { range?: { offset: number; length: number } }) | null>;
+}
+
+const AUDIT_PAGE_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/?$/;
+const AUDIT_ASSET_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/assets\/(.+)$/;
+const AUDIT_TWIN_RE = /^\/audits\/[^/]+\/index\.md$/;
+
+const AUDIT_NO_STORE: Record<string, string> = {
+  'Cache-Control': 'private, no-store',
+  'X-Robots-Tag': 'noindex',
+};
+
+function auditContentType(path: string): string {
+  const ext = path.split('.').pop()!.toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'svg': return 'image/svg+xml';
+    case 'png': return 'image/png';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'webp': return 'image/webp';
+    case 'gif': return 'image/gif';
+    case 'avif': return 'image/avif';
+    case 'mp4': return 'video/mp4';
+    case 'webm': return 'video/webm';
+    case 'mp3': return 'audio/mpeg';
+    case 'ogg': return 'audio/ogg';
+    case 'wav': return 'audio/wav';
+    case 'json': return 'application/json; charset=utf-8';
+    case 'zip': return 'application/zip';
+    default: return 'application/octet-stream';
+  }
+}
+
+/** Catalogue paths become both R2 keys and public URLs; keep them plain
+ *  relative paths so `/audits/<slug>/assets/` cannot be escaped. */
+function safeAuditAssetPath(path: string): boolean {
+  if (path.startsWith('/') || path.includes('\\')) return false;
+  return path.split('/').every((s) => s !== '' && s !== '.' && s !== '..');
+}
+
+/** A public, valid audit document, or null when the route must answer 404:
+ *  no binding, no file, invalid JSON, a contract violation or anything but
+ *  `visibility: 'public'`. Private audits answer as if they did not exist. */
+async function loadPublicAudit(
+  env: { AUDITS?: AuditR2Bucket },
+  slug: string,
+): Promise<AuditDocument | null> {
+  try {
+    if (!env.AUDITS) return null;
+    const obj = await env.AUDITS.get(`${slug}/audit.json`);
+    if (!obj) return null;
+    const doc = JSON.parse(await obj.text()) as AuditDocument;
+    if (validateAuditDocument(doc).errors.length > 0) return null;
+    if (typeof doc !== 'object' || doc === null || doc.visibility !== 'public') return null;
+    if (!doc.assets.every((a) => safeAuditAssetPath(a.path))) return null;
+    return doc;
+  } catch {
+    return null;
+  }
+}
+
+/** `bytes=start-end`, `bytes=start-` or a `bytes=-suffix` tail. Null means
+ *  no usable range: serve the whole file. */
+function parseAuditRange(header: string | null, size: number): { offset: number; length: number } | null {
+  if (!header) return null;
+  const m = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!m || (m[1] === '' && m[2] === '')) return null;
+  let start: number;
+  let end: number;
+  if (m[1] === '') {
+    const tail = parseInt(m[2], 10);
+    if (!(tail > 0)) return null;
+    start = Math.max(0, size - tail);
+    end = size - 1;
+  } else {
+    start = parseInt(m[1], 10);
+    end = m[2] === '' ? size - 1 : parseInt(m[2], 10);
+  }
+  if (!(start < size) || end < start) return null;
+  return { offset: start, length: Math.min(end, size - 1) - start + 1 };
+}
+
 export async function onRequest(context: {
   request: Request;
-  env: { ASSETS: { fetch: (input: string | Request) => Promise<Response> } };
+  env: {
+    ASSETS: { fetch: (input: string | Request) => Promise<Response> };
+    AUDITS?: AuditR2Bucket;
+  };
   next: () => Promise<Response>;
 }): Promise<Response> {
   const { request, env, next } = context;
@@ -142,6 +245,109 @@ export async function onRequest(context: {
   if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
 
   const accept = request.headers.get('Accept');
+
+  // Audits render at request time from the private R2 bucket, never from the
+  // repo — and never as a markdown twin. This runs before the twin logic.
+  if (AUDIT_TWIN_RE.test(pathname)) return next();
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const page = !wantsMarkdown(accept) ? AUDIT_PAGE_RE.exec(pathname) : null;
+    if (page) {
+      const slug = page[1];
+      const doc = await loadPublicAudit(env, slug);
+      if (!doc) return next();
+      const url = new URL(request.url);
+      const shell = await env.ASSETS.fetch(new URL('/audits/', url.origin).href);
+      if (!shell.ok) return next();
+      const html = auditPageHtml(doc, slug);
+      const lang = doc.meta.language;
+      const title = `${doc.meta.title} — UniverLab`;
+      const desc = doc.meta.subtitle || doc.meta.title;
+      const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
+      let res: Response;
+      if (typeof RW === 'function') {
+        const rewriter = new (RW as new () => {
+          on(s: string, h: unknown): unknown;
+          transform(r: Response): Response;
+        })();
+        const rw = rewriter as unknown as {
+          on(s: string, h: unknown): void;
+          transform(r: Response): Response;
+        };
+        rw.on('html', {
+          element(el: { setAttribute(n: string, v: string): void }) {
+            el.setAttribute('lang', lang);
+          },
+        });
+        rw.on('title', {
+          element(el: { setInnerContent(c: string, o: unknown): void }) {
+            el.setInnerContent(title, { html: false });
+          },
+        });
+        rw.on('meta[name="description"]', {
+          element(el: { setAttribute(n: string, v: string): void }) {
+            el.setAttribute('content', desc);
+          },
+        });
+        rw.on('#audit', {
+          element(el: { setInnerContent(c: string, o: unknown): void }) {
+            el.setInnerContent(html, { html: true });
+          },
+        });
+        res = rw.transform(shell);
+      } else {
+        const shellText = await shell.text();
+        res = new Response(
+          shellText
+            .replace(/<html([^>]*)>/, (_m, attrs: string) =>
+              `<html${String(attrs).replace(/\s*lang="[^"]*"/, '')} lang="${lang}">`)
+            .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
+            .replace(/(<meta name="description" content=")[^"]*(")/, `$1${esc(desc)}$2`)
+            .replace('<div id="audit"></div>', `<div id="audit">${html}</div>`),
+          { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+        );
+      }
+      for (const [k, v] of Object.entries(AUDIT_NO_STORE)) res.headers.set(k, v);
+      return res;
+    }
+    const asset = AUDIT_ASSET_RE.exec(pathname);
+    if (asset) {
+      const slug = asset[1];
+      let rest = asset[2];
+      try {
+        rest = decodeURIComponent(rest);
+      } catch {
+        // A malformed escape cannot name a catalogue path; leave it encoded.
+      }
+      const doc = await loadPublicAudit(env, slug);
+      const entry = doc?.assets.find((a) => a.path === `assets/${rest}` || a.path === rest) ?? null;
+      if (!doc || !entry || !env.AUDITS) return next();
+      try {
+        const full = await env.AUDITS.get(`${slug}/${entry.path}`);
+        if (!full) return next();
+        const type = full.httpMetadata?.contentType || auditContentType(entry.path);
+        const headers: Record<string, string> = {
+          'Content-Type': type,
+          'Accept-Ranges': 'bytes',
+          'ETag': full.etag,
+          ...AUDIT_NO_STORE,
+        };
+        const range = parseAuditRange(request.headers.get('Range'), full.size);
+        if (range) {
+          const obj = await env.AUDITS.get(`${slug}/${entry.path}`, { range });
+          if (!obj) return next();
+          headers['Content-Range'] = `bytes ${range.offset}-${range.offset + range.length - 1}/${full.size}`;
+          headers['Content-Length'] = String(range.length);
+          return new Response(obj.body as BodyInit, { status: 206, headers });
+        }
+        headers['Content-Length'] = String(full.size);
+        return new Response(full.body as BodyInit, { status: 200, headers });
+      } catch {
+        return next();
+      }
+    }
+  } else if (AUDIT_PAGE_RE.test(pathname) || AUDIT_ASSET_RE.test(pathname)) {
+    return next();
+  }
 
   // Roadmap HTML: fetch the static page, then swap the lanes for a live render.
   if (!wantsMarkdown(accept) && (pathname === '/roadmap' || pathname === '/roadmap/')) {

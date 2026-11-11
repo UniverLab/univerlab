@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<!-- Audit shell: the built HTML holds only the container — the edge fills
+     #audit at request time from the R2 document (functions/_middleware.ts),
+     and the client script hydrates the interactive blocks. `noindex` because
+     audit pages are never indexed (see astro.config.mjs SITEMAP_EXCLUDED). -->
+<BaseLayout title="Audit — UniverLab" description="A UniverLab audit." circadian noindex>
+  <link rel="stylesheet" href="/audits/audit.css" />
+  <div class="wrap audit-page">
+    <div id="audit"></div>
+  </div>
+
+  <script>
+    import { initAuditPage } from '../../lib/audit/client';
+    initAuditPage();
+  </script>
+</BaseLayout>
