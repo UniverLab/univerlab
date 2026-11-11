@@ -19,6 +19,16 @@ describe('Header experiments link', () => {
     expect(expIdx).toBeLessThan(manifestoIdx);
   });
 
+  it('links the Workbench nav entry after People and before GitHub', () => {
+    const p = src.indexOf('t.nav.people');
+    const w = src.indexOf('t.nav.workbench');
+    const g = src.indexOf('t.nav.github');
+    expect(p).toBeGreaterThan(-1);
+    expect(w).toBeGreaterThan(p);
+    expect(g).toBeGreaterThan(w);
+    expect(src).toContain("href: localizePath('/workbench', lang)");
+  });
+
   it('renders <a href="/experiments/"> in English and <a href="/es/experiments/"> in Spanish', () => {
     // The one nav entry builds its href from localizePath('/experiments', lang)
     // (asserted above), so the anchor the shared header renders per language is…

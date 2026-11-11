@@ -12,6 +12,7 @@ const VIEW = readFileSync(resolve(__dirname, '../views/Workbench.astro'), 'utf8'
 const ROUTE = readFileSync(resolve(__dirname, '../pages/workbench.astro'), 'utf8');
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/workbench.astro'), 'utf8');
 const FOOTER = readFileSync(resolve(__dirname, '../components/Footer.astro'), 'utf8');
+const HOME = readFileSync(resolve(__dirname, '../views/Home.astro'), 'utf8');
 
 describe('workbench', () => {
   it('both languages carry the same workbench keys', () => {
@@ -114,6 +115,16 @@ describe('workbench', () => {
     expect(en.workbench.policy.summary).toContain('Ley 1480 de 2011');
     expect(es.workbench.policy.summary).toContain('24');
     expect(es.workbench.policy.summary).toContain('Ley 1480 de 2011');
+  });
+
+  it('the home page carries a workbench strip linking the workbench', () => {
+    for (const d of [en, es]) {
+      expect(Object.keys((d as typeof en).home.workbench).sort()).toEqual(['kicker', 'link', 'text']);
+      expect(d.home.workbench.kicker.length).toBeGreaterThan(0);
+      expect(d.home.workbench.text.length).toBeGreaterThan(0);
+      expect(d.home.workbench.link.length).toBeGreaterThan(0);
+    }
+    expect(HOME).toContain("localizePath('/workbench', lang)");
   });
 
   it('the view links the terms anchor instead of printing the full list', () => {

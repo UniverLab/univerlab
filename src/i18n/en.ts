@@ -147,6 +147,11 @@ export const en = {
       title: 'The lab’s lantern',
     },
     lanternLink: 'See them projected in the lantern →',
+    workbench: {
+      kicker: 'The Workbench',
+      text: 'The tools are open; the hands that built them can be booked. A free 15-minute call, then consultations, audits and agentic flows built for you.',
+      link: 'Visit the Workbench →',
+    },
     about: {
       kicker: 'About the lab',
     },

@@ -56,6 +56,12 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
       <p class="lantern-link"><a href={localizePath('/experiments/', lang)}>{t.home.lanternLink}</a></p>
     </section>
 
+    <section class="wrap section home-bench" aria-labelledby="t-bench">
+      <span class="label">{t.home.workbench.kicker}</span>
+      <p id="t-bench" class="home-bench-text">{t.home.workbench.text}</p>
+      <a class="btn" href={localizePath('/workbench', lang)}>{t.home.workbench.link}</a>
+    </section>
+
     <!-- About the lab: the former hero, now below the plate. -->
     <section class="wrap section two-col about">
       <div>
@@ -197,6 +203,8 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
                  color: var(--bench-line-soft); }
   .enc-intro { max-width: 42rem; margin: 0 auto 1.5rem; text-align: center; color: var(--ink-dim); }
   .lantern-link { text-align: center; margin: 2rem 0 0; font-family: var(--font-mono); font-size: 0.85rem; }
+  .home-bench { display: grid; gap: 0.9rem; justify-items: start; border-block: 1px solid var(--line); padding-block: 2rem; }
+  .home-bench-text { margin: 0; max-width: 46rem; font-family: var(--font-serif); font-size: 1.25rem; line-height: 1.45; }
 
   /* ── Separators ───────────────────────────────────────────────────────── */
   .sep { color: var(--bench-line); margin-block: 2.25rem; }

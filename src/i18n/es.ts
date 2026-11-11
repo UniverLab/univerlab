@@ -145,6 +145,11 @@ export const es: Dict = {
       title: 'La linterna del laboratorio',
     },
     lanternLink: 'Verlos proyectados en la linterna →',
+    workbench: {
+      kicker: 'El Banco de trabajo',
+      text: 'Las herramientas son abiertas; las manos que las construyeron se pueden reservar. Una llamada gratis de 15 minutos, luego consultas, auditorías y flujos agénticos a tu medida.',
+      link: 'Ir al Banco de trabajo →',
+    },
     about: {
       kicker: 'Acerca del laboratorio',
     },
