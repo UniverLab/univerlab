@@ -75,8 +75,11 @@ describe('DOI badge', () => {
 
   it('the layout renders the badge only when declared', () => {
     const layout = readFileSync(resolve(REPO, 'src/layouts/ExperimentLayout.astro'), 'utf8');
-    expect(layout).toContain('exp.citation?.badge &&');
-    expect(layout).toContain('class="doi-badge"');
+    expect(layout).toContain('(exp.citation || release) &&');
+    expect(layout).toContain('class="seal"');
     expect(layout).toContain('https://doi.org/${exp.citation.doi}');
+    expect(layout).toContain('release.version');
+    expect(layout).toContain('class="seal-key"');
+    expect(layout).not.toContain('<img src={exp.citation.badge}');
   });
 });
