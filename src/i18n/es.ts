@@ -88,6 +88,7 @@ export const es: Dict = {
     },
     // Solo en páginas de experimento: la línea de créditos sobre el sello.
     forged: 'Artefacto concebido y forjado en UniverLab',
+    operator: 'UniverLab es operado por Jheison Martinez Bolivar, Colombia.',
     privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
   },
   common: {
