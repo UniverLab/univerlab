@@ -81,6 +81,14 @@ export function plateSizes(p: Plate): string {
   return `(min-width: 40rem) ${wide}px, ${narrow}px`;
 }
 
+/** Per-experiment plate placement: vertical nudge and base strength.
+ *  astro-denoise sits a little lower and less transparent than the default;
+ *  every other experiment takes the shared defaults. */
+export function plateTuning(exp: Pick<Experiment, 'id'>): { offset?: string; alpha?: string } {
+  if (exp.id === 'astro-denoise') return { offset: '1.25rem', alpha: '0.55' };
+  return {};
+}
+
 /** Which ink an experiment's hero plate takes. Circadian surfaces follow the
  *  bench theme; the light surfaces take the day ink; everything else — dark
  *  grounds, including the studio — takes the night ink. */

@@ -6,7 +6,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { plateMask } from '../lib/machines';
+import { plateMask, plateTuning } from '../lib/machines';
 import { experiments } from '../lib/experiments';
 
 const LAYOUT = readFileSync(resolve(__dirname, '../layouts/ExperimentLayout.astro'), 'utf8');
@@ -43,6 +43,35 @@ describe('hero plate: ground and light', () => {
     expect(PLATE).toContain('pointerIn(');
     expect(PLATE).toContain('prefers-reduced-motion');
     expect(PLATE).toContain('var(--essence)');
+  });
+});
+
+describe('hero plate: aspect-ratio geometry', () => {
+  it('sizes the plate from its own ratio, never by stretching the box', () => {
+    expect(PLATE).toContain('container-type: inline-size');
+    expect(PLATE).toContain('--hp-wcap: 58cqw');
+    expect(PLATE).toContain('calc(var(--hp-wcap) * var(--hp-inv))');
+    expect(PLATE).toContain('--hp-inv:');
+    expect(PLATE).toContain('center / contain');
+    expect(PLATE).toContain('z-index: -1');
+    expect(PLATE).not.toContain('max-width: 58%');
+    expect(PLATE).not.toContain('100% 100% no-repeat');
+  });
+
+  it('caps the narrow plate in viewport units', () => {
+    expect(PLATE).toContain('--hp-wcap: 88vw');
+  });
+
+  it('tunes astro-denoise lower and stronger, nothing else', () => {
+    expect(plateTuning({ id: 'astro-denoise' })).toEqual({ offset: '1.25rem', alpha: '0.55' });
+    expect(plateTuning({ id: 'canopy' })).toEqual({});
+    expect(plateTuning({ id: 'facetmedia' })).toEqual({});
+  });
+
+  it('renders the plate inside the hero as its first child', () => {
+    expect(LAYOUT.indexOf('<HeroPlate')).toBeGreaterThan(LAYOUT.indexOf('class="wrap hero"'));
+    expect(LAYOUT).toContain('offset={tuning.offset}');
+    expect(LAYOUT).toContain('alpha={tuning.alpha}');
   });
 });
 

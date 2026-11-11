@@ -4,7 +4,7 @@ import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
 import HeroPlate from '../components/HeroPlate.astro';
-import { machineInk } from '../lib/machines';
+import { machineInk, plateTuning } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
 import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
@@ -23,6 +23,7 @@ const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
 const surface = exp.surface;
 const heroPlate = exp.status !== 'archived' && !hideMachine;
+const tuning = plateTuning(exp);
 
 // Cyclical prev/next so you can browse experiments without going back home.
 const idx = liveExperiments.findIndex((x) => x.id === id);
@@ -92,8 +93,8 @@ const ogImage = `/og/${id}.png`;
     </p>
     {Astro.slots.has('site-nav') && <slot name="site-nav" />}
     <div class="hero-frame">
-    {heroPlate && <HeroPlate id={id} ink={machineInk(exp)} />}
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
+      {heroPlate && <HeroPlate id={id} ink={machineInk(exp)} offset={tuning.offset} alpha={tuning.alpha} />}
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}{id === 'quorum' && (<>{' · '}<a href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.experiments.quorum.bench}</a></>)}</p>
@@ -253,9 +254,11 @@ const ogImage = `/og/${id}.png`;
   .lab-strip a:hover { color: var(--essence); }
 
   /* Hero */
-  /* The machine is a sibling of the hero, not a child: the hero's view
-     transition name makes it an isolated group, and a blend inside it has no
-     page behind it to mix with. The frame is the machine's containing block. */
+  /* The machine is the hero's first child at z-index -1: a negative-z child
+     paints over the hero ground but under the hero content, so the plate
+     shows through even where the hero background is opaque. The hero keeps
+     its stacking context (position + z-index 1) so the plate never slips
+     behind the page itself. */
   .hero-frame { position: relative; }
   .hero-frame > .hero { position: relative; z-index: 1; }
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }

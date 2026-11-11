@@ -44,9 +44,11 @@ describe('facetmedia EXP-009', () => {
     }
   });
 
-  it('the page renders the arch with the plate and hides the floating machine', () => {
-    expect(VIEW).toContain('hideMachine');
-    expect(VIEW).toContain('<Machine id="facetmedia"');
+  it('the page shows the shared hero plate and keeps its own arch', () => {
+    expect(VIEW).not.toContain('hideMachine');
+    expect(VIEW).not.toContain('<Machine');
+    expect(VIEW).not.toContain("from '../../components/Machine.astro'");
+    expect(VIEW).toContain('class="fm-arch"');
     expect(VIEW).toContain('id="capacidades"');
     expect(ROUTE).toContain('FacetMedia');
     expect(ROUTE_ES).toContain('FacetMedia');

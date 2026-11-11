@@ -1,6 +1,5 @@
 ---
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
-import Machine from '../../components/Machine.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
 const lang = getLang(Astro.url);
@@ -24,13 +23,12 @@ const recordHtml = [
 ].join('\n');
 ---
 
-<ExperimentLayout id="facetmedia" hideMachine>
+<ExperimentLayout id="facetmedia">
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <Fragment slot="hero-visual">
     <p class="fm-headline">{e.headline}</p>
     <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{e.facets}</span></p>
     <section class="fm-arch" aria-label={exp.name}>
-      <Machine id="facetmedia" ink="night" height="360px" />
       <span class="fm-count">0/{e.capabilities.rows.length}</span>
       <a class="fm-more" href="#capacidades">{e.capabilities.kicker}</a>
     </section>
