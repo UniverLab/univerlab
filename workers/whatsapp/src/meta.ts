@@ -116,7 +116,6 @@ interface SendEnv {
   WA_ACCESS_TOKEN: string;
   WA_PHONE_NUMBER_ID: string;
 }
-
 export async function sendText(env: SendEnv, to: string, body: string): Promise<boolean> {
   const res = await fetch(`${GRAPH}/${env.WA_PHONE_NUMBER_ID}/messages`, {
     method: 'POST',
@@ -127,6 +126,45 @@ export async function sendText(env: SendEnv, to: string, body: string): Promise<
     body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body } }),
   });
   return res.ok;
+}
+
+/** Forward an image or document to a chat: upload the bytes, then send the
+ *  returned media id. Resolves to false when the upload fails, carries no
+ *  id, or the send fails. */
+export async function sendMedia(
+  env: SendEnv,
+  to: string,
+  kind: 'image' | 'document',
+  bytes: Uint8Array,
+  mime: string,
+  filename: string,
+  fetchFn: typeof fetch = fetch
+): Promise<boolean> {
+  try {
+    const form = new FormData();
+    form.append('file', new Blob([bytes], { type: mime }), filename);
+    form.append('messaging_product', 'whatsapp');
+    const up = await fetchFn(`${GRAPH}/${env.WA_PHONE_NUMBER_ID}/media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.WA_ACCESS_TOKEN}` },
+      body: form,
+    });
+    if (!up.ok) return false;
+    const data = (await up.json()) as { id?: unknown };
+    if (!data || typeof data.id !== 'string' || !data.id) return false;
+    const media = kind === 'image' ? { id: data.id } : { id: data.id, filename };
+    const res = await fetchFn(`${GRAPH}/${env.WA_PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.WA_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: kind, [kind]: media }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function postRead(env: SendEnv, messageId: string, withTyping: boolean): Promise<boolean> {

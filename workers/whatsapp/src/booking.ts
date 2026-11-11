@@ -20,6 +20,24 @@ export interface BookingState {
   phone: string;
   name: string;
   brief: string[];
+  /** The vision model's reading of the client's payment proof, if any. */
+  proof?: PaymentProof;
+}
+
+/** What the vision model extracted from a payment receipt. The agent
+ *  never confirms a payment by itself: this only briefs the operator. */
+export interface PaymentProof {
+  /** False when the model returned nothing usable. */
+  readable: boolean;
+  amount: number | null;
+  currency: string;
+  date: string;
+  method: string;
+  reference: string;
+  payee: string;
+  /** '' when the proof matches, else one of unreadable, no-amount,
+   *  bad-currency, amount-mismatch, payee-mismatch. */
+  flag: string;
 }
 
 export const OFFER: Record<Lang, string> = {

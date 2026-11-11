@@ -51,13 +51,15 @@ the Worker as `WORKBENCH_CALENDAR_ID` and `BOOKING_CONFIG`.
   "payments": {
     "es": "Bre-B en Colombia o PayPal desde el exterior",
     "en": "Bre-B in Colombia or PayPal from abroad"
-  }
+  },
+  "payee": "Laboratorio UniverLab"
 }
 ```
 
 `windows` are `[startHour, endHour)` pairs in Bogota wall time;
 `payments` overrides the sentence telling the client how to pay
-(Bre-B in Colombia, PayPal from abroad).
+(Bre-B in Colombia, PayPal from abroad); `payee` names the expected
+recipient of the payment, matched against the name on the receipt.
 
 Consultations are created as holds whose title starts with
 `[Por confirmar]`; the operator confirms by removing that prefix in
@@ -104,6 +106,26 @@ To switch, set them and re-run the deploy workflow:
 gh variable set WA_VOICE_MODEL --env production --body '@cf/openai/whisper-large-v3-turbo'
 gh variable set WA_VOICE_MODEL_OPTIONS --env production --body '{}'
 gh variable set WA_VOICE_MAX_SECONDS --env production --body '180'
+gh workflow run deploy-whatsapp.yml --ref main
+```
+
+Payment proofs (configuration, not code): when a client with a held
+consultation sends an image or a PDF, a vision model on Cloudflare
+Workers AI reads the receipt and the agent forwards the file to
+OPERATOR_PHONE next to the extraction (amount, date, method, reference,
+payee), flagging any mismatch against the expected price (COP 150,000,
+USD 45 over PayPal) and the `payee` above. The client is told a person
+checks it; the agent never confirms a payment by itself. Receipts from
+clients without a held booking keep today's handoff. The `production`
+environment's variables `WA_PROOF_MODEL` and `WA_PROOF_MODEL_OPTIONS`
+(a JSON object merged into the request) reach the Worker as
+`PROOF_MODEL` and `PROOF_MODEL_OPTIONS`. Unset, it uses
+`@cf/meta/llama-3.2-11b-vision-instruct`. To switch, set them and
+re-run the deploy workflow:
+
+```sh
+gh variable set WA_PROOF_MODEL --env production --body '@cf/meta/llama-3.2-11b-vision-instruct'
+gh variable set WA_PROOF_MODEL_OPTIONS --env production --body '{}'
 gh workflow run deploy-whatsapp.yml --ref main
 ```
 

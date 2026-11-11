@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { markRead, parseInbound, verifySignature } from '../src/meta';
+import { markRead, parseInbound, sendMedia, verifySignature } from '../src/meta';
 
 const SEND_ENV = { WA_ACCESS_TOKEN: 'token', WA_PHONE_NUMBER_ID: 'phone-id' };
 
@@ -140,4 +140,66 @@ test('ignores status updates and malformed payloads', () => {
   for (const bad of [{}, null, 'x', 42, []]) {
     expect(parseInbound(bad)).toEqual([]);
   }
+});
+
+test('sendMedia uploads the bytes and sends the returned media id', async () => {
+  const fetchFn = jest.fn(async (url: unknown) => {
+    if (String(url).endsWith('/media')) {
+      return { ok: true, json: async () => ({ id: 'mid-1' }) };
+    }
+    return { ok: true, json: async () => ({}) };
+  });
+  const bytes = new TextEncoder().encode('receipt');
+  await expect(
+    sendMedia(SEND_ENV, '15551234567', 'image', bytes, 'image/jpeg', 'comprobante.jpg', fetchFn as never)
+  ).resolves.toBe(true);
+  expect(fetchFn).toHaveBeenCalledTimes(2);
+  expect(String(fetchFn.mock.calls[0][0])).toBe('https://graph.facebook.com/v25.0/phone-id/media');
+  const upload = fetchFn.mock.calls[0][1] as { body: unknown };
+  expect(upload.body).toBeInstanceOf(FormData);
+  const sent = JSON.parse(String((fetchFn.mock.calls[1][1] as { body: string }).body));
+  expect(sent).toMatchObject({
+    to: '15551234567',
+    type: 'image',
+    image: { id: 'mid-1' },
+  });
+});
+
+test('sendMedia sends documents with their filename', async () => {
+  const fetchFn = jest.fn(async (url: unknown) => {
+    if (String(url).endsWith('/media')) {
+      return { ok: true, json: async () => ({ id: 'mid-2' }) };
+    }
+    return { ok: true, json: async () => ({}) };
+  });
+  const bytes = new TextEncoder().encode('receipt');
+  await expect(
+    sendMedia(SEND_ENV, '15551234567', 'document', bytes, 'application/pdf', 'comprobante.pdf', fetchFn as never)
+  ).resolves.toBe(true);
+  const sent = JSON.parse(String((fetchFn.mock.calls[1][1] as { body: string }).body));
+  expect(sent).toMatchObject({
+    type: 'document',
+    document: { id: 'mid-2', filename: 'comprobante.pdf' },
+  });
+});
+
+test('sendMedia is false when the upload or send fails', async () => {
+  const bytes = new TextEncoder().encode('receipt');
+  const down = jest.fn(async () => ({ ok: false }));
+  await expect(sendMedia(SEND_ENV, 'to', 'image', bytes, 'image/jpeg', 'f.jpg', down as never)).resolves.toBe(false);
+  const noId = jest.fn(async () => ({ ok: true, json: async () => ({}) }));
+  await expect(sendMedia(SEND_ENV, 'to', 'image', bytes, 'image/jpeg', 'f.jpg', noId as never)).resolves.toBe(false);
+  const sendFails = jest.fn(async (url: unknown) => {
+    if (String(url).endsWith('/media')) {
+      return { ok: true, json: async () => ({ id: 'mid-3' }) };
+    }
+    return { ok: false, json: async () => ({}) };
+  });
+  await expect(
+    sendMedia(SEND_ENV, 'to', 'image', bytes, 'image/jpeg', 'f.jpg', sendFails as never)
+  ).resolves.toBe(false);
+  const throws = jest.fn(async () => {
+    throw new Error('down');
+  });
+  await expect(sendMedia(SEND_ENV, 'to', 'image', bytes, 'image/jpeg', 'f.jpg', throws as never)).resolves.toBe(false);
 });

@@ -18,6 +18,7 @@ jest.mock(
 
 jest.mock('../src/meta', () => ({
   sendText: jest.fn(async () => true),
+  sendMedia: jest.fn(async () => true),
   markRead: jest.fn(async () => true),
 }));
 
@@ -58,6 +59,11 @@ jest.mock('../src/intake', () => ({
   },
 }));
 
+jest.mock('../src/proof', () => {
+  const actual = jest.requireActual('../src/proof') as Record<string, unknown>;
+  return { ...actual, readProof: jest.fn() };
+});
+
 jest.mock('../src/schedule', () => ({
   bookingConfig: jest.fn(() => ({
     windows: [
@@ -97,6 +103,7 @@ import { ERASED, retentionDeadline } from '../src/erase';
 import { burstConfig } from '../src/env';
 import { burstDue, joinBurst, nextAlarm } from '../src/burst';
 import { decide } from '../src/booking';
+import { readProof } from '../src/proof';
 import { accessToken, deleteEvent, freeBusy, getEvent, listEvents } from '../src/google';
 import { Conversation } from '../src/conversation';
 
@@ -125,19 +132,19 @@ let nowMs = T0;
 
 function makeCtx() {
   const state = new Map<string, string>();
-  const rows: Array<{ id: string; at: number; role: string; type: string; text: string | null }> = [];
+  const rows: Array<{ id: string; at: number; role: string; type: string; text: string | null; mediaId: string | null; mime: string | null }> = [];
   const sql = {
     exec: jest.fn((query: string, ...params: unknown[]) => {
       if (query.startsWith('SELECT 1 FROM messages WHERE id')) {
         const found = rows.some((r) => r.id === params[0]);
         return { toArray: () => (found ? [1] : []) };
       }
-      if (query.startsWith('SELECT id, at, type, text FROM messages WHERE role')) {
+      if (query.startsWith('SELECT id, at, type, text, media_id, mime FROM messages WHERE role')) {
         return {
           toArray: () =>
             rows
               .filter((r) => r.role === 'user')
-              .map((r) => ({ id: r.id, at: r.at, type: r.type, text: r.text })),
+              .map((r) => ({ id: r.id, at: r.at, type: r.type, text: r.text, media_id: r.mediaId, mime: r.mime })),
         };
       }
       if (query.startsWith('SELECT role, text FROM messages WHERE text IS NOT NULL')) {
@@ -157,6 +164,8 @@ function makeCtx() {
           role: String(params[2]),
           type: String(params[3]),
           text: params[4] as string | null,
+          mediaId: (params[5] as string | null) ?? null,
+          mime: (params[6] as string | null) ?? null,
         });
         return { toArray: () => [] };
       }
@@ -221,6 +230,8 @@ beforeEach(() => {
   (listEvents as jest.Mock).mockResolvedValue([]);
   // A voice note hands off unless the test transcribes it.
   (transcribe as jest.Mock).mockResolvedValue({ ok: false });
+  // A receipt falls back to today's handoff unless the test reads it.
+  (readProof as jest.Mock).mockResolvedValue(null);
 });
 
 afterEach(() => {

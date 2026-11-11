@@ -169,3 +169,14 @@ test('a 60-minute service never overflows its window', () => {
     expect(inWindow).toBe(true);
   }
 });
+
+test('parses the expected payee and trims it', () => {
+  const cfg = bookingConfig({ BOOKING_CONFIG: JSON.stringify({ payee: '  Laboratorio UniverLab  ' }) });
+  expect(cfg.payee).toBe('Laboratorio UniverLab');
+});
+
+test('an absent or blank payee stays unset', () => {
+  expect(bookingConfig({}).payee).toBeUndefined();
+  expect(bookingConfig({ BOOKING_CONFIG: JSON.stringify({ payee: '   ' }) }).payee).toBeUndefined();
+  expect(bookingConfig({ BOOKING_CONFIG: JSON.stringify({ payee: 42 }) }).payee).toBeUndefined();
+});

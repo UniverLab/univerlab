@@ -12,6 +12,8 @@ export interface Env {
   VOICE_MODEL?: string;
   VOICE_MODEL_OPTIONS?: string;
   VOICE_MAX_SECONDS?: string;
+  PROOF_MODEL?: string;
+  PROOF_MODEL_OPTIONS?: string;
   BURST_QUIET_MS?: string;
   BURST_MAX_MS?: string;
   GOOGLE_CLIENT_ID?: string;

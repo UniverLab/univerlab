@@ -3,6 +3,7 @@ import type { Env } from './env';
 import { burstConfig } from './env';
 import { burstDue, joinBurst, nextAlarm, type BurstState } from './burst';
 import { markRead, sendText, type Inbound } from './meta';
+import { isProofMedia, proofConfig, readProof } from './proof';
 import { transcribe, voiceConfig, VOICE_HANDOFF } from './audio';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
 import {
@@ -106,9 +107,16 @@ export class Conversation extends DurableObject<Env> {
         role TEXT NOT NULL,
         type TEXT NOT NULL,
         text TEXT,
-        media_id TEXT
+        media_id TEXT,
+        mime TEXT
       )
     `);
+    try {
+      // Columns outlive the code that added them: old objects gain mime here.
+      this.ctx.storage.sql.exec('ALTER TABLE messages ADD COLUMN mime TEXT');
+    } catch {
+      /* the column already exists */
+    }
     this.ctx.storage.sql.exec(`
       CREATE TABLE IF NOT EXISTS state (
         key TEXT PRIMARY KEY,
@@ -848,13 +856,14 @@ export class Conversation extends DurableObject<Env> {
       }
     }
     this.ctx.storage.sql.exec(
-      'INSERT INTO messages (id, at, role, type, text, media_id) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO messages (id, at, role, type, text, media_id, mime) VALUES (?, ?, ?, ?, ?, ?, ?)',
       m.id,
       m.timestamp,
       'user',
       m.type,
       m.text ?? null,
-      m.mediaId ?? null
+      m.mediaId ?? null,
+      m.mime ?? null
     );
     const retention = alarmAt(m.timestamp);
     this.state('retention', String(retention));
@@ -958,10 +967,10 @@ export class Conversation extends DurableObject<Env> {
 
   private burstRows(
     ids: string[]
-  ): Array<{ id: string; at: number; type: string; text: string | null }> {
+  ): Array<{ id: string; at: number; type: string; text: string | null; media_id: string | null; mime: string | null }> {
     const rows = this.ctx.storage.sql
-      .exec("SELECT id, at, type, text FROM messages WHERE role = 'user' ORDER BY at ASC, rowid ASC")
-      .toArray() as Array<{ id: string; at: number; type: string; text: string | null }>;
+      .exec("SELECT id, at, type, text, media_id, mime FROM messages WHERE role = 'user' ORDER BY at ASC, rowid ASC")
+      .toArray() as Array<{ id: string; at: number; type: string; text: string | null; media_id: string | null; mime: string | null }>;
     const wanted = new Set(ids);
     return rows.filter((r) => wanted.has(r.id));
   }
@@ -1062,13 +1071,18 @@ export class Conversation extends DurableObject<Env> {
     const firstMedia = rows.find((r) => r.type !== 'text' && r.text === null);
     if (texts.length > 0 && firstMedia !== undefined) {
       // A burst mixing text and media: the text is answered below as one
-      // turn, and the media keeps today's handoff exactly once per burst.
-      const mediaLang = detectLang(joined);
-      await sendText(this.env, from, NON_TEXT[mediaLang]);
-      this.storeAssistant(firstMedia.at, 'a-' + firstMedia.id + '-nontext', NON_TEXT[mediaLang]);
+      // turn. A held booking's receipt is read as a proof instead of
+      // keeping today's handoff; other media keeps it exactly once.
       const mediaIn: Inbound = { id: firstMedia.id, from, timestamp: firstMedia.at, type: firstMedia.type };
+      if (firstMedia.media_id) mediaIn.mediaId = firstMedia.media_id;
+      if (firstMedia.mime) mediaIn.mime = firstMedia.mime;
       if (name !== undefined) mediaIn.name = name;
-      await this.notify(mediaIn);
+      if (!(await this.proofIfHeld(mediaIn))) {
+        const mediaLang = detectLang(joined);
+        await sendText(this.env, from, NON_TEXT[mediaLang]);
+        this.storeAssistant(firstMedia.at, 'a-' + firstMedia.id + '-nontext', NON_TEXT[mediaLang]);
+        await this.notify(mediaIn);
+      }
     }
     if (m.type === 'text') {
       const pendingRaw = this.state('pendingErase');
@@ -1168,9 +1182,54 @@ export class Conversation extends DurableObject<Env> {
     } else {
       this.state('intake', null);
       const lang = 'es' as const;
+      const mediaIn: Inbound = { id: last.id, from, timestamp: last.at, type: last.type };
+      if (last.media_id) mediaIn.mediaId = last.media_id;
+      if (last.mime) mediaIn.mime = last.mime;
+      if (name !== undefined) mediaIn.name = name;
+      // A held booking's receipt is read as a proof and never says NON_TEXT.
+      if (await this.proofIfHeld(mediaIn)) return;
       await sendText(this.env, m.from, NON_TEXT[lang]);
       this.storeAssistant(m.timestamp, 'a-' + m.id, NON_TEXT[lang]);
       await this.notify(m);
+    }
+  }
+
+  /** A held consultation's receipt goes to the operator next to the vision
+   *  model's reading, and the client is told a person checks it. The agent
+   *  never confirms a payment by itself. Resolves to true only when the
+   *  proof path ran; anything else keeps today's handoff. */
+  private async proofIfHeld(mediaIn: Inbound): Promise<boolean> {
+    try {
+      if (!mediaIn.mediaId) return false;
+      if (!isProofMedia(mediaIn.type, mediaIn.mime)) return false;
+      const raw = this.state('booking');
+      if (!raw) return false;
+      const st = JSON.parse(raw) as BookingState;
+      if (st.phase !== 'held') return false;
+      const cfg = bookingConfig(this.env);
+      const res = await readProof(
+        this.env,
+        st,
+        { id: mediaIn.mediaId, kind: mediaIn.type, mime: mediaIn.mime },
+        proofConfig(this.env),
+        cfg.payee ?? '',
+        this.state('code') ?? ''
+      );
+      if (!res) return false;
+      st.proof = res.proof;
+      this.state('booking', JSON.stringify(st));
+      const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+      try {
+        await sendText(this.env, operator, res.operatorText);
+      } catch {
+        /* the client notice still goes out */
+      }
+      await sendText(this.env, mediaIn.from, res.clientText);
+      this.storeAssistant(mediaIn.timestamp, 'a-' + mediaIn.id + '-proof', res.clientText);
+      await this.armNext(Date.now());
+      return true;
+    } catch {
+      return false;
     }
   }
 

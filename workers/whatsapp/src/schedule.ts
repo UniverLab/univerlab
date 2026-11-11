@@ -9,6 +9,8 @@ export interface BookingConfig {
   horizonDays: number;
   /** Full per-language payment sentence used in the hold message. */
   payments?: { es: string; en: string };
+  /** Expected recipient of the payment, matched against the receipt. */
+  payee?: string;
 }
 
 export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
@@ -58,6 +60,7 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
       noticeHours?: unknown;
       horizonDays?: unknown;
       payments?: unknown;
+      payee?: unknown;
     };
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return base;
     const windows = validWindows(parsed.windows);
@@ -80,6 +83,9 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
       payments.en.trim()
     ) {
       base.payments = { es: payments.es.trim(), en: payments.en.trim() };
+    }
+    if (typeof parsed.payee === 'string' && parsed.payee.trim()) {
+      base.payee = parsed.payee.trim();
     }
     return base;
   } catch {

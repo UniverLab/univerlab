@@ -18,6 +18,7 @@ jest.mock(
 
 jest.mock('../src/meta', () => ({
   sendText: jest.fn(async () => true),
+  sendMedia: jest.fn(async () => true),
   markRead: jest.fn(async () => true),
 }));
 
@@ -57,6 +58,11 @@ jest.mock('../src/intake', () => ({
     en: { 'first-call': 'First call', consultation: 'Consultation' },
   },
 }));
+
+jest.mock('../src/proof', () => {
+  const actual = jest.requireActual('../src/proof') as Record<string, unknown>;
+  return { ...actual, readProof: jest.fn() };
+});
 
 jest.mock('../src/schedule', () => ({
   bookingConfig: jest.fn(() => ({
@@ -98,7 +104,9 @@ import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retenti
 import { accessToken, deleteEvent, freeBusy, getEvent, insertEvent, listEvents, patchEvent } from '../src/google';
 import { freeSlots } from '../src/schedule';
 import { decide } from '../src/booking';
-import { Conversation } from '../src/conversation';
+import { PROOF_RECEIVED, readProof } from '../src/proof';
+import { shortCode } from '../src/registry';
+import { Conversation, NON_TEXT } from '../src/conversation';
 
 const env = {
   OPERATOR_PHONE: '+57 300 999 8888',
@@ -136,6 +144,7 @@ function makeCtx(handoff = false) {
     type: string;
     text: string | null;
     mediaId: string | null;
+    mime: string | null;
   }> = [];
   const sql = {
     exec: jest.fn((query: string, ...params: unknown[]) => {
@@ -143,12 +152,12 @@ function makeCtx(handoff = false) {
         const found = rows.some((r) => r.id === params[0]);
         return { toArray: () => (found ? [1] : []) };
       }
-      if (query.startsWith('SELECT id, at, type, text FROM messages WHERE role')) {
+      if (query.startsWith('SELECT id, at, type, text, media_id, mime FROM messages WHERE role')) {
         return {
           toArray: () =>
             rows
               .filter((r) => r.role === 'user')
-              .map((r) => ({ id: r.id, at: r.at, type: r.type, text: r.text })),
+              .map((r) => ({ id: r.id, at: r.at, type: r.type, text: r.text, media_id: r.mediaId, mime: r.mime })),
         };
       }
       if (query.startsWith('SELECT role, text FROM messages WHERE text IS NOT NULL')) {
@@ -170,6 +179,7 @@ function makeCtx(handoff = false) {
           type: String(params[3]),
           text: params[4] as string | null,
           mediaId: (params[5] as string | null) ?? null,
+          mime: (params[6] as string | null) ?? null,
         });
         return { toArray: () => [] };
       }
@@ -233,6 +243,8 @@ beforeEach(() => {
   (brief as jest.Mock).mockResolvedValue({ bullets: ['goal x'] });
   // A voice note hands off unless the test transcribes it.
   (transcribe as jest.Mock).mockResolvedValue({ ok: false });
+  // A receipt falls back to today's handoff unless the test reads it.
+  (readProof as jest.Mock).mockResolvedValue(null);
 });
 
 test('deletion request erases storage before any model call and stores nothing', async () => {
@@ -979,4 +991,79 @@ test('an operator confirm still lands when the client notice fails', async () =>
     'ev2',
     expect.objectContaining({ summary: expect.not.stringContaining('[Por confirmar]') })
   );
+});
+
+function imageInbound(id: string): Inbound {
+  return inbound({ id, type: 'image', text: undefined, mediaId: 'media-9', mime: 'image/jpeg' });
+}
+
+async function holdConsultation() {
+  const { ctx, storage, c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (insertEvent as jest.Mock).mockResolvedValue({ id: 'ev1', summary: '', start: SLOT_A, end: SLOT_B });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+  return { ctx, storage, c };
+}
+
+test('a held booking image goes to the operator with the proof, never NON_TEXT', async () => {
+  const { storage, c } = await holdConsultation();
+  (readProof as jest.Mock).mockImplementation(
+    async (
+      _env: unknown,
+      _st: unknown,
+      _media: unknown,
+      _cfg: unknown,
+      _payee: unknown,
+      code: unknown
+    ) => ({
+      operatorText: 'UniverLab [' + code + '] · comprobante de Ana: 150000 COP. confirmar ' + code,
+      clientText: PROOF_RECEIVED.es,
+      proof: {
+        readable: true,
+        amount: 150000,
+        currency: 'COP',
+        date: '2026-11-10',
+        method: 'Bre-B',
+        reference: '123',
+        payee: '',
+        flag: '',
+      },
+    })
+  );
+
+  const answersBefore = (answer as jest.Mock).mock.calls.length;
+  await say(c, imageInbound('wamid.p1'));
+  expect((answer as jest.Mock).mock.calls.length).toBe(answersBefore);
+
+  expect(readProof).toHaveBeenCalledTimes(1);
+  const proofCall = (readProof as jest.Mock).mock.calls[0];
+  expect(proofCall[1]).toMatchObject({ phase: 'held' });
+  expect(proofCall[2]).toMatchObject({ id: 'media-9', kind: 'image', mime: 'image/jpeg' });
+  expect(proofCall[5]).toBe(shortCode(CLIENT));
+  const opBodies = (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+  expect(opBodies.some((b) => b.includes('[' + shortCode(CLIENT) + ']') && b.includes('comprobante'))).toBe(true);
+  expect(clientTexts()).toContain(PROOF_RECEIVED.es);
+  expect(clientTexts()).not.toContain(NON_TEXT.es);
+  // The extraction is kept on the booking for the operator's confirmar.
+  const bookingWrites = (storage.sql.exec as jest.Mock).mock.calls.filter(
+    (call) => String(call[0]).startsWith('INSERT INTO state') && call[1] === 'booking'
+  );
+  const saved = JSON.parse(bookingWrites[bookingWrites.length - 1][2] as string) as {
+    proof?: { amount: number; currency: string; flag: string };
+  };
+  expect(saved.proof).toMatchObject({ amount: 150000, currency: 'COP', flag: '' });
+});
+
+test('an image without a held booking keeps today handoff', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+
+  await say(c, imageInbound('wamid.p2'));
+
+  expect(readProof).not.toHaveBeenCalled();
+  expect(clientTexts()).toContain(NON_TEXT.es);
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[image]'));
+  expect(answer).not.toHaveBeenCalled();
 });
