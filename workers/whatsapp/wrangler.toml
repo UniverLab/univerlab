@@ -1,0 +1,19 @@
+name = "univerlab-whatsapp"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "CONVERSATION"
+class_name = "Conversation"
+
+# SQLite-backed is required on the Workers Free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Conversation"]
+
+[observability]
+enabled = true
