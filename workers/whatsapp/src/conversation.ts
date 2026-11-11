@@ -13,7 +13,17 @@ import {
   type IntakeState,
 } from './intake';
 import { detectLang, type Lang } from './lang';
-import { alarmAt, deletionRequest, ERASED, operatorErased } from './erase';
+import {
+  alarmAt,
+  CONFIRM_MS,
+  deletionRequest,
+  ERASED,
+  fuzzyDeletionRequest,
+  isConfirmation,
+  NOT_DELETED,
+  operatorErased,
+  PENDING_ERASE,
+} from './erase';
 import {
   bookingConfig,
   bogotaDateKey,
@@ -565,6 +575,35 @@ export class Conversation extends DurableObject<Env> {
       const erased = deletionRequest(m.text ?? '');
       if (erased) {
         await this.erase(m, erased);
+        return;
+      }
+      const pendingRaw = this.state('pendingErase');
+      if (pendingRaw) {
+        let pendingLang: Lang = 'es';
+        let live = false;
+        try {
+          const pending = JSON.parse(pendingRaw) as Partial<{ lang: Lang; expiresAt: number }>;
+          pendingLang = pending.lang === 'en' ? 'en' : 'es';
+          live = typeof pending.expiresAt === 'number' && Date.now() <= pending.expiresAt;
+        } catch {
+          live = false;
+        }
+        this.state('pendingErase', null);
+        if (live) {
+          if (isConfirmation(m.text ?? '')) {
+            await this.erase(m, pendingLang);
+            return;
+          }
+          await sendText(this.env, m.from, NOT_DELETED[pendingLang]);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-notdeleted', NOT_DELETED[pendingLang]);
+        }
+      }
+      const text = m.text ?? '';
+      const lang = detectLang(text);
+      if (await fuzzyDeletionRequest(this.env.AI, modelConfig(this.env), lang, text)) {
+        this.state('pendingErase', JSON.stringify({ lang, expiresAt: Date.now() + CONFIRM_MS }));
+        await sendText(this.env, m.from, PENDING_ERASE[lang]);
+        this.storeAssistant(m.timestamp, 'a-' + m.id + '-pending', PENDING_ERASE[lang]);
         return;
       }
     }

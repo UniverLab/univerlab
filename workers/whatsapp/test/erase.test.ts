@@ -3,7 +3,10 @@ import {
   alarmAt,
   deletionRequest,
   ERASED,
+  isConfirmation,
   operatorErased,
+  parseFuzzy,
+  PENDING_ERASE,
   retentionDeadline,
 } from '../src/erase';
 
@@ -54,4 +57,35 @@ test('erased confirmations mention WhatsApp and differ by language', () => {
 
 test('operator notice names the phone number', () => {
   expect(operatorErased('573001234567')).toContain('573001234567');
+});
+
+test('one-word confirmations in any case or punctuation count', () => {
+  expect(isConfirmation('SÍ')).toBe(true);
+  expect(isConfirmation('si')).toBe(true);
+  expect(isConfirmation('yes!')).toBe(true);
+  expect(isConfirmation('y')).toBe(true);
+  expect(isConfirmation(' Y. ')).toBe(true);
+});
+
+test('anything longer than the one word is not a confirmation', () => {
+  expect(isConfirmation('no')).toBe(false);
+  expect(isConfirmation('sí borra todo')).toBe(false);
+  expect(isConfirmation('yes please delete')).toBe(false);
+  expect(isConfirmation('')).toBe(false);
+});
+
+test('fuzzy classifier output parses to a boolean', () => {
+  expect(parseFuzzy('{"delete": true}')).toBe(true);
+  expect(parseFuzzy('{"delete": false}')).toBe(false);
+  expect(parseFuzzy('not json at all')).toBe(false);
+  expect(parseFuzzy('{"delete": "yes"}')).toBe(false);
+});
+
+test('pending confirmation names everything that will be deleted', () => {
+  for (const text of [PENDING_ERASE.es, PENDING_ERASE.en]) {
+    expect(text).toMatch(/mensajes|messages/);
+  }
+  expect(PENDING_ERASE.es).toMatch(/estado/);
+  expect(PENDING_ERASE.es).toMatch(/notas/);
+  expect(PENDING_ERASE.es).toMatch(/cita/);
 });

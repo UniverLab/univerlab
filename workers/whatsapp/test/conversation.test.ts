@@ -23,6 +23,7 @@ jest.mock('../src/meta', () => ({
 
 jest.mock('../src/brain', () => ({
   answer: jest.fn(),
+  runModel: jest.fn(),
   FALLBACK: { es: 'fallback', en: 'fallback' },
   modelConfig: () => ({}),
 }));
@@ -78,10 +79,10 @@ jest.mock('../src/booking', () => {
   return { ...actual, decide: jest.fn() };
 });
 
-import { answer } from '../src/brain';
+import { answer, runModel } from '../src/brain';
 import { brief, intake } from '../src/intake';
 import { markRead, sendText } from '../src/meta';
-import { ERASED, operatorErased, retentionDeadline } from '../src/erase';
+import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retentionDeadline } from '../src/erase';
 import { accessToken, deleteEvent, freeBusy, getEvent, insertEvent, listEvents } from '../src/google';
 import { freeSlots } from '../src/schedule';
 import { decide } from '../src/booking';
@@ -155,6 +156,7 @@ function inbound(overrides: Partial<Inbound> = {}): Inbound {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (runModel as jest.Mock).mockResolvedValue('{"delete": false}');
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
   (accessToken as jest.Mock).mockResolvedValue('tok');
   (freeBusy as jest.Mock).mockResolvedValue([]);
@@ -266,6 +268,121 @@ function clientTexts(): string[] {
     .filter((call) => call[1] === CLIENT)
     .map((call) => call[2] as string);
 }
+
+function seedPending(ctx: unknown, lang: 'es' | 'en', expiresAt: number): void {
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'pendingErase',
+    JSON.stringify({ lang, expiresAt })
+  );
+}
+
+test('a fuzzy deletion request asks for confirmation without erasing', async () => {
+  const { ctx, storage } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
+
+  await c.receive(inbound({ id: 'wamid.f1', text: 'quiero que borren mis datos' }));
+
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, PENDING_ERASE.es);
+  expect(answer).not.toHaveBeenCalled();
+  expect(intake).not.toHaveBeenCalled();
+});
+
+test('confirming a pending request erases like the exact phrase', async () => {
+  const { ctx, storage } = makeCtx();
+  seedPending(ctx, 'es', Date.now() + CONFIRM_MS);
+  const c = new Conversation(ctx as never, env as never);
+
+  await c.receive(inbound({ id: 'wamid.f2', text: 'SÍ' }));
+
+  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+});
+
+test('any other answer cancels the request and continues normally', async () => {
+  const { ctx, storage } = makeCtx();
+  seedPending(ctx, 'es', Date.now() + CONFIRM_MS);
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'hola hola', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.f3', text: 'ya no quiero' }));
+
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+  expect(clientTexts()).toContain(NOT_DELETED.es);
+  expect(answer).toHaveBeenCalled();
+  expect(clientTexts()).toContain('hola hola');
+
+  // The request is cleared: a later SÍ is just another message.
+  await c.receive(inbound({ id: 'wamid.f4', text: 'SÍ' }));
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+});
+
+test('an expired pending confirmation is ignored', async () => {
+  const { ctx, storage } = makeCtx();
+  seedPending(ctx, 'es', Date.now() - 1000);
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'hola hola', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.f5', text: 'SÍ' }));
+
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+  expect(clientTexts()).not.toContain(NOT_DELETED.es);
+  expect(answer).toHaveBeenCalled();
+});
+
+test('the exact phrase still deletes without calling the model', async () => {
+  const { ctx, storage } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+
+  await c.receive(inbound({ id: 'wamid.f6', text: 'BORRAR MIS DATOS' }));
+
+  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  expect(runModel).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+});
+
+test('a question about stored data is answered, not treated as deletion', async () => {
+  const { ctx, storage } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'guardamos X', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.f7', text: '¿qué datos guardan?' }));
+
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+  expect(clientTexts()).not.toContain(PENDING_ERASE.es);
+  expect(answer).toHaveBeenCalled();
+  expect(clientTexts()).toContain('guardamos X');
+});
+
+test('a fuzzy deletion request in english confirms in english', async () => {
+  const { ctx, storage } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
+
+  await c.receive(inbound({ id: 'wamid.f8', text: 'please delete all my data, thanks' }));
+
+  expect(storage.deleteAll).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, PENDING_ERASE.en);
+
+  await c.receive(inbound({ id: 'wamid.f9', text: 'YES' }));
+
+  expect(storage.deleteAll).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.en);
+});
+
+test('a fuzzy deletion request wins over an active booking flow', async () => {
+  const { c } = await offerSlots('first-call');
+  (runModel as jest.Mock).mockResolvedValue('{"delete": true}');
+
+  await c.receive(inbound({ id: 'wamid.bf', text: 'mejor borren toda mi información' }));
+
+  expect(clientTexts()).toContain(PENDING_ERASE.es);
+  expect(decide).not.toHaveBeenCalled();
+});
 
 afterEach(() => {
   jest.restoreAllMocks();
