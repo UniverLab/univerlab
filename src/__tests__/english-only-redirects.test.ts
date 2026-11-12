@@ -35,8 +35,9 @@ const englishOnly = readdirSync(resolve(ROOT, 'src/pages'))
 const spellings = (n: string) => [`/es/${n} /${n}/ 301`, `/es/${n}/ /${n}/ 301`];
 
 describe('English-only pages are never linked with the /es prefix', () => {
-  it('the class today is exactly audit-shell, roadmap and status', () => {
-    expect(englishOnly).toEqual(['audit-shell', 'roadmap', 'status']);
+  it('the class today is exactly audit-shell and roadmap', () => {
+    // Status left the class: the logbook is the newspaper's second page now.
+    expect(englishOnly).toEqual(['audit-shell', 'roadmap']);
   });
 
   it.each(englishOnly)('%s has no Spanish twin', (n) => {
@@ -44,22 +45,40 @@ describe('English-only pages are never linked with the /es prefix', () => {
     expect(hasCounterpart(`/${n}/`, 'es')).toBe(false);
   });
 
-  it('field notes link to /status/?topic=<id> in every language', () => {
+  it('field notes link to the newspaper logbook in every language', () => {
     const src = read('src/components/FieldNotes.astro');
-    expect(src).toContain('const statusHref = `/status/?topic=${exp.id}`;');
-    expect(src).not.toMatch(/localizePath\(`\/status/);
+    // Page 2 exists in both languages now, so the link localizes: an es
+    // reader lands on /es/newspaper/ with the ?topic filter intact.
+    expect(src).toContain('localizePath(`/newspaper/?topic=${exp.id}#lab`, lang)');
   });
 
-  it('the header nav links to /status/', () => {
+  it('the header nav links to /roadmap/', () => {
     const src = read('src/components/Header.astro');
-    expect(src).toContain("{ href: '/status/', label: t.nav.log }");
-    expect(src).not.toMatch(/localizePath\('\/status'/);
+    expect(src).toContain("{ href: '/roadmap/', label: t.nav.roadmap }");
+    expect(src).not.toMatch(/localizePath\('\/roadmap'/);
   });
 
-  it('the command palette links to /status/', () => {
+  it('the command palette links to the newspaper logbook', () => {
     const src = read('src/layouts/BaseLayout.astro');
-    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' }");
+    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/newspaper/#lab' }");
     expect(src).not.toContain("base + '/status/'");
+  });
+});
+
+describe('the retired status addresses redirect to the newspaper', () => {
+  const rules = [
+    '/status /newspaper/#lab 301',
+    '/status/ /newspaper/#lab 301',
+    '/status/index.md /newspaper/index.md 301',
+    '/es/status /es/newspaper/#lab 301',
+    '/es/status/ /es/newspaper/#lab 301',
+    '/es/status/index.md /es/newspaper/index.md 301',
+  ];
+  const lines = read('public/_redirects').split('\n').map((l) => l.trim());
+
+  it.each(rules)('%s ships as a static rule and in _redirects', (rule) => {
+    expect(STATIC_RULES).toContain(rule);
+    expect(lines).toContain(rule);
   });
 });
 

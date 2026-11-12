@@ -119,12 +119,12 @@ describe('todayEditionHtml (en)', () => {
     expect(html).toContain(`${FACTS.length} letters from the past · 1 from the lab`);
   });
 
-  it('frames the lab mail with its kicker, title, first paragraph and /status/ link', () => {
+  it('frames the lab mail with its kicker, title, first paragraph and newspaper link', () => {
     expect(html).toContain('Lab mail · today · Quorum · launch');
     expect(html).toContain('Quorum 1.0.0: a planning-poker table drawn as an old plate');
     expect(html).toContain('The table now looks like the rest of the lab.');
     expect(html).not.toContain('Second paragraph');
-    expect(html).toContain('<a href="/status/">Read the full announcement →</a>');
+    expect(html).toContain('<a href="/newspaper/#lab">Read the full announcement →</a>');
   });
 
   it('prints the lab entry as a second headline, not a level-skip under the h1', () => {
@@ -307,6 +307,7 @@ describe('todayEditionHtml (es)', () => {
     expect(html).toContain('<h3>Nacimientos</h3>');
     expect(html).toContain('<h3>Defunciones</h3>');
     expect(html).toContain('Correo del laboratorio · hoy · Quorum · lanzamiento');
+    expect(html).toContain('<a href="/es/newspaper/#lab">Leer el anuncio completo →</a>');
     expect(html).toContain('Wikipedia →');
   });
 
@@ -350,7 +351,7 @@ describe('todayEditionMarkdown', () => {
     expect(md).toContain('## Also on this day');
     // The side column no longer repeats the Events heading right below it.
     expect(md.match(/^## Events$/gm)).toHaveLength(1);
-    expect(md).toContain('[Read the full announcement →](https://univerlab.org/status/)');
+    expect(md).toContain('[Read the full announcement →](https://univerlab.org/newspaper/#lab)');
   });
 });
 

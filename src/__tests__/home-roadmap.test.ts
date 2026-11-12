@@ -79,7 +79,6 @@ describe('home: no dotted background anywhere', () => {
       'es/manifesto/index.html',
       'contributors/index.html',
       'experiments/index.html',
-      'status/index.html',
       'roadmap/index.html',
       'api/index.html',
       'es/api/index.html',

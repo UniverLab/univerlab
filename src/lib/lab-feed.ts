@@ -1,12 +1,12 @@
 /**
  * The lab's public feed — one data layer for every reader of it.
  *
- * AGR1's markdown twin (`functions/status-twin.ts`) and AGR2's WebMCP tools
- * (`src/lib/webmcp.ts`) both read the same two public endpoints of the
- * announcements API, and both must say the same thing: the agent that asks a
- * tool and the reader that fetches `/status/index.md` get one format, one
- * filter rule, one ordering. So the fetch, the filtering and the markdown live
- * here, and both callers only decide *how much* to ask for.
+ * The newspaper's live markdown twin (`functions/_middleware.ts`) and AGR2's
+ * WebMCP tools (`src/lib/webmcp.ts`) both read the same two public endpoints
+ * of the announcements API, and both must say the same thing: the agent that
+ * asks a tool and the reader that fetches `/newspaper/index.md` get one
+ * format, one filter rule, one ordering. So the fetch, the filtering and the
+ * markdown live here, and both callers only decide *how much* to ask for.
  *
  * Pure by design: no i18n import (that is what keeps this safe to ship to the
  * browser — the only `src/` types it reuses are the API's own row shapes), no

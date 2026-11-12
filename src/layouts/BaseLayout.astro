@@ -713,7 +713,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
-          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' },
+          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/newspaper/#lab' },
           { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 

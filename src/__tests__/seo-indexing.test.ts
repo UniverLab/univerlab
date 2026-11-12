@@ -440,7 +440,7 @@ describe('check-seo', () => {
     const dist = distFixture({ '_redirects': '/sitemap.xml /sitemap-index.xml 301\n' });
     try {
       const failures = checkRedirects(dist);
-      expect(failures).toContain('_redirects: missing static rule "/es/status /status/ 301"');
+      expect(failures).toContain('_redirects: missing static rule "/status/ /newspaper/#lab 301"');
       expect(failures).toContain('_redirects: missing docs rename rule "/canopy/docs/loops/ /canopy/docs/graphs/ 301"');
       expect(failures).toContain('_redirects: /gitkit/docs/builds.md is crawled as a URL but has no rule');
     } finally {

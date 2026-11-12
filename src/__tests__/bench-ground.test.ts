@@ -40,7 +40,7 @@ describe('Google Fonts request', () => {
   });
 
   it('no longer requests IBM Plex Mono, Inter or Space Grotesk anywhere in src', () => {
-    const files = [LAYOUT, GLOBAL, SURFACES, readFileSync(resolve(SRC, 'components', 'Footer.astro'), 'utf8'), readFileSync(resolve(SRC, 'pages', 'status.astro'), 'utf8')];
+    const files = [LAYOUT, GLOBAL, SURFACES, readFileSync(resolve(SRC, 'components', 'Footer.astro'), 'utf8'), readFileSync(resolve(SRC, 'components', 'TodaysPaper.astro'), 'utf8')];
     for (const file of files) {
       expect(file).not.toMatch(/IBM\+Plex|IBM Plex Mono|Space\+Grotesk|Space Grotesk/);
       expect(file).not.toMatch(/family=Inter|'Inter'/);

@@ -240,9 +240,10 @@ function startMailbox(): void {
         ? `<h2>${esc(parts.headline)}</h2>`
         : '';
 
+    const labHref = lang === 'es' ? '/es/newspaper/' : '/newspaper/';
     const links = lab
       ? `<a href="${
-          m.exp ? `/status/?topic=${encodeURIComponent(m.exp.id)}` : '/status/'
+          m.exp ? `${labHref}?topic=${encodeURIComponent(m.exp.id)}#lab` : `${labHref}#lab`
         }">${esc(copy.readAnnouncement)}</a>`
       : `<a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${esc(
           parts ? parts.linkLabel : copy.readWikipedia,

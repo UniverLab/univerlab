@@ -144,7 +144,7 @@ export function labLetters(
         title: e.title || '',
         body: firstParagraph(e.body),
         type: e.type || '',
-        link: exp ? `/status/?topic=${exp.id}` : '/status/',
+        link: exp ? `/newspaper/?topic=${exp.id}#lab` : '/newspaper/#lab',
         date: e.date,
         exp,
       };

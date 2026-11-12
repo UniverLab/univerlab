@@ -162,15 +162,20 @@ export function todayAside(facts: Fact[], lead: Fact | null): Fact[] {
     .reverse();
 }
 
+/** Every lab announcement published on the edition's day, newest first. */
+export function todayLabBoxes(lab: TodayLab[], date: Date): TodayLab[] {
+  const ymd = editionYmd(date);
+  return [...(lab || [])]
+    .filter((e) => {
+      const t = Date.parse(e?.date || '');
+      return Number.isFinite(t) && editionYmd(new Date(t)) === ymd;
+    })
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
 /** The newest lab announcement published on the edition's day, if any. */
 export function todayLabBox(lab: TodayLab[], date: Date): TodayLab | null {
-  const ymd = editionYmd(date);
-  const rows = [...(lab || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
-  for (const e of rows) {
-    const t = Date.parse(e?.date || '');
-    if (Number.isFinite(t) && editionYmd(new Date(t)) === ymd) return e;
-  }
-  return null;
+  return todayLabBoxes(lab, date)[0] ?? null;
 }
 
 function expNameOf(topic: unknown): string {
@@ -271,7 +276,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   const facts = feed?.facts || [];
   const lead = todayLead(facts, date);
   const aside = todayAside(facts, lead);
-  const box = todayLabBox(feed?.lab || [], date);
+  const boxes = todayLabBoxes(feed?.lab || [], date);
 
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
     weekday: 'long',
@@ -280,13 +285,13 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     year: 'numeric',
   }).format(date);
   const sol = solOf(date);
-  const counts = fmt(t.counts, { n: facts.length, m: box ? 1 : 0 });
+  const counts = fmt(t.counts, { n: facts.length, m: boxes.length });
 
   let out =
     `<div class="dateline"><span>${esc(full)}</span>` +
     `<span>${esc(t.sol)} ${sol}</span><span>${esc(counts)}</span></div>`;
 
-  if (box) {
+  for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)
@@ -296,7 +301,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<p class="kicker">${esc(kicker)}</p>` +
       `<h2>${esc(box.title || '')}</h2>` +
       `<p>${esc(firstParagraph(box.body || ''))}</p>` +
-      `<a href="/status/">${esc(t.labLink)}</a></article>`;
+      `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
   }
 
   if (lead) {
@@ -371,7 +376,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   const facts = feed?.facts || [];
   const lead = todayLead(facts, date);
   const aside = todayAside(facts, lead);
-  const box = todayLabBox(feed?.lab || [], date);
+  const boxes = todayLabBoxes(feed?.lab || [], date);
 
   const path = lang === 'es' ? 'https://univerlab.org/es/newspaper/' : 'https://univerlab.org/newspaper/';
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -394,15 +399,15 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     // was set, exactly as the page prints it.
     `**${full} · ${t.sol} ${solOf(date)}**`,
     '',
-    `${fmt(t.counts, { n: facts.length, m: box ? 1 : 0 })}`,
+    `${fmt(t.counts, { n: facts.length, m: boxes.length })}`,
     '',
   ];
 
-  if (box) {
+  for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)].filter((s) => s).join(' · ');
     lines.push(`## ${kicker}`, '', `**${box.title || ''}**`, '', firstParagraph(box.body || ''));
-    lines.push('', `[${t.labLink}](https://univerlab.org/status/)`, '');
+    lines.push('', `[${t.labLink}](${path}#lab)`, '');
   }
 
   if (lead) {

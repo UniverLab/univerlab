@@ -128,15 +128,11 @@ describe('template helper', () => {
   });
 });
 
-describe('status.astro flight-plan guards', () => {
-  const src = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
+describe('roadmap board + newspaper logbook guards', () => {
   const rmSrc = readFileSync(resolve(__dirname, '../lib/roadmap-board.ts'), 'utf8');
   const pageSrc = readFileSync(resolve(__dirname, '../pages/roadmap.astro'), 'utf8');
-
-  it('removes the orphan line', () => {
-    expect(src).not.toContain('rm-quiet');
-    expect(src).not.toContain('Project updates live at');
-  });
+  const labSrc = readFileSync(resolve(__dirname, '../lib/lab-page.ts'), 'utf8');
+  const labClient = readFileSync(resolve(__dirname, '../lib/lab-page-client.ts'), 'utf8');
 
   it('renders trajectory cards with summaries, hold notes and entries links', () => {
     expect(rmSrc).toContain('rm-seg');
@@ -151,22 +147,21 @@ describe('status.astro flight-plan guards', () => {
     expect(rmSrc).not.toMatch(/rm-date/);
   });
 
-  it('wires the entries filter into the log with a clear chip', () => {
-    expect(src).toContain('activeRoadmapId');
-    expect(src).toContain('roadmap_id');
-    expect(src).toContain('rm-clear');
+  it('wires each card entries link into the newspaper logbook filter', () => {
+    expect(rmSrc).toContain('/newspaper/?roadmap=');
+    expect(rmSrc).toContain('#lab');
+    expect(labSrc).toContain('data-roadmap');
+    expect(labClient).toContain('roadmap');
   });
 
   it('stays read-only on the public page', () => {
-    for (const page of [src, pageSrc]) {
-      expect(page).not.toMatch(/contenteditable/i);
-      expect(page).not.toMatch(/roadmap.*PATCH|PATCH.*roadmap/i);
-      expect(page).not.toMatch(/<form[^>]*roadmap/i);
-    }
+    expect(pageSrc).not.toMatch(/contenteditable/i);
+    expect(pageSrc).not.toMatch(/roadmap.*PATCH|PATCH.*roadmap/i);
+    expect(pageSrc).not.toMatch(/<form[^>]*roadmap/i);
   });
 
-  it('keeps the shared board-head RSS link', () => {
-    expect(src).toMatch(/href="\/feed\/?"/);
+  it('the board head links the logbook at the newspaper', () => {
+    expect(pageSrc).toContain('href="/newspaper/#lab"');
   });
 });
 

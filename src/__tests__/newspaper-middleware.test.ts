@@ -22,17 +22,18 @@ const STATIC_PAGE =
   '<div id="today-loading">skeletons</div></div></body></html>';
 
 /** workerd's HTMLRewriter is not in Node: this stub records what the
- *  middleware asks it to write into #edition. */
+ *  middleware asks it to write into #edition and #lab-body. */
 class FakeHTMLRewriter {
   static last: FakeHTMLRewriter | null = null;
   selector = '';
   inner = '';
+  writes: Record<string, string> = {};
   constructor() {
     FakeHTMLRewriter.last = this;
   }
   on(selector: string, handler: { element: (el: { setInnerContent: (c: string) => void }) => void }) {
     this.selector = selector;
-    handler.element({ setInnerContent: (c: string) => { this.inner = c; } });
+    handler.element({ setInnerContent: (c: string) => { this.inner = c; this.writes[selector] = c; } });
     return this;
   }
   transform(res: Response) {
@@ -112,7 +113,7 @@ describe('middleware — /newspaper/ HTML', () => {
     await onRequest(context('/newspaper/', 'text/html'));
 
     expect(labRead).toBe(true);
-    expect(FakeHTMLRewriter.last?.inner).toContain('class="dateline"');
+    expect(FakeHTMLRewriter.last?.writes['#edition']).toContain('class="dateline"');
   });
 
   it('fills #edition with the day’s edition, dated and UA-tagged', async () => {
@@ -130,8 +131,8 @@ describe('middleware — /newspaper/ HTML', () => {
     const res = await onRequest(context('/newspaper/', 'text/html'));
 
     expect(res.status).toBe(200);
-    expect(FakeHTMLRewriter.last?.selector).toBe('#edition');
-    const inner = FakeHTMLRewriter.last?.inner || '';
+    expect(FakeHTMLRewriter.last?.selector).toBe('#lab-body');
+    const inner = FakeHTMLRewriter.last?.writes['#edition'] || '';
     // The edition itself: dateline, columns, and the same count the pool has.
     const facts = buildPool(FIX, 'en');
     expect(inner).toContain('class="dateline"');
@@ -139,6 +140,8 @@ describe('middleware — /newspaper/ HTML', () => {
       facts.length - 1 - todayAside(facts, todayLead(facts, editionDate())).length,
     );
     expect(inner).toContain('<h3>Births</h3>');
+    // Page 2 reads from the same fetch: the logbook heading is set too.
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('lab-heading');
 
     // One read per source, the Wikipedia one carrying the project's UA and an
     // hour of edge cache, the date coming from the edition day (UTC−5).
@@ -176,6 +179,51 @@ describe('middleware — legacy /today/ addresses redirect permanently', () => {
   });
 });
 
+describe('middleware — retired /status/ addresses redirect permanently', () => {
+  it.each([
+    ['/status', 'https://univerlab.org/newspaper/#lab'],
+    ['/status/', 'https://univerlab.org/newspaper/#lab'],
+    ['/es/status', 'https://univerlab.org/es/newspaper/#lab'],
+    ['/es/status/', 'https://univerlab.org/es/newspaper/#lab'],
+    ['/status/index.md', 'https://univerlab.org/newspaper/index.md'],
+    ['/es/status/index.md', 'https://univerlab.org/es/newspaper/index.md'],
+  ])('%s 301s to %s', async (from, to) => {
+    const ctx = context(from, 'text/html');
+
+    const res = await onRequest(ctx);
+
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe(to);
+    expect(asMock(ctx.next)).not.toHaveBeenCalled();
+  });
+
+  it('keeps the query string across the redirect', async () => {
+    const res = await onRequest(context('/status/?topic=canopy', 'text/html'));
+
+    expect(res.status).toBe(301);
+    // The query string stays a query: it must precede the #lab fragment or
+    // the deep-link filters (?topic=, ?roadmap=) would land inside the hash.
+    expect(res.headers.get('Location')).toBe('https://univerlab.org/newspaper/?topic=canopy#lab');
+  });
+
+  it('the markdown twin carries both pages', async () => {
+    global.fetch = jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes('wikipedia.org')) {
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const res = await onRequest(context('/newspaper/index.md', 'text/markdown'));
+
+    expect(res.status).toBe(200);
+    const md = await res.text();
+    expect(md).toContain('# The Observable');
+    expect(md).toContain('## Lab news');
+  });
+});
+
 describe('middleware — /newspaper/ picked day (?d=)', () => {
   const stubFetch = (calls: string[]) =>
     jest.fn(async (input: string | URL | Request) => {
@@ -197,7 +245,7 @@ describe('middleware — /newspaper/ picked day (?d=)', () => {
     expect(res.status).toBe(200);
     const wp = calls.find((u) => u.includes('wikipedia.org'))!;
     expect(wp.endsWith('/onthisday/all/07/20')).toBe(true);
-    expect(FakeHTMLRewriter.last?.inner).toContain('2024');
+    expect(FakeHTMLRewriter.last?.writes['#edition']).toContain('2024');
   });
 
   it('the markdown twin honours the picked day', async () => {

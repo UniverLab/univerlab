@@ -727,6 +727,13 @@ export const en = {
     counts: '{n} letters from the past · {m} from the lab',
     labKicker: 'Lab mail · today',
     labLink: 'Read the full announcement →',
+    tabs: { p1: 'Page 1', p2: 'Page 2 · Lab news' },
+    labPage: {
+      heading: 'Lab news',
+      older: 'Older entries',
+      all: 'All',
+      view: 'View →',
+    },
     leadKicker: 'Letter of the day · {years} years ago',
     readOn: 'Read on Wikipedia →',
     wikiLink: 'Wikipedia →',
@@ -735,7 +742,7 @@ export const en = {
     deaths: 'Deaths',
     aside: 'Also on this day',
     more: 'Show {n} more',
-    types: { launch: 'launch', note: 'note', update: 'update' },
+    types: { launch: 'launch', note: 'note', update: 'update', deploy: 'deploy', bugfix: 'bugfix', incident: 'incident' },
     ago: {
       event: '{years} years ago',
       born: 'born {years} years ago',

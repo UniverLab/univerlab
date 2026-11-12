@@ -1,5 +1,5 @@
-import { renderStatusTwin, statusTwinRoute, type Lang } from './status-twin';
 import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
+import { labPageHtml, labPageMarkdown } from '../src/lib/lab-page';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
 import { buildPool } from '../src/lib/science-filter';
 import {
@@ -93,13 +93,14 @@ function timeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
  *  Rejects on any failure — the caller's catch is what degrades to the
  *  static page. The Wikipedia read carries the project's User-Agent and is
  *  edge-cached one hour per language and day; the lab read reuses the API
- *  policy. Both share one 3 s deadline. */
+ *  policy. Both share one 3 s deadline. Page 2 (the logbook) does not depend
+ *  on the edition's date: any edition prints the same logbook. */
 async function liveTodayEdition(
   lang: 'en' | 'es',
   fetchImpl: typeof fetch,
   signal: AbortSignal,
   date: Date,
-): Promise<{ html: string; markdown: string }> {
+): Promise<{ html: string; labHtml: string; markdown: string }> {
   // Both reads run together: the shared 3 s deadline must not be spent twice,
   // and a slow Wikipedia response must not push the lab mail past it.
   const otd = fetchImpl(otdUrl(lang, date), {
@@ -115,22 +116,9 @@ async function liveTodayEdition(
   const feed = { facts: buildPool(data, lang), lab };
   return {
     html: todayEditionHtml(feed, lang, date),
-    markdown: todayEditionMarkdown(feed, lang, date),
+    labHtml: labPageHtml(lab, lang),
+    markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang)}\n`,
   };
-}
-
-/** One public read for the log, rendered for `lang`. Rejects on any failure —
- *  the caller's catch is what degrades to the static twin. The read is
- *  edge-cached behind the shared 3 s deadline. The roadmap is not fetched:
- *  the twin only points at `/roadmap/index.md`, which renders the board. */
-async function liveStatusTwin(lang: Lang): Promise<string> {
-  const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
-  try {
-    const entries = await loadEntries({ init: apiInit(), signal, limit: 20 });
-    return renderStatusTwin({ lang, entries });
-  } finally {
-    clear();
-  }
 }
 
 /** The R2 surface the audit routes need: reads only, never writes. */
@@ -701,6 +689,23 @@ export async function onRequest(context: {
     const dest = pathname.startsWith('/es/') ? '/es/newspaper/' : '/newspaper/';
     return Response.redirect(new URL(dest + url.search, url.origin).href, 301);
   }
+  // The logbook moved into the newspaper's second page: every status address
+  // redirects permanently there, keeping the query string. The old markdown
+  // twin keeps serving the new twin's address.
+  if (pathname === '/status' || pathname.startsWith('/status/')) {
+    const url = new URL(request.url);
+    // The query string stays a query: it must land before the #lab fragment
+    // or the ?topic=/?roadmap= deep links arrive as fragment text and filter nothing.
+    const twin = pathname === '/status/index.md' || pathname === '/status/index.md/';
+    const dest = twin ? '/newspaper/index.md' : '/newspaper/';
+    return Response.redirect(new URL(dest + url.search + (twin ? '' : '#lab'), url.origin).href, 301);
+  }
+  if (pathname === '/es/status' || pathname.startsWith('/es/status/')) {
+    const url = new URL(request.url);
+    const twin = pathname === '/es/status/index.md' || pathname === '/es/status/index.md/';
+    const dest = twin ? '/es/newspaper/index.md' : '/es/newspaper/';
+    return Response.redirect(new URL(dest + url.search + (twin ? '' : '#lab'), url.origin).href, 301);
+  }
   if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
 
   // The published-audit shell is only ever filled at request time: asked for
@@ -868,9 +873,10 @@ export async function onRequest(context: {
     }
   }
 
-  // The newspaper: fetch the static page, then set its #edition to the day's
-  // edition. Any failure (timeout 3 s, non-OK) serves the static page, whose
-  // client script fills #edition with the same renderer.
+  // The newspaper: fetch the static page, then set #edition to the day's
+  // edition and #lab-body to the logbook's second page. Any failure
+  // (timeout 3 s, non-OK) serves the static page, whose client script fills
+  // both with the same renderers.
   const todayLang = request.method === 'GET' && !wantsMarkdown(accept) ? todayRoute(pathname) : null;
   if (todayLang) {
     const staticRes = await next();
@@ -878,16 +884,23 @@ export async function onRequest(context: {
     try {
       const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
       try {
-        const { html } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
+        const { html, labHtml } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
         const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
         if (typeof RW === 'function') {
           const rewriter = new (RW as new () => {
             on(s: string, h: unknown): unknown;
             transform(r: Response): Response;
           })();
+          // Member-expression calls: extracting `on` first would lose its
+          // receiver, and a stub rewriter records nothing.
           (rewriter.on as (s: string, h: unknown) => void)('#edition', {
             element(el: { setInnerContent(c: string, o: unknown): void }) {
               el.setInnerContent(html, { html: true });
+            },
+          });
+          (rewriter.on as (s: string, h: unknown) => void)('#lab-body', {
+            element(el: { setInnerContent(c: string, o: unknown): void }) {
+              el.setInnerContent(labHtml, { html: true });
             },
           });
           return rewriter.transform(staticRes);
@@ -902,27 +915,16 @@ export async function onRequest(context: {
   }
 
   // A path ending in /index.md asks for the markdown twin whatever the Accept
-  // header says — an agent that GETs /status/index.md with `Accept: */*` is
-  // reading the twin, and a bare next() would hand it the raw build artifact
-  // with no live render. Every other path still needs text/markdown in Accept.
+  // header says — an agent that GETs /newspaper/index.md with `Accept: */*`
+  // is reading the twin, and a bare next() would hand it the raw build
+  // artifact with no live render. Every other path still needs text/markdown
+  // in Accept.
   if (!wantsMarkdown(accept) && !pathname.endsWith('/index.md')) {
     return next();
   }
 
   try {
     const url = new URL(request.url);
-
-    // The status routes render live — this runs before markdownTwinPath, which
-    // would return null for `/status/index.md` and never ask for them.
-    const lang = statusTwinRoute(url.pathname);
-    if (lang) {
-      try {
-        return new Response(await liveStatusTwin(lang), { headers: MARKDOWN_HEADERS });
-      } catch {
-        // API down, non-OK or past 3 s: fall through to the static twin below,
-        // so an outage degrades to today's behaviour and never to an error page.
-      }
-    }
 
     if (roadmapTwinRoute(url.pathname)) {
       try {
@@ -938,8 +940,8 @@ export async function onRequest(context: {
       }
     }
 
-    // The newspaper's markdown twin, rendered live the same way. Any failure
-    // falls through to the static twin below, never to an error page.
+    // The newspaper's markdown twin, both pages rendered live the same way.
+    // Any failure falls through to the static twin below, never to an error page.
     const todayMdLang = request.method === 'GET' ? todayRoute(url.pathname) : null;
     if (todayMdLang) {
       try {

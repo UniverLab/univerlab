@@ -17,13 +17,16 @@ describe("today's paper styles stay on the paper", () => {
     const nightOk = (sel: string): boolean =>
       sel === `[data-bench-theme='night'] .paper` ||
       sel === `:root:not([data-bench-theme='day']) .paper`;
+    // The JS-gated paper: hidden pages and folded rows only exist after the
+    // client script runs, so these rules hang the .js flag off .paper itself.
+    const jsOk = (sel: string): boolean => sel.startsWith('.paper.js ');
     const selectors = [...css.matchAll(/(?:^|\})\s*([^{}@]+?)\s*\{/gm)]
       .map((m) => m[1].replace(/\/\*[\s\S]*?\*\//g, '').trim())
       .filter((s) => s && !/^(to|from|<style)/.test(s) && !/^\d/.test(s));
     expect(selectors.length).toBeGreaterThan(30);
     for (const group of selectors) {
       for (const sel of group.split(',').map((s) => s.trim())) {
-        expect(sel === '.paper' || sel.startsWith('.paper ') || nightOk(sel)).toBe(true);
+        expect(sel === '.paper' || sel.startsWith('.paper ') || nightOk(sel) || jsOk(sel)).toBe(true);
       }
     }
   });

@@ -19,18 +19,24 @@ import TodaysPaper from '../../components/TodaysPaper.astro';
   </style>
 
   <script>
-    // El respaldo del cliente para el periódico: cuando el edge no compuso la
-    // plana (#edition sigue vacío), trae el acopio del día y los anuncios del
-    // laboratorio y la llena con el mismo renderer que usa el edge.
+    // El respaldo del cliente para el periódico: por cada plana que el edge no
+    // compuso (#edition, #lab-body aún vacías), trae lo que necesita y la
+    // llena con el mismo renderer que usa el edge. Las pestañas van siempre.
     import { readOtdCache, fetchPool, FULL_POOL } from '../../lib/science-filter';
     import { todayEditionHtml, editionDateFor } from '../../lib/today-edition';
+    import { labPageHtml } from '../../lib/lab-page';
+    import { bindLabPage } from '../../lib/lab-page-client';
 
     (function () {
+      bindLabPage(document);
       var lang = 'es';
       var day = editionDateFor(window.location.search);
       var picked = /[?&]d=/.test(window.location.search);
       var ed = document.getElementById('edition');
-      if (!ed || (ed.textContent || '').replace(/\s/g, '')) return;
+      var labBody = document.getElementById('lab-body');
+      var needEdition = ed && !(ed.textContent || '').replace(/\s/g, '');
+      var needLab = labBody && !(labBody.textContent || '').replace(/\s/g, '');
+      if (!needEdition && !needLab) return;
 
       var loading = document.getElementById('today-loading');
       var failed = function () {
@@ -51,20 +57,27 @@ import TodaysPaper from '../../components/TodaysPaper.astro';
         : fetchPool(fetch, lang, day, FULL_POOL);
       // El buzón del laboratorio es opcional: si su lectura falla (CORS, una
       // caída) igual se imprimen las cartas del día, sin ese recuadro.
-      var labP = fetch('https://announcements.univerlab.org/?limit=10')
-        .then(function (res) {
-          if (!res.ok) throw new Error('API ' + res.status);
-          return res.json();
-        })
-        .then(function (data) {
-          return Array.isArray(data?.entries) ? data.entries : [];
-        })
-        .catch(function () { return []; });
+      var labP = needLab || needEdition
+        ? fetch('https://announcements.univerlab.org/?limit=100')
+          .then(function (res) {
+            if (!res.ok) throw new Error('API ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            return Array.isArray(data?.entries) ? data.entries : [];
+          })
+          .catch(function () { return []; })
+        : Promise.resolve([]);
 
       Promise.all([factsP, labP]).then(
         function (parts) {
-          if (!parts[0] || !parts[0].length) { failed(); return; }
-          ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, day);
+          // La página 2 no depende de las cartas del día: se llena aunque la
+          // lectura de Wikipedia falle y la página 1 muestre el error.
+          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang);
+          if (needEdition) {
+            if (!parts[0] || !parts[0].length) { failed(); return; }
+            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, day);
+          }
         },
         function () { failed(); },
       );

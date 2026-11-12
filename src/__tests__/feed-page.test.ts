@@ -98,25 +98,13 @@ describe('feed page', () => {
   });
 });
 
-describe('status page links to feed', () => {
-  const status = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
-
-  it('contains a link to /feed in the shared board header', () => {
-    expect(status).toMatch(/href="\/feed\/?"/);
-    // link text is RSS (same word as feed page heading)
-    expect(status).toMatch(/>RSS<\/a>/);
-    // Spec 4 split: the feed link lives in the shared .board-head (header row
-    // spanning both columns), which now precedes the LOGBOOK col-label
-    // rather than sitting beside it in the old .log-head.
-    const headEnd = status.indexOf('</header>');
-    const feedIdx = status.indexOf('href="/feed');
-    expect(feedIdx).toBeGreaterThan(-1);
-    expect(feedIdx).toBeLessThan(headEnd);
-  });
-
-  it('status feed link uses the same label as feed heading', () => {
-    const statusFeedLabel = status.match(/<a[^>]*href="\/feed\/?"[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
-    expect(statusFeedLabel).toBe('RSS');
+describe('retired status page links to nothing', () => {
+  it('no page links to /status/ anymore: the logbook lives at /newspaper/#lab', () => {
+    for (const f of ['../pages/roadmap.astro', '../components/FieldNotes.astro', '../components/Header.astro']) {
+      const src = readFileSync(resolve(__dirname, f), 'utf8');
+      expect(`${f}\n${src}`).not.toMatch(/href="\/status\/?"/);
+      expect(`${f}\n${src}`).not.toContain('/status/?');
+    }
     expect(en.feed.heading).toBe('RSS');
     expect(es.feed.heading).toBe('RSS');
   });

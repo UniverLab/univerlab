@@ -78,9 +78,13 @@ export const STATIC_RULES: readonly string[] = [
   '/today/ /newspaper/ 301',
   '/es/today /es/newspaper/ 301',
   '/es/today/ /es/newspaper/ 301',
-  '/es/status /status/ 301',
-  '/es/status/ /status/ 301',
-  // /roadmap/ is English-only like /status/.
+  '/status /newspaper/#lab 301',
+  '/status/ /newspaper/#lab 301',
+  '/status/index.md /newspaper/index.md 301',
+  '/es/status /es/newspaper/#lab 301',
+  '/es/status/ /es/newspaper/#lab 301',
+  '/es/status/index.md /es/newspaper/index.md 301',
+  // /roadmap/ is English-only: the Spanish spelling redirects to it.
   '/es/roadmap /roadmap/ 301',
   '/es/roadmap/ /roadmap/ 301',
   // /audit-shell/ is English-only too: the edge fills it at request time and

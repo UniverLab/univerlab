@@ -151,7 +151,7 @@ describe('budgetedPages', () => {
     // Re-reviewed 2026-11-10: the ninth plate (facetmedia EXP-009) added ~44 KB.
     expect(byRoute.get('/experiments/')).toBe(1210 * KB);
     expect(byRoute.get('/es/experiments/')).toBe(1210 * KB);
-    for (const route of ['/roadmap/', '/manifesto/', '/contributors/', '/status/']) {
+    for (const route of ['/roadmap/', '/manifesto/', '/contributors/']) {
       expect(byRoute.get(route)).toBe(800 * KB);
     }
   });

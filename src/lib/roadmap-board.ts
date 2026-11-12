@@ -152,7 +152,7 @@ export function roadmapLanesHtml(
           e.count,
           e.last_date,
         );
-        meta += ` <a href="/status/?roadmap=${escHtml(id)}" class="rm-entries">${escHtml(text)}</a>`;
+        meta += ` <a href="/newspaper/?roadmap=${escHtml(id)}#lab" class="rm-entries">${escHtml(text)}</a>`;
       }
       out += `<div class="rm-meta">${meta}</div>`;
       if (item.blocked_reason) {

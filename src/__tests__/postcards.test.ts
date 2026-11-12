@@ -28,7 +28,6 @@ const carriers: Array<[string, string, string]> = [
   // The 404 dropped its postcard: the kraken chart is its opening now (see
   // not-found-kraken.test.ts). The postcard key stays for the asset history.
   ['src/pages/roadmap.astro', 'roadmap', 'en.postcards.roadmap'],
-  ['src/pages/status.astro', 'status', 'en.postcards.status'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -80,8 +79,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 10 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(10);
+  it('all 9 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(9);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -146,14 +145,14 @@ describe('Watermark component', () => {
     expect(watermark).toMatch(/:global\(body\)\s*\{\s*isolation:\s*isolate;\s*position:\s*relative;?\s*\}/);
   });
 
-  it('lands on the manifesto (celestial) and on people, status, roadmap (blueprint)', () => {
+  it('lands on the manifesto (celestial) and on people and roadmap (blueprint)', () => {
     expect(read('src/views/Manifesto.astro')).toContain('<Watermark kind="celestial"');
-    for (const f of ['src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro']) {
+    for (const f of ['src/views/People.astro', 'src/pages/roadmap.astro']) {
       expect(`${f}: ${read(f)}`).toContain('<Watermark kind="blueprint"');
     }
     const others = carriers
       .map(([f]) => f)
-      .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro'].includes(f));
+      .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
     expect(others).toHaveLength(6);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
@@ -163,7 +162,6 @@ describe('Watermark component', () => {
   it('veils dense text over the drawing instead of lowering the opacity', () => {
     expect(read('src/views/Manifesto.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
     expect(read('src/pages/roadmap.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
-    expect(read('src/pages/status.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
   });
 });
 

@@ -721,6 +721,13 @@ export const es: Dict = {
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
     labLink: 'Leer el anuncio completo →',
+    tabs: { p1: 'Página 1', p2: 'Página 2 · Noticias del laboratorio' },
+    labPage: {
+      heading: 'Noticias del laboratorio',
+      older: 'Ver anteriores',
+      all: 'Todas',
+      view: 'Ver →',
+    },
     leadKicker: 'Carta del día · hace {years} años',
     readOn: 'Leer en Wikipedia →',
     wikiLink: 'Wikipedia →',
@@ -729,7 +736,7 @@ export const es: Dict = {
     deaths: 'Defunciones',
     aside: 'También en este día',
     more: 'Ver {n} más',
-    types: { launch: 'lanzamiento', note: 'nota', update: 'actualización' },
+    types: { launch: 'lanzamiento', note: 'nota', update: 'actualización', deploy: 'despliegue', bugfix: 'corrección', incident: 'incidente' },
     ago: {
       event: 'hace {years} años',
       born: 'nace hace {years} años',

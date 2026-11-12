@@ -157,9 +157,9 @@ describe('labLetters', () => {
   it('leaves an entry that names no experiment without an experiment line', () => {
     const [general] = labLetters([ann('g1', 1, 'general')], [], NOW, [EXP_CANOPY]);
     expect(general.exp).toBeUndefined();
-    expect(general.link).toBe('/status/');
+    expect(general.link).toBe('/newspaper/#lab');
     const [canopy] = labLetters([ann('g2', 1, 'canopy')], [], NOW, [EXP_CANOPY]);
-    expect(canopy.link).toBe('/status/?topic=canopy');
+    expect(canopy.link).toBe('/newspaper/?topic=canopy#lab');
   });
 });
 

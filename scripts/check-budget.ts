@@ -133,7 +133,7 @@ export function budgetedPages(): BudgetedPage[] {
     pages.push({ route: `/${e.id}/`, file: `${e.id}/index.html`, budgetBytes: budget });
     pages.push({ route: `/es/${e.id}/`, file: `es/${e.id}/index.html`, budgetBytes: budget });
   }
-  for (const r of ['experiments', 'roadmap', 'manifesto', 'contributors', 'status']) {
+  for (const r of ['experiments', 'roadmap', 'manifesto', 'contributors']) {
     const budget = r === 'experiments' ? 1210 * KB : 800 * KB;
     pages.push({ route: `/${r}/`, file: `${r}/index.html`, budgetBytes: budget });
     pages.push({ route: `/es/${r}/`, file: `es/${r}/index.html`, budgetBytes: budget });
