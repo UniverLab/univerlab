@@ -290,8 +290,10 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
           pointer-events: none; }
 
   /* ── The bench ────────────────────────────────────────────────────────── */
+  /* The bench scrolls by swipe on a phone; no bar is drawn under it. */
   .row-wrap { overflow-x: auto; width: 100%; margin-top: 0.5rem;
-              -webkit-overflow-scrolling: touch; }
+              -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .row-wrap::-webkit-scrollbar { display: none; }
   .row { display: flex; align-items: flex-end; justify-content: center;
          gap: clamp(0.75rem, 2vw, 1.5rem); min-width: max-content;
          padding: 6px 4px; margin-inline: auto; }
@@ -299,7 +301,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
            display: grid; justify-items: center; gap: 6px; font: inherit;
            color: var(--bench-line); opacity: 0.55;
            transition: opacity 0.3s ease; }
-  .plate picture { display: block; height: 120px; }
+  .plate picture { display: block; height: clamp(84px, 7.4vw, 120px); }
   .plate img { display: block; height: 100%; width: auto; }
   .plate span { font-family: var(--font-serif); font-style: italic; font-size: 13px; }
   .plate[aria-current='true'] { opacity: 1; }

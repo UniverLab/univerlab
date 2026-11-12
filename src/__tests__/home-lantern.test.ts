@@ -254,8 +254,8 @@ describe('Home — the bench', () => {
     expect(LAB_LANTERN).toMatch(/class="plate"/);
   });
 
-  it('gives every plate the same height, 120 px from 48rem and 84 px below', () => {
-    expect(LAB_LANTERN).toMatch(/\.plate picture \{[^}]*height:\s*120px/);
+  it('gives every plate the same height, up to 120 px so the bench fits a desktop row, and 84 px below 48rem', () => {
+    expect(LAB_LANTERN).toMatch(/\.plate picture \{[^}]*height:\s*clamp\(84px, 7\.4vw, 120px\)/);
     expect(LAB_LANTERN).toMatch(/@media \(max-width: 47\.999rem\) \{ \.plate picture \{ height: 84px; \} \}/);
     expect(LAB_LANTERN).toMatch(/\.plate img \{[^}]*height:\s*100%/);
   });
