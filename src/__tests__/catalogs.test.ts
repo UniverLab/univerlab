@@ -206,6 +206,70 @@ kind = "audio"
   });
 });
 
+describe('catalogs — parseFacetPackage verify and seed', () => {
+  it('reads thresholds from a verify section, numbers as numbers', () => {
+    const toml = `tool_name = "T"
+facet = "audio"
+
+[capabilities.bed]
+summary = "Bed"
+kind = "audio"
+
+[capabilities.bed.inputs.seed]
+type = "integer"
+
+[capabilities.bed.verify]
+thresholds = { duration_tolerance_s = 1.0, peak_dbfs_min = -40.0 }
+`;
+    expect(parseFacetPackage(toml, 'acestep')).toEqual([
+      {
+        id: 'acestep.bed',
+        tool: 'T',
+        kind: 'audio',
+        summary: 'Bed',
+        facet: 'audio',
+        verify: { duration_tolerance_s: 1, peak_dbfs_min: -40 },
+        seed: true,
+      },
+    ]);
+  });
+
+  it('leaves verify and seed off when the sections are absent', () => {
+    const toml = `tool_name = "T"
+facet = "voice"
+
+[capabilities.speak]
+summary = "Narration"
+kind = "audio"
+`;
+    const out = parseFacetPackage(toml, 'kokomo');
+    expect(out).toHaveLength(1);
+    expect(out[0].verify).toBeUndefined();
+    expect(out[0].seed).toBeUndefined();
+  });
+
+  it('keeps a non-numeric threshold as a string', () => {
+    const toml = `tool_name = "T"
+
+[capabilities.a]
+summary = "A"
+kind = "text"
+
+[capabilities.a.verify]
+thresholds = { mode = "strict", steps_min = 1 }
+`;
+    expect(parseFacetPackage(toml, 'pkg')[0].verify).toEqual({ mode: 'strict', steps_min: 1 });
+  });
+
+  it('acestep.bed carries its real thresholds and seed', () => {
+    const caps = readFacetCapabilities();
+    const bed = caps.find((c) => c.id === 'acestep.bed');
+    expect(bed).toBeDefined();
+    expect(bed!.verify).toEqual({ duration_tolerance_s: 1, peak_dbfs_min: -40 });
+    expect(bed!.seed).toBe(true);
+  });
+});
+
 describe('catalogs — groupFacetCapabilities', () => {
   const pick = (facet: string, id: string) => ({ id, tool: 'T', kind: 'k', summary: 's', facet });
 

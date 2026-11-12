@@ -31,7 +31,7 @@ describe('facetmedia EXP-009', () => {
     for (const dict of [enFm, esFm]) {
       expect(dict.capabilities.columns).toHaveLength(5);
       expect(dict.verbs.items).toHaveLength(6);
-      expect(dict.faq.items).toHaveLength(5);
+      expect(dict.faq.items).toHaveLength(7);
     }
     expect(Object.keys(enFm.capabilities.summaries)).toHaveLength(0);
     expect(Object.keys(esFm.capabilities.summaries).length).toBeGreaterThan(0);
@@ -55,11 +55,14 @@ describe('facetmedia EXP-009', () => {
     }
   });
 
-  it('the page shows the shared hero plate and keeps its own arch', () => {
+  it('the page shows the shared hero plate and keeps its own dial', () => {
     expect(VIEW).not.toContain('hideMachine');
     expect(VIEW).not.toContain('<Machine');
     expect(VIEW).not.toContain("from '../../components/Machine.astro'");
-    expect(VIEW).toContain('class="fm-arch"');
+    expect(VIEW).toContain('class="fm-dial"');
+    expect(VIEW).toContain('data-fm-dial');
+    expect(VIEW).not.toContain('class="fm-arch"');
+    expect(VIEW).not.toContain('0/{caps.length}');
     expect(VIEW).toContain('id="capacidades"');
     expect(ROUTE).toContain('FacetMedia');
     expect(ROUTE_ES).toContain('FacetMedia');
@@ -70,9 +73,51 @@ describe('facetmedia EXP-009', () => {
     expect(VIEW).toContain('groupFacetCapabilities');
     expect(VIEW).toContain('f.caps.map((cap, i)');
     expect(VIEW).toContain('caps.length');
-    expect(VIEW).toContain('0/{caps.length}');
+    expect(VIEW).toContain('dialArcs');
+    expect(VIEW).toContain('demoCap');
+    expect(VIEW).toContain('demoText');
+    expect(VIEW).toContain('set:html');
     expect(VIEW).toContain('{e.subproject.kicker}');
     expect(VIEW).toContain('{e.subproject.body}');
+  });
+
+  it('asks the seven agreed questions in order, in both languages', () => {
+    expect(enFm.faq.items.map(([q]) => q)).toEqual([
+      'What does facet actually do?',
+      'Can I use it yet?',
+      'What is a facet?',
+      'How does an agent use it?',
+      'How do I know the output is right?',
+      'Who decides how it looks or sounds?',
+      'Do I need a GPU? And who accepts the licences?',
+    ]);
+    expect(esFm.faq.items.map(([q]) => q)).toEqual([
+      '¿Qué hace facet, en concreto?',
+      '¿Ya se puede usar?',
+      '¿Qué es una faceta?',
+      '¿Cómo lo usa un agente?',
+      '¿Cómo sé que lo que salió está bien?',
+      '¿Quién decide cómo se ve o cómo suena?',
+      '¿Necesita GPU? ¿Y quién acepta las licencias?',
+    ]);
+  });
+
+  it('renders the command names in the answers as inline code', () => {
+    const answers = (items: [string, string][]) => items.map(([, a]) => a);
+    const en = answers(enFm.faq.items);
+    const es = answers(esFm.faq.items);
+    expect(en[1]).toContain('<code>uv tool install facetmedia</code>');
+    expect(en[3]).toContain('<code>--json</code>');
+    expect(en[3]).toContain('<code>facet skill</code>');
+    expect(en[4]).toContain('<code>.facet.json</code>');
+    expect(en[4]).toContain('<code>facet check</code>');
+    expect(en[6]).toContain('<code>facet license accept</code>');
+    expect(es[1]).toContain('<code>uv tool install facetmedia</code>');
+    expect(es[3]).toContain('<code>--json</code>');
+    expect(es[3]).toContain('<code>facet skill</code>');
+    expect(es[4]).toContain('<code>.facet.json</code>');
+    expect(es[4]).toContain('<code>facet check</code>');
+    expect(es[6]).toContain('<code>facet license accept</code>');
   });
 
   it('groups capabilities by facet in tabs', () => {
@@ -101,8 +146,8 @@ describe('facetmedia EXP-009', () => {
     // The three .ok spans left are exactly the record JSON values.
     expect(VIEW).not.toContain('<span class="ok">{');
     expect(VIEW.match(/class="ok"/g)).toHaveLength(3);
-    // var(--essence) is used only by .ok.
-    expect(VIEW.match(/var\(--essence\)/g)).toHaveLength(1);
+    // var(--essence) is used by .ok and by the lit dial arc.
+    expect(VIEW.match(/var\(--essence\)/g)).toHaveLength(2);
   });
 
   it('beta entries show under the Active tab', () => {

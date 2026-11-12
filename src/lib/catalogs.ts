@@ -100,6 +100,8 @@ export interface FacetCapability {
   kind: string;
   summary: string;
   facet: string;
+  verify?: Record<string, number | string>;
+  seed?: boolean;
 }
 
 export interface FacetGroup {
@@ -152,6 +154,8 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
   let section = '';
   let cap: Partial<FacetCapability> | null = null;
   const caps: FacetCapability[] = [];
+  const verifyByCap = new Map<string, Record<string, number | string>>();
+  const seedCaps = new Set<string>();
   const flush = () => {
     if (!cap || !cap.id) {
       cap = null;
@@ -166,6 +170,24 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
     });
     cap = null;
   };
+  const parseThresholds = (value: string): Record<string, number | string> => {
+    const out: Record<string, number | string> = {};
+    const inner = value.match(/^\{(.*)\}$/s);
+    if (!inner) return out;
+    for (const part of inner[1].split(',')) {
+      const kv = part.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$/);
+      if (!kv) continue;
+      const rawValue = kv[2];
+      const quoted = rawValue.match(/^["'](.*)["']$/);
+      if (quoted) {
+        out[kv[1]] = quoted[1];
+        continue;
+      }
+      const num = Number(rawValue);
+      out[kv[1]] = Number.isFinite(num) ? num : rawValue;
+    }
+    return out;
+  };
 
   for (const raw of toml.split(/\r?\n/)) {
     const line = raw.trim();
@@ -175,6 +197,18 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
       section = sectionMatch[1].trim();
       const capMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)$/);
       if (capMatch) cap = { id: `${pkg}.${capMatch[1]}` };
+      else {
+        const verifyMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.verify$/);
+        if (verifyMatch) verifyByCap.set(`${pkg}.${verifyMatch[1]}`, {});
+        const seedMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.inputs\.seed$/);
+        if (seedMatch) seedCaps.add(`${pkg}.${seedMatch[1]}`);
+      }
+      continue;
+    }
+    const verifySection = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.verify$/);
+    if (verifySection) {
+      const tm = line.match(/^thresholds\s*=\s*(\{.*\})$/);
+      if (tm) verifyByCap.set(`${pkg}.${verifySection[1]}`, parseThresholds(tm[1]));
       continue;
     }
     const m = line.match(/^([A-Za-z_-]+)\s*=\s*(["'])(.*?)\2/);
@@ -187,6 +221,12 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
     }
   }
   flush();
+
+  for (const c of caps) {
+    const verify = verifyByCap.get(c.id);
+    if (verify && Object.keys(verify).length > 0) c.verify = verify;
+    if (seedCaps.has(c.id)) c.seed = true;
+  }
 
   return caps;
 }
