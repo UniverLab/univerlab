@@ -158,13 +158,22 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('Alfred Nobel · Wikimedia Commons');
   });
 
-  it('keeps the side column to two events and no photos', () => {
+  it('keeps the side column to two events, their pictures next in weight', () => {
     const at = html.indexOf('<aside class="also">');
     const aside = html.slice(at, html.indexOf('</aside>', at));
     expect(aside).toContain('1879');
     expect(aside).toContain('1638');
     expect(aside.indexOf('1879')).toBeLessThan(aside.indexOf('1638'));
-    expect(aside).not.toContain('<img');
+    // The 1879 portrait prints at the side column's own size; nothing in the
+    // side column outranks the lead's engraving or shrinks to a stamp.
+    expect(aside).toContain('photo--medium');
+    expect(aside).not.toContain('photo--lead');
+    expect(aside).not.toContain('photo--event');
+    expect(aside).not.toContain('photo--stamp');
+    // One sentence of body under each event, never the whole summary.
+    for (const m of aside.matchAll(/<p class="aside-body">(.*?)<\/p>/g)) {
+      expect(m[1]).not.toMatch(/[.?!…] .*$/);
+    }
   });
 
   it('lists every other fact once across the three columns', () => {
@@ -240,15 +249,25 @@ describe('todayEditionHtml (en)', () => {
     expect(md.match(/^- \*\*/gm)).toHaveLength(9);
   });
 
-  it('omits the .lead block and starts at the columns when the day has no event', () => {
+  it('omits the .lead block and runs feature, columns, notices when the day has no event', () => {
     const noEvents = FACTS.filter((f) => f.kind !== 'event');
     expect(noEvents.length).toBeGreaterThan(0);
     const bare = todayEditionHtml({ facts: noEvents, lab: [] }, 'en', DATE);
     expect(bare).not.toContain('class="lead"');
     expect(bare).not.toContain('Letter of the day');
     expect(bare).not.toContain('<aside>');
-    // The dateline hands straight over to the columns.
-    expect(bare).toMatch(/<\/div><div class="cols">/);
+    // With no side column there is no rail to leave a hole beside: the
+    // feature ad, the columns and the closing notices run full width, and
+    // the Workbench notice joins the pair instead of standing alone.
+    const front = bare.slice(bare.indexOf('<div class="front">'));
+    expect(front).not.toContain('<div class="rail">');
+    const order = ['ad--feature', '<div class="cols">', '<div class="ad-pair">'].map((m) =>
+      front.indexOf(m),
+    );
+    for (const at of order) expect(at).toBeGreaterThan(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(front.indexOf('class="ad ad--tall"')).toBeGreaterThan(front.indexOf('<div class="cols">'));
+    expect(bare).not.toContain('rail" style=');
     // And the columns still list every birth and death.
     expect(bare).toContain('<h3>Births</h3>');
     expect(bare).toContain('<h3>Deaths</h3>');
@@ -274,8 +293,9 @@ describe('todayEditionHtml (en)', () => {
       DATE,
     );
     // Six letters: one leads, two stand aside, three fill the column —
-    // every column event prints its photo, lazily.
-    expect(col.match(/class="item has-photo"/g)).toHaveLength(3);
+    // every column event prints its photo at the column size, lazily.
+    expect(col.match(/class="item has-photo item--event"/g)).toHaveLength(3);
+    expect(col).toContain('photo--event');
     expect(col).toContain('loading="lazy"');
   });
 
@@ -414,27 +434,43 @@ describe('the lab advertisements', () => {
     const leadStart = full.indexOf('<article class="lead');
     expect(leadStart).toBeGreaterThan(-1);
     expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="ad');
-    // The wide ad follows the lead; the rail holds the side column and the
-    // three shorter notices.
-    expect(full.indexOf('class="ad ad--wide"')).toBeGreaterThan(leadStart);
-    expect(full).toContain('<div class="rail"');
+    // The front runs rail, feature, columns, pair: the Workbench notice
+    // beside the lead, the audits display under them, the small pair last.
+    const front = full.slice(full.indexOf('<div class="front">'));
+    const order = [
+      '<div class="rail">',
+      'class="ad ad--feature"',
+      '<div class="cols">',
+      '<div class="ad-pair">',
+    ].map((m) => front.indexOf(m));
+    for (const at of order) expect(at).toBeGreaterThan(-1);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // The rail holds the side column and one notice, never a sized band:
+    // no rail carries an inline row count.
+    expect(full).toContain('<div class="rail">');
     expect(full.indexOf('<aside class="also">')).toBeGreaterThan(full.indexOf('<div class="rail"'));
+    expect(full.indexOf('class="ad ad--tall"')).toBeGreaterThan(full.indexOf('<div class="rail"'));
+    expect(full.indexOf('class="ad ad--tall"')).toBeLessThan(full.indexOf('class="ad ad--feature"'));
+    expect(full).not.toContain('rail" style=');
+    // Every ad is a display ad: a large display line, copy and a boxed
+    // call to action that closes the notice.
+    for (const m of full.matchAll(/<aside class="ad ad--\w+"[^>]*>(.*?)<\/aside>/gs)) {
+      expect(m[1]).toContain('class="ad-display"');
+      expect(m[1]).toContain('class="ad-copy"');
+      const close = m[1].indexOf('class="ad-close"');
+      expect(close).toBeGreaterThan(-1);
+      expect(m[1].indexOf('class="ad-cta"', close)).toBeGreaterThan(close);
+    }
   });
 
-  it('sizes the rail to the rows the front fills, so no band is left empty', () => {
-    // No lead and no lab mail: the columns follow the wide ad at once.
-    expect(todayEditionHtml({ facts: [], lab: [] }, 'en', DATE)).toContain(
-      '<div class="rail" style="--rail-rows:1">',
-    );
+  it('leaves no sized band on the front: no rail carries a row count', () => {
+    // No lead and no lab mail, a full edition, a lead-less day: the rail is
+    // always content-sized.
+    expect(todayEditionHtml({ facts: [], lab: [] }, 'en', DATE)).not.toContain('rail" style=');
     const noEvents = FACTS.filter((f) => f.kind !== 'event');
     expect(noEvents.length).toBeGreaterThan(0);
-    expect(todayEditionHtml({ facts: noEvents, lab: [] }, 'en', DATE)).toContain(
-      '<div class="rail" style="--rail-rows:1">',
-    );
-    // One lab box and the lead fill two rows; the wide ad the third.
-    expect(todayEditionHtml(feed(), 'en', DATE)).toContain(
-      '<div class="rail" style="--rail-rows:3">',
-    );
+    expect(todayEditionHtml({ facts: noEvents, lab: [] }, 'en', DATE)).not.toContain('rail" style=');
+    expect(todayEditionHtml(feed(), 'en', DATE)).not.toContain('rail" style=');
   });
 
   it('spells the Spanish Workbench notice without a lone banco', () => {
@@ -442,11 +478,11 @@ describe('the lab advertisements', () => {
     expect(html).toContain('Banco de trabajo');
     expect(html).toContain('inteligencia artificial');
     expect(html).not.toMatch(/[a-zñ] banco/);
-    expect(html).toContain('<a href="/es/workbench/">Abrir el Banco de trabajo</a>');
-    expect(html).toContain('<a href="/es/workbench/audits/">');
-    expect(html).toContain('<a href="/es/canopy/">');
+    expect(html).toContain('<a class="ad-cta" href="/es/workbench/">Abrir el Banco de trabajo</a>');
+    expect(html).toContain('<a class="ad-cta" href="/es/workbench/audits/">');
+    expect(html).toContain('<a href="/es/canopy/">Canopy</a>');
     expect(html).toContain('<a href="/es/facetmedia/">');
-    expect(html).toContain('<a href="/es/contributors/">');
+    expect(html).toContain('<a class="ad-cta" href="/es/contributors/">');
   });
 
   it('installs with the registry one-liners, never hardcoded', () => {

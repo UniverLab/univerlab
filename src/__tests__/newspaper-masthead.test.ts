@@ -33,6 +33,23 @@ describe('the masthead is the only h1 of the page', () => {
     expect(edition).toContain('paperPlateHtml');
   });
 
+  it('frames the name with an ear on each side', () => {
+    expect(paper).toContain('class="ear ear--left"');
+    expect(paper).toContain('class="ear ear--right"');
+    // The left ear carries the path, the edition label and the sol; the
+    // right ear carries the price. The motto, the date controls and the tabs
+    // span the whole masthead under them.
+    expect(paper).toContain('{t.today.price}');
+    expect(paper).toContain('[data-sol]');
+    expect(paper).toContain('data-sol-label={t.today.sol}');
+    expect(en.today.price).toBe('Price: free');
+    expect(es.today.price).toBe('Precio: gratis');
+    expect(paper).toMatch(/\.paper \.masthead \{[^}]*grid-template-columns:\s*1fr auto 1fr/);
+    // The sol is set by script from the same day key as the edition.
+    expect(paper).toContain('solOf');
+    expect(edition).toContain('export function solOf');
+  });
+
   it('the masthead prints the new name over the centred motto', () => {
     // The paper was renamed from El Almanaque / The Almanac.
     expect(en.today.name).toBe('The Observable');

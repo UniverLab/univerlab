@@ -37,13 +37,56 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).not.toContain('var(--bench-c-slate)');
   });
 
-  it('lays the front out as spans beside a rail sized to the rows it must fill', () => {
-    // The lab mail box and the lead take three of the four columns; the rail
-    // is told by the renderer how many rows to run beside, so a day without a
-    // lead does not leave an empty band before the columns.
-    expect(css).toMatch(/\.paper \.front \.labmail \{[^}]*grid-column:\s*1 \/ span 3/);
-    expect(css).toMatch(/\.paper \.front \.rail \{[^}]*grid-row:\s*1 \/ span var\(--rail-rows/);
-    expect(css).toMatch(/\.paper \.front \.cols \{[^}]*grid-column:\s*1 \/ -1/);
+  it('lays the front out as three columns with the lead spanning two', () => {
+    // The lead takes two of the three columns with the rail beside it; the
+    // lab mail, the feature ad, the columns and the pair span them all. No
+    // rail is ever sized by the renderer, so no band is left empty.
+    expect(css).toMatch(/\.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
+    expect(css).toMatch(/\.paper \.front \.lead \{[^}]*grid-column:\s*1 \/ span 2/);
+    expect(css).toMatch(/\.paper \.front \.rail \{[^}]*grid-column:\s*3/);
+    expect(css).toContain('grid-column: 1 / -1;');
+    expect(css).not.toContain('rail-rows');
+    // The columns are as many as the day prints — one, two or three — never
+    // a fixed three-track grid that would leave blank paper beside a short
+    // band.
+    expect(css).toMatch(
+      /\.paper \.cols \{[^}]*grid-template-columns:\s*none[^}]*grid-auto-flow:\s*column[^}]*grid-auto-columns:\s*minmax\(0, 1fr\)/,
+    );
+  });
+
+  it('fills the lead and the rail instead of leaving blank paper', () => {
+    // The story is a full-height flex column and the lead engraving grows
+    // into the slack; the rail matches the lead's height the same way.
+    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*100%/);
+    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
+    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*object-fit:\s*cover/);
+    expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
+    expect(css).toContain('.paper .photo--medium');
+  });
+
+  it('sets bodies upright with hyphenation, never long italic blocks', () => {
+    expect(css).toMatch(/\.paper \.item \.body \{[^}]*font-style:\s*normal/);
+    expect(css).toMatch(/\.paper \.item \.body \{[^}]*hyphens:\s*auto/);
+    expect(css).not.toMatch(/\.paper \.item \.body \{[^}]*italic/);
+  });
+
+  it('sizes pictures by weight: lead spanning, stamps small', () => {
+    expect(css).toMatch(/\.paper \.item\.has-photo \{[^}]*grid-template-columns:\s*38%/);
+    expect(css).toMatch(
+      /\.paper \.item\.has-photo\.item--stamp \{[^}]*grid-template-columns:\s*56px/,
+    );
+  });
+
+  it('sets the ads as period display ads, the feature across three', () => {
+    expect(css).toMatch(/\.paper \.ad \{[^}]*border:\s*3px double/);
+    expect(css).toContain('clamp(26px, 3.4vw, 40px)');
+    expect(css).toMatch(/\.paper \.ad--feature \{[^}]*grid-template-columns:\s*1\.2fr 1\.5fr 1fr/);
+    expect(css).toMatch(/\.paper \.ad \.ad-close \{[^}]*border-top:\s*3px double/);
+  });
+
+  it('prints without horizontal scroll: blocks, kept-together ads', () => {
+    expect(css).toMatch(/@media print \{[^}]*\.paper \.front,\s*\.paper \.cols \{[^}]*display:\s*block/);
+    expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
   });
 
   it('sets page 2 as dense ruled columns, not row-aligned grid cells', () => {

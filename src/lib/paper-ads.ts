@@ -30,28 +30,37 @@ function installCmd(id: string): string {
 }
 
 const shapeOf = (id: PaperAdId): string =>
-  id === 'workbench' ? 'tall' : id === 'audits' ? 'wide' : 'small';
+  id === 'audits' ? 'feature' : id === 'workbench' ? 'tall' : 'small';
 
+/** A period display advertisement: the kicker, one large display line, the
+ *  copy at two weights and the close — the tail over its rule, then the
+ *  boxed call to action last. Sized to its content, with no inner blank. */
 function frame(
   lang: PaperAdLang,
   id: PaperAdId,
   head: string,
-  inner: string,
-  href: string,
-  link: string,
+  copy: string,
+  close: string,
 ): string {
   const t = dict(lang);
   return (
     `<aside class="ad ad--${shapeOf(id)}" aria-label="${esc(t.ads.label)}">` +
     `<p class="kicker">${esc(t.ads.label)}</p>` +
-    `<h3>${esc(head)}</h3>` +
-    inner +
-    `<a href="${esc(href)}">${esc(link)}</a></aside>`
+    `<h3 class="ad-display">${esc(head)}</h3>` +
+    `<div class="ad-copy">${copy}</div>` +
+    `<div class="ad-close">${close}</div></aside>`
   );
 }
 
+function closeHtml(tail: string, href: string, link: string): string {
+  const tailHtml = tail ? `<p class="ad-tail">${esc(tail)}</p>` : '';
+  return tailHtml + `<a class="ad-cta" href="${esc(href)}">${esc(link)}</a>`;
+}
+
 function linesHtml(lines: ReadonlyArray<string>): string {
-  return lines.map((l) => `<p class="ad-line">${esc(l)}</p>`).join('');
+  return lines
+    .map((l, i) => `<p class="${i === 0 ? 'ad-line--lead' : 'ad-line'}">${esc(l)}</p>`)
+    .join('');
 }
 
 /** One advertisement as HTML. Every ad links only to a real lab offering. */
@@ -64,9 +73,8 @@ export function paperAdHtml(lang: PaperAdLang, id: PaperAdId): string {
       lang,
       id,
       a.head,
-      linesHtml(a.lines) + `<p class="tail">${esc(a.tail)}</p>`,
-      `${p}/workbench/`,
-      a.link,
+      linesHtml(a.lines),
+      closeHtml(a.tail, `${p}/workbench/`, a.link),
     );
   }
   if (id === 'audits') {
@@ -75,22 +83,21 @@ export function paperAdHtml(lang: PaperAdLang, id: PaperAdId): string {
       lang,
       id,
       a.head,
-      linesHtml(a.lines) + `<p class="tail">${esc(a.tail)}</p>`,
-      `${p}/workbench/audits/`,
-      a.link,
+      linesHtml(a.lines),
+      closeHtml(a.tail, `${p}/workbench/audits/`, a.link),
     );
   }
   if (id === 'install') {
     const a = t.ads.install;
     const canopy = installCmd('canopy');
     const facet = installCmd('facetmedia');
-    return (
-      `<aside class="ad ad--small" aria-label="${esc(t.ads.label)}">` +
-      `<p class="kicker">${esc(t.ads.label)}</p>` +
-      `<h3>${esc(a.head)}</h3>` +
-      `<p class="cmd"><a href="${p}/canopy/">${esc(a.cmd1)}</a><code>${esc(canopy)}</code></p>` +
-      `<p class="cmd"><a href="${p}/facetmedia/">${esc(a.cmd2)}</a><code>${esc(facet)}</code></p>` +
-      `<a href="${p}/canopy/">${esc(a.link)}</a></aside>`
+    return frame(
+      lang,
+      id,
+      a.head,
+      `<p class="cmd ad-line--lead"><a href="${p}/canopy/">${esc(a.cmd1)}</a><code>${esc(canopy)}</code></p>` +
+        `<p class="cmd ad-line"><a href="${p}/facetmedia/">${esc(a.cmd2)}</a><code>${esc(facet)}</code></p>`,
+      closeHtml('', `${p}/canopy/`, a.link),
     );
   }
   const a = t.ads.collab;
@@ -98,9 +105,8 @@ export function paperAdHtml(lang: PaperAdLang, id: PaperAdId): string {
     lang,
     id,
     a.head,
-    linesHtml(a.lines) + `<p class="tail">${esc(a.tail)}</p>`,
-    `${p}/contributors/`,
-    a.link,
+    linesHtml(a.lines),
+    closeHtml(a.tail, `${p}/contributors/`, a.link),
   );
 }
 

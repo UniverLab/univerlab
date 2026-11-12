@@ -747,6 +747,8 @@ export const en = {
     deaths: 'Deaths',
     aside: 'Also on this day',
     more: 'Show {n} more',
+    continued: 'continued',
+    price: 'Price: free',
     types: { launch: 'launch', note: 'note', update: 'update', deploy: 'deploy', bugfix: 'bugfix', incident: 'incident' },
     ago: {
       event: '{years} years ago',

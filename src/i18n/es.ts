@@ -741,6 +741,8 @@ export const es: Dict = {
     deaths: 'Defunciones',
     aside: 'También en este día',
     more: 'Ver {n} más',
+    continued: 'continuación',
+    price: 'Precio: gratis',
     types: { launch: 'lanzamiento', note: 'nota', update: 'actualización', deploy: 'despliegue', bugfix: 'corrección', incident: 'incidente' },
     ago: {
       event: 'hace {years} años',

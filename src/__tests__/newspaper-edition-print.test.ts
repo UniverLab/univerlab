@@ -149,12 +149,12 @@ describe('event photos print beside every event that has one', () => {
   const thumbedEvent = (year: string): Fact =>
     fact({ kind: 'event', year, page: `Event of ${year}`, text: `something happened in ${year}`, thumb: { src: `https://upload.wikimedia.org/wikipedia/commons/${year}.jpg`, w: 320, h: 200 } });
 
-  it('the lead event prints its photo', () => {
+  it('the lead event prints its photo spanning the columns', () => {
     const ev = thumbedEvent('1945');
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
     expect(todayLead([ev], DATE)).toBe(ev);
     expect(html).toContain('<article class="lead solo">');
-    expect(html).toContain('<figure class="photo">');
+    expect(html).toContain('<figure class="photo photo--lead">');
     expect(html).not.toContain('loading="lazy"');
   });
   it('a lead without a thumb prints no figure', () => {
@@ -176,9 +176,12 @@ describe('event photos print beside every event that has one', () => {
     const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
     // Six letters: one leads, two stand aside, three fill the column.
-    expect((html.match(/class="item has-photo"/g) ?? []).length).toBe(3);
-    // The lead, the three column photos and the engraving: no cap.
-    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(5);
+    // Column photos print at the column size, side-column photos medium.
+    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(3);
+    expect((html.match(/photo--medium/g) ?? []).length).toBe(2);
+    // The lead, the two side photos, the three column photos and the
+    // engraving: no cap.
+    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(7);
   });
   it('an event without a thumb prints no figure while the rest print theirs', () => {
     const noThumb = fact({ kind: 'event', year: '1800', page: 'Old event', text: 'something old happened' });
@@ -188,7 +191,9 @@ describe('event photos print beside every event that has one', () => {
     const aside = todayAside(facts, lead);
     const cols = facts.filter((f) => f !== lead && !aside.includes(f));
     // Every column event carrying a photo prints it, thumb or none.
-    expect((html.match(/class="item has-photo"/g) ?? []).length).toBe(cols.filter((f) => f.thumb).length);
+    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(
+      cols.filter((f) => f.thumb).length,
+    );
     for (const f of cols) {
       if (f.thumb) expect(html).toContain(f.thumb.src);
     }
@@ -213,15 +218,16 @@ describe('every letter prints its body, not only the lead', () => {
     expect(md).toContain('  She wrote the first program.');
   });
 
-  it('a cut body ends with … in the column, like the lead', () => {
+  it('a cut body prints its first sentence in the column, never the wall', () => {
     const cut = fact({
       ...summarized,
       summary: 'First sentence. The rest is cut.',
       summaryCut: true,
     });
     const html = todayEditionHtml({ facts: [cut], lab: [] }, 'es', day);
-    expect(html).toContain(`<p class="body">${summaryText(cut)}</p>`);
     expect(summaryText(cut).endsWith('…')).toBe(true);
+    expect(html).toContain('<p class="body">First sentence.</p>');
+    expect(html).not.toContain('The rest is cut.');
   });
 
   it('an event without a summary prints no body', () => {

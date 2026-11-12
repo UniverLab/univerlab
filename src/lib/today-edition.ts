@@ -148,6 +148,33 @@ function leadBody(lead: Fact): string {
   return itemBody(lead);
 }
 
+const SENTENCE_ABBREV = new Set([
+  'mr', 'mrs', 'ms', 'mme', 'dr', 'dra', 'sr', 'sra', 'srta', 'ud', 'uds',
+  'vs', 'viz', 'cf', 'al', 'eg', 'ie', 'fig',
+]);
+
+/** The first sentence of a column body: columns print one sentence, never a
+ *  wall of italic paragraphs. The lead keeps its whole paragraph. */
+export function firstSentence(s: string): string {
+  const flat = (s || '').replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < flat.length; i++) {
+    const c = flat[i];
+    if (c !== '.' && c !== '!' && c !== '?' && c !== '…') continue;
+    const atEnd = i + 1 >= flat.length;
+    if (!atEnd && flat[i + 1] !== ' ') continue;
+    if (c === '.') {
+      const prev = flat[i - 1] || '';
+      const after = flat[i + 1] || '';
+      if (/\d/.test(prev) && /\d/.test(after)) continue;
+      const tail = /([A-Za-z]+(?:\.[A-Za-z]+)*)$/.exec(flat.slice(0, i))?.[1] || '';
+      const bare = tail.replace(/\./g, '').toLowerCase();
+      if (tail.includes('.') || /^[A-Z]$/.test(tail) || SENTENCE_ABBREV.has(bare)) continue;
+    }
+    return flat.slice(0, i + 1);
+  }
+  return flat;
+}
+
 /** The edition's lead: the same letter the mailbox delivers, chosen by the
  *  shared filter from the day's pool. */
 export function todayLead(facts: Fact[], date: Date): Fact | null {
@@ -197,16 +224,22 @@ function typeOf(box: TodayLab, t: Dict): string {
 }
 
 /** The day-of-year number the dateline prints as `Sol n`. Noon keeps a DST
- *  shift from rounding the count down a day. */
-function solOf(date: Date): number {
+ *  shift from rounding the count down a day. Exported for the masthead ear,
+ *  which prints the same number beside the edition label. */
+export function solOf(date: Date): number {
   const start = new Date(date.getFullYear(), 0, 0);
   return Math.floor((date.getTime() - start.getTime()) / 86400000);
 }
 
+/** The engraving's size on the page: the lead's picture spans columns, the
+ *  side column's pictures are next in weight, column events print smaller
+ *  and births and deaths keep their small portraits. */
+export type PhotoSize = 'lead' | 'medium' | 'event' | 'stamp';
+
 function photoFigure(
   fact: Fact,
   t: Dict,
-  opts: { eager: boolean; caption: boolean },
+  opts: { eager: boolean; caption: boolean; size: PhotoSize },
 ): string {
   const src = fact.thumb?.src || '';
   if (!src) return '';
@@ -218,22 +251,24 @@ function photoFigure(
   const loading = opts.eager ? '' : ' loading="lazy"';
   const cap = opts.caption && name ? `<figcaption>${esc(fmt(t.caption, { name }))}</figcaption>` : '';
   return (
-    `<figure class="photo"><div class="print">` +
+    `<figure class="photo photo--${opts.size}"><div class="print">` +
     `<img src="${esc(src)}" alt="${alt}"${dims}${loading}></div>${cap}</figure>`
   );
 }
 
-function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
+function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): string {
   const years = yearsOnWay(fact, date);
   const text = fact.text ? fact.text.charAt(0).toUpperCase() + fact.text.slice(1) : '';
-  const img = photo ? photoFigure(fact, t, { eager: false, caption: false }) : '';
-  const cls = img ? 'item has-photo' : 'item';
+  const img = photoFigure(fact, t, { eager: false, caption: false, size });
+  const cls = img ? `item has-photo item--${size}` : 'item';
   const link = fact.link
     ? `<a href="${esc(fact.link)}" target="_blank" rel="noopener noreferrer">${esc(t.wikiLink)}</a>`
     : '';
-  // The body's own paragraph: skipped when empty or when it would repeat the
-  // line above (a person with no summary, whose line is already the body).
-  const body = itemBody(fact);
+  // The body's own paragraph: the first sentence only, so a long summary
+  // never leaves one column longer than the rest. Skipped when empty or when
+  // it would repeat the line above (a person with no summary, whose line is
+  // already the body). The lead keeps its whole paragraph.
+  const body = firstSentence(itemBody(fact));
   const bodyHtml = body && body !== fact.text ? `<p class="body">${esc(body)}</p>` : '';
   return (
     `<article class="${cls}">${img}` +
@@ -245,31 +280,104 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
 /** A column shows this many letters before the rest fold under "show more". */
 export const COLUMN_FOLD = 6;
 
-function columnHtml(
-  title: string,
-  items: Fact[],
+/** One column entry: its kind sets the heading it prints under. */
+export interface ColEntry {
+  kind: Fact['kind'];
+  fact: Fact;
+}
+
+/** A printed column's weight in body lines: the line, one sentence of body
+ *  and the engraving's own rows. The splitter below balances columns by it. */
+export function estimate(f: Fact): number {
+  const body = firstSentence(itemBody(f));
+  return Math.ceil((f.text || '').length / 26) + Math.ceil(body.length / 34) + (f.thumb ? 7 : 0) + 2;
+}
+
+const kindTitle = (kind: Fact['kind'], t: Dict): string =>
+  kind === 'event' ? t.events : kind === 'born' ? t.births : t.deaths;
+
+/** Split the day's letters into balanced columns. Entries stay contiguous in
+ *  kind order; each column closes at the cut nearest its third of the total
+ *  weight, so the columns end within a few lines of each other. Short days
+ *  (or days with a single kind) keep one column per kind instead. */
+export function splitColumns(entries: ColEntry[]): ColEntry[][] {
+  if (!entries.length) return [];
+  if (entries.length === 1) return [[entries[0]]];
+  const kinds = new Set(entries.map((e) => e.kind));
+  const total = entries.reduce((n, e) => n + estimate(e.fact), 0);
+  if (!(total > 45 && kinds.size >= 2)) {
+    const cols: ColEntry[][] = [];
+    for (const e of entries) {
+      const last = cols[cols.length - 1];
+      if (last && last[0].kind === e.kind) last.push(e);
+      else cols.push([e]);
+    }
+    return cols;
+  }
+  const cum: number[] = [];
+  let running = 0;
+  for (const e of entries) {
+    running += estimate(e.fact);
+    cum.push(running);
+  }
+  // The end index of the column closing nearest weight t, never before lo
+  // and never past the second-to-last letter (every column keeps at least
+  // one letter).
+  const cutNear = (t: number, lo: number): number => {
+    let best = Math.min(lo, entries.length - 2);
+    for (let i = best; i <= entries.length - 2; i++) {
+      if (Math.abs(cum[i] - t) < Math.abs(cum[best] - t)) best = i;
+    }
+    return best;
+  };
+  const cut1 = cutNear(total / 3, 0);
+  const cut2 = cutNear((2 * total) / 3, cut1 + 1);
+  return [
+    entries.slice(0, cut1 + 1),
+    entries.slice(cut1 + 1, cut2 + 1),
+    entries.slice(cut2 + 1),
+  ].filter((c) => c.length > 0);
+}
+
+/** One balanced column: a heading per kind change, marked as a continuation
+ *  when the kind runs on from the previous column. */
+function balancedColumnHtml(
+  col: ColEntry[],
+  openKind: Fact['kind'] | null,
   t: Dict,
   date: Date,
   lang: TodayLang,
-  photo: (f: Fact) => boolean,
   plate: boolean,
-  boxed: boolean,
-): string {
-  const head = items.slice(0, COLUMN_FOLD);
-  const extra = items.slice(COLUMN_FOLD);
-  const headHtml = head.map((f) => itemHtml(f, t, date, photo(f))).join('');
-  const extraHtml = extra.length
-    ? `<details class="more"><summary>${esc(fmt(t.more, { n: extra.length }))}</summary>` +
-      extra.map((f) => itemHtml(f, t, date, photo(f))).join('') +
-      `</details>`
-    : '';
-  return (
-    `<section class="col${boxed ? ' boxed' : ''}"><h3>${esc(title)}</h3>` +
-    headHtml +
-    extraHtml +
-    (plate ? paperPlateHtml(lang) : '') +
-    `</section>`
-  );
+): { html: string; endKind: Fact['kind'] | null } {
+  const head = col.slice(0, COLUMN_FOLD);
+  const extra = col.slice(COLUMN_FOLD);
+  let cur: Fact['kind'] | null = null;
+  let first = true;
+  const render = (items: ColEntry[]): string => {
+    let html = '';
+    for (const e of items) {
+      if (e.kind !== cur) {
+        const continuing = first && cur === null && openKind === e.kind;
+        html +=
+          `<h3>${esc(kindTitle(e.kind, t))}` +
+          (continuing ? ` <span class="cont">${esc(t.continued)}</span>` : '') +
+          `</h3>`;
+        cur = e.kind;
+      }
+      first = false;
+      html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp');
+    }
+    return html;
+  };
+  let html = `<section class="col">` + render(head);
+  if (extra.length) {
+    html +=
+      `<details class="more"><summary>${esc(fmt(t.more, { n: extra.length }))}</summary>` +
+      render(extra) +
+      `</details>`;
+  }
+  if (plate) html += paperPlateHtml(lang);
+  return { html: html + `</section>`, endKind: cur };
 }
 
 /** The edition's inner HTML: everything inside `#edition`. */
@@ -316,7 +424,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<article class="lead${aside.length ? '' : ' solo'}"><div class="story">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
-      photoFigure(lead, t, { eager: true, caption: true }) +
+      photoFigure(lead, t, { eager: true, caption: true, size: 'lead' }) +
       (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
@@ -324,60 +432,73 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `</div></article>`;
   }
 
-  // The audits advertisement spans the front under the lead, never the lead
-  // slot itself.
-  out += paperAdHtml(lang, 'audits');
-
-  // The side column and the remaining advertisements share the rail: the
-  // events the lead pushed aside read first, then the shorter notices.
+  // The rail beside the lead: the events the lead pushed aside read first,
+  // then the Workbench notice. Nothing else shares it, so a long side column
+  // can no longer stretch past the lead and leave a hole under it.
   const side = aside.length
     ? `<aside class="also">` +
       aside
         .map((f) => {
           const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
-          const body = itemBody(f);
+          const body = firstSentence(itemBody(f));
           const bodyHtml =
             body && body !== f.text ? `<p class="aside-body">${esc(body)}</p>` : '';
-          return `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}`;
+          const img = photoFigure(f, t, { eager: false, caption: false, size: 'medium' });
+          return (
+            `<div class="aside-item${img ? ' has-photo' : ''}">${img}<div>` +
+            `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}</div></div>`
+          );
         })
         .join('') +
       `</aside>`
     : '';
-  // The rail runs beside every row the front fills before the columns: each
-  // lab box, the lead and the wide advertisement. On a day with no lead the
-  // wide advertisement is the only one, so the columns can follow it directly
-  // instead of leaving an empty band.
-  const railRows = boxes.length + (lead ? 1 : 0) + 1;
-  out +=
-    `<div class="rail" style="--rail-rows:${railRows}">` +
-    side +
-    paperAdHtml(lang, 'workbench') +
-    paperAdHtml(lang, 'install') +
-    paperAdHtml(lang, 'collab') +
-    `</div>`;
+  if (side) {
+    out += `<div class="rail">${side}${paperAdHtml(lang, 'workbench')}</div>`;
+  }
+
+  // The audits display advertisement spans the front under the lead and,
+  // when the day has one, the rail — never the lead slot itself.
+  out += paperAdHtml(lang, 'audits');
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
-  // Every event whose article carries a photo prints it, like births and
+  // Every letter whose article carries a photo prints it, like births and
   // deaths do; the column folds the overflow under "show more" instead.
-  const eventPhoto = (f: Fact): boolean => !!f.thumb;
-  const pairs: Array<[string, Fact[], (f: Fact) => boolean, Fact['kind']]> = [
-    [t.events, rest('event'), eventPhoto, 'event'],
-    [t.births, rest('born'), () => true, 'born'],
-    [t.deaths, rest('died'), () => true, 'died'],
-  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[], (f: Fact) => boolean, Fact['kind']]>;
-  if (pairs.length) {
-    // The engraving fills the gap the day's content leaves: it is appended
-    // in the shortest column (fewest letters, ties to the first).
+  const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
+    rest(kind).map((fact) => ({ kind, fact })),
+  );
+  const cols = splitColumns(entries);
+  if (cols.length) {
+    // The engraving absorbs the slack the day's content leaves: it is
+    // appended in the lightest column (ties to the first).
     let plateAt = 0;
-    for (let i = 1; i < pairs.length; i++) {
-      if (pairs[i][1].length < pairs[plateAt][1].length) plateAt = i;
-    }
-    out +=
-      `<div class="cols">` +
-      pairs.map(([title, items, photo, kind], i) => columnHtml(title, items, t, date, lang, photo, i === plateAt, kind !== 'event')).join('') +
-      `</div>`;
+    let lightest = Infinity;
+    cols.forEach((col, i) => {
+      const weight = col.reduce((n, e) => n + estimate(e.fact), 0);
+      if (weight < lightest) {
+        lightest = weight;
+        plateAt = i;
+      }
+    });
+    let openKind: Fact['kind'] | null = null;
+    out += `<div class="cols">`;
+    cols.forEach((col, i) => {
+      const rendered = balancedColumnHtml(col, openKind, t, date, lang, i === plateAt);
+      out += rendered.html;
+      openKind = rendered.endKind;
+    });
+    out += `</div>`;
   }
+
+  // The small notices close the front, each sized to its own content. On a
+  // day without a side column the Workbench notice joins them instead of
+  // leaving the rail's column empty.
+  out +=
+    `<div class="ad-pair">` +
+    (side ? '' : paperAdHtml(lang, 'workbench')) +
+    paperAdHtml(lang, 'install') +
+    paperAdHtml(lang, 'collab') +
+    `</div>`;
 
   out += `</div><p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
