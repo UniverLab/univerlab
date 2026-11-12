@@ -29,12 +29,11 @@ const path = Astro.url.pathname;
 const seg = path.replace(/^\/es(?=\/|$)/, '').split('/').filter(Boolean)[0] ?? '';
 const onExperiment = experiments.some((e) => e.id === seg);
 
-// On docs pages the header points GitHub at the project's own repo (not the org).
+// Docs pages light up the Experiments entry too.
 // Docs are circadian like the rest of the site — no manual theme toggle.
 const docsMatch = path.match(/^\/([^/]+)\/docs/);
 const docExp = docsMatch ? experiments.find((e) => e.id === docsMatch[1]) : undefined;
 const isDocs = !!docExp;
-const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
@@ -42,7 +41,8 @@ const nav = [
   { href: '/roadmap/', label: t.nav.roadmap }, // English-only page, no /es twin
   { href: localizePath('/contributors', lang), label: t.nav.people },
   { href: localizePath('/workbench', lang), label: t.nav.workbench },
-  { href: githubHref, label: t.nav.github, ext: true },
+  // The newspaper takes the slot GitHub had: GitHub stays in the footer's icons.
+  { href: localizePath('/newspaper', lang), label: t.nav.observable },
   { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';
@@ -356,8 +356,10 @@ const signals = [
 <style>
   /* The header owns the page-corner switch, which is fixed at the viewport's bottom
      right: a stacking context of its own keeps it painted above the footer's ground
-     (a later sibling) while the footer's own popups still layer above it. */
-  header { position: relative; z-index: 1; }
+     (a later sibling) while the footer's own popups (z 20) still layer above it.
+     It sits above every hero too (an experiment hero is its own z 1 context
+     later in the page), so the phone menu never drops behind a machine. */
+  header { position: relative; z-index: 10; }
   .bar {
     position: relative;
     display: flex;

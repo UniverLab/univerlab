@@ -32,6 +32,8 @@ const footGroups = [
       { href: localizePath('/experiments', lang), label: t.nav.experiments },
       { href: localizePath('/archive', lang), label: t.nav.archive },
       { href: '/roadmap/', label: t.nav.roadmap },
+      // Four a side: the org's repos close the experiments column.
+      { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
     ],
   },
   {
@@ -91,7 +93,7 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
     <nav class="foot-nav" aria-label={t.nav.experiments}>
       {footGroups.map((group) => (
         <div class="foot-group"><span class="foot-head">{group.head}</span>{group.links.map((item) => (
-          <a href={item.href}>{item.label}</a>
+          <a href={item.href} target={'ext' in item ? '_blank' : undefined} rel={'ext' in item ? 'noopener noreferrer' : undefined}>{item.label}</a>
         ))}</div>
       ))}
     </nav>

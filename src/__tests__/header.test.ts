@@ -19,10 +19,10 @@ describe('Header experiments link', () => {
     expect(expIdx).toBeLessThan(manifestoIdx);
   });
 
-  it('links the Workbench nav entry after People and before GitHub', () => {
+  it('links the Workbench nav entry after People and before The Observable', () => {
     const p = src.indexOf('t.nav.people');
     const w = src.indexOf('t.nav.workbench');
-    const g = src.indexOf('t.nav.github');
+    const g = src.indexOf('t.nav.observable');
     expect(p).toBeGreaterThan(-1);
     expect(w).toBeGreaterThan(p);
     expect(g).toBeGreaterThan(w);

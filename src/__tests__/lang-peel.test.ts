@@ -276,7 +276,9 @@ describe('language corner styles', () => {
     expect(z).toBeLessThan(dialogZ); // palette, mail letter, paper slips
     // The footer is a later sibling: without a stacking context on the header the
     // fixed corner would be painted under the footer's ground.
-    expect(HEADER).toMatch(/header \{ position: relative; z-index: 1; \}/);
+    // Its z (10) also lifts it above every experiment hero (z 1, later in the
+    // page) and stays under the footer's popups (z 20).
+    expect(HEADER).toMatch(/header \{ position: relative; z-index: 10; \}/);
   });
 
   it('does not move under prefers-reduced-motion', () => {
