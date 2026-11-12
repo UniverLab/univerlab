@@ -727,6 +727,7 @@ export const es: Dict = {
       older: 'Ver anteriores',
       all: 'Todas',
       view: 'Ver →',
+      unavailable: 'No llegó el correo del laboratorio; inténtelo más tarde.',
     },
     leadKicker: 'Carta del día · hace {years} años',
     readOn: 'Leer en Wikipedia →',

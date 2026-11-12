@@ -82,6 +82,37 @@ describe('lab page (newspaper page 2)', () => {
     expect(LAB_TYPES).toEqual(['launch', 'deploy', 'bugfix', 'note', 'incident']);
   });
 
+  it('says the lab mail did not arrive instead of empty filter rows', () => {
+    const html = labPageHtml([], 'en', { unavailable: true });
+    expect(html).toContain('<h2 class="lab-heading">Lab news</h2>');
+    expect(html).toContain('<p class="lab-empty">The lab mail did not arrive — try again later.</p>');
+    expect(html).not.toContain('lab-filter');
+    expect(html).not.toContain('lab-log');
+    expect(html).not.toContain('lab-older');
+  });
+
+  it('says the same in Spanish', () => {
+    const html = labPageHtml([], 'es', { unavailable: true });
+    expect(html).toContain('<h2 class="lab-heading">Noticias del laboratorio</h2>');
+    expect(html).toContain('<p class="lab-empty">No llegó el correo del laboratorio; inténtelo más tarde.</p>');
+    expect(html).not.toContain('lab-filter');
+  });
+
+  it('keeps the filter rows when the feed simply has no entries', () => {
+    const html = labPageHtml([], 'en');
+    expect(html).toContain('lab-filter');
+    expect(html).not.toContain('lab-empty');
+  });
+
+  it('the markdown twin carries the unavailable line', () => {
+    expect(labPageMarkdown([], 'en', { unavailable: true })).toBe(
+      '## Lab news\n\nThe lab mail did not arrive — try again later.',
+    );
+    expect(labPageMarkdown([], 'es', { unavailable: true })).toBe(
+      '## Noticias del laboratorio\n\nNo llegó el correo del laboratorio; inténtelo más tarde.',
+    );
+  });
+
   it('twins page 2 as markdown under its heading', () => {
     const md = labPageMarkdown(entries, 'en');
     const lines = md.split('\n');

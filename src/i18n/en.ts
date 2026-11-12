@@ -733,6 +733,7 @@ export const en = {
       older: 'Older entries',
       all: 'All',
       view: 'View →',
+      unavailable: 'The lab mail did not arrive — try again later.',
     },
     leadKicker: 'Letter of the day · {years} years ago',
     readOn: 'Read on Wikipedia →',

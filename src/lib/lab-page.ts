@@ -71,10 +71,16 @@ function filterButtons(
   return shown.map((i) => btn(i.id, i.label, i.count)).join('');
 }
 
-/** Page 2's inner HTML: everything inside `#lab-body`. */
-export function labPageHtml(entries: Entry[], lang: LabPageLang): string {
+/** Page 2's inner HTML: everything inside `#lab-body`. When the lab feed
+ *  could not be read (`unavailable`) and there is nothing to print, the page
+ *  says so in one line instead of showing empty filter rows. */
+export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavailable?: boolean }): string {
   const t = dict(lang);
   const rows = sortEntries(entries || []);
+  if (!rows.length && opts?.unavailable) {
+    return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
+      `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
+  }
 
   const topicCounts = new Map<string, number>();
   const typeCounts = new Map<string, number>();
@@ -123,9 +129,13 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang): string {
   return out;
 }
 
-/** The twin's second page: the heading over the shared entry lines. */
-export function labPageMarkdown(entries: Entry[], lang: LabPageLang): string {
+/** The twin's second page: the heading over the shared entry lines, or over
+ *  the one unavailable line when the feed could not be read. */
+export function labPageMarkdown(entries: Entry[], lang: LabPageLang, opts?: { unavailable?: boolean }): string {
   const t = dict(lang);
+  if (!(entries || []).length && opts?.unavailable) {
+    return `## ${t.labPage.heading}\n\n${t.labPage.unavailable}`;
+  }
   const body = entriesMarkdown(entries || [], { labels: { empty: '' } });
   return `## ${t.labPage.heading}\n\n${body}`;
 }

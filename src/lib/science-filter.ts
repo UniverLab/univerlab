@@ -150,11 +150,25 @@ function pageTitle(p: FeedPage): string {
   return (raw || '').replace(/_/g, ' ').trim();
 }
 
-/** Lowercased, whitespace-collapsed: the live feed writes a non-breaking
- *  space inside some titles ("Chang\u00a01"), so a raw substring compare
- *  would miss the page the event is about. */
+/** Lowercased, whitespace-collapsed, Roman numerals as digits: the live
+ *  feed writes a non-breaking space inside some titles ("Chang\u00a01"), so
+ *  a raw substring compare would miss the page the event is about — and it
+ *  writes "Voyager I" where the page says "Voyager 1". Only whole words from
+ *  the fixed I–XXX table map, so "ill" or "civil" never match. */
+const ROMAN_TO_DIGITS: Record<string, string> = {
+  i: '1', ii: '2', iii: '3', iv: '4', v: '5', vi: '6', vii: '7', viii: '8',
+  ix: '9', x: '10', xi: '11', xii: '12', xiii: '13', xiv: '14', xv: '15',
+  xvi: '16', xvii: '17', xviii: '18', xix: '19', xx: '20', xxi: '21',
+  xxii: '22', xxiii: '23', xxiv: '24', xxv: '25', xxvi: '26', xxvii: '27',
+  xxviii: '28', xxix: '29', xxx: '30',
+};
+
 function comparable(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+  return s
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\b[ivxl]+\b/g, (w) => ROMAN_TO_DIGITS[w] ?? w);
 }
 
 /** How specific a title match is: more words first, then more characters.
@@ -166,22 +180,30 @@ function specificity(form: string): number {
   return words * 1000 + form.length;
 }
 
-/** The entry's own page (events only): among the pages, the one whose
- *  title matches the entry's text most specifically — the subject, never
- *  the country or the planet it happens near. An earlier match breaks a
- *  tie. Otherwise undefined: an unrelated paragraph is worse than none on
- *  a page that sells rigour, so the year-extract and pages[0] fallbacks
- *  are gone. Returns undefined when the entry carries no pages. */
+/** The entry's own page (events only): the page whose extract mentions the
+ *  entry's year is the subject — the craft, the person, the discovery — and
+ *  wins outright when exactly one page does ("Robert Falcon Scott" need not
+ *  appear in "Robert Scott" for its 1912 extract to name it). Several
+ *  year-hits narrow to the ones the text also names, most specific first;
+ *  none naming it means no page, never the setting. With no year-hit at all
+ *  the title match decides as before ("Voyager I" meets "Voyager 1" through
+ *  the numeral table), most specific first, earliest on a tie. Otherwise
+ *  undefined: an unrelated paragraph is worse than none on a page that
+ *  sells rigour, so the pages[0] fallback is gone. Returns undefined when
+ *  the entry carries no pages. */
 export function mainPage(entry: FeedEntry): FeedPage | undefined {
   const pages = entry?.pages || [];
   if (!pages.length) return undefined;
+  const year = entry?.year;
+  const yearRe =
+    typeof year === 'number' && Number.isFinite(year)
+      ? new RegExp(`(^|\\D)${year}(\\D|$)`)
+      : null;
   const text = comparable(entry.text || '');
   // Case kept, so a stripped title only counts where the text prints it as
   // the page does: "Phoenix (spacecraft)" meets "Phoenix", never "the lander".
   const rawText = (entry.text || '').replace(/\s+/g, ' ').trim();
-  let best: FeedPage | undefined;
-  let bestScore = -1;
-  let bestAt = -1;
+  const scored: Array<{ page: FeedPage; form: string; at: number; hasYear: boolean }> = [];
   for (const p of pages) {
     const title = pageTitle(p);
     const t = comparable(title);
@@ -206,12 +228,29 @@ export function mainPage(entry: FeedEntry): FeedPage | undefined {
         (specificity(f.form) === specificity(mine.form) && f.at < mine.at);
       if (better) mine = f;
     }
-    if (!mine) continue;
-    const score = specificity(mine.form);
-    if (score > bestScore || (score === bestScore && mine.at < bestAt)) {
-      best = p;
+    scored.push({
+      page: p,
+      form: mine?.form || '',
+      at: mine?.at ?? -1,
+      hasYear: !!yearRe && yearRe.test(p.extract || ''),
+    });
+  }
+  const hits = scored.filter((s) => s.hasYear);
+  // Exactly one page carries the event's year: that is the subject, whether
+  // or not the sentence prints its name.
+  if (hits.length === 1) return hits[0].page;
+  const pool = hits.length > 1 ? hits.filter((s) => s.at >= 0) : scored.filter((s) => s.at >= 0);
+  // Several year-hits and none of them named: the setting is not the story.
+  if (hits.length > 1 && !pool.length) return undefined;
+  let best: FeedPage | undefined;
+  let bestScore = -1;
+  let bestAt = -1;
+  for (const s of pool) {
+    const score = specificity(s.form);
+    if (score > bestScore || (score === bestScore && s.at < bestAt)) {
+      best = s.page;
       bestScore = score;
-      bestAt = mine.at;
+      bestAt = s.at;
     }
   }
   return best;

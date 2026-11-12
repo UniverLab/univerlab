@@ -157,6 +157,43 @@ describe('middleware — /newspaper/ HTML', () => {
   });
 });
 
+describe('middleware — page 2 when the lab feed cannot be read', () => {
+  const stubFetchLabDown = jest.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('wikipedia.org')) {
+      return new Response(JSON.stringify(FIX), { status: 200 });
+    }
+    throw new Error('announcements down');
+  }) as unknown as typeof fetch;
+
+  it('fills #lab-body with the one unavailable line, never empty filter rows', async () => {
+    global.fetch = stubFetchLabDown;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/newspaper/', 'text/html'));
+
+    expect(res.status).toBe(200);
+    const lab = FakeHTMLRewriter.last?.writes['#lab-body'] || '';
+    expect(lab).toContain('lab-empty');
+    expect(lab).toContain('The lab mail did not arrive');
+    expect(lab).not.toContain('lab-filter');
+    expect(lab).not.toContain('lab-log');
+    // Page 1 still prints the day's letters from the encyclopedia read.
+    expect(FakeHTMLRewriter.last?.writes['#edition']).toContain('class="dateline"');
+  });
+
+  it('the markdown twin carries the unavailable line', async () => {
+    global.fetch = stubFetchLabDown;
+
+    const res = await onRequest(context('/newspaper/index.md', 'text/markdown'));
+
+    expect(res.status).toBe(200);
+    const md = await res.text();
+    expect(md).toContain('## Lab news');
+    expect(md).toContain('The lab mail did not arrive');
+  });
+});
+
 describe('middleware — legacy /today/ addresses redirect permanently', () => {
   it.each([['/today', '/newspaper/'], ['/today/', '/newspaper/'], ['/es/today', '/es/newspaper/'], ['/es/today/', '/es/newspaper/']])(
     '%s 301s to %s',

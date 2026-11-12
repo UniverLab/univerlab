@@ -111,13 +111,15 @@ async function liveTodayEdition(
     if (!res.ok) throw new Error(`otd ${res.status}`);
     return res.json() as Promise<Parameters<typeof buildPool>[0]>;
   });
-  const entries = loadEntries({ fetchImpl, init: apiInit(), signal });
-  const [data, lab] = await Promise.all([otd, entries]);
+  const entries = loadEntries({ fetchImpl, init: apiInit(), signal }).catch(() => null);
+  const [data, labEntries] = await Promise.all([otd, entries]);
+  const lab = labEntries ?? [];
+  const unavailable = labEntries === null;
   const feed = { facts: buildPool(data, lang), lab };
   return {
     html: todayEditionHtml(feed, lang, date),
-    labHtml: labPageHtml(lab, lang),
-    markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang)}\n`,
+    labHtml: labPageHtml(lab, lang, { unavailable }),
+    markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang, { unavailable })}\n`,
   };
 }
 

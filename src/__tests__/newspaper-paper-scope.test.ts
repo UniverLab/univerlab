@@ -36,4 +36,11 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toContain('--p-ink: #16191c');
     expect(css).not.toContain('var(--bench-c-slate)');
   });
+
+  it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
+    // A long event body must not pull a tall grey mat below the photo: the
+    // figure sits at the start of its grid area, so the halftone frame wraps
+    // only the image — the same fixed portrait births and deaths print.
+    expect(css).toMatch(/\.paper \.item\.has-photo \.photo \{[^}]*align-self:\s*start/);
+  });
 });

@@ -66,17 +66,17 @@ import TodaysPaper from '../components/TodaysPaper.astro';
           .then(function (data) {
             return Array.isArray(data?.entries) ? data.entries : [];
           })
-          .catch(function () { return []; })
+          .catch(function () { return null; })
         : Promise.resolve([]);
 
       Promise.all([factsP, labP]).then(
         function (parts) {
           // Page 2 does not depend on the day's facts: fill it even when the
           // Wikipedia read failed and page 1 reports the error.
-          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang);
+          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang, { unavailable: parts[1] === null });
           if (needEdition) {
             if (!parts[0] || !parts[0].length) { failed(); return; }
-            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] }, lang, day);
+            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] || [] }, lang, day);
           }
         },
         function () { failed(); },

@@ -286,6 +286,17 @@ describe('the newspaper pages ask for the whole day', () => {
     const src = read('scripts/mail.ts');
     expect(src).toMatch(/dailyFact<Fact>\(letterPool\(pool\)/);
   });
+
+  it.each([
+    ['pages/newspaper.astro'],
+    ['pages/es/newspaper.astro'],
+  ])('%s marks a failed lab read unavailable, never an empty list', (p) => {
+    const src = read(p);
+    // A failed announcements read resolves null (not []), so page 2 prints
+    // the one unavailable line; a readable-but-empty feed still prints filters.
+    expect(src).toContain('.catch(function () { return null; })');
+    expect(src).toContain('{ unavailable: parts[1] === null }');
+  });
 });
 
 const ES_FIX = JSON.parse(
@@ -380,13 +391,25 @@ describe('mainPage picks the event\u2019s own page', () => {
     expect(mainPage(entry)?.titles?.normalized).toBe('Lander (spacecraft)');
   });
 
-  it('ignores extracts: no title match means no page, even when an extract holds the year', () => {
+  it('a year in the extract selects the page without a title match', () => {
     const entry = {
       year: 1907,
       text: 'A physicist publishes a paper on the new observatory findings.',
       pages: [
         { titles: { normalized: 'Alpha' }, extract: 'A dirty snowball from the outer system.' },
         { titles: { normalized: 'Beta' }, extract: 'In 1907 the observatory recorded the tremors.' },
+      ],
+    };
+    expect(mainPage(entry)?.titles?.normalized).toBe('Beta');
+  });
+
+  it('no year and no match means no page, never the setting', () => {
+    const entry = {
+      year: 1907,
+      text: 'A physicist publishes a paper on the new observatory findings.',
+      pages: [
+        { titles: { normalized: 'Alpha' }, extract: 'A dirty snowball from the outer system.' },
+        { titles: { normalized: 'Beta' }, extract: 'The observatory recorded the tremors.' },
       ],
     };
     expect(mainPage(entry)).toBeUndefined();
@@ -404,6 +427,62 @@ describe('mainPage picks the event\u2019s own page', () => {
   it('returns undefined when the entry carries no pages', () => {
     expect(mainPage({ year: 1900, text: 'A chemist dies.' })).toBeUndefined();
     expect(mainPage({ year: 1900, text: 'A chemist dies.', pages: [] })).toBeUndefined();
+  });
+
+  it('meets "Voyager I" with the "Voyager 1" page through the numeral table', () => {
+    const entry = {
+      year: 1980,
+      text: 'La sonda Voyager I vuela junto a Saturno.',
+      pages: [
+        { titles: { normalized: 'Voyager 1' } },
+        { titles: { normalized: 'Saturno (planeta)' } },
+      ],
+    };
+    expect(mainPage(entry)?.titles?.normalized).toBe('Voyager 1');
+  });
+});
+
+const ES_1211 = JSON.parse(
+  readFileSync(resolve(__dirname, 'fixtures/onthisday-es-1211-subjects.json'), 'utf8'),
+);
+
+describe('mainPage on the 12 November edition: the subject, never the setting', () => {
+  it('names Venera 2, the craft, not the Soviet Union or Venus', () => {
+    expect(mainPage(ES_1211.events[0])?.titles?.normalized).toBe('Venera 2');
+  });
+
+  it('names Robert Falcon Scott from his 1912 extract, though the text prints only "Robert Scott"', () => {
+    expect(mainPage(ES_1211.events[1])?.titles?.normalized).toBe('Robert Falcon Scott');
+  });
+
+  it('names Philae over the generic probe page, the comet and 67P, though both extracts hold 2014', () => {
+    expect(mainPage(ES_1211.events[2])?.titles?.normalized).toBe('Philae (sonda espacial)');
+  });
+
+  it('names Voyager 1 over Saturn, through the numeral table, with no year in any extract', () => {
+    expect(mainPage(ES_1211.events[3])?.titles?.normalized).toBe('Voyager 1');
+  });
+
+  it('collectFacts prints page, link and summary from the subject’s own page', () => {
+    const facts = collectFacts(ES_1211.events, 'event', 'es');
+    expect(facts).toHaveLength(4);
+    const byYear = new Map(facts.map((f) => [f.year, f]));
+    const venera = byYear.get('1965')!;
+    expect(venera.page).toBe('Venera 2');
+    expect(venera.link).toBe('https://es.wikipedia.org/wiki/Venera_2');
+    expect(venera.summary).toContain('1965');
+    const scott = byYear.get('1912')!;
+    expect(scott.page).toBe('Robert Falcon Scott');
+    expect(scott.link).toBe('https://es.wikipedia.org/wiki/Robert_Falcon_Scott');
+    expect(scott.summary).toContain('1912');
+    const philae = byYear.get('2014')!;
+    expect(philae.page).toBe('Philae (sonda espacial)');
+    expect(philae.link).toBe('https://es.wikipedia.org/wiki/Philae_(sonda_espacial)');
+    expect(philae.summary).toContain('2014');
+    const voyager = byYear.get('1980')!;
+    expect(voyager.page).toBe('Voyager 1');
+    expect(voyager.link).toBe('https://es.wikipedia.org/wiki/Voyager_1');
+    expect(voyager.summary).toContain('sonda espacial');
   });
 });
 
