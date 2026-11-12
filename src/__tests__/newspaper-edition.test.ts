@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { experiments } from '../lib/experiments';
-import { paperPlateHtml } from '../lib/paper-plate';
+import { labPlateHtml, paperPlateHtml } from '../lib/paper-plate';
 import { buildPool, collectFacts, letterPool, summaryText, type Fact } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
 import {
@@ -387,6 +387,19 @@ describe('the sundial engraving sits inside the grid', () => {
     expect(fig).toContain('loading="lazy"');
     expect(fig).toContain("The sundial, the paper's engraving");
     expect(fig).not.toContain('today-night');
+  });
+
+  it('sets the page-2 ticker plate at the same sizes as the page-1 plate', () => {
+    const sizesOf = (fig: string): string[] =>
+      [...fig.matchAll(/sizes="([^"]+)"/g)].map((m) => m[1]);
+    const day = sizesOf(paperPlateHtml('en'));
+    const lab = sizesOf(labPlateHtml('en'));
+    expect(day.length).toBeGreaterThan(0);
+    expect(lab).toEqual(day);
+    expect(lab).toContain('(min-width: 48rem) 20rem, 100vw');
+    const esFig = labPlateHtml('es');
+    expect(sizesOf(esFig)).toEqual(day);
+    expect(esFig).toContain('El teletipo, el grabado del periódico');
   });
 
   it('is appended in the shortest column, ties to the first', () => {

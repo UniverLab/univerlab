@@ -195,6 +195,39 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).toContain('lab-empty');
   });
 
+  it('sets the ticker engraving among the columns, before the first entry', () => {
+    for (const lang of ['en', 'es'] as const) {
+      const html = labPageHtml(entries, lang);
+      expect(html).toContain('<figure class="photo paper-plate">');
+      expect(html).toContain('/bench/postcards/status-day-1600.avif 1600w');
+      expect(html).toContain('/bench/postcards/status-day-800.avif 800w');
+      expect(html).toContain('/bench/postcards/status-day-1600.webp 1600w');
+      expect(html).toContain('/bench/postcards/status-day-800.webp 800w');
+      expect(html).toContain('loading="lazy"');
+      expect(html).not.toContain('status-night');
+      expect(html).not.toContain('status-mobile');
+      const caption = lang === 'es' ? 'El teletipo, el grabado del periódico' : "The ticker, the paper's engraving";
+      expect(html).toContain(caption);
+      // The plate opens the logbook so the columns balance around it.
+      expect(html.indexOf('paper-plate')).toBeLessThan(html.indexOf('log-entry'));
+      // The bare engraving carries no postcard chrome.
+      const fig = html.slice(html.indexOf('<figure'), html.indexOf('</figure>'));
+      expect(fig).not.toContain('lab-log');
+      expect(fig).not.toContain('postmark');
+      expect(fig).not.toContain('stamp');
+    }
+  });
+
+  it('keeps the plate on page 2 when the feed is unavailable', () => {
+    const html = labPageHtml([], 'en', { unavailable: true });
+    expect(html).toContain('<figure class="photo paper-plate">');
+    expect(html).toContain('status-day-800.webp');
+    expect(html).toContain('lab-empty');
+    expect(html).not.toContain('id="lab-log"');
+    expect(html).not.toContain('lab-filter');
+    expect(html).not.toContain('lab-older');
+  });
+
   it('twins the coupons as plain markdown lines with links', () => {
     const md = labPageMarkdown(entries, 'en');
     expect(md).toContain('*✂ Free — ');

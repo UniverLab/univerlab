@@ -95,6 +95,11 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.log-entry \{[^}]*break-inside:\s*avoid/);
   });
 
+  it('keeps the page-2 plate whole inside the logbook columns', () => {
+    expect(css).toMatch(/\.paper #lab-log \.paper-plate \{[^}]*break-inside:\s*avoid/);
+    expect(css).toMatch(/\.paper #lab-log \.paper-plate \{[^}]*max-width:\s*100%/);
+  });
+
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
     // A long event body must not pull a tall grey mat below the photo: the
     // figure sits at the start of its grid area, so the halftone frame wraps

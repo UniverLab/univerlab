@@ -6,6 +6,7 @@
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { labPlateHtml } from './paper-plate';
 import { liveExperiments } from './experiments';
 import { paperCouponsHtml, paperCouponsMarkdown } from './paper-coupons';
 import { normalizeTopic } from './field-notes';
@@ -80,6 +81,7 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
     return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
+      labPlateHtml(lang) +
       paperCouponsHtml(lang) +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
@@ -112,6 +114,7 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
     `<div class="lab-filter-row" data-kind="type">${filterButtons('type', [{ id: 'all', label: t.labPage.all, count: rows.length }, ...types])}</div>` +
     `</div>`;
   out += `<div id="lab-log" data-shown="${LAB_SHOWN}">`;
+  out += labPlateHtml(lang);
   rows.forEach((e, i) => {
     const topic = normalizeTopic(e.topic);
     const type = typeof e.type === 'string' ? e.type.toLowerCase() : '';
