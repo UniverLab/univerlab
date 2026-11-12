@@ -48,6 +48,14 @@ One aggregate data point per request, via
 **Not recorded**: IP addresses, full user-agents, cookies, anything tied to a
 person. The client class is a coarse bucket, not the raw header.
 
+**Also not recorded**: scanner probes. A request whose path is not a plausible
+tool name — dotted names like `.env`, multi-segment paths like
+`.git/config` or `wp-json/batch/v1` — and the well-known scanner targets
+`wp`, `wordpress`, `blog`, `admin`, `login`, `wp-admin` and `xmlrpc` get a
+404 and write no data point. They are probes, not demand. A clean single-slug
+name that simply is not a tool yet (for example `quorum`) still counts as
+`unknown-tool`, so real demand for tools that do not exist stays visible.
+
 The supply-chain argument is unchanged: the Worker still proxies nothing, and
 the script still comes from GitHub. What changed is that aggregate metadata
 about the *redirect* is now recorded. The write is fire-and-forget inside a
