@@ -56,7 +56,9 @@ interface Entry {
 /** Entries kept in the KV mirror. SQLite in the DO retains the full history. */
 const MIRROR_LIMIT = 100;
 const MAX_TITLE = 200;
-const MAX_BODY = 2000;
+// An announcement is a classified, not an article: an X-sized post.
+const MAX_ANNOUNCEMENT_TITLE = 100;
+const MAX_BODY = 280;
 const MAX_LINK = 500;
 /** Ceiling on concurrent SSE clients, so a stuck client set cannot grow unbounded. */
 const MAX_CLIENTS = 200;
@@ -1330,8 +1332,8 @@ export default {
       if (!title || !text) {
         return json({ error: 'title and body required' }, 400);
       }
-      if (title.length > MAX_TITLE || text.length > MAX_BODY) {
-        return json({ error: `title max ${MAX_TITLE} chars, body max ${MAX_BODY}` }, 413);
+      if (title.length > MAX_ANNOUNCEMENT_TITLE || text.length > MAX_BODY) {
+        return json({ error: `title max ${MAX_ANNOUNCEMENT_TITLE} chars, body max ${MAX_BODY}` }, 413);
       }
       if (link && link.length > MAX_LINK) {
         return json({ error: `link max ${MAX_LINK} chars` }, 413);
