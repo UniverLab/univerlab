@@ -665,7 +665,7 @@ export class Conversation extends DurableObject<Env> {
       }
       const slotText = formatSlot(startIso, st.lang);
       const text = hold
-        ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang) })
+        ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang, st.phone) })
         : renderBooking(PICKED[st.lang], {
             slot: slotText,
             service: serviceLabel(st.lang, st.service),
@@ -1161,7 +1161,7 @@ export class Conversation extends DurableObject<Env> {
       const history = rows
         .reverse()
         .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: r.text }));
-      const a = await answer(this.env.AI, history, lang, modelConfig(this.env));
+      const a = await answer(this.env.AI, history, lang, modelConfig(this.env), m.from);
       if (a.booking) {
         const ask = INTAKE_ASK[lang];
         await sendText(this.env, m.from, ask);

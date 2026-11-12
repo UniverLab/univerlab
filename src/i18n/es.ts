@@ -787,10 +787,10 @@ export const es: Dict = {
     ctaNote: 'por WhatsApp',
     ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
     tags: { kicker: 'Servicios y precios', items: [
-      ['Primera llamada', 'Gratis · 15 min', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
-      ['Consulta', '150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio. Desde el exterior, USD 45.'],
-      ['Auditorías y flujos', 'Desde 900.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte. Desde el exterior, desde USD 250.'],
-    ] as [string, string, string][] },
+      ['Primera llamada', 'Gratis · 15 min', '', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
+      ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.'],
+      ['Auditorías y flujos', 'Desde USD 250', 'En Colombia: desde 900.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte.'],
+    ] as [string, string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
       ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
       ['Reservas y pagas', 'Bre-B en Colombia, PayPal desde afuera. El espacio queda tuyo al verificar el pago.'],
@@ -845,7 +845,7 @@ export const es: Dict = {
         'Tampoco incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
-      price: { kicker: 'Precio', text: 'Desde 900.000 COP; desde el exterior, desde USD 250. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.' },
+      price: { kicker: 'Precio', text: 'Desde USD 250. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.', cop: 'En Colombia: desde 900.000 COP. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.' },
       cardLink: 'Qué revisamos y qué entregamos →',
       offers: { kicker: 'Publicar tu auditoría', founding: {
         title: 'Auditorías fundadoras',

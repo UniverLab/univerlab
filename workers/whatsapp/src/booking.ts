@@ -81,14 +81,8 @@ export const CALENDAR_DOWN: Record<Lang, string> = {
   en: 'Sorry, the calendar is not responding right now and I booked nothing. I already passed your case to someone at the lab with your notes and they will write here.',
 };
 
-/** Default payment sentence; mirrors the Workbench "how.steps" copy. */
-export const DEFAULT_PAYMENTS: Record<Lang, string> = {
-  es: 'Bre-B en Colombia o PayPal desde el exterior',
-  en: 'Bre-B in Colombia or PayPal from abroad',
-};
-
-export function paymentText(cfg: BookingConfig, lang: Lang): string {
-  return cfg.payments?.[lang] ?? DEFAULT_PAYMENTS[lang];
+export function paymentText(cfg: BookingConfig, lang: Lang, phone = ''): string {
+  return cfg.payments?.[lang] ?? (phone.replace(/\D/g, '').startsWith('57') ? 'Bre-B' : 'PayPal');
 }
 
 export function serviceLabel(lang: Lang, service: BookingService): string {

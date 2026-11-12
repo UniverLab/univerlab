@@ -108,11 +108,13 @@ test('system prompt carries knowledge in spanish and the booking json shape', as
       return { response: '{"reply":"Hola","handoff":false,"booking":false,"service":""}' };
     },
   };
-  await answer(ai, [], 'es');
+  await answer(ai, [], 'es', modelConfig({}), '573001234567');
   const messages = (sent as { messages: Array<{ role: string; content: string }> }).messages;
   const system = messages[0].content;
   expect(system).toContain('KNOWLEDGE:');
   expect(system).toContain('150.000 COP');
+  expect(system).not.toContain('USD 45 / hora');
+  expect(system).toContain('numbers starting with 57 are in Colombia');
   expect(system).toContain('"booking"');
   expect(system).toContain('"service"');
   expect(system).toContain('first-call');

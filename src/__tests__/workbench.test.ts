@@ -20,7 +20,7 @@ describe('workbench', () => {
     expect(Object.keys(en.workbench).sort()).toEqual(Object.keys(es.workbench).sort());
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.tags.items).toHaveLength(3);
-      for (const tag of dict.tags.items) expect(tag).toHaveLength(3);
+      for (const tag of dict.tags.items) expect(tag).toHaveLength(4);
       expect(dict.how.steps).toHaveLength(3);
       expect(dict.proof.items).toHaveLength(4);
       expect(dict.policy.items).toHaveLength(9);
@@ -73,18 +73,36 @@ describe('workbench', () => {
     expect(VIEW).not.toContain('Or by email');
   });
 
-  it('the three price tags carry the prices', () => {
+  it('the three price tags lead with US dollars and keep pesos for Colombia', () => {
     expect(en.workbench.tags.items[0][1]).toContain('Free');
     expect(en.workbench.tags.items[0][1]).toContain('15 min');
     expect(es.workbench.tags.items[0][1]).toContain('Gratis');
-    expect(en.workbench.tags.items[1][1]).toContain('COP 150,000');
-    expect(es.workbench.tags.items[1][1]).toContain('150.000 COP');
-    expect(en.workbench.tags.items[1][2]).toContain('USD 45');
-    expect(es.workbench.tags.items[1][2]).toContain('USD 45');
-    expect(en.workbench.tags.items[2][1]).toContain('900,000');
-    expect(es.workbench.tags.items[2][1]).toContain('900.000 COP');
-    expect(en.workbench.tags.items[2][2]).toContain('30 days of support');
-    expect(es.workbench.tags.items[2][2]).toContain('30 días de soporte');
+    expect(en.workbench.tags.items[1][1]).toContain('USD 45');
+    expect(es.workbench.tags.items[1][1]).toContain('USD 45');
+    expect(es.workbench.tags.items[1][2]).toContain('En Colombia');
+    expect(es.workbench.tags.items[1][2]).toContain('150.000 COP');
+    expect(en.workbench.tags.items[1][2]).toContain('COP 150,000');
+    expect(en.workbench.tags.items[2][1]).toContain('USD 250');
+    expect(es.workbench.tags.items[2][1]).toContain('USD 250');
+    expect(es.workbench.tags.items[2][2]).toContain('En Colombia');
+    expect(es.workbench.tags.items[2][2]).toContain('900.000 COP');
+    expect(en.workbench.tags.items[2][2]).toContain('COP 900,000');
+    expect(en.workbench.tags.items[1][3]).toContain('harness');
+    expect(es.workbench.tags.items[1][3]).toContain('laboratorio');
+    expect(en.workbench.tags.items[2][3]).toContain('30 days of support');
+    expect(es.workbench.tags.items[2][3]).toContain('30 días de soporte');
+    for (const dict of [en.workbench, es.workbench]) {
+      expect(dict.tags.items.map((t) => t.join(' ')).join(' ').toLowerCase()).not.toContain('abroad');
+    }
+    expect(en.workbench.tags.items.map((t) => t.join(' ')).join(' ')).not.toContain('exterior');
+    expect(es.workbench.tags.items.map((t) => t.join(' ')).join(' ')).not.toContain('exterior');
+  });
+
+  it('the peso line renders as a smaller Spanish-only note', () => {
+    expect(VIEW).toContain('wb-price-cop');
+    expect(VIEW).toContain("lang === 'es' && note");
+    expect(VIEW).toContain('{note}');
+    expect(VIEW).toContain('.wb-price-cop');
   });
 
   it('a consultation is paid when booked and confirmed once checked', () => {

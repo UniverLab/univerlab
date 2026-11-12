@@ -76,12 +76,21 @@ describe('workbench-audits', () => {
     }
   });
 
-  it('the price names COP 900,000 / USD 250 and quotes the implementation apart', () => {
-    expect(es.workbench.audits.price.text).toContain('900.000 COP');
+  it('the price leads with USD 250 and keeps the peso line for Colombia', () => {
     expect(es.workbench.audits.price.text).toContain('USD 250');
-    expect(en.workbench.audits.price.text).toContain('900,000');
     expect(en.workbench.audits.price.text).toContain('USD 250');
+    expect(es.workbench.audits.price.text).not.toContain('900.000 COP');
+    expect(en.workbench.audits.price.text).not.toContain('900,000');
+    expect(es.workbench.audits.price.cop).toContain('900.000 COP');
+    expect(en.workbench.audits.price.cop).toContain('900,000');
     expect(es.workbench.audits.impl.paras.join(' ')).toContain('30 días de soporte');
     expect(en.workbench.audits.impl.paras.join(' ')).toContain('30 days of support');
+  });
+
+  it('the peso line renders as a smaller Spanish-only note', () => {
+    expect(VIEW).toContain('wba-price-cop');
+    expect(VIEW).toContain("lang === 'es'");
+    expect(VIEW).toContain('a.price.cop');
+    expect(VIEW).toContain('.wba-price-cop');
   });
 });

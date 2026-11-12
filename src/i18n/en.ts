@@ -793,10 +793,10 @@ export const en = {
     ctaNote: 'on WhatsApp',
     ctaMessage: 'Hi, I come from the Workbench page.',
     tags: { kicker: 'Services and prices', items: [
-      ['First call', 'Free · 15 min', 'We look at what you need and whether the Workbench is the right place for it.'],
-      ['Consultation', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab. From abroad, USD 45.'],
-      ['Audits and flows', 'From COP 900,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support. From abroad, from USD 250.'],
-    ] as [string, string, string][] },
+      ['First call', 'Free · 15 min', '', 'We look at what you need and whether the Workbench is the right place for it.'],
+      ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab.'],
+      ['Audits and flows', 'From USD 250', 'From COP 900,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support.'],
+    ] as [string, string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
       ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],
       ['You book and pay', 'Bre-B in Colombia, PayPal from abroad. The slot is yours once the payment is checked.'],
@@ -851,7 +851,7 @@ export const en = {
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
-      price: { kicker: 'Price', text: 'From COP 900,000; from abroad, from USD 250. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.' },
+      price: { kicker: 'Price', text: 'From USD 250. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.', cop: 'In Colombia: from COP 900,000. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.' },
       cardLink: 'What we review and what you receive →',
       offers: { kicker: 'Publishing your audit', founding: {
         title: 'Founding audits',

@@ -2,9 +2,10 @@ import { en } from '../../../src/i18n/en.ts';
 import { es } from '../../../src/i18n/es.ts';
 import type { Lang } from './lang';
 
-export function knowledge(lang: Lang): string {
+export function knowledge(lang: Lang, phone = ''): string {
   const d = lang === 'es' ? es : en;
   const w = d.workbench;
+  const co = phone.replace(/\D/g, '').startsWith('57');
   const lines: string[] = [];
   lines.push('# UniverLab');
   lines.push('univerlab.org — ' + w.intro);
@@ -12,7 +13,7 @@ export function knowledge(lang: Lang): string {
   lines.push('### ' + w.who.kicker);
   for (const [title, body] of w.who.items) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.tags.kicker);
-  for (const [title, price, body] of w.tags.items) lines.push('- ' + title + ' · ' + price + ': ' + body);
+  for (const [title, price, note, body] of w.tags.items) lines.push('- ' + title + ' · ' + (co && note ? note : price) + ': ' + body);
   lines.push('### ' + w.how.kicker);
   for (const [title, body] of w.how.steps) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.policy.kicker);
@@ -24,7 +25,7 @@ export function knowledge(lang: Lang): string {
   lines.push('### ' + w.audits.deliver.kicker);
   for (const [title, body] of w.audits.deliver.items) lines.push('- ' + title + ': ' + body);
   for (const para of w.audits.impl.paras) lines.push(para);
-  lines.push(w.audits.price.text);
+  lines.push(co ? w.audits.price.cop : w.audits.price.text);
   lines.push('### ' + w.audits.offers.kicker);
   if (w.audits.offers.founding.spots > 0) {
     lines.push('- ' + w.audits.offers.founding.title + ': ' + w.audits.offers.founding.text);

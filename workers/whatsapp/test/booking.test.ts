@@ -4,7 +4,6 @@ import {
   CANCELLED,
   CONFIRMED,
   decide,
-  DEFAULT_PAYMENTS,
   EXPIRED,
   HOLD_SENT,
   MOVE_ONCE,
@@ -59,12 +58,14 @@ test('every template exists in both languages and renders placeholders', () => {
   expect(serviceLabel('en', 'consultation')).toBe('Consultation');
 });
 
-test('payment copy falls back to Bre-B/PayPal and honours BOOKING_CONFIG', () => {
-  expect(paymentText(DEFAULT_BOOKING_CONFIG, 'es')).toBe(DEFAULT_PAYMENTS.es);
-  expect(DEFAULT_PAYMENTS.es).toContain('Bre-B');
-  expect(DEFAULT_PAYMENTS.en).toContain('PayPal');
+test('payment copy picks Bre-B for +57 and PayPal otherwise, and honours BOOKING_CONFIG', () => {
+  expect(paymentText(DEFAULT_BOOKING_CONFIG, 'es', '573001234567')).toBe('Bre-B');
+  expect(paymentText(DEFAULT_BOOKING_CONFIG, 'en', '+573001234567')).toBe('Bre-B');
+  expect(paymentText(DEFAULT_BOOKING_CONFIG, 'es', '14155552671')).toBe('PayPal');
+  expect(paymentText(DEFAULT_BOOKING_CONFIG, 'en', '')).toBe('PayPal');
   const cfg = { ...DEFAULT_BOOKING_CONFIG, payments: { es: 'E', en: 'F' } };
-  expect(paymentText(cfg, 'en')).toBe('F');
+  expect(paymentText(cfg, 'en', '573001234567')).toBe('F');
+  expect(paymentText(cfg, 'es', '14155552671')).toBe('E');
 });
 
 test('decide routes a pick with its slot number', async () => {

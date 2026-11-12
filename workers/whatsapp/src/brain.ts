@@ -105,14 +105,15 @@ export async function answer(
   ai: { run(model: string, input: unknown): Promise<unknown> },
   history: Turn[],
   lang: Lang,
-  cfg: ModelConfig = modelConfig({})
+  cfg: ModelConfig = modelConfig({}),
+  phone = ''
 ): Promise<Answer> {
   try {
     const raw = await runModel(
       ai,
       cfg,
       [
-        { role: 'system', content: systemPrompt(lang) },
+        { role: 'system', content: systemPrompt(lang, phone) },
         ...history.map((t) => ({ role: t.role, content: t.text })),
       ],
       1200

@@ -66,6 +66,7 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
     <section class="wba-block wba-price">
       <span class="label">{a.price.kicker}</span>
       <p>{a.price.text}</p>
+      {lang === 'es' && <p class="wba-price-cop">{a.price.cop}</p>}
     </section>
     <section class="wba-block wba-offers">
       <span class="label">{a.offers.kicker}</span>
@@ -126,6 +127,7 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
   .wba-privacy p { max-width: 46rem; color: var(--ink-dim); line-height: 1.7; }
   .wba-privacy a { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wba-price p { max-width: 46rem; font-family: var(--font-serif); font-size: 1.4rem; line-height: 1.5; }
+  .wba-price-cop { font-family: var(--font-mono); font-size: .75rem; color: var(--ink-dim); margin: .15rem 0 .25rem; }
   .wba-close { background: var(--bg-raise); border-block: 1px solid var(--line); margin-top: 3rem; padding: 2.5rem 1.5rem; text-align: center; display: grid; gap: 1rem; justify-items: center; }
   .wba-close h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(1.5rem, 3vw, 2rem); margin: 0; text-wrap: balance; max-width: 44rem; }
   .wba-close p { margin: 0; }
