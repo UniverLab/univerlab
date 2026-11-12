@@ -54,11 +54,32 @@ describe('Header experiments link', () => {
     expect(src).toContain("aria-current={navActive(item as any) ? 'page' : undefined}");
   });
 
-  it('keeps the burger working: link close, Escape closes the menu, collapse at 1024px', () => {
+  it('keeps the burger working: link close, Escape closes the menu, JS fit-check fold', () => {
     expect(src).toContain("siteNav.querySelectorAll('a').forEach");
     expect(src).toContain("if (e.key === 'Escape') setOpen(false)");
-    expect(src).toContain('@media (max-width: 1024px)');
+    // The fold is a measured class, not a fixed breakpoint: no width query left.
+    expect(src).toContain('nav-burger');
+    expect(src).toContain("classList.toggle('nav-burger'");
+    // The fit-check reads the unfolded bar (fold off before measuring): the
+    // folded rule releases the brand reserve, so measuring while folded
+    // would under-read and flap between states on every observer tick.
+    expect(src).toContain("classList.remove('nav-burger')");
+    expect(src).toContain('ResizeObserver');
+    expect(src).not.toContain('@media (max-width: 1024px)');
     expect(src).not.toMatch(/@media \(max-width: 900px\)/);
+  });
+
+  it('reserves the brand width up front and folds the mailbox with the burger', () => {
+    const NAMEGLOSS = readFileSync(resolve(__dirname, '..', 'components', 'NameGloss.astro'), 'utf8');
+    const MAIL = readFileSync(resolve(__dirname, '..', 'styles', 'mail.css'), 'utf8');
+    // NameGloss measures its widest suffix + gloss in a clone and pins .home.
+    expect(NAMEGLOSS).toContain("closest('.home')");
+    expect(NAMEGLOSS).toContain('dataset.brandW');
+    expect(NAMEGLOSS).toContain('cloneNode');
+    // The mailbox no longer clears the burger on its own breakpoint: the
+    // header's nav-burger rule carries the small mailbox instead.
+    expect(MAIL).not.toContain('max-width: 1024px');
+    expect(src).toContain('.mailbox');
   });
 
   it('draws the burger and the sponsor heart from the shared Lucide lib', () => {

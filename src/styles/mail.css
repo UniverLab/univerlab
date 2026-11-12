@@ -150,10 +150,6 @@
   pointer-events: none;
 }
 
-@media (max-width: 1024px) {
-  .mailbox { width: 40px; height: 52px; }
-}
-
 /* ── The letter dialog ───────────────────────────────────────────────────── */
 .mail-pop {
   position: fixed;

@@ -350,6 +350,35 @@ const signals = [
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setOpen(false);
     });
+
+    // Fold into the burger exactly when the single-line bar no longer fits:
+    // measure with the nav forced onto one line, then restore. The reserved
+    // brand width (NameGloss) keeps the cycle from moving the fold point.
+    const bar = document.querySelector('.bar');
+    const home = document.querySelector('a.home');
+    const headerEl = bar?.closest('header');
+    function syncNav() {
+      if (!bar || !headerEl || !siteNav) return;
+      // Measure the unfolded bar: the folded rule releases the brand's
+      // reserved width (width:auto !important) and shows the burger, so
+      // measuring while folded would under-read and flap between states
+      // on every ResizeObserver tick. Reading with the fold off makes the
+      // result a pure function of the viewport, with a stable fixed point.
+      headerEl.classList.remove('nav-burger');
+      const m = siteNav.style;
+      m.display = 'flex';
+      m.flexWrap = 'nowrap';
+      const over = bar.scrollWidth > bar.clientWidth + 1;
+      m.display = '';
+      m.flexWrap = '';
+      headerEl.classList.toggle('nav-burger', over);
+    }
+    syncNav();
+    if ('ResizeObserver' in window) {
+      if (bar) new ResizeObserver(syncNav).observe(bar);
+      if (home) new ResizeObserver(syncNav).observe(home);
+    }
+    if (document.fonts) document.fonts.ready.then(syncNav);
   }
 </script>
 
@@ -393,6 +422,8 @@ const signals = [
   nav a.sponsor .heart-icon { display: inline-flex; line-height: 0; }
   nav a.sponsor .heart-text { display: none; }
   nav a.sponsor:hover { color: color-mix(in srgb, var(--accent, var(--bench-emphasis)) 75%, var(--bench-line)); animation-play-state: paused; }
+  /* The wave strip lives only in the folded menu; the inline bar never shows it. */
+  .nav-waves { display: none; }
 
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
@@ -585,56 +616,52 @@ const signals = [
   .burger[aria-expanded='true'] .burger-menu { display: none; }
   .burger[aria-expanded='true'] .burger-close { display: inline-flex; }
 
-  @media (max-width: 1024px) {
-    /* The mailbox stands at the rule's right end and rises into the bar:
-       keep the burger and menu clear of it. */
-    .bar { padding-right: 56px; }
-    .burger { display: inline-flex; align-items: center; justify-content: center; }
-    nav a.sponsor .heart-icon { display: none; }
-    nav a.sponsor .heart-text { display: inline; }
-    nav {
-      display: none;
-      position: absolute;
-      top: calc(100% + 0.6rem);    /* float a little below the bar */
-      right: 0;                    /* anchored under the burger; .wrap padding keeps it off the page edge */
-      z-index: 30;
-      flex-direction: column;
-      align-items: flex-end;
-      text-align: right;
-      gap: 1.1rem;
-      min-width: 11rem;
-      padding: 1.1rem 1.3rem 1.6rem; /* extra bottom room for the wave strip */
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-      overflow: hidden;              /* clip the wave strip to the rounded card */
-    }
-    nav.open { display: flex; }
-
-    /* Several short signals drift along the bottom of the open menu, each at its
-       own speed — a faint P2P chatter. */
-    .nav-waves {
-      display: block;
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 26px;
-      pointer-events: none;
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);
-      mask-image: linear-gradient(90deg, transparent, #000 42%);
-    }
-    .nav-waves svg { display: block; width: 780px; height: 28px; }
-    .nav-waves g { animation: nav-signal var(--dur, 3s) linear infinite; }
-    @keyframes nav-signal { to { transform: translateX(calc(-1 * var(--tx, 22px))); } }
+  /* JS fit-check (see the burger script): when the single-line bar no longer
+     fits, the header folds the menu into the burger — never wraps. */
+  header.nav-burger .burger { display: inline-flex; align-items: center; justify-content: center; }
+  header.nav-burger nav a.sponsor .heart-icon { display: none; }
+  header.nav-burger nav a.sponsor .heart-text { display: inline; }
+  header.nav-burger nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.6rem);    /* float a little below the bar */
+    right: 0;                    /* anchored under the burger; .wrap padding keeps it off the page edge */
+    z-index: 30;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    gap: 1.1rem;
+    min-width: 11rem;
+    padding: 1.1rem 1.3rem 1.6rem; /* extra bottom room for the wave strip */
+    background: var(--menu-bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    overflow: hidden;              /* clip the wave strip to the rounded card */
   }
+  header.nav-burger nav.open { display: flex; }
 
-  /* Hidden on desktop, where the inline nav already fills the bar. Scoped to a
-     min-width query so it can't override the max-width rule above by source order. */
-  @media (min-width: 1181px) {
-    .nav-waves { display: none; }
+  /* Several short signals drift along the bottom of the open menu, each at its
+     own speed — a faint P2P chatter. */
+  header.nav-burger .nav-waves {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 26px;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);
+    mask-image: linear-gradient(90deg, transparent, #000 42%);
   }
+  header.nav-burger .nav-waves svg { display: block; width: 780px; height: 28px; }
+  header.nav-burger .nav-waves g { animation: nav-signal var(--dur, 3s) linear infinite; }
+  @keyframes nav-signal { to { transform: translateX(calc(-1 * var(--tx, 22px))); } }
+
+  /* Folded: the brand releases its reserved width so bar + burger fit phones,
+     and the mailbox shrinks as it did under the old breakpoint. */
+  header.nav-burger .home { width: auto !important; flex: 0 1 auto !important; }
+  header.nav-burger :global(.mailbox) { width: 40px; height: 52px; }
 
   @media (prefers-reduced-motion: reduce) {
     .nav-waves g { animation: none !important; }

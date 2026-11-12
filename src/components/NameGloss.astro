@@ -25,6 +25,56 @@ const first = senses[0];
     if (senses.length < 1 || !suffix || !subline) return;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+    // Reserve the brand's widest shape up front: measure every suffix and
+    // every gloss line in an off-screen clone and pin the home link to that
+    // width, so the cycle never steals room from the menu beside it.
+    const home = el.closest('.home');
+    if (home instanceof HTMLElement) {
+      const measure = () => {
+        const iconGap = Number(
+          home.dataset.ngIconGap ?? (home.dataset.ngIconGap = String(home.offsetWidth - el.offsetWidth)),
+        );
+        const probe = el.cloneNode(true) as HTMLElement;
+        probe.setAttribute('aria-hidden', 'true');
+        probe.style.cssText =
+          'position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;';
+        document.body.appendChild(probe);
+        const word = probe.querySelector<HTMLElement>('.wordmark');
+        const psuffix = probe.querySelector<HTMLElement>('.suffix');
+        const sub = probe.querySelector<HTMLElement>('.subline');
+        let w = 0;
+        if (word && psuffix) {
+          psuffix.style.width = '0px';
+          w = word.scrollWidth;
+          for (const s of senses) {
+            psuffix.textContent = s.suffix;
+            psuffix.style.width = 'auto';
+            w = Math.max(w, word.scrollWidth);
+          }
+        }
+        if (sub) {
+          sub.classList.remove('slogan');
+          sub.style.whiteSpace = 'nowrap';
+          sub.textContent = tagline;
+          sub.classList.add('slogan');
+          w = Math.max(w, sub.scrollWidth);
+          for (const s of senses) {
+            for (const g of s.glosses) {
+              sub.textContent = g;
+              sub.classList.remove('slogan');
+              w = Math.max(w, sub.scrollWidth);
+            }
+          }
+        }
+        probe.remove();
+        home.dataset.brandW = String(Math.ceil(iconGap + w + 2));
+        home.style.width = home.dataset.brandW + 'px';
+        home.style.flex = 'none';
+      };
+      measure();
+      if (document.fonts) document.fonts.ready.then(measure);
+    }
+
     const OPEN_MS = 3300; // word open on a sense — time to read the gloss
     // Word closed as UNIVERLAB + slogan: the resting state most of the time, with
     // a random margin so it's unpredictable when the next phrase opens.
