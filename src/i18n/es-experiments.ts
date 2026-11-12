@@ -548,7 +548,7 @@ export const experiments: Dict['experiments'] = {
       installNote: 'Funciona en Linux y dentro de WSL en Windows.',
       record: {
         title: '— Cada activo deja su registro',
-        body: 'Junto a cada archivo queda un .facet.json: la capacidad, el paquete, los modelos, los parámetros, la verificación y las licencias. Lo amarillo es lo verificado; nada más lleva ese color.',
+        body: 'Junto a cada archivo queda un .facet.json con la capacidad, el paquete, los modelos, los parámetros, la verificación y las licencias: lo necesario para repetirlo o saber de dónde salió.',
         caption: 'Fig. 1 / el registro de la lámina de esta página',
       },
       verbs: {

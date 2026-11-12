@@ -502,7 +502,7 @@ export const experiments = {
       installNote: 'Runs on Linux and inside WSL on Windows.',
       record: {
         title: '— Every asset leaves its record',
-        body: 'Beside every file stays a .facet.json: the capability, the package, the models, the parameters, the check and the licences. Yellow marks what was verified; nothing else carries that colour.',
+        body: 'Beside every file stays a .facet.json with the capability, the package, the models, the parameters, the check and the licences: enough to make it again or to know where it came from.',
         caption: 'Fig. 1 / the record of the plate on this page',
       },
       verbs: {
