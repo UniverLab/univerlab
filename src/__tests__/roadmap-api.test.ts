@@ -424,6 +424,28 @@ describe('announcement PATCH with roadmap_id', () => {
     expect(patch).not.toHaveProperty('topic');
   });
 
+  it('rewords title and body without touching topic or date', async () => {
+    const stub = fakeHub();
+    stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', type: 'note', topic: 'canopy', ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const res = await call(send('/e1', 'PATCH', { title: ' Short title ', body: ' Short body. ' }), env);
+    expect(res.status).toBe(200);
+    const [id, patch] = stub.calls.updateEntryMeta[0] as [string, Record<string, unknown>];
+    expect(id).toBe('e1');
+    expect(patch).toEqual({ title: 'Short title', body: 'Short body.' });
+    expect(res.body).toMatchObject({ date: '2026-09-19T00:00:00.000Z', topic: 'canopy' });
+  });
+
+  it('refuses a reworded title or body over the announcement limits, or an empty one', async () => {
+    const stub = fakeHub();
+    const env = fakeEnv(fakeKV({}), stub.hub);
+    expect((await call(send('/e1', 'PATCH', { title: 'x'.repeat(101) }), env)).status).toBe(413);
+    expect((await call(send('/e1', 'PATCH', { body: 'x'.repeat(281) }), env)).status).toBe(413);
+    expect((await call(send('/e1', 'PATCH', { body: '   ' }), env)).status).toBe(400);
+    expect(stub.calls.updateEntryMeta).toBeUndefined();
+  });
+
   it('still reclassifies as general when neither key is present', async () => {
     const stub = fakeHub();
     stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', type: 'note', ...(patch as object) }));
