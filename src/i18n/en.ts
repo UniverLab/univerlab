@@ -738,6 +738,7 @@ export const en = {
       all: 'All',
       view: 'View →',
       unavailable: 'The lab mail did not arrive — try again later.',
+      coupons: { kicker: 'Clip-out coupons', cut: 'cut here' },
     },
     leadKicker: 'Letter of the day · {years} years ago',
     readOn: 'Read on Wikipedia →',

@@ -272,6 +272,18 @@ const t = useTranslations(lang);
   .paper .ad .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
   .paper .ad-pair { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
   .paper .ad-pair > * { min-width: 0; }
+  /* Page 2's clip-out coupons: a sibling of the display ads, set in the
+    same type. Each coupon cuts out along its dashed border. */
+  .paper .coupon-band { display: grid; gap: 10px; margin: 12px 0 4px; min-width: 0; }
+  .paper .coupon-kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-block: 1px solid var(--p-rule); padding-block: 4px; }
+  .paper .coupon-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); min-width: 0; }
+  .paper .coupon-grid > * { min-width: 0; }
+  .paper .coupon { border: 1px dashed var(--p-ink); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; text-decoration: none; }
+  .paper .coupon-cut { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-soft); }
+  .paper .coupon-figure { font-family: var(--font-serif); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; margin: 0; text-transform: uppercase; color: var(--p-ink); }
+  .paper .coupon-cond { margin: 0; font-family: var(--font-body); font-size: 14.5px; line-height: 1.45; color: var(--p-ink); }
+  .paper .coupon-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); }
+  .paper .coupon-note { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
   @media (min-width: 48rem) {
     .paper .ad-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
@@ -294,6 +306,7 @@ const t = useTranslations(lang);
   @media print {
     .paper .front, .paper .cols { display: block; }
     .paper .ad { break-inside: avoid; }
+    .paper .coupon { break-inside: avoid; }
   }
   .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }

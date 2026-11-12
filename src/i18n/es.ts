@@ -732,6 +732,7 @@ export const es: Dict = {
       all: 'Todas',
       view: 'Ver →',
       unavailable: 'No llegó el correo del laboratorio; inténtelo más tarde.',
+      coupons: { kicker: 'Cupones para recortar', cut: 'recorta aquí' },
     },
     leadKicker: 'Carta del día · hace {years} años',
     readOn: 'Leer en Wikipedia →',

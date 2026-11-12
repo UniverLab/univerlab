@@ -7,6 +7,7 @@
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { liveExperiments } from './experiments';
+import { paperCouponsHtml, paperCouponsMarkdown } from './paper-coupons';
 import { normalizeTopic } from './field-notes';
 import { entriesMarkdown, sortEntries, type Entry } from './lab-feed';
 
@@ -79,6 +80,7 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
     return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
+      paperCouponsHtml(lang) +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
 
@@ -103,6 +105,7 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
   }));
 
   let out = `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>`;
+  out += paperCouponsHtml(lang);
   out +=
     `<div class="lab-filters">` +
     `<div class="lab-filter-row" data-kind="topic">${filterButtons('topic', [{ id: 'all', label: t.labPage.all, count: rows.length }, ...topics])}</div>` +
@@ -139,8 +142,8 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
 export function labPageMarkdown(entries: Entry[], lang: LabPageLang, opts?: { unavailable?: boolean }): string {
   const t = dict(lang);
   if (!(entries || []).length && opts?.unavailable) {
-    return `## ${t.labPage.heading}\n\n${t.labPage.unavailable}`;
+    return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang)}\n\n${t.labPage.unavailable}`;
   }
   const body = entriesMarkdown(entries || [], { labels: { empty: '' } });
-  return `## ${t.labPage.heading}\n\n${body}`;
+  return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang)}\n\n${body}`;
 }

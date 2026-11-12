@@ -119,13 +119,15 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).not.toContain('lab-empty');
   });
 
-  it('the markdown twin carries the unavailable line', () => {
-    expect(labPageMarkdown([], 'en', { unavailable: true })).toBe(
-      '## Lab news\n\nThe lab mail did not arrive — try again later.',
-    );
-    expect(labPageMarkdown([], 'es', { unavailable: true })).toBe(
-      '## Noticias del laboratorio\n\nNo llegó el correo del laboratorio; inténtelo más tarde.',
-    );
+  it('the markdown twin carries the unavailable line under the coupons', () => {
+    const enMd = labPageMarkdown([], 'en', { unavailable: true });
+    expect(enMd.split('\n')[0]).toBe('## Lab news');
+    expect(enMd).toContain('The lab mail did not arrive — try again later.');
+    expect(enMd).toContain('*✂ Free — ');
+    const esMd = labPageMarkdown([], 'es', { unavailable: true });
+    expect(esMd.split('\n')[0]).toBe('## Noticias del laboratorio');
+    expect(esMd).toContain('No llegó el correo del laboratorio; inténtelo más tarde.');
+    expect(esMd).toContain('*✂ Gratis — ');
   });
 
   it('twins page 2 as markdown under its heading', () => {
@@ -147,6 +149,62 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).not.toContain('<b>Hi</b>');
     expect(html).toContain('&lt;b&gt;Hi&lt;/b&gt;');
     expect(html).toContain('a&amp;b');
+  });
+
+  it('bands four clip-out coupons between the heading and the filters', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).toContain('coupon-band');
+    expect(html).toContain('Clip-out coupons');
+    expect(html.match(/class="coupon"/g)).toHaveLength(4);
+    expect(html.indexOf('coupon-band')).toBeGreaterThan(html.indexOf('lab-heading'));
+    expect(html.indexOf('coupon-band')).toBeLessThan(html.indexOf('lab-filters'));
+  });
+
+  it('reads every coupon figure from the Workbench copy, never invented', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).toContain('<span class="coupon-figure">Free</span>');
+    expect(html).toContain('<span class="coupon-figure">50 %</span>');
+    expect(html).toContain('<span class="coupon-figure">20 %</span>');
+    expect(html).toContain('<span class="coupon-figure">30 %</span>');
+    expect(html).toContain('✂ cut here');
+    expect(html).toContain('The first 5 audits: we refund 50 % of the price');
+    expect(html).toContain('costs 30 % less');
+  });
+
+  it('links the call to the Workbench and the audits to the audits page', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).toContain('href="/workbench/"');
+    expect(html.match(/href="\/workbench\/audits\/"/g)).toHaveLength(3);
+    const esHtml = labPageHtml(entries, 'es');
+    expect(esHtml).toContain('href="/es/workbench/"');
+    expect(esHtml.match(/href="\/es\/workbench\/audits\/"/g)).toHaveLength(3);
+    expect(esHtml).toContain('<span class="coupon-figure">Gratis</span>');
+    expect(esHtml).toContain('Cupones para recortar');
+    expect(esHtml).toContain('✂ recorta aquí');
+  });
+
+  it('prints the no-stack rule once under the coupons', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html.match(/largest one applies/g)).toHaveLength(1);
+    expect(labPageHtml(entries, 'es')).toContain('aplica el mayor');
+  });
+
+  it('keeps the coupon band when the feed is unavailable', () => {
+    const html = labPageHtml([], 'en', { unavailable: true });
+    expect(html).toContain('coupon-band');
+    expect(html).toContain('lab-empty');
+  });
+
+  it('twins the coupons as plain markdown lines with links', () => {
+    const md = labPageMarkdown(entries, 'en');
+    expect(md).toContain('*✂ Free — ');
+    expect(md).toContain('[Open the Workbench](https://univerlab.org/workbench/)');
+    expect(md.match(/\(https:\/\/univerlab\.org\/workbench\/audits\/\)/g)).toHaveLength(3);
+    expect(md).toContain('Discounts and refunds do not stack');
+    expect(md.indexOf('*✂')).toBeLessThan(md.indexOf('**Newest**'));
+    const esMd = labPageMarkdown(entries, 'es');
+    expect(esMd).toContain('[Abrir el Banco de trabajo](https://univerlab.org/es/workbench/)');
+    expect(esMd).toContain('no se acumulan');
   });
 });
 
