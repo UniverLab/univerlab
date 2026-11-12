@@ -24,6 +24,7 @@ export const en = {
     archive: 'Archive',
     roadmap: 'Roadmap',
     workbench: 'Workbench',
+    observable: 'The Observable',
   },
   header: {
     // The sky body's click names the action it will do: the body showing now
@@ -94,8 +95,7 @@ export const en = {
     forged: 'Artifact conceived and forged at UniverLab',
     cta: 'Workbench · free first call →',
     operator: 'UniverLab is run by Jheison Martinez Bolivar, Colombia.',
-    privacy: "no external tracking. theme preferences stay in your browser's local storage.",
-    groups: { work: 'Experiments', lab: 'The lab', open: 'Open' },
+    groups: { work: 'Experiments', lab: 'The lab' },
   },
   common: {
     repo: 'Star on GitHub ↗',
@@ -427,9 +427,9 @@ export const en = {
     // Footer easter egg — the one software metaphor on the site. Clicking the
     // branch reveals the universe's latest commit (hardcoded English in Footer,
     // since git output is never localized).
-    branch: 'branch: milky-way/main',
+    branch: 'branch: milky-way/orion',
     branchTooltip:
-      'The main branch of the Milky Way — the line of cosmic history we are committed to.',
+      'The Orion Arm of the Milky Way — the line of cosmic history we are committed to.',
   },
   observatory: {
     kicker: 'Observatory',

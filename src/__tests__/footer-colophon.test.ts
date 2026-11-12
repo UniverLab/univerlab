@@ -114,6 +114,7 @@ describe('Footer — the centred colophon order', () => {
       'class="cta"',
       'class="word-rule"',
       'class="braille"',
+      'class="icon-row"',
       'class="small"',
       'class="branch mono"',
       'id="cosmic-commit"',
@@ -140,11 +141,11 @@ describe('Footer — the centred colophon order', () => {
     expect(src).toMatch(/\.word-rule::before,\s*\.word-rule::after/);
   });
 
-  it('stacks the groups in one column, then opens three columns at 40rem', () => {
+  it('stacks the groups in one column, then opens two columns at 40rem', () => {
     expect(src).toMatch(/\.foot-nav\s*\{[^}]*display:\s*grid/s);
     const at = src.indexOf('.foot-nav {');
     expect(src.slice(at, src.indexOf('}', at))).not.toMatch(/grid-template-columns/);
-    expect(src).toMatch(/@media \(min-width:\s*40rem\)[^{]*\{[^}]*\.foot-nav\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*auto\)/s);
+    expect(src).toMatch(/@media \(min-width:\s*40rem\)[^{]*\{[^}]*\.foot-nav\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*auto\)/s);
   });
 });
 
@@ -158,7 +159,7 @@ describe('Footer — the wax seal and the easter eggs are gone from the old line
   });
 });
 
-describe('Footer — forged line inside the small legal line', () => {
+describe('Footer — forged line inside the small block', () => {
   it('renders the forged line only when an expId prop is passed', () => {
     expect(src).toMatch(/interface Props\s*\{[^}]*expId\?:\s*ExperimentId/s);
     expect(src).toMatch(/forged && \(|forged \?/);
@@ -176,18 +177,25 @@ describe('Footer — forged line inside the small legal line', () => {
     expect(src).toMatch(/\.forged-name\s*\{\s*font-family:\s*var\(--font-mono\)/);
   });
 
-  it('keeps the privacy notice and the built-with credits in the same small line', () => {
-    expect(markup).toContain('{t.footer.privacy}');
-    expect(markup).toContain('class="privacy"');
+  it('splits the bottom information into centred lines inside the small block', () => {
+    expect(markup).not.toContain('{t.footer.privacy}');
+    expect(markup).not.toContain('class="privacy"');
+    // A <div> of separate <p> lines, not one wrapping paragraph.
+    expect(markup).toMatch(/<div class="small">/);
+    expect(markup).toMatch(/<p><span class="operator">/);
+    expect(markup).toMatch(/<p><span class="built">/);
     expect(markup).toContain('class="built"');
     expect(markup).toContain('t.footer.built.label');
     const smallAt = markup.indexOf('class="small"');
-    const privacyAt = markup.indexOf('class="privacy"');
-    const builtAt = markup.indexOf('class="built"');
+    const operatorAt = markup.indexOf('<p><span class="operator">');
+    const builtAt = markup.indexOf('<p><span class="built">');
     const branchAt = markup.indexOf('class="branch mono"');
-    expect(privacyAt).toBeGreaterThan(smallAt);
-    expect(builtAt).toBeGreaterThan(privacyAt);
+    expect(operatorAt).toBeGreaterThan(smallAt);
+    expect(builtAt).toBeGreaterThan(operatorAt);
     expect(branchAt).toBeGreaterThan(builtAt);
+    // The operator line is the one carrying the legal links.
+    expect(markup.slice(operatorAt, builtAt)).toContain('legalLinks.map');
+    expect(markup.slice(builtAt)).toContain('t.footer.built.gitkit');
   });
 });
 
@@ -226,7 +234,7 @@ describe('Footer — the lab faces', () => {
   it('nav links read in the serif face, labels and lines in the mono face', () => {
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*font-family:\s*var\(--font-serif\)/s);
     expect(src).toMatch(/\.word\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
-    expect(src).toMatch(/\.privacy\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(src).toMatch(/\.small p\s*\{[^}]*margin-block:\s*0/s);
   });
 
   it('nav targets stay tappable at 32px', () => {
@@ -256,21 +264,30 @@ describe('Layouts — expId plumbing', () => {
   });
 });
 
-describe('Footer — three grouped link headings', () => {
-  it('the footer groups its links under three headings', () => {
+describe('Footer — two grouped link headings', () => {
+  it('the footer groups its links under two headings', () => {
     expect(src).toContain('t.footer.groups.work');
     expect(src).toContain('t.footer.groups.lab');
-    expect(src).toContain('t.footer.groups.open');
+    expect(src).not.toContain('t.footer.groups.open');
     expect(src).toContain('class="foot-group"');
     expect(src).toContain('class="foot-head"');
     expect(src).not.toContain('const footNav');
   });
 
   it('the footer keeps its links', () => {
-    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/today', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
       expect(src).toContain(href);
     }
     expect(src).not.toContain('/status/');
+  });
+
+  it('links the newspaper under the lab group in both languages', () => {
+    expect(src).toContain("localizePath('/today', lang)");
+    expect(src).toContain('label: t.nav.observable');
+    // Inside the lab group, not the experiments one.
+    expect(src.indexOf("localizePath('/today', lang)")).toBeGreaterThan(src.indexOf('t.footer.groups.lab'));
+    expect(en.nav.observable).toBe('The Observable');
+    expect(es.nav.observable).toBe('El Observable');
   });
 
   it('the footer links the lab on X and Bluesky', () => {
@@ -280,7 +297,7 @@ describe('Footer — three grouped link headings', () => {
     expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
   });
 
-  it('the Open shelf reads as icons, not text links', () => {
+  it('the social and API links read as icons in one centred row', () => {
     // GitHub, API and the sponsor heart come from the shared Lucide lib at
     // 20px; X and Bluesky use their official fill marks (Lucide lacks them).
     expect(src).toContain("import { iconSvg } from '../lib/icon-svg'");
@@ -290,6 +307,7 @@ describe('Footer — three grouped link headings', () => {
     expect(src).toMatch(/iconSvg\(heart, \{ size: 20 \}\)/);
     expect(src).toContain('X_PATH');
     expect(src).toContain('BLUESKY_PATH');
+    expect(src).toMatch(/\.icon-row\s*\{[^}]*justify-content:\s*center/s);
     // Every icon keeps its name for assistive tech and hover — no new i18n,
     // the existing dictionary labels are reused.
     expect(src).toMatch(/class="icon-link"[\s\S]*?aria-label=\{item\.label\}[\s\S]*?title=\{item\.label\}/);
@@ -310,9 +328,9 @@ describe('Footer — three grouped link headings', () => {
     expect(src).toMatch(/\.icon-link\s*\{[^}]*min-height:\s*32px/s);
   });
 
-  it('both dictionaries name the three groups', () => {
-    expect(Object.keys(en.footer.groups).sort()).toEqual(['lab', 'open', 'work']);
-    expect(Object.keys(es.footer.groups).sort()).toEqual(['lab', 'open', 'work']);
+  it('both dictionaries name the two groups', () => {
+    expect(Object.keys(en.footer.groups).sort()).toEqual(['lab', 'work']);
+    expect(Object.keys(es.footer.groups).sort()).toEqual(['lab', 'work']);
   });
 });
 
@@ -373,5 +391,23 @@ describe('Footer — the wrap lines sit inside the centred column', () => {
     for (const sel of ['.colophon', '.base']) {
       expect(rule(sel)).not.toMatch(/\bmargin[a-z-]*\s*:/);
     }
+  });
+});
+
+describe('Footer — the cosmic branch names the Orion Arm', () => {
+  it('prints milky-way/orion in both languages and nothing still says main', () => {
+    expect(en.cosmos.branch).toBe('branch: milky-way/orion');
+    expect(es.cosmos.branch).toBe('branch: milky-way/orion');
+    expect(markup).toContain('{t.cosmos.branch}');
+    // The easter egg prints no branch of its own…
+    expect(markup.slice(markup.indexOf('id="cosmic-commit"'))).not.toMatch(/milky-way/);
+    // …and no string anywhere still calls it main.
+    expect(src).not.toContain('milky-way/main');
+    for (const d of [en, es]) {
+      expect(d.cosmos.branch).not.toMatch(/\bmain\b/);
+      expect(d.cosmos.branchTooltip).not.toMatch(/\bmain\b|principal/);
+    }
+    expect(en.cosmos.branchTooltip).toContain('Orion');
+    expect(es.cosmos.branchTooltip).toContain('Orión');
   });
 });

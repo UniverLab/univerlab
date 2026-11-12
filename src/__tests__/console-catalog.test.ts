@@ -25,7 +25,6 @@ const SRC = resolve(__dirname, '..');
 const LAYOUT = readFileSync(resolve(SRC, 'layouts', 'BaseLayout.astro'), 'utf8');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const TOKENS = readFileSync(resolve(SRC, 'styles', 'bench-tokens.css'), 'utf8');
-const FOOTER = readFileSync(resolve(SRC, 'components', 'Footer.astro'), 'utf8');
 const GHOST = readFileSync(resolve(SRC, 'components', 'GhostHint.astro'), 'utf8');
 const STATUS = readFileSync(resolve(SRC, 'pages', 'status.astro'), 'utf8');
 
@@ -78,11 +77,6 @@ describe('the retired console pieces leave no trace under src', () => {
   it('removes the two old palette keys the same one time', () => {
     expect(hitsOf(OLD_DAY).length).toBe(1);
     expect(hitsOf(OLD_NIGHT).length).toBe(1);
-  });
-
-  it('the footer privacy line forgets the log and comes from the dictionary', () => {
-    expect(FOOTER).toContain('{t.footer.privacy}');
-    expect(FOOTER).not.toMatch(/no external tracking/);
   });
 
   it('the roadmap links through the renamed status feed key', () => {
@@ -269,11 +263,6 @@ describe('i18n — the console dictionary in both languages', () => {
     expect(es.console.answer).toBe('La Respuesta a la Pregunta Fundamental de la Vida, el Universo y Todo lo Demás.');
     expect(en.console.guide).toBe("The Hitchhiker's Guide to the Galaxy");
     expect(es.console.guide).toBe('Guía del autoestopista galáctico');
-  });
-
-  it('the footer privacy line matches the spec verbatim', () => {
-    expect(en.footer.privacy).toBe("no external tracking. theme preferences stay in your browser's local storage.");
-    expect(es.footer.privacy).toBe('sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.');
   });
 
   it('the README names the three themes in the /theme help line', () => {

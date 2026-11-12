@@ -25,6 +25,7 @@ export const es: Dict = {
     archive: 'Archivo',
     roadmap: 'Hoja de ruta',
     workbench: 'Banco de trabajo',
+    observable: 'El Observable',
   },
   header: {
     skyToNight: 'Cambiar al tema de noche',
@@ -91,8 +92,7 @@ export const es: Dict = {
     forged: 'Artefacto concebido y forjado en UniverLab',
     cta: 'Banco de trabajo · primera llamada gratis →',
     operator: 'UniverLab es operado por Jheison Martinez Bolivar, Colombia.',
-    privacy: 'sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.',
-    groups: { work: 'Experimentos', lab: 'El laboratorio', open: 'Abierto' },
+    groups: { work: 'Experimentos', lab: 'El laboratorio' },
   },
   common: {
     repo: 'Star en GitHub ↗',
@@ -423,9 +423,9 @@ export const es: Dict = {
     // Easter egg del footer — la única metáfora de software del sitio. El click
     // en la rama revela el último commit del universo (en inglés hardcodeado en
     // el Footer, porque la salida de git no se localiza).
-    branch: 'branch: milky-way/main',
+    branch: 'branch: milky-way/orion',
     branchTooltip:
-      'La rama principal de la Vía Láctea: la línea de la historia cósmica en la que estamos.',
+      'El Brazo de Orión de la Vía Láctea: la línea de la historia cósmica en la que estamos.',
   },
   observatory: {
     kicker: 'Observatorio',

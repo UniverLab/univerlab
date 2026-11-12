@@ -40,11 +40,12 @@ const footGroups = [
       { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
       { href: localizePath('/contributors', lang), label: t.nav.people },
       { href: localizePath('/workbench', lang), label: t.nav.workbench },
+      { href: localizePath('/today', lang), label: t.nav.observable },
     ],
   },
 ];
-// The Open shelf reads faster as icons: the lab's repo, X and Bluesky, the
-// API as code, and the sponsor heart — each keeping its name for assistive
+// The social and API links read faster as icons: the lab's repo, X and Bluesky,
+// the API as code, and the sponsor heart — each keeping its name for assistive
 // tech and hover. Brands Lucide lacks (X, Bluesky) use their official marks
 // (Simple Icons paths on the 24×24 grid, drawn as fill, not stroke).
 const X_PATH =
@@ -93,30 +94,6 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
           <a href={item.href}>{item.label}</a>
         ))}</div>
       ))}
-      <div class="foot-group"><span class="foot-head">{t.footer.groups.open}</span>
-        <span class="icon-row">
-          {openIcons.map((item) => (
-            <a
-              class="icon-link"
-              href={item.href}
-              target={item.ext ? '_blank' : undefined}
-              rel={item.ext ? 'noopener noreferrer' : undefined}
-              aria-label={item.label}
-              title={item.label}
-              set:html={item.svg}
-            />
-          ))}
-          <a
-            class="icon-link sponsor"
-            href="https://github.com/sponsors/JheisonMB"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t.nav.sponsors}
-            title={t.nav.sponsors}
-            set:html={sponsorIcon}
-          />
-        </span>
-      </div>
     </nav>
     <a class="cta" href={localizePath('/workbench', lang)}>{t.footer.cta}</a>
     <p class="word-rule"><span class="word" translate="no">UNIVERLAB</span></p>
@@ -128,23 +105,42 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
     <span class="braille" role="img" aria-label={BRAILLE_SENTENCE}>
       <span aria-hidden="true">{brailleCells}</span>
     </span>
+    <span class="icon-row">
+      {openIcons.map((item) => (
+        <a
+          class="icon-link"
+          href={item.href}
+          target={item.ext ? '_blank' : undefined}
+          rel={item.ext ? 'noopener noreferrer' : undefined}
+          aria-label={item.label}
+          title={item.label}
+          set:html={item.svg}
+        />
+      ))}
+      <a
+        class="icon-link sponsor"
+        href="https://github.com/sponsors/JheisonMB"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t.nav.sponsors}
+        title={t.nav.sponsors}
+        set:html={sponsorIcon}
+      />
+    </span>
   </div>
   <div class="wrap base">
-    <p class="small">
-      <span class="operator">{t.footer.operator}</span><span class="sep"> · </span>
-      {legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}
-      <span class="sep"> · </span><span class="privacy">{t.footer.privacy}</span>
-      <span class="sep"> · </span><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span>
-      {forged && (<><span class="sep"> · </span><span class="forged"><span class="forged-name" translate="no">{forged.name}</span>{' · '}{t.footer.forged}</span></>)}
-      <span class="sep"> · </span><button
+    <div class="small">
+      {forged && (<p><span class="forged"><span class="forged-name" translate="no">{forged.name}</span>{' · '}{t.footer.forged}</span></p>)}
+      <p><span class="operator">{t.footer.operator}</span><span class="sep"> · </span>{legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}</p>
+      <p><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span><span class="sep"> · </span><button
         type="button"
         class="branch mono"
         translate="no"
         title={t.cosmos.branchTooltip}
         aria-expanded="false"
         aria-controls="cosmic-commit"
-      >{t.cosmos.branch}</button>
-    </p>
+      >{t.cosmos.branch}</button></p>
+    </div>
     <!-- Easter egg: the universe's latest commit. Terminal output stays English
          in every locale (git always is), toggled by the branch button. -->
     <div id="cosmic-commit" class="commit-panel" hidden translate="no">
@@ -238,10 +234,10 @@ Date:   now
     transition: color 0.15s ease;
   }
   .foot-nav a:hover { color: var(--f-ink); }
-  /* The Open shelf reads as icons: one quiet row of 20px marks next to the
-     sponsor heart, dim ink at rest, full ink on hover. The fixed box keeps
-     the row from shifting; the svg inherits the anchor's colour (the footer
-     paints every svg faint by default, which would freeze the hover). */
+  /* The social and API links read as icons: one quiet row of 20px marks next
+     to the sponsor heart, dim ink at rest, full ink on hover. The fixed box
+     keeps the row from shifting; the svg inherits the anchor's colour (the
+     footer paints every svg faint by default, which would freeze the hover). */
   .icon-row { display: flex; gap: 1rem; align-items: center; justify-content: center; min-height: 32px; }
   .icon-link {
     display: inline-flex; align-items: center; min-height: 32px; min-width: 32px; justify-content: center;
@@ -310,16 +306,11 @@ Date:   now
     color: var(--f-ink-dim);
     overflow-wrap: anywhere;
   }
+  .small p { margin-block: 0; }
   .small .sep { color: var(--f-ink-faint); }
   .small a { color: inherit; }
   .built a { text-decoration-color: var(--f-line); }
   .built a:hover { color: var(--f-ink); }
-  .privacy {
-    margin: 0;
-    font-family: var(--font-mono); font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    color: var(--f-ink-faint); text-align: center;
-  }
   /* The forged colophon line — experiment pages only: the artifact's name in
      the mono face, then the dictionary line. */
   .forged {
@@ -364,7 +355,7 @@ Date:   now
   }
 
   @media (min-width: 40rem) {
-    .foot-nav { grid-template-columns: repeat(3, auto); justify-content: center; column-gap: clamp(1.75rem, 5vw, 4.5rem); }
+    .foot-nav { grid-template-columns: repeat(2, auto); justify-content: center; column-gap: clamp(1.75rem, 5vw, 4.5rem); }
   }
   @media (max-width: 40rem) {
     .colophon { padding-block-start: 2.25rem; }
