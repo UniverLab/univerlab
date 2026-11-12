@@ -5,6 +5,16 @@
    --mail-prefixed custom properties: day values on :root, night values under
    the site's night flag, like the language corner. */
 
+/* The past letter's hand. Declared here, used only by letter text, so the
+   file is fetched the first time a letter opens — never on page load. */
+@font-face {
+  font-family: 'Homemade Apple';
+  src: url('/fonts/HomemadeApple-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --mail-ground: #f4f0ea;
   --mail-ink: #1d1510;
@@ -25,6 +35,11 @@
   --mail-stamp-bg: #2c3a52;
   --mail-shadow: 32 22 12;
   --mail-garnet: #87222c;
+  --mail-hand: 'Homemade Apple', 'Segoe Script', cursive;
+  --mail-head: 21px;
+  --mail-body: 13.5px;
+  --mail-past-head: 17px;
+  --mail-past-body: 11px;
 }
 
 :root[data-bench-theme='night'] {
@@ -198,7 +213,10 @@
   left: 7%;
   right: 7%;
   top: 11%;
-  min-height: 118%;
+  /* A letter page in portrait, close to 1 : 1.3, at every viewport width.
+     The sheet never stretches to fit its body: long text scrolls inside. */
+  aspect-ratio: 10 / 13;
+  overflow: hidden;
   padding: 18px 18px 16px;
   color: var(--mail-letter-ink);
   background:
@@ -206,8 +224,8 @@
     repeating-linear-gradient(0deg, transparent 0 3px, rgb(var(--mail-shadow) / 0.018) 3px 4px),
     var(--mail-letter);
   clip-path: var(--deckle, none);
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 .mail-pop .letter-shadow {
@@ -235,7 +253,7 @@
 .mail-pop .letter h2 {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 21px;
+  font-size: var(--mail-head);
   line-height: 1.15;
   margin: 2px 0 0;
   /* Same clearance as the meta row above: a short title must not slide
@@ -244,16 +262,35 @@
 }
 .mail-pop .letter p {
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--mail-body);
   line-height: 1.55;
   margin: 0;
-  min-height: 6.2em;
   white-space: pre-wrap;
+  /* A long unbroken token (a URL, a binomial) must wrap inside the sheet
+     rather than force a sideways scroll. */
+  overflow-wrap: anywhere;
+  /* The body takes the sheet's free height and scrolls inside it. `min-height: 0`
+     is what lets it shrink below its content: with a floor here a long headline
+     pushes the links past the sheet's fixed height and clips them. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
-/* A letter from the past reads in italic; lab letters stay upright. Body
-   paragraphs only — headline, meta, links and caret keep their style. */
+/* A letter from the past reads in its period hand, smaller than today's
+   text; lab letters stay upright in the site's mono. Meta lines and links
+   keep the site's type so dates and destinations stay legible. */
+.mail-pop .letter.past h2 {
+  font-family: var(--mail-hand);
+  font-size: var(--mail-past-head);
+  /* The hand's ink runs about 1.8em a line (a looped ascender over a deep
+     descender), so the shared 1.15 leading would make a wrapped headline
+     collide with itself. */
+  line-height: 1.45;
+}
 .mail-pop .letter.past p {
-  font-style: italic;
+  font-family: var(--mail-hand);
+  font-size: var(--mail-past-body);
+  line-height: 1.7;
 }
 .mail-pop .letter p .caret {
   display: inline-block;
@@ -288,7 +325,7 @@
   border: 1px solid var(--mail-letter-soft);
   padding: 3px 9px;
   cursor: pointer;
-  justify-self: start;
+  align-self: flex-start;
 }
 .mail-pop .letter .next:focus-visible { outline: 2px solid var(--mail-letter-ink); outline-offset: 2px; }
 .mail-pop .close {
