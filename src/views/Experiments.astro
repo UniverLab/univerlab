@@ -28,6 +28,8 @@ const room = t.lanternRoom;
   .enc-h1 { font-family: 'Old Standard TT', serif; font-size: clamp(32px, 6vw, 54px); letter-spacing: 0.04em; margin: 0; }
   .enc-tome { margin: 0; font-family: 'Old Standard TT', serif; font-variant: small-caps; letter-spacing: 0.12em; color: var(--bench-line-soft); font-size: 15px; }
   .enc-intro { margin: 6px auto 0; max-width: 56ch; color: var(--bench-line-soft); font-size: 16px; }
+  /* Its own rule: the lantern hall used to borrow Home's .hall through the CSS every page loaded. */
+  .hall { display: grid; justify-items: center; min-width: 0; }
 
   @media (max-width: 520px) {
     .enc-tome { font-size: 15px; }
