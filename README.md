@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Astro-static-FF5D01?style=for-the-badge&logo=astro&logoColor=white" alt="Astro"/>
   <img src="https://img.shields.io/badge/i18n-EN%20%C2%B7%20ES-00a9a0?style=for-the-badge" alt="i18n"/>
   <img src="https://img.shields.io/badge/host-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare Pages"/>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2E8B57?style=for-the-badge" alt="License"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-2E8B57?style=for-the-badge" alt="License"/></a>
 </p>
 
 <p align="center">
