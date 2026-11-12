@@ -131,7 +131,7 @@ export const experiments: Experiment[] = [
       night: { '--bg': '#241a12', '--bg-raise': '#2f2318', '--ink': '#f2e7d3', '--ink-dim': '#b8a583', '--ink-faint': '#8a7a5e', '--line': '#40331f', '--accent': '#e6b24a', '--canvas-color': '#e6b24a', '--canvas-mute': '#5a4a32' },
     },
   },
-  { id: 'facetmedia', name: 'facetMedia', ipa: '/ˈfæs.ɪt ˈmiː.di.ə/', number: 'EXP-009', status: 'beta', essenceHex: '#e8c547', github: 'https://github.com/UniverLab/facetmedia', license: 'Apache-2.0', motif: '◇ ── ◆ ── ◇ · 24/24 ✓', surface: 'facet', startDate: '2026-10-22', install: { unix: 'uv tool install facetmedia' }, fondo: true, thread: '@i18n', builtWith: ['canopy'] },
+  { id: 'facetmedia', name: 'facetMedia', ipa: '/ˈfæs.ɪt ˈmiː.di.ə/', number: 'EXP-009', status: 'beta', essenceHex: '#e8c547', github: 'https://github.com/UniverLab/facetmedia', license: 'Apache-2.0', motif: '◇ ── ◆ ── ◇ · 24/24 ✓', surface: 'facet', startDate: '2026-10-22', install: { unix: 'uv tool install facetmedia' }, hasDocs: true, fondo: true, thread: '@i18n', builtWith: ['canopy'] },
 ];
 
 /** License file URL for an experiment's own repository. Dual-licensed repos

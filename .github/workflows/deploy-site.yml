@@ -125,6 +125,15 @@ jobs:
           path: demostage
           sparse-checkout: docs
           fetch-depth: 0
+      # facetMedia's docs live on its default branch like the others; until
+      # its v0.1 line reaches main the collection is empty and /facetmedia/docs/
+      # does not build.
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/facetmedia
+          path: facetmedia
+          sparse-checkout: docs
+          fetch-depth: 0
       # Canopy registry — platforms/ directory for platform badges
       - uses: actions/checkout@v4
         with:
