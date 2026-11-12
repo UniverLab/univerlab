@@ -4,7 +4,7 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { experiments, byId, Status } from '../lib/experiments';
+import { experiments, byId, Status, licenseUrl } from '../lib/experiments';
 
 describe('experiments.ts', () => {
   describe('experiments array', () => {
@@ -139,6 +139,49 @@ describe('experiments.ts', () => {
   describe('fondo opt-in', () => {
     it('demostage opts into the live fondo', () => {
       expect(byId('demostage').fondo).toBe(true);
+    });
+  });
+
+  describe('license — SPDX pin per repo (2026-11-12, breaks on relicense)', () => {
+    // Grounded in the live LICENSE files fetched 2026-11-12 (see the spec
+    // reviewer's notes): Rust crates are dual MIT OR Apache-2.0, everything
+    // else names its single license. A relicense must update this table and
+    // the registry value together — the badge follows the one registry value.
+    const EXPECTED_LICENSE: Record<string, 'MIT' | 'Apache-2.0' | 'MIT OR Apache-2.0'> = {
+      canopy: 'MIT OR Apache-2.0',
+      demostage: 'MIT OR Apache-2.0',
+      texforge: 'MIT',
+      gitkit: 'MIT',
+      ghscaff: 'MIT',
+      cadspec: 'MIT',
+      quorum: 'Apache-2.0',
+      'astro-denoise': 'Apache-2.0',
+      facetmedia: 'Apache-2.0',
+    };
+
+    it('pins every experiment to the table above', () => {
+      // Given: the nine experiments in the registry
+      // When: we compare each license to the table
+      // Then: every row matches, and no experiment is missing or extra
+      expect(Object.keys(EXPECTED_LICENSE).sort()).toEqual(experiments.map((e) => e.id).sort());
+      for (const exp of experiments) {
+        expect(exp.license).toBe(EXPECTED_LICENSE[exp.id]);
+      }
+    });
+
+    it('links the license file of each experiment repository', () => {
+      // Given: the licenseUrl helper and the nine experiments
+      // When: we build each license URL
+      // Then: dual-licensed repos link LICENSE-MIT, the rest link LICENSE
+      for (const exp of experiments) {
+        const url = licenseUrl(exp);
+        expect(url.startsWith(exp.github)).toBe(true);
+        expect(url).toBe(
+          exp.license === 'MIT OR Apache-2.0'
+            ? `${exp.github}/blob/main/LICENSE-MIT`
+            : `${exp.github}/blob/main/LICENSE`,
+        );
+      }
     });
   });
 

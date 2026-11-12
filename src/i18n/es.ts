@@ -92,6 +92,8 @@ export const es: Dict = {
     forged: 'Artefacto concebido y forjado en UniverLab',
     cta: 'Banco de trabajo · primera llamada gratis →',
     operator: 'UniverLab es operado por Jheison Martinez Bolivar, Colombia.',
+    copyright: '© 2026 Jheison Martinez Bolivar',
+    licenseName: 'Apache-2.0',
     groups: { work: 'Experimentos', lab: 'El laboratorio' },
   },
   common: {
@@ -108,6 +110,7 @@ export const es: Dict = {
     faq: 'Preguntas frecuentes',
     cite: 'Citar',
     citeTitle: 'Cómo citar',
+    license: 'Licencia',
   },
   status: {
     active: 'activo',

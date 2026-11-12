@@ -238,3 +238,24 @@ describe('main() — every page gets the generic conversion', () => {
     expect(md).toContain('Ordinary page body.');
   });
 });
+
+describe('seal badges in markdown twin', () => {
+  const seal = (parts: string) =>
+    `<!DOCTYPE html><html><head><title>T</title></head><body><main><p class="seal" translate="no">${parts}</p></main></body></html>`;
+  const licensePart = (key: string, val: string) =>
+    `<a class="seal-part" href="https://github.com/UniverLab/x/blob/main/LICENSE"><span class="seal-key">${key}</span><span class="seal-val">${val}</span></a>`;
+
+  it('renders a license-only seal (no DOI, no release) as its own line', () => {
+    const md = htmlToMarkdown(seal(licensePart('License', 'MIT')));
+    expect(md).toContain('[License MIT](https://github.com/UniverLab/x/blob/main/LICENSE)');
+    expect(md.split('\n\n')).toContainEqual(expect.stringContaining('[License MIT]'));
+  });
+
+  it('separates adjacent badges with a space and key from value', () => {
+    const doi = `<a class="seal-part" href="https://doi.org/10.5281/zenodo.1"><span class="seal-key">DOI</span><span class="seal-val">10.5281/zenodo.1</span></a>`;
+    const md = htmlToMarkdown(seal(`${doi}${licensePart('License', 'MIT OR Apache-2.0')}`));
+    expect(md).toContain('[DOI 10.5281/zenodo.1](https://doi.org/10.5281/zenodo.1) [License MIT OR Apache-2.0]');
+    expect(md).not.toContain('](https://doi.org/10.5281/zenodo.1)[License');
+    expect(md).not.toContain('[LicenseMIT');
+  });
+});

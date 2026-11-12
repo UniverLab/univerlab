@@ -135,6 +135,32 @@ export function htmlToMarkdown(html: string): string {
   cleaned = injectLatestRelease(cleaned);
 
   const td = new TurndownService({ headingStyle: 'atx' });
+  // Seal badges: each `a.seal-part` holds a key span and a value span
+  // (`License` + `MIT`). The default link rule concatenates them
+  // (`[LicenseMIT](…)`) and drops the whitespace between adjacent badges
+  // (`…](…)[License…](…)`). Render every badge explicitly and join the
+  // row with spaces, so the twin always carries a separated license line.
+  const sealLabel = (anchor: Element): string => {
+    const key = anchor.querySelector('.seal-key')?.textContent?.trim() ?? '';
+    const val = anchor.querySelector('.seal-val')?.textContent?.trim() ?? '';
+    const href = anchor.getAttribute('href') ?? '';
+    const label = [key, val].filter(Boolean).join(' ');
+    return href ? `[${label}](${href})` : label;
+  };
+  td.addRule('seal', {
+    filter: (node) =>
+      node.nodeName === 'P' && (node as HTMLElement).classList?.contains('seal'),
+    replacement: (_content, node) => {
+      const parts = Array.from((node as HTMLElement).querySelectorAll('a.seal-part')).map(sealLabel);
+      if (parts.length === 0) return '';
+      return `\n\n${parts.join(' ')}\n\n`;
+    },
+  });
+  td.addRule('sealPart', {
+    filter: (node) =>
+      node.nodeName === 'A' && (node as HTMLElement).classList?.contains('seal-part'),
+    replacement: (_content, node) => sealLabel(node as unknown as Element),
+  });
   // Mission-date <time> labels: append the ISO in parentheses so an agent
   // reading the twin never has to convert. Every renderer marks its label
   // with data-mission (Astro keeps the attribute in the built HTML); the

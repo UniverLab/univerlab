@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { toBraille, fromBraille, BRAILLE_SENTENCE } from '../lib/braille';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { byId } from '../lib/experiments';
 
 const FOOTER = resolve(__dirname, '..', 'components', 'Footer.astro');
 const src = readFileSync(FOOTER, 'utf8');
@@ -390,6 +391,67 @@ describe('Footer — the wrap lines sit inside the centred column', () => {
   it('the other .wrap blocks carry no margin override of their own', () => {
     for (const sel of ['.colophon', '.base']) {
       expect(rule(sel)).not.toMatch(/\bmargin[a-z-]*\s*:/);
+    }
+  });
+});
+
+describe('Footer — the copyright line', () => {
+  it('prints «© 2026 Jheison Martinez Bolivar · Apache-2.0» with the license linking the site LICENSE', () => {
+    expect(en.footer.copyright).toBe('© 2026 Jheison Martinez Bolivar');
+    expect(es.footer.copyright).toBe('© 2026 Jheison Martinez Bolivar');
+    expect(en.footer.licenseName).toBe('Apache-2.0');
+    expect(es.footer.licenseName).toBe('Apache-2.0');
+    expect(markup).toContain('{t.footer.copyright}');
+    expect(markup).toContain('{t.footer.licenseName}');
+    expect(markup).toContain('href="https://github.com/UniverLab/univerlab/blob/main/LICENSE"');
+  });
+
+  it('sits after the operator line inside the small block, in the .copyright span', () => {
+    const smallAt = markup.indexOf('class="small"');
+    const operatorAt = markup.indexOf('<p><span class="operator">');
+    const copyrightAt = markup.indexOf('class="copyright"');
+    expect(copyrightAt).toBeGreaterThan(operatorAt);
+    expect(copyrightAt).toBeGreaterThan(smallAt);
+  });
+
+  it('never says «all rights reserved» — the lab is open', () => {
+    expect(src).not.toMatch(/all rights reserved/i);
+    expect(src).not.toMatch(/todos los derechos reservados/i);
+    expect(en.footer.copyright).not.toMatch(/all rights reserved/i);
+    expect(es.footer.copyright).not.toMatch(/todos los derechos reservados/i);
+  });
+
+  it('keeps the footer dictionaries in parity (copyright and licenseName exist in both)', () => {
+    expect(Object.keys(en.footer).sort()).toEqual(Object.keys(es.footer).sort());
+    expect(en.common.license).toBe('License');
+    expect(es.common.license).toBe('Licencia');
+    expect(Object.keys(en.common).sort()).toEqual(Object.keys(es.common).sort());
+  });
+});
+
+describe('ExperimentLayout — the self-drawn license badge', () => {
+  it('renders the license from the registry data, linked to the license file', () => {
+    expect(EXP).toContain('{t.common.license}');
+    expect(EXP).toContain('{exp.license}');
+    expect(EXP).toContain('licenseUrl(exp)');
+    expect(EXP).toContain("import { byId, licenseUrl, liveExperiments, type ExperimentId } from '../lib/experiments'");
+    expect(EXP).not.toContain('shields.io');
+  });
+
+  it('pins the badge text to the SPDX value of each experiment', () => {
+    const pinned: Record<string, string> = {
+      canopy: 'MIT OR Apache-2.0',
+      demostage: 'MIT OR Apache-2.0',
+      texforge: 'MIT',
+      gitkit: 'MIT',
+      ghscaff: 'MIT',
+      cadspec: 'MIT',
+      quorum: 'Apache-2.0',
+      'astro-denoise': 'Apache-2.0',
+      facetmedia: 'Apache-2.0',
+    };
+    for (const [id, license] of Object.entries(pinned)) {
+      expect(byId(id).license).toBe(license);
     }
   });
 });

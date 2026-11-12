@@ -95,13 +95,17 @@ describe('DOI badge', () => {
     }
   });
 
-  it('the layout renders the badge only when declared', () => {
+  it('the layout always renders the seal so the license badge survives without DOI or release', () => {
     const layout = readFileSync(resolve(REPO, 'src/layouts/ExperimentLayout.astro'), 'utf8');
-    expect(layout).toContain('(exp.citation || release) &&');
+    // The seal row itself is unconditional: pages without a citation and
+    // without a published release (latestRelease returns null) still show
+    // the license badge. Only the DOI and release badges stay conditional.
+    expect(layout).not.toContain('(exp.citation || release) &&');
     expect(layout).toContain('class="seal"');
     expect(layout).toContain('https://doi.org/${exp.citation.doi}');
     expect(layout).toContain('release.version');
     expect(layout).toContain('class="seal-key"');
+    expect(layout).toContain('licenseUrl(exp)');
     expect(layout).not.toContain('<img src={exp.citation.badge}');
   });
 });

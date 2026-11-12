@@ -95,6 +95,8 @@ export const en = {
     forged: 'Artifact conceived and forged at UniverLab',
     cta: 'Workbench · free first call →',
     operator: 'UniverLab is run by Jheison Martinez Bolivar, Colombia.',
+    copyright: '© 2026 Jheison Martinez Bolivar',
+    licenseName: 'Apache-2.0',
     groups: { work: 'Experiments', lab: 'The lab' },
   },
   common: {
@@ -111,6 +113,7 @@ export const en = {
     faq: 'FAQ',
     cite: 'Cite',
     citeTitle: 'How to cite',
+    license: 'License',
   },
   status: {
     active: 'active',

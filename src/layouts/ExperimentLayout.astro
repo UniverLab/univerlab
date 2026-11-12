@@ -6,7 +6,7 @@ import LabPlate from '../components/LabPlate.astro';
 import HeroPlate from '../components/HeroPlate.astro';
 import { machineInk, plateTuning } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
-import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
+import { byId, licenseUrl, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
 import { citationTexts } from '../lib/citation';
 import { latestRelease } from '../lib/releases';
@@ -111,12 +111,11 @@ const ogImage = `/og/${id}.png`;
           )}
           <slot name="cta" />
       </div>
-      {(exp.citation || release) && (
-        <p class="seal" translate="no">
-          {exp.citation && (<a class="seal-part" href={`https://doi.org/${exp.citation.doi}`} target="_blank" rel="noopener noreferrer"><span class="seal-key">DOI</span><span class="seal-val">{exp.citation.doi}</span></a>)}
-          {release && (<a class="seal-part" href={release.url} target="_blank" rel="noopener noreferrer"><span class="seal-key">{t.plate.release}</span><span class="seal-val">{release.version}</span></a>)}
-        </p>
-      )}
+      <p class="seal" translate="no">
+        {exp.citation && (<a class="seal-part" href={`https://doi.org/${exp.citation.doi}`} target="_blank" rel="noopener noreferrer"><span class="seal-key">DOI</span><span class="seal-val">{exp.citation.doi}</span></a>)}
+        {release && (<a class="seal-part" href={release.url} target="_blank" rel="noopener noreferrer"><span class="seal-key">{t.plate.release}</span><span class="seal-val">{release.version}</span></a>)}
+        <a class="seal-part" href={licenseUrl(exp)} target="_blank" rel="noopener noreferrer"><span class="seal-key">{t.common.license}</span><span class="seal-val">{exp.license}</span></a>
+      </p>
       {exp.install && (
         <div class="install" id="install" data-install>
           {exp.install && (
