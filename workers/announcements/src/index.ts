@@ -4,7 +4,7 @@
  *   GET  /             → JSON array of entries (served from the KV mirror, edge-cheap)
  *   GET  /events       → SSE stream (pushes `event: entry|update|roadmap`)
  *   PUT  /             → Add entry, optionally linked via roadmap_id (Bearer)
- *   PATCH /:id         → Update an entry's topic and/or roadmap_id (Bearer)
+ *   PATCH /:id         → Update an entry's topic, roadmap_id, title and/or body; the date never changes (Bearer)
  *   DELETE /:id        → Remove entry by id (Bearer token required)
  *
  *   GET  /roadmap       → roadmap items (KV mirror by default; DO behind ?private=1 / ?state=all)
@@ -600,12 +600,24 @@ export class LogHub extends DurableObject<Env> {
   }
 
   /**
-   * Patch an entry's metadata. Only the keys present in `patch` are written, so
-   * a `roadmap_id`-only update cannot silently reclassify the announcement.
+   * Patch an entry's metadata or its wording. Only the keys present in `patch`
+   * are written, so a `roadmap_id`-only update cannot silently reclassify the
+   * announcement, and a text edit never touches its date.
    */
-  async updateEntryMeta(id: string, patch: { topic?: string; roadmap_id?: string | null }): Promise<Entry | null> {
+  async updateEntryMeta(
+    id: string,
+    patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string }
+  ): Promise<Entry | null> {
     const set: string[] = [];
     const args: (string | null)[] = [];
+    if (patch.title !== undefined) {
+      set.push('title = ?');
+      args.push(patch.title);
+    }
+    if (patch.body !== undefined) {
+      set.push('body = ?');
+      args.push(patch.body);
+    }
     if (patch.topic !== undefined) {
       set.push('topic = ?');
       args.push(patch.topic);
@@ -1363,7 +1375,7 @@ export default {
         return json({ error: 'Unauthorized' }, 401);
       }
 
-      let body: { topic?: unknown; roadmap_id?: unknown };
+      let body: { topic?: unknown; roadmap_id?: unknown; title?: unknown; body?: unknown };
       try {
         body = await req.json();
       } catch {
@@ -1372,6 +1384,23 @@ export default {
 
       const hasTopic = isPlainObject(body) && 'topic' in body;
       const hasRoadmapId = isPlainObject(body) && 'roadmap_id' in body;
+      const hasTitle = isPlainObject(body) && 'title' in body;
+      const hasBody = isPlainObject(body) && 'body' in body;
+
+      // Rewording keeps the entry's date: title and body follow the same
+      // limits as a new announcement.
+      let title: string | undefined;
+      let text: string | undefined;
+      if (hasTitle) {
+        title = typeof body.title === 'string' ? body.title.trim() : '';
+        if (!title) return json({ error: 'title must be a non-empty string' }, 400);
+        if (title.length > MAX_ANNOUNCEMENT_TITLE) return json({ error: `title max ${MAX_ANNOUNCEMENT_TITLE} chars` }, 413);
+      }
+      if (hasBody) {
+        text = typeof body.body === 'string' ? body.body.trim() : '';
+        if (!text) return json({ error: 'body must be a non-empty string' }, 400);
+        if (text.length > MAX_BODY) return json({ error: `body max ${MAX_BODY} chars` }, 413);
+      }
 
       // Neither key present → exactly today's behaviour: reclassify as general.
       // With `roadmap_id` present, `topic` is only touched if its key is too,
@@ -1385,7 +1414,7 @@ export default {
           return json({ error: `topic must be one of: ${[...TOPICS].join(', ')}` }, 400);
         }
         topic = value;
-      } else if (!hasRoadmapId) {
+      } else if (!hasRoadmapId && !hasTitle && !hasBody) {
         topic = DEFAULT_TOPIC;
       }
 
@@ -1400,7 +1429,9 @@ export default {
       const id = url.pathname.slice(1);
       if (!id) return json({ error: 'id required' }, 400);
 
-      const patch: { topic?: string; roadmap_id?: string | null } = {};
+      const patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string } = {};
+      if (title !== undefined) patch.title = title;
+      if (text !== undefined) patch.body = text;
       if (topic !== undefined) patch.topic = topic;
       if (roadmapId !== undefined) patch.roadmap_id = roadmapId;
 
