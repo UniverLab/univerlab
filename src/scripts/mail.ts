@@ -214,7 +214,7 @@ function startMailbox(): void {
     const sent = Number.isFinite(posted.getTime()) ? posted : now;
     const sentToday = sent.toDateString() === now.toDateString();
     const mark = `${sent.getDate()} ${monthName(sent, lang, 'short').toUpperCase()}`;
-    const todayHref = lang === 'es' ? '/es/today/' : '/today/';
+    const todayHref = lang === 'es' ? '/es/newspaper/' : '/newspaper/';
 
     const el = document.createElement('div');
     el.className = 'mail-pop';

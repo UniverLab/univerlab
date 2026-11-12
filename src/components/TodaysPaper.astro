@@ -1,21 +1,22 @@
 ---
 import { getLang, useTranslations } from '../i18n';
-import Postcard from './Postcard.astro';
+import { iconSvg } from '../lib/icon-svg';
+import { chevronLeft, chevronRight, printer } from '../lib/icons';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 ---
 <!-- The newspaper: the masthead is static, #edition is set at the edge by
   functions/_middleware.ts (HTMLRewriter) or, on failure, by the client script
-  in pages/today.astro with the same renderer. The masthead name is the
-  page's h1; the sundial plate is an engraving inside the masthead, not a
+  in pages/newspaper.astro with the same renderer. The masthead name is the
+  page's h1; the sundial plate is an engraving inside the paper's grid, not a
   band above it. The ear's date controls are set by the script below: the
-  built page cannot know ?d=. -->
+  built page cannot know ?d=. The paper is always light: sepia by day, a
+  cooler grey under the moon — never dark. -->
 <div class="paper">
   <header class="masthead">
-    <div class="ear"><span>{t.today.path}</span><form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./">{t.today.pick.prev}</a><label class="words"><span data-words></span><input type="date" name="d" required /></label><a class="step next" data-next href="./">{t.today.pick.next}</a><button type="submit">{t.today.pick.go}</button></form><span class="edition-label" data-today={t.today.edition} data-past={t.today.editionPast}>{t.today.edition}</span></div>
+    <div class="ear"><span>{t.today.path}</span><form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words></span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form><span class="edition-label" data-today={t.today.edition} data-past={t.today.editionPast}>{t.today.edition}</span></div>
     <h1 class="masthead-name">{t.today.name}</h1>
     <p class="motto">{t.today.motto}</p>
-    <figure class="masthead-fig"><Postcard page="today" alt={t.postcards.today} /></figure>
   </header>
   <div id="edition"></div>
   <div id="today-loading" class="today-loading" role="status" aria-label={t.today.loading}>
@@ -91,76 +92,114 @@ const t = useTranslations(lang);
 <style is:global>
   /* Global (the edition is injected at the edge and by script, so scoped
      styles would miss it), but every rule hangs off .paper: generic names like
-     .lead or .col must never style another page. */
-  .paper { display: grid; gap: 18px; margin-top: 2.5rem; }
-  .paper .masthead { text-align: center; display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 3px double var(--bench-line); }
-  .paper .masthead .ear { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bench-line-soft); flex-wrap: wrap; }
-  .paper .edition-pick { display: inline-flex; gap: 8px; align-items: center; }
-  .paper .edition-pick .step { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--bench-line); text-decoration: none; border-bottom: 1px solid var(--bench-line-soft); }
-  .paper .edition-pick .words { position: relative; cursor: pointer; border-bottom: 1px dotted var(--bench-line-soft); }
+     .lead or .col must never style another page. The paper is always light:
+     sepia by day, a cooler grey under the moon — never dark. */
+  .paper {
+    --p-ground: var(--bench-c-parchment);
+    --p-deep: var(--bench-c-parchment-deep);
+    --p-ink: var(--bench-c-ink);
+    --p-soft: var(--bench-c-sepia);
+    --p-rule: var(--bench-c-graphite);
+    --p-emphasis: var(--bench-c-garnet);
+    display: grid; gap: 18px; margin-top: 2.5rem;
+    background: var(--p-ground);
+    padding: clamp(16px, 3vw, 28px);
+  }
+  [data-bench-theme='night'] .paper {
+    --p-ground: #e3e5e2;
+    --p-deep: #d7dad6;
+    --p-ink: #16191c;
+    --p-soft: #454e54;
+    --p-rule: #6d787e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-bench-theme='day']) .paper {
+      --p-ground: #e3e5e2;
+      --p-deep: #d7dad6;
+      --p-ink: #16191c;
+      --p-soft: #454e54;
+      --p-rule: #6d787e;
+    }
+  }
+  .paper .masthead { text-align: center; display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 3px double var(--p-ink); }
+  .paper .masthead .ear { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--p-soft); flex-wrap: wrap; }
+  .paper .edition-pick { display: inline-flex; gap: 8px; align-items: center; justify-content: center; flex: 1; }
+  .paper .edition-pick .step, .paper .edition-pick button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; color: var(--p-ink); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; cursor: pointer; }
+  .paper .edition-pick .step { text-decoration: none; }
+  .paper .edition-pick .icon { display: block; }
+  .paper .edition-pick .words { position: relative; cursor: pointer; border-bottom: 1px dotted var(--p-soft); text-align: center; }
   .paper .edition-pick .words input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .paper .edition-pick .words:focus-within { outline: 1px solid var(--bench-emphasis); outline-offset: 3px; }
-  .paper .edition-pick button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--bench-line); background: transparent; border: 1px solid var(--bench-line-soft); padding: 1px 6px; border-radius: 0; cursor: pointer; }
-  .paper .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--bench-line); }
-  .paper .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; color: var(--bench-line-soft); }
-  .paper .masthead .masthead-fig { width: min(30rem, 100%); margin: 10px auto 0; }
+  .paper .edition-pick .words:focus-within { outline: 1px solid var(--p-emphasis); outline-offset: 3px; }
+  .paper .edition-pick .step:focus-visible, .paper .edition-pick button:focus-visible { outline: 1px solid var(--p-emphasis); outline-offset: 2px; }
+  .paper .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--p-ink); }
+  .paper .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; text-align: center; color: var(--p-soft); }
   .paper .lead.solo { grid-template-columns: minmax(0, 1fr); }
   .paper .lead.solo .story { max-width: 66ch; }
   .paper #edition { display: grid; gap: 18px; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
-  .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--bench-line); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--bench-line); }
-  .paper .lead { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; border-bottom: 1px solid var(--bench-rule); padding-bottom: 20px; }
-  .paper .lead .kicker, .paper .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bench-line-soft); margin: 0; font-weight: 400; }
-  .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 6px 0 10px; text-wrap: balance; color: var(--bench-line); }
-  .paper .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--bench-line); }
+  .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
+  .paper .lead { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; }
+  .paper .lead .kicker, .paper .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; font-weight: 400; }
+  .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 6px 0 10px; text-wrap: balance; color: var(--p-ink); }
+  .paper .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--p-ink); }
   .paper .lead .story .dropcap::first-letter { font-family: var(--font-serif); float: left; font-size: 3.4em; line-height: 0.82; padding: 4px 8px 0 0; }
-  .paper .lead a, .paper .item a { font-family: var(--font-mono); font-size: 12px; color: var(--bench-emphasis); text-underline-offset: 3px; }
-  .paper .lead aside { border-left: 1px solid var(--bench-rule); padding-left: 22px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--bench-line-soft); }
-  .paper .lead aside b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--bench-line); display: block; line-height: 1.1; }
+  .paper .lead a, .paper .item a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
+  .paper .lead aside { border-left: 1px solid var(--p-rule); padding-left: 22px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); }
+  .paper .lead aside b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
   .paper .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .paper .more { display: grid; gap: 14px; }
-  .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--bench-emphasis); cursor: pointer; }
+  .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
-  .paper .col + .col { border-left: 1px solid var(--bench-rule); }
+  .paper .col + .col { border-left: 1px solid var(--p-rule); }
   .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
-  .paper .col h3 { border-bottom: 1px solid var(--bench-line); padding-bottom: 4px; }
-  .paper .item { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px dotted var(--bench-rule); }
+  .paper .col h3 { border-bottom: 1px solid var(--p-ink); padding-bottom: 4px; }
+  .paper .item { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px dotted var(--p-rule); }
   .paper .item:last-child { border-bottom: 0; }
   .paper .item .yr { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-  .paper .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--bench-line); }
-  .paper .item .yr span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--bench-line-soft); white-space: nowrap; }
-  .paper .item p { margin: 0; font-family: var(--font-body); font-size: 16.5px; line-height: 1.45; color: var(--bench-line); }
+  .paper .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--p-ink); }
+  .paper .item .yr span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--p-soft); white-space: nowrap; }
+  .paper .item p { margin: 0; font-family: var(--font-body); font-size: 16.5px; line-height: 1.45; color: var(--p-ink); }
   .paper .item .body { font-size: 15px; line-height: 1.5; }
   .paper .item a { justify-self: start; }
   .paper .lead aside .aside-body { font-size: 14.5px; line-height: 1.5; }
-  .paper .labmail { border: 1px solid var(--bench-line); outline: 1px solid var(--bench-line); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
-  .paper .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bench-line-soft); margin: 0; }
-  .paper .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--bench-line); }
-  .paper .labmail p { margin: 0; font-family: var(--font-body); font-size: 17px; color: var(--bench-line); }
-  .paper .labmail a { font-family: var(--font-mono); font-size: 12px; color: var(--bench-emphasis); text-underline-offset: 3px; justify-self: start; }
+  .paper .labmail { border: 1px solid var(--p-ink); outline: 1px solid var(--p-ink); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
+  .paper .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; }
+  .paper .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); }
+  .paper .labmail p { margin: 0; font-family: var(--font-body); font-size: 17px; color: var(--p-ink); }
+  .paper .labmail a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; justify-self: start; }
   /* Newspaper photos: printed halftone, sepia-tinted, framed like a press
-    print. The mat keeps its paper tone in both phases. */
+    print. The mat keeps the paper's own tone in both phases. */
   .paper .photo { position: relative; margin: 0; display: grid; gap: 4px; }
-  .paper .photo .print { position: relative; overflow: hidden; background: var(--bench-c-parchment-deep); padding: 4px; box-shadow: 0 1px 0 var(--bench-rule); }
+  .paper .photo .print { position: relative; overflow: hidden; background: var(--p-deep); padding: 4px; box-shadow: 0 1px 0 var(--p-rule); }
   .paper .photo img { display: block; width: 100%; height: auto; filter: grayscale(1) sepia(0.3) contrast(1.35) brightness(1.04); }
   .paper .photo .print::after { content: ""; position: absolute; inset: 4px; pointer-events: none; mix-blend-mode: multiply; opacity: 0.28;
     background: radial-gradient(circle, #2a2118 30%, transparent 33%) 0 0 / 2.5px 2.5px; }
-  .paper .photo figcaption { font-family: var(--font-mono); font-size: 10.5px; color: var(--bench-line-soft); letter-spacing: 0.03em; }
+  .paper .photo figcaption { font-family: var(--font-mono); font-size: 10.5px; color: var(--p-soft); letter-spacing: 0.03em; }
   .paper .lead .story .photo { float: right; width: min(42%, 220px); margin: 4px 0 10px 18px; }
   .paper .item.has-photo { grid-template-columns: 64px minmax(0, 1fr); column-gap: 12px; }
   .paper .item.has-photo .photo { grid-row: span 3; }
   .paper .item.has-photo .yr, .paper .item.has-photo p, .paper .item.has-photo a { grid-column: 2; }
-  .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--bench-line-soft); text-align: center; border-top: 3px double var(--bench-line); padding-top: 8px; margin: 0; }
+  /* The sundial engraving: an old plate set among the columns, under the
+    shorter one; on phones it sits between sections at column width. */
+  .paper .paper-plate { margin: 4px 0 0; }
+  /* The Workbench notice: a paid-style box with ornamental double rules,
+    honestly labelled as an ad. Never the lead story. */
+  .paper .notice { border: 3px double var(--p-ink); padding: 14px 18px; display: grid; gap: 6px; justify-items: center; text-align: center; }
+  .paper .notice .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-bottom: 1px solid var(--p-rule); padding-bottom: 6px; width: 100%; }
+  .paper .notice h2 { font-family: var(--font-serif); font-weight: 700; font-size: clamp(24px, 3vw, 32px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); }
+  .paper .notice p { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--p-ink); }
+  .paper .notice a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
+  .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
-  .paper .skeleton-line { height: 1rem; border-radius: 4px; background: linear-gradient(90deg, var(--bench-rule) 25%, transparent 50%, var(--bench-rule) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  .paper .skeleton-line { height: 1rem; border-radius: 4px; background: linear-gradient(90deg, var(--p-rule) 25%, transparent 50%, var(--p-rule) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
-  .paper .today-error { font-family: var(--font-mono); font-size: 0.8rem; color: var(--bench-line-soft); padding-block: 2rem; text-align: center; }
+  .paper .today-error { font-family: var(--font-mono); font-size: 0.8rem; color: var(--p-soft); padding-block: 2rem; text-align: center; }
   @media (max-width: 47.99rem) {
     .paper .lead { grid-template-columns: 1fr; }
-    .paper .lead aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--bench-rule); padding-top: 12px; }
+    .paper .lead aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--p-rule); padding-top: 12px; }
     .paper .cols { grid-auto-flow: row; }
     .paper .col, .paper .col:first-child, .paper .col:last-child { padding-inline: 0; }
-    .paper .col + .col { border-left: 0; border-top: 1px solid var(--bench-line); padding-top: 14px; margin-top: 8px; }
+    .paper .col + .col { border-left: 0; border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }
   }
 </style>

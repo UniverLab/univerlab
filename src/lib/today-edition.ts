@@ -1,13 +1,14 @@
-// The day's newspaper: El Almanaque / The Almanac. One renderer for the
+// The day's newspaper: El Observable / The Observable. One renderer for the
 // edge (functions/_middleware.ts fills #edition through HTMLRewriter), the
-// client (pages/today.astro fills #edition when the edge did not) and the
-// markdown twin (/today/index.md). Escape every text field from the feed.
+// client (pages/newspaper.astro fills #edition when the edge did not) and the
+// markdown twin (/newspaper/index.md). Escape every text field from the feed.
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
+import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
 export type TodayLang = FilterLang;
@@ -96,8 +97,8 @@ export function otdUrl(lang: TodayLang, date: Date): string {
 /** The newspaper routes, with or without trailing slash or index.md. */
 export function todayRoute(pathname: string): TodayLang | null {
   const p = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
-  if (p === '/today' || p === '/today/index.md') return 'en';
-  if (p === '/es/today' || p === '/es/today/index.md') return 'es';
+  if (p === '/newspaper' || p === '/newspaper/index.md') return 'en';
+  if (p === '/es/newspaper' || p === '/es/newspaper/index.md') return 'es';
   return null;
 }
 
@@ -238,10 +239,15 @@ function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
 /** A column shows this many letters before the rest fold under "show more". */
 export const COLUMN_FOLD = 6;
 
-/** Events that may print a photo in one edition, the lead included. */
-export const EVENT_PHOTOS = 3;
-
-function columnHtml(title: string, items: Fact[], t: Dict, date: Date, photo: (f: Fact) => boolean): string {
+function columnHtml(
+  title: string,
+  items: Fact[],
+  t: Dict,
+  date: Date,
+  lang: TodayLang,
+  photo: (f: Fact) => boolean,
+  plate: boolean,
+): string {
   const head = items.slice(0, COLUMN_FOLD);
   const extra = items.slice(COLUMN_FOLD);
   const headHtml = head.map((f) => itemHtml(f, t, date, photo(f))).join('');
@@ -250,7 +256,13 @@ function columnHtml(title: string, items: Fact[], t: Dict, date: Date, photo: (f
       extra.map((f) => itemHtml(f, t, date, photo(f))).join('') +
       `</details>`
     : '';
-  return `<section class="col"><h3>${esc(title)}</h3>` + headHtml + extraHtml + `</section>`;
+  return (
+    `<section class="col"><h3>${esc(title)}</h3>` +
+    headHtml +
+    extraHtml +
+    (plate ? paperPlateHtml(lang) : '') +
+    `</section>`
+  );
 }
 
 /** The edition's inner HTML: everything inside `#edition`. */
@@ -318,20 +330,36 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
-  let left = EVENT_PHOTOS - (lead?.thumb ? 1 : 0);
-  const eventPhoto = (f: Fact): boolean => {
-    if (left <= 0 || !f.thumb) return false;
-    left -= 1;
-    return true;
-  };
+  // Every event whose article carries a photo prints it, like births and
+  // deaths do; the column folds the overflow under "show more" instead.
+  const eventPhoto = (f: Fact): boolean => !!f.thumb;
   const pairs: Array<[string, Fact[], (f: Fact) => boolean]> = [
     [t.events, rest('event'), eventPhoto],
     [t.births, rest('born'), () => true],
     [t.deaths, rest('died'), () => true],
   ].filter(([, items]) => items.length > 0) as Array<[string, Fact[], (f: Fact) => boolean]>;
   if (pairs.length) {
-    out += `<div class="cols">` + pairs.map(([title, items, photo]) => columnHtml(title, items, t, date, photo)).join('') + `</div>`;
+    // The engraving fills the gap the day's content leaves: it is appended
+    // in the shortest column (fewest letters, ties to the first).
+    let plateAt = 0;
+    for (let i = 1; i < pairs.length; i++) {
+      if (pairs[i][1].length < pairs[plateAt][1].length) plateAt = i;
+    }
+    out +=
+      `<div class="cols">` +
+      pairs.map(([title, items, photo], i) => columnHtml(title, items, t, date, lang, photo, i === plateAt)).join('') +
+      `</div>`;
   }
+
+  // The Workbench notice: a period advertisement in every edition, never
+  // the lead story.
+  const ad = lang === 'es' ? '/es/workbench/' : '/workbench/';
+  out +=
+    `<aside class="notice" aria-label="${esc(t.notice.label)}">` +
+    `<p class="kicker">${esc(t.notice.label)}</p>` +
+    `<h2>${esc(t.notice.head)}</h2>` +
+    `<p>${esc(t.notice.text)}</p>` +
+    `<a href="${ad}">${esc(t.notice.link)}</a></aside>`;
 
   out += `<p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
@@ -345,7 +373,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   const aside = todayAside(facts, lead);
   const box = todayLabBox(feed?.lab || [], date);
 
-  const path = lang === 'es' ? 'https://univerlab.org/es/today/' : 'https://univerlab.org/today/';
+  const path = lang === 'es' ? 'https://univerlab.org/es/newspaper/' : 'https://univerlab.org/newspaper/';
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
     weekday: 'long',
     day: 'numeric',
@@ -418,5 +446,8 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     }
     lines.push('');
   }
+  // The Workbench notice rides the twin as one short line with its link.
+  const adUrl = lang === 'es' ? 'https://univerlab.org/es/workbench/' : 'https://univerlab.org/workbench/';
+  lines.push(`*${t.notice.label} — [${t.notice.head}](${adUrl}): ${t.notice.text}*`, '');
   return lines.join('\n');
 }

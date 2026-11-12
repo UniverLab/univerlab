@@ -689,6 +689,18 @@ export async function onRequest(context: {
   // this guard `/mcp` would be rewritten to `/mcp/index.md`. Pass through
   // before anything else looks at the request.
   const { pathname } = new URL(request.url);
+  // The newspaper moved from /today/ to /newspaper/: the old addresses
+  // redirect permanently, keeping the edition parameter (?d=).
+  if (
+    pathname === '/today' ||
+    pathname === '/today/' ||
+    pathname === '/es/today' ||
+    pathname === '/es/today/'
+  ) {
+    const url = new URL(request.url);
+    const dest = pathname.startsWith('/es/') ? '/es/newspaper/' : '/newspaper/';
+    return Response.redirect(new URL(dest + url.search, url.origin).href, 301);
+  }
   if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return next();
 
   // The published-audit shell is only ever filled at request time: asked for

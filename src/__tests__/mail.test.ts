@@ -281,9 +281,9 @@ describe('a letter from the past', () => {
   it('says "See the newspaper" under the letter in both languages', () => {
     expect(en.header.mailbox.allToday).toBe('See the newspaper →');
     expect(es.header.mailbox.allToday).toBe('Ver el periódico →');
-    // The past letter alone renders the link, to /today/ — the newspaper.
+    // The past letter alone renders the link, to /newspaper/ — the newspaper.
     expect(MAIL_SRC).toMatch(/copy\.allToday/);
-    expect(MAIL_SRC).toMatch(/const todayHref = lang === 'es' \? '\/es\/today\/' : '\/today\/';/);
+    expect(MAIL_SRC).toMatch(/const todayHref = lang === 'es' \? '\/es\/newspaper\/' : '\/newspaper\/';/);
   });
 });
 

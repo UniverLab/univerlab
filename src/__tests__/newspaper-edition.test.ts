@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { paperPlateHtml } from '../lib/paper-plate';
 import { buildPool, collectFacts, letterPool, summaryText, type Fact } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
 import {
@@ -37,8 +38,6 @@ const DATE = new Date(Y, 9, 21, 12);
 const FACTS = buildPool(FIX, 'en');
 const NOBEL_IMG =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Alfred_Nobel.jpg/330px-Alfred_Nobel.jpg';
-const EDISON_IMG =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Thomas_Edison.jpg/320px-Thomas_Edison.jpg';
 
 function feed(lang: 'en' | 'es' = 'en'): TodayFeed {
   return {
@@ -77,13 +76,13 @@ describe('today edition helpers', () => {
   });
 
   it('routes the four newspaper paths per language', () => {
-    expect(todayRoute('/today')).toBe('en');
-    expect(todayRoute('/today/')).toBe('en');
-    expect(todayRoute('/today/index.md')).toBe('en');
-    expect(todayRoute('/es/today')).toBe('es');
-    expect(todayRoute('/es/today/')).toBe('es');
-    expect(todayRoute('/es/today/index.md')).toBe('es');
-    expect(todayRoute('/todayx/')).toBeNull();
+    expect(todayRoute('/newspaper')).toBe('en');
+    expect(todayRoute('/newspaper/')).toBe('en');
+    expect(todayRoute('/newspaper/index.md')).toBe('en');
+    expect(todayRoute('/es/newspaper')).toBe('es');
+    expect(todayRoute('/es/newspaper/')).toBe('es');
+    expect(todayRoute('/es/newspaper/index.md')).toBe('es');
+    expect(todayRoute('/newspaperx/')).toBeNull();
     expect(todayRoute('/')).toBeNull();
   });
 
@@ -255,8 +254,29 @@ describe('todayEditionHtml (en)', () => {
     expect(countItems(bare)).toBe(noEvents.length);
   });
 
-  it('never prints event photos, non-Commons images or .svg files', () => {
-    expect(html).not.toContain(EDISON_IMG);
+  it('prints an event photo beside the event, like births and deaths', () => {
+    // 1879 carries a Commons portrait but sits sidelined, so the column
+    // proof uses letters of its own: one event per column slot.
+    const ev = (year: string): Fact => ({
+      year,
+      text: `something happened in ${year}`,
+      link: '',
+      kind: 'event',
+      page: `Event of ${year}`,
+      thumb: { src: `https://upload.wikimedia.org/wikipedia/commons/${year}.jpg` },
+    });
+    const col = todayEditionHtml(
+      { facts: [ev('1901'), ev('1902'), ev('1903'), ev('1904'), ev('1905'), ev('1906')], lab: [] },
+      'en',
+      DATE,
+    );
+    // Six letters: one leads, two stand aside, three fill the column —
+    // every column event prints its photo, lazily.
+    expect(col.match(/class="item has-photo"/g)).toHaveLength(3);
+    expect(col).toContain('loading="lazy"');
+  });
+
+  it('still excludes non-Commons images and .svg files', () => {
     expect(html).not.toContain('wikipedia/en/');
     expect(html).not.toContain('.svg');
   });
@@ -306,7 +326,7 @@ describe('todayEditionHtml (es)', () => {
 describe('todayEditionMarkdown', () => {
   it('carries the same lead and columns as text', () => {
     const md = todayEditionMarkdown(feed(), 'en', DATE);
-    expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/today\/"\n---\n/);
+    expect(md).toMatch(/^---\ntitle: "[^"]+"\nsource: "https:\/\/univerlab\.org\/newspaper\/"\n---\n/);
     expect(md).toContain(
       '**Doctors at a Boston hospital switch on a new laboratory respirator to keep a patient breathing.**',
     ); // the lead: the same event as the mailbox
@@ -331,6 +351,72 @@ describe('todayEditionMarkdown', () => {
     // The side column no longer repeats the Events heading right below it.
     expect(md.match(/^## Events$/gm)).toHaveLength(1);
     expect(md).toContain('[Read the full announcement →](https://univerlab.org/status/)');
+  });
+});
+
+describe('the sundial engraving sits inside the grid', () => {
+  it('renders the day plate, lazy, with the paper caption', () => {
+    const fig = paperPlateHtml('en');
+    expect(fig).toContain('<figure class="photo paper-plate">');
+    expect(fig).toContain('/bench/postcards/today-day-1600.avif 1600w');
+    expect(fig).toContain('/bench/postcards/today-day-800.webp 800w');
+    expect(fig).toContain('loading="lazy"');
+    expect(fig).toContain("The sundial, the paper's engraving");
+    expect(fig).not.toContain('today-night');
+  });
+
+  it('is appended in the shortest column, ties to the first', () => {
+    const mk = (kind: Fact['kind'], year: string): Fact => ({
+      year,
+      text: `${kind} letter of ${year}`,
+      link: '',
+      kind,
+      page: `${kind} ${year}`,
+    });
+    // No events: no lead, no aside — births take three slots, deaths one.
+    const html = todayEditionHtml(
+      { facts: [mk('born', '1800'), mk('born', '1801'), mk('born', '1802'), mk('died', '1900')], lab: [] },
+      'en',
+      DATE,
+    );
+    expect(html.match(/paper-plate/g)).toHaveLength(1);
+    expect(html.indexOf('paper-plate')).toBeGreaterThan(html.indexOf('<h3>Deaths</h3>'));
+    // Equal columns: the first one takes the plate.
+    const tied = todayEditionHtml(
+      { facts: [mk('born', '1800'), mk('born', '1801'), mk('died', '1900'), mk('died', '1901')], lab: [] },
+      'en',
+      DATE,
+    );
+    const at = tied.indexOf('paper-plate');
+    expect(at).toBeGreaterThan(tied.indexOf('<h3>Births</h3>'));
+    expect(at).toBeLessThan(tied.indexOf('<h3>Deaths</h3>'));
+  });
+});
+
+describe('the Workbench notice', () => {
+  it('prints the ad box on every edition, never the lead story', () => {
+    const html = todayEditionHtml({ facts: [], lab: [] }, 'en', DATE);
+    expect(html).toContain('<aside class="notice" aria-label="Notice">');
+    expect(html).toContain('<h2>The Workbench</h2>');
+    expect(html).toContain('<a href="/workbench/">Open the Workbench</a>');
+    expect(html.indexOf('<aside class="notice"')).toBeGreaterThan(html.indexOf('<div class="dateline">'));
+  });
+
+  it('speaks Spanish on the Spanish edition', () => {
+    const html = todayEditionHtml({ facts: [], lab: [] }, 'es', DATE);
+    expect(html).toContain('<aside class="notice" aria-label="Aviso">');
+    expect(html).toContain('<h2>Banco de trabajo</h2>');
+    expect(html).toContain('Primera llamada gratis');
+    expect(html).toContain('<a href="/es/workbench/">Abrir el Banco de trabajo</a>');
+  });
+
+  it('rides the markdown twin as one short line with the link', () => {
+    const md = todayEditionMarkdown(feed(), 'en', DATE);
+    const line = md.split('\n').find((l) => l.includes('The Workbench')) || '';
+    expect(line).toContain('[The Workbench](https://univerlab.org/workbench/)');
+    expect(md).toContain('*Notice — ');
+    const es = todayEditionMarkdown(feed('es'), 'es', DATE);
+    expect(es).toContain('[Banco de trabajo](https://univerlab.org/es/workbench/)');
   });
 });
 

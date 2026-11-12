@@ -712,10 +712,10 @@ export const es: Dict = {
     },
   },
   today: {
-    path: 'univerlab.org/today',
+    path: 'univerlab.org/newspaper',
     edition: 'Edición de hoy',
     editionPast: 'Edición del {date}',
-    name: 'El Almanaque',
+    name: 'El Observable',
     motto: 'Cartas de la ciencia que llegan hoy, después de años en camino',
     sol: 'Sol',
     counts: '{n} cartas del pasado · {m} del laboratorio',
@@ -742,6 +742,13 @@ export const es: Dict = {
     empty: 'No hay eventos científicos para hoy.',
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
+    plate: 'El reloj de sol, el grabado del periódico',
+    notice: {
+      label: 'Aviso',
+      head: 'Banco de trabajo',
+      text: 'Consultas de inteligencia artificial y Agent Experience (AX) · Primera llamada gratis · Escríbanos por WhatsApp',
+      link: 'Abrir el Banco de trabajo',
+    },
   },
   audit: {
     contents: 'Contenido',

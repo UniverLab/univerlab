@@ -11,10 +11,10 @@ import docsLastUpdated from './src/plugins/docs-last-updated.ts';
  * sitemap's i18n block also lists the locale alternates.
  */
 const SITEMAP_EXCLUDED = new Set([
-  '/today',
-  '/today/',
-  '/es/today',
-  '/es/today/',
+  '/newspaper',
+  '/newspaper/',
+  '/es/newspaper',
+  '/es/newspaper/',
   '/audits',
   '/audits/',
   '/audit-shell',
@@ -51,7 +51,7 @@ export default defineConfig({
         locales: { en: 'en', es: 'es' },
       },
       // Only URLs that answer 200 as indexable HTML belong in the sitemap.
-      // `/today/` and `/es/today/` render a heading plus a client-side fetch of
+      // `/newspaper/` and `/es/newspaper/` render a heading plus a client-side fetch of
       // Wikipedia's feed — nothing indexable at build time, which is what Google
       // reported as a Soft 404 — so they are `noindex` in BaseLayout and are
       // dropped here too. A noindex URL in the sitemap is a reported

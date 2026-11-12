@@ -161,7 +161,7 @@ describe('the catalog card', () => {
   });
 
   it('/fact asks the mailbox for today\u2019s letter instead of driving the sky body', () => {
-    const fact = LAYOUT.slice(LAYOUT.indexOf("cmd: '/fact'"), LAYOUT.indexOf("cmd: '/today'"));
+    const fact = LAYOUT.slice(LAYOUT.indexOf("cmd: '/fact'"), LAYOUT.indexOf("cmd: '/newspaper'"));
     expect(fact).toContain("label: 'Today in science'");
     // It no longer fakes mouse events on the celestial button: that click is
     // the theme toggle now (the header forwards it to toggleTheme), so a

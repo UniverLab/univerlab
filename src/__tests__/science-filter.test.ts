@@ -261,7 +261,7 @@ describe('dayKey and fetchPool', () => {
     const items = await fetchPool(fakeFetch, 'en', day, { births: 1, deaths: 1 });
     expect(items.filter((f) => f.kind === 'born')).toHaveLength(1);
     expect(items.filter((f) => f.kind === 'died')).toHaveLength(1);
-    // … but the cache still holds the whole day, so /today (reading the same
+    // … but the cache still holds the whole day, so /newspaper (reading the same
     // cache the header warmed) never sees a truncated newspaper.
     const cached = JSON.parse(localStorage.getItem('univerlab-otd-2') || 'null');
     const cachedItems = cached.items as Fact[];
@@ -275,8 +275,8 @@ describe('the newspaper pages ask for the whole day', () => {
   const read = (p: string) => readFileSync(resolve(__dirname, '..', p), 'utf8');
 
   it.each([
-    ['pages/today.astro'],
-    ['pages/es/today.astro'],
+    ['pages/newspaper.astro'],
+    ['pages/es/newspaper.astro'],
   ])('%s fetches with FULL_POOL, never a limited pool', (p) => {
     const src = read(p);
     expect(src).toMatch(/fetchPool\(fetch, lang, day, FULL_POOL\)/);
@@ -293,17 +293,16 @@ const ES_FIX = JSON.parse(
 );
 
 describe('mainPage picks the event\u2019s own page', () => {
-  it('picks Chang\u2019e 1 over the country, the city over the observatory, Deep Space 1 alone', () => {
+  it('picks Chang\u2019e 1 over the country, the observatory over the city, Deep Space 1 alone', () => {
     const [change, cordoba, deep] = ES_FIX.events;
     expect(mainPage(change)?.titles?.normalized).toBe("Chang'e 1");
-    // "Córdoba (Argentina)" also matches through its stripped form
-    // "Córdoba", which starts after the observatory's full title, so the
-    // page whose match starts last is the city.
-    expect(mainPage(cordoba)?.titles?.normalized).toBe('Córdoba (Argentina)');
+    // The full observatory title is more specific than the city's bare
+    // name, so its paragraph describes the inauguration, not the city.
+    expect(mainPage(cordoba)?.titles?.normalized).toBe('Observatorio Astronómico de Córdoba');
     expect(mainPage(deep)?.titles?.normalized).toBe('Deep Space 1');
   });
 
-  it('keeps the last match when a stripped form competes with a full title', () => {
+  it('keeps the more specific title when a stripped form competes with a full one', () => {
     const entry = {
       year: 1,
       text: 'The Phoenix Lander touched down.',
@@ -312,7 +311,7 @@ describe('mainPage picks the event\u2019s own page', () => {
         { titles: { normalized: 'Phoenix Lander' } },
       ],
     };
-    expect(mainPage(entry)?.titles?.normalized).toBe('Lander (spacecraft)');
+    expect(mainPage(entry)?.titles?.normalized).toBe('Phoenix Lander');
   });
 
   it('matches a title across the non-breaking space the live feed writes', () => {
@@ -327,7 +326,7 @@ describe('mainPage picks the event\u2019s own page', () => {
     expect(mainPage(entry)?.titles?.normalized).toBe("Chang'e 1");
   });
 
-  it('breaks ties by the latest match: the object of the sentence comes last', () => {
+  it('breaks ties by the earliest match: the subject comes first', () => {
     const entry = {
       year: 1879,
       text: 'Thomas Edison invents a practical lamp in Menlo Park.',
@@ -336,12 +335,13 @@ describe('mainPage picks the event\u2019s own page', () => {
         { titles: { normalized: 'Menlo Park' } },
       ],
     };
-    expect(mainPage(entry)?.titles?.normalized).toBe('Menlo Park');
+    // Two-word titles: the longer "Thomas Edison" outranks "Menlo Park".
+    expect(mainPage(entry)?.titles?.normalized).toBe('Thomas Edison');
   });
 
   it('reads display titles with tags stripped and underscores as spaces', () => {
-    // Both pages match, so only a title read out of the HTML display form
-    // lets the craft win: "Estados Unidos" matches, but starts earlier.
+    // The mission's three-word title beats the country's two words even
+    // though "Estados Unidos" opens the sentence.
     const entry = {
       year: 1998,
       text: 'Estados Unidos lanza la sonda espacial Deep Space 1.',
@@ -353,7 +353,7 @@ describe('mainPage picks the event\u2019s own page', () => {
     expect(mainPage(entry)?.titles?.display).toBe('<b>Deep</b>_Space_1');
   });
 
-  it('matches a parenthetical title through its capitalised bare form', () => {
+  it('names the event’s own page, not an earlier background page', () => {
     const entry = {
       year: 2008,
       text: 'Over five months after landing on Mars, NASA declares the Phoenix mission concluded after communications with the lander were lost.',
@@ -364,10 +364,23 @@ describe('mainPage picks the event\u2019s own page', () => {
         { titles: { normalized: 'Lander (spacecraft)' } },
       ],
     };
+    // Mars and NASA are printed earlier, but the event is about the
+    // probe: its page lends the paragraph, never the planet's.
     expect(mainPage(entry)?.titles?.normalized).toBe('Phoenix (spacecraft)');
   });
 
-  it('falls back to the first page whose extract holds the year', () => {
+  it('matches a parenthetical title through its capitalised bare form', () => {
+    const entry = {
+      year: 2008,
+      text: 'The Lander reached the red planet after a long cruise.',
+      pages: [{ titles: { normalized: 'Mars' } }, { titles: { normalized: 'Lander (spacecraft)' } }],
+    };
+    // Neither full title occurs; the bare "Lander" does, capitalised as
+    // the page spells it.
+    expect(mainPage(entry)?.titles?.normalized).toBe('Lander (spacecraft)');
+  });
+
+  it('ignores extracts: no title match means no page, even when an extract holds the year', () => {
     const entry = {
       year: 1907,
       text: 'A physicist publishes a paper on the new observatory findings.',
@@ -376,16 +389,16 @@ describe('mainPage picks the event\u2019s own page', () => {
         { titles: { normalized: 'Beta' }, extract: 'In 1907 the observatory recorded the tremors.' },
       ],
     };
-    expect(mainPage(entry)?.titles?.normalized).toBe('Beta');
+    expect(mainPage(entry)).toBeUndefined();
   });
 
-  it('returns pages[0] when nothing matches and no extract holds the year', () => {
+  it('returns undefined when nothing matches, never pages[0]', () => {
     const entry = {
       year: 1900,
       text: 'A physicist publishes a paper on cathode rays.',
       pages: [{ titles: { normalized: 'Physics' } }, { titles: { normalized: 'Paris' } }],
     };
-    expect(mainPage(entry)?.titles?.normalized).toBe('Physics');
+    expect(mainPage(entry)).toBeUndefined();
   });
 
   it('returns undefined when the entry carries no pages', () => {
@@ -449,17 +462,17 @@ describe('collectFacts with the chosen page and its summary', () => {
     expect(change.summary).toContain("Chang'e 1 fue la primera sonda lunar");
     expect(typeof change.summaryCut).toBe('boolean');
     const cordoba = facts.find((f) => f.year === '1871')!;
-    // The city page matches last through its stripped form, so the fact
-    // carries the city's link and summary.
-    expect(cordoba.page).toBe('Córdoba (Argentina)');
-    expect(cordoba.link).toContain('C%C3%B3rdoba_(Argentina)');
-    expect(cordoba.summary).toContain('Córdoba es una ciudad');
+    // The observatory is named first in the inauguration line, so the fact
+    // carries its link and summary — the inauguration's, not the city's.
+    expect(cordoba.page).toBe('Observatorio Astronómico de Córdoba');
+    expect(cordoba.link).toContain('Observatorio_Astron%C3%B3mico_de_C%C3%B3rdoba');
+    expect(cordoba.summary).toContain('El Observatorio Astronómico de Córdoba fue fundado en 1871');
 
     const born = collectFacts(ES_FIX.births, 'born', 'es');
     expect(born).toHaveLength(1);
-    // A birth keeps pages[0] — the person — even though a later page title
-    // ("Colombia") is what mainPage would pick for an event.
-    expect(mainPage(ES_FIX.births[0])?.titles?.normalized).toBe('Colombia');
+    // A birth keeps pages[0] — the person — which is also what mainPage
+    // names first here.
+    expect(mainPage(ES_FIX.births[0])?.titles?.normalized).toBe('Francisco Antonio Zea');
     expect(born[0].link).toBe('https://es.wikipedia.org/wiki/Francisco_Antonio_Zea');
     expect(born[0].page).toBe('Francisco Antonio Zea');
     expect(born[0].summary).toBeUndefined();
@@ -472,6 +485,8 @@ describe('collectFacts with the chosen page and its summary', () => {
       [
         {
           year: 2007,
+          // The probe's two-word title outranks the bare country, so its
+          // page — not pages[0] — lends the link, the photo and the summary.
           text: "China lanza la sonda lunar Chang'e 1.",
           pages: [
             { titles: { normalized: 'China' } },

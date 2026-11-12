@@ -3,7 +3,7 @@
  * rewrite, the redirect generator, and the check script that guards all three.
  *
  * The pure helpers are tested against fixtures so the suite needs no `dist/`;
- * the checked-in sources (`astro.config.mjs`, `public/_redirects`, the today
+ * the checked-in sources (`astro.config.mjs`, `public/_redirects`, the newspaper
  * pages, the removed stubs) are asserted directly, which is what catches a
  * regression at PR time rather than after the next deploy.
  */
@@ -323,14 +323,14 @@ describe('astro.config.mjs', () => {
     expect(config).not.toContain('rehypePlugins');
   });
 
-  it('filters today out of the sitemap', () => {
+  it('filters the newspaper out of the sitemap', () => {
     expect(config).toContain('SITEMAP_EXCLUDED');
-    for (const p of ['/today', '/es/today']) expect(config).toContain(`'${p}'`);
+    for (const p of ['/newspaper', '/es/newspaper']) expect(config).toContain(`'${p}'`);
   });
 });
 
 describe('noindex placement', () => {
-  it.each(['src/pages/today.astro', 'src/pages/es/today.astro'])('%s sets noindex', (p) => {
+  it.each(['src/pages/newspaper.astro', 'src/pages/es/newspaper.astro'])('%s sets noindex', (p) => {
     expect(read(p)).toMatch(/<BaseLayout[^>]*\bnoindex\b/);
   });
 
@@ -399,12 +399,12 @@ describe('check-seo', () => {
   it('flags a sitemap URL that is noindex (the "Excluded by noindex" report)', () => {
     const dist = distFixture({
       'sitemap-index.xml': SITEMAP_INDEX,
-      'sitemap-0.xml': '<urlset><url><loc>https://univerlab.org/today/</loc></url></urlset>',
-      'today/index.html': page(NOINDEX),
+      'sitemap-0.xml': '<urlset><url><loc>https://univerlab.org/newspaper/</loc></url></urlset>',
+      'newspaper/index.html': page(NOINDEX),
     });
     try {
       expect(checkSitemap(dist)).toEqual([
-        'sitemap: https://univerlab.org/today/ is noindex — drop it from the sitemap filter instead',
+        'sitemap: https://univerlab.org/newspaper/ is noindex — drop it from the sitemap filter instead',
       ]);
     } finally {
       rmSync(dist, { recursive: true, force: true });
@@ -530,7 +530,7 @@ describe('checkMetaDescriptions', () => {
   });
 
   it('skips noindex pages', () => {
-    const dist = distFixture({ 'today/index.html': page(NOINDEX + meta(desc(40, 't'))) });
+    const dist = distFixture({ 'newspaper/index.html': page(NOINDEX + meta(desc(40, 't'))) });
     try {
       expect(checkMetaDescriptions(dist)).toEqual([]);
     } finally {
@@ -598,7 +598,7 @@ describe('checkTitles', () => {
   });
 
   it('skips noindex pages', () => {
-    const dist = distFixture({ 'today/index.html': `<head>${NOINDEX}<title>${s(5, 't')}</title></head>` });
+    const dist = distFixture({ 'newspaper/index.html': `<head>${NOINDEX}<title>${s(5, 't')}</title></head>` });
     try {
       expect(checkTitles(dist)).toEqual([]);
     } finally {

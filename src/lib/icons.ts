@@ -4,21 +4,27 @@
 import {
   ArrowUpRight,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CodeXml,
   Copy,
   Github,
   Heart,
   Menu,
+  Printer,
   X,
 } from 'lucide';
 
 export {
   ArrowUpRight as arrowUpRight,
   Check as check,
+  ChevronLeft as chevronLeft,
+  ChevronRight as chevronRight,
   CodeXml as codeXml,
   Copy as copy,
   Github as github,
   Heart as heart,
   Menu as menu,
+  Printer as printer,
   X as xIcon,
 };

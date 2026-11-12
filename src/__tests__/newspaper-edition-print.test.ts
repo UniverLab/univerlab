@@ -54,12 +54,12 @@ const feed: TodayFeed = {
 
 describe('todayRoute', () => {
   it('accepts both languages with or without slash and the md twin', () => {
-    expect(todayRoute('/today')).toBe('en');
-    expect(todayRoute('/today/')).toBe('en');
-    expect(todayRoute('/today/index.md')).toBe('en');
-    expect(todayRoute('/es/today')).toBe('es');
-    expect(todayRoute('/es/today/')).toBe('es');
-    expect(todayRoute('/es/today/index.md')).toBe('es');
+    expect(todayRoute('/newspaper')).toBe('en');
+    expect(todayRoute('/newspaper/')).toBe('en');
+    expect(todayRoute('/newspaper/index.md')).toBe('en');
+    expect(todayRoute('/es/newspaper')).toBe('es');
+    expect(todayRoute('/es/newspaper/')).toBe('es');
+    expect(todayRoute('/es/newspaper/index.md')).toBe('es');
     expect(todayRoute('/status/')).toBeNull();
   });
 });
@@ -145,7 +145,7 @@ describe('todayEditionHtml prints every branch', () => {
   });
 });
 
-describe('event photos print up to three per edition', () => {
+describe('event photos print beside every event that has one', () => {
   const thumbedEvent = (year: string): Fact =>
     fact({ kind: 'event', year, page: `Event of ${year}`, text: `something happened in ${year}`, thumb: { src: `https://upload.wikimedia.org/wikipedia/commons/${year}.jpg`, w: 320, h: 200 } });
 
@@ -172,22 +172,26 @@ describe('event photos print up to three per edition', () => {
     expect(threeHtml).toContain('<article class="lead">');
     expect(threeHtml).not.toContain('lead solo');
   });
-  it('events print at most three photos, the lead included', () => {
+  it('every column event with a thumb prints its photo, the lead included', () => {
     const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
-    expect((html.match(/<figure class="photo">/g) ?? []).length).toBe(3);
+    // Six letters: one leads, two stand aside, three fill the column.
+    expect((html.match(/class="item has-photo"/g) ?? []).length).toBe(3);
+    // The lead, the three column photos and the engraving: no cap.
+    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(5);
   });
-  it('events without a thumb do not use up the allowance', () => {
+  it('an event without a thumb prints no figure while the rest print theirs', () => {
     const noThumb = fact({ kind: 'event', year: '1800', page: 'Old event', text: 'something old happened' });
-    const facts = [noThumb, '1901', '1902', '1903', '1904', '1905'].map((f) =>
-      typeof f === 'string' ? thumbedEvent(f) : f,
-    );
-    let d = DATE;
-    for (let i = 0; i < 370 && todayLead(facts, d) !== noThumb; i++) d = new Date(d.getTime() + 86400000);
-    expect(todayLead(facts, d)).toBe(noThumb);
-    const html = todayEditionHtml({ facts, lab: [] }, 'en', d);
-    expect(html).toContain('<article class="lead">');
-    expect((html.match(/<figure class="photo">/g) ?? []).length).toBe(3);
+    const facts = [noThumb, ...['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent)];
+    const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
+    const lead = todayLead(facts, DATE)!;
+    const aside = todayAside(facts, lead);
+    const cols = facts.filter((f) => f !== lead && !aside.includes(f));
+    // Every column event carrying a photo prints it, thumb or none.
+    expect((html.match(/class="item has-photo"/g) ?? []).length).toBe(cols.filter((f) => f.thumb).length);
+    for (const f of cols) {
+      if (f.thumb) expect(html).toContain(f.thumb.src);
+    }
   });
 });
 

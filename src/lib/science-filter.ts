@@ -1,5 +1,5 @@
 // The science filter for Wikipedia's "On this day" feed — one source of truth
-// for the header's letter from the past and the /today newspaper. Stems are
+// for the header's letter from the past and the /newspaper. Stems are
 // matched with indexOf against the lowercased text, so 'physic' catches
 // physics/physicist and 'descubr' caught descubrió/descubrimiento. We keep an
 // event only when it mentions science AND mentions no war/politics/religion/
@@ -96,7 +96,7 @@ export interface Fact {
   longCut?: boolean;
   /** The entry's photo, kept only when it is a real Commons image (a
    *  `/wikipedia/commons/` URL that is not an `.svg`). The newspaper prints
-   *  it for people, for the lead and for at most EVENT_PHOTOS events per edition. */
+   *  it for people, for the lead and for every event that carries one. */
   thumb?: { src: string; w?: number; h?: number };
 }
 
@@ -157,10 +157,21 @@ function comparable(s: string): string {
   return s.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+/** How specific a title match is: more words first, then more characters.
+ *  "Deep Space 1" beats "United States", "Zond 6" beats "the Moon" and
+ *  "Phoenix" beats "Mars": the event is about the craft, not the place the
+ *  sentence mentions on its way there. */
+function specificity(form: string): number {
+  const words = form.split(/\s+/).filter(Boolean).length;
+  return words * 1000 + form.length;
+}
+
 /** The entry's own page (events only): among the pages, the one whose
- *  title occurs in the entry's text — the object's match starts last —
- *  else the first page whose extract holds the year, else pages[0].
- *  Returns undefined when the entry carries no pages. */
+ *  title matches the entry's text most specifically — the subject, never
+ *  the country or the planet it happens near. An earlier match breaks a
+ *  tie. Otherwise undefined: an unrelated paragraph is worse than none on
+ *  a page that sells rigour, so the year-extract and pages[0] fallbacks
+ *  are gone. Returns undefined when the entry carries no pages. */
 export function mainPage(entry: FeedEntry): FeedPage | undefined {
   const pages = entry?.pages || [];
   if (!pages.length) return undefined;
@@ -169,31 +180,41 @@ export function mainPage(entry: FeedEntry): FeedPage | undefined {
   // the page does: "Phoenix (spacecraft)" meets "Phoenix", never "the lander".
   const rawText = (entry.text || '').replace(/\s+/g, ' ').trim();
   let best: FeedPage | undefined;
-  let bestIdx = -1;
+  let bestScore = -1;
+  let bestAt = -1;
   for (const p of pages) {
     const title = pageTitle(p);
     const t = comparable(title);
     if (!t) continue;
-    let idx = text.lastIndexOf(t);
+    // The forms this page can match: its full title, and — for a
+    // parenthetical title — the bare name.
+    const forms: Array<{ form: string; at: number }> = [];
+    const idx = text.indexOf(t);
+    if (idx >= 0) forms.push({ form: t, at: idx });
     const collapsed = title.replace(/\s+/g, ' ').trim();
     if (/\s*\([^)]*\)\s*$/.test(collapsed)) {
       const bare = collapsed.replace(/\s*\([^)]*\)\s*$/, '');
-      if (bare) idx = Math.max(idx, rawText.lastIndexOf(bare));
+      const bareIdx = bare ? rawText.indexOf(bare) : -1;
+      if (bareIdx >= 0) forms.push({ form: comparable(bare), at: bareIdx });
     }
-    if (idx >= 0 && idx > bestIdx) {
+    // The page's own best form: the most specific, earlier on a tie.
+    let mine: { form: string; at: number } | undefined;
+    for (const f of forms) {
+      const better =
+        !mine ||
+        specificity(f.form) > specificity(mine.form) ||
+        (specificity(f.form) === specificity(mine.form) && f.at < mine.at);
+      if (better) mine = f;
+    }
+    if (!mine) continue;
+    const score = specificity(mine.form);
+    if (score > bestScore || (score === bestScore && mine.at < bestAt)) {
       best = p;
-      bestIdx = idx;
+      bestScore = score;
+      bestAt = mine.at;
     }
   }
-  if (best) return best;
-  const year = String(entry.year ?? '');
-  if (year && year !== '?') {
-    const re = new RegExp(`(^|\\D)${year}(\\D|$)`);
-    for (const p of pages) {
-      if (p.extract && re.test(p.extract)) return p;
-    }
-  }
-  return pages[0];
+  return best;
 }
 
 /** Shorten an extract to a body: whole sentences from the start, at most
@@ -341,7 +362,7 @@ export interface PoolLimits {
 /** The newspaper's pool: everything the day's feed kept. A missing kind
  *  means "all" (and 0 means "all" for events too), so this is also
  *  fetchPool's default and what the cache always stores — a header warm
- *  can never shrink what /today renders. */
+ *  can never shrink what /newspaper renders. */
 export const FULL_POOL: PoolLimits = { events: 0 };
 
 /** The whole filtered day: every science event plus every filtered birth
@@ -396,7 +417,7 @@ export function readOtdCache(lang: FilterLang): Fact[] | null {
 
 /** Fetch the day's feed, filter it to science and cache the whole day for
  *  today. `limits` only slices what this caller gets back (via letterPool);
- *  the cache always keeps everything, so /today renders the full newspaper
+ *  the cache always keeps everything, so /newspaper renders the full newspaper
  *  even when the header warmed the cache first. */
 export function fetchPool(
   fetchImpl: typeof fetch,

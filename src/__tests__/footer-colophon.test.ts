@@ -275,17 +275,17 @@ describe('Footer — two grouped link headings', () => {
   });
 
   it('the footer keeps its links', () => {
-    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/today', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/newspaper', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
       expect(src).toContain(href);
     }
     expect(src).not.toContain('/status/');
   });
 
   it('links the newspaper under the lab group in both languages', () => {
-    expect(src).toContain("localizePath('/today', lang)");
+    expect(src).toContain("localizePath('/newspaper', lang)");
     expect(src).toContain('label: t.nav.observable');
     // Inside the lab group, not the experiments one.
-    expect(src.indexOf("localizePath('/today', lang)")).toBeGreaterThan(src.indexOf('t.footer.groups.lab'));
+    expect(src.indexOf("localizePath('/newspaper', lang)")).toBeGreaterThan(src.indexOf('t.footer.groups.lab'));
     expect(en.nav.observable).toBe('The Observable');
     expect(es.nav.observable).toBe('El Observable');
   });

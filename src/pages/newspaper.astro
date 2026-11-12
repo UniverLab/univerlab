@@ -1,32 +1,32 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import TodaysPaper from '../../components/TodaysPaper.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TodaysPaper from '../components/TodaysPaper.astro';
 ---
-<!-- `noindex` porque el HTML construido solo trae el cabezal: la edición la
-     compone el edge (functions/_middleware.ts), y el script de abajo llena
-     #edition con el mismo renderer cuando el edge no lo hizo. El filtro del
-     sitemap en astro.config.mjs la excluye por lo mismo — una URL noindex en
-     el sitemap es un error reportado. -->
-<BaseLayout title="El Almanaque — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." circadian noindex>
+<!-- `noindex` because the built HTML holds only the masthead: the edition is
+     set at the edge by functions/_middleware.ts, and the client script below
+     fills #edition with the same renderer when the edge did not. The sitemap
+     filter in astro.config.mjs excludes it for the same reason — a noindex
+     URL in the sitemap is a reported error. -->
+<BaseLayout title="The Observable — UniverLab" description="Every science event that happened on this day in history." circadian noindex>
   <section class="wrap today-page">
     <TodaysPaper />
   </section>
 
   <style is:global>
-    /* El periódico necesita el ancho completo: tres columnas desde 48rem,
-       como en el mockup. La lista anterior limitaba la página a 42rem. */
+    /* The newspaper needs the full wrap: three columns from 48rem, as in the
+       mockup. The old list layout capped the page at 42rem. */
     .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
   </style>
 
   <script>
-    // El respaldo del cliente para el periódico: cuando el edge no compuso la
-    // plana (#edition sigue vacío), trae el acopio del día y los anuncios del
-    // laboratorio y la llena con el mismo renderer que usa el edge.
-    import { readOtdCache, fetchPool, FULL_POOL } from '../../lib/science-filter';
-    import { todayEditionHtml, editionDateFor } from '../../lib/today-edition';
+    // The client fallback for the newspaper: when the edge did not set the
+    // type (#edition is still empty), fetch the day's pool and the lab's
+    // announcements and fill it with the same renderer the edge uses.
+    import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
+    import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
 
     (function () {
-      var lang = 'es';
+      var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
       var day = editionDateFor(window.location.search);
       var picked = /[?&]d=/.test(window.location.search);
       var ed = document.getElementById('edition');
@@ -38,7 +38,7 @@ import TodaysPaper from '../../components/TodaysPaper.astro';
         var err = document.getElementById('today-error');
         if (err) {
           err.style.display = 'block';
-          // El texto vive en src/i18n (t.today.error), lo pone el componente.
+          // Copy lives in src/i18n (t.today.error), set by the component.
           err.textContent = err.getAttribute('data-msg') || '';
         }
       };
@@ -46,11 +46,11 @@ import TodaysPaper from '../../components/TodaysPaper.astro';
       var facts = !picked && readOtdCache(lang);
       var factsP = facts && facts.length
         ? Promise.resolve(facts)
-        // El mismo día que pide el edge: la fecha del laboratorio (UTC−5), no
-        // la del visitante, para no imprimir las cartas de otro día.
+        // The same day the edge asks for: the lab's date (UTC−5), not the
+        // visitor's, so a reader abroad never prints another day's letters.
         : fetchPool(fetch, lang, day, FULL_POOL);
-      // El buzón del laboratorio es opcional: si su lectura falla (CORS, una
-      // caída) igual se imprimen las cartas del día, sin ese recuadro.
+      // The lab mailbox is optional: a failed announcements read (CORS, an
+      // outage) still prints the day's letters, just without that box.
       var labP = fetch('https://announcements.univerlab.org/?limit=10')
         .then(function (res) {
           if (!res.ok) throw new Error('API ' + res.status);

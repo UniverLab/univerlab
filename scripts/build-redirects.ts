@@ -74,6 +74,10 @@ export const STATIC_RULES: readonly string[] = [
   '/es/demo-stage /es/demostage/ 301',
   '/research /astro-denoise/ 301',
   '/es/research /es/astro-denoise/ 301',
+  '/today /newspaper/ 301',
+  '/today/ /newspaper/ 301',
+  '/es/today /es/newspaper/ 301',
+  '/es/today/ /es/newspaper/ 301',
   '/es/status /status/ 301',
   '/es/status/ /status/ 301',
   // /roadmap/ is English-only like /status/.

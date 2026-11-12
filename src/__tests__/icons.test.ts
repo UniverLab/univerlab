@@ -40,7 +40,7 @@ describe('icons — the shared Lucide vocabulary', () => {
   it('exports exactly the icons the site uses, each a Lucide IconNode', () => {
     const names = Object.keys(icons).sort();
     expect(names).toEqual(
-      ['arrowUpRight', 'check', 'codeXml', 'copy', 'github', 'heart', 'menu', 'xIcon'].sort(),
+      ['arrowUpRight', 'check', 'chevronLeft', 'chevronRight', 'codeXml', 'copy', 'github', 'heart', 'menu', 'printer', 'xIcon'].sort(),
     );
     for (const node of Object.values(icons) as unknown as IconNode[]) {
       expect(Array.isArray(node)).toBe(true);

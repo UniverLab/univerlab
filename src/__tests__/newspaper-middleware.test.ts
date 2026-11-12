@@ -67,10 +67,10 @@ afterEach(() => {
   FakeHTMLRewriter.last = null;
 });
 
-describe('middleware — /today/ HTML', () => {
+describe('middleware — /newspaper/ HTML', () => {
   it('serves the static page untouched when the feed fetch rejects', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('otd down')) as unknown as typeof fetch;
-    const ctx = context('/today/', 'text/html');
+    const ctx = context('/newspaper/', 'text/html');
 
     const res = await onRequest(ctx);
 
@@ -85,7 +85,7 @@ describe('middleware — /today/ HTML', () => {
     global.fetch = jest
       .fn()
       .mockResolvedValue({ ok: false, status: 503 } as Response) as unknown as typeof fetch;
-    const ctx = context('/es/today/', 'text/html');
+    const ctx = context('/es/newspaper/', 'text/html');
 
     const res = await onRequest(ctx);
 
@@ -109,7 +109,7 @@ describe('middleware — /today/ HTML', () => {
     }) as unknown as typeof fetch;
     (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
 
-    await onRequest(context('/today/', 'text/html'));
+    await onRequest(context('/newspaper/', 'text/html'));
 
     expect(labRead).toBe(true);
     expect(FakeHTMLRewriter.last?.inner).toContain('class="dateline"');
@@ -127,7 +127,7 @@ describe('middleware — /today/ HTML', () => {
     }) as unknown as typeof fetch;
     (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
 
-    const res = await onRequest(context('/today/', 'text/html'));
+    const res = await onRequest(context('/newspaper/', 'text/html'));
 
     expect(res.status).toBe(200);
     expect(FakeHTMLRewriter.last?.selector).toBe('#edition');
@@ -154,7 +154,29 @@ describe('middleware — /today/ HTML', () => {
   });
 });
 
-describe('middleware — /today/ picked day (?d=)', () => {
+describe('middleware — legacy /today/ addresses redirect permanently', () => {
+  it.each([['/today', '/newspaper/'], ['/today/', '/newspaper/'], ['/es/today', '/es/newspaper/'], ['/es/today/', '/es/newspaper/']])(
+    '%s 301s to %s',
+    async (from, to) => {
+      const ctx = context(from, 'text/html');
+
+      const res = await onRequest(ctx);
+
+      expect(res.status).toBe(301);
+      expect(res.headers.get('Location')).toBe(`https://univerlab.org${to}`);
+      expect(asMock(ctx.next)).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps the edition parameter across the redirect', async () => {
+    const res = await onRequest(context('/today/?d=2024-07-20', 'text/html'));
+
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe('https://univerlab.org/newspaper/?d=2024-07-20');
+  });
+});
+
+describe('middleware — /newspaper/ picked day (?d=)', () => {
   const stubFetch = (calls: string[]) =>
     jest.fn(async (input: string | URL | Request) => {
       const url = String(input);
@@ -170,7 +192,7 @@ describe('middleware — /today/ picked day (?d=)', () => {
     global.fetch = stubFetch(calls);
     (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
 
-    const res = await onRequest(context('/today/?d=2024-07-20', 'text/html'));
+    const res = await onRequest(context('/newspaper/?d=2024-07-20', 'text/html'));
 
     expect(res.status).toBe(200);
     const wp = calls.find((u) => u.includes('wikipedia.org'))!;
@@ -182,7 +204,7 @@ describe('middleware — /today/ picked day (?d=)', () => {
     const calls: string[] = [];
     global.fetch = stubFetch(calls);
 
-    const res = await onRequest(context('/today/index.md?d=2024-07-20', 'text/markdown'));
+    const res = await onRequest(context('/newspaper/index.md?d=2024-07-20', 'text/markdown'));
 
     expect(res.status).toBe(200);
     const wp = calls.find((u) => u.includes('wikipedia.org'))!;

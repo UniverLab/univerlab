@@ -29,7 +29,6 @@ const carriers: Array<[string, string, string]> = [
   // not-found-kraken.test.ts). The postcard key stays for the asset history.
   ['src/pages/roadmap.astro', 'roadmap', 'en.postcards.roadmap'],
   ['src/pages/status.astro', 'status', 'en.postcards.status'],
-  ['src/components/TodaysPaper.astro', 'today', 't.postcards.today'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -81,8 +80,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 11 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(11);
+  it('all 10 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(10);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -155,7 +154,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(7);
+    expect(others).toHaveLength(6);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
