@@ -137,8 +137,8 @@ describe('todayEditionHtml prints every branch', () => {
     expect(en).toContain(`born 446 years ago`);
     expect(en).toContain(`died 13 years ago`);
     const es = todayEditionHtml(kindsFeed, 'es', DATE);
-    expect(es).toContain('nace hace 446 años');
-    expect(es).toContain('fallece hace 13 años');
+    expect(es).toContain('nació hace 446 años');
+    expect(es).toContain('murió hace 13 años');
     const md = todayEditionMarkdown(kindsFeed, 'en', DATE);
     expect(md).toContain('(born 446 years ago)');
     expect(md).toContain('(died 13 years ago)');

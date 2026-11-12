@@ -175,6 +175,8 @@ describe('firstSentence', () => {
     expect(firstSentence('He led the U.S. Senate. Then he retired.')).toBe(
       'He led the U.S. Senate.',
     );
+    expect(firstSentence('Jacques Charles, físico (f. 1823). Otro.')).toBe('Jacques Charles, físico (f. 1823).');
+    expect(firstSentence('Robert Scott (b. 1868). Next.')).toBe('Robert Scott (b. 1868).');
     expect(firstSentence('No terminator here')).toBe('No terminator here');
     expect(firstSentence('')).toBe('');
   });

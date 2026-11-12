@@ -746,8 +746,8 @@ export const es: Dict = {
     types: { launch: 'lanzamiento', note: 'nota', update: 'actualización', deploy: 'despliegue', bugfix: 'corrección', incident: 'incidente' },
     ago: {
       event: 'hace {years} años',
-      born: 'nace hace {years} años',
-      died: 'fallece hace {years} años',
+      born: 'nació hace {years} años',
+      died: 'murió hace {years} años',
     },
     caption: '{name} · Wikimedia Commons',
     colophon:

@@ -151,6 +151,8 @@ function leadBody(lead: Fact): string {
 const SENTENCE_ABBREV = new Set([
   'mr', 'mrs', 'ms', 'mme', 'dr', 'dra', 'sr', 'sra', 'srta', 'ud', 'uds',
   'vs', 'viz', 'cf', 'al', 'eg', 'ie', 'fig',
+  // Life dates in a person's line: (b. 1746), (n. 1746), (d. 1823), (f. 1823), c. 1500.
+  'b', 'n', 'd', 'f', 'c',
 ]);
 
 /** The first sentence of a column body: columns print one sentence, never a
@@ -268,8 +270,9 @@ function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): str
   // never leaves one column longer than the rest. Skipped when empty or when
   // it would repeat the line above (a person with no summary, whose line is
   // already the body). The lead keeps its whole paragraph.
-  const body = firstSentence(itemBody(fact));
-  const bodyHtml = body && body !== fact.text ? `<p class="body">${esc(body)}</p>` : '';
+  const raw = itemBody(fact);
+  const body = raw === fact.text ? '' : firstSentence(raw);
+  const bodyHtml = body ? `<p class="body">${esc(body)}</p>` : '';
   return (
     `<article class="${cls}">${img}` +
     `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
@@ -289,7 +292,8 @@ export interface ColEntry {
 /** A printed column's weight in body lines: the line, one sentence of body
  *  and the engraving's own rows. The splitter below balances columns by it. */
 export function estimate(f: Fact): number {
-  const body = firstSentence(itemBody(f));
+  const raw = itemBody(f);
+  const body = raw === f.text ? '' : firstSentence(raw);
   return Math.ceil((f.text || '').length / 26) + Math.ceil(body.length / 34) + (f.thumb ? 7 : 0) + 2;
 }
 
@@ -297,8 +301,8 @@ const kindTitle = (kind: Fact['kind'], t: Dict): string =>
   kind === 'event' ? t.events : kind === 'born' ? t.births : t.deaths;
 
 /** Split the day's letters into balanced columns. Entries stay contiguous in
- *  kind order; each column closes at the cut nearest its third of the total
- *  weight, so the columns end within a few lines of each other. Short days
+ *  kind order; the two cuts are the pair that leaves the columns' weights
+ *  closest, so the columns end within a few lines of each other. Short days
  *  (or days with a single kind) keep one column per kind instead. */
 export function splitColumns(entries: ColEntry[]): ColEntry[][] {
   if (!entries.length) return [];
@@ -320,18 +324,25 @@ export function splitColumns(entries: ColEntry[]): ColEntry[][] {
     running += estimate(e.fact);
     cum.push(running);
   }
-  // The end index of the column closing nearest weight t, never before lo
-  // and never past the second-to-last letter (every column keeps at least
-  // one letter).
-  const cutNear = (t: number, lo: number): number => {
-    let best = Math.min(lo, entries.length - 2);
-    for (let i = best; i <= entries.length - 2; i++) {
-      if (Math.abs(cum[i] - t) < Math.abs(cum[best] - t)) best = i;
+  // Every pair of cuts is tried (a day has a few dozen letters at most) and
+  // the pair whose longest column runs least past its shortest wins; every
+  // column keeps at least one letter.
+  const n = entries.length;
+  const span = (a: number, b: number): number => cum[b] - (a > 0 ? cum[a - 1] : 0);
+  let cut1 = 0;
+  let cut2 = Math.min(1, n - 1);
+  let bestSpread = Infinity;
+  for (let i = 0; i <= n - 3; i++) {
+    for (let j = i + 1; j <= n - 2; j++) {
+      const w = [span(0, i), span(i + 1, j), span(j + 1, n - 1)];
+      const spread = Math.max(...w) - Math.min(...w);
+      if (spread < bestSpread) {
+        bestSpread = spread;
+        cut1 = i;
+        cut2 = j;
+      }
     }
-    return best;
-  };
-  const cut1 = cutNear(total / 3, 0);
-  const cut2 = cutNear((2 * total) / 3, cut1 + 1);
+  }
   return [
     entries.slice(0, cut1 + 1),
     entries.slice(cut1 + 1, cut2 + 1),
@@ -440,9 +451,9 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       aside
         .map((f) => {
           const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
-          const body = firstSentence(itemBody(f));
-          const bodyHtml =
-            body && body !== f.text ? `<p class="aside-body">${esc(body)}</p>` : '';
+          const raw = itemBody(f);
+          const body = raw === f.text ? '' : firstSentence(raw);
+          const bodyHtml = body ? `<p class="aside-body">${esc(body)}</p>` : '';
           const img = photoFigure(f, t, { eager: false, caption: false, size: 'medium' });
           return (
             `<div class="aside-item${img ? ' has-photo' : ''}">${img}<div>` +
