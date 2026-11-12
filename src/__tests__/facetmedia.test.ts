@@ -67,10 +67,33 @@ describe('facetmedia EXP-009', () => {
 
   it('reads the capability table from the registry and never ships it empty', () => {
     expect(VIEW).toContain('readFacetCapabilities');
-    expect(VIEW).toContain('caps.map((cap, i)');
+    expect(VIEW).toContain('groupFacetCapabilities');
+    expect(VIEW).toContain('f.caps.map((cap, i)');
     expect(VIEW).toContain('caps.length');
+    expect(VIEW).toContain('0/{caps.length}');
     expect(VIEW).toContain('{e.subproject.kicker}');
     expect(VIEW).toContain('{e.subproject.body}');
+  });
+
+  it('groups capabilities by facet in tabs', () => {
+    expect(VIEW).toContain('role="tablist"');
+    expect(VIEW).toContain('role="tab"');
+    expect(VIEW).toContain('role="tabpanel"');
+    expect(VIEW).toContain('aria-selected');
+    expect(VIEW).toContain('facetLabels');
+    expect(VIEW).toContain('f.caps.length');
+    // No-JS shows every group: the tabpanel tags carry no hidden attribute.
+    expect(VIEW).not.toMatch(/role="tabpanel"[^>]*hidden/);
+  });
+
+  it('labels every facet in both languages', () => {
+    expect(enFm.capabilities.facetLabels.voice).toBe('Voice');
+    expect(esFm.capabilities.facetLabels.voice).toBe('Voz');
+    expect(Object.keys(enFm.capabilities.facetLabels).sort()).toEqual(
+      Object.keys(esFm.capabilities.facetLabels).sort(),
+    );
+    expect(enFm.capabilities.tabsAria).toBe('Capabilities by facet');
+    expect(esFm.capabilities.tabsAria).toBe('Capacidades por faceta');
   });
 
   it('only verified values are yellow', () => {

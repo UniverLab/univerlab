@@ -482,6 +482,17 @@ export const experiments: Dict['experiments'] = {
       capabilities: {
         kicker: 'Capacidades ↳',
         columns: ['N.º', 'Capacidad', 'Herramienta', 'Salida', 'Qué hace'] as string[],
+        tabsAria: 'Capacidades por faceta',
+        facetLabels: {
+          voice: 'Voz',
+          audio: 'Audio',
+          image: 'Imagen',
+          video: 'Vídeo',
+          cad: 'CAD',
+          presentation: 'Presentación',
+          text: 'Texto',
+          other: 'Otros',
+        } as Record<string, string>,
         summaries: {
           'acestep.bed': 'Base instrumental desde un caption en inglés, ~50 s por pista de 30 s, máximo 30 s.',
           'ascii.banner': 'Banner de texto en la fuente figlet del laboratorio (DOS Rebel por defecto).',

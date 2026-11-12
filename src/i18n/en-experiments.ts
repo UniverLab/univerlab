@@ -481,6 +481,17 @@ export const experiments = {
         kicker: 'Capabilities ↳',
         columns: ['No.', 'Capability', 'Tool', 'Output', 'What it does'] as string[],
         summaries: {} as Record<string, string>,
+        tabsAria: 'Capabilities by facet',
+        facetLabels: {
+          voice: 'Voice',
+          audio: 'Audio',
+          image: 'Image',
+          video: 'Video',
+          cad: 'CAD',
+          presentation: 'Presentation',
+          text: 'Text',
+          other: 'Other',
+        } as Record<string, string>,
       },
       subproject: {
         kicker: 'Subproject',

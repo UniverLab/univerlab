@@ -99,6 +99,31 @@ export interface FacetCapability {
   tool: string;
   kind: string;
   summary: string;
+  facet: string;
+}
+
+export interface FacetGroup {
+  facet: string;
+  label: string;
+  caps: FacetCapability[];
+}
+
+export function groupFacetCapabilities(
+  caps: FacetCapability[],
+  labels: Record<string, string>,
+): FacetGroup[] {
+  const byFacet = new Map<string, FacetCapability[]>();
+  for (const cap of caps) {
+    const f = cap.facet || 'other';
+    const list = byFacet.get(f);
+    if (list) list.push(cap);
+    else byFacet.set(f, [cap]);
+  }
+  return [...byFacet.keys()].sort().map((facet) => ({
+    facet,
+    label: labels[facet] ?? facet,
+    caps: byFacet.get(facet) ?? [],
+  }));
 }
 
 export function parseFacetIndex(toml: string): string[] {
@@ -123,6 +148,7 @@ export function parseFacetIndex(toml: string): string[] {
 
 export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] {
   let tool = '';
+  let facet = '';
   let section = '';
   let cap: Partial<FacetCapability> | null = null;
   const caps: FacetCapability[] = [];
@@ -136,6 +162,7 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
       tool,
       kind: cap.kind ?? '',
       summary: cap.summary ?? '',
+      facet,
     });
     cap = null;
   };
@@ -153,6 +180,7 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
     const m = line.match(/^([A-Za-z_-]+)\s*=\s*(["'])(.*?)\2/);
     if (!m) continue;
     if (!section && m[1] === 'tool_name') tool = m[3];
+    else if (!section && m[1] === 'facet') facet = m[3];
     else if (cap && (m[1] === 'summary' || m[1] === 'kind')) {
       if (m[1] === 'summary') cap.summary = m[3];
       else cap.kind = m[3];

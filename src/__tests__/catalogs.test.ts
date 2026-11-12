@@ -9,6 +9,7 @@ import {
   parseFacetIndex,
   parseFacetPackage,
   readFacetCapabilities,
+  groupFacetCapabilities,
 } from '../lib/catalogs';
 
 describe('catalogs — parseTemplateRegistry', () => {
@@ -143,7 +144,34 @@ type = "string"
 viewer = "audio"
 `;
     expect(parseFacetPackage(toml, 'kokoro')).toEqual([
-      { id: 'kokoro.speak', tool: 'Kokomo', kind: 'audio', summary: 'Narration from text' },
+      { id: 'kokoro.speak', tool: 'Kokomo', kind: 'audio', summary: 'Narration from text', facet: 'voice' },
+    ]);
+  });
+
+  it('ignores a facet key inside a [capabilities.*] section', () => {
+    const toml = `tool_name = "T"
+facet = "voice"
+
+[capabilities.a]
+summary = "first"
+kind = "audio"
+facet = "video"
+`;
+    expect(parseFacetPackage(toml, 'pkg')).toEqual([
+      { id: 'pkg.a', tool: 'T', kind: 'audio', summary: 'first', facet: 'voice' },
+    ]);
+  });
+
+  it('ignores requires_facet when reading the package facet', () => {
+    const toml = `tool_name = "T"
+requires_facet = "video"
+
+[capabilities.a]
+summary = "first"
+kind = "audio"
+`;
+    expect(parseFacetPackage(toml, 'pkg')).toEqual([
+      { id: 'pkg.a', tool: 'T', kind: 'audio', summary: 'first', facet: '' },
     ]);
   });
 
@@ -155,6 +183,7 @@ viewer = "audio"
         tool: 'T',
         kind: 'text',
         summary: "A text banner in the lab's figlet font (DOS Rebel by default).",
+        facet: '',
       },
     ]);
   });
@@ -171,6 +200,34 @@ summary = "first"
 kind = "audio"
 `;
     expect(parseFacetPackage(toml, 'pkg').map((c) => c.id)).toEqual(['pkg.b', 'pkg.a']);
+    for (const cap of parseFacetPackage(toml, 'pkg')) {
+      expect(cap.facet).toBe('');
+    }
+  });
+});
+
+describe('catalogs — groupFacetCapabilities', () => {
+  const pick = (facet: string, id: string) => ({ id, tool: 'T', kind: 'k', summary: 's', facet });
+
+  it('orders facets alphabetically and keeps input order inside each group', () => {
+    const caps = [pick('voice', 'b.z'), pick('audio', 'a.y'), pick('voice', 'a.x')];
+    const groups = groupFacetCapabilities(caps, { voice: 'Voice', audio: 'Audio' });
+    expect(groups.map((g) => g.facet)).toEqual(['audio', 'voice']);
+    expect(groups.map((g) => g.label)).toEqual(['Audio', 'Voice']);
+    expect(groups[1].caps.map((c) => c.id)).toEqual(['b.z', 'a.x']);
+  });
+
+  it('falls back to the registry id when a facet has no label', () => {
+    const groups = groupFacetCapabilities([pick('slides', 'd.p')], { voice: 'Voice' });
+    expect(groups).toHaveLength(1);
+    expect(groups[0].label).toBe('slides');
+  });
+
+  it('groups facet-less capabilities under other', () => {
+    const groups = groupFacetCapabilities([pick('', 'x.a'), pick('voice', 'k.s')], { other: 'Other', voice: 'Voice' });
+    expect(groups.map((g) => g.facet)).toEqual(['other', 'voice']);
+    expect(groups[0].caps.map((c) => c.id)).toEqual(['x.a']);
+    expect(groups[0].label).toBe('Other');
   });
 });
 
@@ -199,7 +256,17 @@ describe('catalogs — readers', () => {
       expect(cap.tool.length).toBeGreaterThan(0);
       expect(cap.kind.length).toBeGreaterThan(0);
       expect(cap.summary.length).toBeGreaterThan(0);
+      expect(cap.facet.length).toBeGreaterThan(0);
     }
+  });
+
+  it('groupFacetCapabilities groups by facet in alphabetical order', () => {
+    const caps = readFacetCapabilities();
+    const groups = groupFacetCapabilities(caps, {});
+    expect(groups.length).toBeGreaterThan(1);
+    expect(groups.map((g) => g.facet)).toEqual([...groups.map((g) => g.facet)].sort());
+    const total = groups.reduce((n, g) => n + g.caps.length, 0);
+    expect(total).toBe(caps.length);
   });
 
   it('every registry capability resolves to a non-empty page summary', async () => {

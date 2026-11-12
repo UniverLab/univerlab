@@ -2,12 +2,13 @@
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
-import { readFacetCapabilities } from '../../lib/catalogs';
+import { readFacetCapabilities, groupFacetCapabilities } from '../../lib/catalogs';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['facetmedia'];
 const exp = byId('facetmedia');
 const caps = readFacetCapabilities();
+const facets = groupFacetCapabilities(caps, e.capabilities.facetLabels);
 const summaryFor = (id: string, fallback: string) =>
   lang === 'es' ? (e.capabilities.summaries[id] ?? fallback) : fallback;
 
@@ -38,21 +39,46 @@ const recordHtml = [
     </section>
   </Fragment>
 
-  <section id="capacidades" class="wrap section fm-index">
+  <section id="capacidades" class="wrap section fm-index fm-cap" data-fm-tabs>
     {caps.length > 0 ? (
       <>
-        <div class="fm-row fm-head">
-          {e.capabilities.columns.map((c) => <span>{c}</span>)}
+        <div class="thumbs" role="tablist" aria-label={e.capabilities.tabsAria}>
+          {facets.map((f, j) => (
+            <button
+              type="button"
+              role="tab"
+              id={`fm-tab-${f.facet}`}
+              aria-controls={`fm-panel-${f.facet}`}
+              aria-selected={j === 0 ? 'true' : 'false'}
+              tabindex={j === 0 ? 0 : -1}
+            >{f.label} ({f.caps.length})</button>
+          ))}
         </div>
-        {caps.map((cap, i) => (
-          <div class="fm-row">
-            <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
-            <span translate="no">{cap.id}</span>
-            <span>{cap.tool}</span>
-            <span>{cap.kind}</span>
-            <span>{summaryFor(cap.id, cap.summary)}</span>
-          </div>
-        ))}
+        <div class="fm-panels">
+          {facets.map((f, j) => (
+            <div
+              class="fm-panel"
+              role="tabpanel"
+              id={`fm-panel-${f.facet}`}
+              aria-labelledby={`fm-tab-${f.facet}`}
+              tabindex="0"
+            >
+              <h2 class="fm-panel-head">{f.label} ({f.caps.length})</h2>
+              <div class="fm-row fm-head">
+                {e.capabilities.columns.map((c) => <span>{c}</span>)}
+              </div>
+              {f.caps.map((cap, i) => (
+                <div class="fm-row">
+                  <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
+                  <span translate="no">{cap.id}</span>
+                  <span>{cap.tool}</span>
+                  <span>{cap.kind}</span>
+                  <span>{summaryFor(cap.id, cap.summary)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </>
     ) : (
       <div class="sub">
@@ -96,6 +122,42 @@ const recordHtml = [
     </dl>
   </section>
 </ExperimentLayout>
+
+<script>
+  (function () {
+    var root = document.querySelector('[data-fm-tabs]');
+    if (!root) return;
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('[role=tab]'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[role=tabpanel]'));
+    if (!tabs.length || tabs.length !== panels.length) return;
+    function select(i) {
+      tabs.forEach(function (btn, j) {
+        var on = j === i;
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        btn.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach(function (p, j) { p.hidden = j !== i; });
+    }
+    tabs.forEach(function (btn, i) {
+      btn.addEventListener('click', function () { select(i); });
+      btn.addEventListener('keydown', function (ev) {
+        var k = ev.key;
+        var n = tabs.length;
+        var next = -1;
+        if (k === 'ArrowRight') next = (i + 1) % n;
+        else if (k === 'ArrowLeft') next = (i - 1 + n) % n;
+        else if (k === 'Home') next = 0;
+        else if (k === 'End') next = n - 1;
+        else return;
+        ev.preventDefault();
+        select(next);
+        tabs[next].focus();
+      });
+    });
+    root.setAttribute('data-ready', '');
+    select(0);
+  })();
+</script>
 
 <style>
   .fm-headline {
@@ -158,6 +220,16 @@ const recordHtml = [
   .fm-index .fm-no {
     font-family: var(--font-mono);
     color: var(--surface-ink-dim);
+  }
+  .fm-cap .thumbs { display: flex; justify-content: center; gap: 0; flex-wrap: wrap; overflow-x: auto; }
+  .fm-cap .thumbs button { font-family: 'Old Standard TT', serif; font-size: 15px; letter-spacing: 0.04em; color: var(--surface-ink); background: color-mix(in srgb, var(--surface-ink) 6%, transparent); border: 1px solid var(--surface-line); border-bottom: 0; border-radius: 10px 10px 0 0; padding: 6px 16px 5px; margin: 0 2px; cursor: pointer; flex: none; }
+  .fm-cap .thumbs button[aria-selected="true"] { background: var(--surface-ink); color: var(--surface-bg); }
+  .fm-panels { border-top: 3px double var(--surface-line); padding-top: 18px; }
+  .fm-panel[hidden] { display: none; }
+  .fm-panel-head { font-family: var(--font-mono); color: var(--surface-ink-dim); margin: 0 0 0.5rem; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+  @media (max-width: 520px) {
+    .fm-cap .thumbs { justify-content: flex-start; flex-wrap: nowrap; }
+    .fm-cap .thumbs button { font-size: 13px; padding: 5px 9px 4px; margin: 0 1px; }
   }
   .ok {
     color: var(--essence);
