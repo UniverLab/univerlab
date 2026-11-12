@@ -37,6 +37,21 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).not.toContain('var(--bench-c-slate)');
   });
 
+  it('lays the front out as spans beside a rail sized to the rows it must fill', () => {
+    // The lab mail box and the lead take three of the four columns; the rail
+    // is told by the renderer how many rows to run beside, so a day without a
+    // lead does not leave an empty band before the columns.
+    expect(css).toMatch(/\.paper \.front \.labmail \{[^}]*grid-column:\s*1 \/ span 3/);
+    expect(css).toMatch(/\.paper \.front \.rail \{[^}]*grid-row:\s*1 \/ span var\(--rail-rows/);
+    expect(css).toMatch(/\.paper \.front \.cols \{[^}]*grid-column:\s*1 \/ -1/);
+  });
+
+  it('sets page 2 as dense ruled columns, not row-aligned grid cells', () => {
+    expect(css).toMatch(/\.paper #lab-log \{[^}]*column-count:\s*3/);
+    expect(css).toContain('column-rule: 1px solid var(--p-rule)');
+    expect(css).toMatch(/\.paper \.log-entry \{[^}]*break-inside:\s*avoid/);
+  });
+
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
     // A long event body must not pull a tall grey mat below the photo: the
     // figure sits at the start of its grid area, so the halftone frame wraps

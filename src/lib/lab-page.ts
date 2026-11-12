@@ -111,17 +111,22 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
   out += `<div id="lab-log" data-shown="${LAB_SHOWN}">`;
   rows.forEach((e, i) => {
     const topic = normalizeTopic(e.topic);
-    const type = typeof e.type === 'string' ? e.type : '';
+    const type = typeof e.type === 'string' ? e.type.toLowerCase() : '';
     const folded = i >= LAB_SHOWN ? ' is-folded' : '';
-    out +=
-      `<article class="log-entry${folded}" data-topic="${esc(topic)}" data-type="${esc(type)}" data-roadmap="${esc(e.roadmap_id || '')}">` +
-      `<time datetime="${esc(e.date)}" data-mission="">${esc(logDate(e.date))}</time>` +
+    // The classifieds display line is set by the entry's type: a release
+    // reads largest, a note smallest.
+    const size = type === 'launch' || type === 'deploy' ? 'sz-lg' : type === 'incident' ? 'sz-md' : 'sz-sm';
+    const meta =
       (type ? `<span class="type-badge">${esc(typeLabel(type, t))}</span>` : '') +
-      `<div class="entry-body"><h3>${esc(e.title || '')}</h3>` +
-      `<p>${linkify(e.body || '')}</p>` +
+      `<time datetime="${esc(e.date)}" data-mission="">${esc(logDate(e.date))}</time>` +
       (e.link
         ? `<a class="log-link" href="${esc(e.link)}" target="_blank" rel="noopener noreferrer">${esc(t.labPage.view)}</a>`
-        : '') +
+        : '');
+    out +=
+      `<article class="log-entry${folded}" data-topic="${esc(topic)}" data-type="${esc(type)}" data-roadmap="${esc(e.roadmap_id || '')}">` +
+      `<div class="entry-body"><h3 class="${size}">${esc(e.title || '')}</h3>` +
+      `<p>${linkify(e.body || '')}</p>` +
+      `<p class="entry-meta">${meta}</p>` +
       `</div></article>`;
   });
   out += `</div>`;

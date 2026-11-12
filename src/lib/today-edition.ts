@@ -8,6 +8,7 @@ import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
+import { paperAdHtml, paperAdsMarkdown } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
@@ -252,6 +253,7 @@ function columnHtml(
   lang: TodayLang,
   photo: (f: Fact) => boolean,
   plate: boolean,
+  boxed: boolean,
 ): string {
   const head = items.slice(0, COLUMN_FOLD);
   const extra = items.slice(COLUMN_FOLD);
@@ -262,7 +264,7 @@ function columnHtml(
       `</details>`
     : '';
   return (
-    `<section class="col"><h3>${esc(title)}</h3>` +
+    `<section class="col${boxed ? ' boxed' : ''}"><h3>${esc(title)}</h3>` +
     headHtml +
     extraHtml +
     (plate ? paperPlateHtml(lang) : '') +
@@ -291,6 +293,8 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     `<div class="dateline"><span>${esc(full)}</span>` +
     `<span>${esc(t.sol)} ${sol}</span><span>${esc(counts)}</span></div>`;
 
+  out += `<div class="banner">${esc(t.banner)}</div><div class="front">`;
+
   for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)]
@@ -317,9 +321,18 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
         : '') +
-      `</div>`;
-    if (aside.length) {
-      const side = aside
+      `</div></article>`;
+  }
+
+  // The audits advertisement spans the front under the lead, never the lead
+  // slot itself.
+  out += paperAdHtml(lang, 'audits');
+
+  // The side column and the remaining advertisements share the rail: the
+  // events the lead pushed aside read first, then the shorter notices.
+  const side = aside.length
+    ? `<aside class="also">` +
+      aside
         .map((f) => {
           const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
           const body = itemBody(f);
@@ -327,22 +340,32 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
             body && body !== f.text ? `<p class="aside-body">${esc(body)}</p>` : '';
           return `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}`;
         })
-        .join('');
-      out += `<aside>${side}</aside>`;
-    }
-    out += `</article>`;
-  }
+        .join('') +
+      `</aside>`
+    : '';
+  // The rail runs beside every row the front fills before the columns: each
+  // lab box, the lead and the wide advertisement. On a day with no lead the
+  // wide advertisement is the only one, so the columns can follow it directly
+  // instead of leaving an empty band.
+  const railRows = boxes.length + (lead ? 1 : 0) + 1;
+  out +=
+    `<div class="rail" style="--rail-rows:${railRows}">` +
+    side +
+    paperAdHtml(lang, 'workbench') +
+    paperAdHtml(lang, 'install') +
+    paperAdHtml(lang, 'collab') +
+    `</div>`;
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
   // Every event whose article carries a photo prints it, like births and
   // deaths do; the column folds the overflow under "show more" instead.
   const eventPhoto = (f: Fact): boolean => !!f.thumb;
-  const pairs: Array<[string, Fact[], (f: Fact) => boolean]> = [
-    [t.events, rest('event'), eventPhoto],
-    [t.births, rest('born'), () => true],
-    [t.deaths, rest('died'), () => true],
-  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[], (f: Fact) => boolean]>;
+  const pairs: Array<[string, Fact[], (f: Fact) => boolean, Fact['kind']]> = [
+    [t.events, rest('event'), eventPhoto, 'event'],
+    [t.births, rest('born'), () => true, 'born'],
+    [t.deaths, rest('died'), () => true, 'died'],
+  ].filter(([, items]) => items.length > 0) as Array<[string, Fact[], (f: Fact) => boolean, Fact['kind']]>;
   if (pairs.length) {
     // The engraving fills the gap the day's content leaves: it is appended
     // in the shortest column (fewest letters, ties to the first).
@@ -352,21 +375,11 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     }
     out +=
       `<div class="cols">` +
-      pairs.map(([title, items, photo], i) => columnHtml(title, items, t, date, lang, photo, i === plateAt)).join('') +
+      pairs.map(([title, items, photo, kind], i) => columnHtml(title, items, t, date, lang, photo, i === plateAt, kind !== 'event')).join('') +
       `</div>`;
   }
 
-  // The Workbench notice: a period advertisement in every edition, never
-  // the lead story.
-  const ad = lang === 'es' ? '/es/workbench/' : '/workbench/';
-  out +=
-    `<aside class="notice" aria-label="${esc(t.notice.label)}">` +
-    `<p class="kicker">${esc(t.notice.label)}</p>` +
-    `<h2>${esc(t.notice.head)}</h2>` +
-    `<p>${esc(t.notice.text)}</p>` +
-    `<a href="${ad}">${esc(t.notice.link)}</a></aside>`;
-
-  out += `<p class="colophon-note">${esc(t.colophon)}</p>`;
+  out += `</div><p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
 }
 
@@ -451,8 +464,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     }
     lines.push('');
   }
-  // The Workbench notice rides the twin as one short line with its link.
-  const adUrl = lang === 'es' ? 'https://univerlab.org/es/workbench/' : 'https://univerlab.org/workbench/';
-  lines.push(`*${t.notice.label} — [${t.notice.head}](${adUrl}): ${t.notice.text}*`, '');
+  // The lab's advertisements ride the twin as one short line each.
+  lines.push(paperAdsMarkdown(lang), '');
   return lines.join('\n');
 }

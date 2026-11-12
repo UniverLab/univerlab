@@ -726,6 +726,7 @@ export const en = {
     editionPast: 'Edition of {date}',
     name: 'The Observable',
     motto: 'Letters of science arriving today, after years on their way',
+    banner: 'SCIENCE LETTERS FOR TODAY!',
     sol: 'Sol',
     counts: '{n} letters from the past · {m} from the lab',
     labKicker: 'Lab mail · today',
@@ -760,11 +761,41 @@ export const en = {
     error: 'Failed to load the day’s letters.',
     pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
     plate: "The sundial, the paper's engraving",
-    notice: {
+    ads: {
       label: 'Notice',
-      head: 'The Workbench',
-      text: 'Consulting on AI and Agent Experience (AX) - First call free - Write to us on WhatsApp',
-      link: 'Open the Workbench',
+      workbench: {
+        head: 'The Workbench',
+        lines: [
+          'Counsel on artificial intelligence and Agent Experience',
+          'First call free · a quarter of an hour',
+        ],
+        tail: 'Write to us on WhatsApp',
+        link: 'Open the Workbench',
+      },
+      audits: {
+        head: 'Audits of the Workbench',
+        lines: [
+          'How your team uses artificial intelligence, reviewed with rigour',
+          'Findings with evidence · risk chart · roadmap',
+        ],
+        tail: 'From USD 250 · implementation quoted separately',
+        link: 'Read the audits',
+      },
+      install: {
+        head: 'The lab’s machines, on your desk',
+        cmd1: 'Canopy',
+        cmd2: 'facetMedia',
+        link: 'Take them home',
+      },
+      collab: {
+        head: 'Correspondents wanted',
+        lines: [
+          'Every experiment takes issues and focused pull requests',
+          'Your help is genuinely welcome',
+        ],
+        tail: 'UniverLab · open source',
+        link: 'Join the contributors',
+      },
     },
   },
   audit: {

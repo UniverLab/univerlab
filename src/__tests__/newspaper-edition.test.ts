@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { experiments } from '../lib/experiments';
 import { paperPlateHtml } from '../lib/paper-plate';
 import { buildPool, collectFacts, letterPool, summaryText, type Fact } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
@@ -145,7 +146,8 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('class="dropcap"');
     // The lead is an event, and events never print photos: its block
     // carries no figure and no caption at all.
-    const leadBlock = html.slice(html.indexOf('<article class="lead">'), html.indexOf('</aside>'));
+    const leadStart = html.indexOf('<article class="lead">');
+    const leadBlock = html.slice(leadStart, html.indexOf('</article>', leadStart));
     expect(leadBlock.indexOf('<article class="lead">')).toBe(0);
     expect(leadBlock).not.toContain('<img');
     expect(leadBlock).not.toContain('figcaption');
@@ -157,7 +159,8 @@ describe('todayEditionHtml (en)', () => {
   });
 
   it('keeps the side column to two events and no photos', () => {
-    const aside = html.slice(html.indexOf('<aside>'), html.indexOf('</aside>'));
+    const at = html.indexOf('<aside class="also">');
+    const aside = html.slice(at, html.indexOf('</aside>', at));
     expect(aside).toContain('1879');
     expect(aside).toContain('1638');
     expect(aside.indexOf('1879')).toBeLessThan(aside.indexOf('1638'));
@@ -394,29 +397,80 @@ describe('the sundial engraving sits inside the grid', () => {
   });
 });
 
-describe('the Workbench notice', () => {
-  it('prints the ad box on every edition, never the lead story', () => {
-    const html = todayEditionHtml({ facts: [], lab: [] }, 'en', DATE);
-    expect(html).toContain('<aside class="notice" aria-label="Notice">');
-    expect(html).toContain('<h2>The Workbench</h2>');
-    expect(html).toContain('<a href="/workbench/">Open the Workbench</a>');
-    expect(html.indexOf('<aside class="notice"')).toBeGreaterThan(html.indexOf('<div class="dateline">'));
+describe('the lab advertisements', () => {
+  it('prints four shaped ads on every edition, honestly labelled, never the lead', () => {
+    for (const lang of ['en', 'es'] as const) {
+      const html = todayEditionHtml({ facts: [], lab: [] }, lang, DATE);
+      const asides = html.match(/<aside class="ad ad--[a-z]+" aria-label="[^"]*">/g) ?? [];
+      expect(asides).toHaveLength(4);
+      const label = lang === 'es' ? 'Aviso' : 'Notice';
+      for (const a of asides) expect(a).toContain(`aria-label="${label}"`);
+      // The label is printed, not only spoken to a screen reader.
+      expect(html.match(new RegExp(`<p class="kicker">${label}</p>`, 'g')) ?? []).toHaveLength(4);
+      expect(html).toContain('<div class="banner">');
+    }
+    // With a full edition the lead carries no advertisement.
+    const full = todayEditionHtml(feed(), 'en', DATE);
+    const leadStart = full.indexOf('<article class="lead');
+    expect(leadStart).toBeGreaterThan(-1);
+    expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="ad');
+    // The wide ad follows the lead; the rail holds the side column and the
+    // three shorter notices.
+    expect(full.indexOf('class="ad ad--wide"')).toBeGreaterThan(leadStart);
+    expect(full).toContain('<div class="rail"');
+    expect(full.indexOf('<aside class="also">')).toBeGreaterThan(full.indexOf('<div class="rail"'));
   });
 
-  it('speaks Spanish on the Spanish edition', () => {
+  it('sizes the rail to the rows the front fills, so no band is left empty', () => {
+    // No lead and no lab mail: the columns follow the wide ad at once.
+    expect(todayEditionHtml({ facts: [], lab: [] }, 'en', DATE)).toContain(
+      '<div class="rail" style="--rail-rows:1">',
+    );
+    const noEvents = FACTS.filter((f) => f.kind !== 'event');
+    expect(noEvents.length).toBeGreaterThan(0);
+    expect(todayEditionHtml({ facts: noEvents, lab: [] }, 'en', DATE)).toContain(
+      '<div class="rail" style="--rail-rows:1">',
+    );
+    // One lab box and the lead fill two rows; the wide ad the third.
+    expect(todayEditionHtml(feed(), 'en', DATE)).toContain(
+      '<div class="rail" style="--rail-rows:3">',
+    );
+  });
+
+  it('spells the Spanish Workbench notice without a lone banco', () => {
     const html = todayEditionHtml({ facts: [], lab: [] }, 'es', DATE);
-    expect(html).toContain('<aside class="notice" aria-label="Aviso">');
-    expect(html).toContain('<h2>Banco de trabajo</h2>');
-    expect(html).toContain('Primera llamada gratis');
+    expect(html).toContain('Banco de trabajo');
+    expect(html).toContain('inteligencia artificial');
+    expect(html).not.toMatch(/[a-zñ] banco/);
     expect(html).toContain('<a href="/es/workbench/">Abrir el Banco de trabajo</a>');
+    expect(html).toContain('<a href="/es/workbench/audits/">');
+    expect(html).toContain('<a href="/es/canopy/">');
+    expect(html).toContain('<a href="/es/facetmedia/">');
+    expect(html).toContain('<a href="/es/contributors/">');
   });
 
-  it('rides the markdown twin as one short line with the link', () => {
+  it('installs with the registry one-liners, never hardcoded', () => {
+    const html = todayEditionHtml({ facts: [], lab: [] }, 'en', DATE);
+    const canopy = experiments.find((e) => e.id === 'canopy')?.install?.unix;
+    const facet = experiments.find((e) => e.id === 'facetmedia')?.install?.unix;
+    expect(canopy).toBeTruthy();
+    expect(facet).toBeTruthy();
+    expect(html).toContain(canopy!);
+    expect(html).toContain(facet!);
+    expect(html).toContain('curl -fsSL https://install.univerlab.org/canopy | sh');
+    expect(html).toContain('uv tool install facetmedia');
+  });
+
+  it('rides the markdown twin as one short line per ad', () => {
     const md = todayEditionMarkdown(feed(), 'en', DATE);
-    const line = md.split('\n').find((l) => l.includes('The Workbench')) || '';
-    expect(line).toContain('[The Workbench](https://univerlab.org/workbench/)');
-    expect(md).toContain('*Notice — ');
+    expect(md.match(/^\*Notice — /gm)).toHaveLength(4);
+    expect(md).toContain('[The Workbench](https://univerlab.org/workbench/)');
+    expect(md).toContain('https://univerlab.org/workbench/audits/');
+    expect(md).toContain('https://univerlab.org/canopy/');
+    expect(md).toContain('https://univerlab.org/facetmedia/');
+    expect(md).toContain('https://univerlab.org/contributors/');
     const es = todayEditionMarkdown(feed('es'), 'es', DATE);
+    expect(es.match(/^\*Aviso — /gm)).toHaveLength(4);
     expect(es).toContain('[Banco de trabajo](https://univerlab.org/es/workbench/)');
   });
 });

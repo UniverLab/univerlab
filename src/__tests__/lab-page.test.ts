@@ -34,7 +34,7 @@ describe('lab page (newspaper page 2)', () => {
 
   it('prints every entry newest first, folded past ten', () => {
     const html = labPageHtml(entries, 'en');
-    const titles = [...html.matchAll(/<h3>(.*?)<\/h3>/g)].map((m) => m[1]);
+    const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)].map((m) => m[1]);
     expect(titles).toEqual([
       'Newest', 'Notes on TexForge', 'Mystery topic', 'General note', 'Bugfix',
       'Incident', 'Update', 'Old launch', 'Older note', 'Tenth', 'Eleventh', 'Twelfth',
@@ -96,6 +96,21 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).toContain('<h2 class="lab-heading">Noticias del laboratorio</h2>');
     expect(html).toContain('<p class="lab-empty">No llegó el correo del laboratorio; inténtelo más tarde.</p>');
     expect(html).not.toContain('lab-filter');
+  });
+
+  it('sizes the display line by type and closes with the meta line', () => {
+    const html = labPageHtml(entries, 'en');
+    // A release reads largest, an incident next, a note smallest.
+    expect(html).toContain('<h3 class="sz-lg">Newest</h3>');
+    expect(html).toContain('<h3 class="sz-lg">Mystery topic</h3>');
+    expect(html).toContain('<h3 class="sz-md">Incident</h3>');
+    expect(html).toContain('<h3 class="sz-sm">Notes on TexForge</h3>');
+    const metas = html.match(/<p class="entry-meta">.*?<\/p>/g) ?? [];
+    expect(metas).toHaveLength(12);
+    expect(metas[0]).toContain('type-badge');
+    expect(metas[0]).toContain('<time datetime="2026-10-06T01:09:26.735Z" data-mission="">');
+    expect(metas[1]).toContain('<time datetime="2026-10-05T10:00:00.000Z" data-mission="">');
+    expect(metas[1]).toContain('class="log-link"');
   });
 
   it('keeps the filter rows when the feed simply has no entries', () => {

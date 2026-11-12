@@ -159,16 +159,27 @@ const t = useTranslations(lang);
   .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
   .paper .lab-filters { display: grid; gap: 6px; }
   .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .paper .lab-filter { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .paper .lab-filter-row { border-top: 1px solid var(--p-ink); padding-top: 6px; }
+  .paper .lab-filter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 3px 10px; cursor: pointer; }
   .paper .lab-filter.is-active { color: var(--p-ink); border-color: var(--p-ink); }
   .paper .lab-filter-count { opacity: 0.7; margin-left: 6px; font-size: 10.5px; }
-  .paper #lab-log { display: grid; }
-  .paper .log-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; padding-block: 14px; border-bottom: 1px dotted var(--p-rule); }
+  /* The classifieds: three dense ruled stacks on a wide page, one on a
+     phone. Multi-column flow packs the notices instead of aligning them in
+     grid rows, which would leave a shelf of blank paper under short ones. */
+  .paper #lab-log { column-gap: 32px; }
+  @media (min-width: 48rem) {
+    .paper #lab-log { column-count: 3; column-rule: 1px solid var(--p-rule); }
+  }
+  .paper .log-entry { display: block; min-width: 0; break-inside: avoid; padding-block: 14px; border-bottom: 1px dotted var(--p-rule); }
   .paper .log-entry time { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--p-soft); }
-  .paper .log-entry .type-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-emphasis); border: 1px solid var(--p-emphasis); padding: 2px 8px; border-radius: 3px; }
-  .paper .log-entry .entry-body { grid-column: 1 / -1; display: grid; gap: 6px; }
-  .paper .log-entry h3 { font-family: var(--font-serif); font-weight: 400; font-size: 21px; line-height: 1.25; margin: 0; color: var(--p-ink); }
-  .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
+  .paper .log-entry .type-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-emphasis); border: 1px solid var(--p-emphasis); padding: 2px 8px; border-radius: 0; }
+  .paper .log-entry .entry-body { display: grid; gap: 6px; }
+  .paper .log-entry h3 { font-family: var(--font-serif); line-height: 1.25; margin: 0; text-wrap: balance; color: var(--p-ink); }
+  .paper .log-entry h3.sz-lg { font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: 0.02em; }
+  .paper .log-entry h3.sz-md { font-weight: 700; font-size: 20px; }
+  .paper .log-entry h3.sz-sm { font-weight: 400; font-size: 18px; font-style: italic; }
+  .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 15.5px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
+  .paper .log-entry .entry-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; border-top: 1px solid var(--p-rule); padding-top: 6px; }
   .paper .log-entry p a, .paper .log-entry .log-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper.js .log-entry.is-hidden, .paper.js .log-entry.is-folded { display: none; }
   .paper #lab-older { justify-self: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--p-emphasis); background: transparent; border: 1px solid var(--p-rule); padding: 8px 22px; cursor: pointer; }
@@ -176,30 +187,37 @@ const t = useTranslations(lang);
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
   .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
-  .paper .lead { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; }
+  .paper .banner { text-align: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 6px; margin: 0; }
+  .paper .front { display: grid; gap: 18px; }
+  .paper .front > * { min-width: 0; }
+  .paper .lead { border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; }
   .paper .lead .kicker, .paper .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; font-weight: 400; }
-  .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 6px 0 10px; text-wrap: balance; color: var(--p-ink); }
+  .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05; margin: 6px 0 10px; text-wrap: balance; color: var(--p-ink); }
   .paper .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--p-ink); }
   .paper .lead .story .dropcap::first-letter { font-family: var(--font-serif); float: left; font-size: 3.4em; line-height: 0.82; padding: 4px 8px 0 0; }
   .paper .lead a, .paper .item a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
-  .paper .lead aside { border-left: 1px solid var(--p-rule); padding-left: 22px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); }
-  .paper .lead aside b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
+  .paper .rail { display: grid; gap: 18px; align-content: start; min-width: 0; }
+  .paper .rail .also { border: 1px solid var(--p-rule); padding: 12px 14px; display: grid; align-content: start; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); }
+  .paper .rail .also b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
+  .paper .rail .also .aside-body { font-size: 14.5px; line-height: 1.5; }
   .paper .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .paper .more { display: grid; gap: 14px; }
   .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
   .paper .col + .col { border-left: 1px solid var(--p-rule); }
   .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
+  .paper .cols { gap: 0 16px; }
+  .paper .cols .col.boxed { border: 1px solid var(--p-ink); padding: 12px 14px; align-self: start; }
+  .paper .cols .col.boxed .item.has-photo { grid-template-columns: 48px minmax(0, 1fr); column-gap: 10px; }
   .paper .col h3 { border-bottom: 1px solid var(--p-ink); padding-bottom: 4px; }
   .paper .item { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px dotted var(--p-rule); }
   .paper .item:last-child { border-bottom: 0; }
   .paper .item .yr { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .paper .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--p-ink); }
-  .paper .item .yr span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--p-soft); white-space: nowrap; }
-  .paper .item p { margin: 0; font-family: var(--font-body); font-size: 16.5px; line-height: 1.45; color: var(--p-ink); }
-  .paper .item .body { font-size: 15px; line-height: 1.5; }
+  .paper .item .yr span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: lowercase; font-variant: small-caps; color: var(--p-soft); white-space: nowrap; }
+  .paper .item p { margin: 0; font-family: var(--font-serif); font-size: 17px; line-height: 1.4; color: var(--p-ink); }
+  .paper .item .body { font-size: 15px; line-height: 1.5; font-style: italic; }
   .paper .item a { justify-self: start; }
-  .paper .lead aside .aside-body { font-size: 14.5px; line-height: 1.5; }
   .paper .labmail { border: 1px solid var(--p-ink); outline: 1px solid var(--p-ink); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
   .paper .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; }
   .paper .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); }
@@ -220,21 +238,34 @@ const t = useTranslations(lang);
   /* The sundial engraving: an old plate set among the columns, under the
     shorter one; on phones it sits between sections at column width. */
   .paper .paper-plate { margin: 4px 0 0; }
-  /* The Workbench notice: a paid-style box with ornamental double rules,
-    honestly labelled as an ad. Never the lead story. */
-  .paper .notice { border: 3px double var(--p-ink); padding: 14px 18px; display: grid; gap: 6px; justify-items: center; text-align: center; }
-  .paper .notice .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-bottom: 1px solid var(--p-rule); padding-bottom: 6px; width: 100%; }
-  .paper .notice h2 { font-family: var(--font-serif); font-weight: 700; font-size: clamp(24px, 3vw, 32px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); }
-  .paper .notice p { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--p-ink); }
-  .paper .notice a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
+  /* The lab's own advertisements: period notices in type, honestly
+    labelled, each shaped by its weight. Never the lead story. */
+  .paper .ad { border: 1px solid var(--p-ink); padding: 12px 14px; display: grid; gap: 6px; justify-items: center; text-align: center; align-content: start; min-width: 0; }
+  .paper .ad .kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-block: 1px solid var(--p-rule); padding-block: 4px; width: 100%; }
+  .paper .ad h3 { font-family: var(--font-serif); font-weight: 700; font-size: 21px; line-height: 1.15; margin: 0; text-wrap: balance; color: var(--p-ink); }
+  .paper .ad .ad-line { margin: 0; font-family: var(--font-body); font-size: 14.5px; line-height: 1.45; color: var(--p-ink); }
+  .paper .ad .tail { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
+  .paper .ad a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
+  .paper .ad .cmd { display: grid; gap: 2px; justify-items: center; margin: 0; }
+  .paper .ad .cmd a { font-size: 11px; }
+  .paper .ad .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  .paper .ad--wide { border: 3px double var(--p-ink); padding: 14px 18px; align-content: center; }
+  .paper .ad--wide h3 { font-size: clamp(24px, 3vw, 32px); }
+  .paper .ad--tall { outline: 1px solid var(--p-ink); outline-offset: 3px; }
+  @media (min-width: 48rem) {
+    .paper .front { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .paper .front .lead { grid-column: 1 / span 3; }
+    .paper .front .labmail { grid-column: 1 / span 3; }
+    .paper .front .ad--wide { grid-column: 1 / span 3; }
+    .paper .front .rail { grid-column: 4; grid-row: 1 / span var(--rail-rows, 2); border-left: 1px solid var(--p-rule); padding-left: 18px; }
+    .paper .front .cols { grid-column: 1 / -1; }
+  }
   .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
   .paper .skeleton-line { height: 1rem; border-radius: 4px; background: linear-gradient(90deg, var(--p-rule) 25%, transparent 50%, var(--p-rule) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
   .paper .today-error { font-family: var(--font-mono); font-size: 0.8rem; color: var(--p-soft); padding-block: 2rem; text-align: center; }
   @media (max-width: 47.99rem) {
-    .paper .lead { grid-template-columns: 1fr; }
-    .paper .lead aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--p-rule); padding-top: 12px; }
     .paper .cols { grid-auto-flow: row; }
     .paper .col, .paper .col:first-child, .paper .col:last-child { padding-inline: 0; }
     .paper .col + .col { border-left: 0; border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }

@@ -720,6 +720,7 @@ export const es: Dict = {
     editionPast: 'Edición del {date}',
     name: 'El Observable',
     motto: 'Cartas de la ciencia que llegan hoy, después de años en camino',
+    banner: '¡CARTAS DE LA CIENCIA DE HOY!',
     sol: 'Sol',
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
@@ -754,11 +755,41 @@ export const es: Dict = {
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
     plate: 'El reloj de sol, el grabado del periódico',
-    notice: {
+    ads: {
       label: 'Aviso',
-      head: 'Banco de trabajo',
-      text: 'Consultas de inteligencia artificial y Agent Experience (AX) · Primera llamada gratis · Escríbanos por WhatsApp',
-      link: 'Abrir el Banco de trabajo',
+      workbench: {
+        head: 'Banco de trabajo',
+        lines: [
+          'Consultas de inteligencia artificial y Agent Experience (AX)',
+          'Primera llamada gratis · un cuarto de hora',
+        ],
+        tail: 'Escríbanos por WhatsApp',
+        link: 'Abrir el Banco de trabajo',
+      },
+      audits: {
+        head: 'Auditorías del Banco de trabajo',
+        lines: [
+          'Cómo usa su equipo la inteligencia artificial, revisado con rigor',
+          'Hallazgos con evidencia · matriz de riesgo · hoja de ruta',
+        ],
+        tail: 'Desde USD 250 · implementación cotizada por separado',
+        link: 'Leer las auditorías',
+      },
+      install: {
+        head: 'Las máquinas del laboratorio, en su mesa',
+        cmd1: 'Canopy',
+        cmd2: 'facetMedia',
+        link: 'Llévelas a casa',
+      },
+      collab: {
+        head: 'Se buscan corresponsales',
+        lines: [
+          'Cada experimento recibe issues y pull requests enfocados',
+          'Su ayuda es genuinamente bienvenida',
+        ],
+        tail: 'UniverLab · código abierto',
+        link: 'Únase a los colaboradores',
+      },
     },
   },
   audit: {
