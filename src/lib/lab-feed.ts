@@ -36,6 +36,11 @@ export const FEED_URL = `${ANNOUNCEMENTS_API}/feed.atom`;
 export const LANE_ORDER = ['now', 'next', 'later', 'idea', 'done'] as const;
 export type Lane = (typeof LANE_ORDER)[number];
 
+/** The four lanes the roadmap board shows. `idea` keeps rendering in the
+ *  markdown twin but has no board column (nothing is filed there today). */
+export const BOARD_LANES = ['now', 'next', 'later', 'done'] as const;
+export type BoardLane = (typeof BOARD_LANES)[number];
+
 /** The `done` lane lists at most this many of the most recently shipped items. */
 export const DONE_CAP = 10;
 

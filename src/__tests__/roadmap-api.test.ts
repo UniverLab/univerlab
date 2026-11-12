@@ -344,6 +344,33 @@ describe('roadmap writes', () => {
     expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { state: 'done' }]);
   });
 
+  it('accepts facetmedia as a roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    stub.on('createRoadmapItem', (input) => ({ ...publicItem(), ...(input as object) }));
+    stub.on('patchRoadmapItem', (_id, patch) => ({ ...publicItem(), ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const created = await call(send('/roadmap', 'POST', { title: 'Facet work', topic: 'facetmedia' }), env);
+    expect(created.status).toBe(201);
+    expect(created.body.topic).toBe('facetmedia');
+    expect(stub.calls.createRoadmapItem[0][0]).toMatchObject({ topic: 'facetmedia' });
+
+    const patched = await call(send('/roadmap/r1', 'PATCH', { topic: 'facetmedia' }), env);
+    expect(patched.status).toBe(200);
+    expect(patched.body.topic).toBe('facetmedia');
+    expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { topic: 'facetmedia' }]);
+  });
+
+  it('rejects an unknown roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    expect((await call(send('/roadmap', 'POST', { title: 'x', topic: 'nope' }), env)).status).toBe(400);
+    expect((await call(send('/roadmap/r1', 'PATCH', { topic: 'nope' }), env)).status).toBe(400);
+    expect(stub.calls.createRoadmapItem).toBeUndefined();
+    expect(stub.calls.patchRoadmapItem).toBeUndefined();
+  });
+
   it('rejects unknown fields on POST, and shipped_at on both POST and PATCH', async () => {
     const stub = fakeHub();
     const env = fakeEnv(fakeKV({}), stub.hub);

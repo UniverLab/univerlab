@@ -72,6 +72,7 @@ const TOPICS = new Set([
   'cadspec',
   'demostage',
   'quorum',
+  'facetmedia',
 ]);
 
 /** Roadmap lifecycle: rough idea → in flight → shipped. Mirrors ROADMAP.md. */

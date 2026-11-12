@@ -598,6 +598,8 @@ export const es: Dict = {
     entriesMetaOne: '1 entrada del registro · último Sol {sol}',
     landed: 'aterrizó Sol {sol}',
     more: '+{n} más',
+    showAll: 'ver todo',
+    showLess: 'ver menos',
     clearRoadmapFilter: 'Quitar filtro del roadmap',
     empty: 'Aún no hay nada en el roadmap.',
     emptyTopic: 'Nada en el roadmap bajo {topic}.',

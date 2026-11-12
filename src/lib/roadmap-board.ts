@@ -1,5 +1,5 @@
 import { solDayOfYear } from './mission-time';
-import { activeRoadmap, laneRows, LANE_ORDER, topicOf, type RoadmapItem } from './lab-feed';
+import { activeRoadmap, laneRows, BOARD_LANES, DONE_CAP, topicOf, type RoadmapItem } from './lab-feed';
 
 export interface EntriesSummary {
   count: number;
@@ -98,20 +98,37 @@ export interface RoadmapHtmlLabels {
   entriesMetaOne?: string;
 }
 
-export function roadmapLanesHtml(items: any, labels?: RoadmapHtmlLabels | any): string {
+export interface RoadmapBoardOpts {
+  /** Per-topic colour, as CSS colour strings keyed by topic id. */
+  colors?: Record<string, string>;
+  /** When true the `done` lane renders every shipped row instead of DONE_CAP. */
+  doneOpen?: boolean;
+}
+
+export function roadmapLanesHtml(
+  items: any,
+  labels?: RoadmapHtmlLabels | any,
+  opts?: RoadmapBoardOpts,
+): string {
   const L = labels || {};
   const lanesMap = (L && L.lanes) ? L.lanes : L;
   const laneName = (lane: string): string => {
     if (lanesMap && lanesMap[lane]) return String(lanesMap[lane]);
     return lane.charAt(0).toUpperCase() + lane.slice(1);
   };
+  const colors = opts?.colors ?? {};
   const active = activeRoadmap(Array.isArray(items) ? items : []);
+  const doneTotal = active.filter((i: any) => i.state === 'done').length;
   let out = '';
-  for (const lane of LANE_ORDER) {
-    const rows = laneRows(active as any, lane as any) as any[];
+  for (const lane of BOARD_LANES) {
+    let rows = laneRows(active as any, lane as any) as any[];
+    if (lane === 'done' && opts?.doneOpen) {
+      rows = sortDoneNewestFirst(active.filter((i: any) => i.state === 'done') as any[]) as any[];
+    }
     if (!rows.length) continue;
     out += `<section class="rm-seg" data-lane="${escHtml(lane)}" aria-labelledby="lane-${escHtml(lane)}">`;
-    out += `<h2 id="lane-${escHtml(lane)}">${escHtml(laneName(lane))} <span class="rm-count">${rows.length}</span></h2>`;
+    const count = lane === 'done' ? doneTotal : rows.length;
+    out += `<h2 id="lane-${escHtml(lane)}">${escHtml(laneName(lane))} <span class="rm-count">${count}</span></h2>`;
     for (const item of rows) {
       const id = item.id;
       out += `<article class="rm-card" data-roadmap-id="${escHtml(id)}">`;
@@ -120,7 +137,13 @@ export function roadmapLanesHtml(items: any, labels?: RoadmapHtmlLabels | any): 
         out += `<p class="rm-summary">${escHtml(item.summary)}</p>`;
       }
       const topic = topicOf(item.topic);
-      let meta = `<span class="rm-topic">${escHtml(topic)}</span>`;
+      const color = item.essence_hex || colors[topic] || '';
+      const style = color ? ` style="--topic:${escHtml(color)}"` : '';
+      let meta = `<span class="rm-topic"${style}>${escHtml(topic)}</span>`;
+      if (item.state === 'done' && item.shipped_at) {
+        const text = landedText((L && L.landed) || 'landed Sol {sol}', item.shipped_at);
+        meta += ` <time class="rm-landed" datetime="${escHtml(item.shipped_at)}">${escHtml(text)}</time>`;
+      }
       if (shouldShowEntriesMeta(item.entries)) {
         const e = item.entries;
         const text = entriesMetaText(
@@ -131,15 +154,16 @@ export function roadmapLanesHtml(items: any, labels?: RoadmapHtmlLabels | any): 
         );
         meta += ` <a href="/status/?roadmap=${escHtml(id)}" class="rm-entries">${escHtml(text)}</a>`;
       }
-      if (item.state === 'done' && item.shipped_at) {
-        const text = landedText((L && L.landed) || 'landed Sol {sol}', item.shipped_at);
-        meta += ` <time class="rm-landed" datetime="${escHtml(item.shipped_at)}">${escHtml(text)}</time>`;
-      }
       out += `<div class="rm-meta">${meta}</div>`;
       if (item.blocked_reason) {
         out += `<div class="rm-hold">${escHtml((L && L.hold) || 'hold')}: ${escHtml(item.blocked_reason)}</div>`;
       }
       out += `</article>`;
+    }
+    if (lane === 'done' && doneTotal > DONE_CAP) {
+      const open = !!opts?.doneOpen;
+      const label = escHtml(open ? (L.showLess || 'show less') : (L.showAll || 'see all'));
+      out += `<button class="rm-more" type="button" data-lane-more="done" aria-expanded="${open ? 'true' : 'false'}">${label}</button>`;
     }
     out += `</section>`;
   }

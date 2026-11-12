@@ -602,6 +602,8 @@ export const en = {
     entriesMetaOne: '1 log entry · last Sol {sol}',
     landed: 'landed Sol {sol}',
     more: '+{n} more',
+    showAll: 'see all',
+    showLess: 'show less',
     clearRoadmapFilter: 'Clear roadmap filter',
     empty: 'Nothing on the roadmap yet.',
     emptyTopic: 'Nothing on the roadmap under {topic}.',
