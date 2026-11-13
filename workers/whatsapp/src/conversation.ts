@@ -2,7 +2,7 @@ import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { burstConfig } from './env';
 import { burstDue, joinBurst, nextAlarm, type BurstState } from './burst';
-import { markRead, sendText, type Inbound } from './meta';
+import { cleanName, markRead, sendText, type Inbound } from './meta';
 import { forwardUnread, isProofMedia, proofConfig, readProof } from './proof';
 import { transcribe, voiceConfig, VOICE_HANDOFF } from './audio';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
@@ -49,6 +49,23 @@ import {
   bogotaDateKey,
   formatSlot,
 } from './schedule';
+import {
+  ask as reasonAsk,
+  CAPTURE_MS,
+  classify,
+  closing as reasonClosing,
+  complaintSays,
+  fixed as reasonFixed,
+  formatReasonNote,
+  isCaptureReason,
+  isDecline,
+  nextCaptureStep,
+  priorityOf,
+  REASON_TAG,
+  routeOf,
+  type CaptureReason,
+  type CaptureState,
+} from './reasons';
 import { HOLD_PREFIX } from './google';
 import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
 import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
@@ -82,6 +99,32 @@ export const NON_TEXT = {
   es: 'Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.',
   en: 'For now I only read text messages. I am passing this to someone at the lab.',
 };
+
+/** Read the capture state; corrupt or foreign content clears to null. */
+function parseCapture(raw: string | null): CaptureState | null {
+  if (!raw) return null;
+  try {
+    const p = JSON.parse(raw) as Partial<CaptureState>;
+    if (!isCaptureReason((p as { reason?: unknown }).reason as string)) return null;
+    if (p.lang !== 'es' && p.lang !== 'en') return null;
+    if (typeof p.phone !== 'string' || !p.phone) return null;
+    if (typeof p.opening !== 'string') return null;
+    if (!Array.isArray(p.answers)) return null;
+    if (typeof p.updatedAt !== 'number' || !Number.isFinite(p.updatedAt)) return null;
+    return {
+      reason: p.reason as CaptureReason,
+      lang: p.lang,
+      phone: p.phone,
+      name: typeof p.name === 'string' ? p.name : '',
+      opening: p.opening,
+      answers: p.answers.filter((a): a is string => typeof a === 'string').slice(0, 8),
+      asks: typeof p.asks === 'number' && Number.isFinite(p.asks) ? p.asks : 0,
+      updatedAt: p.updatedAt,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export class Conversation extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
@@ -542,6 +585,26 @@ export class Conversation extends DurableObject<Env> {
         now = Date.now();
       }
     }
+    // A capture abandoned for 24 hours hands off with what was gathered,
+    // even when no new message arrives to trigger it.
+    const capRaw = this.state('capture');
+    if (capRaw) {
+      const cap = parseCapture(capRaw);
+      if (!cap) {
+        this.state('capture', null);
+      } else if (now >= cap.updatedAt + CAPTURE_MS) {
+        await this.reasonHandoff(
+          { from: cap.phone, name: cap.name },
+          cap.reason,
+          cap.lang,
+          cap.opening,
+          cap.answers,
+          'alarm-' + String(cap.updatedAt)
+        );
+        await this.armNext(Date.now());
+        return;
+      }
+    }
     const raw = this.state('booking');
     const ret = Number(this.state('retention') ?? '0');
     if (raw && !(ret > 0 && now >= ret)) {
@@ -605,13 +668,21 @@ export class Conversation extends DurableObject<Env> {
       service: st.service,
     });
     this.state('code', code);
-    const note = formatBrief({
+    const intakeReason = this.state('intakeReason');
+    this.state('intakeReason', null);
+    let note = formatBrief({
       name: m.name ?? '',
       phone: m.from,
       lang: st.lang,
       service: st.service,
       bullets: b.bullets,
     }).replace('UniverLab ·', 'UniverLab [' + code + '] ·');
+    if (intakeReason === 'flow' || intakeReason === 'audit') {
+      note +=
+        '\n' +
+        (st.lang === 'es' ? 'Motivo: ' : 'Reason: ') +
+        (intakeReason === 'flow' ? 'FLUJO' : 'AUDITORÍA');
+    }
     // FR5: at most one handoff notice per client every 10 minutes. A
     // throttled handoff still tells the client and keeps the registry row.
     if (await guardHandoff(this.env, m.from)) {
@@ -1205,6 +1276,19 @@ export class Conversation extends DurableObject<Env> {
     return;
   }
 
+  /** The capture deadline, if a reason capture is open. */
+  private captureDue(now: number): number | undefined {
+    try {
+      const cap = parseCapture(this.state('capture'));
+      if (!cap) return undefined;
+      const due = cap.updatedAt + CAPTURE_MS;
+      return due > now ? due : now;
+    } catch {
+      /* corrupt capture state: no capture deadline */
+      return undefined;
+    }
+  }
+
   /** The next pending hold deadline, if a consultation hold is open. */
   private holdDue(now: number): number | undefined {
     try {
@@ -1252,6 +1336,9 @@ export class Conversation extends DurableObject<Env> {
     if (ret > now) deadlines.push(ret);
     const hold = this.holdDue(now);
     if (hold !== undefined && hold > now) deadlines.push(hold);
+    const capture = this.captureDue(now);
+    if (capture !== undefined && capture > now) deadlines.push(capture);
+    else if (capture !== undefined) deadlines.push(now);
     try {
       const raw = this.state('taken');
       if (raw) {
@@ -1416,12 +1503,29 @@ export class Conversation extends DurableObject<Env> {
           this.state('booking', null);
         }
       }
+      // A capture in progress owns the next message: after 24 hours of
+      // silence the note goes out with what was gathered and this message
+      // starts a fresh topic instead.
+      const capRaw = this.state('capture');
+      if (capRaw) {
+        const cap = parseCapture(capRaw);
+        if (!cap) {
+          this.state('capture', null);
+        } else if (Date.now() - cap.updatedAt >= CAPTURE_MS) {
+          this.state('capture', null);
+          await this.reasonHandoff(m, cap.reason, cap.lang, cap.opening, cap.answers, m.id + '-silent');
+        } else {
+          await this.answerCapture(m, cap);
+          return;
+        }
+      }
       const saved = this.state('intake');
       if (saved) {
         const st = JSON.parse(saved) as IntakeState;
         const res = await intake(this.ai(), st, m.text ?? '', modelConfig(this.env));
         if (res.status === 'handoff') {
           this.state('intake', null);
+          this.state('intakeReason', null);
           const fallback = FALLBACK[lang];
           await sendText(this.env, m.from, fallback);
           this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
@@ -1451,34 +1555,138 @@ export class Conversation extends DurableObject<Env> {
         await this.finishBooking(m, st);
         return;
       }
-      const rows = this.ctx.storage.sql
-        .exec('SELECT role, text FROM messages WHERE text IS NOT NULL ORDER BY rowid DESC LIMIT 12')
-        .toArray() as Array<{ role: string; text: string }>;
-      const history = rows
-        .reverse()
-        .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: capTurn(gcfg, r.text) }));
-      const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from);
-      if (a.booking) {
+      // A new topic (no booking, intake or capture in progress) is
+      // classified into exactly one reason; code decides what happens.
+      const reason = await classify(this.ai(), modelConfig(this.env), joined, lang);
+      const startIntake = async (service: IntakeState['service']): Promise<void> => {
         const ask = INTAKE_ASK[lang];
         await sendText(this.env, m.from, ask);
         this.storeAssistant(m.timestamp, 'a-' + m.id, ask);
+        // A fresh intake starts with no reason tag: the tag is set only by
+        // the flow/audit routes below, and finishBooking consumes it. Without
+        // this, a tag from an aborted earlier intake would leak into the next
+        // booking's operator note.
+        this.state('intakeReason', null);
         const st: IntakeState = {
           lang,
-          // FR6: the service is model output, so it enters the state only
-          // through the closed set; everything downstream (brief prompt,
-          // registry, briefs table) reads the normalized value.
-          service: normalizeService(a.service),
+          service,
           opening: (m.text ?? '').slice(0, 500),
           answers: [],
           asks: 1,
           phone: m.from,
         };
         this.state('intake', JSON.stringify(st));
-        return;
+      };
+      switch (routeOf(reason)) {
+        case 'question': {
+          const history = this.historyTurns();
+          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from);
+          if (a.booking) {
+            // FR6: the service is model output, so it enters the state only
+            // through the closed set; everything downstream (brief prompt,
+            // registry, briefs table) reads the normalized value.
+            await startIntake(normalizeService(a.service));
+            return;
+          }
+          await sendText(this.env, m.from, a.reply);
+          this.storeAssistant(m.timestamp, 'a-' + m.id, a.reply);
+          if (a.handoff) await this.notify(m);
+          return;
+        }
+        case 'booking-first-call':
+        case 'booking-consultation': {
+          await startIntake(routeOf(reason) === 'booking-consultation' ? 'consultation' : 'first-call');
+          return;
+        }
+        case 'intake-flow':
+        case 'intake-audit': {
+          await startIntake('audit-flow');
+          this.state('intakeReason', reason);
+          return;
+        }
+        case 'my-booking': {
+          const res = await calendarCall(this.env, {
+            action: 'status',
+            contactKey: contactKey('wa', m.from),
+            service: 'first-call',
+            minutes: 15,
+            now: Date.now(),
+          });
+          if (!res.ok) {
+            await this.calendarDown(m, lang, 'my-booking', [(m.text ?? '').slice(0, 500)], m.name ?? '');
+            return;
+          }
+          if (res.active) {
+            const active = res.active as ActiveInfo;
+            const svc: BookingService = active.service === 'consultation' ? 'consultation' : 'first-call';
+            const seeded = seedFromActive(active, {
+              lang,
+              phone: m.from,
+              name: m.name ?? '',
+              service: svc,
+              brief: [(m.text ?? '').slice(0, 500)],
+            });
+            this.state('booking', JSON.stringify(seeded));
+            this.state('intake', null);
+            const text = renderBooking(EXISTING[lang], { slot: formatSlot(active.start, lang) });
+            await sendText(this.env, m.from, text);
+            this.storeAssistant(m.timestamp, 'a-' + m.id + '-existing', text);
+            return;
+          }
+          const text = reasonFixed('noBooking', lang);
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-nobooking', text);
+          return;
+        }
+        case 'payment': {
+          // How to pay is fixed code text; a receipt follows the proof path.
+          const text = reasonFixed('howToPay', lang);
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-howtopay', text);
+          return;
+        }
+        case 'open-source': {
+          const history = this.historyTurns();
+          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from, ['github.com']);
+          // Docs and issues links live on github.com, so the check admits
+          // that host; a failing reply still never hands off to a person.
+          const text = a.handoff ? reasonFixed('openSourceFallback', lang) : a.reply;
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id, text);
+          return;
+        }
+        case 'vendor': {
+          const text = reasonFixed('vendor', lang);
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-vendor', text);
+          return;
+        }
+        case 'off-topic': {
+          const text = reasonFixed('offTopic', lang);
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-offtopic', text);
+          return;
+        }
+        default: {
+          if (!isCaptureReason(reason)) {
+            await this.notify(m);
+            const fallback = FALLBACK[lang];
+            await sendText(this.env, m.from, fallback);
+            this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
+            return;
+          }
+          if (reason === 'complaint' && complaintSays(joined)) {
+            // The message already says what happened: ack and hand off.
+            const ack = reasonFixed('complaintAck', lang);
+            await sendText(this.env, m.from, ack);
+            this.storeAssistant(m.timestamp, 'a-' + m.id + '-ack', ack);
+            await this.reasonHandoff(m, reason, lang, joined.slice(0, 500), [], m.id);
+            return;
+          }
+          await this.startCapture(m, reason, lang, joined.slice(0, 500));
+          return;
+        }
       }
-      await sendText(this.env, m.from, a.reply);
-      this.storeAssistant(m.timestamp, 'a-' + m.id, a.reply);
-      if (a.handoff) await this.notify(m);
     } else {
       this.state('intake', null);
       const lang = 'es' as const;
@@ -1563,6 +1771,106 @@ export class Conversation extends DurableObject<Env> {
       if (isGuardOver(e)) throw e;
       return false;
     }
+  }
+
+  /** The last client turns, capped for any model call; storage keeps the full text. */
+  private historyTurns(): Array<Turn> {
+    const gcfg = guardConfig(this.env);
+    const rows = this.ctx.storage.sql
+      .exec('SELECT role, text FROM messages WHERE text IS NOT NULL ORDER BY rowid DESC LIMIT 12')
+      .toArray() as Array<{ role: string; text: string }>;
+    return rows
+      .reverse()
+      .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: capTurn(gcfg, r.text) }));
+  }
+
+  /** Hand off a reason capture: the tagged operator note, then the closing template. */
+  private async reasonHandoff(
+    m: { from: string; name?: string },
+    reason: CaptureReason,
+    lang: Lang,
+    opening: string,
+    answers: string[],
+    stamp: string
+  ): Promise<void> {
+    this.state('handoff', '1');
+    this.state('capture', null);
+    const code = await register(this.env, {
+      phone: m.from,
+      name: m.name ?? '',
+      lang,
+      kind: 'handoff',
+      service: reason,
+    });
+    this.state('code', code);
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const note = formatReasonNote({
+      code,
+      name: cleanName(m.name ?? ''),
+      phone: m.from,
+      lang,
+      tag: REASON_TAG[reason] ?? 'PERSONA',
+      priority: priorityOf(reason),
+      opening,
+      answers,
+    });
+    if (priorityOf(reason) === 'high') {
+      // High-priority notes are never dropped by the operator-notice limits:
+      // they go straight to the operator instead of the capped queue.
+      try {
+        await sendText(this.env, operator, note);
+      } catch {
+        /* the client closing below still runs */
+      }
+    } else if (await guardHandoff(this.env, m.from)) {
+      await this.opSend(note, lang);
+    }
+    const text = reasonClosing(reason, lang);
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(Math.floor(Date.now() / 1000), 'a-' + stamp + '-closing', text);
+    await this.armNext(Date.now());
+  }
+
+  /** One more answer inside an open capture: ask next, or hand off. */
+  private async answerCapture(m: Inbound, cap: CaptureState): Promise<void> {
+    const declined = isDecline(m.text ?? '', cap.lang);
+    if (!declined) cap.answers.push((m.text ?? '').slice(0, 500));
+    cap.updatedAt = Date.now();
+    const step = nextCaptureStep(cap.reason, cap.lang, cap.answers, declined);
+    if (step.action === 'handoff') {
+      await this.reasonHandoff(m, cap.reason, cap.lang, cap.opening, cap.answers, m.id);
+      return;
+    }
+    cap.asks += 1;
+    this.state('capture', JSON.stringify(cap));
+    await sendText(this.env, m.from, step.question);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-capture', step.question);
+    await this.armNext(Date.now());
+  }
+
+  /** A new topic that needs a person: ask the first fixed question. */
+  private async startCapture(m: Inbound, reason: CaptureReason, lang: Lang, opening: string): Promise<void> {
+    const cap: CaptureState = {
+      reason,
+      lang,
+      phone: m.from,
+      name: m.name ?? '',
+      opening: opening.slice(0, 500),
+      answers: [],
+      asks: 1,
+      updatedAt: Date.now(),
+    };
+    this.state('capture', JSON.stringify(cap));
+    if (reason === 'complaint') {
+      const text = reasonFixed('complaintAck', lang) + '\n' + reasonAsk(reason, lang)[0];
+      await sendText(this.env, m.from, text);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-capture', text);
+    } else {
+      const question = reasonAsk(reason, lang)[0];
+      await sendText(this.env, m.from, question);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-capture', question);
+    }
+    await this.armNext(Date.now());
   }
 
   private async notify(m: Inbound): Promise<void> {

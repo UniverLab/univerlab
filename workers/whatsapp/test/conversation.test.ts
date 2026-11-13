@@ -16,11 +16,15 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock('../src/meta', () => ({
-  sendText: jest.fn(async () => true),
-  sendMedia: jest.fn(async () => true),
-  markRead: jest.fn(async () => true),
-}));
+jest.mock('../src/meta', () => {
+  const actual = jest.requireActual('../src/meta') as Record<string, unknown>;
+  return {
+    ...actual,
+    sendText: jest.fn(async () => true),
+    sendMedia: jest.fn(async () => true),
+    markRead: jest.fn(async () => true),
+  };
+});
 
 jest.mock('../src/brain', () => ({
   answer: jest.fn(),
@@ -101,6 +105,11 @@ jest.mock('../src/booking', () => {
   return { ...actual, decide: jest.fn() };
 });
 
+jest.mock('../src/reasons', () => {
+  const actual = jest.requireActual('../src/reasons') as Record<string, unknown>;
+  return { ...actual, classify: jest.fn() };
+});
+
 import { answer, runModel } from '../src/brain';
 import { transcribe } from '../src/audio';
 import { brief, intake } from '../src/intake';
@@ -113,7 +122,9 @@ import { OPENING } from '../src/opening';
 import { PROOF_RECEIVED, forwardUnread, readProof } from '../src/proof';
 import { GUARD_PAUSED } from '../src/guard';
 import { shortCode } from '../src/registry';
+import { classify } from '../src/reasons';
 import { Conversation, NON_TEXT } from '../src/conversation';
+import { es } from '../../../src/i18n/es';
 
 const env = {
   OPERATOR_PHONE: '+57 300 999 8888',
@@ -244,6 +255,9 @@ beforeEach(() => {
   // retention still lies in the future while the burst is handled.
   jest.spyOn(Date, 'now').mockReturnValue(AT * 1000 + 3600 * 1000);
   (runModel as jest.Mock).mockResolvedValue('{"delete": false}');
+  // The router is pinned to the question path: these tests cover what
+  // happens after routing, while reasons.test.ts covers routing itself.
+  (classify as jest.Mock).mockResolvedValue('question');
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
   // The owner answers status with a free contact and two slots unless the
   // test overrides it; every other op is calendar-down by default.
@@ -1638,3 +1652,266 @@ test('a taken conversation stays silent instead of sending the opening', async (
   expect(clientTexts()).not.toContain(OPENING.es);
   expect(clientTexts()).not.toContain(OPENING.en);
 });
+
+// A new topic classified into a capture reason asks the fixed first question:
+// no model reply, no calendar call, no operator note yet.
+test.each([
+  ['support'],
+  ['audit-fixes'],
+  ['publish'],
+  ['refund'],
+  ['invoice'],
+  ['data-rights'],
+  ['human'],
+  ['collab'],
+] as Array<[string]>)('a new topic classified as %s asks its fixed first question', async (reason) => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue(reason);
+  const ask = (es as unknown as { wa: { ask: Record<string, string[]> } }).wa.ask;
+
+  await say(c, inbound({ id: 'wamid.r1-' + reason, text: 'hola, necesito ayuda' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, ask[reason][0]]);
+  expect(classify).toHaveBeenCalledTimes(1);
+  expect(answer).not.toHaveBeenCalled();
+  expect(calendarCall).not.toHaveBeenCalled();
+  expect(operatorBodies()).toHaveLength(0);
+});
+
+test('a complaint that already says what happened skips the question', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('complaint');
+  const wa = (es as unknown as { wa: { fixed: Record<string, string>; closing: Record<string, string> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r2', text: 'me cobraron dos veces y nadie responde' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.fixed.complaintAck, wa.closing.complaint]);
+  const ops = operatorBodies();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]).toContain('RECLAMO');
+  expect(ops[0]).toContain('prioridad alta');
+  expect(ops[0]).toContain('me cobraron dos veces');
+});
+
+test('a short complaint is asked once, in the same message as the ack', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('complaint');
+  const wa = (es as unknown as { wa: { ask: Record<string, string[]>; fixed: Record<string, string> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r3', text: 'todo mal' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.fixed.complaintAck + '\n' + wa.ask.complaint[0]]);
+});
+
+test('a support capture asks twice, then hands off with tag, priority and answers', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('support');
+  const wa = (es as unknown as { wa: { ask: Record<string, string[]>; closing: Record<string, string> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r4a', text: 'se cayó el flujo' }));
+  await say(c, inbound({ id: 'wamid.r4b', text: 'el proyecto atlas no carga' }));
+  await say(c, inbound({ id: 'wamid.r4c', text: 'desde ayer y sí me frena' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.ask.support[0], wa.ask.support[1], wa.closing.support]);
+  // The capture owns the follow-ups: nothing is classified twice.
+  expect(classify).toHaveBeenCalledTimes(1);
+  const ops = operatorBodies();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]).toContain('SOPORTE');
+  expect(ops[0]).toContain('prioridad alta');
+  expect(ops[0]).toContain('se cayó el flujo');
+  expect(ops[0]).toContain('el proyecto atlas no carga');
+  expect(ops[0]).toContain('desde ayer y sí me frena');
+  expect(calendarCall).not.toHaveBeenCalled();
+});
+
+test('a human capture asks once, then hands off', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('human');
+  const wa = (es as unknown as { wa: { ask: Record<string, string[]>; closing: Record<string, string> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r5a', text: 'necesito hablar con alguien' }));
+  await say(c, inbound({ id: 'wamid.r5b', text: 'es sobre una alianza' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.ask.human[0], wa.closing.human]);
+  const ops = operatorBodies();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]).toContain('PERSONA');
+  expect(ops[0]).toContain('es sobre una alianza');
+});
+
+test('declining to answer still hands off with what was gathered', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('support');
+  const wa = (es as unknown as { wa: { ask: Record<string, string[]>; closing: Record<string, string> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r6a', text: 'se cayó el flujo' }));
+  await say(c, inbound({ id: 'wamid.r6b', text: 'no gracias' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.ask.support[0], wa.closing.support]);
+  const ops = operatorBodies();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]).toContain('SOPORTE');
+  expect(ops[0]).toContain('se cayó el flujo');
+});
+
+test('a long sentence starting with no stays an answer inside the capture', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('support');
+  const wa = (es as unknown as { wa: { ask: Record<string, string[]> } }).wa;
+
+  await say(c, inbound({ id: 'wamid.r7a', text: 'se cayó el flujo' }));
+  await say(c, inbound({ id: 'wamid.r7b', text: 'no puedo entrar al panel desde ayer' }));
+
+  // Not a decline: the second fixed question is asked, the content is kept.
+  expect(clientTexts()).toEqual([OPENING.es, wa.ask.support[0], wa.ask.support[1]]);
+});
+
+test.each([['first-call'], ['consultation']] as Array<[string]>)(
+  'a new topic classified as %s starts the booking intake without booking',
+  async (reason) => {
+    const { ctx } = makeCtx();
+    const c = new Conversation(ctx as never, env as never);
+    (classify as jest.Mock).mockResolvedValue(reason);
+
+    await say(c, inbound({ id: 'wamid.r8-' + reason, text: 'quiero agendar' }));
+
+    expect(clientTexts()).toEqual([OPENING.es, 'ask']);
+    expect(calendarCall).not.toHaveBeenCalled();
+    expect(operatorBodies()).toHaveLength(0);
+  }
+);
+
+test('a flow intake that completes tags the operator note FLUJO', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('flow');
+
+  await say(c, inbound({ id: 'wamid.r9a', text: 'quiero un flujo' }));
+  expect(clientTexts()).toEqual([OPENING.es, 'ask']);
+
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  await say(c, inbound({ id: 'wamid.r9b', text: 'automatizar reportes' }));
+
+  expect(clientTexts()).toContain('confirm');
+  const ops = operatorBodies();
+  expect(ops).toHaveLength(1);
+  expect(ops[0]).toContain('FLUJO');
+});
+
+test('a tag from an aborted flow intake does not leak into the next booking note', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValueOnce('flow').mockResolvedValue('first-call');
+
+  await say(c, inbound({ id: 'wamid.r10a', text: 'quiero una auditoría' }));
+  (intake as jest.Mock).mockResolvedValueOnce({ status: 'handoff', reply: '' });
+  await say(c, inbound({ id: 'wamid.r10b', text: 'mejor hablemos' }));
+
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [] };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.r10c', text: 'quiero agendar la primera' }));
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  await say(c, inbound({ id: 'wamid.r10d', text: 'para la próxima semana' }));
+
+  const ops = operatorBodies();
+  expect(ops.length).toBeGreaterThan(0);
+  expect(ops.some((b) => b.includes('FLUJO'))).toBe(false);
+  expect(ops.some((b) => b.includes('AUDITOR'))).toBe(false);
+});
+
+test.each([
+  ['payment', 'Puedes pagar por Bre-B'],
+  ['vendor', 'no recibimos propuestas de venta'],
+  ['off-topic', 'Solo puedo ayudarte con UniverLab'],
+] as Array<[string, string]>)('a new topic classified as %s gets its fixed sentence with no handoff', async (reason, snippet) => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue(reason);
+
+  await say(c, inbound({ id: 'wamid.r11-' + reason, text: 'hola' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, expect.stringContaining(snippet)]);
+  expect(answer).not.toHaveBeenCalled();
+  expect(calendarCall).not.toHaveBeenCalled();
+  expect(operatorBodies()).toHaveLength(0);
+});
+
+test('a my-booking topic with an active hold shows it and offers move or cancel', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('my-booking');
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') {
+      return {
+        ok: true,
+        active: { eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold', service: 'first-call', createdAt: Date.now() },
+        slots: [],
+      };
+    }
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  await say(c, inbound({ id: 'wamid.r12', text: 'cuándo es mi cita' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, expect.stringContaining('Ya tienes un espacio reservado')]);
+  expect(clientTexts()[1]).toContain('moverlo o cancelarlo');
+  expect(operatorBodies()).toHaveLength(0);
+});
+
+test('a my-booking topic with nothing booked says so and offers to book', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('my-booking');
+
+  await say(c, inbound({ id: 'wamid.r13', text: 'cuándo es mi cita' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, expect.stringContaining('No veo ninguna reserva')]);
+  expect(operatorBodies()).toHaveLength(0);
+});
+
+test('an open-source answer never hands off, even when the reply check fails', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('open-source');
+  const wa = (es as unknown as { wa: { fixed: Record<string, string> } }).wa;
+
+  (answer as jest.Mock).mockResolvedValue({ reply: 'mira https://evil.example/x', booking: false, handoff: true });
+  await say(c, inbound({ id: 'wamid.r14', text: 'cómo instalo canopy' }));
+
+  expect(clientTexts()).toEqual([OPENING.es, wa.fixed.openSourceFallback]);
+  expect(operatorBodies()).toHaveLength(0);
+});
+
+test('the exact deletion phrase wins over an open capture', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (classify as jest.Mock).mockResolvedValue('support');
+
+  await say(c, inbound({ id: 'wamid.r15a', text: 'se cayó el flujo' }));
+  await c.receive(inbound({ id: 'wamid.r15b', text: 'BORRAR MIS DATOS' }));
+
+  expect(clientTexts()).toContain(ERASED.es);
+  expect(operatorBodies().some((b) => b.includes('SOPORTE'))).toBe(false);
+
+  (classify as jest.Mock).mockResolvedValue('human');
+  const ask = (es as unknown as { wa: { ask: Record<string, string[]> } }).wa.ask;
+  await say(c, inbound({ id: 'wamid.r15c', text: 'hola de nuevo' }));
+  expect(clientTexts()).toContain(ask.human[0]);
+});
+
+function operatorBodies(): string[] {
+  return (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+}

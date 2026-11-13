@@ -107,7 +107,8 @@ export async function answer(
   history: Turn[],
   lang: Lang,
   cfg: ModelConfig = modelConfig({}),
-  phone = ''
+  phone = '',
+  extraHosts: string[] = []
 ): Promise<Answer> {
   try {
     const raw = await runModel(
@@ -130,7 +131,7 @@ export async function answer(
     // wins (the prompt tells the model to set handoff true alongside it)
     // and the conversation answers with the intake template; any other
     // handoff never carries model-written text.
-    if (!checkReply(parsed.reply, lang, phone)) {
+    if (!checkReply(parsed.reply, lang, phone, extraHosts)) {
       return { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
     }
     if (parsed.booking) return parsed;

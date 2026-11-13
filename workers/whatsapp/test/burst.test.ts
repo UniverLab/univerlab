@@ -101,6 +101,11 @@ jest.mock('../src/reservations', () => {
   return { ...actual, calendarCall: jest.fn() };
 });
 
+jest.mock('../src/reasons', () => {
+  const actual = jest.requireActual('../src/reasons') as Record<string, unknown>;
+  return { ...actual, classify: jest.fn() };
+});
+
 import { answer, runModel } from '../src/brain';
 import { transcribe } from '../src/audio';
 import { markRead, sendText } from '../src/meta';
@@ -110,6 +115,7 @@ import { burstDue, joinBurst, nextAlarm } from '../src/burst';
 import { decide } from '../src/booking';
 import { readProof } from '../src/proof';
 import { calendarCall } from '../src/reservations';
+import { classify } from '../src/reasons';
 import { Conversation } from '../src/conversation';
 import { OPENING } from '../src/opening';
 
@@ -234,6 +240,9 @@ beforeEach(() => {
   nowMs = T0;
   jest.spyOn(Date, 'now').mockImplementation(() => nowMs);
   (runModel as jest.Mock).mockResolvedValue('{"delete": false}');
+  // The router is pinned to the question path: these tests cover burst
+  // batching, while reasons.test.ts covers routing itself.
+  (classify as jest.Mock).mockResolvedValue('question');
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
   (calendarCall as jest.Mock).mockImplementation(async () => ({ ok: false, reason: 'calendar-down' }));
   // A voice note hands off unless the test transcribes it.

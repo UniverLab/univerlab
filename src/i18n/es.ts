@@ -935,6 +935,64 @@ export const es: Dict = {
       ] },
     },
   },
+  wa: {
+    ask: {
+      support: [
+        '¿De qué proyecto se trata y qué está pasando?',
+        '¿Desde cuándo pasa y te impide trabajar?',
+      ],
+      'audit-fixes': [
+        '¿De qué auditoría se trata?',
+        '¿Dónde están las correcciones: en qué versión, release o enlaces?',
+      ],
+      publish: [
+        'Publicar pide que los hallazgos críticos y altos estén corregidos, tu aprobación escrita de lo publicado, y el registro queda permanente. ¿De qué auditoría se trata?',
+        '¿Algo más que deba saber la persona que lo revisa?',
+      ],
+      refund: [
+        'Hasta 24 horas antes puedes elegir un nuevo espacio o la devolución; con menos de 24 horas se puede mover una vez sin reembolso. ¿De qué servicio se trata?',
+        '¿Cuándo lo pagaste?',
+      ],
+      invoice: [
+        'Para la factura necesito tu nombre legal o completo y tu número de identificación tributaria. ¿Me los pasas?',
+        '¿A qué correo la enviamos y a qué pago corresponde?',
+      ],
+      complaint: [
+        '¿Qué pasó?',
+        '¿Algo más que deba saber la persona que lo revisa?',
+      ],
+      'data-rights': [
+        'Las consultas se responden dentro de los 10 días hábiles siguientes y los reclamos dentro de los 15, según la política de privacidad. ¿Qué necesitas: conocer, corregir o dejar de usar tus datos?',
+        '¿Algo más que deba saber la persona que lo revisa?',
+      ],
+      human: [
+        '¿De qué se trata? Así te paso con la persona indicada.',
+      ],
+      collab: [
+        '¿Quién eres y a quién representas?',
+        '¿Qué propones?',
+      ],
+    },
+    closing: {
+      support: 'Gracias, le pasé tu caso a una persona del laboratorio y te responde por aquí para seguirlo contigo.',
+      'audit-fixes': 'Gracias, le pasé tus correcciones a una persona del laboratorio y te responde por aquí.',
+      publish: 'Gracias, le pasé tu solicitud a una persona del laboratorio y te responde por aquí.',
+      refund: 'Gracias, le pasé tu solicitud a una persona del laboratorio y te responde por aquí.',
+      invoice: 'Gracias, le pasé tus datos a una persona del laboratorio y te responde por aquí.',
+      complaint: 'Gracias por contarlo, ya lo está leyendo una persona del laboratorio y te responde por aquí.',
+      'data-rights': 'Gracias, le pasé tu solicitud a una persona del laboratorio y te responde por aquí. Las consultas se responden dentro de los 10 días hábiles siguientes y los reclamos dentro de los 15.',
+      human: 'Gracias, ya le pasé tu mensaje a una persona del laboratorio y te responde por aquí.',
+      collab: 'Gracias, le pasé tu propuesta a una persona del laboratorio y te responde por aquí.',
+    },
+    fixed: {
+      complaintAck: 'Lo que me cuentas lo lee una persona del laboratorio y te responde por aquí.',
+      vendor: 'Gracias por escribir, pero no recibimos propuestas de venta por este medio.',
+      offTopic: 'Solo puedo ayudarte con UniverLab y el Banco de trabajo: cuéntame en qué te ayudo con eso.',
+      noBooking: 'No veo ninguna reserva ni apartado a tu nombre. Si quieres, agendamos: cuéntame qué te gustaría tratar.',
+      howToPay: 'Puedes pagar por Bre-B en Colombia o por PayPal desde afuera. El espacio queda tuyo al verificar el pago: mándame el comprobante por aquí.',
+      openSourceFallback: 'Mira la documentación en univerlab.org y los repositorios en github.com/UniverLab. Dime de qué herramienta se trata y te paso su enlace exacto.',
+    },
+  },
   book: {
     title: 'Agenda la primera llamada gratis · 15 min — UniverLab',
     description:

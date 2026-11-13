@@ -941,6 +941,64 @@ export const en = {
       ] },
     },
   },
+  wa: {
+    ask: {
+      support: [
+        'Which project is it about and what is happening?',
+        'Since when has it been happening, and does it stop your work?',
+      ],
+      'audit-fixes': [
+        'Which audit is it about?',
+        'Where are the fixes: in which version, release or links?',
+      ],
+      publish: [
+        'Publishing needs the critical and high findings fixed, your written approval of what is shown, and the record stays permanent. Which audit is it about?',
+        'Anything else the person reviewing it should know?',
+      ],
+      refund: [
+        'Up to 24 hours ahead you can choose a new slot or a refund; with less than 24 hours it can be moved once with no refund. Which service is it about?',
+        'When did you pay for it?',
+      ],
+      invoice: [
+        'For the invoice I need your legal or full name and your tax or ID number. Can you share them?',
+        'Which email should it go to, and which payment is it for?',
+      ],
+      complaint: [
+        'What happened?',
+        'Anything else the person reviewing it should know?',
+      ],
+      'data-rights': [
+        'Requests are answered within 10 business days and claims within 15, under the privacy policy. What do you need: to know, correct or stop the use of your data?',
+        'Anything else the person reviewing it should know?',
+      ],
+      human: [
+        'What is it about? That way I pass you to the right person.',
+      ],
+      collab: [
+        'Who are you and who do you represent?',
+        'What do you propose?',
+      ],
+    },
+    closing: {
+      support: 'Thanks, I passed your case to a person at the lab and they will reply to you here to follow it with you.',
+      'audit-fixes': 'Thanks, I passed your fixes to a person at the lab and they will reply to you here.',
+      publish: 'Thanks, I passed your request to a person at the lab and they will reply to you here.',
+      refund: 'Thanks, I passed your request to a person at the lab and they will reply to you here.',
+      invoice: 'Thanks, I passed your details to a person at the lab and they will reply to you here.',
+      complaint: 'Thanks for telling me, a person at the lab is already reading it and will reply to you here.',
+      'data-rights': 'Thanks, I passed your request to a person at the lab and they will reply to you here. Requests are answered within 10 business days and claims within 15.',
+      human: 'Thanks, I already passed your message to a person at the lab and they will reply to you here.',
+      collab: 'Thanks, I passed your proposal to a person at the lab and they will reply to you here.',
+    },
+    fixed: {
+      complaintAck: 'What you tell me is read by a person at the lab, who replies to you here.',
+      vendor: 'Thanks for writing, but we do not take sales pitches through this channel.',
+      offTopic: 'I can only help with UniverLab and the Workbench: tell me what you need there.',
+      noBooking: 'I see no booking or hold under your name. If you like, we can book one: tell me what you would like to cover.',
+      howToPay: 'You can pay by Bre-B in Colombia or by PayPal from abroad. The slot is yours once the payment is checked: send me the receipt here.',
+      openSourceFallback: 'See the docs at univerlab.org and the repositories at github.com/UniverLab. Tell me which tool it is about and I will send you its exact link.',
+    },
+  },
   book: {
     title: 'Book the free first call · 15 min — UniverLab',
     description:
