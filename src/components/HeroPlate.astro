@@ -10,20 +10,57 @@ interface Props {
 const { id, ink, offset = '0px', alpha } = Astro.props;
 const rootStyle = `--hp-offset:${offset};${alpha ? ` --hp-base-a:${alpha};` : ''}`;
 const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
+const single = inks.length === 1;
 ---
 <div class:list={['hero-plate', id === 'gitkit' && 'gitkit']} data-hero-plate data-pair={inks.length === 2 ? '' : undefined} aria-hidden="true" style={rootStyle}>
-  {inks.map((which, i) => {
+  {inks.map((which) => {
     const p = plate(id, which);
-    return (
-      <div class:list={['hp', `hp-${which}`]} style={`--hp-mask: url(${plateMask(id, which)}); --hp-ink: url(${plateLarge(id, which)}); aspect-ratio: ${p.w} / ${p.h}; --hp-inv: ${(p.h / p.w).toFixed(4)};`}>
+    const avif = srcsetFor(id, which, 'avif');
+    const fallback = plateLarge(id, which);
+    // The hero plate is the experiment page's largest element: its active
+    // phase is discovered with the document (avif srcset at high priority)
+    // and the parked phase ships in data-* until a theme flip needs it.
+    return single ? (
+      <div class:list={['hp', `hp-${which}`]} style={`--hp-mask: url(${plateMask(id, which)}); --hp-ink: url(${fallback}); aspect-ratio: ${p.w} / ${p.h}; --hp-inv: ${(p.h / p.w).toFixed(4)};`}>
         <span class="hp-ground"></span>
-        <img class="hp-plate" src={plateLarge(id, which)} srcset={srcsetFor(id, which, 'webp')} sizes="(min-width: 40rem) 560px, 300px" width={p.w} height={p.h} alt="" decoding="async" loading={i === 0 ? undefined : 'lazy'} />
+        <img class="hp-plate" src={fallback} srcset={avif} sizes="(min-width: 40rem) 560px, 300px" width={p.w} height={p.h} alt="" decoding="async" fetchpriority="high" />
+        <span class="hp-light"></span>
+      </div>
+    ) : (
+      <div class:list={['hp', `hp-${which}`]} style={`--hp-mask: url(${plateMask(id, which)}); --hp-ink: url(${fallback}); aspect-ratio: ${p.w} / ${p.h}; --hp-inv: ${(p.h / p.w).toFixed(4)};`}>
+        <span class="hp-ground"></span>
+        <img class="hp-plate" data-src={fallback} data-srcset={avif} sizes="(min-width: 40rem) 560px, 300px" width={p.w} height={p.h} alt="" decoding="async" fetchpriority="high" />
         <span class="hp-light"></span>
       </div>
     );
   })}
   {id === 'gitkit' && <span class="hp-veil"></span>}
 </div>
+
+<!-- The live phase's plate populates at parse time (high priority, with the
+     document); a theme flip populates the newly shown phase. -->
+<script is:inline data-hero-swap>
+  (function () {
+    function populate(hp) {
+      if (!hp) return;
+      var img = hp.querySelector('img.hp-plate[data-src]');
+      if (img && !img.hasAttribute('src')) {
+        var avif = img.getAttribute('data-srcset');
+        if (avif) img.setAttribute('srcset', avif);
+        img.setAttribute('src', img.getAttribute('data-src'));
+      }
+    }
+    function sync() {
+      var night = document.documentElement.dataset.benchTheme === 'night';
+      var roots = document.querySelectorAll('[data-hero-plate][data-pair]');
+      for (var i = 0; i < roots.length; i++) {
+        populate(roots[i].querySelector(night ? '.hp-night' : '.hp-day'));
+      }
+    }
+    sync();
+    window.addEventListener('univerlab:themechange', sync);
+  })();
+</script>
 
 <style>
   .hero-plate { position: absolute; inset-block: 1rem; left: 0; right: 0; margin-inline: auto; max-width: 72rem; z-index: -1; pointer-events: none; --hp-base-a: 0.38; container-type: inline-size; --hp-wcap: 58cqw; }

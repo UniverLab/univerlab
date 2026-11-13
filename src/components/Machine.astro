@@ -7,61 +7,95 @@ interface Props {
   ink?: MachineTheme;
   height?: string;
   class?: string;
+  eager?: boolean;
 }
-const { id, ink = 'night', height = '240px', class: className } = Astro.props;
+const { id, ink = 'night', height = '240px', class: className, eager = false } = Astro.props;
 const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] : [ink];
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 // The engraving's description, written once per machine: the workbench keeps
 // its own key, every experiment keeps one under experiments[id].
 const alt = id === 'workbench' ? t.workbench.machineAlt : t.experiments[id as keyof typeof t.experiments].machineAlt;
+// A lone plate is the page's hero art: its URLs ship inline and eager. A theme
+// pair ships every URL in data-* and the swap script below populates only the
+// live phase at parse time (the other phase loads if the theme changes), so
+// one variant — never both — downloads. The visible plate of a lazy pair also
+// carries its day URL as src (a no-JS fallback the alt contract reads): lazy
+// loading means the parse-time script still swaps in the live phase before
+// anything fetches, while eager pairs stay data-only so the script alone picks
+// the live phase. Below-fold pairs stay lazy through the native loading
+// attribute; eager pairs (the workbench thumb) take the high-priority eager
+// path instead.
+const single = inks.length === 1;
+const pairEager = eager && !single;
 ---
 <span class:list={['machine', className]} data-machine={ink} style={`--machine-h:${height}`}>
   {inks.map((which) => {
     const p = plate(id, which);
     const sizes = plateSizes(p);
-    // A lone plate is the page's hero art: always eager. A theme pair ships
-    // day eager / night lazy like Postcard, and the swap script below corrects
-    // to the live phase on load and on univerlab:themechange.
-    const eager = inks.length === 1 || which === 'day';
     // Only the visible plate exposes the description: a lone plate always
     // does, a theme pair ships it on the day plate with the night plate empty
     // and hidden, and the swap script moves the pair with the eager/lazy one
     // so a screen reader hears it once.
-    const exposed = inks.length === 1 || which === 'day';
-    return (
+    const exposed = single || which === 'day';
+    const avif = srcsetFor(id, which, 'avif');
+    const webp = srcsetFor(id, which, 'webp');
+    const fallback = `/bench/machines/${id}-${which}-450.webp`;
+    return single ? (
       <picture class:list={['machine-pic', `machine-${which}`]}>
-        <source srcset={srcsetFor(id, which, 'avif')} sizes={sizes} type="image/avif" />
-        <source srcset={srcsetFor(id, which, 'webp')} sizes={sizes} type="image/webp" />
+        <source srcset={avif} sizes={sizes} type="image/avif" />
+        <source srcset={webp} sizes={sizes} type="image/webp" />
         <img
-          src={`/bench/machines/${id}-${which}-450.webp`}
+          src={fallback}
+          width={p.w}
+          height={p.h}
+          alt={alt}
+          data-alt={alt}
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
+    ) : (
+      <picture class:list={['machine-pic', `machine-${which}`]}>
+        <source data-srcset={avif} sizes={sizes} type="image/avif" />
+        <source data-srcset={webp} sizes={sizes} type="image/webp" />
+        <img
+          src={exposed && !pairEager ? fallback : undefined}
+          data-src={fallback}
           width={p.w}
           height={p.h}
           alt={exposed ? alt : ''}
           aria-hidden={exposed ? undefined : 'true'}
           data-alt={alt}
           decoding="async"
-          fetchpriority={eager ? 'high' : undefined}
-          loading={eager ? undefined : 'lazy'}
+          fetchpriority={pairEager ? 'high' : undefined}
+          loading={pairEager ? undefined : 'lazy'}
         />
       </picture>
     );
   })}
 </span>
 
-<!-- Only the picture matching the current phase is fetched eagerly: the day
-     plate ships fetchpriority=high, the night plate loading=lazy, and this swaps
-     them on the same signal the theme script in <head> uses. A single-ink
-     machine has no pair, so the sync below finds nothing and does nothing. -->
+<!-- Only the picture matching the live phase gets real URLs: this parser-run
+     script copies the active phase's data-* into src/srcset (eager at high
+     priority, otherwise lazily through the native loading attribute), and the
+     themechange listener populates the newly shown phase on a flip. A
+     single-ink machine has no pair, so the sync below finds nothing and does
+     nothing. -->
 <script is:inline data-machine-swap>
   (function () {
-    function eager(img) {
-      img.setAttribute('fetchpriority', 'high');
-      img.removeAttribute('loading');
-    }
-    function lazy(img) {
-      img.setAttribute('loading', 'lazy');
-      img.removeAttribute('fetchpriority');
+    function populate(pic) {
+      if (!pic) return;
+      var sources = pic.querySelectorAll('source[data-srcset]');
+      for (var i = 0; i < sources.length; i++) {
+        if (!sources[i].hasAttribute('srcset')) {
+          sources[i].setAttribute('srcset', sources[i].getAttribute('data-srcset'));
+        }
+      }
+      var img = pic.querySelector('img[data-src]');
+      if (img && !img.hasAttribute('src')) {
+        img.setAttribute('src', img.getAttribute('data-src'));
+      }
     }
     // Only the visible plate exposes the description: the live plate carries
     // its data-alt, the parked one carries an empty alt and stays hidden.
@@ -75,11 +109,15 @@ const alt = id === 'workbench' ? t.workbench.machineAlt : t.experiments[id as ke
       var night = document.documentElement.dataset.benchTheme === 'night';
       var roots = document.querySelectorAll('span[data-machine="theme"]');
       for (var i = 0; i < roots.length; i++) {
-        var day = roots[i].querySelector('picture.machine-day > img');
-        var dark = roots[i].querySelector('picture.machine-night > img');
+        var day = roots[i].querySelector('picture.machine-day');
+        var dark = roots[i].querySelector('picture.machine-night');
         if (day && dark) {
-          if (night) { lazy(day); eager(dark); expose(dark, day); }
-          else { lazy(dark); eager(day); expose(day, dark); }
+          var show = night ? dark : day;
+          var hide = night ? day : dark;
+          populate(show);
+          var simg = show.querySelector('img');
+          var himg = hide.querySelector('img');
+          if (simg && himg && simg.hasAttribute('src')) expose(simg, himg);
         }
       }
     }

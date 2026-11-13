@@ -2694,6 +2694,17 @@
       "height": 977
     },
     {
+      "name": "fondo-canopy-panal-1600",
+      "file": "fondos/canopy/panal-1600.webp",
+      "kind": "background",
+      "experiment": "canopy",
+      "variant": null,
+      "source": "fondos/canopy/panal.webp",
+      "notes": "Sized comb for the canopy live background (perf round 1): the 1813 px panal at the 1600 px it is shown at, so phones never pay for the full engraving.",
+      "width": 1600,
+      "height": 862
+    },
+    {
       "name": "fondo-canopy-celdas",
       "file": "fondos/canopy/celdas.png",
       "kind": "background",

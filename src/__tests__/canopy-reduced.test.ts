@@ -46,7 +46,7 @@ describe('canopy fondo, reduced motion', () => {
   it('paints the still engraving once it loads', async () => {
     mount(document.createElement('div'), { night: false, reduced: true, base: '/bench/fondos/canopy/' });
     await flush();
-    expect(loadImage).toHaveBeenCalledWith('/bench/fondos/canopy/panal.webp');
+    expect(loadImage).toHaveBeenCalledWith('/bench/fondos/canopy/panal-1600.webp');
     expect(ctx.drawImage).toHaveBeenCalledTimes(1);
   });
 

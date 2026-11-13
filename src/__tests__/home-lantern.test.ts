@@ -108,14 +108,37 @@ describe('Home — Plate I, the lantern', () => {
     );
     // The day engraving was redrawn (its posts had faded mid-height): its URL is versioned.
     expect(LAB_LANTERN).toContain("const lanternVersion = { day: '?v=3', night: '' } as const;");
-    expect(LAB_LANTERN).toContain(
-      'const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;',
-    );
+    // The frame is the page's largest element: the live phase's 900 px AVIF
+    // travels in data-avif and becomes the img src at parse time.
+    expect(LAB_LANTERN).toContain('lantern-day-900.avif${lanternVersion.day}');
+    expect(LAB_LANTERN).toContain('lantern-night-900.avif${lanternVersion.night}');
+    expect(LAB_LANTERN).toContain('data-avif-day={lanternFrameAvif.day}');
+    expect(LAB_LANTERN).toContain('data-avif-night={lanternFrameAvif.night}');
     expect(LAB_LANTERN).toContain('data-phase={src.phase}');
+    expect(LAB_LANTERN).toContain('data-srcset={src.srcset}');
+    // No real srcset or src ships in the frame: the parse-time script
+    // populates only the live phase, so one variant downloads, never both.
+    // (A bare space before the name: data-srcset and data-src must not match.)
+    expect(LAB_LANTERN).not.toMatch(/<source[^>]* srcset=/);
+    expect(LAB_LANTERN).not.toMatch(/<img[^>]* src=/);
     expect(LAB_LANTERN).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
     expect(LAB_LANTERN).toMatch(/width="1178"/);
     expect(LAB_LANTERN).toMatch(/height="900"/);
     expect(LAB_LANTERN).toContain('{t.home.lantern.alt}');
+  });
+
+  it('populates only the live phase at parse time, at high priority', () => {
+    // The is:inline script runs while the document parses: it copies the
+    // active phase's data-* into real URLs and leaves the other phase parked.
+    expect(LAB_LANTERN).toContain('<script is:inline data-lantern-swap>');
+    expect(LAB_LANTERN).toContain("dataset.benchTheme === 'night'");
+    expect(LAB_LANTERN).toContain("setAttribute('src', url)");
+    expect(LAB_LANTERN).toContain("setAttribute('srcset',");
+    expect(LAB_LANTERN).toContain("img[data-avif-day]");
+    expect(LAB_LANTERN).toContain('fetchpriority="high"');
+    // A theme flip populates the newly shown phase instead.
+    expect(LANTERN).toContain("getAttribute('data-srcset')");
+    expect(LANTERN).toContain("setAttribute('srcset', ds)");
   });
 
   it('draws the engraving again over the screen, so the cloth shows whole behind the frame', () => {
@@ -157,6 +180,16 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(
       /!reduce && \(i === current \|\| i === current \+ 1\) \? 'auto' : 'none'/,
     );
+  });
+
+  it('parks every clip unloaded while the screen is off view', () => {
+    // The screen observer pauses the rotation off view (no bytes, no frames)
+    // and resumes it — plus the next clip's preload — on return. The rotation
+    // itself must stop too, or the next cut would play a clip and reload it.
+    expect(LANTERN).toMatch(/video\.preload = 'none'/);
+    expect(LANTERN).toMatch(/!reduce && onView && !paused/);
+    expect(LANTERN).toMatch(/Back on view: the current clip resumes/);
+    expect(LANTERN).toMatch(/syncPreload\(\);\s*\n\s*playCurrent\(\);/);
   });
 
   it('loads no clip at all under reduced motion (the poster is the slide)', () => {
@@ -284,10 +317,15 @@ describe('Home — the bench', () => {
     expect(LAB_LANTERN).toMatch(/\.row \{[^}]*min-width:\s*max-content/);
   });
 
-  it('keeps the first plates eager and lazy-loads the bench past the second', () => {
+  it('lazy-loads every bench plate below the fold in the live phase only', () => {
     expect(LAB_LANTERN).toMatch(/<img[\s\S]*?fetchpriority="low"/);
-    expect(LAB_LANTERN).toContain('liveExperiments.map((exp, i)');
-    expect(LAB_LANTERN).toContain("loading={i >= 2 ? 'lazy' : undefined}");
+    expect(LAB_LANTERN).toContain('liveExperiments.map((exp) => {');
+    expect(LAB_LANTERN).toContain('loading="lazy"');
+    expect(LAB_LANTERN).not.toContain("loading={i >= 2 ? 'lazy' : undefined}");
+    // Plates ship data-only URLs; the parse-time script populates the live
+    // phase and the flip populates the newly shown one.
+    expect(LAB_LANTERN).toContain('data-srcset={`/bench/machines/${exp.id}-day-450.avif`}');
+    expect(LAB_LANTERN).toContain('data-day-src={`/bench/machines/${exp.id}-day-450.webp`}');
   });
 
   it('marks only the projected machine current and names every button', () => {
@@ -370,6 +408,15 @@ describe('Home — Plate I world mode', () => {
     expect(LANTERN).not.toContain('<iframe');
     expect(LAB_LANTERN).not.toContain('<iframe');
     expect(LANTERN).toMatch(/base:\s*`\/bench\/fondos\/\$\{id\}\/`/);
+  });
+
+  it('starts the experiment background after first paint, never before', () => {
+    // The fondo's script work and its data/images stay off the critical path:
+    // the run waits for load and then an idle slot (or 5 s).
+    expect(LIVE_BG).toContain('requestIdleCallback(run, { timeout: 5000 })');
+    expect(LIVE_BG).toContain('setTimeout(run, 5000)');
+    expect(LIVE_BG).toContain("window.addEventListener('load', later, { once: true })");
+    expect(LIVE_BG).not.toMatch(/readyState.*run\(\)/);
   });
 
   it('opens the screen with a world host, a typed block and a catcher', () => {

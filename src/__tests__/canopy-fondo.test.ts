@@ -81,4 +81,12 @@ describe('canopy fondo', () => {
     expect(src).toContain("glow.style.mixBlendMode = 'plus-lighter'");
     expect(src).toMatch(/if \(now - lastDraw < DRAW_MS\) return;/);
   });
+
+  it('scales the sized comb into the cell map, so the lit cells stay on the engraving', () => {
+    // celdas.json is 1813×977 while the shipped panal is 1600×862; drawing the
+    // image at natural size inside the map's transform would slide it off.
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
+    expect(src).toContain('c.drawImage(comb, 0, 0, map.w, map.h)');
+    expect(src).not.toMatch(/c\.drawImage\(comb, 0, 0\)/);
+  });
 });

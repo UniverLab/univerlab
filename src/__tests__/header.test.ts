@@ -98,6 +98,11 @@ describe('Header experiments link', () => {
     // measured at default sizes and the reserve never narrowed.
     expect(NAMEGLOSS).toContain('home.appendChild(probe)');
     expect(NAMEGLOSS).not.toContain('document.body.appendChild(probe)');
+    // The measure runs inline while the document parses and exactly once: a
+    // deferred re-measure on fonts.ready would move the header after paint.
+    expect(NAMEGLOSS).toContain('<script is:inline>');
+    expect(NAMEGLOSS).not.toContain('document.fonts');
+    expect(NAMEGLOSS).not.toContain('fonts.ready');
     // The mailbox no longer clears the burger on its own breakpoint: the
     // header's nav-burger rule carries the small mailbox instead.
     expect(MAIL).not.toContain('max-width: 1024px');

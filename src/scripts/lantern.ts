@@ -209,10 +209,14 @@ export function startLantern(): void {
     phase = next;
 
     // Every <source data-phase> pair (lantern frame + machine plates) flips
-    // together: the inactive phase is parked behind `media="not all"`.
+    // together: the newly shown phase's data-srcset populates into srcset so
+    // it downloads, the inactive phase parks behind `media="not all"`.
     document.querySelectorAll<HTMLSourceElement>('source[data-phase]').forEach((source) => {
-      if (source.dataset.phase === phase) source.removeAttribute('media');
-      else source.setAttribute('media', 'not all');
+      if (source.dataset.phase === phase) {
+        const ds = source.getAttribute('data-srcset');
+        if (ds && !source.hasAttribute('srcset')) source.setAttribute('srcset', ds);
+        source.removeAttribute('media');
+      } else source.setAttribute('media', 'not all');
     });
 
     // The <img> fallback follows too (and carries the intrinsic box).
@@ -412,7 +416,23 @@ export function startLantern(): void {
   };
   new ResizeObserver(sizeFilm).observe(film);
   new IntersectionObserver(([entry]) => {
-    onView = entry?.isIntersecting ?? true;
+    const vis = entry?.isIntersecting ?? true;
+    const was = onView;
+    onView = vis;
+    if (!vis) {
+      // Off-screen the rotation costs nothing: park every clip unloaded.
+      videos.forEach((video) => {
+        if (!video) return;
+        video.pause();
+        video.preload = 'none';
+      });
+    } else if (!was) {
+      // Back on view: the current clip resumes and the next one preloads,
+      // with a full cycle before the next cut (the rotation was parked).
+      lastTurn = performance.now();
+      syncPreload();
+      playCurrent();
+    }
   }).observe(screen);
 
   const drawFilm = (now: number): void => {
@@ -467,7 +487,7 @@ export function startLantern(): void {
       setWorld(false);
       lastTouch = 0;
     }
-    if (!reduce && !paused && held < 0 && !inWorld && !document.hidden && now - lastTurn > CYCLE_MS) {
+    if (!reduce && onView && !paused && held < 0 && !inWorld && !document.hidden && now - lastTurn > CYCLE_MS) {
       show((current + 1) % slides.length);
     }
     drawFilm(now);

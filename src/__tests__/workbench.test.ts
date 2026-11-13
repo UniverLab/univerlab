@@ -203,6 +203,8 @@ describe('workbench', () => {
     expect(VIEW).toContain('<div class="wb-thumb"><Machine');
     expect(VIEW).not.toMatch(/<Machine[^>]*class="wb-thumb"/);
     expect(VIEW).toContain('.wb-thumb { display: none; }');
+    // The hero thumbnail is above the fold: its live phase loads eager.
+    expect(VIEW).toContain('<Machine id="workbench" ink="theme" height="112px" eager />');
   });
 
   it('the phone price tags drop the desktop columns before scrolling sideways', () => {

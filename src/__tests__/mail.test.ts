@@ -29,8 +29,8 @@ import { es } from '../i18n/es';
 const DAY = 86400000;
 const NOW = new Date('2026-10-24T12:00:00Z');
 
-// The mailbox's own script, read as text: it owns the letter AND the science
-// pool warm-up the header used to run before it stopped opening letters.
+// The mailbox's own script, read as text: it owns the letter, and it fetches
+// the past letter lazily on the first open — never during load.
 const MAIL_SRC = readFileSync(resolve(__dirname, '..', 'scripts', 'mail.ts'), 'utf8');
 const MAIL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'mail.css'), 'utf8');
 
@@ -414,15 +414,16 @@ describe('the rest of the papers', () => {
 });
 
 describe('the science pool warm-up', () => {
-  it('lives in the mailbox script so the first letter opens without the network', () => {
-    // Moved here from Header.astro, which no longer opens letters: the pool
-    // is warmed off the critical path under the same idle schedule as before.
-    expect(MAIL_SRC).toMatch(
-      /const warmLang: FilterLang = document\.documentElement\.lang === 'es' \? 'es' : 'en'/,
-    );
-    expect(MAIL_SRC).toMatch(/if \(!readOtdCache\(warmLang\)\)/);
-    expect(MAIL_SRC).toMatch(/requestIdleCallback\(warm, \{ timeout: 5000 \}\)/);
-    expect(MAIL_SRC).toMatch(/setTimeout\(warm, 4000\)/);
+  it('is gone: no feed downloads until the visitor opens the mailbox', () => {
+    // The warm block used to fetch the Wikipedia pool during load. Now the
+    // first open fetches the past letter once and opens it when it lands.
+    expect(MAIL_SRC).not.toMatch(/warmLang/);
+    expect(MAIL_SRC).not.toMatch(/requestIdleCallback\(warm/);
+    expect(MAIL_SRC).not.toContain('void loadPast();');
+    expect(MAIL_SRC).toContain('let pastRequested = false;');
+    expect(MAIL_SRC).toMatch(/if \(!pastRequested\)/);
+    expect(MAIL_SRC).toMatch(/pastRequested = true/);
+    expect(MAIL_SRC).toMatch(/void loadPast\(\)\.then/);
     // The mailbox keeps the only letter hook the site has.
     expect(MAIL_SRC).toMatch(/univerlabOpenMail/);
   });

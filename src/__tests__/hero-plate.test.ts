@@ -75,6 +75,23 @@ describe('hero plate: aspect-ratio geometry', () => {
   });
 });
 
+describe('hero plate: one variant downloads', () => {
+  it('ships the parked phase in data-* and populates the live phase at parse time', () => {
+    // A theme pair ships every URL in data-*; the is:inline script copies the
+    // live phase into real URLs at high priority, and a flip populates the
+    // newly shown phase. A lone plate has no pair, so its URLs ship inline.
+    expect(PLATE).toContain('data-src={fallback}');
+    expect(PLATE).toContain('data-srcset={avif}');
+    expect(PLATE).toContain('src={fallback}');
+    expect(PLATE).toContain('fetchpriority="high"');
+    expect(PLATE).toContain('<script is:inline data-hero-swap>');
+    expect(PLATE).toContain("dataset.benchTheme === 'night'");
+    expect(PLATE).toContain('univerlab:themechange');
+    // The shown size travels with the data: the 300 px phone slot picks 450.
+    expect(PLATE).toContain('sizes="(min-width: 40rem) 560px, 300px"');
+  });
+});
+
 describe('hero plate: gitkit readability veil', () => {
   it('backs the gitkit hero text with a fading ground-coloured veil', () => {
     expect(PLATE).toContain("id === 'gitkit'");

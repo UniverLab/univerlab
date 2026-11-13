@@ -16,12 +16,12 @@ const first = senses[0];
   <span class="subline slogan">{tagline}</span>
 </div>
 
-<script>
-  document.querySelectorAll<HTMLElement>('.namegloss').forEach((el) => {
-    const senses = JSON.parse(el.dataset.senses || '[]') as { suffix: string; glosses: string[] }[];
+<script is:inline>
+  document.querySelectorAll('.namegloss').forEach((el) => {
+    const senses = JSON.parse(el.dataset.senses || '[]');
     const tagline = el.dataset.tagline || '';
-    const suffix = el.querySelector<HTMLElement>('.suffix');
-    const subline = el.querySelector<HTMLElement>('.subline');
+    const suffix = el.querySelector('.suffix');
+    const subline = el.querySelector('.subline');
     if (senses.length < 1 || !suffix || !subline) return;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -34,7 +34,7 @@ const first = senses[0];
         const iconGap = Number(
           home.dataset.ngIconGap ?? (home.dataset.ngIconGap = String(home.offsetWidth - el.offsetWidth)),
         );
-        const probe = el.cloneNode(true) as HTMLElement;
+        const probe = el.cloneNode(true);
         probe.setAttribute('aria-hidden', 'true');
         probe.style.cssText =
           'position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;';
@@ -42,9 +42,9 @@ const first = senses[0];
         // probe inherits the bar's compact --ng-* vars; on body it measured
         // at default sizes and the reserve never narrowed.
         home.appendChild(probe);
-        const word = probe.querySelector<HTMLElement>('.wordmark');
-        const psuffix = probe.querySelector<HTMLElement>('.suffix');
-        const sub = probe.querySelector<HTMLElement>('.subline');
+        const word = probe.querySelector('.wordmark');
+        const psuffix = probe.querySelector('.suffix');
+        const sub = probe.querySelector('.subline');
         let w = 0;
         if (word && psuffix) {
           psuffix.style.width = '0px';
@@ -74,8 +74,9 @@ const first = senses[0];
         home.style.width = home.dataset.brandW + 'px';
         home.style.flex = 'none';
       };
+      // Measured once, pre-paint: re-measuring after the webfont arrives
+      // moves the header after first paint (CLS). The reserve holds.
       measure();
-      if (document.fonts) document.fonts.ready.then(measure);
     }
 
     const OPEN_MS = 3300; // word open on a sense — time to read the gloss
@@ -91,7 +92,7 @@ const first = senses[0];
     // Per-sense shuffle bag: show every gloss of a sense once (in random order)
     // before any repeats, instead of an independent random pick that lets some
     // glosses surface far more often than others.
-    const shuffle = (n: number): number[] => {
+    const shuffle = (n) => {
       const a = Array.from({ length: n }, (_, k) => k);
       for (let k = a.length - 1; k > 0; k--) {
         const j = Math.floor(Math.random() * (k + 1));
@@ -99,9 +100,9 @@ const first = senses[0];
       }
       return a;
     };
-    const bags: number[][] = senses.map(() => []);
-    const last: number[] = senses.map(() => -1);
-    const nextGloss = (s: number): string => {
+    const bags = senses.map(() => []);
+    const last = senses.map(() => -1);
+    const nextGloss = (s) => {
       const glosses = senses[s].glosses;
       if (bags[s].length === 0) {
         bags[s] = shuffle(glosses.length);
@@ -110,12 +111,12 @@ const first = senses[0];
           [bags[s][0], bags[s][bags[s].length - 1]] = [bags[s][bags[s].length - 1], bags[s][0]];
         }
       }
-      const idx = bags[s].pop() as number;
+      const idx = bags[s].pop();
       last[s] = idx;
       return glosses[idx];
     };
 
-    const swapSub = (text: string, slogan: boolean) => {
+    const swapSub = (text, slogan) => {
       subline.classList.add('fade');
       setTimeout(() => {
         subline.textContent = text;

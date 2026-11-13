@@ -13,7 +13,10 @@
  *     as a fixed 120 KB — the fonts are external and their weight varies;
  *   - `<script src>` unless `type="module"` (module imports are dynamic);
  *   - `<img>`/`<picture>` without `loading="lazy"` — the first candidate of
- *     each `srcset`, AVIF when the picture offers it;
+ *     each `srcset`, AVIF when the picture offers it. A URL shipped in
+ *     `data-src`/`data-srcset` counts too when the element is eager: the
+ *     parse-time theme-swap script copies it into `src`/`srcset` before the
+ *     first paint, so the browser really fetches it;
  *   - `<video>` posters always, and a video's `src` (or first inner
  *     `<source src>`) only when `preload` is not `none`;
  *   - the ground-tile `url(/bench/textures/…)` of every counted stylesheet
@@ -54,6 +57,10 @@ export function firstViewItems(html: string): string[] {
   };
   /** The first candidate of a `srcset`: `a.avif 450w, b.avif 900w` → `a.avif`. */
   const firstCandidate = (srcset: string): string => srcset.split(',')[0].trim().split(/\s+/)[0];
+  /** An element's URL, real or the data-* the swap script realises at parse
+   *  time (`\b` also matches after the hyphen in `data-src`). */
+  const srcsetOf = (tag: string): string | undefined => /\b(?:data-)?srcset="([^"]*)"/i.exec(tag)?.[1];
+  const srcOf = (tag: string): string | undefined => /\b(?:data-)?src="([^"]*)"/i.exec(tag)?.[1];
 
   // Stylesheets.
   for (const m of cleaned.matchAll(/<link\b[^>]*>/gi)) {
@@ -79,8 +86,8 @@ export function firstViewItems(html: string): string[] {
     const sources = [...inner.matchAll(/<source\b[^>]*>/gi)].map((s) => s[0]);
     const avif = sources.find((s) => /\btype="image\/avif"/i.test(s));
     const pick = avif ?? sources[0];
-    const srcset = pick ? /\bsrcset="([^"]*)"/i.exec(pick)?.[1] : undefined;
-    push(srcset ? firstCandidate(srcset) : /\bsrc="([^"]*)"/i.exec(img)?.[1]);
+    const srcset = pick ? srcsetOf(pick) : undefined;
+    push(srcset ? firstCandidate(srcset) : srcOf(img));
   }
 
   // Bare <img> (every <picture> above was removed from the count's view by
@@ -89,8 +96,8 @@ export function firstViewItems(html: string): string[] {
   for (const m of withoutPictures.matchAll(/<img\b[^>]*>/gi)) {
     const tag = m[0];
     if (/\bloading="lazy"/i.test(tag)) continue;
-    const srcset = /\bsrcset="([^"]*)"/i.exec(tag)?.[1];
-    push(srcset ? firstCandidate(srcset) : /\bsrc="([^"]*)"/i.exec(tag)?.[1]);
+    const srcset = srcsetOf(tag);
+    push(srcset ? firstCandidate(srcset) : srcOf(tag));
   }
 
   // <video>: the poster always paints; the video bytes load only when the

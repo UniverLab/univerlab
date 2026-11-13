@@ -45,8 +45,15 @@ const { id } = Astro.props;
       window.addEventListener('pagehide', onPageHide);
     }
   };
-  if (document.readyState === 'complete') run();
-  else window.addEventListener('load', run, { once: true });
+  // The fondo's script work and its data/images stay off the critical path:
+  // after the load event, an idle slot (or 5 s) before the module that
+  // animates the background even starts, so first paint is never blocked.
+  const later = () => {
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 5000 });
+    else setTimeout(run, 5000);
+  };
+  if (document.readyState === 'complete') later();
+  else window.addEventListener('load', later, { once: true });
 </script>
 
 <style>

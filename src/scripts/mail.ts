@@ -173,6 +173,7 @@ function startMailbox(): void {
 
   let queue: MailLetter[] = [];
   let past: PastLetter | null = null;
+  let pastRequested = false;
   // Today's opened ids plus every lab letter ever opened here: the lab list
   // outlives the day, so a release letter is delivered once, not daily.
   let opened: string[] = readOpened().concat(readLabSeen());
@@ -312,6 +313,20 @@ function startMailbox(): void {
   /* ── Opening ─────────────────────────────────────────────────────────── */
   function openLetter(from?: HTMLElement | null): void {
     if (pop) return;
+    // No fetch runs at load: the first open fetches the past letter once and
+    // opens it when it lands.
+    if (!queue.length && !past) {
+      if (!pastRequested) {
+        pastRequested = true;
+        void loadPast().then(() => {
+          if (queue.length || past) openLetter(from);
+          // A failed fetch must not silence the box for the rest of the
+          // session: the next open tries again.
+          else pastRequested = false;
+        });
+      }
+      return;
+    }
     const now = new Date();
     const letter: MailLetter | null = queue.length ? (queue.shift() as MailLetter) : past;
     if (!letter) return;
@@ -665,22 +680,10 @@ function startMailbox(): void {
 
   syncBox();
   void loadLabMail();
-  void loadPast();
   wireEvents();
 }
 
 if (typeof document !== 'undefined') {
-  // Warm today's filtered science pool once, in the background, so the first
-  // letter arrives with no network wait. High timeout keeps it off FCP/LCP.
-  // (This warm-up moved here from the header, which no longer opens letters.)
-  const warmLang: FilterLang = document.documentElement.lang === 'es' ? 'es' : 'en';
-  if (!readOtdCache(warmLang)) {
-    const warm = () => {
-      fetchPool(fetch, warmLang).catch(() => {});
-    };
-    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 5000 });
-    else setTimeout(warm, 4000);
-  }
   if (document.readyState === 'complete') startMailbox();
   else {
     addEventListener('load', () => startMailbox(), { once: true });

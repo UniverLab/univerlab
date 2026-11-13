@@ -22,11 +22,18 @@ const plateWidths: Record<string, number> = {
 };
 
 // The lantern engraving's sources, day and night: the frame behind the screen
-// and its front copy over it share them (lantern.ts flips the media per phase).
+// and its front copy over it share them. Every URL ships in data-* — the
+// parse-time script below populates only the live phase (lantern.ts populates
+// the newly shown one on a theme flip) — so one variant downloads, not both.
 // /bench/ is cached for 30 days: bump a phase's `v` whenever its engraving is
 // redrawn, or returning visitors keep the old one.
 const lanternVersion = { day: '?v=3', night: '' } as const;
-const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;
+// The frame is the page's largest element: it starts downloading with the
+// document, at high priority, as the 900 px AVIF of the live phase.
+const lanternFrameAvif = {
+  day: `/bench/live/lantern-day-900.avif${lanternVersion.day}`,
+  night: `/bench/live/lantern-night-900.avif${lanternVersion.night}`,
+} as const;
 const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
   (['avif', 'webp'] as const).map((type) => {
     const v = lanternVersion[phase];
@@ -103,20 +110,21 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
               <source
                 data-phase={src.phase}
                 type={src.type}
-                media={src.phase === 'night' ? 'not all' : undefined}
-                srcset={src.srcset}
+                data-srcset={src.srcset}
                 sizes="(min-width: 50rem) 760px, 100vw"
               />
             ))}
             <img
               id="lantern-img"
-              src={lanternDaySrc}
+              data-avif-day={lanternFrameAvif.day}
+              data-avif-night={lanternFrameAvif.night}
               width="1178"
               height="900"
               alt={t.home.lantern.alt}
+              decoding="async"
               fetchpriority="high"
-              data-day-src={lanternDaySrc}
-              data-night-src="/bench/live/lantern-night-900.webp"
+              data-day-src={lanternFrameAvif.day}
+              data-night-src={lanternFrameAvif.night}
             />
           </picture>
         </button>
@@ -128,18 +136,20 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
             <source
               data-phase={src.phase}
               type={src.type}
-              media={src.phase === 'night' ? 'not all' : undefined}
-              srcset={src.srcset}
+              data-srcset={src.srcset}
               sizes="(min-width: 50rem) 760px, 100vw"
             />
           ))}
           <img
-            src={lanternDaySrc}
+            data-avif-day={lanternFrameAvif.day}
+            data-avif-night={lanternFrameAvif.night}
             width="1178"
             height="900"
             alt=""
-            data-day-src={lanternDaySrc}
-            data-night-src="/bench/live/lantern-night-900.webp"
+            decoding="async"
+            fetchpriority="high"
+            data-day-src={lanternFrameAvif.day}
+            data-night-src={lanternFrameAvif.night}
           />
         </picture>
         <p class="lantern-paused" id="lantern-paused" hidden>{t.home.lantern.paused}</p>
@@ -148,7 +158,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
       <!-- The bench: the seven machines, all the same height. -->
       <div class="row-wrap">
         <div class="row" role="group" aria-label={t.home.lantern.benchLabel}>
-          {liveExperiments.map((exp, i) => {
+          {liveExperiments.map((exp) => {
             const e = t.experiments[exp.id];
             return (
               <button
@@ -159,17 +169,17 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
                 aria-current="false"
               >
                 <picture>
-                  <source data-phase="day" type="image/avif" srcset={`/bench/machines/${exp.id}-day-450.avif`} />
-                  <source data-phase="day" type="image/webp" srcset={`/bench/machines/${exp.id}-day-450.webp`} />
-                  <source data-phase="night" type="image/avif" media="not all" srcset={`/bench/machines/${exp.id}-night-450.avif`} />
-                  <source data-phase="night" type="image/webp" media="not all" srcset={`/bench/machines/${exp.id}-night-450.webp`} />
+                  <source data-phase="day" type="image/avif" data-srcset={`/bench/machines/${exp.id}-day-450.avif`} />
+                  <source data-phase="day" type="image/webp" data-srcset={`/bench/machines/${exp.id}-day-450.webp`} />
+                  <source data-phase="night" type="image/avif" data-srcset={`/bench/machines/${exp.id}-night-450.avif`} />
+                  <source data-phase="night" type="image/webp" data-srcset={`/bench/machines/${exp.id}-night-450.webp`} />
                   <img
-                    src={`/bench/machines/${exp.id}-day-450.webp`}
                     width={plateWidths[exp.id] ?? 450}
                     height="450"
                     alt={e.machineAlt}
+                    decoding="async"
                     fetchpriority="low"
-                    loading={i >= 2 ? 'lazy' : undefined}
+                    loading="lazy"
                     data-day-src={`/bench/machines/${exp.id}-day-450.webp`}
                     data-night-src={`/bench/machines/${exp.id}-night-450.webp`}
                   />
@@ -184,6 +194,41 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
       <div class="bench-foot">
         <p class="hint" data-open-hint={t.home.lantern.open}>{t.home.lantern.benchLabel}</p>
       </div>
+
+<!-- Only the live phase's URLs become real, at parse time: the frame (the
+     page's largest element) at high priority, the bench plates lazily through
+     their native loading attribute. A theme flip populates the newly shown
+     phase instead (lantern.ts). -->
+<script is:inline data-lantern-swap>
+  (function () {
+    var phase = document.documentElement.dataset.benchTheme === 'night' ? 'night' : 'day';
+    function populateSources(pic) {
+      var sources = pic.querySelectorAll('source[data-phase="' + phase + '"][data-srcset]');
+      for (var i = 0; i < sources.length; i++) {
+        sources[i].setAttribute('srcset', sources[i].getAttribute('data-srcset'));
+      }
+    }
+    // The frame, twice (behind the screen and its cloth copy over it).
+    var frames = document.querySelectorAll('img[data-avif-day]');
+    for (var f = 0; f < frames.length; f++) {
+      var attr = phase === 'night' ? 'data-avif-night' : 'data-avif-day';
+      var url = frames[f].getAttribute(attr);
+      if (url) frames[f].setAttribute('src', url);
+      var fp = frames[f].closest('picture');
+      if (fp) populateSources(fp);
+    }
+    // The bench plates below the fold: active phase only, natively lazy.
+    var plates = document.querySelectorAll('.plate picture');
+    for (var p = 0; p < plates.length; p++) {
+      populateSources(plates[p]);
+      var img = plates[p].querySelector('img[data-day-src]');
+      if (img) {
+        var purl = img.getAttribute(phase === 'night' ? 'data-night-src' : 'data-day-src');
+        if (purl) img.setAttribute('src', purl);
+      }
+    }
+  })();
+</script>
 
 <style>
   /* ── The lantern and its screen ───────────────────────────────────────── */
