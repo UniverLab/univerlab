@@ -345,3 +345,30 @@ describe('one date constant, shared section ids, bounded metadata', () => {
     }
   });
 });
+
+describe('paid services not denied', () => {
+  const enUsing = termsEn.sections.find((s) => s.id === 'using-the-services')!;
+  const esUsing = termsEs.sections.find((s) => s.id === 'using-the-services')!;
+
+  it('scoped to free tools', () => {
+    expect(enUsing.paras).toHaveLength(4);
+    expect(esUsing.paras).toHaveLength(4);
+    expect(enUsing.paras[1]).toMatch(/free and open-source/);
+    expect(enUsing.paras[1]).not.toContain('any service, or your access');
+    expect(esUsing.paras[1]).toMatch(/gratuito y de código abierto/);
+    expect(esUsing.paras[1]).not.toContain('cualquier servicio, o tu acceso');
+  });
+
+  it('paid scope in writing', () => {
+    expect(enUsing.paras[2]).toContain('Workbench pages');
+    expect(enUsing.paras[2]).toContain('written scope agreed before starting');
+    expect(enUsing.paras[2]).toContain('support period');
+    expect(enUsing.paras[2]).toContain('verification of fixes');
+    expect(enUsing.paras[2]).toContain('cannot change that scope on its own');
+    expect(esUsing.paras[2]).toContain('páginas del Banco de trabajo');
+    expect(esUsing.paras[2]).toContain('alcance escrito acordado');
+    expect(esUsing.paras[2]).toContain('periodo de soporte');
+    expect(esUsing.paras[2]).toContain('verificación de las correcciones');
+    expect(esUsing.paras[2]).toContain('no puede cambiar por su cuenta ese alcance');
+  });
+});

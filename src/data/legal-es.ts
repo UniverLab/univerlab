@@ -180,7 +180,8 @@ export const termsEs: LegalDoc = {
       title: 'Uso de los servicios',
       paras: [
         'UniverLab te concede una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar los servicios con tus propios fines lícitos.',
-        'UniverLab puede modificar, suspender o descontinuar cualquier servicio, o tu acceso a él, en cualquier momento, con o sin aviso. No hay obligación de soporte: los servicios se operan como un laboratorio abierto, no como un producto contratado.',
+        'UniverLab puede modificar, suspender o descontinuar cualquier herramienta o sitio gratuito y de código abierto que publique, o tu acceso a él, en cualquier momento, con o sin aviso, y sin obligación de soporte sobre ellos: se operan como un laboratorio abierto, no como un producto contratado.',
+        'Los servicios pagados del Banco de trabajo —consulta, flujos agénticos y auditorías— se entregan como se describe en las páginas del Banco de trabajo y en el alcance escrito acordado antes de empezar, incluidos el periodo de soporte y la verificación de las correcciones, y el laboratorio no puede cambiar por su cuenta ese alcance una vez acordado.',
         'Tu uso también se rige por la <a href="/es/privacy/">Política de Privacidad</a>, que describe qué datos registra cada servicio. Si estos términos y la política difieren sobre datos, manda la política.',
       ],
     },
