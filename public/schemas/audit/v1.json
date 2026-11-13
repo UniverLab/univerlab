@@ -50,7 +50,7 @@
     },
     "deliverables": {
       "$ref": "#/$defs/deliverables",
-      "description": "Downloadable deliverables by asset id. The page never generates a PDF itself; the TeXForge PDF report is required once status is delivered or final."
+      "description": "Downloadable deliverables by asset id, plus the audit's repository URL. The page never generates a PDF itself; the TeXForge PDF report is required once status is delivered or final."
     },
     "findings": {
       "type": "array",
@@ -212,11 +212,13 @@
     },
     "deliverables": {
       "title": "Deliverables",
-      "description": "Downloadable deliverables by asset id. The page offers them for download; it never generates a PDF itself.",
+      "description": "Deliverables by asset id plus the audit's repository. The page offers the files for download and links the repository; it never generates a PDF itself.",
       "type": "object",
       "properties": {
         "report": { "type": "string", "minLength": 1, "description": "Asset id of the TeXForge PDF report. Required once the audit status is delivered or final." },
-        "bundle": { "type": "string", "minLength": 1, "description": "Optional asset id of an archive bundling every asset." }
+        "bundle": { "type": "string", "minLength": 1, "description": "Optional asset id of an archive bundling every asset." },
+        "repository": { "type": "string", "format": "uri", "pattern": "^https://", "description": "HTTPS URL of the audit's repository." },
+        "repositoryPublic": { "enum": [true], "description": "True only when the repository is public too; omitted means private." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false

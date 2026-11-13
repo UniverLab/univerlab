@@ -169,6 +169,9 @@ describe('middleware — audit page', () => {
     expect(body).toContain('id="audit-finding-F-01"');
     expect(body).toContain('id="audit-source-owasp"');
     expect(body).toContain('class="audit-back"');
+    expect(body).toContain('href="https://github.com/univerlab/fixture-repo"');
+    expect(body).toContain('Open the repository');
+    expect(body).toContain('Access is by invitation');
     expect(body).toContain('Fixture Client (not a real client)');
     expect(body).toContain('Contract Test Team');
     expect(body).toContain('2026-01-05');
@@ -240,6 +243,34 @@ describe('middleware — audit page', () => {
     expect(body).toContain('data-severity="info" data-status="accepted" hidden');
     expect(body).toContain('class="audit-step"');
     expect(body).toContain('id="audit-h-0-0"');
+  });
+
+  it('lists the repository on the public page only when it is marked public', () => {
+    const unflagged = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    delete unflagged.deliverables.repositoryPublic;
+    const priv = auditPageHtml(unflagged, SLUG);
+    expect(priv).toContain('href="https://github.com/univerlab/fixture-repo"');
+    expect(priv).toContain('Open the repository');
+    const pub = auditPageHtml(unflagged, SLUG, { published: { previous: null, next: [] } });
+    expect(pub).not.toContain('Open the repository');
+    expect(pub).not.toContain('https://github.com/univerlab/fixture-repo');
+    const flagged = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const pubFlagged = auditPageHtml(flagged, SLUG, { published: { previous: null, next: [] } });
+    expect(pubFlagged).toContain('href="https://github.com/univerlab/fixture-repo"');
+    expect(pubFlagged).toContain('Open the repository');
+  });
+
+  it('renders the deliverables unchanged when the audit names no repository', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    delete doc.deliverables.repository;
+    delete doc.deliverables.repositoryPublic;
+
+    const priv = auditPageHtml(doc, SLUG);
+    expect(priv).toContain(`href="/audits/${SLUG}/assets/report.pdf"`);
+    expect(priv).not.toContain('Open the repository');
+    const pub = auditPageHtml(doc, SLUG, { published: { previous: null, next: [] } });
+    expect(pub).toContain('Download the report (PDF)');
+    expect(pub).not.toContain('Open the repository');
   });
 
   it('answers 404 for a private audit, as if it did not exist', async () => {

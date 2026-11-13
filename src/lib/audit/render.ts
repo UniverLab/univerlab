@@ -87,7 +87,7 @@ function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: str
   );
 }
 
-function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string): string {
+function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, isPublic: boolean): string {
   const cards: string[] = [];
   const report = doc.deliverables.report ? assetById(doc, doc.deliverables.report) : null;
   if (report) {
@@ -101,6 +101,14 @@ function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], ba
     cards.push(
       `<div class="audit-deliverable"><p>${esc(bundle.title)}</p>` +
         `<a href="${esc(assetUrl(slug, bundle.path, base))}">${esc(t.downloadBundle)}</a></div>`,
+    );
+  }
+  const repo = safeExternalUrl(doc.deliverables.repository ?? '');
+  if (repo !== null && repo.startsWith('https://') && (!isPublic || doc.deliverables.repositoryPublic === true)) {
+    cards.push(
+      `<div class="audit-deliverable"><p>${esc(t.repository)}</p>` +
+        `<a href="${esc(repo)}" rel="noopener noreferrer">${esc(t.openRepository)}</a>` +
+        `<p class="audit-deliverable-note">${esc(t.repositoryInvite)}</p></div>`,
     );
   }
   if (!cards.length) return '';
@@ -287,7 +295,7 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
     `<script type="application/json" id="audit-data">${data}</script>` +
     coverHtml(doc, slug, t, base) +
     published +
-    deliverablesHtml(doc, slug, t, base) +
+    deliverablesHtml(doc, slug, t, base, Boolean(opts.published)) +
     tocHtml(doc, t) +
     sectionsHtml +
     findingsEntries +

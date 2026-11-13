@@ -134,6 +134,8 @@ export interface AuditAsset {
 export interface AuditDeliverables {
   report?: string;
   bundle?: string;
+  repository?: string;
+  repositoryPublic?: true;
 }
 
 export interface AuditCost {

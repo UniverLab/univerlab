@@ -21,7 +21,7 @@
     { "id": "chart-data", "path": "assets/chart-data.json", "kind": "data", "title": "Fixture chart data", "bytes": 87, "sha256": "47784e5d1650b662eeeafd092b8c614197967f793d798a4b0c5ba14ac17b84e1" },
     { "id": "snippet-py", "path": "assets/snippet.py", "kind": "code", "title": "Fixture snippet", "bytes": 144, "sha256": "337468a5ef6164640612e1b2828109603288694c79c76590da41a900ff1f0625" }
   ],
-  "deliverables": { "report": "report-pdf" },
+  "deliverables": { "report": "report-pdf", "repository": "https://github.com/univerlab/fixture-repo", "repositoryPublic": true },
   "findings": [
     {
       "id": "F-01",

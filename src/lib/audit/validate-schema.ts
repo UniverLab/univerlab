@@ -30,6 +30,7 @@ const CURRENCY_RE = /^[A-Z]{3}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URI_RE = /^[a-zA-Z][a-zA-Z0-9+.\-]*:/;
+const HTTPS_RE = /^https:\/\//;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -556,9 +557,13 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   }
   if (doc['deliverables'] !== undefined) {
     const d = doc['deliverables'];
-    if (enterObject(ctx, d, '$.deliverables', 'deliverables', ['report', 'bundle'])) {
+    if (enterObject(ctx, d, '$.deliverables', 'deliverables', ['report', 'bundle', 'repository', 'repositoryPublic'])) {
       checkOptionalString(ctx, d['report'], '$.deliverables.report', 'report asset');
       checkOptionalString(ctx, d['bundle'], '$.deliverables.bundle', 'bundle asset');
+      checkOptionalString(ctx, d['repository'], '$.deliverables.repository', 'repository URL', { format: 'uri', pattern: HTTPS_RE });
+      if (d['repositoryPublic'] !== undefined && d['repositoryPublic'] !== true) {
+        err(ctx, '$.deliverables.repositoryPublic', 'repository visibility must be true');
+      }
     }
   }
   if (doc['findings'] !== undefined) {

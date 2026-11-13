@@ -297,6 +297,33 @@ describe('cross-reference failures', () => {
     expect(errors[0].message).toContain('pdf');
   });
 
+  it('rejects a repository deliverable that is not an https URL', () => {
+    const folder = setup((doc) => {
+      (doc['deliverables'] as Record<string, unknown>)['repository'] = 'http://x.test/r';
+    });
+    const errors = errorsOf(folder);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].path).toBe('$.deliverables.repository');
+  });
+
+  it('accepts an https repository deliverable without the public flag', () => {
+    const folder = setup((doc) => {
+      (doc['deliverables'] as Record<string, unknown>)['repository'] = 'https://x.test/r';
+    });
+    expect(errorsOf(folder)).toEqual([]);
+  });
+
+  it('rejects a repository visibility flag other than true', () => {
+    const folder = setup((doc) => {
+      const d = doc['deliverables'] as Record<string, unknown>;
+      d['repository'] = 'https://x.test/r';
+      d['repositoryPublic'] = false;
+    });
+    const errors = errorsOf(folder);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].path).toBe('$.deliverables.repositoryPublic');
+  });
+
   it('warns on unknown block types instead of failing', () => {
     const folder = setup((doc) => {
       (((doc['sections'] as unknown[])[0] as Record<string, unknown>)['blocks'] as unknown[]).push({ type: 'x-poll', question: 'Q?' });
