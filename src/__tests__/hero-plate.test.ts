@@ -75,6 +75,19 @@ describe('hero plate: aspect-ratio geometry', () => {
   });
 });
 
+describe('hero plate: gitkit readability veil', () => {
+  it('backs the gitkit hero text with a fading ground-coloured veil', () => {
+    expect(PLATE).toContain("id === 'gitkit'");
+    expect(PLATE).toContain('hp-veil');
+    expect(PLATE).toContain('--hp-wcap: 46cqw');
+    expect(PLATE).toContain('ellipse 50% 85%');
+    expect(PLATE).toContain('var(--bg)');
+    expect(PLATE).toContain('transparent 75%');
+    expect(PLATE).toContain('.hero-plate.gitkit');
+    expect(PLATE).toContain('ellipse 85% 90%');
+  });
+});
+
 describe('hero plate: column geometry and soft light', () => {
   it('lives inside the content column with small elliptical masks', () => {
     expect(PLATE).toContain('max-width: 72rem');

@@ -11,7 +11,7 @@ const { id, ink, offset = '0px', alpha } = Astro.props;
 const rootStyle = `--hp-offset:${offset};${alpha ? ` --hp-base-a:${alpha};` : ''}`;
 const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
 ---
-<div class="hero-plate" data-hero-plate data-pair={inks.length === 2 ? '' : undefined} aria-hidden="true" style={rootStyle}>
+<div class:list={['hero-plate', id === 'gitkit' && 'gitkit']} data-hero-plate data-pair={inks.length === 2 ? '' : undefined} aria-hidden="true" style={rootStyle}>
   {inks.map((which, i) => {
     const p = plate(id, which);
     return (
@@ -22,6 +22,7 @@ const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
       </div>
     );
   })}
+  {id === 'gitkit' && <span class="hp-veil"></span>}
 </div>
 
 <style>
@@ -32,11 +33,14 @@ const inks: MachineInk[] = ink === 'theme' ? ['day', 'night'] : [ink];
   .hp-ground { background: var(--bg); -webkit-mask: var(--hp-mask) center / contain no-repeat; mask: var(--hp-mask) center / contain no-repeat; }
   .hp-plate { -webkit-mask-image: radial-gradient(ellipse 150px 120px at var(--mx, -9999px) var(--my, -9999px), #000 0%, rgba(0, 0, 0, 0.82) 30%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, var(--hp-base-a)) 100%); mask-image: radial-gradient(ellipse 150px 120px at var(--mx, -9999px) var(--my, -9999px), #000 0%, rgba(0, 0, 0, 0.82) 30%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, var(--hp-base-a)) 100%); }
   .hp-light { background: radial-gradient(ellipse 90px 70px at var(--mx, -9999px) var(--my, -9999px), color-mix(in srgb, var(--essence) 70%, transparent) 0%, color-mix(in srgb, var(--essence) 25%, transparent) 55%, transparent 100%); opacity: 0.35; -webkit-mask: var(--hp-ink) center / contain no-repeat; mask: var(--hp-ink) center / contain no-repeat; }
+  .hp-veil { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 85% at 36% 45%, color-mix(in srgb, var(--bg) 94%, transparent) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 45%, transparent 75%); }
+  @media (min-width: 40rem) { .hero-plate.gitkit { --hp-wcap: 46cqw; } }
   :global(html[data-bench-theme='night']) .hero-plate[data-pair] .hp-day { display: none; }
   :global(html:not([data-bench-theme='night'])) .hero-plate[data-pair] .hp-night { display: none; }
   @media (max-width: 39.999rem) {
     .hero-plate { inset-block: 0.5rem auto; height: 320px; left: 30%; right: 0; --hp-wcap: 88vw; --hp-base-a: 0.28; }
     .hp { right: 0; }
+    .hp-veil { background: radial-gradient(ellipse 85% 90% at 50% 35%, color-mix(in srgb, var(--bg) 94%, transparent) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 45%, transparent 75%); }
   }
 </style>
 
