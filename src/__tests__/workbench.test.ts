@@ -194,11 +194,13 @@ describe('workbench', () => {
     expect(en.workbench.policy.items[2]).toContain('15 minutes');
     expect(en.workbench.policy.items[8]).toContain('Right of retraction');
     expect(en.workbench.policy.items[8]).toContain('5 business days');
-    expect(en.workbench.policy.items[8]).toContain('Ley 1480 de 2011, art. 47');
+    expect(en.workbench.policy.items[8]).not.toContain('Ley 1480');
+    expect(en.workbench.policy.items[8]).toContain('unless the service has already started at your request');
     expect(es.workbench.policy.items[0]).toContain('24 horas');
     expect(es.workbench.policy.items[8]).toContain('Derecho de retracto');
     expect(es.workbench.policy.items[8]).toContain('5 días hábiles');
-    expect(es.workbench.policy.items[8]).toContain('Ley 1480 de 2011, art. 47');
+    expect(es.workbench.policy.items[8]).not.toContain('Ley 1480');
+    expect(es.workbench.policy.items[8]).toContain('salvo que el servicio ya haya empezado a pedido tuyo');
   });
 
   it('the phone thumbnail is a wrapper, so Machine cannot outrank its hiding', () => {

@@ -313,7 +313,7 @@ describe('one date constant, shared section ids, bounded metadata', () => {
     const hits = blobs.flatMap((b) => b.match(/\d{4}-\d{2}-\d{2}/g) ?? []);
     expect(hits.length).toBeGreaterThan(0);
     expect(hits).toEqual(hits.map(() => LEGAL_DATE));
-    expect(LEGAL_DATE).toBe('2026-11-11');
+    expect(LEGAL_DATE).toBe('2026-11-13');
   });
 
   it('the terms carry the workbench bookings section from the dictionaries', () => {

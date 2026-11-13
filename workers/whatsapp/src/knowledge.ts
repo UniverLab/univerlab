@@ -1,5 +1,6 @@
 import { en } from '../../../src/i18n/en.ts';
 import { es } from '../../../src/i18n/es.ts';
+import { contactEmail } from '../../../src/lib/contact-email';
 import type { Lang } from './lang';
 
 export function knowledge(lang: Lang, phone = ''): string {
@@ -47,8 +48,8 @@ export function knowledge(lang: Lang, phone = ''): string {
   lines.push('## ' + (lang === 'es' ? 'Soporte, verificación y publicación' : 'Support, verification and publishing'));
   lines.push(
     lang === 'es'
-      ? 'Un flujo agéntico trae 30 días de soporte: el código termina en tu repositorio.'
-      : 'An agentic flow comes with 30 days of support: the code ends up in your repository.'
+      ? 'Un flujo agéntico trae 30 días de soporte contados desde la instalación: el código termina en tu repositorio.'
+      : 'An agentic flow comes with 30 days of support counted from installation: the code ends up in your repository.'
   );
   lines.push(
     lang === 'es'
@@ -60,6 +61,26 @@ export function knowledge(lang: Lang, phone = ''): string {
     lang === 'es'
       ? 'Privacidad: las consultas se responden dentro de los 10 días hábiles siguientes (prorrogables una vez por 5) y los reclamos dentro de los 15 días hábiles siguientes (prorrogables una vez por 8); el borrado se confirma dentro de los 15 días hábiles siguientes.'
       : 'Privacy: requests are answered within 10 business days (extendable once by 5) and claims within 15 business days (extendable once by 8); erasure is confirmed within 15 business days.'
+  );
+  lines.push(
+    lang === 'es'
+      ? 'Auditoría privada: el informe, las evidencias, tus datos y el repositorio se eliminan 6 meses después de la entrega, salvo una auditoría con autorización de publicación firmada que aún no se publica, que se conserva hasta que se publique o hasta que el proceso de publicación se cierre. El repositorio pertenece al laboratorio y nunca se transfiere: damos acceso a las cuentas que indiques y guardas tu propia copia antes de la fecha de eliminación.'
+      : 'Private audit: the report, the evidence, your data and the repository are deleted 6 months after delivery, except for an audit with a signed publication authorisation that is not yet published, which is kept until it is published or the publication process closes. The repository belongs to the lab and is never transferred: we give access to the accounts you name and you keep your own copy before the deletion date.'
+  );
+  lines.push(
+    lang === 'es'
+      ? 'Horario: el laboratorio responde entre las 07:00 y las 19:00, hora de Colombia, en días hábiles; lo que llegue fuera de ese horario se responde el siguiente día hábil.'
+      : 'Hours: the lab answers between 07:00 and 19:00 Colombia time on business days; anything arriving outside those hours is answered on the next business day.'
+  );
+  lines.push(
+    lang === 'es'
+      ? 'Quejas y reclamos por correo a ' + contactEmail + ': no hay formulario de reclamos. Una solicitud de privacidad que llegue por otro canal se atiende señalando el agente de WhatsApp o el correo, y se tramita a mano.'
+      : 'Complaints and claims go by email to ' + contactEmail + ': there is no claims form. A privacy request arriving through another channel is answered by pointing to the WhatsApp agent or the email, and is handled by hand.'
+  );
+  lines.push(
+    lang === 'es'
+      ? 'Derecho de retracto: 5 días hábiles desde la reserva cuando reservas con más de cinco días de anticipación, salvo que el servicio ya haya empezado a pedido tuyo (Ley 1480 de 2011, art. 47).'
+      : 'Right of retraction: 5 business days from booking when you book more than five days ahead, unless the service has already started at your request (Ley 1480 de 2011, art. 47).'
   );
   lines.push('## ' + (lang === 'es' ? 'Herramientas abiertas: documentación e issues' : 'Open tools: docs and issues'));
   for (const id of ['canopy', 'texforge', 'gitkit', 'ghscaff', 'facetmedia', 'demostage']) {

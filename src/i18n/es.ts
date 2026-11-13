@@ -849,7 +849,7 @@ export const es: Dict = {
     tags: { kicker: 'Servicios y precios', items: [
       ['Primera llamada', 'Gratis · 15 min', '', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
       ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.'],
-      ['Flujo agéntico', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos un flujo agéntico alrededor de cómo ya trabaja tu equipo, con 30 días de soporte. El código termina en tu repositorio; tus suscripciones, tus harnesses y tus tokens de modelos son tus propias cuentas y tus propios costos.'],
+      ['Flujo agéntico', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos un flujo agéntico alrededor de cómo ya trabaja tu equipo, con 30 días de soporte contados desde la instalación. El código termina en tu repositorio; tus suscripciones, tus harnesses y tus tokens de modelos son tus propias cuentas y tus propios costos.'],
       ['Auditoría', 'Desde USD 400', 'En Colombia: desde 1.500.000 COP', 'Una revisión independiente de cómo usas la inteligencia artificial, con evidencia reproducible para cada hallazgo. Recibes una página dedicada, un informe en PDF y el repositorio de la auditoría, con los hallazgos, la matriz de riesgo y la hoja de ruta por escrito.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
@@ -861,7 +861,7 @@ export const es: Dict = {
       ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
       ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
+    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente. El laboratorio responde entre las 07:00 y las 19:00, hora de Colombia, en días hábiles; lo que llegue fuera de ese horario se responde el siguiente día hábil.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
       'Con menos de 24 horas, la sesión se puede mover una vez sin costo; no se reembolsa, salvo por el derecho de retracto descrito abajo.',
       'Si llegas tarde, la sesión termina a la hora reservada; si no te conectas en los primeros 15 minutos, cuenta como dada.',
@@ -870,7 +870,7 @@ export const es: Dict = {
       'Los reembolsos vuelven por el mismo medio con que pagaste, en un plazo de 5 días hábiles.',
       'La primera llamada gratis se puede cancelar cuando quieras; solo avísanos.',
       'Las auditorías y los flujos agénticos siguen los términos de su cotización escrita.',
-      'Derecho de retracto: si reservas una sesión con más de cinco días de anticipación, puedes retractarte dentro de los 5 días hábiles siguientes a la reserva y recibir todo tu dinero, sin importar la regla de las 24 horas (Ley 1480 de 2011, art. 47).',
+      'Derecho de retracto: si reservas una sesión con más de cinco días de anticipación, puedes retractarte dentro de los 5 días hábiles siguientes a la reserva y recibir todo tu dinero, sin importar la regla de las 24 horas, salvo que el servicio ya haya empezado a pedido tuyo.',
     ] },
     money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al Banco de trabajo paga el laboratorio: modelos de inteligencia artificial, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
     principles: { kicker: 'Cómo trabajamos', items: ['Todo es un script y vive en control de versiones: nada de magia cerrada.', 'El código es tuyo: termina en tu repositorio.', 'Un trabajo pesado a la vez: trabajamos en foco, no en paralelo.'] },
@@ -904,17 +904,17 @@ export const es: Dict = {
       deliver: { kicker: 'Qué recibes', items: [
         ['Página dedicada', 'Una página dedicada en univerlab.org, abierta solo a las direcciones que indiques: un resumen para quienes deciden, los hallazgos por severidad, la matriz de riesgo, la tabla de áreas cubiertas, la hoja de ruta en orden de prioridad y un glosario para seguir sin ser especialista.'],
         ['Informe en PDF', 'Un informe en PDF compuesto con TeXForge: cada hallazgo completo, con cómo reproducirlo, su causa, su impacto y la recomendación, más los límites de la auditoría dichos con claridad.'],
-        ['Repositorio de la auditoría', 'El repositorio de la auditoría, privado y compartido con quien indiques: el entorno aislado, cada archivo de evidencia con su checksum y el detalle completo, para revisar y reproducir cada hallazgo.'],
+        ['Repositorio de la auditoría', 'El repositorio de la auditoría, privado y compartido con quien indiques: el entorno aislado, cada archivo de evidencia con su checksum y el detalle completo, para revisar y reproducir cada hallazgo. El repositorio pertenece al laboratorio y nunca se transfiere: damos acceso a las cuentas que indiques y guardas tu propia copia antes de la fecha de eliminación.'],
         ['Verificación', 'Una verificación, dentro de los 6 meses siguientes a la entrega, de las correcciones a hallazgos críticos y altos: el estado de cada hallazgo actualizado en la página de la auditoría y en el repositorio, con la versión que cerró cada corrección, más el documento de auditoría actualizado. Cualquier revisión adicional se cobra como horas de consulta.'],
         ['Opcional: registro público con DOI', 'Opcional: un registro público, permanente, verificable y citable con DOI y la insignia, si decides publicar la auditoría.'],
       ] as [string, string][] },
       not: { kicker: 'Lo que una auditoría no es', text: 'Una auditoría no es una certificación ni una garantía de seguridad continua. No cotiza ni construye las correcciones. Sus hallazgos siguen privados hasta que apruebes su publicación.' },
       impl: { kicker: 'La implementación, un servicio aparte', paras: [
         'Construir la solución agéntica que recomienda la auditoría es el servicio de flujo agéntico del Banco de trabajo, desde USD 150 (desde 550.000 COP en Colombia): también puedes construirla con el informe o reservar horas de consulta pagadas.',
-        'Trae 30 días de soporte.',
+        'Trae 30 días de soporte contados desde la instalación.',
         'No incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
-      privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
+      privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría. El informe, las evidencias, tus datos y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si lo pides, salvo una auditoría con autorización de publicación firmada que aún no se publica, que se conserva hasta que se publique o hasta que el proceso de publicación se cierre.', link: 'El detalle está en la política de privacidad →' },
       price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
       cardLink: 'Qué revisamos y qué entregamos →',
       offers: { kicker: 'Publicar tu auditoría', founding: {
@@ -927,7 +927,7 @@ export const es: Dict = {
       }, reaudit: {
         title: 'Reauditoría',
         text: 'Auditar de nuevo el mismo sistema, para revisar las correcciones y emitir una auditoría nueva con una fecha nueva, cuesta 30 % menos, aplicado al cobrar.',
-      }, zenodoNote: 'Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.', rules: [
+      }, zenodoNote: 'Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados. El laboratorio puede retirar su página de la auditoría en cualquier momento, pero el depósito permanente sigue publicado.', rules: [
         'La publicación requiere tu autorización firmada de lo publicado, y ocurre cuando los hallazgos críticos y altos están verificados como corregidos.',
         'Si una auditoría con autorización de publicación firmada todavía tiene hallazgos críticos o altos sin corregir 6 meses después de la entrega, el laboratorio te escribe con dos opciones: pagar el descuento aplicado, o publicar ahora con los riesgos encontrados. Tienes 15 días calendario desde ese mensaje para pagar; si no pagas, la auditoría se publica de todos modos, y los hallazgos aún sin corregir se publican solo con su título, severidad y estado, sin pasos de reproducción, endpoints ni nada que permita explotarlos, y esos detalles se agregan cuando se verifique la corrección.',
         'Los descuentos no se acumulan: aplica el mayor.',

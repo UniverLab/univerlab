@@ -119,7 +119,8 @@ export const privacyEs: LegalDoc = {
         'Cookie de sesión del relay: 12 horas y vence; el token de acceso se descarta de inmediato y el relay no almacena nada.',
         'CLI y daemon de canopy: tus datos se quedan en ~/.canopy hasta que los borres.',
         'Banco de trabajo por WhatsApp: la conversación y las notas se borran solas 6 meses después de tu último mensaje, o antes si lo pides. Los datos extraídos de un comprobante y los soportes de un pago se conservan el tiempo que exige la ley contable y tributaria colombiana.',
-        'Auditorías del Banco de trabajo: el informe y las evidencias se conservan 6 meses después de la entrega, o menos si lo pides.',
+        'Auditorías del Banco de trabajo: el informe, las evidencias, los datos del cliente y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si lo pides. La única excepción es una auditoría privada con autorización de publicación firmada que aún no se publica: se conserva hasta que se publique o hasta que el proceso de publicación se cierre.',
+        'Contratos, encargos y autorizaciones firmados, con sus evidencias de firma, se conservan 10 años como prueba del acuerdo, aparte de la eliminación de los datos de auditoría descrita arriba.',
       ],
     },
     {
@@ -135,6 +136,7 @@ export const privacyEs: LegalDoc = {
       title: 'Cómo ejercerlos',
       paras: [
         'Escríbenos a <a href="mailto:{email}">{email}</a>. Las consultas se responden dentro de los 10 días hábiles siguientes, prorrogables una vez por 5; los reclamos dentro de los 15 días hábiles siguientes, prorrogables una vez por 8 (Ley 1581, artículos 14 y 15).',
+        'Las quejas y reclamos van por correo a <a href="mailto:{email}">{email}</a>: no existe un formulario de reclamos. Una solicitud de privacidad que llegue por otro canal se atiende señalando el agente de WhatsApp o el correo, y el laboratorio la tramita a mano.',
         'Los datos del catálogo tienen además un camino corto: el autor retira un documento quitando el tópico <code>canopy-graph</code> o el repositorio, y cualquiera puede reportar un documento abriendo un issue en UniverLab/canopy-web.',
       ],
     },
@@ -201,6 +203,7 @@ export const termsEs: LegalDoc = {
         'El descuento por publicar es un porcentaje del precio, aplicado al pago de entrega y nunca pagado por separado: 50 % para las auditorías fundadoras, cuya autorización se firma con el encargo y reserva entonces el cupo fundador, y 20 % para las demás, cuya autorización se firma a la entrega. Los descuentos no se acumulan: aplica el mayor. Auditar de nuevo el mismo sistema, con fecha nueva, cuesta 30 % menos al cobrar.',
         'Las correcciones a hallazgos críticos y altos tienen una verificación dentro de los 6 meses siguientes a la entrega. Si una auditoría con autorización de publicación firmada todavía tiene hallazgos críticos o altos sin corregir 6 meses después de la entrega, el laboratorio te escribe con dos opciones: pagar el descuento aplicado, o publicar ahora con los riesgos encontrados. Tienes 15 días calendario desde ese mensaje para pagar; si no pagas, la auditoría se publica de todos modos, y los hallazgos aún sin corregir se publican solo con su título, severidad y estado, sin pasos de reproducción, endpoints ni nada que permita explotarlos. Esos detalles se agregan cuando se verifique la corrección.',
         'Lo que se muestra es la auditoría con su fecha, su vigencia y su alcance, además de la insignia para tu sitio. La insignia acredita que UniverLab auditó un alcance en una fecha: no acredita seguridad continua ni es una certificación. La fecha es cómo el lector juzga qué tan actual es la auditoría, y cada reauditoría emite una insignia nueva. Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.',
+        'El repositorio de una auditoría pertenece al laboratorio y nunca se transfiere: el laboratorio da acceso a las cuentas que el cliente indique, y el cliente guarda su propia copia antes de la fecha de eliminación. En una auditoría privada, el informe, las evidencias, los datos del cliente y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si el cliente lo pide. La única excepción es una auditoría con autorización de publicación firmada que aún no se publica: se conserva hasta que se publique o hasta que el proceso de publicación se cierre. Una auditoría publicada sigue pública: el laboratorio puede retirar su página en cualquier momento, pero el depósito permanente sigue publicado.',
       ],
     },
     {

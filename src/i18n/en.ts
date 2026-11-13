@@ -855,7 +855,7 @@ export const en = {
     tags: { kicker: 'Services and prices', items: [
       ['First call', 'Free · 15 min', '', 'We look at what you need and whether the Workbench is the right place for it.'],
       ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab.'],
-      ['Agentic flow', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install an agentic flow around how your team already works, with 30 days of support. The code ends up in your repository; your subscriptions, your harnesses and your model tokens are your own accounts and your own costs.'],
+      ['Agentic flow', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install an agentic flow around how your team already works, with 30 days of support counted from installation. The code ends up in your repository; your subscriptions, your harnesses and your model tokens are your own accounts and your own costs.'],
       ['Audit', 'From USD 400', 'In Colombia: from COP 1,500,000', 'An independent review of how you use artificial intelligence, with reproducible evidence for every finding. You receive a dedicated page, a PDF report and the audit repository, with the findings, the risk matrix and the roadmap in writing.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
@@ -867,7 +867,7 @@ export const en = {
       ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
       ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
+    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. The lab answers between 07:00 and 19:00 Colombia time on business days; anything arriving outside those hours is answered on the next business day.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
       'Less than 24 hours before, the session can be moved once at no cost; it is not refunded, except under the right of retraction below.',
       'If you join late, the session still ends at the booked time; if you do not join within 15 minutes of the start, it counts as given.',
@@ -876,7 +876,7 @@ export const en = {
       'Refunds go back by the method you paid with, within 5 business days.',
       'The free first call can be cancelled at any time; just tell us.',
       'Audits and agentic flows follow the terms of their written quote.',
-      'Right of retraction: if you book a session more than five days ahead, you may withdraw within 5 business days of booking and get all your money back, whatever the 24-hour rule says (Ley 1480 de 2011, art. 47).',
+      'Right of retraction: if you book a session more than five days ahead, you may withdraw within 5 business days of booking and get all your money back, whatever the 24-hour rule says, unless the service has already started at your request.',
     ] },
     money: { kicker: 'Where the money goes', text: 'What comes in at the bench pays for the lab: artificial intelligence models, compute and infrastructure. The tools, the experiments and what we learn stay open.' },
     principles: { kicker: 'How we work', items: ['Everything is a script and lives in version control: no closed magic.', 'The code is yours: it ends up in your repository.', 'One heavy job at a time: we work in focus, not in parallel.'] },
@@ -910,17 +910,17 @@ export const en = {
       deliver: { kicker: 'What you receive', items: [
         ['Dedicated page', 'A dedicated page on univerlab.org, open only to the addresses you name: a summary for decision makers, the findings by severity, the risk matrix, the table of areas covered, the fix roadmap in priority order and a glossary so a non-specialist can follow.'],
         ['PDF report', 'A PDF report typeset with TeXForge: every finding in full, with how to reproduce it, its cause, its impact and the recommendation, plus the limits of the audit stated plainly.'],
-        ['Audit repository', 'The audit repository, private and shared with whoever you name: the isolated environment, every evidence file with its checksum, and the full detail, so each finding can be checked and reproduced.'],
+        ['Audit repository', 'The audit repository, private and shared with whoever you name: the isolated environment, every evidence file with its checksum, and the full detail, so each finding can be checked and reproduced. The repository belongs to the lab and is never transferred: we give access to the accounts you name, and you keep your own copy before the deletion date.'],
         ['Verification pass', 'One verification, within 6 months of delivery, of the fixes to critical and high findings: the status of each finding updated on the audit page and in the audit repository, with the version that closed each fix, plus the updated audit document. Any further review is billed as consultation hours.'],
         ['Optional: public record with DOI', 'Optional: a permanent, verifiable and citable public record with a DOI and the badge, if you decide to publish the audit.'],
       ] as [string, string][] },
       not: { kicker: 'What an audit is not', text: 'An audit is not a certification or a guarantee of continuous security. It does not price or build the fixes. Its findings stay private until you approve publishing.' },
       impl: { kicker: 'The build, a separate service', paras: [
         "Building the agentic solution the audit recommends is the Workbench's agentic-flow service, from USD 150 (from COP 550,000 in Colombia): you can also build it from the report or book paid consultation hours.",
-        'It comes with 30 days of support.',
+        'It comes with 30 days of support counted from installation.',
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
-      privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
+      privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit. The report, the evidence, your data and the audit repository are deleted 6 months after delivery, or sooner if you ask, except for an audit with a signed publication authorisation that is not yet published, which is kept until it is published or the publication process closes.', link: 'The detail is in the privacy policy →' },
       price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
       cardLink: 'What we review and what you receive →',
       offers: { kicker: 'Publishing your audit', founding: {
@@ -933,7 +933,7 @@ export const en = {
       }, reaudit: {
         title: 'Re-audit',
         text: 'Auditing the same system again, to check the fixes and issue a new audit with a new date, costs 30 % less, applied when it is charged.',
-      }, zenodoNote: 'A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.', rules: [
+      }, zenodoNote: 'A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files. The lab may take its audit page down at any time, but the permanent deposit stays published.', rules: [
         'Publication needs your signed authorisation of what is shown, and happens once the critical and high findings are verified as fixed.',
         'If an audit with a signed publication authorisation still has unfixed critical or high findings 6 months after delivery, the lab writes to you with two options: pay the discount that was applied, or publish now with the risks found. You have 15 calendar days from that message to pay; otherwise the audit is published anyway, and the findings still unfixed are shown with their title, severity and status only, without reproduction steps, endpoints or anything that would let someone exploit them, added when the fix is verified.',
         'Discounts do not stack: the largest one applies.',

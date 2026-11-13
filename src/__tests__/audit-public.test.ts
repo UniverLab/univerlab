@@ -678,17 +678,21 @@ describe('published audit dictionaries, view and terms', () => {
     expect(enIds).toContain('published-audits');
     const enSection = termsEn.sections.find((s) => s.id === 'published-audits')!;
     const esSection = termsEs.sections.find((s) => s.id === 'published-audits')!;
-    expect(enSection.paras).toHaveLength(4);
-    expect(esSection.paras).toHaveLength(4);
+    expect(enSection.paras).toHaveLength(5);
+    expect(esSection.paras).toHaveLength(5);
     for (const para of [...enSection.paras, ...esSection.paras]) {
       expect(para).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     }
+    expect(enSection.paras[4]).toMatch(/belongs to the lab and is never transferred/);
+    expect(enSection.paras[4]).toMatch(/may take its page down at any time, but the permanent deposit stays published/);
+    expect(esSection.paras[4]).toMatch(/pertenece al laboratorio y nunca se transfiere/);
+    expect(esSection.paras[4]).toMatch(/puede retirar su página en cualquier momento, pero el depósito permanente sigue publicado/);
     const { en } = await import('../i18n/en');
     const { es } = await import('../i18n/es');
     const offersText = [en, es].map((d) => [d.workbench.audits.offers.founding.text, d.workbench.audits.offers.public.text, ...d.workbench.audits.offers.rules].join(' ')).join(' ');
     const publishedText = [...enSection.paras, ...esSection.paras].join(' ');
     for (const text of [offersText, publishedText]) {
-      expect(text).not.toMatch(/12 months|12 meses|refund|devolución|transfer/);
+      expect(text).not.toMatch(/12 months|12 meses|refund|devolución/);
     }
     expect(en.workbench.audits.offers.rules[1]).toMatch(/15 calendar days/);
     expect(es.workbench.audits.offers.rules[1]).toMatch(/15 días/);

@@ -121,7 +121,8 @@ export const privacyEn: LegalDoc = {
         'Remote session cookie: 12 hours, then it expires; the sign-in token is discarded at once and the relay stores nothing.',
         'canopy CLI and daemon: your data stays in ~/.canopy until you remove it.',
         'Workbench on WhatsApp: the conversation and the notes are deleted automatically 6 months after your last message, or sooner if you ask. The details extracted from a payment proof and the records of a payment are kept for as long as Colombian accounting and tax law requires.',
-        'Workbench audits: the report and the evidence are kept for 6 months after delivery, or less if you ask.',
+        'Workbench audits: the report, the evidence, the client data and the audit repository are deleted 6 months after delivery, or sooner if you ask. The only exception is a private audit with a signed publication authorisation that is not yet published: it is kept until it is published or the publication process closes.',
+        'Signed contracts, orders and authorisations, with their signature evidence, are kept for 10 years as proof of the agreement, apart from the audit-data deletion described above.',
       ],
     },
     {
@@ -137,6 +138,7 @@ export const privacyEn: LegalDoc = {
       title: 'How to exercise them',
       paras: [
         'Write to <a href="mailto:{email}">{email}</a>. Queries (<em>consultas</em>) are answered within 10 business days, extendable once by 5; claims (<em>reclamos</em>) within 15 business days, extendable once by 8 (Ley 1581, articles 14 and 15).',
+        'Complaints and claims go by email to <a href="mailto:{email}">{email}</a>: there is no claims form. A privacy request that arrives through another channel is answered by pointing to the WhatsApp agent or the email, and the lab handles it by hand.',
         'Catalogue data has a shorter path too: the author removes a document by dropping the <code>canopy-graph</code> topic or the repository, or anyone may report a document by opening an issue in UniverLab/canopy-web.',
       ],
     },
@@ -203,6 +205,7 @@ export const termsEn: LegalDoc = {
         'The publication discount is a percentage of the price, taken off the delivery payment and never paid out afterwards: 50 % for founding audits, whose authorisation is signed with the order and reserves the founding spot then, and 20 % for the rest, whose authorisation is signed at delivery. Discounts do not stack: the largest one applies. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
         'The fixes to critical and high findings get one verification within 6 months of delivery. If an audit with a signed publication authorisation still has unfixed critical or high findings 6 months after delivery, the lab writes to you with two options: pay the discount that was applied, or publish now with the risks found. You have 15 calendar days from that message to pay; if you do not pay, the audit is published anyway, and the findings still unfixed are shown with their title, severity and status only, without reproduction steps, endpoints or anything that would let someone exploit them. Those details are added when the fix is verified.',
         'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge. A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.',
+        'An audit repository belongs to the lab and is never transferred: the lab gives access to the accounts the client names, and the client keeps their own copy before the deletion date. For a private audit, the report, the evidence, the client data and the audit repository are deleted 6 months after delivery, or sooner if the client asks. The only exception is an audit with a signed publication authorisation that is not yet published: it is kept until it is published or the publication process closes. A published audit stays public: the lab may take its page down at any time, but the permanent deposit stays published.',
       ],
     },
     {
