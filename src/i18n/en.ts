@@ -843,6 +843,7 @@ export const en = {
     title: 'The Workbench — UniverLab consulting on artificial intelligence agents and automation',
     description: 'Book the bench of the people who built this lab: consulting on artificial intelligence agents, workflow automation and audits. The work funds the open lab.',
     label: 'THE WORKBENCH',
+    machineAlt: 'An engraved workbench with a gauge, a rack of test tubes, a small press and chisels',
     head: 'Are your agents failing in silence? Bring them to the Workbench.',
     headEm: 'in silence',
     intro: 'The hands that built this lab, for whatever you need in artificial intelligence and Agent Experience (AX): technical judgement, ideas, agents or the latest release. You leave with written notes and a clear next step.',

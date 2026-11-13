@@ -169,7 +169,13 @@ describe('language corner markup', () => {
   });
 
   it('names the other language in its aria-label, localized', () => {
-    expect(anchor![0]).toMatch(/aria-label=\{`\$\{t\.header\.switchTo\} \$\{t\.header\.langLabel\[other\]\}`\}/);
+    expect(anchor![0]).toMatch(/aria-label=\{`\$\{t\.header\.switchTo\} \$\{t\.header\.langLabel\[other\]\} \(\$\{languages\[other\]\}\)`\}/);
+  });
+
+  it('carries the visible short code inside the accessible name', () => {
+    // label-content-name-mismatch: the corner shows ES/EN, so the name ends
+    // with the same code the eye sees.
+    expect(anchor![0]).toMatch(/\(\$\{languages\[other\]\}\)`\}/);
   });
 
   it('has dropped the old top-right triangle', () => {

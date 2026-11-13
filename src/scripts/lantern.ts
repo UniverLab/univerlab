@@ -32,7 +32,7 @@ export function startLantern(): void {
   const slides = Array.from(screen.querySelectorAll<HTMLElement>('.slide'));
   if (slides.length === 0) return;
   const plates = Array.from(document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]'));
-  const pauseBtn = document.getElementById('lantern-pause') as HTMLElement | null;
+  const pauseBtn = document.getElementById('lantern-pause') as HTMLButtonElement | null;
   const pausedPlate = document.getElementById('lantern-paused');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -325,9 +325,10 @@ export function startLantern(): void {
 
   // ── Pause toggle ─────────────────────────────────────────────────────────
   if (pauseBtn) {
-    // The projector (<picture id="lantern-pause">) carries the control: the
+    // The projector (<button id="lantern-pause">) carries the control: the
     // label moves through aria-label — textContent would destroy the sources
-    // and the <img> inside the picture (T3).
+    // and the <img> inside the picture (T3). Enter/Space come free with the
+    // native button, so there is no keydown handler.
     const togglePause = (): void => {
       paused = !paused;
       pauseBtn.setAttribute('aria-pressed', String(paused));
@@ -345,12 +346,6 @@ export function startLantern(): void {
       }
     };
     pauseBtn.addEventListener('click', togglePause);
-    pauseBtn.addEventListener('keydown', (ev) => {
-      if ((ev as KeyboardEvent).key === 'Enter' || (ev as KeyboardEvent).key === ' ') {
-        ev.preventDefault();
-        togglePause();
-      }
-    });
   }
 
   // A hidden tab stops cycle and clip; a bfcache restore fires no

@@ -212,19 +212,28 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/held < 0/);
     expect(LANTERN).toContain("document.addEventListener('visibilitychange'");
     expect(LANTERN).toMatch(/pauseBtn\.setAttribute\('aria-pressed'/);
-    // The projector itself is the pause control: id/role/tabindex/aria live on
-    // the <picture>, and the standalone bench-foot button is gone.
+    // The projector itself is the pause control: a real <button> wrapping an
+    // inner <picture> — no role or tabindex, and the standalone bench-foot
+    // button is gone.
     expect(LAB_LANTERN).toMatch(
-      /<picture\s+class="lantern-pic"\s+id="lantern-pause"\s+role="button"\s+tabindex="0"\s+aria-pressed="false"/,
+      /<button\s+type="button"\s+class="lantern-pic"\s+id="lantern-pause"\s+aria-pressed="false"/,
     );
+    expect(LAB_LANTERN).toMatch(/<button[\s\S]*?class="lantern-pic"[\s\S]*?>\s*<picture>/);
+    expect(LAB_LANTERN).not.toContain('role="button"');
+    expect(LAB_LANTERN).not.toContain('tabindex');
+    expect(LAB_LANTERN).not.toMatch(/<picture\s+class="lantern-pic"/);
     expect(LAB_LANTERN).toMatch(/aria-label=\{t\.home\.lantern\.pause\}/);
     expect(LAB_LANTERN).toMatch(/data-pause-label=\{t\.home\.lantern\.pause\}/);
     expect(LAB_LANTERN).toMatch(/data-resume-label=\{t\.home\.lantern\.resume\}/);
+    // The button carries no UA chrome: the reset keeps the engraving's look.
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic \{[^}]*background:\s*none/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic picture \{[^}]*display:\s*block/);
     expect(LAB_LANTERN).not.toMatch(/class="lantern-pause"/);
     expect(LAB_LANTERN).not.toMatch(/\.lantern-pause \{/);
-    // Keyboard: Enter/Space toggle, and the paused plate follows aria-pressed.
-    expect(LANTERN).toMatch(/pauseBtn\.addEventListener\('keydown'/);
-    expect(LANTERN).toMatch(/key === 'Enter' \|\| \(ev as KeyboardEvent\)\.key === ' '/);
+    // Keyboard: Enter/Space come free with the native button (no keydown
+    // handler), and the paused plate follows aria-pressed.
+    expect(LANTERN).toMatch(/as HTMLButtonElement/);
+    expect(LANTERN).not.toMatch(/pauseBtn\.addEventListener\('keydown'/);
     expect(LANTERN).toMatch(/getElementById\('lantern-paused'\)/);
     // hidden is the force argument: it must come OFF while paused, so the
     // flag is negated (the inverse silently keeps the plate invisible).
@@ -252,6 +261,16 @@ describe('Home — the bench', () => {
     expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.avif/);
     expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.webp/);
     expect(LAB_LANTERN).toMatch(/class="plate"/);
+  });
+
+  it('describes the projected machine once, in the page language', () => {
+    expect(LAB_LANTERN).toContain('alt={e.machineAlt}');
+    for (const id of ['canopy', 'texforge', 'gitkit', 'ghscaff', 'demostage', 'astro-denoise', 'quorum', 'facetmedia'] as const) {
+      expect(en.experiments[id].machineAlt).toBeTruthy();
+      expect(es.experiments[id].machineAlt).toBeTruthy();
+      expect(en.experiments[id].machineAlt).not.toBe(es.experiments[id].machineAlt);
+    }
+    expect(en.experiments.canopy.machineAlt).toContain('hive');
   });
 
   it('gives every plate the same height, up to 120 px so the bench fits a desktop row, and 84 px below 48rem', () => {

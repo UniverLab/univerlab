@@ -51,15 +51,35 @@ describe('404 — Hic sunt dracones', () => {
       // The kraken files ship 1600x914 — their own ratio, not 16:9. The
       // markup describes the real bytes; a forced ratio would squish them.
       expect(pic).toContain('height="914"');
-      expect(pic).toContain('alt={t.notFound.alt}');
       // Lazy in markup: an eager img would be fetched by the preload scanner
       // before the swap script runs, so every visitor would download both
       // charts; lazy + display:none means the off-theme one never loads.
       expect(pic).toContain('loading="lazy"');
       expect(pic).not.toContain('fetchpriority');
     }
+    // The day chart carries the description; the night chart ships empty and
+    // hidden so the screen reader hears the edge of the world once.
+    expect(pictureOf('day')).toContain('alt={t.notFound.alt}');
+    expect(pictureOf('day')).not.toContain('aria-hidden');
+    expect(pictureOf('night')).toContain('alt=""');
+    expect(pictureOf('night')).toContain('aria-hidden="true"');
+    // The night chart travels with the description in data-alt: in night
+    // theme it is the visible picture, so the swap must move the alt with it
+    // (the same expose pattern the machine plates use) or the page's picture
+    // would be silent to screen readers after dark.
+    expect(pictureOf('night')).toContain('data-alt={t.notFound.alt}');
     // The CSS never forces a ratio over the charts: the attributes carry it.
     expect(page).not.toMatch(/\.kraken img\s*\{[^}]*aspect-ratio/);
+  });
+
+  it('moves the description with the visible chart on a theme flip', () => {
+    // In night theme the night chart is the visible picture: without the
+    // expose swap its empty alt and aria-hidden would leave the page's
+    // picture silent to screen readers after dark.
+    expect(page).toContain("img.setAttribute('alt', img.getAttribute('data-alt') || '')");
+    expect(page).toContain('expose(dark, day)');
+    expect(page).toContain('expose(day, dark)');
+    expect(page).toContain("hide.setAttribute('aria-hidden', 'true')");
   });
 
   it('swaps eager/lazy with the theme, keyed to the same test the head script uses', () => {

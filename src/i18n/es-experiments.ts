@@ -8,6 +8,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Un motor de grafos para agentes de IA — todos los harness, un solo flujo.',
       etymology: '(Del ingl. <em>canopy</em>, ‘dosel del bosque’.)',
+      machineAlt: 'Torre colmena de madera grabada, con panales y abejas, movida por una manivela en su base',
       figure: 'Colmena de madera donde muchos agentes trabajan bajo un mismo techo, cada uno en su celda y todos en un solo flujo. Como el dosel del bosque, no hace crecer los árboles: los cubre y los ordena para que la luz llegue a todos.',
       thread: {
         problem: 'agentes de IA',
@@ -111,6 +112,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Un espacio de trabajo LaTeX unificado — escritura, diagramas y PDFs en una sola herramienta autocontenida.',
       etymology: '(De <em>TeX</em> y el ingl. <em>forge</em>, ‘forja’.)',
+      machineAlt: 'Prensa de imprenta de madera grabada, con volante, rodillo de tinta y palanca',
       figure: 'Prensa de tipos para la época de las máquinas: entra el manuscrito, sale el pliego. Con ella LaTeX deja de ser un oficio de instaladores y vuelve a ser lo que siempre fue, el arte de componer bien una página.',
       thread: {
         problem: 'LaTeX',
@@ -182,6 +184,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
       etymology: '(De <em>git</em> y el ingl. <em>kit</em>, ‘estuche de herramientas’.)',
+      machineAlt: 'Torno de madera grabado con manivela, enrollando hilo rosa en un cuenco',
       figure: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
       thread: {
         problem: 'configuración de repos',
@@ -245,6 +248,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Un asistente interactivo que arma y hace cumplir convenciones en repositorios de GitHub.',
       etymology: '(De <em>GitHub</em> y el ingl. <em>scaffold</em>, ‘andamio’.)',
+      machineAlt: 'Torre de andamio de madera grabada, con cuerdas, polea y escalera',
       figure: 'Andamio que se levanta antes que la obra: protege las ramas, alza los chequeos y deja cada repositorio en pie desde el primer día, para que lo que se construya encima no haya que apuntalarlo después.',
       thread: {
         problem: 'repositorios de GitHub',
@@ -311,6 +315,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'CAD como código: geometría declarativa compilada de forma determinista a DXF.',
       etymology: '(De <em>CAD</em> y el ingl. <em>spec</em>, ‘especificación’.)',
+      machineAlt: 'Mesa de dibujo grabada cubierta con un paño, con una regla encima',
       figure: 'Mesa de dibujo que declaraba las piezas en lugar de trazarlas. Se archivó cuando el laboratorio prefirió envolver las mejores herramientas antes que reinventarlas; su idea sigue en las que la reemplazaron.',
       thread: {
         problem: 'CAD',
@@ -327,6 +332,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
       etymology: '(Del gr. <em>ástron</em>, ‘astro’, y el ingl. <em>denoise</em>, ‘quitar el ruido’.)',
+      machineAlt: 'Telescopio de latón grabado sobre un trípode, con la lente en luz violeta',
       figure: 'Ocular que separa la luz del ruido: entre el grano que deja el sensor y la estrella que de verdad está ahí, una investigación que mide antes de afirmar.',
       thread: {
         problem: 'reducción de ruido',
@@ -415,6 +421,7 @@ export const experiments: Dict['experiments'] = {
       need: 'El planning poker casi siempre implica un servidor en medio — una cuenta que crear, una sala que hospedar, una herramienta más entre tú y un número.',
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       etymology: '(Del lat. <em>quorum</em>, ‘de los cuales’.)',
+      machineAlt: 'Aparato de sifón de latón grabado, con un matraz de líquido oscuro, tubos y volante',
       figure: 'Mesa de cartas boca abajo: cada quien juega su estimación a la vez y nadie arrastra a los demás; el acuerdo aparece cuando se voltean.',
       thread: {
         problem: 'estimación',
@@ -461,6 +468,7 @@ export const experiments: Dict['experiments'] = {
       need: 'Un agente puede pedir una voz, un modelo o una imagen, pero no puede oír, ver ni medir lo que recibió. La herramienta tiene que decirle si el resultado pasó.',
       tagline: 'Herramientas de creación para agentes, cada una en su propio entorno fijado y con cada resultado verificado.',
       etymology: '(Del fr. <em>facette</em>, ‘cara pequeña de una piedra tallada’, y el lat. <em>media</em>.)',
+      machineAlt: 'Máquina de tallar gemas grabada con una piedra amarilla, con calibre de ángulos y manivela',
       figure: 'Una faceteadora de gemas: la piedra en bruto entra y sale tallada cara por cara, y cada cara se mide antes de pulir la siguiente.',
       thread: {
         problem: 'agentes que crean a ciegas',
@@ -599,6 +607,7 @@ export const experiments: Dict['experiments'] = {
       tagline:
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       etymology: '(Del ingl. <em>demo</em> y <em>stage</em>, ‘escenario’.)',
+      machineAlt: 'Cámara de fuelle grabada, con montura de latón y ojo de vidrio rojo',
       figure: 'Zoótropo de la terminal: cada demostración se escribe como una partitura y se reproduce idéntica, cuadro a cuadro, como el galope que Muybridge descompuso para que por fin pudiera verse.',
       thread: {
         problem: 'demos de terminal',

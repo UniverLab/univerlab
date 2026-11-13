@@ -133,9 +133,9 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
   <div class="wrap base">
     <div class="small">
       {forged && (<p><span class="forged"><span class="forged-name" translate="no">{forged.name}</span>{' · '}{t.footer.forged}</span></p>)}
-      <p><span class="operator">{t.footer.operator}</span><span class="sep"> · </span>{legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}</p>
+      <p><span class="operator">{t.footer.operator}</span><span class="sep" aria-hidden="true"> · </span>{legalLinks.map((l, i) => (<Fragment>{i > 0 && <span class="sep" aria-hidden="true"> · </span>}<a href={l.href}>{l.label}</a></Fragment>))}</p>
       <p><span class="copyright">{t.footer.copyright} · <a href="https://github.com/UniverLab/univerlab/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">{t.footer.licenseName}</a></span></p>
-      <p><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span><span class="sep"> · </span><button
+      <p><span class="built">{t.footer.built.label} {t.footer.built.canopy} <a href={localizePath('/canopy', lang)} translate="no">{byId('canopy').name}</a><span class="sep" aria-hidden="true"> · </span>{t.footer.built.ghscaff} <a href={localizePath('/ghscaff', lang)} translate="no">{byId('ghscaff').name}</a><span class="sep" aria-hidden="true"> · </span>{t.footer.built.gitkit} <a href={localizePath('/gitkit', lang)} translate="no">{byId('gitkit').name}</a></span><span class="sep" aria-hidden="true"> · </span><button
         type="button"
         class="branch mono"
         translate="no"
@@ -173,7 +173,7 @@ Date:   now
     color: var(--f-ink);
     margin-top: 2rem;
   }
-  footer :global(svg) { color: var(--f-ink-faint); }
+  footer :global(svg) { color: var(--f-ink-dim); }
   footer :focus-visible { outline-color: var(--f-ink); }
 
   /* The engraved machinery frieze (Quorum's colophon band): full width at the
@@ -327,11 +327,11 @@ Date:   now
      everything around it; hover reveals its meaning, click reveals the commit. */
   .branch {
     font-family: var(--font-mono);
-    font-size: 0.6rem; letter-spacing: 0.08em; color: var(--f-ink-faint);
+    font-size: 0.6rem; letter-spacing: 0.08em; color: var(--f-ink-dim);
     background: none; border: 0; padding: 0; cursor: pointer;
     transition: color 0.15s ease;
   }
-  .branch:hover, .branch[aria-expanded='true'] { color: var(--f-ink-dim); }
+  .branch:hover, .branch[aria-expanded='true'] { color: var(--f-ink); }
 
   /* The universe's latest commit — a small terminal card above the branch. */
   .commit-panel {

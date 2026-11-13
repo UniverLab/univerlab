@@ -65,7 +65,12 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain('type="image/avif"');
     expect(MACHINE).toContain('type="image/webp"');
     expect(MACHINE).toContain('decoding="async"');
-    expect(MACHINE).toContain('alt=""');
+    expect(MACHINE).toContain('machineAlt');
+    // A lone plate always exposes the description; a theme pair ships it on
+    // the day plate with the night plate empty and hidden.
+    expect(MACHINE).toMatch(/alt=\{exposed \? alt : ''\}/);
+    expect(MACHINE).toContain("aria-hidden={exposed ? undefined : 'true'}");
+    expect(MACHINE).toContain('data-alt={alt}');
     expect(MACHINE).toContain('fetchpriority');
     expect(MACHINE).toMatch(/loading=\{eager \? undefined : 'lazy'\}/);
     // A lone plate is the hero art: eager even when its ink is night.
@@ -79,6 +84,13 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain("html[data-bench-theme='night'] .machine[data-machine='theme'] .machine-day");
     expect(MACHINE).toContain("html:not([data-bench-theme='night']) .machine[data-machine='theme'] .machine-night");
     expect(MACHINE).toContain('univerlab:themechange');
+  });
+
+  it('announces the description once: the swap moves alt with the live plate', () => {
+    expect(MACHINE).toContain('expose(dark, day)');
+    expect(MACHINE).toContain('expose(day, dark)');
+    expect(MACHINE).toContain("img.setAttribute('alt', img.getAttribute('data-alt') || '')");
+    expect(MACHINE).toContain("hide.setAttribute('aria-hidden', 'true')");
   });
 
   it('ships no recolouring: the plates are already inked for their ground', () => {

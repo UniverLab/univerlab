@@ -1,5 +1,6 @@
 ---
 import { plate, srcsetFor, plateSizes, type MachineTheme } from '../lib/machines';
+import { getLang, useTranslations } from '../i18n';
 
 interface Props {
   id: string;
@@ -9,6 +10,11 @@ interface Props {
 }
 const { id, ink = 'night', height = '240px', class: className } = Astro.props;
 const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] : [ink];
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+// The engraving's description, written once per machine: the workbench keeps
+// its own key, every experiment keeps one under experiments[id].
+const alt = id === 'workbench' ? t.workbench.machineAlt : t.experiments[id as keyof typeof t.experiments].machineAlt;
 ---
 <span class:list={['machine', className]} data-machine={ink} style={`--machine-h:${height}`}>
   {inks.map((which) => {
@@ -18,6 +24,11 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
     // day eager / night lazy like Postcard, and the swap script below corrects
     // to the live phase on load and on univerlab:themechange.
     const eager = inks.length === 1 || which === 'day';
+    // Only the visible plate exposes the description: a lone plate always
+    // does, a theme pair ships it on the day plate with the night plate empty
+    // and hidden, and the swap script moves the pair with the eager/lazy one
+    // so a screen reader hears it once.
+    const exposed = inks.length === 1 || which === 'day';
     return (
       <picture class:list={['machine-pic', `machine-${which}`]}>
         <source srcset={srcsetFor(id, which, 'avif')} sizes={sizes} type="image/avif" />
@@ -26,7 +37,9 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
           src={`/bench/machines/${id}-${which}-450.webp`}
           width={p.w}
           height={p.h}
-          alt=""
+          alt={exposed ? alt : ''}
+          aria-hidden={exposed ? undefined : 'true'}
+          data-alt={alt}
           decoding="async"
           fetchpriority={eager ? 'high' : undefined}
           loading={eager ? undefined : 'lazy'}
@@ -50,6 +63,14 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
       img.setAttribute('loading', 'lazy');
       img.removeAttribute('fetchpriority');
     }
+    // Only the visible plate exposes the description: the live plate carries
+    // its data-alt, the parked one carries an empty alt and stays hidden.
+    function expose(img, hide) {
+      img.setAttribute('alt', img.getAttribute('data-alt') || '');
+      img.removeAttribute('aria-hidden');
+      hide.setAttribute('alt', '');
+      hide.setAttribute('aria-hidden', 'true');
+    }
     function sync() {
       var night = document.documentElement.dataset.benchTheme === 'night';
       var roots = document.querySelectorAll('span[data-machine="theme"]');
@@ -57,8 +78,8 @@ const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] 
         var day = roots[i].querySelector('picture.machine-day > img');
         var dark = roots[i].querySelector('picture.machine-night > img');
         if (day && dark) {
-          if (night) { lazy(day); eager(dark); }
-          else { lazy(dark); eager(day); }
+          if (night) { lazy(day); eager(dark); expose(dark, day); }
+          else { lazy(dark); eager(day); expose(day, dark); }
         }
       }
     }

@@ -837,6 +837,7 @@ export const es: Dict = {
     title: 'El Banco de trabajo — consultoría de UniverLab en agentes de inteligencia artificial',
     description: 'Reserva una sesión con quienes construyeron este laboratorio: consultoría en agentes de inteligencia artificial, automatización y auditorías.',
     label: 'EL BANCO DE TRABAJO',
+    machineAlt: 'Banco de trabajo grabado con un manómetro, una gradilla de tubos, una prensa pequeña y formones',
     head: '¿Tus agentes fallan en silencio? Tráelos al Banco de trabajo.',
     headEm: 'en silencio',
     intro: 'Las manos que construyeron este laboratorio, para lo que necesites en inteligencia artificial y Agent Experience (AX): criterio técnico, ideas, agentes o lo último que salió. Sales con notas escritas y el siguiente paso claro.',

@@ -6,6 +6,7 @@ export const experiments = {
       tagline:
         'A graph engine for AI coding agents — every harness, one workflow.',
       etymology: '(From <em>canopy</em>, the forest’s crown.)',
+      machineAlt: 'An engraved wooden hive tower with honeycomb panels and bees, worked by a crank at its base',
       figure: 'A wooden hive where many agents work under one roof, each in its own cell and all in one flow. Like the forest canopy, it does not grow the trees: it covers and orders them so the light reaches every one.',
       thread: {
         problem: 'AI agents',
@@ -109,6 +110,7 @@ export const experiments = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       etymology: '(From <em>TeX</em> and <em>forge</em>.)',
+      machineAlt: 'An engraved wooden printing press with a hand wheel, an ink roller and a pull lever',
       figure: 'A type press for the age of machines: the manuscript goes in, the printed sheet comes out. With it LaTeX stops being an installer\'s trade and becomes again what it always was, the art of setting a page well.',
       thread: {
         problem: 'LaTeX',
@@ -180,6 +182,7 @@ export const experiments = {
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
       etymology: '(From <em>git</em> and <em>kit</em>, a case of tools.)',
+      machineAlt: 'An engraved wooden winding reel with a hand crank, spooling pink thread into a bowl',
       figure: 'The craftsman\'s case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.',
       thread: {
         problem: 'repository setup',
@@ -243,6 +246,7 @@ export const experiments = {
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       etymology: '(From <em>GitHub</em> and <em>scaffold</em>.)',
+      machineAlt: 'An engraved wooden scaffold tower with ropes, a pulley and a ladder',
       figure: 'Scaffolding raised before the building: it guards the branches, lifts the checks and leaves every repository standing from day one, so whatever is built on top never needs propping up later.',
       thread: {
         problem: 'GitHub repositories',
@@ -309,6 +313,7 @@ export const experiments = {
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
       etymology: '(From <em>CAD</em> and <em>spec</em>, specification.)',
+      machineAlt: 'An engraved drafting table draped with a dust cloth, with a ruler resting on top',
       figure: 'A drafting table that declared parts instead of drawing them. It was archived when the lab chose to wrap the best tools rather than reinvent them; its idea lives on in the tools that replaced it.',
       thread: {
         problem: 'CAD',
@@ -325,6 +330,7 @@ export const experiments = {
       tagline:
         'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
       etymology: '(From Greek <em>ástron</em>, star, and <em>denoise</em>.)',
+      machineAlt: 'An engraved brass telescope on a tripod, its lens catching purple light',
       figure: 'An eyepiece that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
       thread: {
         problem: 'noise reduction',
@@ -413,6 +419,7 @@ export const experiments = {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       etymology: '(From Latin <em>quorum</em>, ‘of whom’.)',
+      machineAlt: 'An engraved brass siphon apparatus with a flask of dark liquid, pipes and a hand wheel',
       figure: 'A table of face-down cards: everyone plays their estimate at once and nobody sways the others; agreement appears when they turn over.',
       thread: {
         problem: 'estimation',
@@ -459,6 +466,7 @@ export const experiments = {
       need: 'An agent can ask for a voice, a model or an image, but it cannot hear, see or measure what came back. The tool has to say whether the result passed.',
       tagline: 'Creation tools for agents, each in its own pinned environment, with every result verified.',
       etymology: '(From French <em>facette</em>, the small face of a cut stone, and Latin <em>media</em>.)',
+      machineAlt: 'An engraved gem-cutting machine holding a yellow stone, with an angle gauge and a crank',
       figure: 'A gem faceting machine: the rough stone goes in and comes out cut face by face, and each face is measured before the next one is polished.',
       thread: {
         problem: 'agents that make media blind',
@@ -553,6 +561,7 @@ export const experiments = {
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
       etymology: '(From <em>demo</em> and <em>stage</em>.)',
+      machineAlt: 'An engraved bellows camera with a brass lens mount and a red glass eye',
       figure: 'A zoetrope for the terminal: every demo is written like a score and plays back the same, frame by frame, like the gallop Muybridge broke apart so it could finally be seen.',
       thread: {
         problem: 'terminal demos',

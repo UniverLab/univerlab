@@ -456,6 +456,26 @@ describe('ExperimentLayout — the self-drawn license badge', () => {
   });
 });
 
+describe('Footer — the branch button meets contrast and the separators hide', () => {
+  it('inks the branch at dim, not faint, and lights it on hover', () => {
+    // #4a4d53 on black is ~2.5:1; #8a8d93 is ~6:1, over the 4.5:1 bar.
+    expect(src).toMatch(/\.branch \{[^}]*color:\s*var\(--f-ink-dim\)/);
+    expect(src).toMatch(/\.branch:hover, \.branch\[aria-expanded='true'\] \{[^}]*color:\s*var\(--f-ink\)/);
+    expect(src).not.toMatch(/\.branch \{[^}]*--f-ink-faint/);
+  });
+
+  it('hides every base separator from assistive tech', () => {
+    for (const m of markup.matchAll(/<span class="sep"[^>]*>/g)) {
+      expect(m[0]).toContain('aria-hidden="true"');
+    }
+    expect((markup.match(/<span class="sep"/g) ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('paints footer svg marks dim, not faint', () => {
+    expect(src).toContain('footer :global(svg) { color: var(--f-ink-dim); }');
+  });
+});
+
 describe('Footer — the cosmic branch names the Orion Arm', () => {
   it('prints milky-way/orion in both languages and nothing still says main', () => {
     expect(en.cosmos.branch).toBe('branch: milky-way/orion');

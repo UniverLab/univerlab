@@ -89,36 +89,37 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
 
         <!-- The projector is the pause control itself (id kept for lantern.ts);
              the screen keeps its own click-to-open on #catch (FEAT-30). -->
-        <picture
+        <button
+          type="button"
           class="lantern-pic"
           id="lantern-pause"
-          role="button"
-          tabindex="0"
           aria-pressed="false"
           aria-label={t.home.lantern.pause}
           data-pause-label={t.home.lantern.pause}
           data-resume-label={t.home.lantern.resume}
         >
-          {lanternSources.map((src) => (
-            <source
-              data-phase={src.phase}
-              type={src.type}
-              media={src.phase === 'night' ? 'not all' : undefined}
-              srcset={src.srcset}
-              sizes="(min-width: 50rem) 760px, 100vw"
+          <picture>
+            {lanternSources.map((src) => (
+              <source
+                data-phase={src.phase}
+                type={src.type}
+                media={src.phase === 'night' ? 'not all' : undefined}
+                srcset={src.srcset}
+                sizes="(min-width: 50rem) 760px, 100vw"
+              />
+            ))}
+            <img
+              id="lantern-img"
+              src={lanternDaySrc}
+              width="1178"
+              height="900"
+              alt={t.home.lantern.alt}
+              fetchpriority="high"
+              data-day-src={lanternDaySrc}
+              data-night-src="/bench/live/lantern-night-900.webp"
             />
-          ))}
-          <img
-            id="lantern-img"
-            src={lanternDaySrc}
-            width="1178"
-            height="900"
-            alt={t.home.lantern.alt}
-            fetchpriority="high"
-            data-day-src={lanternDaySrc}
-            data-night-src="/bench/live/lantern-night-900.webp"
-          />
-        </picture>
+          </picture>
+        </button>
         <!-- The same engraving again, over the screen: its cloth is transparent,
              so the projection shows whole behind the frame and the cap, as in
              the profile banner. Decorative and click-through. -->
@@ -166,7 +167,7 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
                     src={`/bench/machines/${exp.id}-day-450.webp`}
                     width={plateWidths[exp.id] ?? 450}
                     height="450"
-                    alt=""
+                    alt={e.machineAlt}
                     fetchpriority="low"
                     loading={i >= 2 ? 'lazy' : undefined}
                     data-day-src={`/bench/machines/${exp.id}-day-450.webp`}
@@ -187,7 +188,9 @@ const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
 <style>
   /* ── The lantern and its screen ───────────────────────────────────────── */
   .lantern { position: relative; width: min(100%, 780px); margin-inline: auto; }
-  .lantern-pic { position: relative; z-index: 2; display: block; cursor: pointer; }
+  .lantern-pic { position: relative; z-index: 2; display: block; width: 100%; cursor: pointer;
+                background: none; border: 0; padding: 0; font: inherit; color: inherit; }
+  .lantern-pic picture { display: block; margin: 0; }
   .lantern-pic img { display: block; width: 100%; height: auto; }
   .lantern-front { position: absolute; inset: 0 auto auto 0; z-index: 4; width: 100%;
                    pointer-events: none; }

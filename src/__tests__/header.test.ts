@@ -324,3 +324,20 @@ describe('celestial button is circadian-only', () => {
     expect(quorumLine![0]).toMatch(/circadian: true/);
   });
 });
+
+describe('Header accessible names', () => {
+  it('names the sponsor link in the page language', () => {
+    // The sponsor mark is a heart icon with its text visually hidden: without
+    // a name it fails link-name, so the link carries the localized name.
+    expect(src).toContain('aria-label={(item as any).sponsor ? t.nav.sponsors : undefined}');
+    expect(en.nav.sponsors).toBe('sponsor');
+    expect(es.nav.sponsors).toBe('sponsor');
+  });
+
+  it('leaves the home link unnamed so its name falls back to the visible wordmark', () => {
+    // label-content-name-mismatch: aria-label="UniverLab" did not contain the
+    // visible slogan, so the label is gone and the name comes from content.
+    expect(src).toContain('<a href={localizePath(\'/\', lang)} class="home">');
+    expect(src).not.toMatch(/class="home"[^>]*aria-label/);
+  });
+});
