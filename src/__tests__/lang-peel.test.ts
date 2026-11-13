@@ -165,7 +165,7 @@ describe('language corner markup', () => {
   it('holds the revealed page with its label and the folded flap', () => {
     const markup = anchor![0];
     expect(markup).toMatch(/<span class="under">[\s\S]*<\/span><span class="flap"><\/span>/);
-    expect(markup).toMatch(/<span class="label"><span class="short">\{languages\[other\]\}<\/span><span class="long">\{t\.header\.langLabel\[other\]\}<\/span><\/span>/);
+    expect(markup).toMatch(/<span class="label"><span class="long">\{t\.header\.langLabel\[other\]\}<\/span>\{' '\}<span class="short">\{languages\[other\]\}<\/span><\/span>/);
   });
 
   it('names the other language in its aria-label, localized', () => {

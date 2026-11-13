@@ -35,7 +35,7 @@ export const es: Dict = {
     // El buzón al final de la regla del encabezado y las cartas que reparte.
     mailbox: {
       open: 'Buzón: {n} cartas nuevas',
-      openOne: 'Buzón: una carta nueva',
+      openOne: 'Buzón: 1 carta nueva',
       openNone: 'Buzón: sin cartas nuevas',
       close: 'Cerrar la carta',
       stage: 'La carta: dale vuelta y abre el lacre',

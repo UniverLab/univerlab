@@ -286,10 +286,10 @@ Date:   now
   }
   .word { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.32em; color: var(--f-ink-dim); }
   /* The braille easter egg sits quietly under the word: no hover, no
-     translation, just plain grade-1 cells at a faint opacity. The font stack
-     is chosen only for having braille glyphs. */
+     translation, just plain grade-1 cells at an opacity that still passes
+     4.5:1. The font stack is chosen only for having braille glyphs. */
   .braille {
-    opacity: 0.45;
+    opacity: 0.9;
     font-family: "DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace;
     font-size: 15px;
     letter-spacing: 2px;

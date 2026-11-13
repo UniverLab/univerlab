@@ -37,7 +37,7 @@ export const en = {
     // The mailbox at the end of the header rule and the letters it delivers.
     mailbox: {
       open: 'Mailbox: {n} new letters',
-      openOne: 'Mailbox: one new letter',
+      openOne: 'Mailbox: 1 new letter',
       openNone: 'Mailbox: no new letters',
       close: 'Close the letter',
       stage: 'The letter: turn it over and break the seal',

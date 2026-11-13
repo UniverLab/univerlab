@@ -223,11 +223,29 @@ describe('Footer — the braille easter egg', () => {
     expect(src).not.toContain('el universo se lee');
   });
 
-  it('styles it faint and quiet: 0.45 opacity, 15px, 2px tracking, braille-capable fallback stack', () => {
-    expect(src).toMatch(/\.braille\s*\{[^}]*opacity:\s*0\.45/s);
+  it('styles it quiet: 0.9 opacity, 15px, 2px tracking, braille-capable fallback stack', () => {
+    expect(src).toMatch(/\.braille\s*\{[^}]*opacity:\s*0\.9/s);
     expect(src).toMatch(/\.braille\s*\{[^}]*font-size:\s*15px/s);
     expect(src).toMatch(/\.braille\s*\{[^}]*letter-spacing:\s*2px/s);
     expect(src).toContain('"DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace');
+  });
+
+  it('meets contrast: the braille line reads at 4.5:1 on the fixed black footer', () => {
+    // The footer ground is fixed black day and night, so one check covers
+    // both themes. The 0.45 opacity read #3e3f42 on #000 = 1.99:1; 0.9
+    // reads ~5.2:1. Any future dimming below ~0.84 breaks this test first.
+    const opacity = Number(src.match(/\.braille\s*\{[^}]*opacity:\s*([\d.]+)/s)![1]);
+    const dim = src.match(/--f-ink-dim:\s*(#[0-9a-f]{6})/i)![1];
+    expect(opacity).toBeGreaterThanOrEqual(0.84);
+    const channel = (c: number) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const blend = (fg: number, bg: number, a: number) => a * fg + (1 - a) * bg;
+    const hex = dim.replace('#', '');
+    const eff = [0, 2, 4].map((i) => blend(parseInt(hex.slice(i, i + 2), 16), 0, opacity));
+    const effLum = 0.2126 * channel(eff[0]) + 0.7152 * channel(eff[1]) + 0.0722 * channel(eff[2]);
+    expect((effLum + 0.05) / 0.05).toBeGreaterThanOrEqual(4.5);
   });
 });
 

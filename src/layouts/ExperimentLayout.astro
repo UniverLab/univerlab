@@ -206,16 +206,16 @@ const ogImage = `/og/${id}.png`;
     )}
 
     <nav class="wrap exp-nav" aria-label="Experiments">
-      <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={prevExp.name}>
+      <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={`${prevExp.number} ${prevExp.name}`}>
         <span class="arrow" aria-hidden="true">←</span>
         <span class="meta">
-          <span class="label n">{prevExp.number}</span>
+          <span class="label n">{prevExp.number}</span>{' '}
           <span class="nm">{prevExp.name}</span>
         </span>
       </a>
-      <a class="exp-nav-link next" href={localizePath(`/${nextExp.id}`, lang)} style={`--essence: ${nextExp.essenceHex}`} aria-label={nextExp.name}>
+      <a class="exp-nav-link next" href={localizePath(`/${nextExp.id}`, lang)} style={`--essence: ${nextExp.essenceHex}`} aria-label={`${nextExp.number} ${nextExp.name}`}>
         <span class="meta">
-          <span class="label n">{nextExp.number}</span>
+          <span class="label n">{nextExp.number}</span>{' '}
           <span class="nm">{nextExp.name}</span>
         </span>
         <span class="arrow" aria-hidden="true">→</span>

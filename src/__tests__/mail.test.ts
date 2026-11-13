@@ -67,7 +67,7 @@ function ann(id: string, daysAgo: number, topic: string | null = 'canopy'): Anno
 
 const COPY = {
   open: 'Mailbox: {n} new letters',
-  openOne: 'Mailbox: one new letter',
+  openOne: 'Mailbox: 1 new letter',
   openNone: 'Mailbox: no new letters',
 };
 
@@ -408,8 +408,19 @@ describe('the rest of the papers', () => {
 
   it('names the count in the accessible label', () => {
     expect(boxLabel(COPY, 0)).toBe('Mailbox: no new letters');
-    expect(boxLabel(COPY, 1)).toBe('Mailbox: one new letter');
+    expect(boxLabel(COPY, 1)).toBe('Mailbox: 1 new letter');
     expect(boxLabel(COPY, 3)).toBe('Mailbox: 3 new letters');
+  });
+
+  it('names the badge digit in the accessible label, both languages', () => {
+    // label-content-name-mismatch: the badge shows the digit, so the name
+    // must contain it — "one"/"una" would not contain the visible "1".
+    for (const copy of [en.header.mailbox, es.header.mailbox]) {
+      expect(boxLabel(copy, 1)).toContain('1');
+      expect(boxLabel(copy, 2)).toContain('2');
+    }
+    expect(en.header.mailbox.openOne).toBe('Mailbox: 1 new letter');
+    expect(es.header.mailbox.openOne).toBe('Buzón: 1 carta nueva');
   });
 });
 
