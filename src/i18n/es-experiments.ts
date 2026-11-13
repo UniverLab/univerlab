@@ -185,7 +185,7 @@ export const experiments: Dict['experiments'] = {
         'Configuración guiada de repositorios git — hooks, ignores, attributes y config en un solo flujo.',
       etymology: '(De <em>git</em> y el ingl. <em>kit</em>, ‘estuche de herramientas’.)',
       machineAlt: 'Torno de madera grabado con manivela, enrollando hilo rosa en un cuenco',
-      figure: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
+      figure: 'Trapiche que exprime la caña hasta la última gota: así le saca GitKit a git todo el jugo, con los ganchos que nadie configura y las reglas que todos olvidan puestos igual en cada repositorio.',
       thread: {
         problem: 'configuración de repos',
         method: 'builds guardados e idempotentes',
@@ -333,7 +333,7 @@ export const experiments: Dict['experiments'] = {
         'Una propuesta de investigación para benchmarking de reducción de ruido astronómico — evaluada por la ciencia que recupera, no por lo limpia que se vea.',
       etymology: '(Del gr. <em>ástron</em>, ‘astro’, y el ingl. <em>denoise</em>, ‘quitar el ruido’.)',
       machineAlt: 'Telescopio de latón grabado sobre un trípode, con la lente en luz violeta',
-      figure: 'Ocular que separa la luz del ruido: entre el grano que deja el sensor y la estrella que de verdad está ahí, una investigación que mide antes de afirmar.',
+      figure: 'Telescopio que separa la luz del ruido: entre el grano que deja el sensor y la estrella que de verdad está ahí, una investigación que mide antes de afirmar.',
       thread: {
         problem: 'reducción de ruido',
         method: 'un benchmark puntuado por la ciencia',
@@ -422,7 +422,7 @@ export const experiments: Dict['experiments'] = {
       tagline: 'Planning poker sin servidor — comparte un enlace, estima juntos, sin registro.',
       etymology: '(Del lat. <em>quorum</em>, ‘de los cuales’.)',
       machineAlt: 'Aparato de sifón de latón grabado, con un matraz de líquido oscuro, tubos y volante',
-      figure: 'Mesa de cartas boca abajo: cada quien juega su estimación a la vez y nadie arrastra a los demás; el acuerdo aparece cuando se voltean.',
+      figure: 'Cafetera de balanza: el agua sube, se junta con el café y, cuando el peso se equilibra, la llama se apaga sola; nadie tiene que servirla. Así estima Quorum: cada quien pone su número a la vez y el acuerdo sale solo, sin un servidor en medio.',
       thread: {
         problem: 'estimación',
         method: 'una sala peer-to-peer',
@@ -608,7 +608,7 @@ export const experiments: Dict['experiments'] = {
         'Demos como Código — captura, graba y exporta demos de terminal reproducibles.',
       etymology: '(Del ingl. <em>demo</em> y <em>stage</em>, ‘escenario’.)',
       machineAlt: 'Cámara de fuelle grabada, con montura de latón y ojo de vidrio rojo',
-      figure: 'Zoótropo de la terminal: cada demostración se escribe como una partitura y se reproduce idéntica, cuadro a cuadro, como el galope que Muybridge descompuso para que por fin pudiera verse.',
+      figure: 'Cámara de fuelle: lo que pasa frente al lente queda fijado tal cual y se puede revelar idéntico cuantas veces haga falta. Así graba DemoStage las demostraciones de terminal: escritas como una partitura, se reproducen iguales cuadro a cuadro.',
       thread: {
         problem: 'demos de terminal',
         method: 'una partitura de eventos',

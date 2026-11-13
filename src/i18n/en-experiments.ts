@@ -183,7 +183,7 @@ export const experiments = {
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
       etymology: '(From <em>git</em> and <em>kit</em>, a case of tools.)',
       machineAlt: 'An engraved wooden winding reel with a hand crank, spooling pink thread into a bowl',
-      figure: 'The craftsman\'s case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.',
+      figure: 'A sugar-cane mill that presses the cane to the last drop: that is how GitKit gets everything out of git, with the hooks nobody sets up and the rules everybody forgets in place the same way in every repository.',
       thread: {
         problem: 'repository setup',
         method: 'saved, idempotent builds',
@@ -331,7 +331,7 @@ export const experiments = {
         'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
       etymology: '(From Greek <em>ástron</em>, star, and <em>denoise</em>.)',
       machineAlt: 'An engraved brass telescope on a tripod, its lens catching purple light',
-      figure: 'An eyepiece that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
+      figure: 'A telescope that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
       thread: {
         problem: 'noise reduction',
         method: 'a benchmark scored by the science',
@@ -420,7 +420,7 @@ export const experiments = {
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       etymology: '(From Latin <em>quorum</em>, ‘of whom’.)',
       machineAlt: 'An engraved brass siphon apparatus with a flask of dark liquid, pipes and a hand wheel',
-      figure: 'A table of face-down cards: everyone plays their estimate at once and nobody sways the others; agreement appears when they turn over.',
+      figure: 'A balance siphon coffee maker: the water rises, meets the coffee and, when the weight evens out, the flame goes out by itself; nobody has to serve it. That is how Quorum estimates: everyone puts down a number at once and the agreement comes out on its own, with no server in between.',
       thread: {
         problem: 'estimation',
         method: 'a peer-to-peer room',
@@ -562,7 +562,7 @@ export const experiments = {
         'Demos as Code — capture, record and export reproducible terminal demos.',
       etymology: '(From <em>demo</em> and <em>stage</em>.)',
       machineAlt: 'An engraved bellows camera with a brass lens mount and a red glass eye',
-      figure: 'A zoetrope for the terminal: every demo is written like a score and plays back the same, frame by frame, like the gallop Muybridge broke apart so it could finally be seen.',
+      figure: 'A bellows camera: what passes in front of the lens is fixed exactly as it was and can be developed the same way as many times as needed. That is how DemoStage records terminal demos: written like a score, they play back the same frame by frame.',
       thread: {
         problem: 'terminal demos',
         method: 'an event score',

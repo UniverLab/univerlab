@@ -29,8 +29,8 @@ const IPA: Record<string, string> = {
 
 /** GitKit's figurative sense, copied from the spec for both languages. */
 const GITKIT_FIGURE = {
-  en: "The craftsman's case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.",
-  es: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
+  en: 'A sugar-cane mill that presses the cane to the last drop: that is how GitKit gets everything out of git, with the hooks nobody sets up and the rules everybody forgets in place the same way in every repository.',
+  es: 'Trapiche que exprime la caña hasta la última gota: así le saca GitKit a git todo el jugo, con los ganchos que nadie configura y las reglas que todos olvidan puestos igual en cada repositorio.',
 };
 
 type ExperimentCopy = { etymology?: string; figure?: string };
