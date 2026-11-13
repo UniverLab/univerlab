@@ -26,8 +26,10 @@ export interface BookingState {
   eventId?: string;
   /** UTC ISO start of the booked/held event. */
   start?: string;
-  /** Epoch ms when the hold was created (24-hour expiry counts from here). */
+  /** Epoch ms when the hold was created (the reminder counts from here). */
   createdAt: number;
+  /** True once the operator got the unconfirmed-hold reminder. */
+  reminded?: boolean;
   phone: string;
   name: string;
   brief: string[];
@@ -62,13 +64,20 @@ export const PICKED: Record<Lang, string> = {
 };
 
 export const HOLD_SENT: Record<Lang, string> = {
-  es: 'Te aparté el espacio del {slot}. Para confirmarlo paga por {payments} y avísame por aquí con el comprobante: el espacio queda tuyo al verificar el pago. Si no se confirma en 24 horas, el apartado se libera.',
-  en: 'I held the slot on {slot} for you. To confirm it pay via {payments} and send me the receipt here: the slot is yours once the payment is checked. If it is not confirmed within 24 hours, the hold is released.',
+  es: 'Te aparté el espacio del {slot}. Para confirmarlo paga por {payments} y avísame por aquí con el comprobante: el espacio queda tuyo al verificar el pago. Si no se confirma 24 horas antes de la sesión, el apartado se libera.',
+  en: 'I held the slot on {slot} for you. To confirm it pay via {payments} and send me the receipt here: the slot is yours once the payment is checked. If it is not confirmed 24 hours before the session, the hold is released.',
+};
+
+/** The operator saw no payment yet: the hold stands and releases 24 hours
+ *  before the session unless the client resends the receipt for a recheck. */
+export const REJECTED: Record<Lang, string> = {
+  es: 'Todavía no nos llega tu pago: tu apartado del {slot} sigue en pie y se libera 24 horas antes de la sesión si el pago no se confirma. Reenvíame el comprobante por aquí y lo revisamos.',
+  en: 'Your payment has not arrived yet: your hold on {slot} still stands and is released 24 hours before the session if the payment is not confirmed. Please resend your receipt here and we will check it.',
 };
 
 export const EXPIRED: Record<Lang, string> = {
-  es: 'Tu apartado venció sin confirmarse y liberé el espacio. Si quieres, dime y buscamos otro.',
-  en: 'Your hold expired unconfirmed and I released the slot. If you like, tell me and we will find another one.',
+  es: 'Tu apartado venció sin confirmar el pago y liberé el espacio. Si quieres, dime y buscamos otro.',
+  en: 'Your hold expired without a confirmed payment and I released the slot. If you like, tell me and we will find another one.',
 };
 
 export const CONFIRMED: Record<Lang, string> = {

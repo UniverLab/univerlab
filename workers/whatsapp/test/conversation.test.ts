@@ -644,6 +644,129 @@ test('tells the client when the operator confirmed the hold', async () => {
   expect(clientTexts().some((t) => t.includes('confirmada'))).toBe(true);
 });
 
+test('an unconfirmed hold reminds the operator once, ahead of quiet hours', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold' };
+    if (body.action === 'expire') return { ok: true, expired: false, pending: true };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+  const createdAt = AT * 1000 + 3600 * 1000;
+  // The 24h mark (20:00 Bogota) sits inside quiet hours, so the reminder
+  // comes forward to 18:59 Bogota: nothing at 18:00, one note at 19:00.
+  (Date.now as jest.Mock).mockReturnValue(createdAt + 22 * 3600_000);
+  await c.alarm();
+  expect(operatorTexts().some((t) => t.includes('Recordatorio'))).toBe(false);
+  (Date.now as jest.Mock).mockReturnValue(createdAt + 23 * 3600_000);
+  await c.alarm();
+  const notes = operatorTexts().filter((t) => t.includes('Recordatorio'));
+  expect(notes).toHaveLength(1);
+  expect(notes[0]).toContain('sin confirmar');
+  expect(notes[0]).toContain('Se libera');
+  expect(notes[0]).toContain('/confirm ');
+  expect(notes[0]).toContain('/reject ');
+  // A later alarm never repeats it.
+  await c.alarm();
+  expect(operatorTexts().filter((t) => t.includes('Recordatorio'))).toHaveLength(1);
+});
+
+test('an operator message re-arms the alarm no later than the reminder due', async () => {
+  const { storage, c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold' };
+    if (body.action === 'expire') return { ok: true, expired: false, pending: true };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+  const createdAt = AT * 1000 + 3600 * 1000;
+  (Date.now as jest.Mock).mockReturnValue(createdAt + 22 * 3600_000);
+  (storage.setAlarm as jest.Mock).mockClear();
+
+  await c.receive(inbound({ id: 'wamid.op1', from: OPERATOR, text: 'hola' }));
+
+  const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
+  // The reminder due (created+24h = 20:00 Bogota, inside quiet hours) moved
+  // forward to 18:59 Bogota: an operator message must not push the alarm
+  // past it or the reminder arrives inside the quiet window.
+  expect(alarms[alarms.length - 1]).toBe(Date.UTC(2026, 0, 1, 23, 59));
+});
+
+test('a moved hold reminds the operator again for its new deadline', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string; forMove?: boolean }) => {
+    if (body.action === 'status') {
+      if (body.forMove === true) {
+        return {
+          ok: true,
+          active: { eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold', service: 'consultation', createdAt: created },
+          slots: [SLOT_A, SLOT_B],
+        };
+      }
+      return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    }
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold' };
+    if (body.action === 'expire') return { ok: true, expired: false, pending: true };
+    if (body.action === 'move') return { ok: true, eventId: 'ev2', start: SLOT_B, end: SLOT_B, kind: 'hold' };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+  const created = AT * 1000 + 3600 * 1000;
+  // First reminder 24h in, shifted ahead of quiet hours.
+  (Date.now as jest.Mock).mockReturnValue(created + 23 * 3600_000);
+  await c.alarm();
+  expect(operatorTexts().filter((t) => t.includes('Recordatorio'))).toHaveLength(1);
+
+  // The client moves the hold: the clock restarts, so a second reminder for
+  // the new slot must still be armed and sent.
+  (decide as jest.Mock).mockResolvedValue({ action: 'move', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor otro horario' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
+  await say(c, inbound({ id: 'wamid.b5', text: 'el segundo' }));
+  const movedAt = created + 23 * 3600_000;
+  (Date.now as jest.Mock).mockReturnValue(movedAt + 24 * 3600_000);
+  await c.alarm();
+
+  const notes = operatorTexts().filter((t) => t.includes('Recordatorio'));
+  expect(notes).toHaveLength(2);
+  // The second reminder names the new slot, not the old one.
+  expect(notes[0]).toContain(SLOT_A);
+  expect(notes[1]).toContain(SLOT_B);
+});
+
+test('an operator reject tells the client the hold stands and keeps it', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold' };
+    if (body.action === 'expire') return { ok: true, expired: false, pending: true };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+
+  expect(await c.control({ action: 'operatorReject' })).toEqual({ ok: true });
+
+  expect(calendarCall).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'release' }));
+  expect(calendarCall).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'confirm' }));
+  expect(clientTexts().some((t) => t.includes('sigue en pie'))).toBe(true);
+  // The hold stays open with the same deadline: the alarm still re-checks it.
+  await c.alarm();
+  expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'expire' }));
+});
+
+test('an operator reject without an open hold fails', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  expect(await c.control({ action: 'operatorReject' })).toEqual({ ok: false });
+  expect(clientTexts()).toEqual([]);
+});
+
 test('a calendar failure apologises, notifies the operator and books nothing', async () => {
   const { c } = await offerSlots('first-call');
   (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });

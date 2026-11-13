@@ -68,21 +68,28 @@ jest.mock('../src/proof', () => {
   return { ...actual, readProof: jest.fn() };
 });
 
-jest.mock('../src/schedule', () => ({
-  bookingConfig: jest.fn(() => ({
-    windows: [
-      [7, 8],
-      [15, 19],
-    ],
-    marginMin: 15,
-    maxPerDay: 3,
-    noticeHours: 12,
-    horizonDays: 14,
-  })),
-  freeSlots: jest.fn(() => []),
-  formatSlot: jest.fn((iso: string) => iso),
-  bogotaDateKey: jest.fn(() => '2026-11-09'),
-}));
+jest.mock('../src/schedule', () => {
+  const actual = jest.requireActual('../src/schedule') as Record<string, unknown>;
+  return {
+    bookingConfig: jest.fn(() => ({
+      windows: [
+        [7, 8],
+        [15, 19],
+      ],
+      marginMin: 15,
+      maxPerDay: 3,
+      noticeHours: 12,
+      horizonDays: 14,
+    })),
+    freeSlots: jest.fn(() => []),
+    formatSlot: jest.fn((iso: string) => iso),
+    bogotaDateKey: jest.fn(() => '2026-11-09'),
+    // The quiet-hours module needs the real pure time functions.
+    bogotaParts: actual.bogotaParts,
+    bogotaToUtcMs: actual.bogotaToUtcMs,
+    colombiaHolidays: actual.colombiaHolidays,
+  };
+});
 
 jest.mock('../src/google', () => ({
   accessToken: jest.fn(),

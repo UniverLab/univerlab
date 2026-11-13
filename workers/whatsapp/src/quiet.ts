@@ -13,6 +13,22 @@ function bogotaHour(nowMs: number): number {
 }
 
 /**
+ * The last moment before the quiet window containing `nowMs` starts: the
+ * window's start minus one minute, so a scheduled note arrives ahead of it.
+ */
+export function quietStartBefore(nowMs: number, cfg: Pick<GuardConfig, 'quietStart' | 'quietEnd'>): number {
+  const p = bogotaParts(nowMs);
+  const startToday = bogotaToUtcMs(p.year, p.month, p.day, cfg.quietStart, 0);
+  if (cfg.quietStart > cfg.quietEnd) {
+    // Wrapping midnight: an early-morning hour belongs to yesterday's start.
+    if (p.hour >= cfg.quietStart) return startToday - 60000;
+    const prev = new Date(Date.UTC(p.year, p.month - 1, p.day) - DAY_MS);
+    return bogotaToUtcMs(prev.getUTCFullYear(), prev.getUTCMonth() + 1, prev.getUTCDate(), cfg.quietStart, 0) - 60000;
+  }
+  return startToday - 60000;
+}
+
+/**
  * Whether the operator is out for the night: the Bogota hour is inside
  * [quietStart, 24) + [0, quietEnd). Defaults (19, 7) wrap midnight.
  */

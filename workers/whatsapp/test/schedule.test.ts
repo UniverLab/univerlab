@@ -8,6 +8,7 @@ import {
   DEFAULT_BOOKING_CONFIG,
   formatSlot,
   freeSlots,
+  noticeHoursFor,
   type BookingConfig,
 } from '../src/schedule';
 
@@ -30,6 +31,7 @@ test('defaults match the spec fallback', () => {
     marginMin: 15,
     maxPerDay: 3,
     noticeHours: 12,
+    paidNoticeHours: 48,
     horizonDays: 14,
     freeCallDays: 90,
     expiredHoldDays: 14,
@@ -38,6 +40,29 @@ test('defaults match the spec fallback', () => {
     openHoldsMax: 4,
     bookingsPerDay: 4,
   });
+});
+
+test('paid sessions default to 48 hours of notice and parse it like noticeHours', () => {
+  expect(DEFAULT_BOOKING_CONFIG.paidNoticeHours).toBe(48);
+  expect(bookingConfig({}).paidNoticeHours).toBe(48);
+  expect(noticeHoursFor(DEFAULT_BOOKING_CONFIG, 'first-call')).toBe(12);
+  expect(noticeHoursFor(DEFAULT_BOOKING_CONFIG, 'consultation')).toBe(48);
+  expect(noticeHoursFor(DEFAULT_BOOKING_CONFIG, 'delivery')).toBe(48);
+  const cfg = bookingConfig({ BOOKING_CONFIG: JSON.stringify({ noticeHours: 24, paidNoticeHours: 72 }) });
+  expect(cfg.noticeHours).toBe(24);
+  expect(cfg.paidNoticeHours).toBe(72);
+  expect(bookingConfig({ BOOKING_CONFIG: JSON.stringify({ paidNoticeHours: 'soon' }) }).paidNoticeHours).toBe(48);
+});
+
+test('a 48-hour notice keeps paid slots two days out while first calls stay closer', () => {
+  const cfg = bookingConfig({});
+  const paid = freeSlots(cfg, [], [], 60, MON_12, noticeHoursFor(cfg, 'consultation'));
+  expect(paid.length).toBeGreaterThan(0);
+  for (const s of paid) {
+    expect(Date.parse(s)).toBeGreaterThanOrEqual(MON_12 + 48 * 3600_000);
+  }
+  const first = freeSlots(cfg, [], [], 15, MON_12, noticeHoursFor(cfg, 'first-call'));
+  expect(first.some((s) => Date.parse(s) < MON_12 + 48 * 3600_000)).toBe(true);
 });
 
 test('parses a full BOOKING_CONFIG and trims payment copy', () => {

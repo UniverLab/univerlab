@@ -14,6 +14,7 @@ import {
   parseDecide,
   paymentText,
   PICKED,
+  REJECTED,
   renderBooking,
   serviceLabel,
   type DecideInput,
@@ -59,6 +60,19 @@ test('every template exists in both languages and renders placeholders', () => {
   expect(renderBooking(HOLD_SENT.es, { slot: 'S', payments: 'P' })).not.toContain('{slot}');
   expect(serviceLabel('es', 'first-call')).toBe('Primera llamada');
   expect(serviceLabel('en', 'consultation')).toBe('Consultation');
+});
+
+test('REJECTED keeps the hold standing in both languages and names the slot', () => {
+  for (const lang of ['es', 'en'] as const) {
+    expect(typeof REJECTED[lang]).toBe('string');
+    const text = renderBooking(REJECTED[lang], { slot: 'S' });
+    expect(text).toContain('S');
+    expect(text).not.toContain('{slot}');
+  }
+  expect(REJECTED.es).toContain('sigue en pie');
+  expect(REJECTED.es).toContain('24 horas antes de la sesión');
+  expect(REJECTED.en).toContain('still stands');
+  expect(REJECTED.en).toContain('24 hours before the session');
 });
 
 test('payment copy picks Bre-B for +57 and PayPal otherwise, and honours BOOKING_CONFIG', () => {

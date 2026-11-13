@@ -6,6 +6,8 @@ export interface BookingConfig {
   marginMin: number;
   maxPerDay: number;
   noticeHours: number;
+  /** A paid session (anything but a first call) needs this much notice. */
+  paidNoticeHours: number;
   horizonDays: number;
   /** Full per-language payment sentence used in the hold message. */
   payments?: { es: string; en: string };
@@ -33,6 +35,7 @@ export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
   marginMin: 15,
   maxPerDay: 3,
   noticeHours: 12,
+  paidNoticeHours: 48,
   horizonDays: 14,
   freeCallDays: 90,
   expiredHoldDays: 14,
@@ -76,6 +79,7 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
       marginMin?: unknown;
       maxPerDay?: unknown;
       noticeHours?: unknown;
+      paidNoticeHours?: unknown;
       horizonDays?: unknown;
       freeCallDays?: unknown;
       expiredHoldDays?: unknown;
@@ -95,6 +99,8 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
     if (maxPerDay !== null) base.maxPerDay = Math.floor(maxPerDay);
     const noticeHours = validPositive(parsed.noticeHours);
     if (noticeHours !== null) base.noticeHours = noticeHours;
+    const paidNoticeHours = validPositive(parsed.paidNoticeHours);
+    if (paidNoticeHours !== null) base.paidNoticeHours = paidNoticeHours;
     const horizonDays = validPositive(parsed.horizonDays);
     if (horizonDays !== null) base.horizonDays = Math.floor(horizonDays);
     const freeCallDays = validPositive(parsed.freeCallDays);
@@ -273,6 +279,14 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): b
 }
 
 /**
+ * The notice a service needs: the first call keeps the plain `noticeHours`,
+ * every other (paid) service needs `paidNoticeHours`.
+ */
+export function noticeHoursFor(cfg: BookingConfig, service: string): number {
+  return service === 'first-call' ? cfg.noticeHours : cfg.paidNoticeHours;
+}
+
+/**
  * Free slot start times (UTC ISO) for a service of `minutes` length.
  * Candidates step every 15 minutes inside the configured windows, skip
  * weekends and Colombian holidays, require `noticeHours` of notice, stay
@@ -286,11 +300,12 @@ export function freeSlots(
   busy: BusyBlock[],
   wbEvents: BusyBlock[],
   minutes: number,
-  nowMs: number
+  nowMs: number,
+  noticeHours: number = cfg.noticeHours
 ): string[] {
   const blocks = [...busy, ...wbEvents].map(parseBlock).filter((b): b is [number, number] => b !== null);
   const marginMs = cfg.marginMin * 60000;
-  const earliest = nowMs + cfg.noticeHours * 3600000;
+  const earliest = nowMs + noticeHours * 3600000;
   const latest = nowMs + cfg.horizonDays * DAY_MS;
   const accepted: number[] = [];
   const perDay = new Map<string, number>();

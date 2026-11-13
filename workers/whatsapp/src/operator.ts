@@ -669,18 +669,24 @@ export class Operator extends DurableObject<Env> {
       return;
     }
     const res = await this.control(row.phone, {
-      action: parsed.cmd === 'confirm' ? 'operatorConfirm' : 'operatorCancel',
+      action:
+        parsed.cmd === 'confirm' ? 'operatorConfirm' : parsed.cmd === 'reject' ? 'operatorReject' : 'operatorCancel',
     });
     if (!res.ok) {
       await sendText(
         this.env,
         m.from,
         'No pude ' +
-          (parsed.cmd === 'confirm' ? 'confirmar' : 'cancelar') +
+          (parsed.cmd === 'confirm' ? 'confirmar' : parsed.cmd === 'reject' ? 'rechazar' : 'cancelar') +
           ' [' +
           row.name +
           ']. Intenta de nuevo en un momento.'
       );
+      return;
+    }
+    // A rejection keeps the hold: the name stays open for /confirm or expiry.
+    if (parsed.cmd === 'reject') {
+      await sendText(this.env, m.from, 'Sin confirmar [' + row.name + ']: el apartado sigue en pie.');
       return;
     }
     this.ctx.storage.sql.exec('DELETE FROM conversations WHERE name = ?', row.name);

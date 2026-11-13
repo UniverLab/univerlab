@@ -1,7 +1,7 @@
 /** The operator's command language: English slash commands, one live
  *  conversation at a time. Anything else gets the help text. */
 
-export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'cancel' | 'delivery' | 'afk' | 'active';
+export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'reject' | 'cancel' | 'delivery' | 'afk' | 'active';
 
 export interface Parsed {
   cmd: Cmd;
@@ -16,6 +16,7 @@ export const HELP =
   '/take <nombre> — abres el directo con ese cliente\n' +
   '/release — cierras el directo y el agente retoma\n' +
   '/confirm <nombre> — confirma su consulta en espera\n' +
+  '/reject <nombre> — sin confirmar todavía: el apartado sigue en pie\n' +
   '/cancel <nombre> — cancela su cita\n' +
   '/delivery <nombre> — autoriza su sesión de entrega\n' +
   '/afk — pausas los avisos hasta que envíes /active\n' +
@@ -40,6 +41,7 @@ const NAMES: Record<string, Cmd> = {
   take: 'take',
   release: 'release',
   confirm: 'confirm',
+  reject: 'reject',
   cancel: 'cancel',
   delivery: 'delivery',
   afk: 'afk',

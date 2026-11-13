@@ -6,6 +6,7 @@ import {
   isQuietHour,
   nextBusinessMorning,
   nextQuietEnd,
+  quietStartBefore,
 } from '../src/quiet';
 
 // 2026-01-05 is a business Monday; Bogota stays at UTC-5 all year.
@@ -20,6 +21,16 @@ test('quiet hours wrap midnight: 19:00 starts, 07:00 ends', () => {
   expect(isQuietHour(BOGOTA(5, 18, 59), cfg)).toBe(false);
   expect(isQuietHour(BOGOTA(5, 19, 0), cfg)).toBe(true);
   expect(isQuietHour(BOGOTA(5, 23, 30), cfg)).toBe(true);
+});
+
+test('quietStartBefore is the minute before the window that holds the instant', () => {
+  const cfg = guardConfig({});
+  // 20:00 Bogota sits in the evening window that started at 19:00.
+  expect(quietStartBefore(BOGOTA(5, 20, 0), cfg)).toBe(BOGOTA(5, 18, 59));
+  // 03:00 Bogota belongs to the window that started yesterday at 19:00.
+  expect(quietStartBefore(BOGOTA(5, 3, 0), cfg)).toBe(BOGOTA(4, 18, 59));
+  // A window that does not wrap midnight starts the same day.
+  expect(quietStartBefore(BOGOTA(5, 3, 0), { quietStart: 1, quietEnd: 5 })).toBe(BOGOTA(5, 0, 59));
 });
 
 test('the morning alarm is the next 07:00 Bogota', () => {

@@ -6,6 +6,7 @@ import {
   bookingConfig,
   bogotaDateKey,
   freeSlots,
+  noticeHoursFor,
 } from './schedule';
 import {
   accessToken,
@@ -21,7 +22,7 @@ import {
   type GoogleOAuth,
 } from './google';
 
-/** A consultation hold expires 24 hours after it was created. */
+/** A consultation hold releases 24 hours before the session starts. */
 export const HOLD_MS = 24 * 3600 * 1000;
 
 const DAY_MS = 86400000;
@@ -321,7 +322,7 @@ export class Calendar extends DurableObject<Env> {
   ): string[] {
     const cfg = bookingConfig(this.env);
     const extra = this.allActive().map((r) => ({ start: r.start, end: r.end }));
-    return freeSlots(cfg, busy, [...events, ...extra], minutes, now);
+    return freeSlots(cfg, busy, [...events, ...extra], minutes, now, noticeHoursFor(cfg, service));
   }
 
   private async opStatus(args: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -361,7 +362,7 @@ export class Calendar extends DurableObject<Env> {
           service: active.service,
           createdAt: active.created_at,
         } satisfies ActiveInfo,
-        slots: freeSlots(cfg, live.busy, [...events, ...extra], minutes, now),
+        slots: freeSlots(cfg, live.busy, [...events, ...extra], minutes, now, noticeHoursFor(cfg, service)),
       };
     }
     if (active) {
@@ -551,7 +552,7 @@ export class Calendar extends DurableObject<Env> {
     const extra = this.allActive()
       .filter((r) => r.event_id !== active.event_id)
       .map((r) => ({ start: r.start, end: r.end }));
-    const slots = freeSlots(cfg, live.busy, [...events, ...extra], minutes, now);
+    const slots = freeSlots(cfg, live.busy, [...events, ...extra], minutes, now, noticeHoursFor(cfg, active.service));
     if (!slots.includes(startIso)) {
       return { ok: false, reason: 'slot-taken' satisfies LimitReason };
     }
@@ -668,7 +669,14 @@ export class Calendar extends DurableObject<Env> {
         this.sql().exec("UPDATE reservations SET kind = 'booked' WHERE event_id = ?", active.event_id);
         return { ok: true, expired: false, confirmed: true, start: active.start };
       }
-      if (now < active.created_at + HOLD_MS) {
+      // The hold releases 24 hours before the session starts, or 24 hours
+      // after it was made when the start is too close to tell them apart.
+      const startMs = Date.parse(active.start);
+      const deadline =
+        Number.isFinite(startMs) && startMs - HOLD_MS > active.created_at
+          ? startMs - HOLD_MS
+          : active.created_at + HOLD_MS;
+      if (now < deadline) {
         return { ok: true, expired: false, pending: true };
       }
       try {

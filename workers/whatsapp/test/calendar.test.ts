@@ -204,7 +204,7 @@ afterEach(() => {
 test('the same slot raced by two contacts has one winner and one insert', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const slot = slots[0];
   const summary = (n: string) => '[Por confirmar] Consultoría · ' + n;
   const [a, b] = await Promise.all([
@@ -222,7 +222,7 @@ test('the same slot raced by two contacts has one winner and one insert', async 
 test('four open holds block the fifth and four creations a day block the fifth', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   for (let i = 0; i < 4; i++) {
     const r = await call(cal, {
       action: 'reserve', contactKey: 'wa:h' + i, service: 'consultation',
@@ -261,7 +261,7 @@ test('four open holds block the fifth and four creations a day block the fifth',
 test('a hand-deleted event stops counting the booking', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const first = await call(cal, {
     action: 'reserve', contactKey: 'wa:gone', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: 'x', description: '', now: MON_12,
@@ -281,7 +281,7 @@ test('a hand-deleted event stops counting the booking', async () => {
 test('a hand-confirmed hold settles without counting as a hold', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const first = await call(cal, {
     action: 'reserve', contactKey: 'wa:op', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: '[Por confirmar] Consultoría · Ana', description: '', now: MON_12,
@@ -300,7 +300,7 @@ test('a hand-confirmed hold settles without counting as a hold', async () => {
 test('erase removes the contact records while the release frees the event', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   await call(cal, {
     action: 'reserve', contactKey: 'wa:bye', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: 'x', description: '', now: MON_12,
@@ -323,7 +323,7 @@ test('erase removes the contact records while the release frees the event', asyn
 test('a delivery reserve books direct with no hold prefix', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const res = await call(cal, {
     action: 'reserve', contactKey: 'wa:del', service: 'delivery',
     startIso: slots[0], minutes: 60, summary: 'Entrega de auditoría · Ana', description: '', now: MON_12,
@@ -342,7 +342,7 @@ test('an insert failure is calendar-down and stores no row', async () => {
   const store = makeStore();
   const cal = makeCal(store);
   (insertEvent as jest.Mock).mockRejectedValueOnce(new Error('down'));
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const res = await call(cal, {
     action: 'reserve', contactKey: 'wa:fail', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: 'x', description: '', now: MON_12,
@@ -355,7 +355,7 @@ test('an insert failure is calendar-down and stores no row', async () => {
 test('a move replaces its event and the third one is refused', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const first = await call(cal, {
     action: 'reserve', contactKey: 'wa:m', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: 'x', description: '', now: MON_12,
@@ -381,7 +381,7 @@ test('a move replaces its event and the third one is refused', async () => {
 test('a hand-confirmed hold moves as a booking and a moved hold restarts its clock', async () => {
   const store = makeStore();
   const cal = makeCal(store);
-  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const first = await call(cal, {
     action: 'reserve', contactKey: 'wa:mv', service: 'consultation',
     startIso: slots[0], minutes: 60, summary: '[Por confirmar] Consultoría · Ana', description: '', now: MON_12,
@@ -420,6 +420,27 @@ test('a hand-confirmed hold moves as a booking and a moved hold restarts its clo
   expect(moved2.kind).toBe('hold');
   expect(calEvents[0].summary.startsWith('[Por confirmar]')).toBe(true);
   expect(store2.reservations[0].created_at).toBe(later);
+});
+
+test('a 72h-out hold stays pending 30h in and expires a day before the session', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
+  const start = slots.find((s) => Date.parse(s) >= MON_12 + 72 * 3600_000) as string;
+  const created = await call(cal, {
+    action: 'reserve', contactKey: 'wa:exp', service: 'consultation',
+    startIso: start, minutes: 60, summary: '[Por confirmar] h', description: '', now: MON_12,
+  });
+  expect(created.ok).toBe(true);
+  const early = await call(cal, { action: 'expire', contactKey: 'wa:exp', now: MON_12 + 30 * 3600_000 });
+  expect(early).toMatchObject({ ok: true, expired: false, pending: true });
+  expect(calEvents).toHaveLength(1);
+  const late = await call(cal, {
+    action: 'expire', contactKey: 'wa:exp', now: Date.parse(start) - 24 * 3600_000 + 1,
+  });
+  expect(late).toMatchObject({ ok: true, expired: true });
+  expect(calEvents).toHaveLength(0);
+  expect(store.reservations.find((r) => r.event_id === created.eventId)?.status).toBe('expired');
 });
 
 test('a second free first call inside 90 days is refused after the first is released', async () => {
@@ -505,7 +526,7 @@ test('a web reserve invites the guest, attaches Meet and answers the link', asyn
   expect(sent[4]).toBe('all');
   // The agent path still books without guests, Meet or notifications, taking
   // a 60-minute start (a 15-minute start cannot hold a 60-minute session).
-  const hourSlots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const hourSlots = freeSlots(quoteCfg(), [], [], 60, MON_12, 48);
   const agent = await call(cal, {
     action: 'reserve', contactKey: 'wa:111', service: 'consultation',
     startIso: hourSlots[hourSlots.length - 1], minutes: 60, summary: '[Por confirmar] h', description: '', now: MON_12,

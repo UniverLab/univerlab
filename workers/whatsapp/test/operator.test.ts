@@ -174,7 +174,7 @@ function makeEnv(convFetch?: jest.Mock, aiRun?: jest.Mock, opts: ConvOpts = {}) 
           { status: 200 }
         );
       }
-      if (body.action === 'operatorConfirm' || body.action === 'operatorCancel') {
+      if (body.action === 'operatorConfirm' || body.action === 'operatorCancel' || body.action === 'operatorReject') {
         return new Response(JSON.stringify({ ok: opts.confirmOk ?? true }), { status: 200 });
       }
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -623,6 +623,37 @@ test('a failed /confirm keeps the row and says so', async () => {
 
   expect(rows).toHaveLength(1);
   expect(toOperator()).toEqual(['No pude confirmar [ana]. Intenta de nuevo en un momento.']);
+});
+
+test('/reject routes to operatorReject and keeps the row', async () => {
+  const { ctx, rows } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op17', text: '/reject ana' }));
+
+  const req = (env.fetchMock.mock.calls[0] as [Request])[0];
+  expect(await req.json()).toEqual({ action: 'operatorReject' });
+  expect(rows).toHaveLength(1);
+  expect(toOperator()).toEqual(['Sin confirmar [ana]: el apartado sigue en pie.']);
+
+  await op.command(opMsg({ id: 'wamid.op18', text: '/reject nadie' }));
+  expect(toOperator()[1]).toBe('No hay conversación abierta con [nadie]. · /help');
+});
+
+test('a failed /reject keeps the row and says so', async () => {
+  const { ctx, rows } = makeCtx();
+  const env = makeEnv(undefined, undefined, { confirmOk: false });
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op19', text: '/reject ana' }));
+
+  expect(rows).toHaveLength(1);
+  expect(toOperator()).toEqual(['No pude rechazar [ana]. Intenta de nuevo en un momento.']);
 });
 
 test('/cancel cancels and releases the name', async () => {

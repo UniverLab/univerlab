@@ -20,7 +20,7 @@ import {
   pausedNoticeDue,
   type PausedNotice,
 } from './guard';
-import { awayNotice, nextBusinessMorning } from './quiet';
+import { awayNotice, isQuietHour, nextBusinessMorning, quietStartBefore } from './quiet';
 import {
   brief,
   CONFIRM_SLOT,
@@ -71,7 +71,7 @@ import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
 import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
 import type { ActiveInfo } from './calendar';
 import { register, release, postNote, nameBase } from './registry';
-import { noteBody } from './notices';
+import { holdReminderText, noteBody } from './notices';
 import {
   CALENDAR_DOWN,
   CANCELLED,
@@ -85,14 +85,36 @@ import {
   offerText,
   paymentText,
   PICKED,
+  REJECTED,
   renderBooking,
   serviceLabel,
   type BookingService,
   type BookingState,
 } from './booking';
 
-/** A consultation hold expires 24 hours after it was created. */
+/** A consultation hold releases 24 hours before the session starts. */
 const HOLD_MS = 24 * 3600 * 1000;
+/** The reminder goes out this long before the hold deadline. */
+const REMIND_BEFORE_MS = 6 * 3600 * 1000;
+
+/**
+ * The instant an unconfirmed hold releases: 24 hours before the session
+ * starts, or 24 hours after it was made when the start is too close to
+ * tell them apart.
+ */
+export function holdDeadlineMs(b: { start?: string; createdAt: number }): number {
+  const startMs = Date.parse(b.start ?? '');
+  if (Number.isFinite(startMs) && startMs - HOLD_MS > b.createdAt) return startMs - HOLD_MS;
+  return b.createdAt + HOLD_MS;
+}
+
+/**
+ * The instant the operator is reminded about an unconfirmed hold: 24 hours
+ * after the hold was made, but never later than 6 hours before the deadline.
+ */
+export function reminderDueMs(createdAt: number, deadlineMs: number): number {
+  return Math.min(createdAt + HOLD_MS, deadlineMs - REMIND_BEFORE_MS);
+}
 /** While a hold is pending the alarm re-checks the calendar at least hourly. */
 const HOLD_CHECK_MS = 3600 * 1000;
 
@@ -501,6 +523,9 @@ export class Conversation extends DurableObject<Env> {
     if (action.action === 'operatorConfirm') {
       return await this.operatorConfirm();
     }
+    if (action.action === 'operatorReject') {
+      return await this.operatorReject();
+    }
     if (action.action === 'operatorCancel') {
       return await this.operatorCancel();
     }
@@ -536,6 +561,32 @@ export class Conversation extends DurableObject<Env> {
       }
       this.storeAssistant(Math.floor(at / 1000), 'a-op-confirm-' + st.eventId, text);
       await this.deregister(st.phone);
+      await this.armNext(at);
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  /** The payment has not arrived yet: tell the client the hold stands and
+   *  releases 24 hours before the session. Unlike a cancel, the hold, the
+   *  registry row and the deadline all stay. */
+  private async operatorReject(): Promise<{ ok: boolean }> {
+    try {
+      const raw = this.state('booking');
+      if (!raw) return { ok: false };
+      const st = JSON.parse(raw) as BookingState;
+      if (st.phase !== 'held' || !st.eventId) return { ok: false };
+      const at = Date.now();
+      const text = renderBooking(REJECTED[st.lang], {
+        slot: formatSlot(st.start ?? '', st.lang),
+      });
+      try {
+        await sendText(this.env, st.phone, text);
+      } catch {
+        /* the hold stands even when the client notice fails */
+      }
+      this.storeAssistant(Math.floor(at / 1000), 'a-op-reject-' + st.eventId, text);
       await this.armNext(at);
       return { ok: true };
     } catch {
@@ -798,6 +849,26 @@ export class Conversation extends DurableObject<Env> {
         // The owner decides expiry against the calendar: a hand-confirmed
         // hold settles, a hand-deleted one stops counting, the deadline
         // releases the event. A failure only re-arms and retries.
+        // One reminder while the hold is still unconfirmed: 24 hours after
+        // it was made, at least 6 hours before the deadline, and never
+        // inside quiet hours — then it comes forward to just before quiet.
+        const deadline = holdDeadlineMs(st);
+        if (!st.reminded) {
+          const gcfg = guardConfig(this.env);
+          let due = reminderDueMs(st.createdAt, deadline);
+          if (isQuietHour(due, gcfg)) due = quietStartBefore(due, gcfg);
+          if (now >= due && now < deadline) {
+            st.reminded = true;
+            this.state('booking', JSON.stringify(st));
+            const cname = this.state('name') || nameBase(st.name || st.phone);
+            await postNote(this.env, {
+              name: cname,
+              text: holdReminderText(cname, st.service, st.start ?? '', new Date(deadline).toISOString()),
+              tag: 'PAGO',
+              priority: 'high',
+            });
+          }
+        }
         const res = await calendarCall(this.env, {
           action: 'expire',
           contactKey: contactKey('wa', st.phone),
@@ -1163,7 +1234,11 @@ export class Conversation extends DurableObject<Env> {
     st.phase = kind === 'hold' ? 'held' : 'booked';
     st.eventId = res.eventId as string;
     st.start = startIso;
-    if (kind === 'hold') st.createdAt = now;
+    if (kind === 'hold') {
+      // A restarted hold re-arms the operator reminder: the deadline moved.
+      st.createdAt = now;
+      st.reminded = false;
+    }
     // One authorisation books once: the delivery consumes it here.
     if (st.service === 'delivery') this.state('deliveryAuth', null);
     this.state('booking', JSON.stringify(st));
@@ -1422,19 +1497,12 @@ export class Conversation extends DurableObject<Env> {
     if (m.from === operator) {
       // The operator's own messages are stored and read, never answered.
       let alarm = retention;
-      try {
-        const raw = this.state('booking');
-        if (raw) {
-          const b = JSON.parse(raw) as BookingState;
-          if (b.phase === 'held' && Number.isFinite(b.createdAt)) {
-            // A pending hold keeps its own deadline/check alarm; retention must
-            // not push it months out or the 24h expiry never runs.
-            alarm = Math.min(alarm, b.createdAt + HOLD_MS, Date.now() + HOLD_CHECK_MS);
-          }
-        }
-      } catch {
-        /* corrupt booking state: the retention alarm stands */
-      }
+      // A pending hold keeps its own deadline, reminder and hourly re-check
+      // alarm; retention must not push it months out or the session-24h
+      // release and the operator reminder never run. holdDue already guards
+      // against a corrupt booking state.
+      const hold = this.holdDue(Date.now());
+      if (hold !== undefined) alarm = Math.min(alarm, hold);
       await this.ctx.storage.setAlarm(alarm);
       return;
     }
@@ -1536,14 +1604,24 @@ export class Conversation extends DurableObject<Env> {
     }
   }
 
-  /** The next pending hold deadline, if a consultation hold is open. */
+  /** The next pending hold deadline, if a consultation hold is open: the
+   *  release deadline, the reminder while it is still unsent, and at least
+   *  an hourly re-check of the calendar. */
   private holdDue(now: number): number | undefined {
     try {
       const raw = this.state('booking');
       if (!raw) return undefined;
       const b = JSON.parse(raw) as Partial<BookingState>;
       if (b.phase === 'held' && typeof b.createdAt === 'number' && Number.isFinite(b.createdAt)) {
-        return Math.min(b.createdAt + HOLD_MS, now + HOLD_CHECK_MS);
+        const deadline = holdDeadlineMs({ start: typeof b.start === 'string' ? b.start : undefined, createdAt: b.createdAt });
+        let due = deadline;
+        if (!b.reminded) {
+          const gcfg = guardConfig(this.env);
+          let rd = reminderDueMs(b.createdAt, deadline);
+          if (isQuietHour(rd, gcfg)) rd = quietStartBefore(rd, gcfg);
+          due = Math.min(due, rd);
+        }
+        return Math.min(due, now + HOLD_CHECK_MS);
       }
     } catch {
       /* corrupt booking state: no hold deadline */
