@@ -69,6 +69,7 @@ import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
 import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
 import type { ActiveInfo } from './calendar';
 import { register, release, postNote, nameBase } from './registry';
+import { noteBody } from './notices';
 import {
   CALENDAR_DOWN,
   CANCELLED,
@@ -694,6 +695,18 @@ export class Conversation extends DurableObject<Env> {
           const text = EXPIRED[st.lang];
           await sendText(this.env, st.phone, text);
           this.storeAssistant(Math.floor(now / 1000), 'a-alarm-expire-' + st.eventId, text);
+          await postNote(this.env, {
+            name: this.state('name') || nameBase(st.name || st.phone),
+            text: noteBody(
+              'Apartado vencido',
+              st.service,
+              st.start ?? '',
+              st.lang,
+              formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief })
+            ),
+            tag: 'Cita',
+            priority: 'normal',
+          });
           await this.deregister(st.phone);
         } else if (res.ok && res.confirmed === true) {
           st.phase = 'booked';
@@ -943,6 +956,9 @@ export class Conversation extends DurableObject<Env> {
     });
     // The serialized owner checks the slot free again at write time: when
     // two clients pick the same slot at once exactly one gets it.
+    // A paid consultation's move returns kind 'booked', so the moved note
+    // keys on the action, not on the returned kind.
+    const isMove = Boolean(st.eventId);
     const res = st.eventId
       ? await calendarCall(this.env, {
           action: 'move',
@@ -1027,6 +1043,19 @@ export class Conversation extends DurableObject<Env> {
       });
       this.state('name', held);
     }
+    const ev = isMove
+      ? 'Cita movida'
+      : kind === 'hold'
+        ? 'Apartado creado'
+        : st.service === 'first-call'
+          ? 'Primera llamada agendada'
+          : 'Cita agendada';
+    await postNote(this.env, {
+      name: this.state('name') || nameBase(st.name || st.phone),
+      text: noteBody(ev, st.service, startIso, st.lang, description),
+      tag: 'Cita',
+      priority: 'normal',
+    });
     const slotText = formatSlot(startIso, st.lang);
     const text =
       kind === 'hold'
@@ -1081,15 +1110,21 @@ export class Conversation extends DurableObject<Env> {
       service: st.service,
     });
     this.state('name', cancelled);
-    // FR5: at most one handoff notice per client every 10 minutes. A
-    // throttled cancel still tells the client and keeps the registry row.
-    if (await guardHandoff(this.env, st.phone)) {
-      await this.note(
-        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }),
-        'CITA',
-        'normal'
-      );
-    }
+    // Every cancellation reaches the operator at once; a paid one is high
+    // priority so it skips the hourly cap and is never dropped in a queue.
+    const paid = st.service === 'consultation' && st.phase === 'booked';
+    await postNote(this.env, {
+      name: cancelled,
+      text: noteBody(
+        paid ? 'Cita cancelada · estaba pagada' : 'Cita cancelada',
+        st.service,
+        st.start ?? '',
+        st.lang,
+        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief })
+      ),
+      tag: 'Cita',
+      priority: paid ? 'high' : 'normal',
+    });
     const text = renderBooking(CANCELLED[st.lang], {
       service: serviceLabel(st.lang, st.service),
       slot: formatSlot(st.start, st.lang),

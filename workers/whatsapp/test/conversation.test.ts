@@ -385,6 +385,14 @@ function clientTexts(): string[] {
     .map((call) => call[2] as string);
 }
 
+// No REGISTRY binds in these tests, so postNote delivers straight to the
+// operator phone through sendText, in the same shape as the registry path.
+function operatorTexts(): string[] {
+  return (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+}
+
 function seedPending(ctx: unknown, lang: 'es' | 'en', expiresAt: number): void {
   const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
   storage.sql.exec(
@@ -562,6 +570,7 @@ test('books a consultation as a hold and tells the client how to pay', async () 
   const texts = clientTexts();
   expect(texts[texts.length - 1]).toContain('verificar el pago');
   expect(texts[texts.length - 1]).toContain('Bre-B');
+  expect(operatorTexts().some((t) => t.includes('Apartado creado'))).toBe(true);
   const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
   expect(alarms[alarms.length - 1]).toBeLessThan(retentionDeadline(AT * 1000));
 });
@@ -582,6 +591,7 @@ test('books a first call without a hold prefix', async () => {
   expect(reserve[1].summary).toContain('Primera llamada');
   const texts = clientTexts();
   expect(texts[texts.length - 1]).toContain('agendé');
+  expect(operatorTexts().some((t) => t.includes('Primera llamada agendada'))).toBe(true);
   const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
   expect(alarms[alarms.length - 1]).toBe(retentionDeadline(AT * 1000));
 });
@@ -607,6 +617,7 @@ test('deletes an expired hold and tells the client', async () => {
 
   expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'expire' }));
   expect(clientTexts().some((t) => t.includes('venció'))).toBe(true);
+  expect(operatorTexts().some((t) => t.includes('Apartado vencido'))).toBe(true);
 });
 
 test('tells the client when the operator confirmed the hold', async () => {
@@ -660,7 +671,34 @@ test('cancelling a first call deletes the event and tells the client', async () 
 
   expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'release' }));
   expect(clientTexts().some((t) => t.includes('cancelé'))).toBe(true);
-  expect(sendText).toHaveBeenCalledWith(BOOKING_ENV, OPERATOR, expect.any(String));
+  const cancelNotes = operatorTexts();
+  expect(cancelNotes.some((t) => t.includes('Cita cancelada'))).toBe(true);
+  expect(cancelNotes.some((t) => t.includes('estaba pagada'))).toBe(false);
+});
+
+test('cancelling a paid consultation tells the operator it was paid, high priority', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold' };
+    if (body.action === 'confirm') return { ok: true, eventId: 'ev1' };
+    if (body.action === 'release') return { ok: true, eventId: 'ev1', start: SLOT_A };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  await say(c, inbound({ id: 'wamid.b3', text: 'el primero' }));
+  expect(await c.control({ action: 'operatorConfirm' })).toEqual({ ok: true });
+
+  // The slot is more than 24 hours out, so the paid booking releases with a
+  // paid-cancellation note instead of the move-once reoffer.
+  (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.b4', text: 'mejor cancela' }));
+
+  expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'release' }));
+  const paid = operatorTexts().filter((t) => t.includes('estaba pagada'));
+  expect(paid.length).toBeGreaterThan(0);
+  expect(paid.some((t) => t.includes('Cita cancelada'))).toBe(true);
+  expect(paid.some((t) => t.includes('· alta'))).toBe(true);
 });
 
 test('a paid consultation inside 24 hours is moved instead of refunded', async () => {
@@ -775,6 +813,7 @@ test('moving a confirmed consultation keeps it confirmed', async () => {
   const move = (calendarCall as jest.Mock).mock.calls.find((call) => call[1].action === 'move');
   expect(move).toBeDefined();
   expect(move[1].startIso).toBe(SLOT_B);
+  expect(operatorTexts().some((t) => t.includes('Cita movida'))).toBe(true);
   expect(calendarCall).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'release' }));
   expect(clientTexts().some((t) => t.includes('Consultoría'))).toBe(true);
 });
@@ -1504,7 +1543,7 @@ test('two no-slot handoffs inside 10 minutes send one operator notice', async ()
   expect(clientTexts().filter((t) => t === 'confirm')).toHaveLength(2);
 });
 
-test('two booking cancels inside 10 minutes send one operator notice', async () => {
+test('two booking cancels inside 10 minutes each send an operator note', async () => {
   let handoffs = 0;
   const fetchMock = guardFetchMock((body) => {
     if (body.action === 'register') return { name: 'ana' };
@@ -1549,9 +1588,10 @@ test('two booking cancels inside 10 minutes send one operator notice', async () 
   await say(c, inbound({ id: 'wamid.hc8', text: 'mejor cancela de nuevo' }));
 
   const notes = (await notePosts(fetchMock)).filter((p) => p.action === 'note');
-  // FR5: at most one handoff notice per client every 10 minutes, but every
-  // cancel still tells its client.
-  expect(notes).toHaveLength(1);
+  // Every booking event reaches the operator on its own note, even inside
+  // the 10-minute handoff window; every cancel still tells its client.
+  expect(notes.filter((n) => String(n.text).includes('Cita cancelada'))).toHaveLength(2);
+  expect(notes).toHaveLength(4);
   expect(clientTexts().filter((t) => t.includes('cancelé'))).toHaveLength(2);
 });
 

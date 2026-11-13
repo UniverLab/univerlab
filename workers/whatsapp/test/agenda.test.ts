@@ -46,14 +46,17 @@ function makeEnv(s: Scenario): {
   env: Env;
   seen: Record<string, unknown>[];
   gateSeen: Record<string, unknown>[];
+  notes: Record<string, unknown>[];
 } {
   const seen: Record<string, unknown>[] = [];
   const gateSeen: Record<string, unknown>[] = [];
+  const notes: Record<string, unknown>[] = [];
   const calendar = s.calendar ?? (() => ({ ok: false, reason: 'calendar-down' }));
   const gate = s.gate ?? (() => ({ ok: true }));
   return {
     seen,
     gateSeen,
+    notes,
     env: {
       CALENDAR: fakeNs((body) => {
         seen.push(body);
@@ -63,6 +66,11 @@ function makeEnv(s: Scenario): {
         gateSeen.push(body);
         return gate(body);
       }),
+      REGISTRY: fakeNs((body) => {
+        if (body.action === 'note') notes.push(body);
+        return { name: 'ana' };
+      }),
+      OPERATOR_PHONE: '+57 300 999 8888',
       ...(s.secret === null ? {} : { TURNSTILE_SECRET: s.secret ?? SECRET }),
       WA_APP_SECRET: 'wa-secret',
     } as unknown as Env,
@@ -285,6 +293,42 @@ test('a booking reserves through the shared owner and answers slot and meet', as
   expect(sent.description).toContain('ana@example.com');
   expect(sent.description).toContain('web');
   expect(sent.description).toContain('/cancel?t=');
+});
+
+test('a web booking tells the operator with the form data', async () => {
+  const { env, notes } = makeEnv({
+    calendar: () => ({ ok: true, eventId: 'ev9', start: SLOT, end: SLOT, kind: 'booked', meet: 'https://meet.google.com/x' }),
+  });
+  const res = await call('/book', env, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Ana', email: 'ana@example.com', lang: 'es', note: 'quiero hablar', slot: SLOT, turnstileToken: 't' }),
+  });
+  expect(res.status).toBe(200);
+  expect(notes).toHaveLength(1);
+  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'Cita', priority: 'normal' });
+  const text = String((notes[0] as { text?: unknown }).text ?? '');
+  expect(text).toContain('Primera llamada agendada (web)');
+  expect(text).toContain('Nombre: Ana');
+  expect(text).toContain('ana@example.com');
+});
+
+test('a web cancellation tells the operator with the token data', async () => {
+  const claim = { k: 'web:ana@example.com', s: SLOT, n: 'Ana', l: 'es' as const };
+  const token = await signCancelToken(claim, SECRET);
+  const { env, notes } = makeEnv({ calendar: () => ({ ok: true, start: SLOT }) });
+  const res = await call('/cancel', env, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ t: token }),
+  });
+  expect(res.status).toBe(200);
+  expect(notes).toHaveLength(1);
+  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'Cita', priority: 'normal' });
+  const text = String((notes[0] as { text?: unknown }).text ?? '');
+  expect(text).toContain('Cita cancelada (web)');
+  expect(text).toContain('Nombre: Ana');
+  expect(text).toContain('ana@example.com');
 });
 
 test('refusals map to their fixed statuses and create nothing', async () => {
