@@ -33,7 +33,10 @@ import { Operator } from '../src/operator';
 const OPERATOR_NUMBER = '+57 300 999 8888';
 const OPERATOR = '573009998888';
 const CLIENT = '573001112222';
-const T0 = 1767225600000;
+// Midday Bogota on a business Monday: outside quiet hours, so notes and
+// flushes in these tests send at once unless a test pins its own clock.
+// (2026-01-01T00:00Z would read 19:00 Bogota, inside quiet hours.)
+const T0 = Date.UTC(2026, 0, 5, 17, 0, 0);
 
 interface Row {
   name: string;
@@ -772,4 +775,134 @@ test('an unknown guard op is refused', async () => {
       .fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify({ action: 'guard', op: 'nope' }) }))
       .then((r) => r.json())
   ).toEqual({ ok: false });
+});
+
+// Monday 20:00 and Tuesday 07:00 Bogota, around a business night.
+const NIGHT = Date.UTC(2026, 0, 6, 1, 0, 0);
+const MORNING = Date.UTC(2026, 0, 6, 12, 0, 0);
+
+function quietHold(op: Operator, now: number) {
+  return op
+    .fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify({ action: 'guard', op: 'quietHold', now }) }))
+    .then((r) => r.json());
+}
+
+test('/afk holds every note and only /active ends it', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/afk' }));
+  expect(toOperator()).toEqual(['Anotado: nada me llega hasta que envíes /active.']);
+  expect(await quietHold(op, T0)).toEqual({ held: true });
+
+  // Notes queue instead of reaching the phone.
+  (sendText as jest.Mock).mockClear();
+  await postNote(op, { name: 'ana', text: 'hola', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual([]);
+
+  // Another command still works and never clears the away state.
+  await op.command(opMsg({ text: '/recap' }));
+  expect(toOperator()).toHaveLength(1);
+  expect(await quietHold(op, T0)).toEqual({ held: true });
+  (sendText as jest.Mock).mockClear();
+  await postNote(op, { name: 'ana', text: 'otra', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual([]);
+
+  // /active confirms and delivers the held notes as one summary.
+  await op.command(opMsg({ text: '/active' }));
+  expect(toOperator()).toEqual([
+    'De vuelta: esto fue lo que quedó en espera.',
+    'UniverLab · mensajes en espera\n[ana] MENSAJE · normal\nhola\n[ana] MENSAJE · normal\notra',
+  ]);
+  expect(await quietHold(op, T0)).toEqual({ held: false });
+});
+
+test('away survives a Worker restart on the same storage', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await op.command(opMsg({ text: '/afk' }));
+  (sendText as jest.Mock).mockClear();
+
+  const restarted = new Operator(ctx as never, env as never);
+  await postNote(restarted, { name: 'ana', text: 'hola', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual([]);
+  expect(await quietHold(restarted, T0)).toEqual({ held: true });
+});
+
+test('notes queue during quiet hours and flush as one summary at 07:00', async () => {
+  const { ctx, storage } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+  expect(await quietHold(op, NIGHT)).toEqual({ held: true });
+  (sendText as jest.Mock).mockClear();
+
+  await postNote(op, { name: 'ana', text: 'primero', tag: 'MENSAJE', priority: 'normal' });
+  await postNote(op, { name: 'beto', text: 'urgente', tag: 'SOPORTE', priority: 'high' });
+  expect(toOperator()).toEqual([]);
+  expect(storage.setAlarm).toHaveBeenCalledWith(MORNING);
+
+  // The 07:00 alarm delivers one grouped summary, oldest first.
+  jest.spyOn(Date, 'now').mockReturnValue(MORNING);
+  (sendText as jest.Mock).mockClear();
+  (storage.setAlarm as jest.Mock).mockClear();
+  await op.alarm();
+  expect(toOperator()).toEqual([
+    'UniverLab · mensajes en espera\n' +
+      '[ana] MENSAJE · normal\nprimero\n' +
+      '[beto] SOPORTE · alta\nurgente\n' +
+      'Pendientes: beto',
+  ]);
+  // A second alarm finds nothing held.
+  (sendText as jest.Mock).mockClear();
+  await op.alarm();
+  expect(toOperator()).toEqual([]);
+});
+
+test('the 07:00 alarm sends nothing while away; /active delivers it', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await op.command(opMsg({ text: '/afk' }));
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  (sendText as jest.Mock).mockClear();
+  await postNote(op, { name: 'ana', text: 'noche', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual([]);
+
+  jest.spyOn(Date, 'now').mockReturnValue(MORNING);
+  await op.alarm();
+  expect(toOperator()).toEqual([]);
+
+  await op.command(opMsg({ text: '/active' }));
+  expect(toOperator()).toEqual([
+    'De vuelta: esto fue lo que quedó en espera.',
+    'UniverLab · mensajes en espera\n[ana] MENSAJE · normal\nnoche',
+  ]);
+});
+
+test('exemptQuiet skips quiet hours but never away', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  const deliver = (
+    op as unknown as {
+      deliver: (note: Record<string, unknown>, opts?: Record<string, unknown>) => Promise<void>;
+    }
+  ).deliver.bind(op);
+  (sendText as jest.Mock).mockClear();
+
+  await deliver({ name: 'ana', text: 'temprano', tag: 'AVISO', priority: 'normal' }, { exemptQuiet: true });
+  expect(toOperator()).toEqual(['[ana] AVISO · normal\ntemprano']);
+
+  await op.command(opMsg({ text: '/afk' }));
+  (sendText as jest.Mock).mockClear();
+  await deliver({ name: 'ana', text: 'nada', tag: 'AVISO', priority: 'normal' }, { exemptQuiet: true });
+  expect(toOperator()).toEqual([]);
 });

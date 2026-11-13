@@ -997,6 +997,13 @@ export const es: Dict = {
       howToPay: 'Puedes pagar por Bre-B en Colombia o por PayPal desde afuera. El espacio queda tuyo al verificar el pago: mándame el comprobante por aquí.',
       openSourceFallback: 'Mira la documentación en univerlab.org y los repositorios en github.com/UniverLab. Dime de qué herramienta se trata y te paso su enlace exacto.',
     },
+    quiet: {
+      awayNotice: 'Gracias, ya le pasé tu mensaje a una persona del laboratorio: te responde a partir de las 07:00 (hora Colombia) del {date}. Yo sigo aquí para lo que pueda resolver yo mismo.',
+      heldHeader: 'UniverLab · mensajes en espera',
+      pendingLine: 'Pendientes:',
+      afkOn: 'Anotado: nada me llega hasta que envíes /active.',
+      afkOff: 'De vuelta: esto fue lo que quedó en espera.',
+    },
   },
   book: {
     title: 'Agenda la primera llamada gratis · 15 min — UniverLab',

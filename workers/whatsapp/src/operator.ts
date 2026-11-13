@@ -3,6 +3,8 @@ import type { Env } from './env';
 import { sendText, markRead, type Inbound } from './meta';
 import { bogotaDateKey, formatSlot } from './schedule';
 import { guardConfig, bogotaHourKey, OPERATOR_DAILY, operatorQueue, type GuardConfig } from './guard';
+import { isQuietHour, nextQuietEnd, formatHeldSummary } from './quiet';
+import { es } from '../../../src/i18n/es.ts';
 import { HELP, parseCommand, looksLegacy, err, type Parsed } from './commands';
 import { nameBase, formatNote } from './registry';
 import { modelConfig, runModel } from './brain';
@@ -121,6 +123,18 @@ export class Operator extends DurableObject<Env> {
     this.guardSet('pass', JSON.stringify(pass));
   }
 
+  private isAway(): boolean {
+    return this.guardGet('away') === '1';
+  }
+
+  private setAway(away: boolean): void {
+    if (away) {
+      this.guardSet('away', '1');
+      return;
+    }
+    this.ctx.storage.sql.exec('DELETE FROM guard WHERE key = ?', 'away');
+  }
+
   private getQueue(): QueuedNote[] {
     try {
       const raw = this.guardGet('passQueue');
@@ -214,11 +228,9 @@ export class Operator extends DurableObject<Env> {
         if (!this.guardGet(notified)) {
           this.guardSet(notified, '1');
           const lang = body['lang'] === 'en' ? 'en' : 'es';
-          try {
-            await sendText(this.env, this.env.OPERATOR_PHONE.replace(/\D/g, ''), OPERATOR_DAILY[lang]);
-          } catch {
-            /* the denial stands even when the notice fails */
-          }
+          // High-priority notes skip the hourly cap: the once-a-day notice
+          // is never dropped, and it waits out quiet hours like the rest.
+          await this.deliver({ name: 'sistema', text: OPERATOR_DAILY[lang], tag: 'AVISO', priority: 'high' });
         }
         return { ok: false };
       }
@@ -233,6 +245,9 @@ export class Operator extends DurableObject<Env> {
       if (last > 0 && now - last < cfg.handoffMs) return { ok: false };
       this.guardSet(key, String(now));
       return { ok: true };
+    }
+    if (op === 'quietHold') {
+      return { held: this.isAway() || isQuietHour(now, guardConfig(this.env)) };
     }
     if (op === 'opmsg') {
       // While a passthrough is open the agent sends nothing about other
@@ -323,13 +338,30 @@ export class Operator extends DurableObject<Env> {
     await this.deliver({ name, text, tag, priority });
   }
 
-  /** One agent note toward the operator: queued while a passthrough is open. */
-  private async deliver(note: QueuedNote): Promise<void> {
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+  /**
+   * The one gate for every operator-bound send: while a passthrough is
+   * open, while away, or inside quiet hours the note waits in the queue.
+   * Only exemptQuiet (a scheduled message that must arrive early) skips
+   * quiet hours, and nothing skips away. Direct replies to the operator's
+   * own messages never go through here.
+   */
+  private async deliver(note: QueuedNote, opts: { exemptQuiet?: boolean } = {}): Promise<void> {
     if (this.getPass()) {
       this.setQueue([...this.getQueue(), note]);
       return;
     }
+    const cfg = guardConfig(this.env);
+    const now = Date.now();
+    if (this.isAway()) {
+      this.setQueue([...this.getQueue(), note]);
+      return;
+    }
+    if (!opts.exemptQuiet && isQuietHour(now, cfg)) {
+      this.setQueue([...this.getQueue(), note]);
+      await this.armWake(now);
+      return;
+    }
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const body = formatNote(note.name, note.text, note.tag, asPriority(note.priority));
     if (note.priority === 'high') {
       // High-priority notes are never dropped by the operator-notice limits.
@@ -356,10 +388,48 @@ export class Operator extends DurableObject<Env> {
     }
   }
 
+  /** Next wake-up: the pass idle close, or 07:00 when quiet alone holds notes. */
+  private async armWake(now: number): Promise<void> {
+    const cfg = guardConfig(this.env);
+    const times: number[] = [];
+    const pass = this.getPass();
+    if (pass) times.push(pass.at + cfg.passthroughIdleMs);
+    if (!this.isAway() && this.getQueue().length > 0 && isQuietHour(now, cfg)) {
+      times.push(nextQuietEnd(now, cfg));
+    }
+    try {
+      if (times.length > 0) await this.ctx.storage.setAlarm(Math.min(...times));
+      else await this.ctx.storage.deleteAlarm();
+    } catch {
+      /* without an alarm the next command still acts */
+    }
+  }
+
+  /** Held notes go out as one summary, oldest first, grouped by conversation. */
+  private async flushSummary(): Promise<void> {
+    const queue = this.getQueue();
+    if (queue.length === 0) return;
+    this.setQueue([]);
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const body = formatHeldSummary(queue.map((q) => ({ ...q, priority: asPriority(q.priority) })));
+    try {
+      await sendText(this.env, operator, body);
+    } catch {
+      /* the summary is best effort like every other note */
+    }
+  }
+
   /** Queued notes go out in order, highest priority first. */
   private async flush(): Promise<void> {
     const queue = this.getQueue();
     if (queue.length === 0) return;
+    const now = Date.now();
+    if (this.isAway() || isQuietHour(now, guardConfig(this.env))) {
+      // Only the delivery waits: keep holding and wake at 07:00 when
+      // quiet alone holds the queue.
+      await this.armWake(now);
+      return;
+    }
     this.setQueue([]);
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const ordered = queue
@@ -395,10 +465,15 @@ export class Operator extends DurableObject<Env> {
       await this.control(pass.phone, { action: 'releaseTake' });
     }
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    try {
-      await sendText(this.env, operator, '[' + pass.name + '] liberada por inactividad');
-    } catch {
-      /* the queued notes below still follow */
+    if (this.isAway() || isQuietHour(now, guardConfig(this.env))) {
+      // Nothing reaches the phone now: the notice joins the held summary.
+      await this.deliver({ name: pass.name, text: 'liberada por inactividad', tag: 'DIRECTO', priority: 'normal' });
+    } else {
+      try {
+        await sendText(this.env, operator, '[' + pass.name + '] liberada por inactividad');
+      } catch {
+        /* the queued notes below still follow */
+      }
     }
     await this.flush();
   }
@@ -441,7 +516,8 @@ export class Operator extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     this.ensureSchema();
-    await this.expirePass(Date.now());
+    const now = Date.now();
+    await this.expirePass(now);
     const pass = this.getPass();
     if (pass) {
       const idle = guardConfig(this.env).passthroughIdleMs;
@@ -450,7 +526,15 @@ export class Operator extends DurableObject<Env> {
       } catch {
         /* without an alarm the next command still expires the pass */
       }
+      return;
     }
+    // Away wins over the morning: only /active releases those notes.
+    if (this.isAway()) return;
+    if (!isQuietHour(now, guardConfig(this.env))) {
+      await this.flushSummary();
+      return;
+    }
+    await this.armWake(now);
   }
 
   /** An operator message from OPERATOR_PHONE: a command, never a conversation. */
@@ -496,6 +580,18 @@ export class Operator extends DurableObject<Env> {
     }
     if (parsed.cmd === 'recap' && parsed.name) {
       await this.recapOne(m.from, parsed.name);
+      return;
+    }
+    if (parsed.cmd === 'afk') {
+      this.setAway(true);
+      await sendText(this.env, m.from, es.wa.quiet.afkOn);
+      return;
+    }
+    if (parsed.cmd === 'active') {
+      // Only /active ends the away state; any other command keeps it.
+      this.setAway(false);
+      await sendText(this.env, m.from, es.wa.quiet.afkOff);
+      await this.flushSummary();
       return;
     }
     if (parsed.cmd === 'release') {

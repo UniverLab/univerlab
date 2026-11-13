@@ -15,10 +15,12 @@ import {
   GUARD_PAUSED,
   guardHandoff,
   guardModelTake,
+  guardQuietHold,
   isGuardOver,
   pausedNoticeDue,
   type PausedNotice,
 } from './guard';
+import { awayNotice, nextBusinessMorning } from './quiet';
 import {
   brief,
   CONFIRM_SLOT,
@@ -2067,7 +2069,12 @@ export class Conversation extends DurableObject<Env> {
     if (priority === 'high' || (await guardHandoff(this.env, m.from))) {
       await this.note(note, tag, priority);
     }
-    const text = reasonClosing(reason, lang);
+    // While the operator holds notices the client hears when a person
+    // answers instead of the closing, and the agent keeps answering.
+    const held = await guardQuietHold(this.env);
+    const text = held
+      ? awayNotice(lang, formatSlot(new Date(nextBusinessMorning(Date.now())).toISOString(), lang))
+      : reasonClosing(reason, lang);
     await sendText(this.env, m.from, text);
     this.storeAssistant(Math.floor(Date.now() / 1000), 'a-' + stamp + '-closing', text);
     await this.armNext(Date.now());

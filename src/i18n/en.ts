@@ -1003,6 +1003,13 @@ export const en = {
       howToPay: 'You can pay by Bre-B in Colombia or by PayPal from abroad. The slot is yours once the payment is checked: send me the receipt here.',
       openSourceFallback: 'See the docs at univerlab.org and the repositories at github.com/UniverLab. Tell me which tool it is about and I will send you its exact link.',
     },
+    quiet: {
+      awayNotice: 'Thanks, I already passed your message to a person at the lab: they will reply from 07:00 (Colombia time) on {date}. I am still here for anything I can handle myself.',
+      heldHeader: 'UniverLab · held messages',
+      pendingLine: 'Pending:',
+      afkOn: 'Noted: nothing will reach me until you send /active.',
+      afkOff: 'Back: here is what was held.',
+    },
   },
   book: {
     title: 'Book the free first call · 15 min — UniverLab',

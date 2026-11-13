@@ -68,21 +68,28 @@ jest.mock('../src/proof', () => {
   return { ...actual, readProof: jest.fn(), forwardUnread: jest.fn() };
 });
 
-jest.mock('../src/schedule', () => ({
-  bookingConfig: jest.fn(() => ({
-    windows: [
-      [7, 8],
-      [15, 19],
-    ],
-    marginMin: 15,
-    maxPerDay: 3,
-    noticeHours: 12,
-    horizonDays: 14,
-  })),
-  freeSlots: jest.fn(() => []),
-  formatSlot: jest.fn((iso: string) => iso),
-  bogotaDateKey: jest.fn(() => '2026-11-09'),
-}));
+jest.mock('../src/schedule', () => {
+  const actual = jest.requireActual('../src/schedule') as Record<string, unknown>;
+  return {
+    bookingConfig: jest.fn(() => ({
+      windows: [
+        [7, 8],
+        [15, 19],
+      ],
+      marginMin: 15,
+      maxPerDay: 3,
+      noticeHours: 12,
+      horizonDays: 14,
+    })),
+    freeSlots: jest.fn(() => []),
+    formatSlot: jest.fn((iso: string) => iso),
+    bogotaDateKey: jest.fn(() => '2026-11-09'),
+    // The quiet-hours module needs the real pure time functions.
+    bogotaParts: actual.bogotaParts,
+    bogotaToUtcMs: actual.bogotaToUtcMs,
+    colombiaHolidays: actual.colombiaHolidays,
+  };
+});
 
 jest.mock('../src/google', () => ({
   accessToken: jest.fn(),
@@ -1830,6 +1837,34 @@ test('a human capture asks once, then hands off', async () => {
   expect(ops).toHaveLength(1);
   expect(ops[0]).toContain('PERSONA');
   expect(ops[0]).toContain('es sobre una alianza');
+});
+
+test('while held the handoff sends the away notice instead of the closing', async () => {
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'guard') {
+      return (body as { op?: string }).op === 'quietHold' ? { held: true } : { ok: true };
+    }
+    return { name: 'ana', ok: true };
+  });
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  (classify as jest.Mock).mockResolvedValue('human');
+  const wa = (es as unknown as {
+    wa: { ask: Record<string, string[]>; closing: Record<string, string>; quiet: Record<string, string> };
+  }).wa;
+
+  await say(c, inbound({ id: 'wamid.r7a', text: 'necesito hablar con alguien' }));
+  await say(c, inbound({ id: 'wamid.r7b', text: 'es sobre una alianza' }));
+
+  const texts = clientTexts();
+  expect(texts).toHaveLength(3);
+  expect(texts[1]).toBe(wa.ask.human[0]);
+  expect(texts[2]).toContain('07:00 (hora Colombia)');
+  expect(texts[2]).not.toBe(wa.closing.human);
+  expect(texts[2]).toContain(wa.quiet.awayNotice.split('{date}')[0]);
+  // The agent flow continues: the note is still posted toward the operator.
+  const payloads = await notePosts(fetchMock);
+  expect(payloads).toContainEqual(expect.objectContaining({ action: 'note' }));
 });
 
 test('declining to answer still hands off with what was gathered', async () => {

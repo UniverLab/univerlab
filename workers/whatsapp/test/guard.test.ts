@@ -10,6 +10,7 @@ import {
   guardHandoff,
   guardModelTake,
   guardOpMsg,
+  guardQuietHold,
   isGuardOver,
   GUARD_OVER,
   OPERATOR_DAILY,
@@ -45,6 +46,15 @@ test('guardConfig parses the deploy JSON and falls back per field', () => {
   expect(cfg.burstsPerDay).toBe(40);
   expect(cfg.passthroughIdleMs).toBe(15 * 60 * 1000);
   expect(guardConfig({ GUARD_CONFIG: JSON.stringify({ passthroughIdleMs: 60000 }) }).passthroughIdleMs).toBe(60000);
+});
+
+test('quiet hours default to 19:00-07:00 and fall back per field', () => {
+  expect(DEFAULT_GUARD_CONFIG).toMatchObject({ quietStart: 19, quietEnd: 7 });
+  expect(guardConfig({})).toMatchObject({ quietStart: 19, quietEnd: 7 });
+  const custom = guardConfig({ GUARD_CONFIG: JSON.stringify({ quietStart: 22, quietEnd: 6 }) });
+  expect(custom).toMatchObject({ quietStart: 22, quietEnd: 6 });
+  const broken = guardConfig({ GUARD_CONFIG: JSON.stringify({ quietStart: 'noche', quietEnd: -2 }) });
+  expect(broken).toMatchObject({ quietStart: 19, quietEnd: 7 });
 });
 
 test('capBurst and capTurn cut model input and pass short text through', () => {
@@ -104,6 +114,8 @@ test('guard fetch helpers fail open without a registry', async () => {
   await expect(guardModelTake(env, 'es')).resolves.toBe(true);
   await expect(guardHandoff(env, '573001112222')).resolves.toBe(true);
   await expect(guardOpMsg(env)).resolves.toEqual({ send: true, firstOver: false, waiting: 0 });
+  // No registry means no away state: the conversation keeps its closing.
+  await expect(guardQuietHold(env)).resolves.toBe(false);
 });
 
 test('guard fetch helpers deny only on an explicit refusal', async () => {

@@ -1,7 +1,7 @@
 /** The operator's command language: English slash commands, one live
  *  conversation at a time. Anything else gets the help text. */
 
-export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'cancel' | 'delivery';
+export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'cancel' | 'delivery' | 'afk' | 'active';
 
 export interface Parsed {
   cmd: Cmd;
@@ -17,7 +17,9 @@ export const HELP =
   '/release — cierras el directo y el agente retoma\n' +
   '/confirm <nombre> — confirma su consulta en espera\n' +
   '/cancel <nombre> — cancela su cita\n' +
-  '/delivery <nombre> — autoriza su sesión de entrega';
+  '/delivery <nombre> — autoriza su sesión de entrega\n' +
+  '/afk — pausas los avisos hasta que envíes /active\n' +
+  '/active — vuelves y recibes lo que quedó en espera';
 
 function normWord(s: string): string {
   return s
@@ -40,6 +42,8 @@ const NAMES: Record<string, Cmd> = {
   confirm: 'confirm',
   cancel: 'cancel',
   delivery: 'delivery',
+  afk: 'afk',
+  active: 'active',
 };
 
 /** Words of the retired language: they are no longer commands and get HELP. */
@@ -65,7 +69,7 @@ export function parseCommand(text: string): Parsed | null {
   const cmd = NAMES[normWord(parts[0])];
   if (!cmd) return null;
   const rest = parts.slice(1);
-  if (cmd === 'help' || cmd === 'release') {
+  if (cmd === 'help' || cmd === 'release' || cmd === 'afk' || cmd === 'active') {
     return rest.length === 0 ? { cmd } : null;
   }
   if (cmd === 'recap') {

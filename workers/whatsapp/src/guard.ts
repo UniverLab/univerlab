@@ -24,6 +24,9 @@ export interface GuardConfig {
   opMsgsPerHour: number;
   /** A passthrough with no message in either direction closes on its own. */
   passthroughIdleMs: number;
+  /** Quiet hours as [quietStart, 24) + [0, quietEnd) in America/Bogota wall time. */
+  quietStart: number;
+  quietEnd: number;
 }
 
 export const DEFAULT_GUARD_CONFIG: GuardConfig = {
@@ -37,6 +40,8 @@ export const DEFAULT_GUARD_CONFIG: GuardConfig = {
   handoffMs: 10 * 60 * 1000,
   opMsgsPerHour: 30,
   passthroughIdleMs: 15 * 60 * 1000,
+  quietStart: 19,
+  quietEnd: 7,
 };
 
 function validCount(value: unknown): number | null {
@@ -61,6 +66,8 @@ export function guardConfig(env: { GUARD_CONFIG?: string }): GuardConfig {
       handoffMs?: unknown;
       opMsgsPerHour?: unknown;
       passthroughIdleMs?: unknown;
+      quietStart?: unknown;
+      quietEnd?: unknown;
     };
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return base;
     for (const key of [
@@ -74,6 +81,8 @@ export function guardConfig(env: { GUARD_CONFIG?: string }): GuardConfig {
       'handoffMs',
       'opMsgsPerHour',
       'passthroughIdleMs',
+      'quietStart',
+      'quietEnd',
     ] as const) {
       const v = validCount(parsed[key]);
       if (v !== null) base[key] = v;
@@ -205,6 +214,13 @@ export interface OpMsgGrant {
   send: boolean;
   firstOver: boolean;
   waiting: number;
+}
+
+/** Whether the operator side currently holds notes: away, or inside quiet hours. */
+export async function guardQuietHold(env: Env, now?: number): Promise<boolean> {
+  const res = await guardFetch(env, { action: 'guard', op: 'quietHold', now: now ?? Date.now() });
+  if (!res || typeof res.held !== 'boolean') return false;
+  return res.held;
 }
 
 /** Whether one more agent message may reach the operator this hour. */
