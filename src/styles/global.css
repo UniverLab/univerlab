@@ -22,8 +22,10 @@
   --ink-faint: #7f7c76;
   --line: #23252c;
 
-  /* UniverLab accent — the lab's own colour (yellow), reserved for the main site */
-  --accent: #e6c84a;
+  /* Lab colour: garnet by day, gold by night (see the night override below) */
+  --accent: #87222c;
+  /* Garnet lifted for the always-black footer; pure garnet is 2.3:1 on #000 */
+  --accent-lift: #e0a2a6;
 
   /* Experiment essences */
   --canopy: #00a9a0;
@@ -37,6 +39,19 @@
   --measure: 64ch;
   --space: clamp(1rem, 2.5vw, 1.75rem);
   --page-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+/* Lab colour by night: the gold the site has always worn, on dark grounds. */
+html[data-bench-theme='night'] {
+  --accent: #e6c84a;
+  --accent-lift: #e6c84a;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-bench-theme='day']) {
+    --accent: #e6c84a;
+    --accent-lift: #e6c84a;
+  }
 }
 
 /* Fixed per-experiment surfaces. Each palette lives in ONE token group, keyed by the
@@ -582,7 +597,7 @@ body > header { view-transition-name: site-header; }
 }
 .slip::before { left: 14px; transform: rotate(-7deg); }
 .slip::after { right: 14px; transform: rotate(6deg); }
-.slip kbd { font: inherit; border-bottom: 1.5px solid #87222c; }
+.slip kbd { font: inherit; border-bottom: 1.5px solid var(--bench-c-garnet); }
 .slip.tip {
   right: max(20px, env(safe-area-inset-right, 0px));
   bottom: calc(58px + 12px);
@@ -678,8 +693,8 @@ body > header { view-transition-name: site-header; }
 .find-prev:hover, .find-next:hover { color: #e0e0e0; background: rgba(255,255,255,0.08); }
 .find-close { font-size: 1rem; }
 .find-close:hover { color: #e0e0e0; }
-.find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
-.find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
+.find-hl { background: color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 2px; }
+.find-hl.find-active { background: color-mix(in srgb, var(--accent) 60%, transparent); }
 /* Demo dialog — full-screen overlay for expanded demo view. */
 #demo-dialog {
   position: fixed;

@@ -260,8 +260,8 @@ describe('Footer — the lab faces', () => {
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
   });
 
-  it('the CTA reads in the accent', () => {
-    expect(src).toMatch(/\.cta\s*\{[^}]*color:\s*var\(--accent,\s*#c9a227\)/s);
+  it('the CTA reads in the lifted lab colour for the black footer', () => {
+    expect(src).toMatch(/\.cta\s*\{[^}]*color:\s*var\(--accent-lift\)/s);
   });
 });
 

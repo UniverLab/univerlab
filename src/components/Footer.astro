@@ -250,10 +250,10 @@ Date:   now
   .icon-link:hover { color: var(--f-ink); }
   .icon-link svg { display: block; color: inherit; }
   .icon-link.sponsor {
-    color: var(--accent, #c9a227);
+    color: var(--accent-lift);
     animation: heartbeat 2s ease-in-out infinite;
   }
-  .icon-link.sponsor:hover { color: #f0d060; animation-play-state: paused; }
+  .icon-link.sponsor:hover { color: color-mix(in srgb, var(--accent-lift) 75%, var(--f-ink)); animation-play-state: paused; }
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
     14% { transform: scale(1.15); }
@@ -266,7 +266,7 @@ Date:   now
     border: 1px solid var(--f-line);
     padding: 0.625rem 1rem;
     font-family: var(--font-mono); font-size: 0.8125rem;
-    color: var(--accent, #c9a227);
+    color: var(--accent-lift);
     text-decoration: none;
   }
   .cta:hover { color: var(--f-ink); }
@@ -340,7 +340,7 @@ Date:   now
     z-index: 20;
     background: var(--f-bg-raise);
     border: 1px solid var(--f-line);
-    border-left: 2px solid var(--accent, #c9a227);
+    border-left: 2px solid var(--accent-lift);
     padding: 0.9rem 1.1rem;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
     animation: commit-in 0.16s ease;

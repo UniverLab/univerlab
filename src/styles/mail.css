@@ -394,7 +394,7 @@
   inset: 5px;
   pointer-events: none;
   border: 5px solid transparent;
-  border-image: repeating-linear-gradient(45deg, var(--accent) 0 8px, transparent 8px 12px, #87222c 12px 20px, transparent 20px 24px) 6;
+  border-image: repeating-linear-gradient(45deg, var(--accent) 0 8px, transparent 8px 12px, var(--mail-garnet) 12px 20px, transparent 20px 24px) 6;
   opacity: 0.85;
 }
 .mail-pop .stamp {

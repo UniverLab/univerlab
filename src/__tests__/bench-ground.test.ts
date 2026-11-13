@@ -100,25 +100,25 @@ describe('default ground', () => {
 describe('circadian palette endpoints', () => {
   it('DG is the day endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#8a6a2c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'}",
+      "var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#87222c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'}",
     );
   });
 
   it('DW is the dawn and dusk endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#9a5530','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'}",
+      "var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#87222c','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'}",
     );
   });
 
   it('NB is the night edge endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#d6955b','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'}",
+      "NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#e6c84a','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'}",
     );
   });
 
   it('NS is the night endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#d9b878','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'}",
+      "NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#e6c84a','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'}",
     );
   });
 
