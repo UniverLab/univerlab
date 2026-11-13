@@ -53,6 +53,15 @@ export const privacyEs: LegalDoc = {
       ],
     },
     {
+      id: 'first-call-booking',
+      title: 'Agendar la primera llamada gratis',
+      paras: [
+        'Para agendar la primera llamada gratis en este sitio recogemos tu nombre, tu correo electrónico y la nota que escribes sobre de qué quieres hablar. Los usamos solo para agendar y sostener la llamada: tu reserva vive en el Google Calendar del laboratorio, y la invitación que te enviamos por correo trae un enlace para cancelar la llamada.',
+        'Antes de enviar el formulario, Cloudflare Turnstile verifica que quien escribe no es un robot.',
+        'Para pedir el borrado, escribe a <a href="mailto:{email}">{email}</a> con el asunto «Borrar mis datos». Confirmamos el borrado dentro de los 15 días hábiles siguientes (Ley 1581, artículo 15).',
+      ],
+    },
+    {
       id: 'purposes',
       title: 'Finalidades',
       paras: ['Una línea por servicio:'],

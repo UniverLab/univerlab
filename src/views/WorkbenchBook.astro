@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Watermark from '../components/Watermark.astro';
+import { contactEmail } from '../lib/site-about';
+import { getLang, useTranslations } from '../i18n';
+const lang = getLang(Astro.url);
+const t = useTranslations(lang);
+const b = t.book;
+const WHATSAPP = 'https://wa.me/573053892323';
+// Build configuration with a local default: the production workflow passes
+// the real values (see .github/workflows/deploy-site.yml).
+const api = import.meta.env.PUBLIC_BOOKING_API || 'https://agenda.univerlab.org';
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+const waHref = `${WHATSAPP}?text=${encodeURIComponent(lang === 'es' ? 'Hola, vengo de la página para agendar la primera llamada.' : 'Hi, I come from the free-first-call booking page.')}`;
+const copy = JSON.stringify({
+  loading: b.loading,
+  empty: b.empty,
+  tzLine: b.tzLine,
+  colombiaSuffix: b.colombiaSuffix,
+  form: b.form,
+  errors: b.errors,
+  success: b.success,
+}).replace(/</g, '\\u003c');
+---
+<BaseLayout title={b.title} description={b.description} circadian>
+  <Watermark kind="blueprint" />
+  <section class="wrap book">
+    <header class="book-hero">
+      <span class="label">{b.label}</span>
+      <h1>{b.h1}</h1>
+      <p class="book-intro">{b.intro}</p>
+    </header>
+    <div class="book-fallback" id="book-fallback">
+      <h2>{b.fallbackTitle}</h2>
+      <p>{b.fallbackText}</p>
+      <p class="book-fallback-links">
+        <a class="book-btn" href={waHref} target="_blank" rel="noopener">{b.whatsapp}</a>
+        <span>{b.emailLabel} <a href={`mailto:${contactEmail}`}>{contactEmail}</a></span>
+      </p>
+    </div>
+    <form class="book-form" id="book-form" hidden data-api={api} data-lang={lang} novalidate>
+      <p class="book-status" id="book-status" role="status"></p>
+      <fieldset class="book-field" id="book-slots">
+        <legend>{b.form.slots}</legend>
+        <div id="book-slot-list"></div>
+        <p class="book-err" id="book-slot-err" hidden></p>
+      </fieldset>
+      <div class="book-field">
+        <label for="book-name">{b.form.name}</label>
+        <input id="book-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-invalid="false" aria-describedby="book-name-err" />
+        <p class="book-err" id="book-name-err" hidden></p>
+      </div>
+      <div class="book-field">
+        <label for="book-email">{b.form.email}</label>
+        <input id="book-email" name="email" type="email" autocomplete="email" maxlength="254" required aria-invalid="false" aria-describedby="book-email-err" />
+        <p class="book-err" id="book-email-err" hidden></p>
+      </div>
+      <div class="book-field">
+        <label for="book-note">{b.form.note}</label>
+        <textarea id="book-note" name="note" rows="3" maxlength="500" aria-invalid="false" aria-describedby="book-note-hint book-note-err"></textarea>
+        <p class="book-hint" id="book-note-hint">{b.form.noteHint}</p>
+        <p class="book-err" id="book-note-err" hidden></p>
+      </div>
+      <div class="book-field">
+        <div class="cf-turnstile" data-sitekey={sitekey} role="group" aria-label={b.form.check}></div>
+      </div>
+      <p><button class="book-btn" id="book-submit" type="submit">{b.form.submit}</button></p>
+    </form>
+    <div class="book-success" id="book-success" hidden>
+      <h2 id="book-success-title">{b.success.title}</h2>
+      <p id="book-success-when"></p>
+      <p id="book-success-meet"></p>
+      <p id="book-success-invite"></p>
+    </div>
+    <script type="application/json" id="book-i18n" set:html={copy} />
+  </section>
+  <script>
+    import { bindBookForm } from '../lib/book-client';
+    bindBookForm(document);
+  </script>
+</BaseLayout>
+
+{/* Inlined so the page ships no CSS chunk: every chunk is linked site-wide
+    and counted on the budgeted pages, and this design must not move them. */}
+<style is:inline>
+  .book { max-width: 44rem; padding-block: 4rem 6rem; }
+  .book-hero .label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; color: var(--accent); }
+  .book-hero h1 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.05; margin: 0.6rem 0 1rem; text-wrap: balance; }
+  .book-intro { max-width: 40rem; color: var(--ink-dim); font-size: 1.1rem; line-height: 1.7; margin: 0 0 1.4rem; }
+  .book-fallback { background: var(--bg-raise); border: 1px solid var(--line); padding: 1.4rem 1.2rem 1.1rem; margin-top: 2rem; }
+  .book-fallback h2 { font-family: var(--font-serif); font-weight: 400; font-size: 1.3rem; margin: 0 0 0.5rem; }
+  .book-fallback p { color: var(--ink-dim); line-height: 1.6; margin: 0.5rem 0 0; }
+  .book-fallback-links { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
+  .book-fallback-links a { color: var(--accent); }
+  .book-btn { text-decoration: none; border: 1px solid var(--accent);
+         color: var(--accent); padding: 0.55rem 1.1rem;
+         font-family: var(--font-mono); font-size: 0.85rem; background: none;
+         transition: background 0.15s ease, color 0.15s ease; cursor: pointer; }
+  .book-btn:hover { background: var(--accent); color: var(--bg); }
+  button.book-btn:disabled { opacity: 0.6; cursor: wait; }
+  .book-form { margin-top: 2rem; display: grid; gap: 1.4rem; }
+  .book-form[hidden] { display: none; }
+  .book-status:empty { display: none; }
+  .book-status { color: var(--ink-dim); line-height: 1.6; margin: 0; }
+  .book-field { border: 0; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+  .book-field > legend, .book-field > label { font-family: var(--font-serif); font-size: 1.2rem; }
+  .book-field input[type="text"], .book-field input[type="email"], .book-field textarea {
+    font: inherit; color: var(--ink); background: var(--bg-raise);
+    border: 1px solid var(--line); padding: 0.55rem 0.7rem; max-width: 100%; }
+  .book-field input[aria-invalid="true"], .book-field textarea[aria-invalid="true"] { border-color: var(--accent); }
+  .book-hint { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); margin: 0; }
+  .book-err { font-size: 0.95rem; color: var(--accent); margin: 0; }
+  .book-err:empty { display: none; }
+  .book-tz { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); margin: 0.6rem 0; }
+  .book-day { border: 1px solid var(--line); padding: 1rem 1rem 0.8rem; margin: 0 0 1rem; display: grid; gap: 0.5rem; }
+  .book-day legend { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); padding-inline: 0.4rem; }
+  .book-slot { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; cursor: pointer; line-height: 1.6; }
+  .book-slot input { accent-color: var(--accent); }
+  .book-co { color: var(--ink-dim); font-size: 0.9em; }
+  .book-success { background: var(--bg-raise); border: 1px solid var(--line); padding: 1.4rem 1.2rem 1.1rem; margin-top: 2rem; display: grid; gap: 0.6rem; }
+  .book-success[hidden] { display: none; }
+  .book-success h2 { font-family: var(--font-serif); font-weight: 400; font-size: 1.5rem; margin: 0; }
+  .book-success p { color: var(--ink-dim); line-height: 1.6; margin: 0; }
+  .book-success a { color: var(--accent); word-break: break-all; }
+  @media (max-width: 47.99rem) {
+    .book { padding-block: 1.5rem 5rem; }
+    .book-hero h1 { font-size: 1.95rem; }
+  }
+</style>

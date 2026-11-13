@@ -168,6 +168,10 @@ jobs:
           # Lifts the GitHub API rate limit for the build-time fetches: the
           # contributors wall and each experiment's latest release plate segment.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The booking page reads these at build time (PUBLIC_*): the free
+          # first-call service and the Turnstile site key guarding its form.
+          PUBLIC_BOOKING_API: https://agenda.univerlab.org
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
         run: |
           npm ci
           npm run build

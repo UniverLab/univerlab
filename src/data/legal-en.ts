@@ -55,6 +55,15 @@ export const privacyEn: LegalDoc = {
       ],
     },
     {
+      id: 'first-call-booking',
+      title: 'Booking the free first call',
+      paras: [
+        'To book the free first call on this site we collect your name, your email address and the note you write about what you want to talk about. We use them only to book and hold the call: your booking lives in the lab’s Google Calendar, and the invitation we email you carries a link to cancel the call.',
+        'Before the form is sent, Cloudflare Turnstile checks that the visitor is not a robot.',
+        'To ask for deletion, write to <a href="mailto:{email}">{email}</a> with the subject “Delete my data”. We confirm the deletion within 15 business days (Ley 1581, article 15).',
+      ],
+    },
+    {
       id: 'purposes',
       title: 'Purposes',
       paras: ['One line per service:'],

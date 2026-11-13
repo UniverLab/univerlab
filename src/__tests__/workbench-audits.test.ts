@@ -162,10 +162,12 @@ describe('workbench-audits', () => {
     }
   });
 
-  it('the view books the free call on the workbench WhatsApp line and links the privacy page', () => {
+  it('the view leads the free call to the booking page and links the privacy page', () => {
+    expect(VIEW).toContain("localizePath('/workbench/book', lang)");
+    expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');
-    // Same invariant as the Workbench view: the only booking path is WhatsApp.
+    // Same invariant as the Workbench view: no booking path by email here.
     expect(VIEW).not.toContain('mailto:');
     expect(VIEW).not.toContain('hola@univerlab.org');
     expect(VIEW).toContain("localizePath('/privacy'");

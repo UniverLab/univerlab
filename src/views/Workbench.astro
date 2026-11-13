@@ -9,6 +9,7 @@ const t = useTranslations(lang);
 const w = t.workbench;
 const WHATSAPP = 'https://wa.me/573053892323';
 const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
+const bookHref = localizePath('/workbench/book', lang);
 const [headPre, headPost] = w.head.split(w.headEm);
 const proof = w.proof.items.map((id) => ({
   href: localizePath(`/${id}`, lang),
@@ -26,7 +27,8 @@ const proof = w.proof.items.map((id) => ({
         <h1>{headPre}<em>{w.headEm}</em>{headPost}</h1>
         <p class="wb-intro">{w.intro}</p>
         <p class="wb-ctas">
-          <a class="wb-btn" href={waHref} target="_blank" rel="noopener"><span class="wb-long">{w.cta}</span><span class="wb-short">{w.ctaShort}</span></a>
+          <a class="wb-btn" href={bookHref}><span class="wb-long">{w.cta}</span><span class="wb-short">{w.ctaShort}</span></a>
+          <a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a>
           <small>{w.ctaNote}</small>
         </p>
       </div>
@@ -66,7 +68,7 @@ const proof = w.proof.items.map((id) => ({
       <small>{w.close.phone}</small>
     </section>
   </section>
-  <div class="wb-sticky"><a class="wb-btn" href={waHref} target="_blank" rel="noopener">{w.ctaShort}</a><span>{w.ctaNote}</span></div>
+  <div class="wb-sticky"><a class="wb-btn" href={bookHref}>{w.ctaShort}</a><a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
 </BaseLayout>
 
 {/* Inlined so the page ships no CSS chunk: every chunk is linked site-wide
@@ -79,6 +81,7 @@ const proof = w.proof.items.map((id) => ({
   .wb-intro { max-width: 40rem; color: var(--ink-dim); font-size: 1.1rem; line-height: 1.7; margin: 0 0 1.4rem; }
   .wb-ctas { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin: 0; }
   .wb-ctas small { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); }
+  .wb-alt { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wb-btn { text-decoration: none; border: 1px solid var(--accent);
          color: var(--accent); padding: 0.55rem 1.1rem;
          font-family: var(--font-mono); font-size: 0.85rem;
@@ -127,6 +130,6 @@ const proof = w.proof.items.map((id) => ({
     .wb-tag .wb-price { font-size: 1.5rem; }
     .wb-sticky { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 5; align-items: center; gap: 0.65rem; padding: 0.65rem var(--space) calc(0.65rem + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 92%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(6px); }
     .wb-sticky .wb-btn { flex: 1; display: flex; justify-content: center; }
-    .wb-sticky span { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-dim); letter-spacing: 0.06em; }
+    .wb-sticky .wb-alt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.06em; white-space: nowrap; }
   }
 </style>

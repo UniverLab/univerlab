@@ -45,13 +45,15 @@ describe('workbench', () => {
     expect(VIEW).toContain('{w.intro}');
   });
 
-  it('one primary button books the free call on WhatsApp, short on phones', () => {
+  it('the primary button books the free call on the booking page, WhatsApp stays secondary', () => {
     expect(es.workbench.cta).toContain('15 min');
     expect(en.workbench.cta).toContain('15 min');
     expect(es.workbench.ctaShort.length).toBeLessThan(es.workbench.cta.length);
     expect(en.workbench.ctaShort.length).toBeLessThan(en.workbench.cta.length);
     expect(VIEW).toContain('{w.ctaShort}');
     expect(VIEW).toContain('{w.ctaNote}');
+    expect(VIEW).toContain("localizePath('/workbench/book', lang)");
+    expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('https://wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');
   });
