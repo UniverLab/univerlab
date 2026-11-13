@@ -1,4 +1,5 @@
 import { runModel, type ModelConfig } from './brain';
+import { DATA_LABEL, DATA_RULES } from './prompt';
 import type { Lang } from './lang';
 
 export function normalize(text: string): string {
@@ -55,13 +56,15 @@ function fuzzyDeletionPrompt(lang: Lang): string {
   const langName = lang === 'es' ? 'Spanish' : 'English';
   return (
     'You decide whether one WhatsApp client message asks us to delete, erase or forget their data or conversation (UniverLab).\n' +
+    DATA_RULES +
+    '\n' +
     'The client writes in ' +
     langName +
     '; your output is JSON only, never chat text.\n' +
     'Answer {"delete": true} only when the client asks to delete, erase, wipe or forget their data, messages, notes or conversation, in any wording, Spanish or English.\n' +
     'Answer {"delete": false} for anything else, including questions about stored data ("¿qué datos guardan?", "how do you use my data?") and past-tense mentions of something already deleted ("borré el mensaje anterior").\n' +
     'Output exactly one JSON object and nothing else: {"delete": true|false}\n' +
-    'Message:\n'
+    'The DATA message carries the client message.'
   );
 }
 
@@ -91,7 +94,7 @@ export async function fuzzyDeletionRequest(
       cfg,
       [
         { role: 'system', content: fuzzyDeletionPrompt(lang) },
-        { role: 'user', content: text },
+        { role: 'user', content: DATA_LABEL + text },
       ],
       300
     );

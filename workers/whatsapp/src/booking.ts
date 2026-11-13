@@ -1,4 +1,5 @@
 import { runModel, type ModelConfig } from './brain';
+import { DATA_LABEL, DATA_RULES } from './prompt';
 import { SERVICE_LABEL } from './intake';
 import type { Lang } from './lang';
 import type { BookingConfig } from './schedule';
@@ -113,6 +114,8 @@ export interface DecideInput {
   offered: string[];
   /** Today as a Bogota YYYY-MM-DD date, to resolve "tomorrow", "Monday", ... */
   today: string;
+  /** Booking horizon in days; a resolved date must stay inside it. */
+  horizonDays?: number;
   eventStart?: string;
 }
 
@@ -145,11 +148,29 @@ function decidePrompt(input: DecideInput): string {
     '- "day" when the client asks for another day (a date, "tomorrow", "next Monday"...). Resolve it against today and put the Bogota YYYY-MM-DD date in "date"; when no day can be resolved use "date": "" and we re-offer nearby slots.\n' +
     '- "other" for anything else (questions, payment proofs, chatting).\n' +
     'Output exactly one JSON object and nothing else: {"action": "pick"|"cancel"|"move"|"day"|"other", "slot": <1-based number or -1>, "date": "<YYYY-MM-DD or empty string>"}\n' +
-    'Latest message:\n'
+    DATA_RULES +
+    '\n' +
+    'The DATA message carries the latest client message.'
   );
 }
 
-export function parseDecide(raw: string): DecideResult {
+const DAY_MS = 86400000;
+
+/** Bogota YYYY-MM-DD key `days` after `key`; '' when either is unparseable. */
+function addDays(key: string, days: number): string {
+  const ms = Date.parse(key + 'T00:00:00Z');
+  if (!Number.isFinite(ms)) return '';
+  const t = new Date(ms + days * DAY_MS);
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return t.getUTCFullYear() + '-' + pad(t.getUTCMonth() + 1) + '-' + pad(t.getUTCDate());
+}
+
+export function parseDecide(
+  raw: string,
+  offeredCount?: number,
+  today?: string,
+  horizonDays?: number
+): DecideResult {
   try {
     const text = raw.replace(/<think>[\s\S]*?<\/think>/g, '');
     const start = text.indexOf('{');
@@ -165,12 +186,16 @@ export function parseDecide(raw: string): DecideResult {
     if (action !== 'pick' && action !== 'cancel' && action !== 'move' && action !== 'day' && action !== 'other') {
       throw new Error('bad-action');
     }
-    const slotNum = typeof slot === 'number' && Number.isFinite(slot) ? Math.floor(slot) : -1;
-    return {
-      action,
-      slot: slotNum,
-      date: typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '',
-    };
+    let slotNum = typeof slot === 'number' && Number.isFinite(slot) ? Math.floor(slot) : -1;
+    // A pick outside the offered list is no pick.
+    if (offeredCount !== undefined && !(slotNum >= 1 && slotNum <= offeredCount)) slotNum = -1;
+    let day = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '';
+    // A resolved day must be today or later and inside the booking horizon.
+    if (today !== undefined && day !== '') {
+      const latest = addDays(today, horizonDays ?? 14);
+      if (!(day >= today && (latest === '' || day <= latest))) day = '';
+    }
+    return { action, slot: slotNum, date: day };
   } catch {
     return { ...DECIDE_FALLBACK };
   }
@@ -188,11 +213,11 @@ export async function decide(
       cfg,
       [
         { role: 'system', content: decidePrompt(input) },
-        { role: 'user', content: latest },
+        { role: 'user', content: DATA_LABEL + latest },
       ],
       400
     );
-    return parseDecide(raw);
+    return parseDecide(raw, input.offered.length, input.today, input.horizonDays);
   } catch {
     return { ...DECIDE_FALLBACK };
   }

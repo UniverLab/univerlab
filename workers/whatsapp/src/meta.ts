@@ -28,6 +28,17 @@ export async function verifySignature(
   return diff === 0;
 }
 
+/** The profile name as the client typed it cannot imitate a code or span
+ *  lines: one line, no control characters, no square brackets, 40 chars. */
+export function cleanName(raw: string): string {
+  return raw
+    .replace(/[\0-\x1F\x7F-\x9F]/g, ' ')
+    .replace(/[\[\]]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 40);
+}
+
 export interface Inbound {
   id: string;
   from: string;
@@ -99,7 +110,7 @@ export function parseInbound(payload: unknown): Inbound[] {
           if (contact) {
             const profile = contact['profile'];
             if (isPlainObject(profile) && typeof profile['name'] === 'string') {
-              inbound.name = profile['name'] as string;
+              inbound.name = cleanName(profile['name'] as string);
             }
           }
           out.push(inbound);

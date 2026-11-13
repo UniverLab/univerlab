@@ -1,4 +1,5 @@
-import { systemPrompt } from './prompt';
+import { DATA_LABEL, systemPrompt } from './prompt';
+import { checkReply } from './replycheck';
 import type { Lang } from './lang';
 
 /** Used when the deploy sets no TEXT_MODEL. The model is configuration: the
@@ -114,11 +115,29 @@ export async function answer(
       cfg,
       [
         { role: 'system', content: systemPrompt(lang, phone) },
-        ...history.map((t) => ({ role: t.role, content: t.text })),
+        // Client-written turns travel as marked DATA user content; the
+        // model's own earlier turns stay untouched.
+        ...history.map((t) => ({
+          role: t.role,
+          content: t.role === 'user' ? DATA_LABEL + t.text : t.text,
+        })),
       ],
       1200
     );
-    return parseAnswer(raw, lang);
+    const parsed = parseAnswer(raw, lang);
+    // A reply failing the output check is replaced by the fixed fallback
+    // with a handoff, whatever the flags say. Otherwise a booking flag
+    // wins (the prompt tells the model to set handoff true alongside it)
+    // and the conversation answers with the intake template; any other
+    // handoff never carries model-written text.
+    if (!checkReply(parsed.reply, lang, phone)) {
+      return { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
+    }
+    if (parsed.booking) return parsed;
+    if (parsed.handoff) {
+      return { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
+    }
+    return parsed;
   } catch {
     return { reply: FALLBACK[lang], handoff: true, booking: false, service: '' };
   }

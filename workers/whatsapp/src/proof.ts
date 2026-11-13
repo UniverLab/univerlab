@@ -1,4 +1,5 @@
 import { serviceLabel, type BookingState, type PaymentProof } from './booking';
+import { DATA_RULES } from './prompt';
 import { guardOpMsg } from './guard';
 import { GRAPH, sendMedia } from './meta';
 import { formatSlot } from './schedule';
@@ -127,7 +128,8 @@ const PROMPT =
   'Read this payment receipt (Bre-B or PayPal) and reply with JSON only, ' +
   'no other text: {"amount": number or null, "currency": "COP" or "USD" or "", ' +
   '"date": "", "method": "", "reference": "", "payee": ""}. ' +
-  'Use null for the amount and "" for any field you cannot read.';
+  'Use null for the amount and "" for any field you cannot read. ' +
+  DATA_RULES;
 
 function extractRaw(res: unknown): string {
   const r = res as {

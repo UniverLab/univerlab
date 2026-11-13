@@ -1,4 +1,6 @@
 import { modelConfig, runModel, type ModelConfig } from './brain';
+import { checkReply } from './replycheck';
+import { DATA_LABEL, DATA_RULES } from './prompt';
 import type { Lang } from './lang';
 
 export interface IntakeState {
@@ -7,6 +9,8 @@ export interface IntakeState {
   opening: string;
   answers: string[];
   asks: number;
+  /** Client number, so the follow-up check reads the right price list. */
+  phone?: string;
 }
 
 export const INTAKE_ASK: Record<Lang, string> = {
@@ -61,21 +65,30 @@ export interface IntakeResult {
   reply: string;
 }
 
-export function intakePrompt(state: IntakeState): string {
-  const langName = state.lang === 'es' ? 'Spanish' : 'English';
-  const known = [
-    'Service: ' + state.service,
-    'Opening booking message: ' + state.opening,
-    ...state.answers.map((a, i) => 'Answer ' + (i + 1) + ': ' + a),
-  ].join('\n');
+/** Rules only: every client-written word travels in the user message. */
+export function intakePrompt(lang: Lang): string {
+  const langName = lang === 'es' ? 'Spanish' : 'English';
   return (
     'You are classifying the latest client message in a short WhatsApp booking intake for UniverLab.\n' +
+    DATA_RULES +
+    '\n' +
     'What is still missing: their goal for the session, their context (what they work on, what they use today, what they already tried), and anything they can share beforehand.\n' +
     'Reply in ' + langName + ' when you write a follow-up.\n' +
     'Statuses: "declined" when the client prefers not to answer; "handoff" when the message is about payment, a payment proof, cancelling, asks for a human, is upset, asks something unrelated to the booking, or is not text-like content; "ready" when you already know their goal plus some context (or there are at least two substantive answers); otherwise "more" with a reply asking ONLY what is still missing, one short question, at most 300 characters.\n' +
     'Output exactly one JSON object and nothing else: {"status": "more"|"ready"|"declined"|"handoff", "reply": "<follow-up or empty string>"}\n' +
-    'Known so far:\n' + known
+    'The DATA message carries what is known so far plus the latest client message.'
   );
+}
+
+/** Client-written intake history as one DATA user message. */
+export function intakeData(state: IntakeState, latest: string): string {
+  const known = [
+    'Service: ' + state.service,
+    'Opening booking message: ' + state.opening,
+    ...state.answers.map((a, i) => 'Answer ' + (i + 1) + ': ' + a),
+    'Latest message: ' + latest,
+  ].join('\n');
+  return DATA_LABEL + '\n' + known;
 }
 
 export function parseIntake(raw: string): IntakeResult {
@@ -107,12 +120,16 @@ export async function intake(
       ai,
       cfg,
       [
-        { role: 'system', content: intakePrompt(state) },
-        { role: 'user', content: latest },
+        { role: 'system', content: intakePrompt(state.lang) },
+        { role: 'user', content: intakeData(state, latest) },
       ],
       800
     );
-    return parseIntake(raw);
+    const parsed = parseIntake(raw);
+    if (parsed.status === 'more' && parsed.reply !== '' && !checkReply(parsed.reply, state.lang, state.phone ?? '')) {
+      return { status: 'more', reply: '' };
+    }
+    return parsed;
   } catch {
     return { status: 'handoff', reply: '' };
   }
@@ -122,16 +139,24 @@ export interface Brief {
   bullets: string[];
 }
 
-export function briefPrompt(state: IntakeState): string {
-  const langName = state.lang === 'es' ? 'Spanish' : 'English';
-  const said = ['Opening booking message: ' + state.opening,
-    ...state.answers.map((a, i) => 'Answer ' + (i + 1) + ': ' + a)].join('\n');
+/** Rules only: every client-written word travels in the user message. */
+export function briefPrompt(lang: Lang, service: string): string {
+  const langName = lang === 'es' ? 'Spanish' : 'English';
   return (
-    'You are writing a handoff brief for a UniverLab operator before a Workbench session (' + state.service + ').\n' +
+    'You are writing a handoff brief for a UniverLab operator before a Workbench session (' + service + ').\n' +
+    DATA_RULES +
+    '\n' +
     'Summarize ONLY what the client said below into 3 to 6 short bullets in ' + langName + ', each at most 200 characters. Never invent facts, goals, tools or context the client did not mention. Ignore messages where the client declines to answer.\n' +
     'Output exactly one JSON object and nothing else: {"bullets": ["...", "..."]}\n' +
-    'What the client said:\n' + said
+    'The DATA message carries what the client said.'
   );
+}
+
+/** Client-written booking history as one DATA user message. */
+export function briefData(state: IntakeState): string {
+  const said = ['Opening booking message: ' + state.opening,
+    ...state.answers.map((a, i) => 'Answer ' + (i + 1) + ': ' + a)].join('\n');
+  return DATA_LABEL + '\n' + said;
 }
 
 export function parseBrief(raw: string): Brief {
@@ -173,7 +198,10 @@ export async function brief(
     const raw = await runModel(
       ai,
       cfg,
-      [{ role: 'system', content: briefPrompt(state) }],
+      [
+        { role: 'system', content: briefPrompt(state.lang, state.service) },
+        { role: 'user', content: briefData(state) },
+      ],
       800
     );
     const parsed = parseBrief(raw);

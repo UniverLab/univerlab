@@ -1021,6 +1021,7 @@ export class Conversation extends DurableObject<Env> {
         phase: st.phase,
         offered: st.offered.map((s) => formatSlot(s, st.lang)),
         today: bogotaDateKey(Date.now()),
+        horizonDays: bookingConfig(this.env).horizonDays,
         eventStart: st.start,
       },
       m.text ?? ''
@@ -1424,6 +1425,9 @@ export class Conversation extends DurableObject<Env> {
           const follow = res.reply || INTAKE_FOLLOWUP[st.lang];
           await sendText(this.env, m.from, follow);
           this.storeAssistant(m.timestamp, 'a-' + m.id, follow);
+          // An empty follow-up means the model text failed the reply
+          // check: a person takes over from here.
+          if (!res.reply) await this.notify(m);
           st.asks += 1;
           this.state('intake', JSON.stringify(st));
           return;
@@ -1451,10 +1455,14 @@ export class Conversation extends DurableObject<Env> {
         this.storeAssistant(m.timestamp, 'a-' + m.id, ask);
         const st: IntakeState = {
           lang,
-          service: a.service,
+          // FR6: the service is model output, so it enters the state only
+          // through the closed set; everything downstream (brief prompt,
+          // registry, briefs table) reads the normalized value.
+          service: normalizeService(a.service),
           opening: (m.text ?? '').slice(0, 500),
           answers: [],
           asks: 1,
+          phone: m.from,
         };
         this.state('intake', JSON.stringify(st));
         return;

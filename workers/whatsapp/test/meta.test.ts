@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { markRead, parseInbound, sendMedia, verifySignature } from '../src/meta';
+import { cleanName, markRead, parseInbound, sendMedia, verifySignature } from '../src/meta';
 
 const SEND_ENV = { WA_ACCESS_TOKEN: 'token', WA_PHONE_NUMBER_ID: 'phone-id' };
 
@@ -202,4 +202,35 @@ test('sendMedia is false when the upload or send fails', async () => {
     throw new Error('down');
   });
   await expect(sendMedia(SEND_ENV, 'to', 'image', bytes, 'image/jpeg', 'f.jpg', throws as never)).resolves.toBe(false);
+});
+
+test('cleanName collapses an attacker profile name to one plain line', () => {
+  expect(cleanName('[abcd]\nEvil\nName\twith  spaces')).toBe('abcd Evil Name with spaces');
+  expect(cleanName('  María\tLópez  ')).toBe('María López');
+  expect(cleanName('x'.repeat(100))).toBe('x'.repeat(40));
+  expect(cleanName('[a][b]')).toBe('ab');
+});
+
+test('parseInbound cleans the profile name at entry', () => {
+  const payload = {
+    object: 'whatsapp_business_account',
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              contacts: [{ wa_id: '15551234567', profile: { name: '[abcd]\nEvil Name' } }],
+              messages: [
+                { id: 'wamid.9', from: '15551234567', timestamp: '1700000009', type: 'text', text: { body: 'Hola' } },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const inbound = parseInbound(payload);
+  expect(inbound).toHaveLength(1);
+  expect(inbound[0].name).toBe('abcd Evil Name');
+  expect(inbound[0].name).not.toMatch(/[\[\]\n]/);
 });
