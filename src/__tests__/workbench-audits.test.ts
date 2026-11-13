@@ -83,7 +83,9 @@ describe('workbench-audits', () => {
       expect(repo).toMatch(/sandbox|aislado|isolated/i);
       expect(repo).toMatch(/checksum/);
       expect(repo).toMatch(/evidencia|evidence/);
-      expect(verify).toMatch(/60 d/);
+      expect(verify).toMatch(/6 months|6 meses/);
+      expect(verify).toMatch(/status|estado/i);
+      expect(verify).toMatch(/consultation hours|horas de consulta/);
       expect(verify).toMatch(/críticos|critical/);
       expect(doi).toMatch(/DOI/);
       expect(doi).toMatch(/insignia|badge/);

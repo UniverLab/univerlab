@@ -867,7 +867,7 @@ export const en = {
       ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
       ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking (Ley 1480 de 2011, art. 47).', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
+    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
       'Less than 24 hours before, the session can be moved once at no cost; it is not refunded, except under the right of retraction below.',
       'If you join late, the session still ends at the booked time; if you do not join within 15 minutes of the start, it counts as given.',
@@ -911,7 +911,7 @@ export const en = {
         ['Dedicated page', 'A dedicated page on univerlab.org, open only to the addresses you name: a summary for decision makers, the findings by severity, the risk matrix, the table of areas covered, the fix roadmap in priority order and a glossary so a non-specialist can follow.'],
         ['PDF report', 'A PDF report typeset with TeXForge: every finding in full, with how to reproduce it, its cause, its impact and the recommendation, plus the limits of the audit stated plainly.'],
         ['Audit repository', 'The audit repository, private and shared with whoever you name: the isolated environment, every evidence file with its checksum, and the full detail, so each finding can be checked and reproduced.'],
-        ['Verification pass', 'One verification pass, within 60 days of delivery, of the fixes to critical and high findings, recorded on the page with the version that fixed each one.'],
+        ['Verification pass', 'One verification, within 6 months of delivery, of the fixes to critical and high findings: the status of each finding updated on the audit page and in the audit repository, with the version that closed each fix, plus the updated audit document. Any further review is billed as consultation hours.'],
         ['Optional: public record with DOI', 'Optional: a permanent, verifiable and citable public record with a DOI and the badge, if you decide to publish the audit.'],
       ] as [string, string][] },
       not: { kicker: 'What an audit is not', text: 'An audit is not a certification or a guarantee of continuous security. It does not price or build the fixes. Its findings stay private until you approve publishing.' },
@@ -921,23 +921,23 @@ export const en = {
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
-      price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
+      price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
       cardLink: 'What we review and what you receive →',
       offers: { kicker: 'Publishing your audit', founding: {
         title: 'Founding audits',
-        text: 'The first 5 audits: we refund 50 % of the price when the audit is published. A founding spot is taken when the agreement is signed.',
+        text: 'The first 5 audits: 50 % of the price, taken off the delivery payment, when the publication authorisation is signed with the order. A founding spot is reserved then.',
         spots: 5,
       }, public: {
         title: 'Audit in public',
-        text: 'Any other client gets 20 % of the price back when they publish, even if they first chose a private audit.',
+        text: 'Any other audit gets 20 % of the price, taken off the delivery payment, when the publication authorisation is signed at delivery, even if a private audit was chosen first.',
       }, reaudit: {
         title: 'Re-audit',
         text: 'Auditing the same system again, to check the fixes and issue a new audit with a new date, costs 30 % less, applied when it is charged.',
       }, zenodoNote: 'A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.', rules: [
-        'Publication happens once critical and high findings are fixed, with your written approval of what is shown.',
-        'The refund must be claimed within 12 months of delivery; after that the audit stays private and the founding spot is not returned.',
-        'Discounts and refunds do not stack: the largest one applies.',
-        'The badge is your choice to display and is never a condition for any refund or discount.',
+        'Publication needs your signed authorisation of what is shown, and happens once the critical and high findings are verified as fixed.',
+        'If an audit with a signed publication authorisation still has unfixed critical or high findings 6 months after delivery, the lab writes to you with two options: pay the discount that was applied, or publish now with the risks found. You have 15 calendar days from that message to pay; otherwise the audit is published anyway, and the findings still unfixed are shown with their title, severity and status only, without reproduction steps, endpoints or anything that would let someone exploit them, added when the fix is verified.',
+        'Discounts do not stack: the largest one applies.',
+        'The badge is your choice to display and is never a condition for any discount.',
       ] },
     },
   },
@@ -952,7 +952,7 @@ export const en = {
         'Where are the fixes: in which version, release or links?',
       ],
       publish: [
-        'Publishing needs the critical and high findings fixed, your written approval of what is shown, and the record stays permanent. Which audit is it about?',
+        'Publishing needs the critical and high findings verified as fixed, your signed authorisation of what is shown, and the record stays permanent. Which audit is it about?',
         'Anything else the person reviewing it should know?',
       ],
       refund: [

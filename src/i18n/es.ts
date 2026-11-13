@@ -861,7 +861,7 @@ export const es: Dict = {
       ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
       ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva (Ley 1480 de 2011, art. 47).', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
+    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
       'Con menos de 24 horas, la sesión se puede mover una vez sin costo; no se reembolsa, salvo por el derecho de retracto descrito abajo.',
       'Si llegas tarde, la sesión termina a la hora reservada; si no te conectas en los primeros 15 minutos, cuenta como dada.',
@@ -905,7 +905,7 @@ export const es: Dict = {
         ['Página dedicada', 'Una página dedicada en univerlab.org, abierta solo a las direcciones que indiques: un resumen para quienes deciden, los hallazgos por severidad, la matriz de riesgo, la tabla de áreas cubiertas, la hoja de ruta en orden de prioridad y un glosario para seguir sin ser especialista.'],
         ['Informe en PDF', 'Un informe en PDF compuesto con TeXForge: cada hallazgo completo, con cómo reproducirlo, su causa, su impacto y la recomendación, más los límites de la auditoría dichos con claridad.'],
         ['Repositorio de la auditoría', 'El repositorio de la auditoría, privado y compartido con quien indiques: el entorno aislado, cada archivo de evidencia con su checksum y el detalle completo, para revisar y reproducir cada hallazgo.'],
-        ['Verificación', 'Una verificación, dentro de los 60 días siguientes a la entrega, de las correcciones a hallazgos críticos y altos, registrada en la página con la versión que corrigió cada uno.'],
+        ['Verificación', 'Una verificación, dentro de los 6 meses siguientes a la entrega, de las correcciones a hallazgos críticos y altos: el estado de cada hallazgo actualizado en la página de la auditoría y en el repositorio, con la versión que cerró cada corrección, más el documento de auditoría actualizado. Cualquier revisión adicional se cobra como horas de consulta.'],
         ['Opcional: registro público con DOI', 'Opcional: un registro público, permanente, verificable y citable con DOI y la insignia, si decides publicar la auditoría.'],
       ] as [string, string][] },
       not: { kicker: 'Lo que una auditoría no es', text: 'Una auditoría no es una certificación ni una garantía de seguridad continua. No cotiza ni construye las correcciones. Sus hallazgos siguen privados hasta que apruebes su publicación.' },
@@ -915,23 +915,23 @@ export const es: Dict = {
         'No incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
-      price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
+      price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
       cardLink: 'Qué revisamos y qué entregamos →',
       offers: { kicker: 'Publicar tu auditoría', founding: {
         title: 'Auditorías fundadoras',
-        text: 'Las primeras 5 auditorías: te devolvemos el 50 % del precio cuando la auditoría se publica. El cupo fundador se aparta cuando se firma el acuerdo.',
+        text: 'Las primeras 5 auditorías: 50 % del precio, aplicado al pago de entrega, cuando la autorización de publicación se firma con el encargo. El cupo fundador se reserva entonces.',
         spots: 5,
       }, public: {
         title: 'Audita en público',
-        text: 'Cualquier otro cliente recibe el 20 % del precio de vuelta cuando publica, incluso si primero eligió una auditoría privada.',
+        text: 'Cualquier otra auditoría obtiene 20 % del precio, aplicado al pago de entrega, cuando la autorización de publicación se firma a la entrega, incluso si primero se eligió una auditoría privada.',
       }, reaudit: {
         title: 'Reauditoría',
         text: 'Auditar de nuevo el mismo sistema, para revisar las correcciones y emitir una auditoría nueva con una fecha nueva, cuesta 30 % menos, aplicado al cobrar.',
       }, zenodoNote: 'Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.', rules: [
-        'La publicación ocurre cuando los hallazgos críticos y altos están corregidos, con tu aprobación escrita del contenido publicado.',
-        'La devolución se reclama dentro de los 12 meses siguientes a la entrega; después la auditoría sigue privada y el cupo fundador no se devuelve.',
-        'Los descuentos y las devoluciones no se acumulan: aplica el mayor.',
-        'La insignia es tu decisión mostrarla y nunca es condición para una devolución o un descuento.',
+        'La publicación requiere tu autorización firmada de lo publicado, y ocurre cuando los hallazgos críticos y altos están verificados como corregidos.',
+        'Si una auditoría con autorización de publicación firmada todavía tiene hallazgos críticos o altos sin corregir 6 meses después de la entrega, el laboratorio te escribe con dos opciones: pagar el descuento aplicado, o publicar ahora con los riesgos encontrados. Tienes 15 días calendario desde ese mensaje para pagar; si no pagas, la auditoría se publica de todos modos, y los hallazgos aún sin corregir se publican solo con su título, severidad y estado, sin pasos de reproducción, endpoints ni nada que permita explotarlos, y esos detalles se agregan cuando se verifique la corrección.',
+        'Los descuentos no se acumulan: aplica el mayor.',
+        'La insignia es tu decisión mostrarla y nunca es condición para ningún descuento.',
       ] },
     },
   },
@@ -946,7 +946,7 @@ export const es: Dict = {
         '¿Dónde están las correcciones: en qué versión, release o enlaces?',
       ],
       publish: [
-        'Publicar pide que los hallazgos críticos y altos estén corregidos, tu aprobación escrita de lo publicado, y el registro queda permanente. ¿De qué auditoría se trata?',
+        'Publicar pide que los hallazgos críticos y altos estén verificados como corregidos, tu autorización firmada de lo publicado, y el registro queda permanente. ¿De qué auditoría se trata?',
         '¿Algo más que deba saber la persona que lo revisa?',
       ],
       refund: [

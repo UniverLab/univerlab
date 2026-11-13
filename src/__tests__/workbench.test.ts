@@ -240,11 +240,15 @@ describe('workbench', () => {
     }
   });
 
-  it('the summaries name the 24-hour rule and the retraction law', () => {
+  it('the summaries name the 24-hour rule, the 50/50 payment and who pays the fees', () => {
     expect(en.workbench.policy.summary).toContain('24');
-    expect(en.workbench.policy.summary).toContain('Ley 1480 de 2011');
+    expect(en.workbench.policy.summary).toContain('50 %');
+    expect(en.workbench.policy.summary).toMatch(/fees|comisiones/);
+    expect(en.workbench.policy.summary).not.toMatch(/Ley \d/);
     expect(es.workbench.policy.summary).toContain('24');
-    expect(es.workbench.policy.summary).toContain('Ley 1480 de 2011');
+    expect(es.workbench.policy.summary).toContain('50 %');
+    expect(es.workbench.policy.summary).toMatch(/fees|comisiones/);
+    expect(es.workbench.policy.summary).not.toMatch(/Ley \d/);
   });
 
   it('the home page carries a workbench strip linking the workbench', () => {

@@ -167,7 +167,7 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).toContain('<span class="coupon-figure">20 %</span>');
     expect(html).toContain('<span class="coupon-figure">30 %</span>');
     expect(html).toContain('✂ cut here');
-    expect(html).toContain('The first 5 audits: we refund 50 % of the price');
+    expect(html).toContain('The first 5 audits: 50 % of the price');
     expect(html).toContain('costs 30 % less');
   });
 
@@ -233,7 +233,7 @@ describe('lab page (newspaper page 2)', () => {
     expect(md).toContain('*✂ Free — ');
     expect(md).toContain('[Open the Workbench](https://univerlab.org/workbench/)');
     expect(md.match(/\(https:\/\/univerlab\.org\/workbench\/audits\/\)/g)).toHaveLength(3);
-    expect(md).toContain('Discounts and refunds do not stack');
+    expect(md).toContain('Discounts do not stack');
     expect(md.indexOf('*✂')).toBeLessThan(md.indexOf('**Newest**'));
     const esMd = labPageMarkdown(entries, 'es');
     expect(esMd).toContain('[Abrir el Banco de trabajo](https://univerlab.org/es/workbench/)');

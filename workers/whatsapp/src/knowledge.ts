@@ -52,8 +52,8 @@ export function knowledge(lang: Lang, phone = ''): string {
   );
   lines.push(
     lang === 'es'
-      ? 'Dentro de los 60 días siguientes a la entrega se verifican las correcciones a hallazgos críticos y altos, registrada en la página con la versión que corrigió cada uno.'
-      : 'Within 60 days of delivery the fixes to critical and high findings are verified, recorded on the page with the version that fixed each one.'
+      ? 'Dentro de los 6 meses siguientes a la entrega se verifica una vez la corrección de hallazgos críticos y altos: el estado de cada hallazgo actualizado en la página y en el repositorio, con la versión que cerró cada corrección, más el documento actualizado. Cualquier revisión adicional se cobra como horas de consulta.'
+      : 'Within 6 months of delivery the fixes to critical and high findings are verified once: the status of each finding updated on the page and in the repository, with the version that closed each fix, plus the updated document. Any further review is billed as consultation hours.'
   );
   lines.push('- ' + w.audits.offers.zenodoNote);
   lines.push(

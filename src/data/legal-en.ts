@@ -183,7 +183,7 @@ export const termsEn: LegalDoc = {
       paras: [
         'UniverLab grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the services for your own lawful purposes.',
         'UniverLab may modify, suspend or discontinue any free and open-source tool or site it publishes, or your access to it, at any time, with or without notice, with no support obligation for them: they run as an open laboratory, not a contracted product.',
-        'Paid Workbench services — consultation, agentic flows and audits — are delivered as described on the Workbench pages and in the written scope agreed before starting, including the support period and the verification of fixes, and the lab cannot change that scope on its own.',
+        'Paid Workbench services — consultation, agentic flows and audits — are delivered as described on the Workbench pages and in the written scope agreed before starting, including the support period and the verification of fixes, and the lab cannot change that scope on its own. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. A refund for dissatisfaction is exceptional and is arranged with the client.',
         'Your use of the services is also governed by the <a href="/privacy/">Privacy Policy</a>, which describes what data each service records. If these terms and the policy disagree about data, the policy controls.',
       ],
     },
@@ -199,8 +199,9 @@ export const termsEn: LegalDoc = {
       id: 'published-audits',
       title: 'Published audits',
       paras: [
-        'An audit is only published with your written approval and once critical and high findings are fixed. What is shown is what you approve: nothing from your private audit is published without your signature.',
-        'The refund on publication is a percentage of the price paid, sent by transfer: 50 % for founding audits and 20 % for the rest, claimable within 12 months of delivery. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
+        'An audit is only published with your signed authorisation of what is shown, and once the critical and high findings are verified as fixed. Nothing from your private audit is published without your signature.',
+        'The publication discount is a percentage of the price, taken off the delivery payment and never paid out afterwards: 50 % for founding audits, whose authorisation is signed with the order and reserves the founding spot then, and 20 % for the rest, whose authorisation is signed at delivery. Discounts do not stack: the largest one applies. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
+        'The fixes to critical and high findings get one verification within 6 months of delivery. If an audit with a signed publication authorisation still has unfixed critical or high findings 6 months after delivery, the lab writes to you with two options: pay the discount that was applied, or publish now with the risks found. You have 15 calendar days from that message to pay; if you do not pay, the audit is published anyway, and the findings still unfixed are shown with their title, severity and status only, without reproduction steps, endpoints or anything that would let someone exploit them. Those details are added when the fix is verified.',
         'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge. A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.',
       ],
     },

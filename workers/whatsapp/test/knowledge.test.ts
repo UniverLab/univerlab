@@ -96,7 +96,9 @@ test('knowledge carries the audits lede, scope, deliverables, method and limits'
     expect(k).toContain(lang === 'es' ? 'sin indulgencia' : 'without indulgence');
     expect(k).toContain(lang === 'es' ? 'Acceso y sesiones' : 'Access and sessions');
     expect(k).toContain('TeXForge');
-    expect(k).toContain('60 d');
+    expect(k).toContain(lang === 'es' ? '6 meses' : '6 months');
+    expect(k).not.toContain('60 d');
+    expect(k).not.toMatch(/12 months|12 meses/);
     expect(k).toContain('DOI');
     expect(k).toContain(lang === 'es' ? 'Tres fuentes' : 'Three sources');
     expect(k).toContain(lang === 'es' ? 'Lo que una auditoría no es' : 'What an audit is not');
