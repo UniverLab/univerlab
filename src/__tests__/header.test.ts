@@ -64,9 +64,26 @@ describe('Header experiments link', () => {
     // folded rule releases the brand reserve, so measuring while folded
     // would under-read and flap between states on every observer tick.
     expect(src).toContain("classList.remove('nav-burger')");
+    // The fit is measured against the content box, not the padding box:
+    // overflow into the bar's padding-right (the mailbox gutter) never grows
+    // scrollWidth, so a scrollWidth-vs-clientWidth check folds ~50px too low
+    // and leaves the last menu item under the fixed mailbox.
+    expect(src).toContain('paddingRight');
+    expect(src).toContain('getBoundingClientRect');
+    expect(src).not.toContain('bar.scrollWidth > bar.clientWidth');
     expect(src).toContain('ResizeObserver');
     expect(src).not.toContain('@media (max-width: 1024px)');
     expect(src).not.toMatch(/@media \(max-width: 900px\)/);
+    // The menu never wraps: the nav stays on one line and labels stay whole,
+    // folding into the burger instead. Breaks on a two-row regression or a
+    // fixed breakpoint returning.
+    expect(src).toMatch(/nav a \{[^}]*white-space: nowrap/);
+    expect(src).toMatch(/nav \{[^}]*flex-wrap: nowrap/);
+    // The single row must fit at 1180px in Spanish too (longest labels):
+    // the nav gap is 0.85rem per the design spec — the room comes from the
+    // brand reserve (NameGloss probes at the compact --ng-* sizes), not from
+    // squeezing the menu, so the fit never depends on hiding overflow.
+    expect(src).toMatch(/nav \{[^}]*gap: 0\.85rem/);
   });
 
   it('reserves the brand width up front and folds the mailbox with the burger', () => {
@@ -76,6 +93,11 @@ describe('Header experiments link', () => {
     expect(NAMEGLOSS).toContain("closest('.home')");
     expect(NAMEGLOSS).toContain('dataset.brandW');
     expect(NAMEGLOSS).toContain('cloneNode');
+    // The probe lives inside .home (still position:fixed, so out of layout)
+    // so it inherits the bar's compact --ng-* vars; on document.body it
+    // measured at default sizes and the reserve never narrowed.
+    expect(NAMEGLOSS).toContain('home.appendChild(probe)');
+    expect(NAMEGLOSS).not.toContain('document.body.appendChild(probe)');
     // The mailbox no longer clears the burger on its own breakpoint: the
     // header's nav-burger rule carries the small mailbox instead.
     expect(MAIL).not.toContain('max-width: 1024px');

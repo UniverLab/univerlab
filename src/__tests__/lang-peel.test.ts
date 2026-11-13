@@ -140,7 +140,7 @@ describe('sponsor heart follows the page accent', () => {
   it('keeps the heartbeat, its pause, the hidden label and its placement', () => {
     expect(rule![1]).toMatch(/animation:\s*heartbeat 2s ease-in-out infinite/);
     expect(rule![1]).toMatch(/display:\s*inline-flex/);
-    expect(rule![1]).toMatch(/margin-right:\s*0\.5rem/);
+    expect(rule![1]).toMatch(/margin-right:\s*0\.25rem/);
     expect(hover![1]).toMatch(/animation-play-state:\s*paused/);
     expect(HEADER).toMatch(/nav a\.sponsor \.heart-text \{ display: none; \}/);
     expect(HEADER).toMatch(/@keyframes heartbeat \{/);

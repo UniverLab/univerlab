@@ -368,7 +368,13 @@ const signals = [
       const m = siteNav.style;
       m.display = 'flex';
       m.flexWrap = 'nowrap';
-      const over = bar.scrollWidth > bar.clientWidth + 1;
+      // Overflow into the bar's own padding-right (the mailbox gutter) never
+      // grows scrollWidth, so compare the nav's right edge against the
+      // content-box right edge instead: clientWidth includes the padding.
+      const pr = parseFloat(getComputedStyle(bar).paddingRight || '0') || 0;
+      const barRect = bar.getBoundingClientRect();
+      const navRect = siteNav.getBoundingClientRect();
+      const over = navRect.right > barRect.left + bar.clientWidth - pr + 1;
       m.display = '';
       m.flexWrap = '';
       headerEl.classList.toggle('nav-burger', over);
@@ -394,7 +400,7 @@ const signals = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.6rem;
     /* No more hr.rule at the foot: the bar's own padding-bottom
        carries the 1px so the header keeps the total height it had. */
     padding-top: 1.1rem;
@@ -409,15 +415,15 @@ const signals = [
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {
     display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none;
-    --ng-word: 1rem; --ng-line: 1rem; --ng-slogan: 0.66rem; --ng-gloss: 0.86rem; --ng-gap: 0.02rem;
+    --ng-word: 0.9rem; --ng-line: 1rem; --ng-slogan: 0.66rem; --ng-gloss: 0.72rem; --ng-gap: 0.02rem;
     /* The cycled suffix in a true gold (not the lemony circadian accent), so it
        reads on both light and dark headers. */
     --ng-suffix: #c9a227;
   }
-  nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
-  nav a { text-decoration: none; color: #8a8d93; }
+  nav { display: flex; gap: 0.85rem; flex-wrap: nowrap; align-items: center; }
+  nav a { text-decoration: none; color: #8a8d93; white-space: nowrap; letter-spacing: 0.08em; }
   nav a:hover, nav a.active { color: var(--ink); }
-  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.25rem; }
   nav a.sponsor svg { display: block; }
   nav a.sponsor .heart-icon { display: inline-flex; line-height: 0; }
   nav a.sponsor .heart-text { display: none; }
