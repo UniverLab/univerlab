@@ -1,4 +1,5 @@
 import type { Env } from './env';
+import { guardHandoff, guardOpMsg, operatorQueue } from './guard';
 import { sendText } from './meta';
 import { formatBrief } from './intake';
 import { LIMIT_TEXT, type LimitReason } from './limits';
@@ -51,7 +52,22 @@ export async function refuseAndHandOff(env: Env, input: RefuseInput): Promise<st
     kind: 'handoff',
     service: input.service,
   });
+  // FR5: the operator gets at most one handoff notice per client every 10
+  // minutes and 30 agent messages per hour across clients. A throttled
+  // refusal still tells the client and keeps the registry row.
+  if (!(await guardHandoff(env, input.phone))) return code;
+  const grant = await guardOpMsg(env);
   const operator = (env.OPERATOR_PHONE ?? '').replace(/\D/g, '');
+  if (!grant.send) {
+    if (grant.firstOver) {
+      try {
+        await sendText(env, operator, operatorQueue(input.lang, grant.waiting));
+      } catch {
+        /* the client refusal still stands */
+      }
+    }
+    return code;
+  }
   const note = formatBrief({
     name: input.name,
     phone: input.phone,

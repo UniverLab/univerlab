@@ -153,6 +153,39 @@ gh variable set WA_PROOF_MODEL_OPTIONS --env production --body '{}'
 gh workflow run deploy-whatsapp.yml --ref main
 ```
 
+Spending limits (configuration, not code): the `production`
+environment's variable `WA_GUARD_CONFIG` reaches the Worker as
+`GUARD_CONFIG` (a JSON object). Counters in Durable Object storage
+bound what one number and all numbers together may spend, before any
+model runs: one number gets at most 12 answered bursts an hour and 40
+a Bogota day (past either the client gets one fixed notice per window
+and the messages are only stored), 5 voice transcriptions a day (later
+notes go to a person untranscribed) and 3 receipt readings per hold
+(later files are forwarded unread); client text reaching any model is
+capped at 2,000 characters a burst and 1,000 a history turn (storage
+keeps the full text); the Worker makes at most 1,500 model calls a
+Bogota day (past it every client gets the fixed sentence and a handoff
+until the next day, and the operator is told once); the operator gets
+at most one handoff notice per client every 10 minutes and 30 agent
+messages an hour. A deletion written as the exact phrase BORRAR MIS
+DATOS / DELETE MY DATA is honoured even over a limit. Unset, the agent
+uses the defaults below. To switch, set the variable and re-run the
+deploy workflow:
+
+```json
+{
+  "burstsPerHour": 12,
+  "burstsPerDay": 40,
+  "voicePerDay": 5,
+  "proofsPerHold": 3,
+  "burstChars": 2000,
+  "historyChars": 1000,
+  "modelsPerDay": 1500,
+  "handoffMs": 600000,
+  "opMsgsPerHour": 30
+}
+```
+
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
 

@@ -22,9 +22,10 @@ jest.mock('../src/meta', () => ({
   markRead: jest.fn(async () => true),
 }));
 
-jest.mock('../src/schedule', () => ({
-  formatSlot: jest.fn((iso: string) => iso),
-}));
+jest.mock('../src/schedule', () => {
+  const actual = jest.requireActual('../src/schedule') as Record<string, unknown>;
+  return { ...actual, formatSlot: jest.fn((iso: string) => iso) };
+});
 
 jest.mock('../src/google', () => ({
   accessToken: jest.fn(),
@@ -329,4 +330,123 @@ test('cancelar cancels and drops the row', async () => {
 
 afterEach(() => {
   jest.restoreAllMocks();
+});
+
+function makeGuardCtx() {
+  const guard = new Map<string, string>();
+  const sql = {
+    exec: jest.fn((query: string, ...params: unknown[]) => {
+      if (query.startsWith('SELECT value FROM guard WHERE key = ?')) {
+        const value = guard.get(String(params[0]));
+        return { toArray: () => (value === undefined ? [] : [{ value }]) };
+      }
+      if (query.startsWith('INSERT INTO guard')) {
+        guard.set(String(params[0]), String(params[1]));
+        return { toArray: () => [] };
+      }
+      return { toArray: () => [] };
+    }),
+  };
+  const storage = { sql, setAlarm: jest.fn(async () => {}), deleteAlarm: jest.fn(async () => {}) };
+  const ctx = {
+    storage,
+    blockConcurrencyWhile: (fn: () => unknown) => {
+      fn();
+    },
+  };
+  return { ctx, guard };
+}
+
+function guardEnv(guardConfig: Record<string, number>) {
+  return {
+    OPERATOR_PHONE: OPERATOR_NUMBER,
+    AI: {},
+    WA_ACCESS_TOKEN: 'token',
+    WA_PHONE_NUMBER_ID: 'phone-id',
+    GUARD_CONFIG: JSON.stringify(guardConfig),
+  };
+}
+
+async function guardCall(op: Operator, body: Record<string, unknown>) {
+  const res = await op.fetch(
+    new Request('https://guard/call', { method: 'POST', body: JSON.stringify(body) })
+  );
+  return (await res.json()) as Record<string, unknown>;
+}
+
+function dailyNotices(): unknown[][] {
+  return (sendText as jest.Mock).mock.calls.filter(
+    (call) => call[1] === OPERATOR && String(call[2]).includes('límite diario')
+  );
+}
+
+test('the Worker-wide model counter admits, then denies, and tells the operator once', async () => {
+  const { ctx } = makeGuardCtx();
+  const op = new Operator(ctx as never, guardEnv({ modelsPerDay: 2 }) as never);
+  const now = Date.UTC(2026, 10, 9, 17, 0, 0);
+  jest.spyOn(Date, 'now').mockReturnValue(now);
+
+  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
+  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
+  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
+  expect(dailyNotices()).toHaveLength(1);
+  // A later denial the same day is silent: the operator heard it once.
+  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
+  expect(dailyNotices()).toHaveLength(1);
+});
+
+test('the model counter resets on the next Bogota day', async () => {
+  const { ctx } = makeGuardCtx();
+  const op = new Operator(ctx as never, guardEnv({ modelsPerDay: 1 }) as never);
+  const day1 = Date.UTC(2026, 10, 9, 17, 0, 0);
+  const day2 = day1 + 24 * 3600 * 1000;
+  jest.spyOn(Date, 'now').mockReturnValue(day1);
+
+  expect(await guardCall(op, { action: 'guard', op: 'model', now: day1, lang: 'es' })).toEqual({ ok: true });
+  expect(await guardCall(op, { action: 'guard', op: 'model', now: day1, lang: 'es' })).toEqual({ ok: false });
+  expect(dailyNotices()).toHaveLength(1);
+  expect(await guardCall(op, { action: 'guard', op: 'model', now: day2, lang: 'en' })).toEqual({ ok: true });
+});
+
+test('one handoff notice per client every 10 minutes', async () => {
+  const { ctx } = makeGuardCtx();
+  const op = new Operator(ctx as never, guardEnv({}) as never);
+  const now = Date.UTC(2026, 10, 9, 17, 0, 0);
+  const mock = jest.spyOn(Date, 'now').mockReturnValue(now);
+
+  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: true });
+  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: false });
+  // Another client is unaffected by the first client's window.
+  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: '573009990000' })).toEqual({
+    ok: true,
+  });
+  mock.mockReturnValue(now + 11 * 60 * 1000);
+  expect(
+    await guardCall(op, { action: 'guard', op: 'handoff', now: now + 11 * 60 * 1000, client: CLIENT })
+  ).toEqual({ ok: true });
+});
+
+test('the operator hourly cap sends one queue count, then drops', async () => {
+  const { ctx } = makeGuardCtx();
+  const op = new Operator(ctx as never, guardEnv({ opMsgsPerHour: 2 }) as never);
+  const now = Date.UTC(2026, 10, 9, 17, 0, 0);
+
+  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
+  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
+  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({
+    send: false,
+    firstOver: true,
+    waiting: 1,
+  });
+  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({
+    send: false,
+    firstOver: false,
+  });
+});
+
+test('an unknown guard op is refused', async () => {
+  const { ctx } = makeGuardCtx();
+  const op = new Operator(ctx as never, guardEnv({}) as never);
+
+  expect(await guardCall(op, { action: 'guard', op: 'nope', now: Date.now() })).toEqual({ ok: false });
 });

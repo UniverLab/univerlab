@@ -61,7 +61,7 @@ jest.mock('../src/intake', () => ({
 
 jest.mock('../src/proof', () => {
   const actual = jest.requireActual('../src/proof') as Record<string, unknown>;
-  return { ...actual, readProof: jest.fn() };
+  return { ...actual, readProof: jest.fn(), forwardUnread: jest.fn() };
 });
 
 jest.mock('../src/schedule', () => ({
@@ -109,7 +109,8 @@ import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retenti
 import { calendarCall } from '../src/reservations';
 import { decide } from '../src/booking';
 import { LIMIT_TEXT } from '../src/limits';
-import { PROOF_RECEIVED, readProof } from '../src/proof';
+import { PROOF_RECEIVED, forwardUnread, readProof } from '../src/proof';
+import { GUARD_PAUSED } from '../src/guard';
 import { shortCode } from '../src/registry';
 import { Conversation, NON_TEXT } from '../src/conversation';
 
@@ -919,9 +920,15 @@ test('a handoff registers the client and carries the code', async () => {
 
   await say(c, inbound({ id: 'wamid.n1', text: 'quiero hablar con una persona' }));
 
-  expect(fetchMock).toHaveBeenCalledTimes(1);
-  const req = fetchMock.mock.calls[0][0] as Request;
-  expect(await req.json()).toMatchObject({ action: 'register', phone: CLIENT, kind: 'handoff' });
+  // Register plus the spending-guard checks (model admission, handoff
+  // throttle, operator hourly cap) all reach the single Operator owner.
+  expect(fetchMock).toHaveBeenCalledTimes(4);
+  const payloads = await Promise.all(
+    fetchMock.mock.calls.map(async (call) => (await (call[0] as Request).json()) as Record<string, unknown>)
+  );
+  expect(payloads).toContainEqual(
+    expect.objectContaining({ action: 'register', phone: CLIENT, kind: 'handoff' })
+  );
   const bodies = (sendText as jest.Mock).mock.calls
     .filter((call) => call[1] === OPERATOR)
     .map((call) => call[2] as string);
@@ -1186,4 +1193,354 @@ test('an image without a held booking keeps today handoff', async () => {
   expect(clientTexts()).toContain(NON_TEXT.es);
   expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[image]'));
   expect(answer).not.toHaveBeenCalled();
+});
+
+function seedState(ctx: unknown, key: string, value: string): void {
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    key,
+    value
+  );
+}
+
+const guardFetchMock = (handler: (body: Record<string, unknown>) => unknown) =>
+  jest.fn(async (req: Request) => new Response(JSON.stringify(handler((await req.json()) as Record<string, unknown>)), {
+    status: 200,
+  }));
+
+test('past 12 bursts an hour the client gets one notice and nothing else happens', async () => {
+  const { ctx, rows } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+  const now = Date.now();
+  seedState(ctx, 'guardBursts', JSON.stringify(Array.from({ length: 12 }, () => now)));
+
+  await say(c, inbound({ id: 'wamid.g1', text: 'hola uno' }));
+  await say(c, inbound({ id: 'wamid.g2', text: 'hola dos' }));
+
+  // One fixed notice for the window, and the messages are only stored.
+  const paused = (sendText as jest.Mock).mock.calls.filter(
+    (call) => call[1] === CLIENT && call[2] === GUARD_PAUSED.es
+  );
+  expect(paused).toHaveLength(1);
+  expect(answer).not.toHaveBeenCalled();
+  expect(runModel).not.toHaveBeenCalled();
+  expect(
+    (sendText as jest.Mock).mock.calls.some((call) => call[1] === OPERATOR)
+  ).toBe(false);
+  expect(rows.filter((r) => r.role === 'user')).toHaveLength(2);
+});
+
+test('past 40 bursts a day the day notice goes once and the window resets', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+  const now = Date.now();
+  // All older than the rolling hour, all the same Bogota day (mocked): the
+  // hour cap passes and the day cap blocks.
+  seedState(
+    ctx,
+    'guardBursts',
+    JSON.stringify(Array.from({ length: 40 }, (_, i) => now - (61 + i) * 60 * 1000))
+  );
+
+  await say(c, inbound({ id: 'wamid.g3', text: 'hola tres' }));
+  await say(c, inbound({ id: 'wamid.g4', text: 'hola cuatro' }));
+
+  const paused = (sendText as jest.Mock).mock.calls.filter(
+    (call) => call[1] === CLIENT && call[2] === GUARD_PAUSED.es
+  );
+  expect(paused).toHaveLength(1);
+  expect(answer).not.toHaveBeenCalled();
+});
+
+test('the exact deletion phrase still erases over the hourly limit', async () => {
+  const { ctx, storage } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedState(ctx, 'guardBursts', JSON.stringify(Array.from({ length: 12 }, () => Date.now())));
+
+  await c.receive(inbound({ id: 'wamid.g5', text: 'BORRAR MIS DATOS' }));
+
+  expect(storage.deleteAll).toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+  expect(runModel).not.toHaveBeenCalled();
+  expect(
+    (sendText as jest.Mock).mock.calls.some((call) => call[1] === CLIENT && call[2] === GUARD_PAUSED.es)
+  ).toBe(false);
+});
+
+test('the 6th voice note in a day goes untranscribed with no model call', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedState(ctx, 'guardVoice', JSON.stringify({ day: '2026-11-09', count: 5 }));
+
+  await c.receive(inbound({ id: 'wamid.g6', type: 'audio', text: undefined, mediaId: 'media-6' }));
+
+  expect(transcribe).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(
+    env,
+    CLIENT,
+    expect.stringContaining('No pude escuchar tu nota de voz')
+  );
+  // The note keeps today's handoff like any untranscribed voice note.
+  expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
+});
+
+test('the 4th receipt on one hold is forwarded unread with no vision call', async () => {
+  const { ctx: holdCtx, c } = await holdConsultation();
+  (forwardUnread as jest.Mock).mockResolvedValue({
+    operatorText: 'UniverLab [code] · comprobante sin leer',
+    clientText: PROOF_RECEIVED.es,
+  });
+  seedState(holdCtx, 'guardProof', JSON.stringify({ hold: 'ev1', count: 3 }));
+
+  await say(c, imageInbound('wamid.g7'));
+
+  expect(readProof).not.toHaveBeenCalled();
+  expect(forwardUnread).toHaveBeenCalledTimes(1);
+  expect(clientTexts()).toContain(PROOF_RECEIVED.es);
+  expect(clientTexts()).not.toContain(NON_TEXT.es);
+});
+
+test('past the Worker model limit every client gets the fallback and a handoff', async () => {
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'guard' && body.op === 'model') return { ok: false };
+    if (body.action === 'guard' && body.op === 'handoff') return { ok: true };
+    if (body.action === 'guard' && body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    return { code: 'zz99' };
+  });
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.g8', text: 'hola' }));
+
+  expect(runModel).not.toHaveBeenCalled();
+  expect(answer).not.toHaveBeenCalled();
+  expect(clientTexts()).toContain('fallback');
+  const opBodies = (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+  expect(opBodies.some((b) => b.includes('[zz99]'))).toBe(true);
+});
+
+test('a long burst reaches the model capped while storage keeps the full text', async () => {
+  const { ctx, rows } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'ok', booking: false, handoff: false });
+  const long = 'x'.repeat(2500);
+  seedMessage(ctx, 'wamid.g9a', 'user', long, AT);
+
+  await say(c, inbound({ id: 'wamid.g9b', text: 'corto' }));
+
+  // The fuzzy deletion check sees the joined burst capped at 2,000.
+  const fuzzyCall = (runModel as jest.Mock).mock.calls[0];
+  const fuzzyInput = fuzzyCall[2] as Array<{ role: string; content: string }>;
+  expect(Math.max(...fuzzyInput.map((m) => m.content.length))).toBeLessThanOrEqual(2000);
+  // Every history turn reaching the answer model is capped at 1,000.
+  const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
+  expect(history.length).toBeGreaterThan(0);
+  expect(Math.max(...history.map((t) => t.text.length))).toBeLessThanOrEqual(1000);
+  // Storage keeps the full text.
+  const stored = rows.find((r) => r.id === 'wamid.g9a');
+  expect(stored?.text).toHaveLength(2500);
+});
+
+test('a taken relay is never limited even when the registry denies everything', async () => {
+  const fetchMock = guardFetchMock(() => ({ ok: false, send: false, firstOver: false, waiting: 99 }));
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  seedTaken(ctx, 'ab12', Date.now());
+
+  await c.receive(inbound({ id: 'wamid.g10', text: 'hola?' }));
+  await c.alarm();
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(
+    expect.objectContaining({ OPERATOR_PHONE: env.OPERATOR_PHONE }),
+    OPERATOR,
+    expect.stringContaining('[ab12]')
+  );
+});
+
+test('two calendar failures inside 10 minutes send one handoff notice', async () => {
+  let handoffs = 0;
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'register') return { code: 'zz99' };
+    if (body.action === 'guard' && body.op === 'handoff') {
+      handoffs += 1;
+      return handoffs === 1 ? { ok: true } : { ok: false };
+    }
+    if (body.action === 'guard' && body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    if (body.action === 'guard' && body.op === 'model') return { ok: true };
+    return { ok: true };
+  });
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'x', booking: true, handoff: true, service: 'first-call' });
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  (calendarCall as jest.Mock).mockResolvedValue({ ok: false, reason: 'calendar-down' });
+
+  // First booking attempt hits a calendar outage.
+  await say(c, inbound({ id: 'wamid.hd1', text: 'quiero agendar una llamada' }));
+  await say(c, inbound({ id: 'wamid.hd2', text: 'quiero lograr X, uso Y' }));
+  // Second booking attempt hits it again inside the 10-minute window.
+  await say(c, inbound({ id: 'wamid.hd3', text: 'quiero agendar otra' }));
+  await say(c, inbound({ id: 'wamid.hd4', text: 'quiero lograr Z, uso W' }));
+
+  const opBodies = (sendText as jest.Mock).mock.calls
+    .filter((call) => call[1] === OPERATOR)
+    .map((call) => call[2] as string);
+  // One handoff notice total; every failure still tells its client.
+  expect(opBodies.filter((b) => b.includes('agenda falló')).length).toBe(1);
+  expect(clientTexts().filter((t) => t.includes('no responde')).length).toBeGreaterThanOrEqual(2);
+});
+
+test('two no-slot handoffs inside 10 minutes send one operator notice', async () => {
+  let handoffs = 0;
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'register') return { code: 'zz99' };
+    if (body.action === 'guard' && body.op === 'handoff') {
+      handoffs += 1;
+      return handoffs === 1 ? { ok: true } : { ok: false };
+    }
+    if (body.action === 'guard' && body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    if (body.action === 'guard' && body.op === 'model') return { ok: true };
+    return { ok: true };
+  });
+  const bookingRegistryEnv = {
+    ...BOOKING_ENV,
+    REGISTRY: {
+      idFromName: (name: string) => name,
+      get: jest.fn(() => ({ fetch: fetchMock })),
+    },
+  };
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, bookingRegistryEnv as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'x', booking: true, handoff: true, service: 'first-call' });
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  (calendarCall as jest.Mock).mockResolvedValue({ ok: true, active: null, slots: [] });
+
+  // No free slot both times, so both intakes hand off via finishBooking.
+  await say(c, inbound({ id: 'wamid.hf1', text: 'quiero agendar una llamada' }));
+  await say(c, inbound({ id: 'wamid.hf2', text: 'quiero lograr X, uso Y' }));
+  await say(c, inbound({ id: 'wamid.hf3', text: 'quiero agendar otra' }));
+  await say(c, inbound({ id: 'wamid.hf4', text: 'quiero lograr Z, uso W' }));
+
+  const opCalls = (sendText as jest.Mock).mock.calls.filter((call) => call[1] === OPERATOR);
+  // FR5: at most one handoff notice per client every 10 minutes, but every
+  // handoff still tells its client.
+  expect(opCalls).toHaveLength(1);
+  expect(clientTexts().filter((t) => t === 'confirm')).toHaveLength(2);
+});
+
+test('two booking cancels inside 10 minutes send one operator notice', async () => {
+  let handoffs = 0;
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'register') return { code: 'zz99' };
+    if (body.action === 'guard' && body.op === 'handoff') {
+      handoffs += 1;
+      return handoffs === 1 ? { ok: true } : { ok: false };
+    }
+    if (body.action === 'guard' && body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    if (body.action === 'guard' && body.op === 'model') return { ok: true };
+    return { ok: true };
+  });
+  const bookingRegistryEnv = {
+    ...BOOKING_ENV,
+    REGISTRY: {
+      idFromName: (name: string) => name,
+      get: jest.fn(() => ({ fetch: fetchMock })),
+    },
+  };
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, bookingRegistryEnv as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'x', booking: true, handoff: true, service: 'first-call' });
+  (intake as jest.Mock).mockResolvedValue({ status: 'ready', reply: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev9', start: SLOT_A, end: SLOT_B, kind: 'booked' };
+    if (body.action === 'release') return { ok: true, eventId: 'ev9', start: SLOT_A };
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  // First book-then-cancel cycle hands off; the rebooked cancel is throttled.
+  await say(c, inbound({ id: 'wamid.hc1', text: 'quiero agendar una llamada' }));
+  await say(c, inbound({ id: 'wamid.hc2', text: 'quiero lograr X, uso Y' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  await say(c, inbound({ id: 'wamid.hc3', text: 'el primero' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.hc4', text: 'mejor cancela' }));
+  await say(c, inbound({ id: 'wamid.hc5', text: 'quiero agendar otra vez' }));
+  await say(c, inbound({ id: 'wamid.hc6', text: 'quiero lograr Z, uso W' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  await say(c, inbound({ id: 'wamid.hc7', text: 'el primero' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.hc8', text: 'mejor cancela de nuevo' }));
+
+  const opCalls = (sendText as jest.Mock).mock.calls.filter((call) => call[1] === OPERATOR);
+  // FR5: at most one handoff notice per client every 10 minutes, but every
+  // cancel still tells its client.
+  expect(opCalls).toHaveLength(1);
+  expect(clientTexts().filter((t) => t.includes('cancelé'))).toHaveLength(2);
+});
+
+test('past the Worker model limit a held receipt falls back instead of going unread', async () => {
+  // The burst-level admission passes, then the limit fills before the
+  // vision reading: the inner denial must still fall back, never NON_TEXT.
+  let models = 0;
+  const fetchMock = guardFetchMock((body) => {
+    if (body.action === 'register') return { code: 'zz99' };
+    if (body.action === 'guard' && body.op === 'model') {
+      models += 1;
+      return models === 1 ? { ok: true } : { ok: false };
+    }
+    if (body.action === 'guard' && body.op === 'handoff') return { ok: true };
+    if (body.action === 'guard' && body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    return { ok: true };
+  });
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, REGISTRY_ENV(fetchMock) as never);
+  seedState(
+    ctx,
+    'booking',
+    JSON.stringify({
+      service: 'consultation',
+      lang: 'es',
+      offered: [],
+      phase: 'held',
+      eventId: 'ev1',
+      start: SLOT_A,
+      createdAt: Date.now(),
+      phone: CLIENT,
+      name: 'Ana',
+      brief: ['goal x'],
+    })
+  );
+
+  await say(c, imageInbound('wamid.g11'));
+
+  // The denied vision reading never runs and the file is not forwarded
+  // unread: FR4 sends every client the fixed fallback sentence and a handoff.
+  expect(readProof).not.toHaveBeenCalled();
+  expect(forwardUnread).not.toHaveBeenCalled();
+  expect(clientTexts()).toContain('fallback');
+  expect(clientTexts()).not.toContain(NON_TEXT.es);
+});
+
+test('an over-limit voice note uses the conversation language', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedState(
+    ctx,
+    'intake',
+    JSON.stringify({ lang: 'en', service: 'other', opening: 'hi', answers: [], asks: 0 })
+  );
+  seedState(ctx, 'guardVoice', JSON.stringify({ day: '2026-11-09', count: 5 }));
+
+  await c.receive(inbound({ id: 'wamid.g12', type: 'audio', text: undefined, mediaId: 'media-12' }));
+
+  expect(transcribe).not.toHaveBeenCalled();
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, expect.stringContaining('could not listen'));
 });

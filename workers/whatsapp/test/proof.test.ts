@@ -3,6 +3,7 @@ import {
   DEFAULT_PROOF_MODEL,
   EXPECTED_COP,
   EXPECTED_USD,
+  forwardUnread,
   isProofMedia,
   parseProof,
   PROOF_RECEIVED,
@@ -196,4 +197,38 @@ test('readProof resolves to null when the download fails', async () => {
     readProof(envOf(aiRun), held(), MEDIA, CFG, '', 'ab12', fetchFn as never)
   ).resolves.toBeNull();
   expect(aiRun).not.toHaveBeenCalled();
+});
+
+function guardDeniedEnv(aiRun: jest.Mock) {
+  const base = envOf(aiRun);
+  return {
+    ...base,
+    REGISTRY: {
+      idFromName: (n: string) => n,
+      get: () => ({
+        fetch: jest.fn(async () => new Response(JSON.stringify({ send: false, firstOver: false, waiting: 5 }), { status: 200 })),
+      }),
+    },
+  };
+}
+
+test('readProof drops the receipt file past the hourly operator cap but keeps the summary', async () => {
+  const aiRun = jest.fn(async () => ({
+    response: JSON.stringify({ amount: EXPECTED_COP, currency: 'COP' }),
+  }));
+  const fetchFn = stubFetch([downloadOk(), jsonOf({ id: 'mid-1' }), jsonOf({})]);
+  const res = await readProof(guardDeniedEnv(aiRun), held(), MEDIA, CFG, '', 'ab12', fetchFn as never);
+  expect(res).not.toBeNull();
+  expect(res!.operatorText).toContain('UniverLab [ab12]');
+  // Only the download ran: no media upload/messages send past the cap.
+  expect((fetchFn as jest.Mock).mock.calls).toHaveLength(1);
+  expect(aiRun).toHaveBeenCalledTimes(1);
+});
+
+test('forwardUnread drops the receipt file past the hourly operator cap but keeps the summary', async () => {
+  const fetchFn = stubFetch([downloadOk(), jsonOf({ id: 'mid-9' }), jsonOf({})]);
+  const res = await forwardUnread(guardDeniedEnv(jest.fn()) as never, held(), MEDIA, 'ab12', fetchFn as never);
+  expect(res).not.toBeNull();
+  expect(res!.operatorText).toContain('UniverLab [ab12]');
+  expect((fetchFn as jest.Mock).mock.calls).toHaveLength(1);
 });

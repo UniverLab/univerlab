@@ -3,9 +3,24 @@ import type { Env } from './env';
 import { burstConfig } from './env';
 import { burstDue, joinBurst, nextAlarm, type BurstState } from './burst';
 import { markRead, sendText, type Inbound } from './meta';
-import { isProofMedia, proofConfig, readProof } from './proof';
+import { forwardUnread, isProofMedia, proofConfig, readProof } from './proof';
 import { transcribe, voiceConfig, VOICE_HANDOFF } from './audio';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
+import {
+  burstLimit,
+  capBurst,
+  capTurn,
+  guardConfig,
+  GUARD_OVER,
+  GUARD_PAUSED,
+  guardHandoff,
+  guardModelTake,
+  guardOpMsg,
+  isGuardOver,
+  operatorQueue,
+  pausedNoticeDue,
+  type PausedNotice,
+} from './guard';
 import {
   brief,
   CONFIRM_SLOT,
@@ -175,6 +190,129 @@ export class Conversation extends DurableObject<Env> {
       return ((JSON.parse(raw) as { code?: unknown }).code as string) ?? '';
     } catch {
       return '';
+    }
+  }
+
+  /** The conversation language for fixed notices: intake, booking, else Spanish. */
+  private guardLang: Lang = 'es';
+
+  /** Every text-model call goes through here so the Worker-wide daily
+   *  counter admits it first. Past the limit the call never runs and the
+   *  burst falls back to the fixed sentence with a handoff. */
+  private ai(): { run(model: string, input: unknown): Promise<unknown> } {
+    const env = this.env;
+    const self = this;
+    return {
+      run: async (model: string, input: unknown): Promise<unknown> => {
+        if (!(await guardModelTake(env, self.guardLang))) throw new Error(GUARD_OVER);
+        const run = env.AI.run.bind(env.AI) as (
+          model: string,
+          input: unknown
+        ) => Promise<unknown>;
+        return run(model, input);
+      },
+    };
+  }
+
+  private clientLang(): Lang {
+    for (const key of ['intake', 'booking']) {
+      try {
+        const raw = this.state(key);
+        if (raw) {
+          const lang = (JSON.parse(raw) as { lang?: unknown }).lang;
+          if (lang === 'es' || lang === 'en') return lang;
+        }
+      } catch {
+        /* corrupt state: try the next source */
+      }
+    }
+    return 'es';
+  }
+
+  /** Epoch ms of every answered burst, oldest first, capped in memory. */
+  private answeredMs(): number[] {
+    try {
+      const raw = this.state('guardBursts');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((t): t is number => typeof t === 'number' && Number.isFinite(t));
+    } catch {
+      return [];
+    }
+  }
+
+  private countAnswered(now: number): void {
+    this.state('guardBursts', JSON.stringify([...this.answeredMs(), now].slice(-80)));
+  }
+
+  private pausedNotice(): PausedNotice | null {
+    try {
+      const raw = this.state('guardPaused');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as Partial<PausedNotice>;
+      return {
+        hourMs: typeof parsed.hourMs === 'number' ? parsed.hourMs : null,
+        dayKey: typeof parsed.dayKey === 'string' ? parsed.dayKey : null,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private voiceUse(): { day: string; count: number } {
+    try {
+      const raw = this.state('guardVoice');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<{ day: string; count: number }>;
+        if (typeof parsed.day === 'string' && typeof parsed.count === 'number') {
+          return { day: parsed.day, count: parsed.count };
+        }
+      }
+    } catch {
+      /* corrupt state counts as unused */
+    }
+    return { day: '', count: 0 };
+  }
+
+  private proofUse(): { hold: string; count: number } {
+    try {
+      const raw = this.state('guardProof');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<{ hold: string; count: number }>;
+        if (typeof parsed.hold === 'string' && typeof parsed.count === 'number') {
+          return { hold: parsed.hold, count: parsed.count };
+        }
+      }
+    } catch {
+      /* corrupt state counts as unused */
+    }
+    return { hold: '', count: 0 };
+  }
+
+  /**
+   * One agent message toward the operator, under the hourly cap. Past it a
+   * single message per hour says how many more conversations are waiting and
+   * the rest is dropped. Taken-conversation relays and the operator's own
+   * command replies never go through here, so they are never limited.
+   */
+  private async opSend(text: string, lang: Lang): Promise<void> {
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const grant = await guardOpMsg(this.env);
+    if (grant.send) {
+      try {
+        await sendText(this.env, operator, text);
+      } catch {
+        /* ignored */
+      }
+      return;
+    }
+    if (grant.firstOver) {
+      try {
+        await sendText(this.env, operator, operatorQueue(lang, grant.waiting));
+      } catch {
+        /* ignored */
+      }
     }
   }
 
@@ -350,11 +488,7 @@ export class Conversation extends DurableObject<Env> {
     }
     await sendText(this.env, m.from, ERASED[lang]);
     if (handedOff && m.from !== operator) {
-      try {
-        await sendText(this.env, operator, operatorErased(m.from));
-      } catch {
-        /* ignored */
-      }
+      await this.opSend(operatorErased(m.from), lang);
     }
   }
 
@@ -372,11 +506,7 @@ export class Conversation extends DurableObject<Env> {
           this.state('taken', null);
           const text =
             'UniverLab [' + (taken.code ?? '') + '] · pasaron 24 horas sin mensajes del operador: retomé la conversación.';
-          try {
-            await sendText(this.env, operator, text);
-          } catch {
-            /* ignored */
-          }
+          await this.opSend(text, 'es');
           // The notice is for the operator: it never enters the client's
           // history as an assistant turn.
         }
@@ -464,7 +594,7 @@ export class Conversation extends DurableObject<Env> {
   private async finishBooking(m: Inbound, st: IntakeState): Promise<void> {
     this.state('handoff', '1');
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    const b = await brief(this.env.AI, st, modelConfig(this.env));
+    const b = await brief(this.ai(), st, modelConfig(this.env));
     this.briefs(1, m.timestamp, m.from, m.name ?? '', st.lang, st.service, JSON.stringify(b.bullets));
     const code = await register(this.env, {
       phone: m.from,
@@ -481,7 +611,11 @@ export class Conversation extends DurableObject<Env> {
       service: st.service,
       bullets: b.bullets,
     }).replace('UniverLab ·', 'UniverLab [' + code + '] ·');
-    await sendText(this.env, operator, note);
+    // FR5: at most one handoff notice per client every 10 minutes. A
+    // throttled handoff still tells the client and keeps the registry row.
+    if (await guardHandoff(this.env, m.from)) {
+      await this.opSend(note, st.lang);
+    }
     const confirm = CONFIRM_SLOT[st.lang];
     await sendText(this.env, m.from, confirm);
     this.storeAssistant(m.timestamp, 'a-' + m.id + '-confirm', confirm);
@@ -497,7 +631,6 @@ export class Conversation extends DurableObject<Env> {
   ): Promise<void> {
     this.state('booking', null);
     this.state('handoff', '1');
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const code = await register(this.env, {
       phone: m.from,
       name,
@@ -506,14 +639,14 @@ export class Conversation extends DurableObject<Env> {
       service,
     });
     this.state('code', code);
-    const note = formatBrief({ name, phone: m.from, lang, service, bullets }).replace(
-      'UniverLab ·',
-      'UniverLab [' + code + '] ·'
-    );
-    try {
-      await sendText(this.env, operator, 'La agenda falló: agendar a mano.\n' + note);
-    } catch {
-      /* ignored */
+    // FR5: at most one handoff notice per client every 10 minutes. A
+    // throttled failure still tells the client and keeps the registry row.
+    if (await guardHandoff(this.env, m.from)) {
+      const note = formatBrief({ name, phone: m.from, lang, service, bullets }).replace(
+        'UniverLab ·',
+        'UniverLab [' + code + '] ·'
+      );
+      await this.opSend('La agenda falló: agendar a mano.\n' + note, lang);
     }
     const down = CALENDAR_DOWN[lang];
     await sendText(this.env, m.from, down);
@@ -543,7 +676,7 @@ export class Conversation extends DurableObject<Env> {
     st: IntakeState,
     service: BookingService
   ): Promise<void> {
-    const b = await brief(this.env.AI, st, modelConfig(this.env));
+    const b = await brief(this.ai(), st, modelConfig(this.env));
     const minutes = service === 'consultation' ? 60 : 15;
     // The owner answers first: an active booking seeds the chat instead of
     // offering, a limit refuses with fixed wording, and only a free contact
@@ -817,14 +950,17 @@ export class Conversation extends DurableObject<Env> {
       service: st.service,
     });
     this.state('code', code);
-    await sendText(
-      this.env,
-      operator,
-      formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
-        'UniverLab ·',
-        'UniverLab [' + code + '] ·'
-      )
-    );
+    // FR5: at most one handoff notice per client every 10 minutes. A
+    // throttled cancel still tells the client and keeps the registry row.
+    if (await guardHandoff(this.env, st.phone)) {
+      await this.opSend(
+        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
+          'UniverLab ·',
+          'UniverLab [' + code + '] ·'
+        ),
+        st.lang
+      );
+    }
     const text = renderBooking(CANCELLED[st.lang], {
       service: serviceLabel(st.lang, st.service),
       slot: formatSlot(st.start, st.lang),
@@ -877,7 +1013,7 @@ export class Conversation extends DurableObject<Env> {
 
   private async handleBooking(m: Inbound, st: BookingState): Promise<void> {
     const res = await decide(
-      this.env.AI,
+      this.ai(),
       modelConfig(this.env),
       {
         lang: st.lang,
@@ -916,17 +1052,34 @@ export class Conversation extends DurableObject<Env> {
     // A voice note is transcribed first and processed exactly as if the
     // client had typed the transcript; the audio itself is never stored.
     let voiceFailed = false;
+    let voiceGlobalOver = false;
     if ((m.type === 'audio' || m.type === 'voice') && m.text === undefined) {
       const cfg = voiceConfig(this.env);
-      const t =
-        !(m.duration !== undefined && m.duration > cfg.maxSeconds) && m.mediaId !== undefined
-          ? await transcribe(this.env, cfg, m.mediaId)
-          : { ok: false as const };
-      if (t.ok) {
-        m.text = t.text;
-        m.mediaId = undefined;
-      } else {
+      if (m.duration !== undefined && m.duration > cfg.maxSeconds) {
         voiceFailed = true;
+      } else if (m.mediaId === undefined) {
+        voiceFailed = true;
+      } else {
+        // At most 5 transcriptions a day per number: later notes go to a
+        // person untranscribed, with no model call. Only heard notes count.
+        const gcfg = guardConfig(this.env);
+        const today = bogotaDateKey(Date.now());
+        const use = this.voiceUse();
+        const usedToday = use.day === today ? use.count : 0;
+        if (usedToday >= gcfg.voicePerDay) {
+          voiceFailed = true;
+        } else if (!(await guardModelTake(this.env, this.clientLang()))) {
+          voiceGlobalOver = true;
+        } else {
+          const t = await transcribe(this.env, cfg, m.mediaId);
+          if (t.ok) {
+            m.text = t.text;
+            m.mediaId = undefined;
+            this.state('guardVoice', JSON.stringify({ day: today, count: usedToday + 1 }));
+          } else {
+            voiceFailed = true;
+          }
+        }
       }
     }
     if (m.text !== undefined) {
@@ -969,6 +1122,16 @@ export class Conversation extends DurableObject<Env> {
       await this.ctx.storage.setAlarm(alarm);
       return;
     }
+    // The Worker is over its daily model calls: the stored voice note gets
+    // the fixed fallback sentence and a handoff, with no model call.
+    if (voiceGlobalOver) {
+      const lang = this.clientLang();
+      await sendText(this.env, m.from, FALLBACK[lang]);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-global', FALLBACK[lang]);
+      await this.notify(m);
+      await this.armNext(Date.now());
+      return;
+    }
     // While taken, the agent stays silent and the client's messages are
     // relayed to the operator with the short code.
     const takenRaw = this.state('taken');
@@ -988,8 +1151,9 @@ export class Conversation extends DurableObject<Env> {
     // A voice note that could not be transcribed goes to a person, like
     // every other non-text message, and the client is told who listens.
     if (voiceFailed) {
-      await sendText(this.env, m.from, VOICE_HANDOFF['es']);
-      this.storeAssistant(m.timestamp, 'a-' + m.id + '-voice', VOICE_HANDOFF['es']);
+      const voiceLang = this.clientLang();
+      await sendText(this.env, m.from, VOICE_HANDOFF[voiceLang]);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-voice', VOICE_HANDOFF[voiceLang]);
       await this.notify(m);
       await this.armNext(Date.now());
       return;
@@ -1140,6 +1304,30 @@ export class Conversation extends DurableObject<Env> {
     // Transcribed voice notes carry their transcript as text and join the
     // burst like typed messages; only untranscribed media is handed off.
     const texts = rows.filter((r) => r.text !== null && r.text !== '');
+    const joined = joinBurst(texts.map((r) => ({ at: r.at, text: r.text as string })));
+    const gcfg = guardConfig(this.env);
+    const now = Date.now();
+    // One number gets at most 12 answered bursts an hour and 40 a Bogota
+    // day. Past either, the stored messages cause no model call, no reply
+    // and no operator message; the client hears about it once per window.
+    const limit = burstLimit(now, this.answeredMs(), gcfg);
+    if (!limit.ok) {
+      const notice = this.pausedNotice();
+      if (pausedNoticeDue(now, limit.window, notice)) {
+        const lang = detectLang(joined);
+        await sendText(this.env, from, GUARD_PAUSED[lang]);
+        this.storeAssistant(last.at, 'a-' + last.id + '-paused', GUARD_PAUSED[lang]);
+        this.state(
+          'guardPaused',
+          JSON.stringify({
+            hourMs: limit.window === 'hour' ? now : (notice?.hourMs ?? null),
+            dayKey: limit.window === 'day' ? bogotaDateKey(now) : (notice?.dayKey ?? null),
+          })
+        );
+      }
+      return;
+    }
+    this.countAnswered(now);
     const m: Inbound = {
       id: last.id,
       from,
@@ -1147,24 +1335,38 @@ export class Conversation extends DurableObject<Env> {
       type: texts.length > 0 ? 'text' : last.type,
     };
     if (name !== undefined) m.name = name;
-    const joined = joinBurst(texts.map((r) => ({ at: r.at, text: r.text as string })));
-    if (joined !== '') m.text = joined;
-    const firstMedia = rows.find((r) => r.type !== 'text' && r.text === null);
-    if (texts.length > 0 && firstMedia !== undefined) {
-      // A burst mixing text and media: the text is answered below as one
-      // turn. A held booking's receipt is read as a proof instead of
-      // keeping today's handoff; other media keeps it exactly once.
-      const mediaIn: Inbound = { id: firstMedia.id, from, timestamp: firstMedia.at, type: firstMedia.type };
-      if (firstMedia.media_id) mediaIn.mediaId = firstMedia.media_id;
-      if (firstMedia.mime) mediaIn.mime = firstMedia.mime;
-      if (name !== undefined) mediaIn.name = name;
-      if (!(await this.proofIfHeld(mediaIn))) {
-        const mediaLang = detectLang(joined);
-        await sendText(this.env, from, NON_TEXT[mediaLang]);
-        this.storeAssistant(firstMedia.at, 'a-' + firstMedia.id + '-nontext', NON_TEXT[mediaLang]);
-        await this.notify(mediaIn);
-      }
+    // Client text reaching any model is capped; storage keeps the full text.
+    if (joined !== '') m.text = capBurst(gcfg, joined);
+    this.guardLang = detectLang(joined);
+    // The Worker makes at most 1,500 model calls a Bogota day. Past it,
+    // every client gets the fixed fallback sentence and a handoff, with no
+    // model call, until the next day; the operator is told once.
+    if (!(await guardModelTake(this.env, this.guardLang))) {
+      const fallback = FALLBACK[this.guardLang];
+      await sendText(this.env, from, fallback);
+      this.storeAssistant(last.at, 'a-' + last.id + '-global', fallback);
+      await this.notify(m);
+      return;
     }
+    let replied = false;
+    try {
+      const firstMedia = rows.find((r) => r.type !== 'text' && r.text === null);
+      if (texts.length > 0 && firstMedia !== undefined) {
+        // A burst mixing text and media: the text is answered below as one
+        // turn. A held booking's receipt is read as a proof instead of
+        // keeping today's handoff; other media keeps it exactly once.
+        const mediaIn: Inbound = { id: firstMedia.id, from, timestamp: firstMedia.at, type: firstMedia.type };
+        if (firstMedia.media_id) mediaIn.mediaId = firstMedia.media_id;
+        if (firstMedia.mime) mediaIn.mime = firstMedia.mime;
+        if (name !== undefined) mediaIn.name = name;
+        if (!(await this.proofIfHeld(mediaIn))) {
+          const mediaLang = detectLang(joined);
+          await sendText(this.env, from, NON_TEXT[mediaLang]);
+          this.storeAssistant(firstMedia.at, 'a-' + firstMedia.id + '-nontext', NON_TEXT[mediaLang]);
+          await this.notify(mediaIn);
+          replied = true;
+        }
+      }
     if (m.type === 'text') {
       const pendingRaw = this.state('pendingErase');
       if (pendingRaw) {
@@ -1189,7 +1391,7 @@ export class Conversation extends DurableObject<Env> {
       }
       const text = m.text ?? '';
       const lang = detectLang(text);
-      if (await fuzzyDeletionRequest(this.env.AI, modelConfig(this.env), lang, text)) {
+      if (await fuzzyDeletionRequest(this.ai(), modelConfig(this.env), lang, text)) {
         this.state('pendingErase', JSON.stringify({ lang, expiresAt: Date.now() + CONFIRM_MS }));
         await sendText(this.env, m.from, PENDING_ERASE[lang]);
         this.storeAssistant(m.timestamp, 'a-' + m.id + '-pending', PENDING_ERASE[lang]);
@@ -1207,7 +1409,7 @@ export class Conversation extends DurableObject<Env> {
       const saved = this.state('intake');
       if (saved) {
         const st = JSON.parse(saved) as IntakeState;
-        const res = await intake(this.env.AI, st, m.text ?? '', modelConfig(this.env));
+        const res = await intake(this.ai(), st, m.text ?? '', modelConfig(this.env));
         if (res.status === 'handoff') {
           this.state('intake', null);
           const fallback = FALLBACK[lang];
@@ -1241,8 +1443,8 @@ export class Conversation extends DurableObject<Env> {
         .toArray() as Array<{ role: string; text: string }>;
       const history = rows
         .reverse()
-        .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: r.text }));
-      const a = await answer(this.env.AI, history, lang, modelConfig(this.env), m.from);
+        .map((r) => ({ role: (r.role === 'operator' ? 'assistant' : r.role) as Turn['role'], text: capTurn(gcfg, r.text) }));
+      const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from);
       if (a.booking) {
         const ask = INTAKE_ASK[lang];
         await sendText(this.env, m.from, ask);
@@ -1272,6 +1474,17 @@ export class Conversation extends DurableObject<Env> {
       await sendText(this.env, m.from, NON_TEXT[lang]);
       this.storeAssistant(m.timestamp, 'a-' + m.id, NON_TEXT[lang]);
       await this.notify(m);
+      }
+    } catch (e) {
+      if (!isGuardOver(e)) throw e;
+      // The Worker ran out of model calls mid-burst: the fixed sentence
+      // and a handoff, unless this burst already answered the client.
+      if (!replied) {
+        const lang = detectLang(joined);
+        await sendText(this.env, from, FALLBACK[lang]);
+        this.storeAssistant(last.at, 'a-' + last.id + '-global', FALLBACK[lang]);
+        await this.notify(m);
+      }
     }
   }
 
@@ -1287,6 +1500,28 @@ export class Conversation extends DurableObject<Env> {
       if (!raw) return false;
       const st = JSON.parse(raw) as BookingState;
       if (st.phase !== 'held') return false;
+      // One hold gets at most 3 receipt readings: later files are forwarded
+      // to the operator unread, with no vision-model call.
+      const gcfg = guardConfig(this.env);
+      const holdKey = st.eventId ?? st.start ?? 'held';
+      const use = this.proofUse();
+      const usedHold = use.hold === holdKey ? use.count : 0;
+      if (usedHold >= gcfg.proofsPerHold) {
+        const fwd = await forwardUnread(
+          this.env,
+          st,
+          { id: mediaIn.mediaId, kind: mediaIn.type, mime: mediaIn.mime },
+          this.state('code') ?? ''
+        );
+        if (!fwd) return false;
+        await this.opSend(fwd.operatorText, st.lang);
+        await sendText(this.env, mediaIn.from, fwd.clientText);
+        this.storeAssistant(mediaIn.timestamp, 'a-' + mediaIn.id + '-proof', fwd.clientText);
+        await this.armNext(Date.now());
+        return true;
+      }
+      // The vision reading is a model call: it never runs past the daily limit.
+      if (!(await guardModelTake(this.env, st.lang))) throw new Error(GUARD_OVER);
       const cfg = bookingConfig(this.env);
       const res = await readProof(
         this.env,
@@ -1299,40 +1534,38 @@ export class Conversation extends DurableObject<Env> {
       if (!res) return false;
       st.proof = res.proof;
       this.state('booking', JSON.stringify(st));
-      const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-      try {
-        await sendText(this.env, operator, res.operatorText);
-      } catch {
-        /* the client notice still goes out */
-      }
+      this.state('guardProof', JSON.stringify({ hold: holdKey, count: usedHold + 1 }));
+      await this.opSend(res.operatorText, st.lang);
       await sendText(this.env, mediaIn.from, res.clientText);
       this.storeAssistant(mediaIn.timestamp, 'a-' + mediaIn.id + '-proof', res.clientText);
       await this.armNext(Date.now());
       return true;
-    } catch {
+    } catch (e) {
+      // The Worker-wide limit denies the vision reading: the burst must
+      // fall back to the fixed sentence with a handoff, never NON_TEXT.
+      if (isGuardOver(e)) throw e;
       return false;
     }
   }
 
   private async notify(m: Inbound): Promise<void> {
     this.state('handoff', '1');
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const lang = detectLang(m.text ?? '');
     const code = await register(this.env, {
       phone: m.from,
       name: m.name ?? '',
-      lang: detectLang(m.text ?? ''),
+      lang,
       kind: 'handoff',
       service: '',
     });
     this.state('code', code);
+    // The operator gets at most one handoff notice per client every 10
+    // minutes: a later notice inside that window is dropped here.
+    if (!(await guardHandoff(this.env, m.from))) return;
     const text = (
       'UniverLab [' + code + '] · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
     ).slice(0, 900);
-    try {
-      await sendText(this.env, operator, text);
-    } catch {
-      /* ignored */
-    }
+    await this.opSend(text, lang);
   }
 }
 

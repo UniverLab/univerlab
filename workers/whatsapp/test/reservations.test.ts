@@ -68,6 +68,55 @@ test('the refusal never calls the text model', async () => {
   expect(sendText).toHaveBeenCalledWith(ENV, '573001112222', LIMIT_TEXT['free-limit'].en);
 });
 
+function guardEnv(handler: (body: Record<string, unknown>) => unknown) {
+  const fetchMock = jest.fn(async (req: Request) => new Response(JSON.stringify(handler((await req.json()) as Record<string, unknown>)), { status: 200 }));
+  return {
+    OPERATOR_PHONE: '+57 300 999 8888',
+    REGISTRY: { idFromName: (n: string) => n, get: jest.fn(() => ({ fetch: fetchMock })) },
+    _fetchMock: fetchMock,
+  } as unknown as { OPERATOR_PHONE: string; _fetchMock: jest.Mock };
+}
+
+test('a handoff-throttled refusal still tells the client but skips the operator', async () => {
+  const g = guardEnv((body) => {
+    if (body.op === 'handoff') return { ok: false };
+    if (body.op === 'opmsg') return { send: true, firstOver: false, waiting: 0 };
+    return { ok: true };
+  });
+  const code = await refuseAndHandOff(g as never, {
+    lang: 'es',
+    phone: '573001112222',
+    name: 'Ana',
+    service: 'consultation',
+    brief: ['goal x'],
+    reason: 'hold-cap',
+  });
+  expect(code).toBe('zz99');
+  expect(sendText).toHaveBeenCalledWith(g, '573001112222', LIMIT_TEXT['hold-cap'].es);
+  expect(register).toHaveBeenCalled();
+  const opCalls = (sendText as jest.Mock).mock.calls.filter((c) => c[1] === '573009998888');
+  expect(opCalls).toHaveLength(0);
+});
+
+test('an hourly-capped refusal drops the operator brief, queueing once', async () => {
+  const g = guardEnv((body) => {
+    if (body.op === 'handoff') return { ok: true };
+    if (body.op === 'opmsg') return { send: false, firstOver: true, waiting: 3 };
+    return { ok: true };
+  });
+  await refuseAndHandOff(g as never, {
+    lang: 'es',
+    phone: '573001112222',
+    name: 'Ana',
+    service: 'consultation',
+    brief: ['goal x'],
+    reason: 'day-cap',
+  });
+  const opCalls = (sendText as jest.Mock).mock.calls.filter((c) => c[1] === '573009998888');
+  expect(opCalls).toHaveLength(1);
+  expect(String(opCalls[0][2])).toContain('3');
+});
+
 test('seeding rebuilds the chat state from the active row', () => {
   const st = seedFromActive(
     { eventId: 'ev1', start: 's', end: 'e', kind: 'hold', service: 'consultation', createdAt: 42 },

@@ -56,6 +56,7 @@ jobs:
             TEXT_MODEL_OPTIONS
             WORKBENCH_CALENDAR_ID
             BOOKING_CONFIG
+            GUARD_CONFIG
         env:
           WA_APP_SECRET: ${{ secrets.WA_APP_SECRET }}
           WA_VERIFY_TOKEN: ${{ secrets.WA_VERIFY_TOKEN }}
@@ -69,3 +70,4 @@ jobs:
           TEXT_MODEL_OPTIONS: ${{ vars.WA_TEXT_MODEL_OPTIONS }}
           WORKBENCH_CALENDAR_ID: ${{ vars.WA_WORKBENCH_CALENDAR_ID }}
           BOOKING_CONFIG: ${{ vars.WA_BOOKING_CONFIG }}
+          GUARD_CONFIG: ${{ vars.WA_GUARD_CONFIG }}

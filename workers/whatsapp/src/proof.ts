@@ -1,4 +1,5 @@
 import { serviceLabel, type BookingState, type PaymentProof } from './booking';
+import { guardOpMsg } from './guard';
 import { GRAPH, sendMedia } from './meta';
 import { formatSlot } from './schedule';
 import type { Lang } from './lang';
@@ -52,12 +53,74 @@ interface ProofEnv {
   WA_ACCESS_TOKEN: string;
   WA_PHONE_NUMBER_ID: string;
   OPERATOR_PHONE: string;
+  REGISTRY?: {
+    idFromName(name: string): unknown;
+    get(id: unknown): { fetch(req: Request): Promise<Response> };
+  };
 }
 
 export interface ProofMedia {
   id: string;
   kind: string;
   mime?: string;
+}
+
+/** A receipt that arrives after its hold used its readings: no vision call,
+ *  the file is only downloaded and forwarded to the operator unread. */
+export interface UnreadForward {
+  operatorText: string;
+  clientText: string;
+}
+
+export async function forwardUnread(
+  env: ProofEnv,
+  st: BookingState,
+  media: ProofMedia,
+  code: string,
+  fetchFn: typeof fetch = fetch
+): Promise<UnreadForward | null> {
+  try {
+    const bytes = await downloadProof(env, media.id, fetchFn);
+    if (bytes === null) return null;
+    const operator = env.OPERATOR_PHONE.replace(/\D/g, '');
+    const kind = media.kind === 'image' ? 'image' : 'document';
+    // FR5: the receipt file counts against the 30 agent messages/hour. Past
+    // the cap the file is dropped and only the summary's opSend may queue.
+    let mediaAllowed = true;
+    try {
+      mediaAllowed = (await guardOpMsg(env as never)).send;
+    } catch {
+      mediaAllowed = true;
+    }
+    if (mediaAllowed) {
+      try {
+        await sendMedia(
+          env,
+          operator,
+          kind,
+          bytes,
+          media.mime ?? (kind === 'image' ? 'image/jpeg' : 'application/pdf'),
+          kind === 'image' ? 'comprobante.jpg' : 'comprobante.pdf',
+          fetchFn
+        );
+      } catch {
+        /* the summary still goes out even when the forward fails */
+      }
+    }
+    const proof = {
+      readable: false,
+      amount: null,
+      currency: '',
+      date: '',
+      method: '',
+      reference: '',
+      payee: '',
+      flag: 'unreadable',
+    };
+    return { operatorText: operatorText(st.lang, code, st, proof), clientText: PROOF_RECEIVED[st.lang] };
+  } catch {
+    return null;
+  }
 }
 
 const PROMPT =
@@ -233,18 +296,28 @@ export async function readProof(
     const proof = parseProof(res, payee);
     const operator = env.OPERATOR_PHONE.replace(/\D/g, '');
     const kind = media.kind === 'image' ? 'image' : 'document';
+    // FR5: the receipt file counts against the 30 agent messages/hour. Past
+    // the cap the file is dropped and only the summary's opSend may queue.
+    let mediaAllowed = true;
     try {
-      await sendMedia(
-        env,
-        operator,
-        kind,
-        bytes,
-        media.mime ?? (kind === 'image' ? 'image/jpeg' : 'application/pdf'),
-        kind === 'image' ? 'comprobante.jpg' : 'comprobante.pdf',
-        fetchFn
-      );
+      mediaAllowed = (await guardOpMsg(env as never)).send;
     } catch {
-      /* the summary still goes out even when the forward fails */
+      mediaAllowed = true;
+    }
+    if (mediaAllowed) {
+      try {
+        await sendMedia(
+          env,
+          operator,
+          kind,
+          bytes,
+          media.mime ?? (kind === 'image' ? 'image/jpeg' : 'application/pdf'),
+          kind === 'image' ? 'comprobante.jpg' : 'comprobante.pdf',
+          fetchFn
+        );
+      } catch {
+        /* the summary still goes out even when the forward fails */
+      }
     }
     return { operatorText: operatorText(st.lang, code, st, proof), clientText: PROOF_RECEIVED[st.lang], proof };
   } catch {

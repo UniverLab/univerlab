@@ -1,7 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { sendText, markRead, type Inbound } from './meta';
-import { formatSlot } from './schedule';
+import { bogotaDateKey, formatSlot } from './schedule';
+import { guardConfig, bogotaHourKey, OPERATOR_DAILY, type GuardConfig } from './guard';
 import { HELP, parseCommand, shortCode } from './registry';
 
 interface RegistryRow {
@@ -37,6 +38,32 @@ export class Operator extends DurableObject<Env> {
         created_at INTEGER NOT NULL
       )
     `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS guard (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+  }
+
+  private guardGet(key: string): string | null {
+    const rows = this.ctx.storage.sql
+      .exec('SELECT value FROM guard WHERE key = ? LIMIT 1', key)
+      .toArray() as Array<{ value: string }>;
+    return rows.length > 0 ? rows[0].value : null;
+  }
+
+  private guardSet(key: string, value: string): void {
+    this.ctx.storage.sql.exec(
+      'INSERT INTO guard (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+      key,
+      value
+    );
+  }
+
+  private guardNum(key: string): number {
+    const n = Number(this.guardGet(key));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
   }
 
   /** Registry HTTP entry: register/release calls from Conversation objects. */
@@ -63,7 +90,57 @@ export class Operator extends DurableObject<Env> {
       }
       return Response.json({ ok: true });
     }
+    if (action === 'guard') {
+      return Response.json(await this.guard(body as Record<string, unknown>));
+    }
     return Response.json({ ok: false }, { status: 400 });
+  }
+
+  /**
+   * Worker-wide spending counters, one serialized owner so concurrent
+   * messages from different numbers count exactly once. The check and the
+   * increment run in the same serialized fetch: admitted calls are counted,
+   * denied calls never run.
+   */
+  private async guard(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const cfg: GuardConfig = guardConfig(this.env);
+    const now = typeof body['now'] === 'number' && Number.isFinite(body['now']) ? (body['now'] as number) : Date.now();
+    const op = body['op'];
+    if (op === 'model') {
+      const day = bogotaDateKey(now);
+      const key = 'guard:model:' + day;
+      if (this.guardNum(key) >= cfg.modelsPerDay) {
+        const notified = 'guard:modelNotified:' + day;
+        if (!this.guardGet(notified)) {
+          this.guardSet(notified, '1');
+          const lang = body['lang'] === 'en' ? 'en' : 'es';
+          try {
+            await sendText(this.env, this.env.OPERATOR_PHONE.replace(/\D/g, ''), OPERATOR_DAILY[lang]);
+          } catch {
+            /* the denial stands even when the notice fails */
+          }
+        }
+        return { ok: false };
+      }
+      this.guardSet(key, String(this.guardNum(key) + 1));
+      return { ok: true };
+    }
+    if (op === 'handoff') {
+      const client = typeof body['client'] === 'string' ? body['client'] : '';
+      if (!client) return { ok: true };
+      const key = 'guard:handoff:' + client;
+      const last = this.guardNum(key);
+      if (last > 0 && now - last < cfg.handoffMs) return { ok: false };
+      this.guardSet(key, String(now));
+      return { ok: true };
+    }
+    if (op === 'opmsg') {
+      const key = 'guard:opmsg:' + bogotaHourKey(now);
+      const n = this.guardNum(key) + 1;
+      this.guardSet(key, String(n));
+      return { send: n <= cfg.opMsgsPerHour, firstOver: n === cfg.opMsgsPerHour + 1, waiting: Math.max(0, n - cfg.opMsgsPerHour) };
+    }
+    return { ok: false };
   }
 
   private upsert(body: Record<string, unknown>): string {
