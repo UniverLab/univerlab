@@ -327,7 +327,6 @@ export function cleanAnswer(raw: string): string {
 }
 
 export interface ReasonNote {
-  code: string;
   name: string;
   phone: string;
   lang: Lang;
@@ -337,7 +336,7 @@ export interface ReasonNote {
   answers: string[];
 }
 
-/** The operator note keeps today's first line and adds the tag and priority. */
+/** The operator note keeps who and adds the tag and priority. */
 export function formatReasonNote(n: ReasonNote): string {
   const who = (n.name ? n.name + ' ' : '') + '+' + n.phone;
   const pri =
@@ -353,9 +352,6 @@ export function formatReasonNote(n: ReasonNote): string {
           ? 'low priority'
           : 'normal priority';
   const head =
-    'UniverLab [' +
-    n.code +
-    '] · ' +
     who +
     '\n' +
     (n.lang === 'es' ? 'Motivo: ' : 'Reason: ') +

@@ -230,7 +230,7 @@ export function formatBrief(h: BriefHeader): string {
     .map((b) => b.slice(0, 200));
   while (bullets.length < 3) bullets.push(NO_DETAILS[h.lang]);
   return (
-    'UniverLab · ' + who + '\n' +
+    who + '\n' +
     (h.lang === 'es' ? 'Idioma: ' : 'Language: ') + langLabel + ' · ' +
     (h.lang === 'es' ? 'Servicio: ' : 'Service: ') + serviceLabel + '\n' +
     bullets.map((b) => '- ' + b).join('\n')

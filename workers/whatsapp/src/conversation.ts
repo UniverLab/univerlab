@@ -15,9 +15,7 @@ import {
   GUARD_PAUSED,
   guardHandoff,
   guardModelTake,
-  guardOpMsg,
   isGuardOver,
-  operatorQueue,
   pausedNoticeDue,
   type PausedNotice,
 } from './guard';
@@ -70,7 +68,7 @@ import { HOLD_PREFIX } from './google';
 import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
 import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
 import type { ActiveInfo } from './calendar';
-import { register, release } from './registry';
+import { register, release, postNote, nameBase } from './registry';
 import {
   CALENDAR_DOWN,
   CANCELLED,
@@ -90,8 +88,6 @@ import {
 
 /** A consultation hold expires 24 hours after it was created. */
 const HOLD_MS = 24 * 3600 * 1000;
-/** A taken conversation returns to the agent after 24 hours without operator messages. */
-const TAKEN_MS = 24 * 3600 * 1000;
 /** While a hold is pending the alarm re-checks the calendar at least hourly. */
 const HOLD_CHECK_MS = 3600 * 1000;
 
@@ -226,12 +222,12 @@ export class Conversation extends DurableObject<Env> {
     );
   }
 
-  /** The taken flag's short code, '' when absent or corrupt. */
-  private takenCode(): string {
+  /** The taken flag's conversation name, '' when absent or corrupt. */
+  private takenName(): string {
     try {
       const raw = this.state('taken');
       if (!raw) return '';
-      return ((JSON.parse(raw) as { code?: unknown }).code as string) ?? '';
+      return ((JSON.parse(raw) as { name?: unknown }).name as string) ?? '';
     } catch {
       return '';
     }
@@ -335,28 +331,50 @@ export class Conversation extends DurableObject<Env> {
   }
 
   /**
-   * One agent message toward the operator, under the hourly cap. Past it a
-   * single message per hour says how many more conversations are waiting and
-   * the rest is dropped. Taken-conversation relays and the operator's own
-   * command replies never go through here, so they are never limited.
+   * One agent note toward the operator. The Operator serializes it: while a
+   * passthrough is open it is queued, otherwise it goes out at once (a
+   * high-priority note skips the hourly cap). Taken-conversation relays
+   * never go through here, so they are never limited or queued.
    */
-  private async opSend(text: string, lang: Lang): Promise<void> {
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    const grant = await guardOpMsg(this.env);
-    if (grant.send) {
-      try {
-        await sendText(this.env, operator, text);
-      } catch {
-        /* ignored */
-      }
-      return;
+  private async note(text: string, tag: string, priority: 'high' | 'normal' | 'low'): Promise<void> {
+    const name = this.state('name');
+    if (!name) return;
+    await postNote(this.env, { name, text, tag, priority });
+  }
+
+  /** Tell the Operator the passthrough saw traffic; keeps its idle clock fresh. */
+  private async passAlive(name: string, at: number): Promise<void> {
+    try {
+      const ns = this.env.REGISTRY;
+      if (!ns || !name) return;
+      const stub = ns.get(ns.idFromName('operator'));
+      await stub.fetch(
+        new Request('https://registry/call', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'passAlive', name, at }),
+        })
+      );
+    } catch {
+      /* the operator's own idle check still runs */
     }
-    if (grant.firstOver) {
-      try {
-        await sendText(this.env, operator, operatorQueue(lang, grant.waiting));
-      } catch {
-        /* ignored */
-      }
+  }
+
+  /** Tell the Operator the passthrough went idle; it tells the operator and flushes. */
+  private async passExpired(name: string): Promise<void> {
+    try {
+      const ns = this.env.REGISTRY;
+      if (!ns || !name) return;
+      const stub = ns.get(ns.idFromName('operator'));
+      await stub.fetch(
+        new Request('https://registry/call', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'passExpired', name }),
+        })
+      );
+    } catch {
+      /* the taken flag below is still cleared */
     }
   }
 
@@ -381,15 +399,61 @@ export class Conversation extends DurableObject<Env> {
     if (typeof body !== 'object' || body === null) {
       return Response.json({ ok: false }, { status: 400 });
     }
+    const action = (body as { action?: unknown }).action;
+    if (action === 'summary') return Response.json(await this.summary());
+    if (action === 'recapData') return Response.json(await this.recapData());
     return Response.json(await this.control(body as { action?: unknown }));
   }
 
+  /** What /recap lists: the last client message and the booking state, if any. */
+  private async summary(): Promise<{ lastAt: number | null; phase: string | null }> {
+    let lastAt: number | null = null;
+    try {
+      const rows = this.ctx.storage.sql
+        .exec('SELECT MAX(at) AS lastAt FROM messages WHERE role = ?', 'user')
+        .toArray() as Array<{ lastAt: number | null }>;
+      // messages.at holds the WhatsApp epoch in seconds; the recap compares
+      // it with Date.now() milliseconds.
+      if (rows.length > 0 && typeof rows[0].lastAt === 'number') lastAt = rows[0].lastAt * 1000;
+    } catch {
+      /* a missing table reads as no message yet */
+    }
+    let phase: string | null = null;
+    try {
+      const raw = this.state('booking');
+      if (raw) {
+        const st = JSON.parse(raw) as { phase?: unknown; start?: unknown };
+        if (st.phase === 'held') phase = 'apartado';
+        else if (st.phase === 'booked') phase = 'reservado';
+        else if (st.phase === 'offered') phase = 'eligiendo horario';
+      }
+    } catch {
+      /* corrupt booking state reads as no booking */
+    }
+    return { lastAt, phase };
+  }
+
+  /** What /recap <name> summarizes: the stored turns and the last client text. */
+  private async recapData(): Promise<{ turns: Array<{ role: string; text: string }>; last: string }> {
+    const turns = this.historyTurns().map((t) => ({ role: t.role, text: t.text }));
+    let last = '';
+    try {
+      const rows = this.ctx.storage.sql
+        .exec("SELECT text FROM messages WHERE role = 'user' AND text IS NOT NULL ORDER BY rowid DESC LIMIT 1")
+        .toArray() as Array<{ text: string }>;
+      if (rows.length > 0 && typeof rows[0].text === 'string') last = rows[0].text;
+    } catch {
+      /* a missing table reads as no message yet */
+    }
+    return { turns, last };
+  }
+
   /** Run one operator command against this conversation. */
-  async control(action: { action?: unknown; code?: unknown; text?: unknown }): Promise<{ ok: boolean }> {
+  async control(action: { action?: unknown; name?: unknown; text?: unknown }): Promise<{ ok: boolean }> {
     this.ensureSchema();
     if (action.action === 'take') {
-      if (typeof action.code !== 'string' || !action.code) return { ok: false };
-      this.state('taken', JSON.stringify({ code: action.code, at: Date.now() }));
+      if (typeof action.name !== 'string' || !action.name) return { ok: false };
+      this.state('taken', JSON.stringify({ name: action.name, at: Date.now() }));
       await this.armNext(Date.now());
       return { ok: true };
     }
@@ -410,12 +474,12 @@ export class Conversation extends DurableObject<Env> {
         (action.text as string).slice(0, 1000),
         null
       );
-      // An operator message restarts the 24-hour taken clock.
+      // An operator message restarts the passthrough idle clock.
       const takenRaw = this.state('taken');
       if (takenRaw) {
         try {
-          const taken = JSON.parse(takenRaw) as { code?: string };
-          this.state('taken', JSON.stringify({ code: taken.code ?? '', at }));
+          const taken = JSON.parse(takenRaw) as { name?: string };
+          this.state('taken', JSON.stringify({ name: taken.name ?? '', at }));
         } catch {
           /* a corrupt taken flag is left alone */
         }
@@ -522,6 +586,7 @@ export class Conversation extends DurableObject<Env> {
     }
     const handedOff = this.state('handoff') !== null;
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const erasedName = this.state('name') ?? nameBase(m.name ?? '');
     await this.deregister(m.from);
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.deleteAlarm();
@@ -532,7 +597,7 @@ export class Conversation extends DurableObject<Env> {
     }
     await sendText(this.env, m.from, ERASED[lang]);
     if (handedOff && m.from !== operator) {
-      await this.opSend(operatorErased(m.from), lang);
+      await postNote(this.env, { name: erasedName, text: operatorErased(m.from), tag: 'DATOS', priority: 'normal' });
     }
   }
 
@@ -540,19 +605,18 @@ export class Conversation extends DurableObject<Env> {
     this.ensureSchema();
     let now = Date.now();
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    // A taken conversation returns to the agent on its own after 24 hours
-    // without operator messages, and the operator is told.
+    // An idle passthrough closes on its own; the Operator tells the
+    // operator and delivers the queued notes.
     const takenRaw = this.state('taken');
     if (takenRaw) {
       try {
-        const taken = JSON.parse(takenRaw) as { code?: string; at?: number };
-        if (typeof taken.at === 'number' && now >= taken.at + TAKEN_MS) {
+        const taken = JSON.parse(takenRaw) as { name?: string; at?: number };
+        const idle = guardConfig(this.env).passthroughIdleMs;
+        if (typeof taken.at === 'number' && taken.name && now >= taken.at + idle) {
           this.state('taken', null);
-          const text =
-            'UniverLab [' + (taken.code ?? '') + '] · pasaron 24 horas sin mensajes del operador: retomé la conversación.';
-          await this.opSend(text, 'es');
-          // The notice is for the operator: it never enters the client's
-          // history as an assistant turn.
+          // The Operator tells the operator and flushes the queued notes;
+          // the notice never enters the client's history as an assistant turn.
+          await this.passExpired(taken.name);
         }
       } catch {
         this.state('taken', null);
@@ -657,17 +721,16 @@ export class Conversation extends DurableObject<Env> {
 
   private async finishBooking(m: Inbound, st: IntakeState): Promise<void> {
     this.state('handoff', '1');
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
     const b = await brief(this.ai(), st, modelConfig(this.env));
     this.briefs(1, m.timestamp, m.from, m.name ?? '', st.lang, st.service, JSON.stringify(b.bullets));
-    const code = await register(this.env, {
+    const name = await register(this.env, {
       phone: m.from,
       name: m.name ?? '',
       lang: st.lang,
       kind: 'handoff',
       service: st.service,
     });
-    this.state('code', code);
+    this.state('name', name);
     const intakeReason = this.state('intakeReason');
     this.state('intakeReason', null);
     let note = formatBrief({
@@ -676,7 +739,7 @@ export class Conversation extends DurableObject<Env> {
       lang: st.lang,
       service: st.service,
       bullets: b.bullets,
-    }).replace('UniverLab ·', 'UniverLab [' + code + '] ·');
+    });
     if (intakeReason === 'flow' || intakeReason === 'audit') {
       note +=
         '\n' +
@@ -686,7 +749,7 @@ export class Conversation extends DurableObject<Env> {
     // FR5: at most one handoff notice per client every 10 minutes. A
     // throttled handoff still tells the client and keeps the registry row.
     if (await guardHandoff(this.env, m.from)) {
-      await this.opSend(note, st.lang);
+      await this.note(note, 'CITA', 'normal');
     }
     const confirm = CONFIRM_SLOT[st.lang];
     await sendText(this.env, m.from, confirm);
@@ -703,22 +766,19 @@ export class Conversation extends DurableObject<Env> {
   ): Promise<void> {
     this.state('booking', null);
     this.state('handoff', '1');
-    const code = await register(this.env, {
+    const registered = await register(this.env, {
       phone: m.from,
       name,
       lang,
       kind: 'handoff',
       service,
     });
-    this.state('code', code);
+    this.state('name', registered);
     // FR5: at most one handoff notice per client every 10 minutes. A
     // throttled failure still tells the client and keeps the registry row.
     if (await guardHandoff(this.env, m.from)) {
-      const note = formatBrief({ name, phone: m.from, lang, service, bullets }).replace(
-        'UniverLab ·',
-        'UniverLab [' + code + '] ·'
-      );
-      await this.opSend('La agenda falló: agendar a mano.\n' + note, lang);
+      const note = formatBrief({ name, phone: m.from, lang, service, bullets });
+      await this.note('La agenda falló: agendar a mano.\n' + note, 'CITA', 'normal');
     }
     const down = CALENDAR_DOWN[lang];
     await sendText(this.env, m.from, down);
@@ -737,8 +797,8 @@ export class Conversation extends DurableObject<Env> {
   ): Promise<void> {
     this.state('booking', null);
     this.state('handoff', '1');
-    const code = await refuseAndHandOff(this.env, { lang, phone, name, service, brief, reason });
-    this.state('code', code);
+    const registered = await refuseAndHandOff(this.env, { lang, phone, name, service, brief, reason });
+    this.state('name', registered);
     const text = LIMIT_TEXT[reason][lang];
     this.storeAssistant(m.timestamp, 'a-' + m.id + '-limit', text);
   }
@@ -956,7 +1016,7 @@ export class Conversation extends DurableObject<Env> {
     if (kind === 'hold') st.createdAt = now;
     this.state('booking', JSON.stringify(st));
     if (kind === 'hold') {
-      const code = await register(this.env, {
+      const held = await register(this.env, {
         phone: st.phone,
         name: st.name,
         lang: st.lang,
@@ -965,7 +1025,7 @@ export class Conversation extends DurableObject<Env> {
         start: startIso,
         eventId: st.eventId,
       });
-      this.state('code', code);
+      this.state('name', held);
     }
     const slotText = formatSlot(startIso, st.lang);
     const text =
@@ -1013,24 +1073,21 @@ export class Conversation extends DurableObject<Env> {
     }
     this.state('booking', null);
     this.state('handoff', '1');
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-    const code = await register(this.env, {
+    const cancelled = await register(this.env, {
       phone: st.phone,
       name: st.name,
       lang: st.lang,
       kind: 'handoff',
       service: st.service,
     });
-    this.state('code', code);
+    this.state('name', cancelled);
     // FR5: at most one handoff notice per client every 10 minutes. A
     // throttled cancel still tells the client and keeps the registry row.
     if (await guardHandoff(this.env, st.phone)) {
-      await this.opSend(
-        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
-          'UniverLab ·',
-          'UniverLab [' + code + '] ·'
-        ),
-        st.lang
+      await this.note(
+        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }),
+        'CITA',
+        'normal'
       );
     }
     const text = renderBooking(CANCELLED[st.lang], {
@@ -1214,19 +1271,25 @@ export class Conversation extends DurableObject<Env> {
       return;
     }
     // While taken, the agent stays silent and the client's messages are
-    // relayed to the operator with the short code.
+    // relayed to the operator under the conversation's name.
     const takenRaw = this.state('taken');
     if (takenRaw) {
-      const code = this.takenCode();
-      const relay = (
-        'UniverLab [' + code + '] · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
-      ).slice(0, 900);
+      const name = this.takenName();
+      const relay = ('[' + name + '] ' + (m.text ?? '[' + m.type + ']')).slice(0, 900);
       try {
         await sendText(this.env, operator, relay);
       } catch {
         /* ignored */
       }
-      await this.armNext(Date.now());
+      // Either direction restarts the idle clock, on both sides.
+      const at = Date.now();
+      try {
+        this.state('taken', JSON.stringify({ name, at }));
+      } catch {
+        /* a corrupt taken flag is left alone */
+      }
+      await this.passAlive(name, at);
+      await this.armNext(at);
       return;
     }
     // A voice note that could not be transcribed goes to a person, like
@@ -1343,8 +1406,9 @@ export class Conversation extends DurableObject<Env> {
       const raw = this.state('taken');
       if (raw) {
         const taken = JSON.parse(raw) as Partial<{ at: number }>;
-        if (typeof taken.at === 'number' && Number.isFinite(taken.at) && taken.at + TAKEN_MS > now) {
-          deadlines.push(taken.at + TAKEN_MS);
+        const idle = guardConfig(this.env).passthroughIdleMs;
+        if (typeof taken.at === 'number' && Number.isFinite(taken.at) && taken.at + idle > now) {
+          deadlines.push(taken.at + idle);
         }
       }
     } catch {
@@ -1383,12 +1447,10 @@ export class Conversation extends DurableObject<Env> {
     // While taken the agent stays silent: messages already queued in the
     // burst before tomar are relayed to the operator, never answered.
     if (this.state('taken')) {
-      const code = this.takenCode();
+      const taken = this.takenName();
       const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
       for (const r of rows) {
-        const relay = (
-          'UniverLab [' + code + '] · ' + (name ? name + ' ' : '') + '+' + from + ': ' + (r.text ?? '[' + r.type + ']')
-        ).slice(0, 900);
+        const relay = ('[' + taken + '] ' + (r.text ?? '[' + r.type + ']')).slice(0, 900);
         try {
           await sendText(this.env, operator, relay);
         } catch {
@@ -1736,10 +1798,10 @@ export class Conversation extends DurableObject<Env> {
           this.env,
           st,
           { id: mediaIn.mediaId, kind: mediaIn.type, mime: mediaIn.mime },
-          this.state('code') ?? ''
+          this.state('name') ?? ''
         );
         if (!fwd) return false;
-        await this.opSend(fwd.operatorText, st.lang);
+        await this.note(fwd.operatorText, 'PAGO', 'normal');
         await sendText(this.env, mediaIn.from, fwd.clientText);
         this.storeAssistant(mediaIn.timestamp, 'a-' + mediaIn.id + '-proof', fwd.clientText);
         await this.armNext(Date.now());
@@ -1754,13 +1816,13 @@ export class Conversation extends DurableObject<Env> {
         { id: mediaIn.mediaId, kind: mediaIn.type, mime: mediaIn.mime },
         proofConfig(this.env),
         cfg.payee ?? '',
-        this.state('code') ?? ''
+        this.state('name') ?? ''
       );
       if (!res) return false;
       st.proof = res.proof;
       this.state('booking', JSON.stringify(st));
       this.state('guardProof', JSON.stringify({ hold: holdKey, count: usedHold + 1 }));
-      await this.opSend(res.operatorText, st.lang);
+      await this.note(res.operatorText, 'PAGO', 'normal');
       await sendText(this.env, mediaIn.from, res.clientText);
       this.storeAssistant(mediaIn.timestamp, 'a-' + mediaIn.id + '-proof', res.clientText);
       await this.armNext(Date.now());
@@ -1795,35 +1857,28 @@ export class Conversation extends DurableObject<Env> {
   ): Promise<void> {
     this.state('handoff', '1');
     this.state('capture', null);
-    const code = await register(this.env, {
+    const registered = await register(this.env, {
       phone: m.from,
       name: m.name ?? '',
       lang,
       kind: 'handoff',
       service: reason,
     });
-    this.state('code', code);
-    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    this.state('name', registered);
+    const tag = REASON_TAG[reason] ?? 'PERSONA';
+    const priority = priorityOf(reason);
     const note = formatReasonNote({
-      code,
       name: cleanName(m.name ?? ''),
       phone: m.from,
       lang,
-      tag: REASON_TAG[reason] ?? 'PERSONA',
-      priority: priorityOf(reason),
+      tag,
+      priority,
       opening,
       answers,
     });
-    if (priorityOf(reason) === 'high') {
-      // High-priority notes are never dropped by the operator-notice limits:
-      // they go straight to the operator instead of the capped queue.
-      try {
-        await sendText(this.env, operator, note);
-      } catch {
-        /* the client closing below still runs */
-      }
-    } else if (await guardHandoff(this.env, m.from)) {
-      await this.opSend(note, lang);
+    // High-priority notes skip the per-client throttle: they always go out.
+    if (priority === 'high' || (await guardHandoff(this.env, m.from))) {
+      await this.note(note, tag, priority);
     }
     const text = reasonClosing(reason, lang);
     await sendText(this.env, m.from, text);
@@ -1876,21 +1931,20 @@ export class Conversation extends DurableObject<Env> {
   private async notify(m: Inbound): Promise<void> {
     this.state('handoff', '1');
     const lang = detectLang(m.text ?? '');
-    const code = await register(this.env, {
+    const registered = await register(this.env, {
       phone: m.from,
       name: m.name ?? '',
       lang,
       kind: 'handoff',
       service: '',
     });
-    this.state('code', code);
+    this.state('name', registered);
     // The operator gets at most one handoff notice per client every 10
     // minutes: a later notice inside that window is dropped here.
     if (!(await guardHandoff(this.env, m.from))) return;
-    const text = (
-      'UniverLab [' + code + '] · ' + (m.name ? m.name + ' ' : '') + '+' + m.from + ': ' + (m.text ?? '[' + m.type + ']')
-    ).slice(0, 900);
-    await this.opSend(text, lang);
+    const who = (m.name ? m.name + ' ' : '') + '+' + m.from;
+    const text = (who + ': ' + (m.text ?? '[' + m.type + ']')).slice(0, 900);
+    await this.note(text, 'MENSAJE', 'normal');
   }
 }
 

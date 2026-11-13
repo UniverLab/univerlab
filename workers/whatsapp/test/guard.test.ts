@@ -28,6 +28,7 @@ test('defaults bound one number and all numbers together', () => {
     modelsPerDay: 1500,
     handoffMs: 10 * 60 * 1000,
     opMsgsPerHour: 30,
+    passthroughIdleMs: 15 * 60 * 1000,
   });
 });
 
@@ -42,6 +43,8 @@ test('guardConfig parses the deploy JSON and falls back per field', () => {
   expect(cfg.modelsPerDay).toBe(10);
   expect(cfg.burstChars).toBe(2000);
   expect(cfg.burstsPerDay).toBe(40);
+  expect(cfg.passthroughIdleMs).toBe(15 * 60 * 1000);
+  expect(guardConfig({ GUARD_CONFIG: JSON.stringify({ passthroughIdleMs: 60000 }) }).passthroughIdleMs).toBe(60000);
 });
 
 test('capBurst and capTurn cut model input and pass short text through', () => {

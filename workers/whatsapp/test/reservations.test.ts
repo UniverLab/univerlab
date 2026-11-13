@@ -17,13 +17,13 @@ jest.mock('../src/meta', () => ({
 }));
 
 jest.mock('../src/registry', () => ({
-  register: jest.fn(async () => 'zz99'),
+  register: jest.fn(async () => 'ana-g'),
   release: jest.fn(async () => {}),
-  shortCode: jest.fn(() => '0000'),
+  postNote: jest.fn(async () => {}),
 }));
 
 import { sendText } from '../src/meta';
-import { register } from '../src/registry';
+import { register, postNote } from '../src/registry';
 
 const ENV = { OPERATOR_PHONE: '+57 300 999 8888' };
 
@@ -45,15 +45,18 @@ test('a refusal uses the fixed wording, registers and briefs the operator', asyn
     brief: ['goal x'],
     reason: 'hold-cap',
   });
-  expect(code).toBe('zz99');
+  expect(code).toBe('ana-g');
   expect(sendText).toHaveBeenCalledWith(ENV, '573001112222', LIMIT_TEXT['hold-cap'].es);
   expect(register).toHaveBeenCalledWith(
     ENV,
     expect.objectContaining({ phone: '573001112222', kind: 'handoff', service: 'consultation' })
   );
-  const operatorNote = (sendText as jest.Mock).mock.calls.find((call) => call[1] === '573009998888')?.[2] as string;
-  expect(operatorNote).toContain('hold-cap');
-  expect(operatorNote).toContain('zz99');
+  expect(postNote).toHaveBeenCalledWith(
+    ENV,
+    expect.objectContaining({ name: 'ana-g', tag: 'CITA', priority: 'normal' })
+  );
+  const noteText = (postNote as jest.Mock).mock.calls[0][1].text as string;
+  expect(noteText).toContain('hold-cap');
 });
 
 test('the refusal never calls the text model', async () => {
@@ -91,14 +94,13 @@ test('a handoff-throttled refusal still tells the client but skips the operator'
     brief: ['goal x'],
     reason: 'hold-cap',
   });
-  expect(code).toBe('zz99');
+  expect(code).toBe('ana-g');
   expect(sendText).toHaveBeenCalledWith(g, '573001112222', LIMIT_TEXT['hold-cap'].es);
   expect(register).toHaveBeenCalled();
-  const opCalls = (sendText as jest.Mock).mock.calls.filter((c) => c[1] === '573009998888');
-  expect(opCalls).toHaveLength(0);
+  expect(postNote).not.toHaveBeenCalled();
 });
 
-test('an hourly-capped refusal drops the operator brief, queueing once', async () => {
+test('a refusal posts its note; the Operator applies the hourly cap', async () => {
   const g = guardEnv((body) => {
     if (body.op === 'handoff') return { ok: true };
     if (body.op === 'opmsg') return { send: false, firstOver: true, waiting: 3 };
@@ -112,9 +114,8 @@ test('an hourly-capped refusal drops the operator brief, queueing once', async (
     brief: ['goal x'],
     reason: 'day-cap',
   });
-  const opCalls = (sendText as jest.Mock).mock.calls.filter((c) => c[1] === '573009998888');
-  expect(opCalls).toHaveLength(1);
-  expect(String(opCalls[0][2])).toContain('3');
+  expect(postNote).toHaveBeenCalledTimes(1);
+  expect(postNote).toHaveBeenCalledWith(g, expect.objectContaining({ name: 'ana-g', tag: 'CITA' }));
 });
 
 test('seeding rebuilds the chat state from the active row', () => {

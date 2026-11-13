@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import type { Inbound } from '../src/meta';
-import { HELP, parseCommand, registryCall, shortCode } from '../src/registry';
+import { HELP } from '../src/commands';
 
 jest.mock(
   'cloudflare:workers',
@@ -17,22 +17,15 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock('../src/meta', () => ({
-  sendText: jest.fn(async () => true),
-  markRead: jest.fn(async () => true),
-}));
+jest.mock('../src/meta', () => {
+  const actual = jest.requireActual('../src/meta') as Record<string, unknown>;
+  return { ...actual, sendText: jest.fn(async () => true), markRead: jest.fn(async () => true) };
+});
 
 jest.mock('../src/schedule', () => {
   const actual = jest.requireActual('../src/schedule') as Record<string, unknown>;
   return { ...actual, formatSlot: jest.fn((iso: string) => iso) };
 });
-
-jest.mock('../src/google', () => ({
-  accessToken: jest.fn(),
-  deleteEvent: jest.fn(),
-  getEvent: jest.fn(),
-  patchEvent: jest.fn(),
-}));
 
 import { sendText, markRead } from '../src/meta';
 import { Operator } from '../src/operator';
@@ -40,300 +33,24 @@ import { Operator } from '../src/operator';
 const OPERATOR_NUMBER = '+57 300 999 8888';
 const OPERATOR = '573009998888';
 const CLIENT = '573001112222';
+const T0 = 1767225600000;
 
 interface Row {
-  code: string;
-  phone: string;
   name: string;
+  phone: string;
   lang: string;
   kind: string;
   service: string;
   start: string | null;
   event_id: string | null;
   created_at: number;
+  tag: string | null;
+  priority: string | null;
 }
 
 function makeCtx() {
-  const state = new Map<string, string>();
-  const rows: Row[] = [];
-  const sql = {
-    exec: jest.fn((query: string, ...params: unknown[]) => {
-      if (query.startsWith('SELECT') && query.includes('WHERE code = ?')) {
-        return { toArray: () => rows.filter((r) => r.code === params[0]) };
-      }
-      if (query.startsWith('SELECT') && query.includes('FROM registry')) {
-        return { toArray: () => [...rows].sort((a, b) => a.created_at - b.created_at) };
-      }
-      if (query.startsWith('DELETE FROM registry WHERE phone = ?')) {
-        for (let i = rows.length - 1; i >= 0; i--) {
-          if (rows[i].phone === params[0]) rows.splice(i, 1);
-        }
-        return { toArray: () => [] };
-      }
-      if (query.startsWith('DELETE FROM registry WHERE code = ?')) {
-        for (let i = rows.length - 1; i >= 0; i--) {
-          if (rows[i].code === params[0]) rows.splice(i, 1);
-        }
-        return { toArray: () => [] };
-      }
-      if (query.startsWith('INSERT INTO registry')) {
-        const [code, phone, name, lang, kind, service, start, event_id, created_at] = params as Array<
-          string | number | null
-        >;
-        const existing = rows.findIndex((r) => r.code === code);
-        const row: Row = {
-          code: String(code),
-          phone: String(phone),
-          name: String(name),
-          lang: String(lang),
-          kind: String(kind),
-          service: String(service),
-          start: (start as string | null) ?? null,
-          event_id: (event_id as string | null) ?? null,
-          created_at: Number(created_at),
-        };
-        if (existing >= 0) rows[existing] = row;
-        else rows.push(row);
-        return { toArray: () => [] };
-      }
-      return { toArray: () => [] };
-    }),
-  };
-  const storage = { sql, setAlarm: jest.fn(async () => {}), deleteAlarm: jest.fn(async () => {}) };
-  const ctx = {
-    storage,
-    blockConcurrencyWhile: (fn: () => unknown) => {
-      fn();
-    },
-  };
-  return { ctx, rows, state };
-}
-
-function controlFetch(result: unknown) {
-  return jest.fn(async () => new Response(JSON.stringify(result), { status: 200 }));
-}
-
-function makeEnv(fetchMock?: jest.Mock) {
-  return {
-    OPERATOR_PHONE: OPERATOR_NUMBER,
-    AI: {},
-    WA_ACCESS_TOKEN: 'token',
-    WA_PHONE_NUMBER_ID: 'phone-id',
-    CONVERSATION: {
-      idFromName: (name: string) => name,
-      get: jest.fn(() => ({ fetch: fetchMock ?? controlFetch({ ok: true }) })),
-    },
-  };
-}
-
-function opMsg(overrides: Partial<Inbound> = {}): Inbound {
-  return { id: 'wamid.op1', from: OPERATOR, timestamp: 1767225600, type: 'text', text: 'ayuda', ...overrides };
-}
-
-async function seedRow(
-  op: Operator,
-  overrides: Partial<{ phone: string; name: string; service: string; start: string }> = {}
-) {
-  const phone = overrides.phone ?? CLIENT;
-  const res = await op.fetch(
-    new Request('https://registry/call', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'register',
-        phone,
-        name: overrides.name ?? 'Ana',
-        lang: 'es',
-        kind: 'handoff',
-        service: overrides.service ?? 'Consultoría',
-        ...(overrides.start ? { start: overrides.start } : {}),
-      }),
-    })
-  );
-  return ((await res.json()) as { code: string }).code;
-}
-
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
-test('shortCode is four base-36 chars and ignores formatting', () => {
-  expect(shortCode(CLIENT)).toMatch(/^[0-9a-z]{4}$/);
-  expect(shortCode('+57 300 111 2222')).toBe(shortCode(CLIENT));
-  expect(shortCode(CLIENT)).toBe(shortCode(CLIENT));
-});
-
-test('parseCommand accepts the Spanish and English words', () => {
-  expect(parseCommand('ayuda')).toEqual({ cmd: 'ayuda' });
-  expect(parseCommand('HELP')).toEqual({ cmd: 'ayuda' });
-  expect(parseCommand('pendientes')).toEqual({ cmd: 'pendientes' });
-  expect(parseCommand('pending')).toEqual({ cmd: 'pendientes' });
-  expect(parseCommand('responder ab12 hola Ana')).toEqual({ cmd: 'responder', code: 'ab12', text: 'hola Ana' });
-  expect(parseCommand('reply ab12 hi Ana')).toEqual({ cmd: 'responder', code: 'ab12', text: 'hi Ana' });
-  expect(parseCommand('tomar ab12')).toEqual({ cmd: 'tomar', code: 'ab12' });
-  expect(parseCommand('take ab12')).toEqual({ cmd: 'tomar', code: 'ab12' });
-  expect(parseCommand('soltar ab12')).toEqual({ cmd: 'soltar', code: 'ab12' });
-  expect(parseCommand('release ab12')).toEqual({ cmd: 'soltar', code: 'ab12' });
-  expect(parseCommand('confirmar ab12')).toEqual({ cmd: 'confirmar', code: 'ab12' });
-  expect(parseCommand('confirm ab12')).toEqual({ cmd: 'confirmar', code: 'ab12' });
-  expect(parseCommand('cancelar ab12')).toEqual({ cmd: 'cancelar', code: 'ab12' });
-  expect(parseCommand('cancel ab12')).toEqual({ cmd: 'cancelar', code: 'ab12' });
-});
-
-test('parseCommand rejects unknown or malformed commands', () => {
-  expect(parseCommand('hola')).toBeNull();
-  expect(parseCommand('')).toBeNull();
-  expect(parseCommand('responder')).toBeNull();
-  expect(parseCommand('responder ab12')).toBeNull();
-  expect(parseCommand('responder toolong hola')).toBeNull();
-  expect(parseCommand('tomar')).toBeNull();
-  expect(parseCommand('tomar ab12 extra')).toBeNull();
-  expect(parseCommand('confirmar')).toBeNull();
-  expect(parseCommand('ayuda extra')).toBeNull();
-});
-
-test('registryCall without a binding resolves an empty code', async () => {
-  await expect(registryCall({} as never, { action: 'release', phone: CLIENT })).resolves.toEqual({ code: '' });
-});
-
-test('messages from any other number never run commands', async () => {
-  const { ctx } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv() as never);
-
-  await op.command(opMsg({ from: CLIENT, text: 'cancelar ab12' }));
-
-  expect(markRead).not.toHaveBeenCalled();
-  expect(sendText).not.toHaveBeenCalled();
-});
-
-test('ayuda and unknown text get the ayuda text back', async () => {
-  const { ctx } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv() as never);
-
-  await op.command(opMsg({ id: 'wamid.op2', text: 'ayuda' }));
-  await op.command(opMsg({ id: 'wamid.op3', text: 'bailar ab12' }));
-
-  expect(sendText).toHaveBeenCalledTimes(2);
-  expect(sendText).toHaveBeenNthCalledWith(1, expect.anything(), OPERATOR, HELP);
-  expect(sendText).toHaveBeenNthCalledWith(2, expect.anything(), OPERATOR, HELP);
-});
-
-test('pendientes is empty without handoffs', async () => {
-  const { ctx } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv() as never);
-
-  await op.command(opMsg({ text: 'pendientes' }));
-
-  expect(sendText).toHaveBeenCalledWith(expect.anything(), OPERATOR, 'Sin pendientes.');
-});
-
-test('pendientes lists every open handoff with its code', async () => {
-  const { ctx } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv() as never);
-  const code = await seedRow(op, { name: 'Ana' });
-  await seedRow(op, { phone: '573003334444', name: 'Beto', service: '' });
-
-  await op.command(opMsg({ text: 'pendientes' }));
-
-  const body = (sendText as jest.Mock).mock.calls[0][2] as string;
-  expect(body).toContain(code);
-  expect(body).toContain('Ana');
-  expect(body).toContain('+' + CLIENT);
-  expect(body).toContain('Beto');
-  expect(body).toContain('+573003334444');
-});
-
-test('responder sends through the lab number and stores an operator message', async () => {
-  const { ctx } = makeCtx();
-  const fetchMock = controlFetch({ ok: true });
-  const env = makeEnv(fetchMock);
-  const op = new Operator(ctx as never, env as never);
-  const code = await seedRow(op);
-
-  await op.command(opMsg({ id: 'wamid.op4', text: 'responder ' + code + ' hola Ana, te confirmo' }));
-
-  expect(sendText).toHaveBeenCalledWith(expect.anything(), CLIENT, 'hola Ana, te confirmo');
-  const req = (fetchMock.mock.calls[0] as [Request])[0];
-  expect(await req.json()).toEqual({ action: 'operatorMessage', text: 'hola Ana, te confirmo' });
-  expect(sendText).toHaveBeenLastCalledWith(expect.anything(), OPERATOR, 'Enviado a ' + code + '.');
-});
-
-test('responder with an unknown code gets the ayuda text back', async () => {
-  const { ctx } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv() as never);
-
-  await op.command(opMsg({ text: 'responder zzzz hola' }));
-
-  expect(sendText).toHaveBeenCalledWith(expect.anything(), OPERATOR, HELP);
-});
-
-test('tomar pauses the agent and soltar resumes it', async () => {
-  const { ctx } = makeCtx();
-  const fetchMock = controlFetch({ ok: true });
-  const op = new Operator(ctx as never, makeEnv(fetchMock) as never);
-  const code = await seedRow(op);
-
-  await op.command(opMsg({ id: 'wamid.op5', text: 'tomar ' + code }));
-  const takeReq = (fetchMock.mock.calls[0] as [Request])[0];
-  expect(await takeReq.json()).toEqual({ action: 'take', code });
-  expect(sendText).toHaveBeenLastCalledWith(
-    expect.anything(),
-    OPERATOR,
-    expect.stringContaining('Tomado ' + code)
-  );
-
-  await op.command(opMsg({ id: 'wamid.op6', text: 'soltar ' + code }));
-  const releaseReq = (fetchMock.mock.calls[1] as [Request])[0];
-  expect(await releaseReq.json()).toEqual({ action: 'releaseTake' });
-  expect(sendText).toHaveBeenLastCalledWith(expect.anything(), OPERATOR, expect.stringContaining('Soltado'));
-});
-
-test('confirmar confirms and drops the row', async () => {
-  const { ctx, rows } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv(controlFetch({ ok: true })) as never);
-  const code = await seedRow(op);
-  expect(rows).toHaveLength(1);
-
-  await op.command(opMsg({ id: 'wamid.op7', text: 'confirmar ' + code }));
-
-  expect(rows).toHaveLength(0);
-  expect(sendText).toHaveBeenLastCalledWith(expect.anything(), OPERATOR, 'Confirmado ' + code + '.');
-});
-
-test('a failed confirmar keeps the row and says so', async () => {
-  const { ctx, rows } = makeCtx();
-  const op = new Operator(ctx as never, makeEnv(controlFetch({ ok: false })) as never);
-  const code = await seedRow(op);
-
-  await op.command(opMsg({ id: 'wamid.op8', text: 'confirmar ' + code }));
-
-  expect(rows).toHaveLength(1);
-  expect(sendText).toHaveBeenLastCalledWith(
-    expect.anything(),
-    OPERATOR,
-    'No pude confirmar ' + code + '. Intenta de nuevo en un momento.'
-  );
-});
-
-test('cancelar cancels and drops the row', async () => {
-  const { ctx, rows } = makeCtx();
-  const fetchMock = controlFetch({ ok: true });
-  const op = new Operator(ctx as never, makeEnv(fetchMock) as never);
-  const code = await seedRow(op);
-
-  await op.command(opMsg({ id: 'wamid.op9', text: 'cancelar ' + code }));
-
-  const req = (fetchMock.mock.calls[0] as [Request])[0];
-  expect(await req.json()).toEqual({ action: 'operatorCancel' });
-  expect(rows).toHaveLength(0);
-  expect(sendText).toHaveBeenLastCalledWith(expect.anything(), OPERATOR, 'Cancelado ' + code + '.');
-});
-
-afterEach(() => {
-  jest.restoreAllMocks();
-});
-
-function makeGuardCtx() {
   const guard = new Map<string, string>();
+  const rows: Row[] = [];
   const sql = {
     exec: jest.fn((query: string, ...params: unknown[]) => {
       if (query.startsWith('SELECT value FROM guard WHERE key = ?')) {
@@ -344,109 +61,662 @@ function makeGuardCtx() {
         guard.set(String(params[0]), String(params[1]));
         return { toArray: () => [] };
       }
+      if (query.startsWith('DELETE FROM guard WHERE key = ?')) {
+        guard.delete(String(params[0]));
+        return { toArray: () => [] };
+      }
+      if (query.startsWith('SELECT name FROM conversations WHERE phone = ?')) {
+        return { toArray: () => rows.filter((r) => r.phone === params[0]).map((r) => ({ name: r.name })) };
+      }
+      if (query.startsWith('SELECT name, phone, lang, kind, service, start, event_id, created_at, tag, priority FROM conversations WHERE name = ?')) {
+        return { toArray: () => rows.filter((r) => r.name === params[0]) };
+      }
+      if (query === 'SELECT name FROM conversations') {
+        return { toArray: () => rows.map((r) => ({ name: r.name })) };
+      }
+      if (query.startsWith('SELECT name, phone, lang, kind, service, start, event_id, created_at, tag, priority FROM conversations ORDER BY')) {
+        return { toArray: () => [...rows].sort((a, b) => a.created_at - b.created_at) };
+      }
+      if (query.startsWith('INSERT INTO conversations')) {
+        const [phone, name, lang, kind, service, start, event_id, created_at, tag, priority] = params as Array<
+          string | number | null
+        >;
+        rows.push({
+          phone: String(phone),
+          name: String(name),
+          lang: String(lang),
+          kind: String(kind),
+          service: String(service),
+          start: (start as string | null) ?? null,
+          event_id: (event_id as string | null) ?? null,
+          created_at: Number(created_at),
+          tag: (tag as string | null) ?? null,
+          priority: (priority as string | null) ?? null,
+        });
+        return { toArray: () => [] };
+      }
+      if (query.startsWith('UPDATE conversations SET tag = ?')) {
+        const row = rows.find((r) => r.name === params[2]);
+        if (row) {
+          row.tag = String(params[0]);
+          row.priority = String(params[1]);
+        }
+        return { toArray: () => [] };
+      }
+      if (query.startsWith('UPDATE conversations SET lang = ?')) {
+        const row = rows.find((r) => r.phone === params[5]);
+        if (row) {
+          row.lang = String(params[0]);
+          row.kind = String(params[1]);
+          row.service = String(params[2]);
+          row.start = (params[3] as string | null) ?? null;
+          row.event_id = (params[4] as string | null) ?? null;
+        }
+        return { toArray: () => [] };
+      }
+      if (query.startsWith('DELETE FROM conversations WHERE phone = ?')) {
+        for (let i = rows.length - 1; i >= 0; i--) {
+          if (rows[i].phone === params[0]) rows.splice(i, 1);
+        }
+        return { toArray: () => [] };
+      }
+      if (query.startsWith('DELETE FROM conversations WHERE name = ?')) {
+        for (let i = rows.length - 1; i >= 0; i--) {
+          if (rows[i].name === params[0]) rows.splice(i, 1);
+        }
+        return { toArray: () => [] };
+      }
       return { toArray: () => [] };
     }),
   };
-  const storage = { sql, setAlarm: jest.fn(async () => {}), deleteAlarm: jest.fn(async () => {}) };
+  const storage = {
+    sql,
+    setAlarm: jest.fn(async () => {}),
+    deleteAlarm: jest.fn(async () => {}),
+  };
   const ctx = {
     storage,
     blockConcurrencyWhile: (fn: () => unknown) => {
       fn();
     },
   };
-  return { ctx, guard };
+  return { ctx, rows, guard, storage };
 }
 
-function guardEnv(guardConfig: Record<string, number>) {
+interface ConvOpts {
+  confirmOk?: boolean;
+  lastAt?: number | null;
+  phase?: string | null;
+  turns?: Array<{ role: string; text: string }>;
+  last?: string;
+}
+
+function makeEnv(convFetch?: jest.Mock, aiRun?: jest.Mock, opts: ConvOpts = {}) {
+  const fetchMock =
+    convFetch ??
+    jest.fn(async (req: Request) => {
+      const body = (await req.clone().json()) as { action?: string };
+      if (body.action === 'summary') {
+        return new Response(JSON.stringify({ lastAt: opts.lastAt ?? null, phase: opts.phase ?? null }), { status: 200 });
+      }
+      if (body.action === 'recapData') {
+        return new Response(
+          JSON.stringify({
+            turns: opts.turns ?? [
+              { role: 'user', text: 'quiero una cita' },
+              { role: 'assistant', text: 'claro' },
+            ],
+            last: opts.last ?? 'quiero una cita ya',
+          }),
+          { status: 200 }
+        );
+      }
+      if (body.action === 'operatorConfirm' || body.action === 'operatorCancel') {
+        return new Response(JSON.stringify({ ok: opts.confirmOk ?? true }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
   return {
     OPERATOR_PHONE: OPERATOR_NUMBER,
-    AI: {},
+    AI: { run: aiRun ?? jest.fn(async () => ({ response: '{"recap": "El cliente quiere una cita."}' })) },
     WA_ACCESS_TOKEN: 'token',
     WA_PHONE_NUMBER_ID: 'phone-id',
-    GUARD_CONFIG: JSON.stringify(guardConfig),
+    CONVERSATION: {
+      idFromName: (name: string) => name,
+      get: jest.fn(() => ({ fetch: fetchMock })),
+    },
+    fetchMock,
   };
 }
 
-async function guardCall(op: Operator, body: Record<string, unknown>) {
+function opMsg(overrides: Partial<Inbound> = {}): Inbound {
+  return { id: 'wamid.op1', from: OPERATOR, timestamp: 1767225600, type: 'text', text: '/help', ...overrides };
+}
+
+async function register(
+  op: Operator,
+  overrides: Partial<{ phone: string; name: string; service: string; email: string }> = {}
+): Promise<string> {
   const res = await op.fetch(
-    new Request('https://guard/call', { method: 'POST', body: JSON.stringify(body) })
+    new Request('https://registry/call', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'register',
+        phone: overrides.phone ?? CLIENT,
+        name: overrides.name ?? 'Ana',
+        lang: 'es',
+        kind: 'handoff',
+        service: overrides.service ?? 'Consultoría',
+        ...(overrides.email ? { email: overrides.email } : {}),
+      }),
+    })
   );
-  return (await res.json()) as Record<string, unknown>;
+  return ((await res.json()) as { name: string }).name;
 }
 
-function dailyNotices(): unknown[][] {
-  return (sendText as jest.Mock).mock.calls.filter(
-    (call) => call[1] === OPERATOR && String(call[2]).includes('límite diario')
+async function postNote(
+  op: Operator,
+  overrides: Partial<{ name: string; text: string; tag: string; priority: string }> = {}
+): Promise<void> {
+  await op.fetch(
+    new Request('https://registry/call', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'note',
+        name: overrides.name ?? 'ana',
+        text: overrides.text ?? 'hola',
+        tag: overrides.tag ?? 'MENSAJE',
+        priority: overrides.priority ?? 'normal',
+      }),
+    })
   );
 }
 
-test('the Worker-wide model counter admits, then denies, and tells the operator once', async () => {
-  const { ctx } = makeGuardCtx();
-  const op = new Operator(ctx as never, guardEnv({ modelsPerDay: 2 }) as never);
-  const now = Date.UTC(2026, 10, 9, 17, 0, 0);
-  jest.spyOn(Date, 'now').mockReturnValue(now);
+function toOperator(): string[] {
+  return (sendText as jest.Mock).mock.calls.filter((call) => call[1] === OPERATOR).map((call) => call[2] as string);
+}
 
-  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
-  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
-  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
-  expect(dailyNotices()).toHaveLength(1);
-  // A later denial the same day is silent: the operator heard it once.
-  expect(await guardCall(op, { action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
-  expect(dailyNotices()).toHaveLength(1);
+function toClient(phone: string): string[] {
+  return (sendText as jest.Mock).mock.calls.filter((call) => call[1] === phone).map((call) => call[2] as string);
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(Date, 'now').mockReturnValue(T0);
 });
 
-test('the model counter resets on the next Bogota day', async () => {
-  const { ctx } = makeGuardCtx();
-  const op = new Operator(ctx as never, guardEnv({ modelsPerDay: 1 }) as never);
-  const day1 = Date.UTC(2026, 10, 9, 17, 0, 0);
-  const day2 = day1 + 24 * 3600 * 1000;
-  jest.spyOn(Date, 'now').mockReturnValue(day1);
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
-  expect(await guardCall(op, { action: 'guard', op: 'model', now: day1, lang: 'es' })).toEqual({ ok: true });
-  expect(await guardCall(op, { action: 'guard', op: 'model', now: day1, lang: 'es' })).toEqual({ ok: false });
-  expect(dailyNotices()).toHaveLength(1);
-  expect(await guardCall(op, { action: 'guard', op: 'model', now: day2, lang: 'en' })).toEqual({ ok: true });
+test('short names come from the profile name, with -2 and -3 on collision', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  expect(await register(op, { phone: '573001112222', name: 'María G' })).toBe('maria-g');
+  expect(await register(op, { phone: '573003334444', name: 'María G.' })).toBe('maria-g-2');
+  expect(await register(op, { phone: '573005556666', name: '¡MARÍA G!' })).toBe('maria-g-3');
+});
+
+test('long names stay within 16 characters even with a suffix', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  const first = await register(op, { phone: '573001112222', name: 'Alexandra Del Carmen Rodríguez' });
+  const second = await register(op, { phone: '573003334444', name: 'Alexandra Del Carmen Rosales' });
+  expect(first).toHaveLength(16);
+  expect(second.length).toBeLessThanOrEqual(16);
+  expect(first).not.toBe(second);
+  expect(second).toBe('alexandra-del-2');
+  // The cut never leaves a double hyphen before the suffix.
+  expect(second).not.toContain('--');
+});
+
+test('the same phone keeps its name and the name is freed on erase', async () => {
+  const { ctx, rows } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  expect(await register(op, { name: 'María' })).toBe('maria');
+  expect(await register(op, { name: 'María Gómez' })).toBe('maria');
+  expect(rows).toHaveLength(1);
+
+  await op.fetch(
+    new Request('https://registry/call', { method: 'POST', body: JSON.stringify({ action: 'release', phone: CLIENT }) })
+  );
+  expect(rows).toHaveLength(0);
+  expect(await register(op, { phone: '573003334444', name: 'María!' })).toBe('maria');
+});
+
+test('an empty name falls back to the email local part, then cliente', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  expect(await register(op, { phone: '573001112222', name: '', email: 'juan@example.com' })).toBe('juan');
+  expect(await register(op, { phone: '573003334444', name: '' })).toBe('cliente');
+});
+
+test('messages from any other number never run commands', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ from: CLIENT, text: '/cancel ana' }));
+
+  expect(markRead).not.toHaveBeenCalled();
+  expect(sendText).not.toHaveBeenCalled();
+});
+
+test('/help gets the help text and malformed commands say what was wrong', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ id: 'wamid.op2', text: '/help' }));
+  await op.command(opMsg({ id: 'wamid.op3', text: '/take' }));
+  await op.command(opMsg({ id: 'wamid.op4', text: '/response ana' }));
+  await op.command(opMsg({ id: 'wamid.op5', text: '/bailar' }));
+  await op.command(opMsg({ id: 'wamid.op6', text: '' }));
+
+  const bodies = toOperator();
+  expect(bodies[0]).toBe(HELP);
+  for (const body of bodies.slice(1, 4)) expect(body).toBe('No reconozco ese comando. · /help');
+  // Plain text with no passthrough open gets the help text.
+  expect(bodies[4]).toBe(HELP);
+});
+
+test('the old Spanish words get the help text, never a relay', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op);
+
+  await op.command(opMsg({ id: 'wamid.op7', text: 'ayuda' }));
+  await op.command(opMsg({ id: 'wamid.op8', text: 'tomar ana' }));
+  await op.command(opMsg({ id: 'wamid.op9', text: 'responder ana hola' }));
+
+  expect(toOperator()).toEqual([HELP, HELP, HELP]);
+  expect(toClient(CLIENT)).toEqual([]);
+});
+
+test('plain text with no passthrough open gets the help text', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+  await register(op);
+
+  await op.command(opMsg({ text: 'hola, ¿sigues ahí?' }));
+
+  expect(toOperator()).toEqual([HELP]);
+});
+
+test('a command naming an unknown conversation errors with /help', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ text: '/take nadie' }));
+
+  expect(toOperator()).toEqual(['No hay conversación abierta con [nadie]. · /help']);
+});
+
+test('a malformed command during a passthrough is answered, never relayed', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  await op.command(opMsg({ text: '/take ana' }));
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/bailar' }));
+  await op.command(opMsg({ text: '/take' }));
+
+  expect(toOperator()).toEqual([
+    'No reconozco ese comando. · /help',
+    'No reconozco ese comando. · /help',
+  ]);
+  // A command-looking message never reaches the client.
+  expect(toClient(CLIENT)).toEqual([]);
+});
+
+test('/recap is empty without conversations', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ text: '/recap' }));
+
+  expect(toOperator()).toEqual(['Sin conversaciones abiertas.']);
+});
+
+test('/recap lists open conversations highest priority first, with minutes', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(T0);
+  await register(op, { phone: '573001112222', name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+  await register(op, { phone: '573005556666', name: 'Luz' });
+  await postNote(op, { name: 'ana', text: 'a', tag: 'CITA', priority: 'normal' });
+  await postNote(op, { name: 'beto', text: 'b', tag: 'SOPORTE', priority: 'high' });
+  await postNote(op, { name: 'luz', text: 'c', tag: 'COLABORACIÓN', priority: 'low' });
+  (env.fetchMock as jest.Mock).mockImplementation(async (req: Request) => {
+    const body = (await req.json()) as { action?: string };
+    if (body.action === 'summary') return new Response(JSON.stringify({ lastAt: T0 - 5 * 60000, phase: null }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/recap' }));
+
+  const lines = toOperator()[0].split('\n');
+  expect(lines).toHaveLength(3);
+  expect(lines[0]).toContain('[beto]');
+  expect(lines[0]).toContain('SOPORTE · alta');
+  expect(lines[1]).toContain('[ana]');
+  expect(lines[2]).toContain('[luz]');
+  for (const line of lines) expect(line).toContain('hace 5 min');
+});
+
+test('/recap <name> asks the model and ends with the last client message verbatim', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv(undefined, undefined, { last: 'quiero la consulta del lunes, ¿sí?' });
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/recap ana' }));
+
+  const bodies = toOperator();
+  expect(bodies).toHaveLength(1);
+  expect(bodies[0].length).toBeLessThanOrEqual(800);
+  expect(bodies[0].endsWith('Último mensaje del cliente: «quiero la consulta del lunes, ¿sí?»')).toBe(true);
+  // Nothing is sent to the client.
+  expect(toClient(CLIENT)).toEqual([]);
+  expect(env.AI.run).toHaveBeenCalledTimes(1);
+});
+
+test('/response sends the text once, stores it, and keeps the agent in charge', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op10', text: '/response ana hola Ana, te confirmo' }));
+
+  expect(toClient(CLIENT)).toEqual(['hola Ana, te confirmo']);
+  const req = (env.fetchMock.mock.calls[0] as [Request])[0];
+  expect(await req.json()).toEqual({ action: 'operatorMessage', text: 'hola Ana, te confirmo' });
+  expect(toOperator()).toEqual(['Enviado a [ana].']);
+});
+
+test('/response to an unknown conversation says so', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ text: '/response nadie hola' }));
+
+  expect(toOperator()).toEqual(['No hay conversación abierta con [nadie]. · /help']);
+  expect(toClient(CLIENT)).toEqual([]);
+});
+
+test('/take opens the passthrough and relays both ways', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op11', text: '/take ana' }));
+  const takeReq = (env.fetchMock.mock.calls[0] as [Request])[0];
+  expect(await takeReq.json()).toEqual({ action: 'take', name: 'ana' });
+  expect(toOperator()).toEqual(['Abierto [ana]: lo que escribas (que no sea un comando) va al cliente.']);
+
+  // Plain operator text goes to the client as is, never as a command.
+  (sendText as jest.Mock).mockClear();
+  await op.command(opMsg({ id: 'wamid.op12', text: 'hola Ana, /take no es un comando aquí' }));
+  expect(toClient(CLIENT)).toEqual(['hola Ana, /take no es un comando aquí']);
+  expect(toOperator()).toEqual([]);
+  const relayReq = (env.fetchMock.mock.calls[1] as [Request])[0];
+  expect(await relayReq.json()).toEqual({ action: 'operatorMessage', text: 'hola Ana, /take no es un comando aquí' });
+});
+
+test('a second /take names the open passthrough and must be released first', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+
+  await op.command(opMsg({ text: '/take ana' }));
+  (sendText as jest.Mock).mockClear();
+  await op.command(opMsg({ text: '/take beto' }));
+
+  expect(toOperator()).toEqual(['Ya está abierto [ana]. Usa /release.']);
+});
+
+test('a /take the conversation refuses opens no passthrough', async () => {
+  const convFetch = jest.fn(async () => new Response(JSON.stringify({ ok: false }), { status: 200 }));
+  const { ctx } = makeCtx();
+  const env = makeEnv(convFetch);
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/take ana' }));
+
+  expect(toOperator()).toEqual(['No pude abrir [ana]. Intenta de nuevo en un momento.']);
+  // The pass was never opened, so a note goes out instead of queuing.
+  (sendText as jest.Mock).mockClear();
+  await postNote(op, { name: 'ana', text: 'nota', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual(['[ana] MENSAJE · normal\nnota']);
+});
+
+test('a /release the conversation cannot take keeps the passthrough open', async () => {
+  let failRelease = false;
+  const convFetch = jest.fn(async (req: Request) => {
+    const body = (await req.clone().json()) as { action?: string };
+    if (body.action === 'releaseTake' && failRelease) {
+      return new Response(JSON.stringify({ ok: false }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  });
+  const { ctx } = makeCtx();
+  const env = makeEnv(convFetch);
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+  await op.command(opMsg({ text: '/take ana' }));
+  failRelease = true;
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/release' }));
+
+  expect(toOperator()).toEqual(['No pude liberar [ana]. Intenta de nuevo en un momento.']);
+  // Still open: another take is refused and names it.
+  (sendText as jest.Mock).mockClear();
+  await op.command(opMsg({ text: '/take beto' }));
+  expect(toOperator()).toEqual(['Ya está abierto [ana]. Usa /release.']);
+  // A release that reaches the conversation closes it.
+  failRelease = false;
+  (sendText as jest.Mock).mockClear();
+  await op.command(opMsg({ text: '/release' }));
+  expect(toOperator()[0]).toBe('Liberado [ana]: el agente retoma.');
+});
+
+test('notes queue while a passthrough is open and flush highest priority first', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+  await register(op, { phone: '573005556666', name: 'Luz' });
+  await op.command(opMsg({ text: '/take ana' }));
+  (sendText as jest.Mock).mockClear();
+
+  await postNote(op, { name: 'beto', text: 'primero', tag: 'MENSAJE', priority: 'normal' });
+  await postNote(op, { name: 'luz', text: 'urgente', tag: 'SOPORTE', priority: 'high' });
+  await postNote(op, { name: 'beto', text: 'segundo', tag: 'MENSAJE', priority: 'normal' });
+  expect(toOperator()).toEqual([]);
+
+  await op.command(opMsg({ text: '/release' }));
+  const bodies = toOperator();
+  expect(bodies[0]).toBe('Liberado [ana]: el agente retoma.');
+  expect(bodies.slice(1)).toEqual([
+    '[luz] SOPORTE · alta\nurgente',
+    '[beto] MENSAJE · normal\nprimero',
+    '[beto] MENSAJE · normal\nsegundo',
+  ]);
+});
+
+test('a passthrough with no traffic for 15 minutes releases on its own', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await register(op, { phone: '573003334444', name: 'Beto' });
+  await op.command(opMsg({ text: '/take ana' }));
+  await postNote(op, { name: 'beto', text: 'pendiente', tag: 'MENSAJE', priority: 'normal' });
+  (sendText as jest.Mock).mockClear();
+  jest.spyOn(Date, 'now').mockReturnValue(T0 + 16 * 60 * 1000);
+
+  // Any command trips the idle check first.
+  await op.command(opMsg({ text: '/recap' }));
+
+  const bodies = toOperator();
+  expect(bodies[0]).toBe('[ana] liberada por inactividad');
+  expect(bodies.slice(1).join('\n')).toContain('[beto] MENSAJE · normal\npendiente');
+  const actions = await Promise.all(
+    env.fetchMock.mock.calls.map(async (call) => ((await (call[0] as Request).json()) as { action: string }).action)
+  );
+  expect(actions).toContain('releaseTake');
+});
+
+test('/release with nothing open says so', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ text: '/release' }));
+
+  expect(toOperator()).toEqual(['No hay ningún directo abierto. · /help']);
+});
+
+test('/confirm confirms and releases the name', async () => {
+  const { ctx, rows } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+  await register(op, { name: 'Ana' });
+  expect(rows).toHaveLength(1);
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op13', text: '/confirm ana' }));
+
+  expect(rows).toHaveLength(0);
+  expect(toOperator()).toEqual(['Confirmado [ana].']);
+});
+
+test('a failed /confirm keeps the row and says so', async () => {
+  const { ctx, rows } = makeCtx();
+  const env = makeEnv(undefined, undefined, { confirmOk: false });
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op14', text: '/confirm ana' }));
+
+  expect(rows).toHaveLength(1);
+  expect(toOperator()).toEqual(['No pude confirmar [ana]. Intenta de nuevo en un momento.']);
+});
+
+test('/cancel cancels and releases the name', async () => {
+  const { ctx, rows } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op15', text: '/cancel ana' }));
+
+  const req = (env.fetchMock.mock.calls[0] as [Request])[0];
+  expect(await req.json()).toEqual({ action: 'operatorCancel' });
+  expect(rows).toHaveLength(0);
+  expect(toOperator()).toEqual(['Cancelado [ana].']);
+});
+
+test('the guard denies other phones sends while a passthrough is open', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+  await register(op, { phone: CLIENT, name: 'Ana' });
+  await op.command(opMsg({ text: '/take ana' }));
+
+  const denied = await op.fetch(
+    new Request('https://guard/call', { method: 'POST', body: JSON.stringify({ action: 'guard', op: 'opmsg', phone: '573003334444' }) })
+  );
+  expect(await denied.json()).toMatchObject({ send: false });
+
+  const own = await op.fetch(
+    new Request('https://guard/call', { method: 'POST', body: JSON.stringify({ action: 'guard', op: 'opmsg', phone: CLIENT }) })
+  );
+  expect(await own.json()).toMatchObject({ send: true });
+});
+
+test('the Worker-wide model counter admits, then denies, and tells the operator once', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  (env as Record<string, unknown>).GUARD_CONFIG = JSON.stringify({ modelsPerDay: 2 });
+  const op = new Operator(ctx as never, env as never);
+  const now = Date.UTC(2026, 10, 9, 17, 0, 0);
+  jest.spyOn(Date, 'now').mockReturnValue(now);
+  const call = (body: Record<string, unknown>) =>
+    op.fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify(body) })).then((r) => r.json());
+
+  expect(await call({ action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
+  expect(await call({ action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: true });
+  expect(await call({ action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
+  expect(
+    (sendText as jest.Mock).mock.calls.filter(
+      (c) => c[1] === OPERATOR && String(c[2]).includes('límite diario')
+    )
+  ).toHaveLength(1);
+  expect(await call({ action: 'guard', op: 'model', now, lang: 'es' })).toEqual({ ok: false });
+  expect(
+    (sendText as jest.Mock).mock.calls.filter(
+      (c) => c[1] === OPERATOR && String(c[2]).includes('límite diario')
+    )
+  ).toHaveLength(1);
 });
 
 test('one handoff notice per client every 10 minutes', async () => {
-  const { ctx } = makeGuardCtx();
-  const op = new Operator(ctx as never, guardEnv({}) as never);
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
   const now = Date.UTC(2026, 10, 9, 17, 0, 0);
   const mock = jest.spyOn(Date, 'now').mockReturnValue(now);
+  const call = (body: Record<string, unknown>) =>
+    op.fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify(body) })).then((r) => r.json());
 
-  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: true });
-  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: false });
-  // Another client is unaffected by the first client's window.
-  expect(await guardCall(op, { action: 'guard', op: 'handoff', now, client: '573009990000' })).toEqual({
-    ok: true,
-  });
+  expect(await call({ action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: true });
+  expect(await call({ action: 'guard', op: 'handoff', now, client: CLIENT })).toEqual({ ok: false });
+  expect(await call({ action: 'guard', op: 'handoff', now, client: '573009990000' })).toEqual({ ok: true });
   mock.mockReturnValue(now + 11 * 60 * 1000);
-  expect(
-    await guardCall(op, { action: 'guard', op: 'handoff', now: now + 11 * 60 * 1000, client: CLIENT })
-  ).toEqual({ ok: true });
+  expect(await call({ action: 'guard', op: 'handoff', now: now + 11 * 60 * 1000, client: CLIENT })).toEqual({ ok: true });
 });
 
 test('the operator hourly cap sends one queue count, then drops', async () => {
-  const { ctx } = makeGuardCtx();
-  const op = new Operator(ctx as never, guardEnv({ opMsgsPerHour: 2 }) as never);
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  (env as Record<string, unknown>).GUARD_CONFIG = JSON.stringify({ opMsgsPerHour: 2 });
+  const op = new Operator(ctx as never, env as never);
   const now = Date.UTC(2026, 10, 9, 17, 0, 0);
+  const call = (body: Record<string, unknown>) =>
+    op.fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify(body) })).then((r) => r.json());
 
-  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
-  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
-  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({
-    send: false,
-    firstOver: true,
-    waiting: 1,
-  });
-  expect(await guardCall(op, { action: 'guard', op: 'opmsg', now })).toMatchObject({
-    send: false,
-    firstOver: false,
-  });
+  expect(await call({ action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
+  expect(await call({ action: 'guard', op: 'opmsg', now })).toMatchObject({ send: true });
+  expect(await call({ action: 'guard', op: 'opmsg', now })).toMatchObject({ send: false, firstOver: true, waiting: 1 });
+  expect(await call({ action: 'guard', op: 'opmsg', now })).toMatchObject({ send: false, firstOver: false });
 });
 
 test('an unknown guard op is refused', async () => {
-  const { ctx } = makeGuardCtx();
-  const op = new Operator(ctx as never, guardEnv({}) as never);
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
 
-  expect(await guardCall(op, { action: 'guard', op: 'nope', now: Date.now() })).toEqual({ ok: false });
+  expect(
+    await op
+      .fetch(new Request('https://guard/call', { method: 'POST', body: JSON.stringify({ action: 'guard', op: 'nope' }) }))
+      .then((r) => r.json())
+  ).toEqual({ ok: false });
 });

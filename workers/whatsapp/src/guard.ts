@@ -22,6 +22,8 @@ export interface GuardConfig {
   handoffMs: number;
   /** Agent messages to the operator per Bogota clock hour, all clients. */
   opMsgsPerHour: number;
+  /** A passthrough with no message in either direction closes on its own. */
+  passthroughIdleMs: number;
 }
 
 export const DEFAULT_GUARD_CONFIG: GuardConfig = {
@@ -34,6 +36,7 @@ export const DEFAULT_GUARD_CONFIG: GuardConfig = {
   modelsPerDay: 1500,
   handoffMs: 10 * 60 * 1000,
   opMsgsPerHour: 30,
+  passthroughIdleMs: 15 * 60 * 1000,
 };
 
 function validCount(value: unknown): number | null {
@@ -57,6 +60,7 @@ export function guardConfig(env: { GUARD_CONFIG?: string }): GuardConfig {
       modelsPerDay?: unknown;
       handoffMs?: unknown;
       opMsgsPerHour?: unknown;
+      passthroughIdleMs?: unknown;
     };
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return base;
     for (const key of [
@@ -69,6 +73,7 @@ export function guardConfig(env: { GUARD_CONFIG?: string }): GuardConfig {
       'modelsPerDay',
       'handoffMs',
       'opMsgsPerHour',
+      'passthroughIdleMs',
     ] as const) {
       const v = validCount(parsed[key]);
       if (v !== null) base[key] = v;
@@ -203,9 +208,13 @@ export interface OpMsgGrant {
 }
 
 /** Whether one more agent message may reach the operator this hour. */
-export async function guardOpMsg(env: Env, now?: number): Promise<OpMsgGrant> {
+export async function guardOpMsg(env: Env, phone?: string, now?: number): Promise<OpMsgGrant> {
   const none = { send: true, firstOver: false, waiting: 0 };
-  const res = await guardFetch(env, { action: 'guard', op: 'opmsg', now: now ?? Date.now() });
+  if (typeof phone === 'number') {
+    now = phone;
+    phone = undefined;
+  }
+  const res = await guardFetch(env, { action: 'guard', op: 'opmsg', phone, now: now ?? Date.now() });
   if (!res || typeof res.send !== 'boolean') return none;
   return {
     send: res.send,

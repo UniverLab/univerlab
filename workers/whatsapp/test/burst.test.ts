@@ -16,11 +16,15 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock('../src/meta', () => ({
-  sendText: jest.fn(async () => true),
-  sendMedia: jest.fn(async () => true),
-  markRead: jest.fn(async () => true),
-}));
+jest.mock('../src/meta', () => {
+  const actual = jest.requireActual('../src/meta') as Record<string, unknown>;
+  return {
+    ...actual,
+    sendText: jest.fn(async () => true),
+    sendMedia: jest.fn(async () => true),
+    markRead: jest.fn(async () => true),
+  };
+});
 
 jest.mock('../src/brain', () => ({
   answer: jest.fn(),

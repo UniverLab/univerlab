@@ -77,7 +77,7 @@ export async function forwardUnread(
   env: ProofEnv,
   st: BookingState,
   media: ProofMedia,
-  code: string,
+  name: string,
   fetchFn: typeof fetch = fetch
 ): Promise<UnreadForward | null> {
   try {
@@ -89,7 +89,7 @@ export async function forwardUnread(
     // the cap the file is dropped and only the summary's opSend may queue.
     let mediaAllowed = true;
     try {
-      mediaAllowed = (await guardOpMsg(env as never)).send;
+      mediaAllowed = (await guardOpMsg(env as never, st.phone)).send;
     } catch {
       mediaAllowed = true;
     }
@@ -118,7 +118,7 @@ export async function forwardUnread(
       payee: '',
       flag: 'unreadable',
     };
-    return { operatorText: operatorText(st.lang, code, st, proof), clientText: PROOF_RECEIVED[st.lang] };
+    return { operatorText: operatorText(st.lang, name, st, proof), clientText: PROOF_RECEIVED[st.lang] };
   } catch {
     return null;
   }
@@ -246,7 +246,7 @@ const FLAG_TEXT: Record<Lang, Record<string, string>> = {
 
 function operatorText(
   lang: Lang,
-  code: string,
+  name: string,
   st: BookingState,
   proof: PaymentProof
 ): string {
@@ -262,14 +262,14 @@ function operatorText(
     lang === 'es'
       ? 'comprobante de ' + who
       : 'receipt from ' + who;
-  const confirm = lang === 'es' ? 'Confirma con: confirmar ' : 'Confirm with: confirmar ';
+  const confirm = lang === 'es' ? 'Confirma con: /confirm ' : 'Confirm with: /confirm ';
   return (
-    'UniverLab [' + code + '] · ' + head + ': ' +
+    head + ': ' +
     serviceLabel(lang, st.service) + ' ' + formatSlot(st.start ?? '', lang) +
     ' — ' + amount + ', ' + (proof.date || '—') + ', ' + (proof.method || '—') +
     ', ref ' + (proof.reference || '—') + ', ' +
     (lang === 'es' ? 'beneficiario ' : 'payee ') + (proof.payee || '—') + '.' +
-    flag + ' ' + confirm + code
+    flag + ' ' + confirm + name
   ).slice(0, 900);
 }
 
@@ -284,7 +284,7 @@ export async function readProof(
   media: ProofMedia,
   cfg: ProofConfig,
   payee: string,
-  code: string,
+  name: string,
   fetchFn: typeof fetch = fetch
 ): Promise<{ operatorText: string; clientText: string; proof: PaymentProof } | null> {
   try {
@@ -302,7 +302,7 @@ export async function readProof(
     // the cap the file is dropped and only the summary's opSend may queue.
     let mediaAllowed = true;
     try {
-      mediaAllowed = (await guardOpMsg(env as never)).send;
+      mediaAllowed = (await guardOpMsg(env as never, st.phone)).send;
     } catch {
       mediaAllowed = true;
     }
@@ -321,7 +321,7 @@ export async function readProof(
         /* the summary still goes out even when the forward fails */
       }
     }
-    return { operatorText: operatorText(st.lang, code, st, proof), clientText: PROOF_RECEIVED[st.lang], proof };
+    return { operatorText: operatorText(st.lang, name, st, proof), clientText: PROOF_RECEIVED[st.lang], proof };
   } catch {
     return null;
   }

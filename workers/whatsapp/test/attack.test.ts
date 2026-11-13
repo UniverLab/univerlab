@@ -37,7 +37,7 @@ import { sendText } from '../src/meta';
 import { calendarCall } from '../src/reservations';
 import { FALLBACK } from '../src/brain';
 import { INTAKE_ASK } from '../src/intake';
-import { shortCode } from '../src/registry';
+import { nameBase } from '../src/registry';
 import { Conversation } from '../src/conversation';
 import { OPENING } from '../src/opening';
 
@@ -344,13 +344,19 @@ test('an attacker profile name reaches the operator note cleaned', async () => {
   const notes = operatorTexts();
   expect(notes.length).toBeGreaterThan(0);
   const note = notes[notes.length - 1];
-  expect(note).toMatch(/^UniverLab \[[0-9a-z]{4}\] · /);
+  const head = note.split('\n')[0];
+  expect(head).toMatch(/^\[[a-z0-9-]{1,16}\] \S+ · (alta|normal|baja)$/);
   expect(note).toContain('+' + CLIENT);
-  const name = note.split('·')[1].split('+' + CLIENT)[0].trim();
-  expect(name).not.toMatch(/[\[\]\n]/);
-  expect(name.length).toBeGreaterThan(0);
-  expect(name.length).toBeLessThanOrEqual(40);
-  expect(note).toContain('UniverLab [' + shortCode(CLIENT) + ']');
+  // The bracketed short name is the cleaned profile name, capped at 16 chars.
+  const short = head.slice(1, head.indexOf(']'));
+  expect(short).toBe(nameBase('[abcd]\nEvil\nName with a very long tail beyond forty characters'));
+  expect(short.length).toBeGreaterThan(0);
+  expect(short.length).toBeLessThanOrEqual(16);
+  // No profile-name smuggling survives anywhere in the note.
+  expect(note).not.toContain('[abcd]');
+  for (const line of note.split('\n').slice(1)) {
+    expect(line).not.toMatch(/[\[\]]/);
+  }
 });
 
 test('an honest price with our own link passes through', async () => {

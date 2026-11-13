@@ -144,9 +144,9 @@ test('readProof returns the operator summary and client copy for a COP receipt',
   const res = await readProof(envOf(aiRun), held(), MEDIA, CFG, 'Laboratorio UniverLab', 'ab12', fetchFn as never);
   expect(res).not.toBeNull();
   expect(res!.proof).toMatchObject({ readable: true, amount: EXPECTED_COP, currency: 'COP', flag: '' });
-  expect(res!.operatorText).toContain('UniverLab [ab12]');
+  expect(res!.operatorText).not.toContain('UniverLab [');
   expect(res!.operatorText).toContain('comprobante');
-  expect(res!.operatorText).toContain('confirmar ab12');
+  expect(res!.operatorText).toContain('/confirm ab12');
   expect(res!.operatorText).not.toContain('⚠');
   expect(res!.clientText).toBe(PROOF_RECEIVED.es);
   // The forward uploaded the bytes and sent the returned media id.
@@ -177,7 +177,7 @@ test('readProof flags a wrong amount instead of confirming anything', async () =
   const res = await readProof(envOf(aiRun), held(), MEDIA, CFG, '', 'ab12', fetchFn as never);
   expect(res!.proof.flag).toBe('amount-mismatch');
   expect(res!.operatorText).toContain('⚠');
-  expect(res!.operatorText).toContain('confirmar ab12');
+  expect(res!.operatorText).toContain('/confirm ab12');
   expect(res!.clientText).toBe(PROOF_RECEIVED.es);
 });
 
@@ -219,7 +219,7 @@ test('readProof drops the receipt file past the hourly operator cap but keeps th
   const fetchFn = stubFetch([downloadOk(), jsonOf({ id: 'mid-1' }), jsonOf({})]);
   const res = await readProof(guardDeniedEnv(aiRun), held(), MEDIA, CFG, '', 'ab12', fetchFn as never);
   expect(res).not.toBeNull();
-  expect(res!.operatorText).toContain('UniverLab [ab12]');
+  expect(res!.operatorText).not.toContain('UniverLab [');
   // Only the download ran: no media upload/messages send past the cap.
   expect((fetchFn as jest.Mock).mock.calls).toHaveLength(1);
   expect(aiRun).toHaveBeenCalledTimes(1);
@@ -229,6 +229,6 @@ test('forwardUnread drops the receipt file past the hourly operator cap but keep
   const fetchFn = stubFetch([downloadOk(), jsonOf({ id: 'mid-9' }), jsonOf({})]);
   const res = await forwardUnread(guardDeniedEnv(jest.fn()) as never, held(), MEDIA, 'ab12', fetchFn as never);
   expect(res).not.toBeNull();
-  expect(res!.operatorText).toContain('UniverLab [ab12]');
+  expect(res!.operatorText).not.toContain('UniverLab [');
   expect((fetchFn as jest.Mock).mock.calls).toHaveLength(1);
 });

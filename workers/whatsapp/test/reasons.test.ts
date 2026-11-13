@@ -128,7 +128,6 @@ test('priority is high only for support, audit-fixes and complaint; low only for
 test('operator note keeps the first line and adds tag, priority and cleaned answers', () => {
   const long = 'x'.repeat(600);
   const note = formatReasonNote({
-    code: 'AB12',
     name: 'Ana Gomez',
     phone: '573001234567',
     lang: 'es',
@@ -138,7 +137,7 @@ test('operator note keeps the first line and adds tag, priority and cleaned answ
     answers: ['pasa desde ayer', long],
   });
   const lines = note.split('\n');
-  expect(lines[0]).toBe('UniverLab [AB12] · Ana Gomez +573001234567');
+  expect(lines[0]).toBe('Ana Gomez +573001234567');
   expect(lines[1]).toContain('SOPORTE');
   expect(lines[1]).toContain('prioridad alta');
   expect(note).toContain('- se cayó el flujo urgente');
@@ -154,7 +153,6 @@ test('operator note keeps the first line and adds tag, priority and cleaned answ
 
 test('english operator note marks priority in english', () => {
   const note = formatReasonNote({
-    code: 'CD34',
     name: 'Bob',
     phone: '14155552671',
     lang: 'en',
@@ -163,7 +161,7 @@ test('english operator note marks priority in english', () => {
     opening: 'a talk proposal',
     answers: [],
   });
-  expect(note.split('\n')[0]).toBe('UniverLab [CD34] · Bob +14155552671');
+  expect(note.split('\n')[0]).toBe('Bob +14155552671');
   expect(note).toContain('COLABORACIÓN');
   expect(note).toContain('low priority');
 });

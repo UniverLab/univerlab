@@ -205,7 +205,8 @@ keeps the full text); the Worker makes at most 1,500 model calls a
 Bogota day (past it every client gets the fixed sentence and a handoff
 until the next day, and the operator is told once); the operator gets
 at most one handoff notice per client every 10 minutes and 30 agent
-messages an hour. A deletion written as the exact phrase BORRAR MIS
+messages an hour; a passthrough with no message in either direction
+for `passthroughIdleMs` (15 minutes) closes on its own. A deletion written as the exact phrase BORRAR MIS
 DATOS / DELETE MY DATA is honoured even over a limit. Unset, the agent
 uses the defaults below. To switch, set the variable and re-run the
 deploy workflow:
@@ -220,12 +221,37 @@ deploy workflow:
   "historyChars": 1000,
   "modelsPerDay": 1500,
   "handoffMs": 600000,
-  "opMsgsPerHour": 30
+  "opMsgsPerHour": 30,
+  "passthroughIdleMs": 900000
 }
 ```
 
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
+
+Operator (commands, not chat): the lab answers clients from one
+WhatsApp chat with the `OPERATOR_PHONE` number. Messages from that
+number are commands; every other number never runs them.
+
+- Every open conversation has a short name (the client's cleaned
+  profile name, lowercased without accents, at most 16 characters,
+  with `-2`, `-3` on collision). Every agent note starts with
+  `[name]`, the tag and the priority; no codes travel anywhere.
+- `/help` lists the commands. `/recap` lists the open conversations
+  (name, tag, priority, minutes since the last client message, booking
+  state); `/recap <name>` asks the text model for a Spanish summary of
+  that conversation (nothing reaches the client). `/response <name>
+  <texto>` sends one message to the client; the agent stays in charge.
+  `/take <name>` opens a passthrough: every operator message that is
+  not a command goes to the client as is, every client message is
+  relayed as `[name] <texto>`. `/release` closes it and the agent takes
+  over. `/confirm <name>` and `/cancel <name>` settle a held booking.
+- Only one passthrough can be open. While it is open, notes about
+  other conversations are queued and delivered in order, highest
+  priority first, right after the release. A passthrough with no
+  message in either direction for 15 minutes closes on its own (see
+  `passthroughIdleMs` below); the operator is told
+  `[name] liberada por inactividad` and the queued notes follow.
 
 A client who writes BORRAR MIS DATOS or DELETE MY DATA has
 everything their number's Durable Object stores erased at
