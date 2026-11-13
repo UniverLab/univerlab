@@ -14,17 +14,110 @@ const ROUTE = readFileSync(resolve(__dirname, '../pages/workbench/audits.astro')
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/workbench/audits.astro'), 'utf8');
 
 describe('workbench-audits', () => {
-  it('both languages carry the same audits keys with 6/4/3/3 items', () => {
+  it('both languages carry the same audits keys with 6/4/4/3 items', () => {
     expect(Object.keys(en.workbench.audits).sort()).toEqual(Object.keys(es.workbench.audits).sort());
     for (const dict of [en.workbench.audits, es.workbench.audits]) {
       expect(dict.scope.items).toHaveLength(6);
       for (const item of dict.scope.items) expect(item).toHaveLength(2);
       expect(dict.how.steps).toHaveLength(4);
       for (const step of dict.how.steps) expect(step).toHaveLength(2);
-      expect(dict.deliver.items).toHaveLength(3);
+      expect(dict.deliver.items).toHaveLength(4);
       for (const item of dict.deliver.items) expect(item).toHaveLength(2);
       expect(dict.impl.paras).toHaveLength(3);
     }
+  });
+
+  it('what you receive is the package in order: dedicated page, PDF, repository, optional DOI', () => {
+    expect(es.workbench.audits.deliver.items.map(([t]) => t)).toEqual([
+      'Página dedicada',
+      'Informe en PDF',
+      'Repositorio de la auditoría',
+      'Opcional: registro público con DOI',
+    ]);
+    expect(en.workbench.audits.deliver.items.map(([t]) => t)).toEqual([
+      'Dedicated page',
+      'PDF report',
+      'Audit repository',
+      'Optional: public record with DOI',
+    ]);
+    for (const dict of [en.workbench.audits, es.workbench.audits]) {
+      const [page, pdf, repo, doi] = dict.deliver.items.map(([, b]) => b);
+      expect(page).toMatch(/severidad|severity/);
+      expect(page).toMatch(/matriz de riesgo|risk matrix/);
+      expect(page).toMatch(/hoja de ruta|roadmap/);
+      expect(pdf).toMatch(/TeXForge/);
+      expect(repo).toMatch(/sandbox/i);
+      expect(repo).toMatch(/evidencia|evidence/);
+      expect(doi).toMatch(/DOI/);
+      expect(doi).toMatch(/Opcional|Optional/);
+    }
+  });
+
+  it('the page is dedicated, not private, and access is restricted in the description', () => {
+    for (const json of [JSON.stringify(es.workbench.audits.deliver.items), JSON.stringify(en.workbench.audits.deliver.items)]) {
+      expect(json).not.toMatch(/privada|Private page|Página privada/);
+    }
+    expect(es.workbench.audits.deliver.items[0][1]).toMatch(/solo a las direcciones que indiques/);
+    expect(en.workbench.audits.deliver.items[0][1]).toMatch(/only to the addresses you name/);
+  });
+
+  it('no statute is named on the audits page or the audit card', () => {
+    const cardEs = JSON.stringify(es.workbench.tags.items[2]);
+    const cardEn = JSON.stringify(en.workbench.tags.items[2]);
+    for (const json of [JSON.stringify(es.workbench.audits), JSON.stringify(en.workbench.audits), cardEs, cardEn]) {
+      expect(json).not.toMatch(/Ley 1581|Ley 1480/);
+      expect(json).not.toMatch(/1[0-9]{3} de 20\d\d/);
+    }
+    expect(es.workbench.audits.scope.items[4][1]).toMatch(/normas de protección de datos/);
+    expect(en.workbench.audits.scope.items[4][1]).toMatch(/data-protection rules/);
+  });
+
+  it('the build is a separate service with three options, quoted apart, 30 days of support', () => {
+    expect(es.workbench.audits.impl.kicker).toMatch(/servicio aparte/);
+    expect(en.workbench.audits.impl.kicker).toMatch(/separate service/);
+    const esImpl = es.workbench.audits.impl.paras.join(' ');
+    const enImpl = en.workbench.audits.impl.paras.join(' ');
+    expect(esImpl).toMatch(/con el informe/);
+    expect(esImpl).toMatch(/consulta/);
+    expect(esImpl).toMatch(/contratas al laboratorio/);
+    expect(enImpl).toMatch(/from the report/);
+    expect(enImpl).toMatch(/consultation hours/);
+    expect(enImpl).toMatch(/hire the lab/);
+    expect(esImpl).toMatch(/cotiza aparte/);
+    expect(enImpl).toMatch(/quoted apart/);
+    expect(esImpl).toMatch(/30 días de soporte/);
+    expect(enImpl).toMatch(/30 days of support/);
+    expect(esImpl).toMatch(/tus suscripciones.*tus harnesses.*tus tokens de modelos/);
+    expect(enImpl).toMatch(/your subscriptions.*your harnesses.*your model tokens/);
+  });
+
+  it('how we work names the three sources, an isolated environment, and ends in delivery', () => {
+    const esHow = es.workbench.audits.how.steps.map(([, b]) => b).join(' ');
+    const enHow = en.workbench.audits.how.steps.map(([, b]) => b).join(' ');
+    expect(esHow).toMatch(/persona/);
+    expect(esHow).toMatch(/agentes hacen trabajo real/);
+    expect(esHow).toMatch(/auditoría agéntica/);
+    expect(esHow).toMatch(/aislado/);
+    expect(esHow).toMatch(/nunca toca producción/);
+    expect(enHow).toMatch(/person/i);
+    expect(enHow).toMatch(/real work/);
+    expect(enHow).toMatch(/agentic audit/);
+    expect(enHow).toMatch(/isolated/);
+    expect(enHow).toMatch(/never touches production/);
+    expect(es.workbench.audits.how.steps[3][0]).toMatch(/Entrega/);
+    expect(en.workbench.audits.how.steps[3][0]).toMatch(/Delivery/);
+  });
+
+  it('the audit card stays one card with its price and no build promise', () => {
+    for (const dict of [en.workbench.tags, es.workbench.tags]) {
+      expect(dict.items).toHaveLength(3);
+    }
+    expect(es.workbench.tags.items[2][1]).toBe('Desde USD 250');
+    expect(en.workbench.tags.items[2][1]).toBe('From USD 250');
+    expect(es.workbench.tags.items[2][3]).not.toMatch(/diseñamos e instalamos/);
+    expect(en.workbench.tags.items[2][3]).not.toMatch(/design and install/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/cotizado por separado/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/quoted apart/);
   });
 
   it('the Spanish lede is the spec sentence verbatim', () => {

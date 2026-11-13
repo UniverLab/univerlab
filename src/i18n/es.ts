@@ -844,7 +844,7 @@ export const es: Dict = {
     tags: { kicker: 'Servicios y precios', items: [
       ['Primera llamada', 'Gratis · 15 min', '', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
       ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.'],
-      ['Auditorías y flujos', 'Desde USD 250', 'En Colombia: desde 900.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Proponemos qué arreglar primero, con costos y riesgos por escrito. Si hace falta, diseñamos e instalamos el flujo agéntico, con 30 días de soporte.'],
+      ['Auditorías y flujos', 'Desde USD 250', 'En Colombia: desde 900.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Recibes los hallazgos y la hoja de ruta por escrito, con costos y riesgos. Construir la solución es un servicio aparte, cotizado por separado, con 30 días de soporte.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
       ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
@@ -872,7 +872,7 @@ export const es: Dict = {
     close: { head: 'Lo que pagas en el Banco de trabajo financia el laboratorio: las herramientas siguen abiertas.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
       title: 'Auditorías del Banco de trabajo — consultoría de UniverLab',
-      description: 'Qué revisamos en una auditoría del Banco de trabajo, cómo trabajamos, qué recibes y cuánto cuesta: hallazgos con evidencia, matriz de riesgo y hoja de ruta.',
+      description: 'La auditoría del Banco de trabajo: página dedicada, informe en PDF y repositorio privado. Hallazgos con evidencia, matriz de riesgo y hoja de ruta.',
       head: 'Auditorías del Banco de trabajo',
       lede: 'Revisamos cómo usa tu equipo la inteligencia artificial y los agentes, y te entregamos qué arreglar primero, cuánto cuesta y qué riesgo corres si no lo haces.',
       scope: { kicker: 'Qué revisamos', items: [
@@ -880,24 +880,25 @@ export const es: Dict = {
         ['Criterio técnico', 'Si el modelo, el harness y la arquitectura sirven para cada tarea, y qué alternativas hay.'],
         ['Profundidad de los flujos', 'Dónde un flujo depende de alguien revisando a mano, dónde falla en silencio y cómo medirlo.'],
         ['Costos', 'Cuánto pagas en modelos y suscripciones por resultado, y dónde gastar menos sin perder calidad.'],
-        ['Datos', 'Qué información personal o del negocio pasa por modelos de terceros y qué exige la Ley 1581.'],
+        ['Datos', 'Qué información personal o del negocio llega a modelos de terceros y qué piden las normas de protección de datos.'],
         ['Agent Experience (AX)', 'Si tu documentación, tus APIs y tus repositorios le sirven a un agente, no solo a una persona.'],
       ] as [string, string][] },
       how: { kicker: 'Cómo trabajamos', steps: [
         ['Llamada gratis', 'Una llamada gratis de 15 minutos para acordar el alcance.'],
         ['Acceso de solo lectura', 'Acceso de solo lectura a lo acordado (repositorios, configuraciones, flujos); nada en producción sin tu permiso.'],
-        ['Revisamos y medimos', 'Revisamos, reproducimos y medimos: cada hallazgo lleva su evidencia.'],
+        ['Revisamos y medimos', 'Una persona prueba, los agentes hacen trabajo real y una auditoría agéntica corre en un entorno aislado que nunca toca producción: cada hallazgo lleva su evidencia.'],
         ['Entrega y sesión', 'La entrega y una sesión para recorrer los hallazgos.'],
       ] as [string, string][] },
       deliver: { kicker: 'Qué recibes', items: [
-        ['Página privada', 'Una página privada en univerlab.org, abierta solo a los correos que indiques, con los hallazgos por severidad, su evidencia, la matriz de riesgo, los costos y una hoja de ruta priorizada.'],
-        ['Informe en PDF', 'Un informe en PDF de estilo editorial, compuesto con TeXForge, con la evidencia, las recomendaciones y la profundidad de cada hallazgo, junto con los archivos de evidencia para descargar.'],
-        ['Implementación opcional', 'Si la pides, la implementación de la solución agéntica: montamos las herramientas y los grafos agénticos que la auditoría recomienda, con 30 días de soporte.'],
+        ['Página dedicada', 'Una página dedicada en univerlab.org, abierta solo a las direcciones que indiques, con los hallazgos por severidad, su evidencia, la matriz de riesgo y una hoja de ruta priorizada.'],
+        ['Informe en PDF', 'Un informe en PDF de estilo editorial, compuesto con TeXForge, con la evidencia, las recomendaciones y la profundidad de cada hallazgo.'],
+        ['Repositorio de la auditoría', 'El repositorio de la auditoría, privado y compartido con quien indiques, con el sandbox, cada archivo de evidencia y el detalle completo: cada hallazgo se puede revisar y reproducir.'],
+        ['Opcional: registro público con DOI', 'Opcional: un registro público, permanente, verificable y citable con DOI, si decides publicar la auditoría.'],
       ] as [string, string][] },
-      impl: { kicker: 'Qué cubre la implementación', paras: [
-        'La implementación cubre instalar y configurar las herramientas y los grafos agénticos que la auditoría recomienda, con 30 días de soporte.',
-        'No cubre hacer los cambios de código o de producto que la auditoría recomienda: eso es un proyecto de desarrollo aparte, que se cotiza por separado.',
-        'Tampoco incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
+      impl: { kicker: 'La implementación, un servicio aparte', paras: [
+        'Construir la solución agéntica que recomienda la auditoría es un servicio aparte: la construyes con el informe, reservas horas de consulta pagadas o contratas al laboratorio para construirla.',
+        'Se cotiza aparte y trae 30 días de soporte.',
+        'No incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
       price: { kicker: 'Precio', text: 'Desde USD 250. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.', cop: 'En Colombia: desde 900.000 COP. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.' },

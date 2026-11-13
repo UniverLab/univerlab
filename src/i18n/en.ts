@@ -850,7 +850,7 @@ export const en = {
     tags: { kicker: 'Services and prices', items: [
       ['First call', 'Free · 15 min', '', 'We look at what you need and whether the Workbench is the right place for it.'],
       ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab.'],
-      ['Audits and flows', 'From USD 250', 'From COP 900,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. We propose what to fix first, with costs and risks in writing. If needed, we design and install the agentic flow, with 30 days of support.'],
+      ['Audits and flows', 'From USD 250', 'From COP 900,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. You receive the findings and the roadmap in writing, with costs and risks. Building the solution is a separate service, quoted apart, with 30 days of support.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
       ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],
@@ -878,7 +878,7 @@ export const en = {
     close: { head: 'What you pay at the Workbench funds the lab: the tools stay open.', cta: 'Write to the Workbench on WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
       title: 'Workbench audits — UniverLab consulting on artificial intelligence',
-      description: 'What a Workbench audit reviews, how we work, what you receive and what it costs: findings with evidence, a risk matrix and a roadmap.',
+      description: 'The Workbench audit: a dedicated page, a PDF report and a private repository. Findings with evidence, a risk matrix and a roadmap.',
       head: 'Workbench audits',
       lede: 'We review how your team uses artificial intelligence and agents, and we deliver what to fix first, what it costs and what risk you run if you do not.',
       scope: { kicker: 'What we review', items: [
@@ -886,23 +886,24 @@ export const en = {
         ['Technical judgement', 'Whether the model, the harness and the architecture fit each task, and what the alternatives are.'],
         ['Flow depth', 'Where a flow depends on someone reviewing by hand, where it fails silently and how to measure it.'],
         ['Costs', 'What you pay in models and subscriptions per result, and where to spend less without losing quality.'],
-        ['Data', 'What personal or business information passes through third-party models and what Ley 1581 requires.'],
+        ['Data', 'What personal or business information reaches third-party models and what data-protection rules ask of you.'],
         ['Agent Experience (AX)', 'Whether your documentation, your APIs and your repositories serve an agent, not only a person.'],
       ] as [string, string][] },
       how: { kicker: 'How we work', steps: [
         ['Free call', 'A free 15-minute call to agree on the scope.'],
         ['Read-only access', 'Read-only access to what we agree on (repositories, configurations, flows); nothing in production without your permission.'],
-        ['We review and measure', 'We review, reproduce and measure: every finding carries its evidence.'],
+        ['We review and measure', 'A person tests, agents do real work and an agentic audit runs in an isolated environment that never touches production: every finding carries its evidence.'],
         ['Delivery and session', 'The delivery and a session to walk through the findings.'],
       ] as [string, string][] },
       deliver: { kicker: 'What you receive', items: [
-        ['Private page', 'A private page on univerlab.org, open only to the emails you name, with the findings by severity, their evidence, the risk matrix, the costs and a prioritized roadmap.'],
-        ['PDF report', 'An editorial-style PDF report, composed with TeXForge, with the evidence, the recommendations and the depth of each finding, plus the evidence files to download.'],
-        ['Optional implementation', 'If you ask for it, the implementation of the agentic solution: we set up the agentic tools and graphs the audit recommends, with 30 days of support.'],
+        ['Dedicated page', 'A dedicated page on univerlab.org, open only to the addresses you name, with the findings by severity, their evidence, the risk matrix and a prioritised roadmap.'],
+        ['PDF report', 'An editorial-style PDF report, composed with TeXForge, with the evidence, the recommendations and the depth of each finding.'],
+        ['Audit repository', 'The audit repository, private and shared with whoever you name, holding the sandbox, every evidence file and the full detail: each finding can be checked and reproduced.'],
+        ['Optional: public record with DOI', 'Optional: a permanent, verifiable and citable public record with a DOI, if you decide to publish the audit.'],
       ] as [string, string][] },
-      impl: { kicker: 'What the implementation covers', paras: [
-        'The implementation covers installing and configuring the agentic tools and graphs the audit recommends, plus 30 days of support.',
-        'It does not cover making the code or product changes the audit recommends: that is a separate development project, quoted apart.',
+      impl: { kicker: 'The build, a separate service', paras: [
+        'Building the agentic solution the audit recommends is a separate service: you build it from the report, book paid consultation hours, or hire the lab to build it.',
+        'It is quoted apart and comes with 30 days of support.',
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
