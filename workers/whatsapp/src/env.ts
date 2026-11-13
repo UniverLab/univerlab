@@ -1,5 +1,6 @@
 export interface Env {
   AI: Ai;
+  SITE_STATE?: KVNamespace;
   CONVERSATION: DurableObjectNamespace<import('./conversation').Conversation>;
   REGISTRY?: DurableObjectNamespace<import('./operator').Operator>;
   CALENDAR?: DurableObjectNamespace<import('./calendar').Calendar>;

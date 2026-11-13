@@ -1,7 +1,7 @@
 /** The operator's command language: English slash commands, one live
  *  conversation at a time. Anything else gets the help text. */
 
-export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'reject' | 'cancel' | 'delivery' | 'afk' | 'active';
+export type Cmd = 'help' | 'recap' | 'response' | 'take' | 'release' | 'confirm' | 'reject' | 'cancel' | 'delivery' | 'afk' | 'active' | 'cupos';
 
 export interface Parsed {
   cmd: Cmd;
@@ -20,7 +20,8 @@ export const HELP =
   '/cancel <nombre> — cancela su cita\n' +
   '/delivery <nombre> — autoriza su sesión de entrega\n' +
   '/afk — pausas los avisos hasta que envíes /active\n' +
-  '/active — vuelves y recibes lo que quedó en espera';
+  '/active — vuelves y recibes lo que quedó en espera\n' +
+  '/cupos <n> — cupos fundadores que quedan (0 a 5)';
 
 function normWord(s: string): string {
   return s
@@ -46,6 +47,7 @@ const NAMES: Record<string, Cmd> = {
   delivery: 'delivery',
   afk: 'afk',
   active: 'active',
+  cupos: 'cupos',
 };
 
 /** Words of the retired language: they are no longer commands and get HELP. */

@@ -19,9 +19,9 @@ export async function getStaticPaths() {
       const slug = entry.id === 'index' ? undefined : entry.id;
       // Rebuilt from the collection base + the entry id rather than taken from
       // `entry.filePath`: this is the exact absolute path the markdown
-      // plugin sees as its `ctx.fileURL`, so both date call sites resolve to
-      // the same string, hit the same memo, and cannot disagree (see
-      // src/lib/doc-last-modified.ts).
+      // plugin sees as its `ctx.fileURL`, so both date call sites key the
+      // same row of the prebuild snapshot (see `src/lib/doc-last-modified.ts`)
+      // and cannot disagree even when a sibling repo commits mid-build.
       const sourceFile = resolve(process.cwd(), DOCS_BASES[id], `${entry.id}.md`);
       paths.push({
         params: { id, slug },

@@ -1,4 +1,6 @@
 import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
+import { foundingRoute, rewriteFoundingSpots } from './founding-spots';
+import { fetchFoundingLeft } from '../src/lib/founding-spots';
 import { labPageHtml, labPageMarkdown } from '../src/lib/lab-page';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
 import { buildPool } from '../src/lib/science-filter';
@@ -112,14 +114,15 @@ async function liveTodayEdition(
     return res.json() as Promise<Parameters<typeof buildPool>[0]>;
   });
   const entries = loadEntries({ fetchImpl, init: apiInit(), signal }).catch(() => null);
-  const [data, labEntries] = await Promise.all([otd, entries]);
+  const founding = fetchFoundingLeft(fetchImpl).catch(() => null);
+  const [data, labEntries, foundingLeft] = await Promise.all([otd, entries, founding]);
   const lab = labEntries ?? [];
   const unavailable = labEntries === null;
   const feed = { facts: buildPool(data, lang), lab };
   return {
     html: todayEditionHtml(feed, lang, date),
-    labHtml: labPageHtml(lab, lang, { unavailable }),
-    markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang, { unavailable })}\n`,
+    labHtml: labPageHtml(lab, lang, { unavailable, foundingLeft }),
+    markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang, { unavailable, foundingLeft })}\n`,
   };
 }
 
@@ -844,6 +847,15 @@ export async function onRequest(context: {
     if (sitemap) return sitemap;
   } else if (AUDIT_PAGE_RE.test(pathname) || AUDIT_ASSET_RE.test(pathname)) {
     return next();
+  }
+
+  // The founding count is live KV data on a static page: serve the static
+  // page, then fill or clear its founding slot. Markdown twins stay static.
+  const foundingLang = request.method === 'GET' && !wantsMarkdown(accept) ? foundingRoute(pathname) : null;
+  if (foundingLang) {
+    const staticRes = await next();
+    if (!staticRes.ok) return staticRes;
+    return rewriteFoundingSpots(staticRes, foundingLang, fetch);
   }
 
   // Roadmap HTML: fetch the static page, then swap the lanes for a live render.

@@ -927,6 +927,9 @@ export const en = {
         title: 'Founding audits',
         text: 'The first 5 audits: 50 % of the price, taken off the delivery payment, when the publication authorisation is signed with the order. A founding spot is reserved then.',
         spots: 5,
+        left: '{n} of {total} left',
+        taken: 'The founding places are taken: this offer is closed.',
+        card: '{card} · {left}',
       }, public: {
         title: 'Audit in public',
         text: 'Any other audit gets 20 % of the price, taken off the delivery payment, when the publication authorisation is signed at delivery, even if a private audit was chosen first.',

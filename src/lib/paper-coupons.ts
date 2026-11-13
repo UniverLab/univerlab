@@ -42,8 +42,10 @@ interface Coupon {
 }
 
 /** The four standing offers, in reading order: the free first call, then
- *  the three audit offers. All copy comes from the Workbench dictionary. */
-function coupons(lang: PaperCouponLang): Coupon[] {
+ *  the three audit offers. All copy comes from the Workbench dictionary.
+ *  A zero founding count drops the founding coupon; null keeps it, so a
+ *  number the edge could not read never removes a live offer. */
+function coupons(lang: PaperCouponLang, foundingLeft?: number | null): Coupon[] {
   const t = today(lang);
   const p = prefix(lang);
   const wb = dict(lang).workbench;
@@ -57,9 +59,13 @@ function coupons(lang: PaperCouponLang): Coupon[] {
   const auditsHref = `${p}/workbench/audits/`;
   const auditsLink = t.ads.audits.link;
   const offers = wb.audits.offers;
+  const founding: Coupon[] =
+    foundingLeft === 0
+      ? []
+      : [{ figure: percentFigure(offers.founding.text), cond: offers.founding.text, href: auditsHref, link: auditsLink }];
   return [
     call,
-    { figure: percentFigure(offers.founding.text), cond: offers.founding.text, href: auditsHref, link: auditsLink },
+    ...founding,
     { figure: percentFigure(offers.public.text), cond: offers.public.text, href: auditsHref, link: auditsLink },
     { figure: percentFigure(offers.reaudit.text), cond: offers.reaudit.text, href: auditsHref, link: auditsLink },
   ];
@@ -73,10 +79,10 @@ function noStack(lang: PaperCouponLang): string {
 
 /** Page 2's coupon band as HTML: everything between the heading and the
  *  logbook filters. */
-export function paperCouponsHtml(lang: PaperCouponLang): string {
+export function paperCouponsHtml(lang: PaperCouponLang, foundingLeft?: number | null): string {
   const t = today(lang);
   const cut = t.labPage.coupons.cut;
-  const cards = coupons(lang)
+  const cards = coupons(lang, foundingLeft)
     .map(
       (c) =>
         `<a class="coupon" href="${esc(c.href)}">` +
@@ -95,10 +101,10 @@ export function paperCouponsHtml(lang: PaperCouponLang): string {
 }
 
 /** The twin's coupons: one plain italic line per coupon, then the rule. */
-export function paperCouponsMarkdown(lang: PaperCouponLang): string {
+export function paperCouponsMarkdown(lang: PaperCouponLang, foundingLeft?: number | null): string {
   const b = abs(lang);
   const unprefixed = (href: string): string => href.replace(/^\/es\//, '/');
-  const lines = coupons(lang).map(
+  const lines = coupons(lang, foundingLeft).map(
     (c) => `*✂ ${c.figure} — ${c.cond} — [${c.link}](${b}${unprefixed(c.href)})*`,
   );
   lines.push(noStack(lang));

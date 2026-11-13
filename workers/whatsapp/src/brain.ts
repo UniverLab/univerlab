@@ -108,14 +108,15 @@ export async function answer(
   lang: Lang,
   cfg: ModelConfig = modelConfig({}),
   phone = '',
-  extraHosts: string[] = []
+  extraHosts: string[] = [],
+  foundingLeft?: number | null
 ): Promise<Answer> {
   try {
     const raw = await runModel(
       ai,
       cfg,
       [
-        { role: 'system', content: systemPrompt(lang, phone) },
+        { role: 'system', content: systemPrompt(lang, phone, foundingLeft) },
         // Client-written turns travel as marked DATA user content; the
         // model's own earlier turns stay untouched.
         ...history.map((t) => ({

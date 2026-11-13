@@ -661,9 +661,11 @@ describe('published audit dictionaries, view and terms', () => {
     expect(en.workbench.audits.offers.reaudit.title).toContain('Re-audit');
   });
 
-  it('the audits view renders the offers and hides the founding one at zero spots', () => {
+  it('the audits view always renders the founding offer with a live-count slot', () => {
     const view = readFileSync(resolve(__dirname, '..', 'views', 'WorkbenchAudits.astro'), 'utf8');
-    expect(view).toContain('a.offers.founding.spots > 0');
+    expect(view).not.toContain('a.offers.founding.spots > 0');
+    expect(view).toContain('data-founding-body');
+    expect(view).toContain('id="founding-left"');
     expect(view).toContain('a.offers.public.title');
     expect(view).toContain('a.offers.reaudit.title');
     for (const rule of ['a.offers.rules', 'a.offers.kicker']) expect(view).toContain(rule);

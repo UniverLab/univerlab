@@ -6,6 +6,7 @@ import { cleanName, markRead, sendText, type Inbound } from './meta';
 import { forwardUnread, isProofMedia, proofConfig, readProof } from './proof';
 import { transcribe, voiceConfig, VOICE_HANDOFF } from './audio';
 import { answer, FALLBACK, modelConfig, type Turn } from './brain';
+import { readFoundingLeft } from '../../../src/lib/founding-spots.ts';
 import {
   burstLimit,
   capBurst,
@@ -1914,7 +1915,8 @@ export class Conversation extends DurableObject<Env> {
       switch (routeOf(reason)) {
         case 'question': {
           const history = this.historyTurns();
-          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from);
+          const foundingLeft = await readFoundingLeft(this.env.SITE_STATE);
+          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from, [], foundingLeft);
           if (a.booking) {
             // FR6: the service is model output, so it enters the state only
             // through the closed set; everything downstream (brief prompt,
@@ -1986,7 +1988,8 @@ export class Conversation extends DurableObject<Env> {
         }
         case 'open-source': {
           const history = this.historyTurns();
-          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from, ['github.com']);
+          const foundingLeft = await readFoundingLeft(this.env.SITE_STATE);
+          const a = await answer(this.ai(), history, lang, modelConfig(this.env), m.from, ['github.com'], foundingLeft);
           // Docs and issues links live on github.com, so the check admits
           // that host; a failing reply still never hands off to a person.
           const text = a.handoff ? reasonFixed('openSourceFallback', lang) : a.reply;

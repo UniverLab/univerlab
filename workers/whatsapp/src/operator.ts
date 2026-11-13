@@ -7,6 +7,7 @@ import { isQuietHour, nextQuietEnd, formatHeldSummary } from './quiet';
 import { es } from '../../../src/i18n/es.ts';
 import { HELP, parseCommand, looksLegacy, err, type Parsed } from './commands';
 import { nameBase, formatNote } from './registry';
+import { FOUNDING_TOTAL, writeFoundingLeft } from '../../../src/lib/founding-spots.ts';
 import { modelConfig, runModel } from './brain';
 import { recapPrompt, recapData, parseRecap } from './recap';
 
@@ -624,6 +625,27 @@ export class Operator extends DurableObject<Env> {
     }
     if (parsed.cmd === 'release') {
       await this.releasePass(m.from);
+      return;
+    }
+    // The founding count needs no open conversation: it is lab state, not a client's.
+    if (parsed.cmd === 'cupos') {
+      const raw = parsed.name as string;
+      const n = /^\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+      if (!Number.isInteger(n) || n < 0 || n > FOUNDING_TOTAL) {
+        await sendText(this.env, m.from, err(`Los cupos van de 0 a ${FOUNDING_TOTAL}: /cupos <n>.`));
+        return;
+      }
+      if (!this.env.SITE_STATE) {
+        await sendText(this.env, m.from, 'No pude guardar los cupos. Intenta de nuevo en un momento.');
+        return;
+      }
+      try {
+        await writeFoundingLeft(this.env.SITE_STATE, n);
+      } catch {
+        await sendText(this.env, m.from, 'No pude guardar los cupos. Intenta de nuevo en un momento.');
+        return;
+      }
+      await sendText(this.env, m.from, `Cupos fundadores: quedan ${n} de ${FOUNDING_TOTAL}.`);
       return;
     }
     const row = this.lookup(parsed.name as string);

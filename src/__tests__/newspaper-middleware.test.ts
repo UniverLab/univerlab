@@ -153,7 +153,13 @@ describe('middleware — /newspaper/ HTML', () => {
     const headers = wp.init?.headers as Record<string, string>;
     expect(headers['User-Agent']).toBe('UniverLab/1.0 (https://univerlab.org)');
     expect((wp.init as { cf?: { cacheTtl: number } }).cf?.cacheTtl).toBe(3600);
-    expect(calls.filter((c) => c.url.includes('announcements'))).toHaveLength(1);
+    // Two reads from the announcements API: the logbook mirror and the
+    // live founding count for page 2's coupons.
+    const apiCalls = calls.filter((c) => c.url.includes('announcements'));
+    expect(apiCalls.map((c) => c.url).sort()).toEqual([
+      'https://announcements.univerlab.org/?limit=100',
+      'https://announcements.univerlab.org/founding-spots',
+    ]);
   });
 });
 

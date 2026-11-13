@@ -34,6 +34,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { buildFeedXml, etagForFeed } from './feed';
+import { FOUNDING_KV_KEY, FOUNDING_TOTAL, parseFoundingLeft } from '../../../src/lib/founding-spots.ts';
 
 export interface Env {
   ANNOUNCEMENTS: KVNamespace;
@@ -1003,6 +1004,19 @@ export default {
 
     if (req.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });
+    }
+
+    // GET /founding-spots — how many founding audits are left (KV, edge-cheap).
+    if (req.method === 'GET' && url.pathname === '/founding-spots') {
+      let left: number | null = null;
+      try {
+        left = parseFoundingLeft(await env.ANNOUNCEMENTS.get(FOUNDING_KV_KEY));
+      } catch {
+        left = null;
+      }
+      return new Response(JSON.stringify({ left, total: FOUNDING_TOTAL }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60', ...CORS },
+      });
     }
 
     // GET / — mirror read with pagination

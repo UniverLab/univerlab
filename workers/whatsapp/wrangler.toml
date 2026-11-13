@@ -6,6 +6,10 @@ workers_dev = true
 [ai]
 binding = "AI"
 
+[[kv_namespaces]]
+binding = "SITE_STATE"
+id = "6456e427df724870ba557449758fe47d"
+
 [[durable_objects.bindings]]
 name = "CONVERSATION"
 class_name = "Conversation"

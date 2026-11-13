@@ -1,9 +1,12 @@
 import { en } from '../../../src/i18n/en.ts';
 import { es } from '../../../src/i18n/es.ts';
 import { contactEmail } from '../../../src/lib/contact-email';
+import { formatFoundingLeft } from '../../../src/lib/founding-spots.ts';
 import type { Lang } from './lang';
 
-export function knowledge(lang: Lang, phone = ''): string {
+/** The founding offer carries the live count when it is known; a zero count
+ *  drops the offer. Undefined keeps the legacy offer with no number. */
+export function knowledge(lang: Lang, phone = '', foundingLeft?: number | null): string {
   const d = lang === 'es' ? es : en;
   const w = d.workbench;
   const co = phone.replace(/\D/g, '').startsWith('57');
@@ -31,8 +34,12 @@ export function knowledge(lang: Lang, phone = ''): string {
   for (const para of w.audits.impl.paras) lines.push(para);
   lines.push(co ? w.audits.price.cop : w.audits.price.text);
   lines.push('### ' + w.audits.offers.kicker);
-  if (w.audits.offers.founding.spots > 0) {
-    lines.push('- ' + w.audits.offers.founding.title + ': ' + w.audits.offers.founding.text);
+  if (foundingLeft !== 0) {
+    let founding = '- ' + w.audits.offers.founding.title + ': ' + w.audits.offers.founding.text;
+    if (foundingLeft !== null && foundingLeft !== undefined) {
+      founding += ' (' + formatFoundingLeft(w.audits.offers.founding.left, foundingLeft) + ')';
+    }
+    lines.push(founding);
   }
   lines.push('- ' + w.audits.offers.public.title + ': ' + w.audits.offers.public.text);
   lines.push('- ' + w.audits.offers.reaudit.title + ': ' + w.audits.offers.reaudit.text);

@@ -3,8 +3,8 @@ import { parseCommand, looksLegacy, normName, err, HELP } from '../src/commands'
 
 test('HELP lists every command on its own line', () => {
   const lines = HELP.split('\n');
-  expect(lines).toHaveLength(11);
-  for (const cmd of ['/help', '/recap', '/response', '/take', '/release', '/confirm', '/reject', '/cancel', '/delivery', '/afk', '/active']) {
+  expect(lines).toHaveLength(12);
+  for (const cmd of ['/help', '/recap', '/response', '/take', '/release', '/confirm', '/reject', '/cancel', '/delivery', '/afk', '/active', '/cupos']) {
     expect(lines.some((l) => l.startsWith(cmd))).toBe(true);
   }
 });
@@ -33,6 +33,8 @@ test('parseCommand accepts every command, case-insensitive', () => {
   expect(parseCommand('/AFK')).toEqual({ cmd: 'afk' });
   expect(parseCommand('/active')).toEqual({ cmd: 'active' });
   expect(parseCommand('  /Active  ')).toEqual({ cmd: 'active' });
+  expect(parseCommand('/cupos 3')).toEqual({ cmd: 'cupos', name: '3' });
+  expect(parseCommand('/CUPOS 0')).toEqual({ cmd: 'cupos', name: '0' });
 });
 
 test('parseCommand rejects unknown or malformed commands', () => {
@@ -52,6 +54,8 @@ test('parseCommand rejects unknown or malformed commands', () => {
   expect(parseCommand('/help x')).toBeNull();
   expect(parseCommand('/afk ahora')).toBeNull();
   expect(parseCommand('/active ya')).toBeNull();
+  expect(parseCommand('/cupos')).toBeNull();
+  expect(parseCommand('/cupos 1 2')).toBeNull();
   // The old Spanish words are no longer commands, with or without a slash.
   expect(parseCommand('ayuda')).toBeNull();
   expect(parseCommand('tomar ab12')).toBeNull();

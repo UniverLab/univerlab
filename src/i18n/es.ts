@@ -921,6 +921,9 @@ export const es: Dict = {
         title: 'Auditorías fundadoras',
         text: 'Las primeras 5 auditorías: 50 % del precio, aplicado al pago de entrega, cuando la autorización de publicación se firma con el encargo. El cupo fundador se reserva entonces.',
         spots: 5,
+        left: 'Quedan {n} de {total}',
+        taken: 'Los cupos fundadores están agotados: esta oferta queda cerrada.',
+        card: '{card} · {left}',
       }, public: {
         title: 'Audita en público',
         text: 'Cualquier otra auditoría obtiene 20 % del precio, aplicado al pago de entrega, cuando la autorización de publicación se firma a la entrega, incluso si primero se eligió una auditoría privada.',

@@ -120,6 +120,19 @@ test('system prompt carries knowledge in spanish and the booking json shape', as
   expect(system).toContain('first-call');
 });
 
+test('answer carries the live founding count into the system prompt', async () => {
+  let sent: unknown;
+  const ai = {
+    run: async (_model: string, input: unknown) => {
+      sent = input;
+      return { response: '{"reply":"Hi","handoff":false,"booking":false,"service":""}' };
+    },
+  };
+  await answer(ai, [], 'en', modelConfig({}), '14155552671', [], 3);
+  const messages = (sent as { messages: Array<{ role: string; content: string }> }).messages;
+  expect(messages[0].content).toContain('3 of 5 left');
+});
+
 test('modelConfig falls back to the default model and no options', () => {
   expect(modelConfig({})).toEqual({ model: DEFAULT_MODEL, options: {} });
   expect(modelConfig({ TEXT_MODEL: '  ', TEXT_MODEL_OPTIONS: '' })).toEqual({ model: DEFAULT_MODEL, options: {} });

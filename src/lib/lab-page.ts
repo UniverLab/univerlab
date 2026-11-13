@@ -76,13 +76,17 @@ function filterButtons(
 /** Page 2's inner HTML: everything inside `#lab-body`. When the lab feed
  *  could not be read (`unavailable`) and there is nothing to print, the page
  *  says so in one line instead of showing empty filter rows. */
-export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavailable?: boolean }): string {
+export function labPageHtml(
+  entries: Entry[],
+  lang: LabPageLang,
+  opts?: { unavailable?: boolean; foundingLeft?: number | null },
+): string {
   const t = dict(lang);
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
     return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
       labPlateHtml(lang) +
-      paperCouponsHtml(lang) +
+      paperCouponsHtml(lang, opts?.foundingLeft) +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
 
@@ -107,7 +111,7 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
   }));
 
   let out = `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>`;
-  out += paperCouponsHtml(lang);
+  out += paperCouponsHtml(lang, opts?.foundingLeft);
   out +=
     `<div class="lab-filters">` +
     `<div class="lab-filter-row" data-kind="topic">${filterButtons('topic', [{ id: 'all', label: t.labPage.all, count: rows.length }, ...topics])}</div>` +
@@ -142,11 +146,15 @@ export function labPageHtml(entries: Entry[], lang: LabPageLang, opts?: { unavai
 
 /** The twin's second page: the heading over the shared entry lines, or over
  *  the one unavailable line when the feed could not be read. */
-export function labPageMarkdown(entries: Entry[], lang: LabPageLang, opts?: { unavailable?: boolean }): string {
+export function labPageMarkdown(
+  entries: Entry[],
+  lang: LabPageLang,
+  opts?: { unavailable?: boolean; foundingLeft?: number | null },
+): string {
   const t = dict(lang);
   if (!(entries || []).length && opts?.unavailable) {
-    return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang)}\n\n${t.labPage.unavailable}`;
+    return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang, opts?.foundingLeft)}\n\n${t.labPage.unavailable}`;
   }
   const body = entriesMarkdown(entries || [], { labels: { empty: '' } });
-  return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang)}\n\n${body}`;
+  return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang, opts?.foundingLeft)}\n\n${body}`;
 }

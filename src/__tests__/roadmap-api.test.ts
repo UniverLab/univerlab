@@ -568,3 +568,27 @@ describe('CORS on the public API', () => {
     expect(stub.calls.createRoadmapItem).toBeUndefined();
   });
 });
+
+describe('GET /founding-spots', () => {
+  it('serves the live count with the total from KV', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '3' });
+    const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+    expect(status).toBe(200);
+    expect(found).toEqual({ left: 3, total: 5 });
+  });
+  it('answers null when the value is missing or out of range, never a wrong number', async () => {
+    const seeds: Record<string, string>[] = [{}, { 'founding-audits-left': '9' }, { 'founding-audits-left': 'x' }];
+    for (const seed of seeds) {
+      const kv = fakeKV(seed);
+      const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+      expect(status).toBe(200);
+      expect(found).toEqual({ left: null, total: 5 });
+    }
+  });
+  it('is edge-cached for a minute', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '2' });
+    const res = await worker.fetch(get('/founding-spots'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
+  });
+});

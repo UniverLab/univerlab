@@ -78,9 +78,7 @@ const bookHref = localizePath('/workbench/book', lang);
     <section class="wba-block wba-offers">
       <span class="label">{a.offers.kicker}</span>
       <ol class="wba-deliver">
-        {a.offers.founding.spots > 0 && (
-          <li><b>{a.offers.founding.title}</b><span>{a.offers.founding.text}</span></li>
-        )}
+        <li><b>{a.offers.founding.title}</b><span data-founding-body>{a.offers.founding.text}</span><span id="founding-left" class="wba-left"></span></li>
         <li><b>{a.offers.public.title}</b><span>{a.offers.public.text}</span></li>
         <li><b>{a.offers.reaudit.title}</b><span>{a.offers.reaudit.text}</span></li>
       </ol>
@@ -132,6 +130,9 @@ const bookHref = localizePath('/workbench/book', lang);
   .wba-deliver li { border: 1px solid var(--line); background: var(--bg-raise); padding: 1.2rem 1.2rem 1rem; }
   .wba-deliver li b { display: block; font-family: var(--font-mono); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 0.4rem; color: var(--accent); }
   .wba-deliver li span { color: var(--ink-dim); font-size: 1rem; line-height: 1.6; }
+  .wba-left { display: block; min-height: 1.6em; margin-top: 0.4rem; font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
+  .wba-left:empty { min-height: 0; }
+  @media (max-width: 47.99rem) { .wba-left:empty { min-height: 1.6em; } }
   .wba-privacy p { max-width: 46rem; color: var(--ink-dim); line-height: 1.7; }
   .wba-privacy a { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wba-price p { max-width: 46rem; font-family: var(--font-serif); font-size: 1.4rem; line-height: 1.5; }

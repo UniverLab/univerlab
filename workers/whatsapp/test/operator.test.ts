@@ -999,3 +999,38 @@ test('a quiet day marks the agenda as handled without sending anything', async (
   expect(toOperator()).toEqual([]);
   await expect(agendaSent(op, '2026-01-05')).resolves.toBe(true);
 });
+
+function siteState(seed: Record<string, string> = {}) {
+  const store = new Map<string, string>(Object.entries(seed));
+  return {
+    store,
+    get: jest.fn(async (key: string) => store.get(key) ?? null),
+    put: jest.fn(async (key: string, value: string) => {
+      store.set(key, value);
+    }),
+  };
+}
+
+test('/cupos 3 stores the live count and confirms the new value', async () => {
+  const { ctx } = makeCtx();
+  const kv = siteState();
+  const op = new Operator(ctx as never, { ...makeEnv(), SITE_STATE: kv } as never);
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/cupos 3' }));
+
+  expect(kv.put).toHaveBeenCalledWith('founding-audits-left', '3');
+  expect(toOperator()).toEqual(['Cupos fundadores: quedan 3 de 5.']);
+});
+
+test('/cupos rejects a number outside 0 to 5 and stores nothing', async () => {
+  const { ctx } = makeCtx();
+  const kv = siteState();
+  const op = new Operator(ctx as never, { ...makeEnv(), SITE_STATE: kv } as never);
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ text: '/cupos 6' }));
+
+  expect(kv.put).not.toHaveBeenCalled();
+  expect(toOperator()).toEqual(['Los cupos van de 0 a 5: /cupos <n>. · /help']);
+});

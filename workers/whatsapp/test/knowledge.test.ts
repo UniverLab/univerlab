@@ -90,6 +90,26 @@ test('english knowledge quotes pesos for a Colombian number and dollars otherwis
   expect(abroad).not.toContain('COP 1,500,000');
 });
 
+test('knowledge shows the live founding count, drops the offer at zero, keeps it when unreadable', () => {
+  const withCount = knowledge('es', '573001234567', 3);
+  expect(withCount).toContain('Auditorías fundadoras');
+  expect(withCount).toContain('Quedan 3 de 5');
+  const enCount = knowledge('en', '14155552671', 3);
+  expect(enCount).toContain('Founding audits');
+  expect(enCount).toContain('3 of 5 left');
+  const taken = knowledge('es', '573001234567', 0);
+  expect(taken).not.toContain('Auditorías fundadoras');
+  expect(taken).toContain('Audita en público');
+  for (const lang of ['es', 'en'] as const) {
+    const unknown = knowledge(lang, '14155552671', null);
+    expect(unknown).toContain(lang === 'es' ? 'Auditorías fundadoras' : 'Founding audits');
+    expect(unknown).not.toContain('Quedan');
+    expect(unknown).not.toContain('of 5 left');
+    const legacy = knowledge(lang, '14155552671');
+    expect(legacy).toContain(lang === 'es' ? 'Auditorías fundadoras' : 'Founding audits');
+  }
+});
+
 test('knowledge carries the audits lede, scope, deliverables, method and limits', () => {
   for (const lang of ['es', 'en'] as const) {
     const k = knowledge(lang, '14155552671');
