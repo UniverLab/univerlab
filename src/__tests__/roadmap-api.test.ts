@@ -515,3 +515,51 @@ describe('guards', () => {
     expect(legacy.entries).toEqual({ count: 0, last_date: null, last_id: null });
   });
 });
+
+describe('CORS on the public API', () => {
+  it('answers GET / with Access-Control-Allow-Origin: *', async () => {
+    const kv = fakeKV({ entries: '[]' });
+    const res = await worker.fetch(get('/'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
+  it('answers GET /roadmap with Access-Control-Allow-Origin: *', async () => {
+    const kv = fakeKV({ roadmap: mirror([publicItem()]), entries: JSON.stringify([]) });
+    const res = await worker.fetch(get('/roadmap'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
+  it('answers GET /feed.atom with Access-Control-Allow-Origin: *', async () => {
+    const kv = fakeKV({ entries: '[]' });
+    const res = await worker.fetch(get('/feed.atom'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
+  it('answers OPTIONS / with 204 and Access-Control-Allow-Origin: *', async () => {
+    const res = await worker.fetch(
+      new Request(`${ORIGIN}/`, { method: 'OPTIONS' }),
+      fakeEnv(fakeKV({}), fakeHub().hub) as never,
+    );
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
+  it('still gates POST /roadmap on the bearer token, with the CORS header present', async () => {
+    const stub = fakeHub();
+    const env = fakeEnv(fakeKV({}), stub.hub);
+    const res = await worker.fetch(
+      new Request(`${ORIGIN}/roadmap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Facet work' }),
+      }),
+      env as never,
+    );
+    expect(res.status).toBe(401);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(stub.calls.createRoadmapItem).toBeUndefined();
+  });
+});
