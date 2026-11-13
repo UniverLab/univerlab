@@ -22,6 +22,9 @@ import {
   depositAudit,
   depositMetadata,
   depositRefusal,
+  discardDraft,
+  draftAudit,
+  draftRefusal,
   findDepositionByConceptDoi,
   md5Hex,
   sha256Hex,
@@ -150,6 +153,7 @@ function mockZenodo(opts?: {
   conceptDoi?: string;
   versionDoi?: string;
   recordId?: number;
+  reservedDoi?: string;
   searchHits?: { id: number }[];
   inherited?: { id: number; filename: string }[];
   publishFails?: number;
@@ -183,7 +187,12 @@ function mockZenodo(opts?: {
     }
     const draft = /^\/api\/deposit\/depositions\/(\d+)$/.exec(u.pathname);
     if (method === 'GET' && draft) {
-      return json({ id: Number(draft[1]), files: opts?.inherited ?? [] });
+      return json({
+        id: Number(draft[1]),
+        files: opts?.inherited ?? [],
+        links: { bucket: `${base}/bucket/${draft[1]}` },
+        metadata: { prereserve_doi: { doi: opts?.reservedDoi ?? '10.5281/zenodo.200' } },
+      });
     }
     if (method === 'PUT' && draft) {
       metadataSeen.push(JSON.parse(String(init?.body)) as Doc);
@@ -404,6 +413,7 @@ function runDeposit(args: string[], env: NodeJS.ProcessEnv, input?: string): Pro
 async function startStub(opts?: {
   conceptDoi?: string;
   versionDoi?: string;
+  reservedDoi?: string;
   searchHits?: { id: number }[];
   inherited?: { id: number; filename: string }[];
 }): Promise<{ base: string; calls: string[]; uploaded: Map<string, Uint8Array>; close: () => Promise<void> }> {
@@ -431,7 +441,13 @@ async function startStub(opts?: {
         files: opts?.inherited ?? [],
       }, 201);
     } else if (req.method === 'GET' && /^\/api\/deposit\/depositions\/\d+$/.test(u.pathname)) {
-      json(res, { id: 11, files: opts?.inherited ?? [] });
+      const id = Number(u.pathname.split('/').pop());
+      json(res, {
+        id,
+        files: opts?.inherited ?? [],
+        links: { bucket: `http://127.0.0.1:${(server.address() as { port: number }).port}/api/bucket/${id}` },
+        metadata: { prereserve_doi: { doi: opts?.reservedDoi ?? '10.5281/zenodo.200' } },
+      });
     } else if (req.method === 'PUT' && /^\/api\/deposit\/depositions\/\d+$/.test(u.pathname)) {
       req.resume();
       json(res, { id: 11 });
@@ -612,6 +628,387 @@ describe('deposit command', () => {
       const bad = await runDeposit(['deposit', folder, '--sandboxx'], env, 'y\n');
       expect(bad.code).toBe(2);
       expect(bad.out).toContain('unknown flag');
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+});
+
+describe('draft refusal', () => {
+  it('accepts what publication refuses: private, open critical, draft status, no consent', () => {
+    const doc = depositableDoc();
+    doc['visibility'] = 'private';
+    (doc as Doc)['access'] = { emails: ['reader@example.com'] };
+    (doc['findings'] as Doc[])[0]['status'] = 'open';
+    (doc['findings'] as Doc[])[0]['severity'] = 'critical';
+    (doc['meta'] as Doc)['status'] = 'draft';
+    delete doc['deposit'];
+    expect(draftRefusal(asAudit(doc))).toBeNull();
+  });
+
+  it('refuses an audit that already carries a version DOI', () => {
+    const done = depositableDoc();
+    (done['deposit'] as Doc)['versionDoi'] = '10.5281/zenodo.1';
+    expect(draftRefusal(asAudit(done))).toMatch(/already deposited/);
+  });
+});
+
+describe('draftAudit', () => {
+  const pdf = new Uint8Array(Buffer.from('%PDF-1.4 fixture'));
+
+  it('creates a draft, uploads, sets metadata and returns the reserved DOI without publishing', async () => {
+    const { fetchImpl, calls, uploaded, metadataSeen } = mockZenodo();
+    const result = await draftAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: { title: 'T', upload_type: 'publication' },
+      files: [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }],
+      fetchImpl,
+    });
+    expect(result).toEqual({ draftDepositionId: 11, reservedDoi: '10.5281/zenodo.200' });
+    expect(uploaded.get('report.pdf')).toEqual(pdf);
+    expect(metadataSeen).toHaveLength(1);
+    expect(metadataSeen[0]['metadata']).toMatchObject({ title: 'T' });
+    expect(calls).toEqual([
+      'POST /api/deposit/depositions',
+      'GET /api/deposit/depositions/11',
+      'PUT /api/bucket/11/report.pdf',
+      'PUT /api/deposit/depositions/11',
+      'GET /api/deposit/depositions/11',
+    ]);
+    expect(calls.some((c) => c.includes('publish'))).toBe(false);
+  });
+
+  it('updates the recorded draft instead of creating a second one', async () => {
+    const { fetchImpl, calls } = mockZenodo({ reservedDoi: '10.5281/zenodo.201' });
+    const result = await draftAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: {},
+      files: [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }],
+      draftDepositionId: 12,
+      fetchImpl,
+    });
+    expect(result).toEqual({ draftDepositionId: 12, reservedDoi: '10.5281/zenodo.201' });
+    expect(calls[0]).toBe('GET /api/deposit/depositions/12');
+    expect(calls).not.toContain('POST /api/deposit/depositions');
+    expect(calls.some((c) => c.includes('publish'))).toBe(false);
+  });
+
+  it('creates a re-audit draft as a new version and drops files outside the selection', async () => {
+    const { fetchImpl, calls } = mockZenodo({
+      inherited: [
+        { id: 99, filename: 'old-annex.bin' },
+        { id: 98, filename: 'report.pdf' },
+      ],
+    });
+    const result = await draftAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: {},
+      files: [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }],
+      priorDepositionId: 7,
+      fetchImpl,
+    });
+    expect(result.draftDepositionId).toBe(12);
+    expect(calls[0]).toBe('POST /api/deposit/depositions/7/actions/newversion');
+    // The inherited file outside the selection is deleted; the same-named
+    // one is replaced, never duplicated.
+    expect(calls).toContain('DELETE /api/deposit/depositions/12/files/99');
+    expect(calls).toContain('DELETE /api/deposit/depositions/12/files/98');
+    expect(calls).toContain('PUT /api/bucket/12/report.pdf');
+    expect(calls.some((c) => c.includes('publish'))).toBe(false);
+  });
+});
+
+describe('depositAudit with a recorded draft', () => {
+  const pdf = new Uint8Array(Buffer.from('%PDF-1.4 fixture'));
+
+  it('publishes the same draft without creating or versioning', async () => {
+    const { fetchImpl, calls } = mockZenodo();
+    const result = await depositAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: {},
+      files: [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }],
+      draftDepositionId: 12,
+      fetchImpl,
+    });
+    expect(result).toEqual({ versionDoi: '10.5281/zenodo.100', conceptDoi: '10.5281/zenodo.99', recordId: 5 });
+    expect(calls).toEqual([
+      'GET /api/deposit/depositions/12',
+      'GET /api/deposit/depositions/12',
+      'PUT /api/bucket/12/report.pdf',
+      'PUT /api/deposit/depositions/12',
+      'POST /api/deposit/depositions/12/actions/publish',
+      'GET /api/records/5',
+    ]);
+    expect(calls).not.toContain('POST /api/deposit/depositions');
+    expect(calls.some((c) => c.includes('newversion'))).toBe(false);
+  });
+
+  it('keeps the draft when publishing it fails', async () => {
+    const { fetchImpl, calls } = mockZenodo({ publishFails: 500 });
+    await expect(
+      depositAudit({
+        apiBase: 'https://zenodo.test/api',
+        token: 'token',
+        metadata: {},
+        files: [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }],
+        draftDepositionId: 12,
+        fetchImpl,
+      }),
+    ).rejects.toThrow(/publish/);
+    expect(calls).not.toContain('DELETE /api/deposit/depositions/12');
+  });
+
+  it('prunes files outside the selection only when reusing a recorded draft', async () => {
+    const files = [{ filename: 'report.pdf', data: pdf, contentType: 'application/pdf' }];
+    const reused = mockZenodo({ inherited: [{ id: 99, filename: 'stale.bin' }] });
+    await depositAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: {},
+      files,
+      draftDepositionId: 12,
+      fetchImpl: reused.fetchImpl,
+    });
+    expect(reused.calls).toContain('DELETE /api/deposit/depositions/12/files/99');
+
+    // A created new-version draft keeps the files it inherits, as
+    // publication always has.
+    const created = mockZenodo({ inherited: [{ id: 99, filename: 'stale.bin' }] });
+    await depositAudit({
+      apiBase: 'https://zenodo.test/api',
+      token: 'token',
+      metadata: {},
+      files,
+      priorDepositionId: 7,
+      fetchImpl: created.fetchImpl,
+    });
+    expect(created.calls).not.toContain('DELETE /api/deposit/depositions/12/files/99');
+  });
+});
+
+describe('discardDraft', () => {
+  it('deletes the unpublished deposition and throws when Zenodo refuses', async () => {
+    const { fetchImpl, calls } = mockZenodo();
+    await expect(
+      discardDraft({ apiBase: 'https://zenodo.test/api', token: 'token', draftDepositionId: 11, fetchImpl }),
+    ).resolves.toBeUndefined();
+    expect(calls).toEqual(['DELETE /api/deposit/depositions/11']);
+
+    const failing = (async () => new Response('gone', { status: 410 })) as typeof fetch;
+    await expect(
+      discardDraft({ apiBase: 'https://zenodo.test/api', token: 'token', draftDepositionId: 11, fetchImpl: failing }),
+    ).rejects.toThrow(/discard/);
+  });
+});
+
+describe('deposit --draft and --discard commands', () => {
+  it('drafts a private audit with open findings: prints the DOI and URL, publishes nothing', async () => {
+    const stub = await startStub();
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      doc['visibility'] = 'private';
+      (doc as Doc)['access'] = { emails: ['reader@example.com'] };
+      (doc['findings'] as Doc[])[0]['status'] = 'open';
+      (doc['findings'] as Doc[])[0]['severity'] = 'critical';
+      delete doc['deposit'];
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+      const { code, out } = await runDeposit(
+        ['deposit', folder, '--slug', 'draft-slug', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(code).toBe(0);
+      expect(out).toContain('10.5281/zenodo.200');
+      expect(out).toContain('https://sandbox.zenodo.org/deposit/11');
+      expect(out).toContain('Nothing was published');
+      expect(stub.calls.some((c) => c.includes('publish'))).toBe(false);
+      expect([...stub.uploaded.keys()].sort()).toEqual(['chart-data.json', 'report.pdf', 'snippet.py']);
+      const written = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((written['deposit'] as Doc)).toMatchObject({
+        draftDepositionId: 11,
+        draftDoi: '10.5281/zenodo.200',
+      });
+      expect((written['deposit'] as Doc)['versionDoi']).toBeUndefined();
+      expect(existsSync(join(dir, 'bucket', 'draft-slug', 'audit.json'))).toBe(false);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+
+  it('reruns against the same draft instead of creating a second one', async () => {
+    const stub = await startStub();
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      delete doc['deposit'];
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+      const first = await runDeposit(
+        ['deposit', folder, '--slug', 'redraft-slug', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(first.code).toBe(0);
+      const second = await runDeposit(
+        ['deposit', folder, '--slug', 'redraft-slug', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(second.code).toBe(0);
+      expect(stub.calls.filter((c) => c === 'POST /api/deposit/depositions')).toHaveLength(1);
+      expect(stub.calls).toContain('GET /api/deposit/depositions/11');
+      const written = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((written['deposit'] as Doc)).toMatchObject({ draftDepositionId: 11 });
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+
+  it('publishes the recorded draft and drops the draft fields', async () => {
+    const stub = await startStub({ versionDoi: '10.5281/zenodo.200' });
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const drafted = await runDeposit(
+        ['deposit', folder, '--slug', 'draft-then-publish', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(drafted.code).toBe(0);
+      const published = await runDeposit(
+        ['deposit', folder, '--slug', 'draft-then-publish'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(published.code).toBe(0);
+      expect(stub.calls).toContain('POST /api/deposit/depositions/11/actions/publish');
+      expect(stub.calls.some((c) => c.includes('newversion'))).toBe(false);
+      const written = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((written['deposit'] as Doc)).toMatchObject({
+        versionDoi: '10.5281/zenodo.200',
+        conceptDoi: '10.5281/zenodo.99',
+        consent: true,
+      });
+      expect((written['deposit'] as Doc)['draftDepositionId']).toBeUndefined();
+      expect((written['deposit'] as Doc)['draftDoi']).toBeUndefined();
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+
+  it('discards the recorded draft on confirmation and keeps it on abort', async () => {
+    const stub = await startStub();
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      (doc as Doc)['deposit'] = { draftDepositionId: 11, draftDoi: '10.5281/zenodo.200' };
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+      const aborted = await runDeposit(
+        ['deposit', folder, '--slug', 'discard-slug', '--discard'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'n\n',
+      );
+      expect(aborted.code).toBe(1);
+      expect(aborted.out).toContain('Aborted');
+      expect(stub.calls).toEqual([]);
+      const kept = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((kept['deposit'] as Doc)['draftDepositionId']).toBe(11);
+
+      const discarded = await runDeposit(
+        ['deposit', folder, '--slug', 'discard-slug', '--discard'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(discarded.code).toBe(0);
+      expect(stub.calls).toEqual(['DELETE /api/deposit/depositions/11']);
+      const cleared = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect('deposit' in cleared).toBe(false);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+
+  it('drafts a re-audit as a new version, then publishes that same draft under the concept', async () => {
+    const stub = await startStub({ searchHits: [{ id: 77 }], conceptDoi: '10.5281/zenodo.77', versionDoi: '10.5281/zenodo.78' });
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const prev = depositableDoc();
+      (prev['deposit'] as Doc)['versionDoi'] = '10.5281/zenodo.76';
+      (prev['deposit'] as Doc)['conceptDoi'] = '10.5281/zenodo.77';
+      const prevDir = join(dir, 'bucket', 'prev-slug');
+      cpSync(FIXTURE_DIR, prevDir, { recursive: true });
+      writeFileSync(join(prevDir, 'audit.json'), JSON.stringify(prev));
+      const doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      (doc['badge'] as Doc)['previous'] = 'prev-slug';
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+
+      const drafted = await runDeposit(
+        ['deposit', folder, '--slug', 'reaudit-draft', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(drafted.code).toBe(0);
+      expect(stub.calls).toContain('POST /api/deposit/depositions/77/actions/newversion');
+      const draftedDoc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((draftedDoc['deposit'] as Doc)['draftDepositionId']).toBe(12);
+
+      const published = await runDeposit(
+        ['deposit', folder, '--slug', 'reaudit-draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(published.code).toBe(0);
+      expect(stub.calls.filter((c) => c.includes('newversion'))).toHaveLength(1);
+      expect(stub.calls).toContain('POST /api/deposit/depositions/12/actions/publish');
+      const written = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      expect((written['deposit'] as Doc)).toMatchObject({
+        versionDoi: '10.5281/zenodo.78',
+        conceptDoi: '10.5281/zenodo.77',
+      });
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+      await stub.close();
+    }
+  });
+
+  it('refuses a draft of an already published audit and rejects --draft with --discard', async () => {
+    const stub = await startStub();
+    const { dir, env } = fakeWranglerEnv();
+    const folder = depositableFolder();
+    try {
+      const doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as Doc;
+      (doc['deposit'] as Doc)['versionDoi'] = '10.5281/zenodo.1';
+      writeFileSync(join(folder, 'audit.json'), JSON.stringify(doc));
+      const { code, out } = await runDeposit(
+        ['deposit', folder, '--slug', 'published-slug', '--draft'],
+        { ...env, ZENODO_TOKEN: 'operator-token', ZENODO_API_BASE: stub.base },
+        'y\n',
+      );
+      expect(code).toBe(1);
+      expect(out).toMatch(/already deposited/);
+      expect(stub.calls).toEqual([]);
+
+      const both = await runDeposit(['deposit', folder, '--draft', '--discard'], env, 'y\n');
+      expect(both.code).toBe(2);
     } finally {
       rmSync(folder, { recursive: true, force: true });
       rmSync(dir, { recursive: true, force: true });

@@ -26,6 +26,9 @@ import {
   depositAudit,
   depositMetadata,
   depositRefusal,
+  discardDraft,
+  draftAudit,
+  draftRefusal,
   findDepositionByConceptDoi,
   sha256Hex,
 } from '../src/lib/audit/zenodo.ts';
@@ -36,7 +39,7 @@ const SITE = 'https://univerlab.org';
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 
 function usage(): string {
-  return 'usage: node scripts/audit.ts validate <folder> | push <folder> [--slug <slug>] | remove <slug> | deposit <folder> [--slug <slug>] [--sandbox|--prod]';
+  return 'usage: node scripts/audit.ts validate <folder> | push <folder> [--slug <slug>] | remove <slug> | deposit <folder> [--slug <slug>] [--sandbox|--prod] [--draft|--discard]';
 }
 
 function reportValidation(folder: string): boolean {
@@ -180,43 +183,20 @@ function fetchRemoteAuditJson(slug: string): AuditDocument | null {
   }
 }
 
-// `deposit <folder>`: publish the audit's public deliverables in Zenodo and
-// write the DOIs back into audit.json. Refuses a private audit, open
-// critical or high findings, a missing permanent-deposit consent, and an
-// audit that is already deposited. A re-audit (badge.previous naming an
-// earlier slug) becomes a new version under the earlier audit's concept DOI,
-// resolved from that audit's remote document. Sandbox is the default until
-// the operator has tested the flow; the token comes from ZENODO_TOKEN only.
-async function deposit(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
-  if (!reportValidation(folder)) process.exit(1);
-  const slug = slugArg ?? basename(resolve(folder));
-  if (!SLUG_RE.test(slug)) {
-    console.error(`invalid slug '${slug}': letters, digits, '-' and '_' only`);
-    process.exit(2);
-  }
-  let doc: AuditDocument;
-  try {
-    doc = JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as AuditDocument;
-  } catch {
-    console.error(`${join(folder, 'audit.json')}: cannot be read`);
-    process.exit(1);
-  }
-  const refusal = depositRefusal(doc);
-  if (refusal !== null) {
-    console.error(`cannot deposit audit '${slug}': ${refusal}`);
-    process.exit(1);
-  }
+// The files a deposit (draft or publication) uploads: the TeXForge PDF
+// plus the public annex files, read from disk and re-checked against the
+// catalogue. Exits on anything publication would keep out of Zenodo, so a
+// draft never holds files publication would refuse.
+function loadDepositFiles(
+  folder: string,
+  slug: string,
+  doc: AuditDocument,
+): { filename: string; data: Uint8Array; contentType: string }[] {
   const ids = depositAssetIds(doc);
   if (ids === null) {
     console.error(`cannot deposit audit '${slug}': no TeXForge PDF report in deliverables`);
     process.exit(1);
   }
-  const token = process.env['ZENODO_TOKEN'];
-  if (!token) {
-    console.error('cannot deposit: set ZENODO_TOKEN in the operator environment (never in a commit)');
-    process.exit(1);
-  }
-  const apiBase = process.env['ZENODO_API_BASE'] || (sandbox ? ZENODO_SANDBOX_API : ZENODO_PROD_API);
   const byId = new Map(doc.assets.map((a) => [a.id, a]));
   const seenNames = new Set<string>();
   const files: { filename: string; data: Uint8Array; contentType: string }[] = [];
@@ -247,6 +227,37 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
     }
     files.push({ filename, data, contentType: contentTypeOf(entry.path) });
   }
+  return files;
+}
+
+/** The recorded unpublished draft deposition id, or null. */
+function recordedDraftId(doc: AuditDocument): number | null {
+  const raw = doc.deposit?.draftDepositionId;
+  return typeof raw === 'number' && Number.isInteger(raw) ? raw : null;
+}
+
+function readZenodoToken(): string {
+  const token = process.env['ZENODO_TOKEN'];
+  if (!token) {
+    console.error('cannot deposit: set ZENODO_TOKEN in the operator environment (never in a commit)');
+    process.exit(1);
+  }
+  return token;
+}
+
+function zenodoApiBase(sandbox: boolean): string {
+  return process.env['ZENODO_API_BASE'] || (sandbox ? ZENODO_SANDBOX_API : ZENODO_PROD_API);
+}
+
+/** Resolve a re-audit's earlier deposition (badge.previous naming an
+ *  earlier slug) to its concept DOI: the new record becomes a new version
+ *  under it. Refuses when the chain is unresolvable. */
+async function resolvePriorDeposition(
+  slug: string,
+  doc: AuditDocument,
+  apiBase: string,
+  token: string,
+): Promise<{ priorDepositionId: number | null; conceptNote: string }> {
   let priorDepositionId: number | null = null;
   let conceptNote = 'a new Zenodo concept (first audit of this system)';
   const previous = doc.badge?.previous;
@@ -266,6 +277,56 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
     }
     priorDepositionId = found;
     conceptNote = `a new version under concept ${conceptDoi} (previous audit '${previous}')`;
+  }
+  return { priorDepositionId, conceptNote };
+}
+
+function readLocalAudit(folder: string): AuditDocument {
+  try {
+    return JSON.parse(readFileSync(join(folder, 'audit.json'), 'utf8')) as AuditDocument;
+  } catch {
+    console.error(`${join(folder, 'audit.json')}: cannot be read`);
+    process.exit(1);
+  }
+}
+
+function checkSlug(slugArg: string | undefined, folder: string): string {
+  const slug = slugArg ?? basename(resolve(folder));
+  if (!SLUG_RE.test(slug)) {
+    console.error(`invalid slug '${slug}': letters, digits, '-' and '_' only`);
+    process.exit(2);
+  }
+  return slug;
+}
+
+// `deposit <folder>`: publish the audit's public deliverables in Zenodo and
+// write the DOIs back into audit.json. Refuses a private audit, open
+// critical or high findings, a missing permanent-deposit consent, and an
+// audit that is already deposited. A re-audit (badge.previous naming an
+// earlier slug) becomes a new version under the earlier audit's concept DOI,
+// resolved from that audit's remote document, unless a draft deposition is
+// already recorded: then that same draft is published as-is. Sandbox is the
+// default until the operator has tested the flow; the token comes from
+// ZENODO_TOKEN only.
+async function deposit(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
+  if (!reportValidation(folder)) process.exit(1);
+  const slug = checkSlug(slugArg, folder);
+  const doc = readLocalAudit(folder);
+  const refusal = depositRefusal(doc);
+  if (refusal !== null) {
+    console.error(`cannot deposit audit '${slug}': ${refusal}`);
+    process.exit(1);
+  }
+  const files = loadDepositFiles(folder, slug, doc);
+  const token = readZenodoToken();
+  const apiBase = zenodoApiBase(sandbox);
+  const draftId = recordedDraftId(doc);
+  let priorDepositionId: number | null = null;
+  let conceptNote = 'a new Zenodo concept (first audit of this system)';
+  if (draftId === null) {
+    ({ priorDepositionId, conceptNote } = await resolvePriorDeposition(slug, doc, apiBase, token));
+  } else {
+    conceptNote = `the recorded draft deposition ${draftId}`;
   }
   const metadata = depositMetadata(doc);
   const host = sandbox ? 'sandbox.zenodo.org' : 'zenodo.org';
@@ -289,7 +350,7 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
   }
   let result: { versionDoi: string; conceptDoi: string; recordId: number };
   try {
-    result = await depositAudit({ apiBase, token, metadata, files, priorDepositionId });
+    result = await depositAudit({ apiBase, token, metadata, files, priorDepositionId, draftDepositionId: draftId });
   } catch (err) {
     console.error(`deposit failed: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
@@ -306,6 +367,88 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
   }
   console.log(`Deposited audit '${slug}': version DOI ${result.versionDoi}, concept DOI ${result.conceptDoi}.`);
   console.log(`Record: https://doi.org/${result.versionDoi}`);
+}
+
+// `deposit <folder> --draft`: reserve a DOI in an unpublished Zenodo draft
+// deposition for the audit — files uploaded, metadata set, nothing public.
+// Accepts what publication refuses (a private audit, open critical or high
+// findings, no recorded consent) and refuses only an audit that already
+// carries a published version DOI. A rerun updates the same draft. The
+// reserved DOI and deposition id are recorded in audit.json (never rendered
+// as a published DOI); only the local file is rewritten, never R2.
+async function depositDraft(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
+  if (!reportValidation(folder)) process.exit(1);
+  const slug = checkSlug(slugArg, folder);
+  const doc = readLocalAudit(folder);
+  const refusal = draftRefusal(doc);
+  if (refusal !== null) {
+    console.error(`cannot draft audit '${slug}': ${refusal}`);
+    process.exit(1);
+  }
+  const files = loadDepositFiles(folder, slug, doc);
+  const token = readZenodoToken();
+  const apiBase = zenodoApiBase(sandbox);
+  const draftId = recordedDraftId(doc);
+  let priorDepositionId: number | null = null;
+  if (draftId === null) {
+    // A re-audit's draft is a new version of the earlier deposition, so
+    // publishing it later keeps the concept chain publication would have.
+    ({ priorDepositionId } = await resolvePriorDeposition(slug, doc, apiBase, token));
+  }
+  const metadata = depositMetadata(doc);
+  const host = sandbox ? 'sandbox.zenodo.org' : 'zenodo.org';
+  console.log(`Drafting audit '${slug}' in Zenodo (${host})${draftId === null ? '' : ` (updating draft ${draftId})`}:`);
+  console.log('  files:');
+  for (const file of files) {
+    console.log(`    ${file.filename} (${file.data.length} bytes, sha256 ${sha256Hex(file.data)})`);
+  }
+  let result: { draftDepositionId: number; reservedDoi: string };
+  try {
+    result = await draftAudit({ apiBase, token, metadata, files, priorDepositionId, draftDepositionId: draftId });
+  } catch (err) {
+    console.error(`draft failed: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+  doc.deposit = {
+    ...doc.deposit,
+    draftDepositionId: result.draftDepositionId,
+    draftDoi: result.reservedDoi,
+  };
+  writeFileSync(join(folder, 'audit.json'), `${JSON.stringify(doc, null, 2)}\n`);
+  console.log(`Drafted audit '${slug}': reserved DOI ${result.reservedDoi}.`);
+  console.log(`Draft: https://${host}/deposit/${result.draftDepositionId}`);
+  console.log('Nothing was published.');
+}
+
+// `deposit <folder> --discard`: delete the unpublished Zenodo draft
+// deposition recorded in audit.json and clear what the draft step recorded.
+async function discardDepositDraft(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
+  const slug = checkSlug(slugArg, folder);
+  const doc = readLocalAudit(folder);
+  const draftId = recordedDraftId(doc);
+  if (draftId === null) {
+    console.error(`cannot discard draft for audit '${slug}': no draft deposition recorded in audit.json`);
+    process.exit(1);
+  }
+  const token = readZenodoToken();
+  const apiBase = zenodoApiBase(sandbox);
+  if (!confirm(`Delete the unpublished Zenodo draft deposition ${draftId} for audit '${slug}'?`)) {
+    console.log('Aborted: nothing deleted.');
+    process.exit(1);
+  }
+  try {
+    await discardDraft({ apiBase, token, draftDepositionId: draftId });
+  } catch (err) {
+    console.error(`discard failed: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+  if (doc.deposit) {
+    delete doc.deposit.draftDepositionId;
+    delete doc.deposit.draftDoi;
+    if (Object.keys(doc.deposit).length === 0) delete doc.deposit;
+  }
+  writeFileSync(join(folder, 'audit.json'), `${JSON.stringify(doc, null, 2)}\n`);
+  console.log(`Discarded draft deposition ${draftId} for audit '${slug}'.`);
 }
 
 const [, , command, ...rest] = process.argv;
@@ -348,6 +491,8 @@ if (command === 'validate') {
   }
   let slug: string | undefined;
   let sandbox = true;
+  let draft = false;
+  let discard = false;
   for (let i = 0; i < flags.length; i++) {
     if (flags[i] === '--slug' && i + 1 < flags.length) {
       slug = flags[++i];
@@ -355,12 +500,21 @@ if (command === 'validate') {
       sandbox = true;
     } else if (flags[i] === '--prod') {
       sandbox = false;
+    } else if (flags[i] === '--draft') {
+      draft = true;
+    } else if (flags[i] === '--discard') {
+      discard = true;
     } else {
       console.error(`${usage()}\nunknown flag '${flags[i]}'`);
       process.exit(2);
     }
   }
-  deposit(folder, slug, sandbox).then(undefined, (err: unknown) => {
+  if (draft && discard) {
+    console.error(usage());
+    process.exit(2);
+  }
+  const run = discard ? discardDepositDraft(folder, slug, sandbox) : draft ? depositDraft(folder, slug, sandbox) : deposit(folder, slug, sandbox);
+  run.then(undefined, (err: unknown) => {
     console.error(`deposit failed: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   });

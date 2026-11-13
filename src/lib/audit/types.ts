@@ -108,6 +108,8 @@ export interface AuditDeposit {
   conceptDoi?: string;
   depositedAt?: string;
   consent?: boolean;
+  draftDepositionId?: number;
+  draftDoi?: string;
 }
 
 export interface AuditCover {

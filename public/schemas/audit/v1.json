@@ -176,7 +176,9 @@
         "versionDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Version DOI of this audit's Zenodo record, e.g. '10.5281/zenodo.1234567'. Written by the deposit command after publication." },
         "conceptDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Concept DOI shared by every audit of the same system: each re-audit publishes a new version under it. Written by the deposit command after publication." },
         "depositedAt": { "type": "string", "format": "date", "description": "Deposit date (YYYY-MM-DD): the day the record was published in Zenodo." },
-        "consent": { "const": true, "description": "The client's recorded consent to a permanent public deposit in Zenodo. Must be literally true: the deposit command refuses to publish without it." }
+        "consent": { "const": true, "description": "The client's recorded consent to a permanent public deposit in Zenodo. Must be literally true: the deposit command refuses to publish without it." },
+        "draftDepositionId": { "type": "integer", "minimum": 1, "description": "Unpublished Zenodo draft deposition id for this audit, e.g. 11. Written by the draft step so a rerun updates the same draft and publication publishes it." },
+        "draftDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "DOI Zenodo reserved for the unpublished draft, e.g. '10.5281/zenodo.1234567'. Written by the draft step; it becomes the version DOI on publication." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false

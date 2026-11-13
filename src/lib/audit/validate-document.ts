@@ -100,9 +100,15 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
     }
   }
 
-  // A recorded deposit consents to permanence: anything but literally
-  // true refuses, so a missing or declined consent never publishes.
-  if (isRecord(doc['deposit']) && (doc['deposit'] as Doc)['consent'] !== true) {
+  // A published deposit consents to permanence: anything but literally
+  // true refuses, so a missing or declined consent never publishes. A
+  // draft-only deposit (reserved DOI, no version DOI yet) carries no consent:
+  // the draft step records it while the audit is still private.
+  if (
+    isRecord(doc['deposit']) &&
+    (doc['deposit'] as Doc)['versionDoi'] !== undefined &&
+    (doc['deposit'] as Doc)['consent'] !== true
+  ) {
     errors.push({ path: '$.deposit.consent', message: 'a recorded deposit needs consent true' });
   }
 

@@ -71,6 +71,17 @@ export function sha256Hex(data: Uint8Array): string {
   return createHash('sha256').update(data).digest('hex');
 }
 
+/** Why this audit must not get a draft deposition, or null when it may.
+ *  The draft step accepts what publication refuses — a private audit, open
+ *  critical or high findings, a draft or delivered status, no consent — and
+ *  refuses only an audit that already carries a published version DOI. */
+export function draftRefusal(doc: AuditDocument): string | null {
+  if (typeof doc.deposit?.versionDoi === 'string' && doc.deposit.versionDoi !== '') {
+    return `already deposited as ${doc.deposit.versionDoi}: a re-audit is a new audit folder`;
+  }
+  return null;
+}
+
 /** Why this audit must not be deposited, or null when it may be. Private
  *  audits never get a DOI; open critical or high findings must be fixed
  *  first; and without the client's recorded consent to a permanent deposit
@@ -177,7 +188,7 @@ async function createDraft(
   const { json } = await checked(
     fetchImpl,
     authed(deps.apiBase, '/deposit/depositions', deps.token),
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' },
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"metadata":{"prereserve_doi":true}}' },
     'deposition create',
   );
   const id = json['id'];
@@ -201,28 +212,48 @@ async function draftFileIds(fetchImpl: typeof fetch, deps: ZenodoDeps, draftId: 
   return out;
 }
 
+/** Delete one file from a draft deposition. */
+async function deleteDraftFile(
+  fetchImpl: typeof fetch,
+  deps: ZenodoDeps,
+  draftId: number,
+  fileId: number,
+  filename: string,
+): Promise<void> {
+  // A 204 carries no body, so the JSON-expecting helper does not apply.
+  const gone = await fetchImpl(authed(deps.apiBase, `/deposit/depositions/${draftId}/files/${fileId}`, deps.token), {
+    method: 'DELETE',
+  });
+  if (!gone.ok) {
+    throw new Error(`zenodo stale file delete of ${filename} failed (${gone.status})${await readError(gone).then((d) => (d ? `: ${d}` : ''))}`);
+  }
+}
+
 /** Upload every file into the draft bucket, replacing same-named files the
- *  new-version draft inherited. Returns the local MD5 of each file, used to
- *  verify the published record below. */
+ *  new-version draft inherited. When prune is set, draft files outside the
+ *  selection are deleted too, so the draft holds exactly what publication
+ *  would upload. Returns the local MD5 of each file, used to verify the
+ *  published record below. */
 async function uploadFiles(
   fetchImpl: typeof fetch,
   deps: ZenodoDeps,
   draftId: number,
   bucket: string,
   files: ZenodoFile[],
+  prune = false,
 ): Promise<Map<string, string>> {
   const inherited = await draftFileIds(fetchImpl, deps, draftId);
+  if (prune) {
+    const keep = new Set(files.map((f) => f.filename));
+    for (const [name, id] of inherited) {
+      if (!keep.has(name)) await deleteDraftFile(fetchImpl, deps, draftId, id, name);
+    }
+  }
   const md5s = new Map<string, string>();
   for (const file of files) {
     const old = inherited.get(file.filename);
     if (old !== undefined) {
-      // A 204 carries no body, so the JSON-expecting helper does not apply.
-      const gone = await fetchImpl(authed(deps.apiBase, `/deposit/depositions/${draftId}/files/${old}`, deps.token), {
-        method: 'DELETE',
-      });
-      if (!gone.ok) {
-        throw new Error(`zenodo stale file delete of ${file.filename} failed (${gone.status})${await readError(gone).then((d) => (d ? `: ${d}` : ''))}`);
-      }
+      await deleteDraftFile(fetchImpl, deps, draftId, old, file.filename);
     }
     const put = await fetchImpl(`${bucket}/${encodeURIComponent(file.filename)}?access_token=${encodeURIComponent(deps.token)}`, {
       method: 'PUT',
@@ -235,26 +266,124 @@ async function uploadFiles(
   return md5s;
 }
 
+/** Read an existing unpublished draft deposition: its id and its file
+ *  bucket. Throws when the deposition is gone or carries no bucket. */
+export async function openDraft(
+  deps: ZenodoDeps & { draftDepositionId: number },
+): Promise<{ id: number; bucket: string }> {
+  const fetchImpl = deps.fetchImpl ?? fetch;
+  const { json } = await checked(
+    fetchImpl,
+    authed(deps.apiBase, `/deposit/depositions/${deps.draftDepositionId}`, deps.token),
+    {},
+    'draft read',
+  );
+  const id = json['id'];
+  const bucket = (json['links'] as Record<string, unknown> | undefined)?.['bucket'];
+  if (typeof id !== 'number' || typeof bucket !== 'string') throw new Error('zenodo draft read returned no draft');
+  return { id, bucket };
+}
+
+/** The DOI Zenodo reserved for this draft deposition: the prereserved DOI
+ *  when present, else the record DOI. Throws when neither is present. */
+export function reservedDoiOf(draft: Record<string, unknown>): string {
+  const metadata = draft['metadata'];
+  if (typeof metadata === 'object' && metadata !== null) {
+    const prereserve = (metadata as Record<string, unknown>)['prereserve_doi'];
+    if (typeof prereserve === 'object' && prereserve !== null) {
+      const doi = (prereserve as Record<string, unknown>)['doi'];
+      if (typeof doi === 'string' && doi !== '') return doi;
+    }
+  }
+  const doi = draft['doi'];
+  if (typeof doi === 'string' && doi !== '') return doi;
+  throw new Error('zenodo draft returned no reserved DOI');
+}
+
+/** Set the deposition metadata, shared by the draft and publish flows. */
+async function setMetadata(
+  fetchImpl: typeof fetch,
+  deps: ZenodoDeps,
+  draftId: number,
+  metadata: Record<string, unknown>,
+): Promise<void> {
+  await checked(
+    fetchImpl,
+    authed(deps.apiBase, `/deposit/depositions/${draftId}`, deps.token),
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ metadata }) },
+    'metadata set',
+  );
+}
+
+export interface ZenodoDraftResult {
+  draftDepositionId: number;
+  reservedDoi: string;
+}
+
+/** Create (or update, when draftDepositionId names an existing draft) an
+ *  unpublished Zenodo deposition: files uploaded, metadata set, DOI
+ *  reserved. A new draft is a new version of priorDepositionId for a
+ *  re-audit, exactly like publication, so publishing it later keeps the
+ *  concept chain. The draft holds exactly the selected files. Never
+ *  publishes and never deletes. */
+export async function draftAudit(
+  deps: ZenodoDeps & {
+    metadata: Record<string, unknown>;
+    files: ZenodoFile[];
+    priorDepositionId?: number | null;
+    draftDepositionId?: number | null;
+  },
+): Promise<ZenodoDraftResult> {
+  const fetchImpl = deps.fetchImpl ?? fetch;
+  const existing = deps.draftDepositionId ?? null;
+  const draft = existing !== null ? await openDraft({ ...deps, draftDepositionId: existing }) : await createDraft(fetchImpl, deps, deps.priorDepositionId ?? null);
+  await uploadFiles(fetchImpl, deps, draft.id, draft.bucket, deps.files, true);
+  await setMetadata(fetchImpl, deps, draft.id, deps.metadata);
+  const { json } = await checked(
+    fetchImpl,
+    authed(deps.apiBase, `/deposit/depositions/${draft.id}`, deps.token),
+    {},
+    'draft read',
+  );
+  return { draftDepositionId: draft.id, reservedDoi: reservedDoiOf(json) };
+}
+
+/** Delete an unpublished draft deposition. Throws when Zenodo refuses. */
+export async function discardDraft(
+  deps: ZenodoDeps & { draftDepositionId: number },
+): Promise<void> {
+  const fetchImpl = deps.fetchImpl ?? fetch;
+  const res = await fetchImpl(authed(deps.apiBase, `/deposit/depositions/${deps.draftDepositionId}`, deps.token), {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`zenodo draft discard failed (${res.status})${await readError(res).then((d) => (d ? `: ${d}` : ''))}`);
+  }
+}
+
 /** Publish the draft and verify every uploaded file against the record's
  *  MD5 checksum: the SHA-256 was already checked against the catalogue
- *  before upload, the record side is checked here. */
+ *  before upload, the record side is checked here. When draftDepositionId
+ *  names an existing draft, that draft is published as-is; otherwise a new
+ *  draft is created. A created draft is removed when publishing fails; a
+ *  reused draft is kept so the operator can retry. */
 export async function depositAudit(
   deps: ZenodoDeps & {
     metadata: Record<string, unknown>;
     files: ZenodoFile[];
     priorDepositionId?: number | null;
+    draftDepositionId?: number | null;
   },
 ): Promise<ZenodoDepositResult> {
   const fetchImpl = deps.fetchImpl ?? fetch;
-  const draft = await createDraft(fetchImpl, deps, deps.priorDepositionId ?? null);
+  const existing = deps.draftDepositionId ?? null;
+  const created = existing === null;
+  const draft = created ? await createDraft(fetchImpl, deps, deps.priorDepositionId ?? null) : await openDraft({ ...deps, draftDepositionId: existing });
   try {
-    const md5s = await uploadFiles(fetchImpl, deps, draft.id, draft.bucket, deps.files);
-    await checked(
-      fetchImpl,
-      authed(deps.apiBase, `/deposit/depositions/${draft.id}`, deps.token),
-      { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ metadata: deps.metadata }) },
-      'metadata set',
-    );
+    // A reused draft is pruned to the selection; a created draft keeps the
+    // files a new-version draft inherits, as publication always has.
+    const md5s = await uploadFiles(fetchImpl, deps, draft.id, draft.bucket, deps.files, existing !== null);
+    await setMetadata(fetchImpl, deps, draft.id, deps.metadata);
     const { json: published } = await checked(
       fetchImpl,
       authed(deps.apiBase, `/deposit/depositions/${draft.id}/actions/publish`, deps.token),
@@ -283,11 +412,15 @@ export async function depositAudit(
     }
     return { versionDoi, conceptDoi, recordId };
   } catch (err) {
-    // A failed deposit leaves a draft behind: remove it so a retry starts clean.
-    try {
-      await fetchImpl(authed(deps.apiBase, `/deposit/depositions/${draft.id}`, deps.token), { method: 'DELETE' });
-    } catch {
-      // The draft cleanup is best effort; the original error is what matters.
+    // A failed deposit on a created draft leaves it behind: remove it so a
+    // retry starts clean. A reused draft is kept so the operator can retry
+    // the same draft.
+    if (created) {
+      try {
+        await fetchImpl(authed(deps.apiBase, `/deposit/depositions/${draft.id}`, deps.token), { method: 'DELETE' });
+      } catch {
+        // The draft cleanup is best effort; the original error is what matters.
+      }
     }
     throw err;
   }

@@ -524,10 +524,14 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   }
   if (doc['deposit'] !== undefined) {
     const deposit = doc['deposit'];
-    if (enterObject(ctx, deposit, '$.deposit', 'deposit', ['versionDoi', 'conceptDoi', 'depositedAt', 'consent'])) {
+    if (enterObject(ctx, deposit, '$.deposit', 'deposit', ['versionDoi', 'conceptDoi', 'depositedAt', 'consent', 'draftDepositionId', 'draftDoi'])) {
       checkOptionalString(ctx, deposit['versionDoi'], '$.deposit.versionDoi', 'deposit version DOI', { pattern: DOI_RE });
       checkOptionalString(ctx, deposit['conceptDoi'], '$.deposit.conceptDoi', 'deposit concept DOI', { pattern: DOI_RE });
       checkOptionalString(ctx, deposit['depositedAt'], '$.deposit.depositedAt', 'deposit date', { format: 'date' });
+      if (deposit['draftDepositionId'] !== undefined) {
+        checkInt(ctx, deposit['draftDepositionId'], '$.deposit.draftDepositionId', 'deposit draft deposition id', 1, Number.MAX_SAFE_INTEGER);
+      }
+      checkOptionalString(ctx, deposit['draftDoi'], '$.deposit.draftDoi', 'deposit draft DOI', { pattern: DOI_RE });
       if (deposit['consent'] !== undefined && deposit['consent'] !== true) {
         err(ctx, '$.deposit.consent', 'deposit consent must be true');
       }
