@@ -95,6 +95,44 @@ the agent creates has no attendees and sends no notifications; its
 description carries the client's name, number, service, language and
 intake brief.
 
+Public agenda (no model): the same Worker also answers
+`https://agenda.univerlab.org` so the site's booking form can offer the
+free 15-minute first call while the WhatsApp number is not approved.
+No WhatsApp secret is needed for these routes, and the WhatsApp
+webhook and the agent's behaviour do not change.
+
+- `GET /slots` returns the free first-call starts as UTC instants,
+  computed with the same windows, margin, sessions-per-day, notice,
+  holidays and both calendars as the agent's offers. Answers may be up
+  to 60 seconds old.
+- `POST /book` takes `{ name, email, lang, note?, slot, turnstileToken }`
+  (`lang` is `es` or `en`, `note` at most 500 characters, `slot` one of
+  the offered UTC instants) and books through the same serialized owner
+  and limits as the agent's bookings, with the lowercased email as the
+  contact. A successful booking creates one event titled like the
+  agent's first calls, with a Google Meet link, the client as its only
+  guest and Google sending the invitation; the description carries the
+  name, email, language, note, the channel (`web`) and a private cancel
+  link. It answers `{ ok: true, slot, meet }`.
+- `GET /cancel?t=…` shows the booking and asks for confirmation;
+  `POST /cancel` deletes the event, frees the slot and lets Google
+  notify the guest. The link cannot be guessed and stops working once
+  the call has started.
+- Every refusal is one fixed reason and creates nothing:
+  `verification` (Turnstile failed), `invalid` (a field),
+  `slot-taken`, `limit` (any per-contact, per-address or global limit),
+  `unavailable` (calendar or configuration down).
+- Browsers may call these routes only from `https://univerlab.org`
+  (`/slots` is also allowed from `localhost` origins so a local or
+  preview build can show slots).
+- One address gets at most 3 booking requests per hour and 30 slot reads
+  per minute; addresses are kept only as salted hashes for at most
+  24 hours.
+- `TURNSTILE_SECRET` (deploy secret, passed by the deploy workflow)
+  verifies the Turnstile token with Cloudflare before anything else.
+  Without it booking answers `unavailable` and slot reads still work.
+  Tests use Cloudflare's published Turnstile test keys.
+
 Text model (configuration, not code): the `production`
 environment's variables `WA_TEXT_MODEL` and
 `WA_TEXT_MODEL_OPTIONS` reach the Worker as `TEXT_MODEL`

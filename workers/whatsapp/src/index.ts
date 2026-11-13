@@ -1,12 +1,16 @@
 import { parseInbound, verifySignature } from './meta';
+import { handleAgenda } from './agenda';
 import type { Env } from './env';
 
 export { Conversation } from './conversation';
 export { Operator } from './operator';
 export { Calendar } from './calendar';
+export { Gate } from './gate';
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const agenda = await handleAgenda(req, env);
+    if (agenda) return agenda;
     const url = new URL(req.url);
     if (req.method === 'GET' && url.pathname === '/webhook') {
       if (

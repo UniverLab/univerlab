@@ -48,6 +48,7 @@ jobs:
             GOOGLE_CLIENT_ID
             GOOGLE_CLIENT_SECRET
             GOOGLE_REFRESH_TOKEN
+            TURNSTILE_SECRET
           # The text model and the booking configuration are configuration,
           # not code: change the environment variables and re-run this
           # workflow, no commit or release needed.
@@ -66,6 +67,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
           TEXT_MODEL: ${{ vars.WA_TEXT_MODEL }}
           TEXT_MODEL_OPTIONS: ${{ vars.WA_TEXT_MODEL_OPTIONS }}
           WORKBENCH_CALENDAR_ID: ${{ vars.WA_WORKBENCH_CALENDAR_ID }}

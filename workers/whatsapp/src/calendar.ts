@@ -159,8 +159,12 @@ export class Calendar extends DurableObject<Env> {
       switch (action) {
         case 'status':
           return Response.json(await this.serial(() => this.opStatus(args)));
+        case 'quote':
+          return Response.json(await this.serial(() => this.opQuote(args)));
         case 'reserve':
           return Response.json(await this.serial(() => this.opReserve(args)));
+        case 'cancel':
+          return Response.json(await this.serial(() => this.opCancel(args)));
         case 'move':
           return Response.json(await this.serial(() => this.opMove(args)));
         case 'confirm':
@@ -391,6 +395,24 @@ export class Calendar extends DurableObject<Env> {
     return { ok: true, active: null, slots: this.quote(service, minutes, now, live.busy, live.events) };
   }
 
+  /**
+   * Public slot read: the free first-call slots under the same configuration
+   * and rules as the agent's offers, with no contact admitted and no model
+   * anywhere in the path.
+   */
+  private async opQuote(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const now = typeof args.now === 'number' ? args.now : Date.now();
+    const oauth = googleOAuth(this.env);
+    const wbId = this.env.WORKBENCH_CALENDAR_ID;
+    if (!oauth || !wbId) return { ok: false, reason: 'calendar-down' };
+    const cfg = bookingConfig(this.env);
+    const live = await this.listing(oauth, wbId, now, cfg.horizonDays);
+    if (!live) return { ok: false, reason: 'calendar-down' };
+    this.verify(live.events);
+    this.prune(now - Math.max(cfg.freeCallDays, cfg.expiredHoldDays) * DAY_MS);
+    return { ok: true, slots: this.quote('first-call', 15, now, live.busy, live.events) };
+  }
+
   private async opReserve(args: Record<string, unknown>): Promise<Record<string, unknown>> {
     const key = typeof args.contactKey === 'string' ? args.contactKey : '';
     const service = typeof args.service === 'string' ? args.service : 'consultation';
@@ -398,6 +420,9 @@ export class Calendar extends DurableObject<Env> {
     const minutes = typeof args.minutes === 'number' ? args.minutes : minutesFor(service);
     const summary = typeof args.summary === 'string' ? args.summary : service;
     const description = typeof args.description === 'string' ? args.description : '';
+    const attendee = typeof args.attendee === 'string' && args.attendee ? args.attendee : undefined;
+    const conference = args.conference === true;
+    const sendUpdates = args.sendUpdates === 'all' ? 'all' : 'none';
     const now = typeof args.now === 'number' ? args.now : Date.now();
     if (!key || !startIso) return { ok: false, reason: 'calendar-down' };
     const oauth = googleOAuth(this.env);
@@ -430,12 +455,20 @@ export class Calendar extends DurableObject<Env> {
     let created: CalEvent;
     try {
       const token = await accessToken(oauth);
-      created = await insertEvent(token, wbId, {
-        summary: holdSummary(summary, hold),
-        description,
-        startIso,
-        endIso,
-      });
+      created = await insertEvent(
+        token,
+        wbId,
+        {
+          summary: holdSummary(summary, hold),
+          description,
+          startIso,
+          endIso,
+          attendee,
+          conference,
+        },
+        undefined,
+        sendUpdates
+      );
     } catch {
       return { ok: false, reason: 'calendar-down' };
     }
@@ -460,7 +493,34 @@ export class Calendar extends DurableObject<Env> {
       moves: 0,
       updated_at: now,
     });
-    return { ok: true, eventId: created.id, start: startIso, end: endIso, kind: hold ? 'hold' : 'booked' };
+    return { ok: true, eventId: created.id, start: startIso, end: endIso, kind: hold ? 'hold' : 'booked', meet: created.hangoutLink ?? '' };
+  }
+  /**
+   * Public booking cancel: the web cancel link carries the contact and the
+   * exact booked start; a mismatch is no-booking, a started call is gone,
+   * and the delete notifies the guest like the booking did.
+   */
+  private async opCancel(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const key = typeof args.contactKey === 'string' ? args.contactKey : '';
+    const startIso = typeof args.startIso === 'string' ? args.startIso : '';
+    const now = typeof args.now === 'number' ? args.now : Date.now();
+    if (!key || !startIso) return { ok: false, reason: 'calendar-down' };
+    const oauth = googleOAuth(this.env);
+    const wbId = this.env.WORKBENCH_CALENDAR_ID;
+    if (!oauth || !wbId) return { ok: false, reason: 'calendar-down' };
+    const row = this.activeFor(key);
+    if (!row || row.start !== startIso) return { ok: false, reason: 'no-booking' };
+    if (now >= Date.parse(row.start)) return { ok: false, reason: 'started' };
+    try {
+      const token = await accessToken(oauth);
+      // A failed delete must not report a cancellation: the guest would keep
+      // the invitation. Leave the row active so confirming again still works.
+      await deleteEvent(token, wbId, row.event_id, undefined, 'all');
+      this.sql().exec("UPDATE reservations SET status = 'released' WHERE event_id = ?", row.event_id);
+      return { ok: true, start: row.start };
+    } catch {
+      return { ok: false, reason: 'calendar-down' };
+    }
   }
 
   private async opMove(args: Record<string, unknown>): Promise<Record<string, unknown>> {

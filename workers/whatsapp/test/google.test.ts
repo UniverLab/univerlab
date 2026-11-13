@@ -129,6 +129,71 @@ test('reads one event and reports a missing one as null', async () => {
   await expect(getEvent('tok', 'wb', 'e1', failingFetch(500))).rejects.toThrow('getEvent');
 });
 
+test('the web booking invites one guest, attaches Meet and notifies', async () => {
+  let seen: { url: string; init?: RequestInit } | null = null;
+  const fetchFn = stubFetch((url, init) => {
+    seen = { url, init };
+    return {
+      id: 'web1',
+      summary: 'First call · Ana',
+      start: { dateTime: '2026-11-17T20:00:00Z' },
+      end: { dateTime: '2026-11-17T20:15:00Z' },
+      hangoutLink: 'https://meet.google.com/abc-defg-hij',
+    };
+  });
+  const ev = await insertEvent(
+    'tok',
+    'wb',
+    {
+      summary: 'First call · Ana',
+      description: 'brief',
+      startIso: '2026-11-17T20:00:00Z',
+      endIso: '2026-11-17T20:15:00Z',
+      attendee: 'ana@example.com',
+      conference: true,
+    },
+    fetchFn,
+    'all'
+  );
+  // The meeting link survives parsing so the booking can answer it.
+  expect(ev.hangoutLink).toBe('https://meet.google.com/abc-defg-hij');
+  expect(seen?.url).toContain('sendUpdates=all');
+  expect(seen?.url).toContain('conferenceDataVersion=1');
+  const body = JSON.parse(String(seen?.init?.body)) as Record<string, unknown>;
+  expect(body).toMatchObject({ attendees: [{ email: 'ana@example.com' }] });
+  const conference = body.conferenceData as {
+    createRequest: { conferenceSolutionKey: { type: string } };
+  };
+  expect(conference.createRequest.conferenceSolutionKey.type).toBe('hangoutsMeet');
+});
+
+test('events without video carry no meeting link', async () => {
+  const fetchFn = stubFetch(() => ({
+    id: 'e9',
+    summary: 'First call · Ana',
+    start: { dateTime: '2026-11-17T20:00:00Z' },
+    end: { dateTime: '2026-11-17T20:15:00Z' },
+  }));
+  const ev = await insertEvent(
+    'tok',
+    'wb',
+    { summary: 'x', description: '', startIso: '2026-11-17T20:00:00Z', endIso: '2026-11-17T20:15:00Z' },
+    fetchFn
+  );
+  expect(ev.hangoutLink).toBeUndefined();
+});
+
+test('a cancel delete notifies the guest', async () => {
+  let seenUrl = '';
+  const inner = stubFetch(() => ({}));
+  const fetchFn = (async (url: string, init?: RequestInit) => {
+    seenUrl = url;
+    return inner(url, init);
+  }) as FetchFn;
+  await deleteEvent('tok', 'wb', 'e1', fetchFn, 'all');
+  expect(seenUrl).toContain('sendUpdates=all');
+});
+
 test('patches titles and tolerates a deleted-away delete', async () => {
   const fetchFn = stubFetch(() => ({
     id: 'e1',

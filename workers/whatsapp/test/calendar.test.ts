@@ -422,3 +422,135 @@ test('a second free first call inside 90 days is refused after the first is rele
 });
 
 const DAY_MS = 86400000;
+
+test('quote offers the same free first-call slots as the agent rules', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const res = await call(cal, { action: 'quote', now: MON_12 });
+  expect(res.ok).toBe(true);
+  // No contact is admitted and no limits are checked: the public read only
+  // quotes. The offer matches the agent's own computation exactly.
+  expect(res.slots).toEqual(freeSlots(quoteCfg(), [], [], 15, MON_12));
+  expect(res.slots.length).toBeGreaterThan(0);
+});
+
+test('quote sees the same busy blocks as the agent, in both calendars', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const before = (await call(cal, { action: 'quote', now: MON_12 })).slots as string[];
+  expect(before.length).toBeGreaterThan(1);
+  // Blocking the first offered slot in the primary calendar removes it.
+  const first = before[0];
+  (freeBusy as jest.Mock).mockImplementation(async () => [
+    { start: first, end: new Date(Date.parse(first) + 15 * 60000).toISOString() },
+  ]);
+  const after = (await call(cal, { action: 'quote', now: MON_12 })).slots as string[];
+  expect(after).not.toContain(first);
+});
+
+test('a web reserve invites the guest, attaches Meet and answers the link', async () => {
+  // The insert mock answers a Meet link, like Google does for conference events.
+  (insertEvent as jest.Mock).mockImplementation(
+    async (_t: string, _c: string, ev: { summary: string; startIso: string; endIso: string }) => {
+      evCounter += 1;
+      const created = {
+        id: 'ev' + evCounter,
+        summary: ev.summary,
+        start: ev.startIso,
+        end: ev.endIso,
+        hangoutLink: 'https://meet.google.com/abc-defg-hij',
+      };
+      calEvents.push(created);
+      return { ...created };
+    }
+  );
+  const store = makeStore();
+  const cal = makeCal(store);
+  const slots = freeSlots(quoteCfg(), [], [], 15, MON_12);
+  const res = await call(cal, {
+    action: 'reserve',
+    service: 'first-call',
+    contactKey: 'web:ana@example.com',
+    startIso: slots[0],
+    minutes: 15,
+    summary: 'Primera llamada · Ana',
+    description: 'UniverLab · Ana <ana@example.com>',
+    attendee: 'ana@example.com',
+    conference: true,
+    sendUpdates: 'all',
+    now: MON_12,
+  });
+  expect(res.ok).toBe(true);
+  expect(res.meet).toBe('https://meet.google.com/abc-defg-hij');
+  const sent = (insertEvent as jest.Mock).mock.calls[0];
+  expect(sent[2]).toMatchObject({ attendee: 'ana@example.com', conference: true });
+  expect(sent[4]).toBe('all');
+  // The agent path still books without guests, Meet or notifications, taking
+  // a 60-minute start (a 15-minute start cannot hold a 60-minute session).
+  const hourSlots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const agent = await call(cal, {
+    action: 'reserve', contactKey: 'wa:111', service: 'consultation',
+    startIso: hourSlots[hourSlots.length - 1], minutes: 60, summary: '[Por confirmar] h', description: '', now: MON_12,
+  });
+  expect(agent.ok).toBe(true);
+  const agentSent = (insertEvent as jest.Mock).mock.calls[1];
+  expect(agentSent[2]).toMatchObject({ attendee: undefined, conference: false });
+  expect(agentSent[4]).toBe('none');
+});
+
+test('cancel frees the slot, notifies, and rejects replays and started calls', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const slots = freeSlots(quoteCfg(), [], [], 15, MON_12);
+  const booked = await call(cal, {
+    action: 'reserve', contactKey: 'web:ana@example.com', service: 'first-call',
+    startIso: slots[0], minutes: 15, summary: 'Primera llamada · Ana', description: '', now: MON_12,
+  });
+  expect(booked.ok).toBe(true);
+  const cancelled = await call(cal, {
+    action: 'cancel', contactKey: 'web:ana@example.com', startIso: slots[0], now: MON_12,
+  });
+  expect(cancelled).toEqual({ ok: true, start: slots[0] });
+  expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', booked.eventId, undefined, 'all');
+  expect(store.reservations[0].status).toBe('released');
+  // A replay finds no booking, like a forged start does.
+  expect(await call(cal, {
+    action: 'cancel', contactKey: 'web:ana@example.com', startIso: slots[0], now: MON_12,
+  })).toEqual({ ok: false, reason: 'no-booking' });
+  expect(await call(cal, {
+    action: 'cancel', contactKey: 'web:ana@example.com', startIso: slots[1], now: MON_12,
+  })).toEqual({ ok: false, reason: 'no-booking' });
+  // Once the call has started the link is dead instead of cancelling.
+  const store2 = makeStore();
+  const cal2 = makeCal(store2);
+  await call(cal2, {
+    action: 'reserve', contactKey: 'web:bea@example.com', service: 'first-call',
+    startIso: slots[1], minutes: 15, summary: 'f', description: '', now: MON_12,
+  });
+  expect(await call(cal2, {
+    action: 'cancel', contactKey: 'web:bea@example.com', startIso: slots[1], now: Date.parse(slots[1]),
+  })).toEqual({ ok: false, reason: 'started' });
+});
+
+test('a failed delete is not a cancellation: the row stays active and a retry works', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const slots = freeSlots(quoteCfg(), [], [], 15, MON_12);
+  const booked = await call(cal, {
+    action: 'reserve', contactKey: 'web:ana@example.com', service: 'first-call',
+    startIso: slots[0], minutes: 15, summary: 'Primera llamada · Ana', description: '', now: MON_12,
+  });
+  expect(booked.ok).toBe(true);
+  (deleteEvent as jest.Mock).mockRejectedValueOnce(new Error('google deleteEvent 500'));
+  expect(await call(cal, {
+    action: 'cancel', contactKey: 'web:ana@example.com', startIso: slots[0], now: MON_12,
+  })).toEqual({ ok: false, reason: 'calendar-down' });
+  // Nothing was released and the event still exists, so confirming again cancels it.
+  expect(store.reservations[0].status).toBe('active');
+  expect(calEvents.map((e) => e.id)).toContain(booked.eventId);
+  expect(await call(cal, {
+    action: 'cancel', contactKey: 'web:ana@example.com', startIso: slots[0], now: MON_12,
+  })).toEqual({ ok: true, start: slots[0] });
+  expect(store.reservations[0].status).toBe('released');
+  expect(calEvents.map((e) => e.id)).not.toContain(booked.eventId);
+});

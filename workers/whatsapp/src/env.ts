@@ -3,6 +3,8 @@ export interface Env {
   CONVERSATION: DurableObjectNamespace<import('./conversation').Conversation>;
   REGISTRY?: DurableObjectNamespace<import('./operator').Operator>;
   CALENDAR?: DurableObjectNamespace<import('./calendar').Calendar>;
+  GATE?: DurableObjectNamespace<import('./gate').Gate>;
+  TURNSTILE_SECRET?: string;
   WA_APP_SECRET: string;
   WA_VERIFY_TOKEN: string;
   WA_ACCESS_TOKEN: string;

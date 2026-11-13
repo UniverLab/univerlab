@@ -21,6 +21,8 @@ export interface CalEvent {
   summary: string;
   start: string;
   end: string;
+  /** Google Meet link, present only when the event carries a video entry point. */
+  hangoutLink?: string;
 }
 
 function auth(token: string): Record<string, string> {
@@ -83,6 +85,8 @@ function parseEvent(item: unknown, fallbackStart: string, fallbackEnd: string): 
   const e = item as {
     id?: unknown;
     summary?: unknown;
+    hangoutLink?: unknown;
+    conferenceData?: { entryPoints?: Array<{ entryPointType?: unknown; uri?: unknown }> };
     start?: { dateTime?: unknown; date?: unknown };
     end?: { dateTime?: unknown; date?: unknown };
   };
@@ -101,12 +105,21 @@ function parseEvent(item: unknown, fallbackStart: string, fallbackEnd: string): 
     if (!m) return null;
     end = new Date(bogotaToUtcMs(Number(m[1]), Number(m[2]), Number(m[3]), 0, 0)).toISOString();
   }
-  return {
+  const out: CalEvent = {
     id: e.id,
     summary: typeof e.summary === 'string' ? e.summary : '',
     start: start ?? fallbackStart,
     end: end ?? fallbackEnd,
   };
+  if (typeof e.hangoutLink === 'string' && e.hangoutLink) {
+    out.hangoutLink = e.hangoutLink;
+  } else if (Array.isArray(e.conferenceData?.entryPoints)) {
+    const video = e.conferenceData.entryPoints.find(
+      (p) => p && p.entryPointType === 'video' && typeof p.uri === 'string' && p.uri
+    );
+    if (video && typeof video.uri === 'string') out.hangoutLink = video.uri;
+  }
+  return out;
 }
 
 /** Timed and all-day events of one calendar in range (single instances). */
@@ -147,40 +160,55 @@ export async function getEvent(
   return parseEvent(await res.json(), '', '');
 }
 
+export type SendUpdates = 'none' | 'all';
+
 export interface NewEvent {
   summary: string;
   description: string;
   startIso: string;
   endIso: string;
+  /** Guest email: the event invites this address and Google notifies it. */
+  attendee?: string;
+  /** Attach a Google Meet link to the event. */
+  conference?: boolean;
 }
 
 function eventBody(ev: NewEvent): Record<string, unknown> {
-  return {
+  const body: Record<string, unknown> = {
     summary: ev.summary,
     description: ev.description,
     start: { dateTime: ev.startIso, timeZone: TIME_ZONE },
     end: { dateTime: ev.endIso, timeZone: TIME_ZONE },
     // The lab confirms everything in the WhatsApp chat: no attendees, no emails.
-    attendees: [],
+    attendees: ev.attendee ? [{ email: ev.attendee }] : [],
     reminders: { useDefault: false, overrides: [] },
   };
+  if (ev.conference) {
+    body.conferenceData = {
+      createRequest: {
+        requestId: 'univerlab-' + Date.parse(ev.startIso) + '-' + Math.floor(Math.random() * 1e9),
+        conferenceSolutionKey: { type: 'hangoutsMeet' },
+      },
+    };
+  }
+  return body;
 }
 
-/** Create an event without attendees, emails or notifications; returns its id. */
+/** Create an event; the agent path keeps no attendees, no Meet and no notifications. */
 export async function insertEvent(
   token: string,
   calendarId: string,
   ev: NewEvent,
-  fetchFn: FetchFn = fetch
+  fetchFn: FetchFn = fetch,
+  sendUpdates: SendUpdates = 'none'
 ): Promise<CalEvent> {
-  const res = await fetchFn(
-    API + '/calendars/' + encodeURIComponent(calendarId) + '/events?sendUpdates=none',
-    {
-      method: 'POST',
-      headers: { ...auth(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventBody(ev)),
-    }
-  );
+  let url = API + '/calendars/' + encodeURIComponent(calendarId) + '/events?sendUpdates=' + sendUpdates;
+  if (ev.conference) url += '&conferenceDataVersion=1';
+  const res = await fetchFn(url, {
+    method: 'POST',
+    headers: { ...auth(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify(eventBody(ev)),
+  });
   if (!res.ok) throw new Error('google insertEvent ' + res.status);
   const parsed = parseEvent(await res.json(), ev.startIso, ev.endIso);
   if (!parsed) throw new Error('google insertEvent empty');
@@ -210,16 +238,17 @@ export async function patchEvent(
   return parsed;
 }
 
-/** Delete an event without sending notifications; missing events are fine. */
+/** Delete an event; missing events are fine. */
 export async function deleteEvent(
   token: string,
   calendarId: string,
   eventId: string,
-  fetchFn: FetchFn = fetch
+  fetchFn: FetchFn = fetch,
+  sendUpdates: SendUpdates = 'none'
 ): Promise<void> {
   const res = await fetchFn(
     API + '/calendars/' + encodeURIComponent(calendarId) + '/events/' +
-      encodeURIComponent(eventId) + '?sendUpdates=none',
+      encodeURIComponent(eventId) + '?sendUpdates=' + sendUpdates,
     { method: 'DELETE', headers: auth(token) }
   );
   if (res.status === 404 || res.status === 410) return;

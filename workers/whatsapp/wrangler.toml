@@ -18,6 +18,10 @@ class_name = "Operator"
 name = "CALENDAR"
 class_name = "Calendar"
 
+[[durable_objects.bindings]]
+name = "GATE"
+class_name = "Gate"
+
 # SQLite-backed is required on the Workers Free plan.
 [[migrations]]
 tag = "v1"
@@ -30,6 +34,14 @@ new_sqlite_classes = ["Operator"]
 [[migrations]]
 tag = "v3"
 new_sqlite_classes = ["Calendar"]
+
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["Gate"]
+
+[[routes]]
+pattern = "agenda.univerlab.org"
+custom_domain = true
 
 [observability]
 enabled = true
