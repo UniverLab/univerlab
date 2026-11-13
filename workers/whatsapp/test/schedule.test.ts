@@ -31,6 +31,12 @@ test('defaults match the spec fallback', () => {
     maxPerDay: 3,
     noticeHours: 12,
     horizonDays: 14,
+    freeCallDays: 90,
+    expiredHoldDays: 14,
+    expiredHoldsMax: 2,
+    movesMax: 2,
+    openHoldsMax: 4,
+    bookingsPerDay: 4,
   });
 });
 
@@ -179,4 +185,29 @@ test('an absent or blank payee stays unset', () => {
   expect(bookingConfig({}).payee).toBeUndefined();
   expect(bookingConfig({ BOOKING_CONFIG: JSON.stringify({ payee: '   ' }) }).payee).toBeUndefined();
   expect(bookingConfig({ BOOKING_CONFIG: JSON.stringify({ payee: 42 }) }).payee).toBeUndefined();
+});
+
+test('parses the six limit fields and falls back field by field', () => {
+  const cfg = bookingConfig({
+    BOOKING_CONFIG: JSON.stringify({
+      freeCallDays: 30,
+      expiredHoldDays: 7,
+      expiredHoldsMax: 1,
+      movesMax: 1,
+      openHoldsMax: 2,
+      bookingsPerDay: 2,
+    }),
+  });
+  expect(cfg.freeCallDays).toBe(30);
+  expect(cfg.expiredHoldDays).toBe(7);
+  expect(cfg.expiredHoldsMax).toBe(1);
+  expect(cfg.movesMax).toBe(1);
+  expect(cfg.openHoldsMax).toBe(2);
+  expect(cfg.bookingsPerDay).toBe(2);
+  const bad = bookingConfig({
+    BOOKING_CONFIG: JSON.stringify({ freeCallDays: -1, movesMax: 'soon', openHoldsMax: [4] }),
+  });
+  expect(bad.freeCallDays).toBe(90);
+  expect(bad.movesMax).toBe(2);
+  expect(bad.openHoldsMax).toBe(4);
 });

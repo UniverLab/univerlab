@@ -2,6 +2,7 @@ export interface Env {
   AI: Ai;
   CONVERSATION: DurableObjectNamespace<import('./conversation').Conversation>;
   REGISTRY?: DurableObjectNamespace<import('./operator').Operator>;
+  CALENDAR?: DurableObjectNamespace<import('./calendar').Calendar>;
   WA_APP_SECRET: string;
   WA_VERIFY_TOKEN: string;
   WA_ACCESS_TOKEN: string;

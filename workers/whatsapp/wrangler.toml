@@ -14,6 +14,10 @@ class_name = "Conversation"
 name = "REGISTRY"
 class_name = "Operator"
 
+[[durable_objects.bindings]]
+name = "CALENDAR"
+class_name = "Calendar"
+
 # SQLite-backed is required on the Workers Free plan.
 [[migrations]]
 tag = "v1"
@@ -22,6 +26,10 @@ new_sqlite_classes = ["Conversation"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Operator"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Calendar"]
 
 [observability]
 enabled = true

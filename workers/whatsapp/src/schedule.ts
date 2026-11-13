@@ -11,6 +11,18 @@ export interface BookingConfig {
   payments?: { es: string; en: string };
   /** Expected recipient of the payment, matched against the receipt. */
   payee?: string;
+  /** Days a free first call blocks the next one for the same contact. */
+  freeCallDays: number;
+  /** Window in which expired unpaid holds count against the contact. */
+  expiredHoldDays: number;
+  /** Expired holds inside the window that block a further hold. */
+  expiredHoldsMax: number;
+  /** Times one booking may be moved. */
+  movesMax: number;
+  /** Unconfirmed holds across all contacts. */
+  openHoldsMax: number;
+  /** New holds and bookings created per Bogota calendar day, all contacts. */
+  bookingsPerDay: number;
 }
 
 export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
@@ -22,6 +34,12 @@ export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
   maxPerDay: 3,
   noticeHours: 12,
   horizonDays: 14,
+  freeCallDays: 90,
+  expiredHoldDays: 14,
+  expiredHoldsMax: 2,
+  movesMax: 2,
+  openHoldsMax: 4,
+  bookingsPerDay: 4,
 };
 
 function validWindows(value: unknown): Array<[number, number]> | null {
@@ -59,6 +77,12 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
       maxPerDay?: unknown;
       noticeHours?: unknown;
       horizonDays?: unknown;
+      freeCallDays?: unknown;
+      expiredHoldDays?: unknown;
+      expiredHoldsMax?: unknown;
+      movesMax?: unknown;
+      openHoldsMax?: unknown;
+      bookingsPerDay?: unknown;
       payments?: unknown;
       payee?: unknown;
     };
@@ -73,6 +97,18 @@ export function bookingConfig(env: { BOOKING_CONFIG?: string }): BookingConfig {
     if (noticeHours !== null) base.noticeHours = noticeHours;
     const horizonDays = validPositive(parsed.horizonDays);
     if (horizonDays !== null) base.horizonDays = Math.floor(horizonDays);
+    const freeCallDays = validPositive(parsed.freeCallDays);
+    if (freeCallDays !== null) base.freeCallDays = freeCallDays;
+    const expiredHoldDays = validPositive(parsed.expiredHoldDays);
+    if (expiredHoldDays !== null) base.expiredHoldDays = expiredHoldDays;
+    const expiredHoldsMax = validPositive(parsed.expiredHoldsMax);
+    if (expiredHoldsMax !== null) base.expiredHoldsMax = Math.floor(expiredHoldsMax);
+    const movesMax = validPositive(parsed.movesMax);
+    if (movesMax !== null) base.movesMax = Math.floor(movesMax);
+    const openHoldsMax = validPositive(parsed.openHoldsMax);
+    if (openHoldsMax !== null) base.openHoldsMax = Math.floor(openHoldsMax);
+    const bookingsPerDay = validPositive(parsed.bookingsPerDay);
+    if (bookingsPerDay !== null) base.bookingsPerDay = Math.floor(bookingsPerDay);
     const payments = parsed.payments as { es?: unknown; en?: unknown } | null | undefined;
     if (
       payments &&

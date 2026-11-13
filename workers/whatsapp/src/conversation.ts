@@ -32,20 +32,11 @@ import {
   bookingConfig,
   bogotaDateKey,
   formatSlot,
-  freeSlots,
-  type BookingConfig,
 } from './schedule';
-import {
-  accessToken,
-  deleteEvent,
-  freeBusy,
-  getEvent,
-  insertEvent,
-  listEvents,
-  patchEvent,
-  HOLD_PREFIX,
-  type GoogleOAuth,
-} from './google';
+import { HOLD_PREFIX } from './google';
+import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
+import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
+import type { ActiveInfo } from './calendar';
 import { register, release } from './registry';
 import {
   CALENDAR_DOWN,
@@ -70,21 +61,6 @@ const HOLD_MS = 24 * 3600 * 1000;
 const TAKEN_MS = 24 * 3600 * 1000;
 /** While a hold is pending the alarm re-checks the calendar at least hourly. */
 const HOLD_CHECK_MS = 3600 * 1000;
-
-function googleOAuth(env: Env): GoogleOAuth | null {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_REFRESH_TOKEN) {
-    return null;
-  }
-  return {
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
-    refreshToken: env.GOOGLE_REFRESH_TOKEN,
-  };
-}
-
-function calendarReady(env: Env): boolean {
-  return googleOAuth(env) !== null && !!env.WORKBENCH_CALENDAR_ID;
-}
 
 export const NON_TEXT = {
   es: 'Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.',
@@ -281,13 +257,12 @@ export class Conversation extends DurableObject<Env> {
       if (!raw) return { ok: false };
       const st = JSON.parse(raw) as BookingState;
       if (st.phase !== 'held' || !st.eventId) return { ok: false };
-      const oauth = googleOAuth(this.env);
-      const wbId = this.env.WORKBENCH_CALENDAR_ID;
-      if (!oauth || !wbId) return { ok: false };
-      const token = await accessToken(oauth);
-      await patchEvent(token, wbId, st.eventId, {
+      const res = await calendarCall(this.env, {
+        action: 'confirm',
+        contactKey: contactKey('wa', st.phone),
         summary: serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone),
       });
+      if (!res.ok) return { ok: false };
       st.phase = 'booked';
       this.state('booking', JSON.stringify(st));
       const at = Date.now();
@@ -316,15 +291,11 @@ export class Conversation extends DurableObject<Env> {
       const st = JSON.parse(raw) as BookingState;
       // The operator cancel always straight-cancels: no MOVE_ONCE reoffer.
       if (!st.eventId || !st.start) return { ok: false };
-      const oauth = googleOAuth(this.env);
-      const wbId = this.env.WORKBENCH_CALENDAR_ID;
-      if (!oauth || !wbId) return { ok: false };
-      const token = await accessToken(oauth);
-      try {
-        await deleteEvent(token, wbId, st.eventId);
-      } catch {
-        /* already gone */
-      }
+      const res = await calendarCall(this.env, {
+        action: 'release',
+        contactKey: contactKey('wa', st.phone),
+      });
+      if (!res.ok && res.reason !== 'no-booking') return { ok: false };
       this.state('booking', null);
       const at = Date.now();
       const text = renderBooking(CANCELLED[st.lang], {
@@ -350,17 +321,22 @@ export class Conversation extends DurableObject<Env> {
       const raw = this.state('booking');
       if (raw) {
         const st = JSON.parse(raw) as Partial<BookingState>;
-        const oauth = googleOAuth(this.env);
-        if (st.eventId && oauth && this.env.WORKBENCH_CALENDAR_ID) {
-          try {
-            await deleteEvent(await accessToken(oauth), this.env.WORKBENCH_CALENDAR_ID, st.eventId);
-          } catch {
-            /* the event is already gone */
-          }
+        if (st.eventId) {
+          // The owner releases the event; a missing one is already gone.
+          await calendarCall(this.env, {
+            action: 'release',
+            contactKey: contactKey('wa', (st.phone as string) ?? m.from),
+          });
         }
       }
     } catch {
       /* storage without a booking leaves nothing to release */
+    }
+    // Erasure also removes the contact's records from the owner.
+    try {
+      await calendarCall(this.env, { action: 'erase', contactKey: contactKey('wa', m.from) });
+    } catch {
+      /* the local wipe below still runs */
     }
     const handedOff = this.state('handoff') !== null;
     const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
@@ -447,42 +423,32 @@ export class Conversation extends DurableObject<Env> {
       if (st === null || typeof st !== 'object') {
         this.state('booking', null);
       } else if (st.phase === 'held' && st.eventId && Number.isFinite(st.createdAt)) {
-        const oauth = googleOAuth(this.env);
-        const wbId = this.env.WORKBENCH_CALENDAR_ID;
-        if (oauth && wbId) {
-          const deadline = st.createdAt + HOLD_MS;
-          try {
-            const token = await accessToken(oauth);
-            const ev = await getEvent(token, wbId, st.eventId);
-            if (ev !== null && !ev.summary.startsWith(HOLD_PREFIX)) {
-              st.phase = 'booked';
-              this.state('booking', JSON.stringify(st));
-              const text = renderBooking(CONFIRMED[st.lang], {
-                slot: formatSlot(st.start ?? '', st.lang),
-              });
-              await sendText(this.env, st.phone, text);
-              this.storeAssistant(Math.floor(now / 1000), 'a-alarm-confirm-' + st.eventId, text);
-              await this.deregister(st.phone);
-            } else if (now >= deadline) {
-              if (ev !== null) {
-                try {
-                  await deleteEvent(token, wbId, st.eventId);
-                } catch {
-                  /* already gone */
-                }
-              }
-              this.state('booking', null);
-              const text = EXPIRED[st.lang];
-              await sendText(this.env, st.phone, text);
-              this.storeAssistant(Math.floor(now / 1000), 'a-alarm-expire-' + st.eventId, text);
-              await this.deregister(st.phone);
-            }
-          } catch {
-            /* transient calendar failure: re-arm below and retry */
-          }
-          await this.armNext(now);
-          return;
+        // The owner decides expiry against the calendar: a hand-confirmed
+        // hold settles, a hand-deleted one stops counting, the deadline
+        // releases the event. A failure only re-arms and retries.
+        const res = await calendarCall(this.env, {
+          action: 'expire',
+          contactKey: contactKey('wa', st.phone),
+          now,
+        });
+        if (res.ok && res.expired === true) {
+          this.state('booking', null);
+          const text = EXPIRED[st.lang];
+          await sendText(this.env, st.phone, text);
+          this.storeAssistant(Math.floor(now / 1000), 'a-alarm-expire-' + st.eventId, text);
+          await this.deregister(st.phone);
+        } else if (res.ok && res.confirmed === true) {
+          st.phase = 'booked';
+          this.state('booking', JSON.stringify(st));
+          const text = renderBooking(CONFIRMED[st.lang], {
+            slot: formatSlot(st.start ?? '', st.lang),
+          });
+          await sendText(this.env, st.phone, text);
+          this.storeAssistant(Math.floor(now / 1000), 'a-alarm-confirm-' + st.eventId, text);
+          await this.deregister(st.phone);
         }
+        await this.armNext(now);
+        return;
       }
       await this.armNext(now);
       return;
@@ -554,58 +520,139 @@ export class Conversation extends DurableObject<Env> {
     this.storeAssistant(m.timestamp, 'a-' + m.id + '-caldown', down);
   }
 
+  /** A limit refusal: no event, the client gets the fixed wording and a person gets the brief. */
+  private async limitRefusal(
+    m: Inbound,
+    lang: BookingState['lang'],
+    phone: string,
+    name: string,
+    service: string,
+    brief: string[],
+    reason: 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves'
+  ): Promise<void> {
+    this.state('booking', null);
+    this.state('handoff', '1');
+    const code = await refuseAndHandOff(this.env, { lang, phone, name, service, brief, reason });
+    this.state('code', code);
+    const text = LIMIT_TEXT[reason][lang];
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-limit', text);
+  }
+
   private async startBooking(
     m: Inbound,
     st: IntakeState,
     service: BookingService
   ): Promise<void> {
-    const cfg = bookingConfig(this.env);
-    if (!calendarReady(this.env)) {
+    const b = await brief(this.env.AI, st, modelConfig(this.env));
+    const minutes = service === 'consultation' ? 60 : 15;
+    // The owner answers first: an active booking seeds the chat instead of
+    // offering, a limit refuses with fixed wording, and only a free contact
+    // gets an offer. Calendar trouble hands off as it does today.
+    const res = await calendarCall(this.env, {
+      action: 'status',
+      contactKey: contactKey('wa', m.from),
+      service,
+      minutes,
+      now: Date.now(),
+    });
+    if (!res.ok) {
+      if (res.reason === 'calendar-down') {
+        await this.calendarDown(m, st.lang, st.service, b.bullets, m.name ?? '');
+        return;
+      }
+      await this.limitRefusal(m, st.lang, m.from, m.name ?? '', st.service, b.bullets, res.reason as 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves');
+      return;
+    }
+    if (res.active) {
+      const active = res.active as ActiveInfo;
+      const seeded = seedFromActive(active, {
+        lang: st.lang,
+        phone: m.from,
+        name: m.name ?? '',
+        service,
+        brief: b.bullets,
+      });
+      this.state('booking', JSON.stringify(seeded));
+      this.state('intake', null);
+      const text = renderBooking(EXISTING[st.lang], { slot: formatSlot(active.start, st.lang) });
+      await sendText(this.env, m.from, text);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-existing', text);
+      return;
+    }
+    const slots = ((res.slots ?? []) as string[]).slice(0, 5);
+    if (slots.length === 0) {
       await this.finishBooking(m, st);
       return;
     }
-    const b = await brief(this.env.AI, st, modelConfig(this.env));
-    const minutes = service === 'consultation' ? 60 : 15;
-    try {
-      const oauth = googleOAuth(this.env) as GoogleOAuth;
-      const wbId = this.env.WORKBENCH_CALENDAR_ID as string;
-      const token = await accessToken(oauth);
-      const now = Date.now();
-      const timeMin = new Date(now).toISOString();
-      const timeMax = new Date(now + cfg.horizonDays * 86400000).toISOString();
-      const busy = await freeBusy(token, timeMin, timeMax, ['primary']);
-      const events = await listEvents(token, wbId, timeMin, timeMax);
-      const slots = freeSlots(cfg, busy, events, minutes, now).slice(0, 5);
-      if (slots.length === 0) {
-        await this.finishBooking(m, st);
+    const now = Date.now();
+    const booking: BookingState = {
+      service,
+      lang: st.lang,
+      offered: slots,
+      phase: 'offered',
+      createdAt: now,
+      phone: m.from,
+      name: m.name ?? '',
+      brief: b.bullets,
+    };
+    this.state('booking', JSON.stringify(booking));
+    this.state('intake', null);
+    const text = offerText(st.lang, slots.map((s) => formatSlot(s, st.lang)));
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-offer', text);
+  }
+
+  /** The lost race: the slot is gone, so the remaining ones are offered. */
+  private async slotTaken(m: Inbound, st: BookingState, minutes: number): Promise<void> {
+    const res = await calendarCall(this.env, {
+      action: 'status',
+      contactKey: contactKey('wa', m.from),
+      service: st.service,
+      minutes,
+      forMove: st.eventId !== undefined,
+      now: Date.now(),
+    });
+    if (!res.ok) {
+      if (res.reason === 'calendar-down') {
+        await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
         return;
       }
-      const booking: BookingState = {
-        service,
-        lang: st.lang,
-        offered: slots,
-        phase: 'offered',
-        createdAt: now,
-        phone: m.from,
-        name: m.name ?? '',
-        brief: b.bullets,
-      };
-      this.state('booking', JSON.stringify(booking));
-      this.state('intake', null);
-      const text = offerText(st.lang, slots.map((s) => formatSlot(s, st.lang)));
-      await sendText(this.env, m.from, text);
-      this.storeAssistant(m.timestamp, 'a-' + m.id + '-offer', text);
-    } catch {
-      await this.calendarDown(m, st.lang, st.service, b.bullets, m.name ?? '');
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, res.reason as 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves');
+      return;
     }
+    if (res.active && !st.eventId) {
+      const active = res.active as ActiveInfo;
+      const seeded = seedFromActive(active, {
+        lang: st.lang,
+        phone: st.phone,
+        name: st.name,
+        service: st.service,
+        brief: st.brief,
+      });
+      this.state('booking', JSON.stringify(seeded));
+      const text = renderBooking(EXISTING[st.lang], { slot: formatSlot(active.start, st.lang) });
+      await sendText(this.env, m.from, text);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-existing', text);
+      return;
+    }
+    const slots = ((res.slots ?? []) as string[]).slice(0, 5);
+    if (slots.length === 0) {
+      await this.notify(m);
+      const fallback = FALLBACK[st.lang];
+      await sendText(this.env, m.from, fallback);
+      this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
+      return;
+    }
+    st.offered = slots;
+    this.state('booking', JSON.stringify(st));
+    const text = SLOT_TAKEN[st.lang] + '\n' + offerText(st.lang, st.offered.map((s) => formatSlot(s, st.lang)));
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-retaken', text);
   }
 
   private async pickSlot(
     m: Inbound,
     st: BookingState,
-    cfg: BookingConfig,
-    oauth: GoogleOAuth,
-    wbId: string,
     slot1: number
   ): Promise<void> {
     const idx = slot1 - 1;
@@ -617,86 +664,126 @@ export class Conversation extends DurableObject<Env> {
     }
     const startIso = st.offered[idx];
     const minutes = st.service === 'consultation' ? 60 : 15;
-    const endIso = new Date(Date.parse(startIso) + minutes * 60000).toISOString();
     // A paid (operator-confirmed) consultation stays confirmed when the
     // client moves it; only unpaid holds carry the [Por confirmar] prefix.
     const hold = st.service === 'consultation' && st.phase !== 'booked';
-    let createdId: string | undefined;
-    try {
-      const token = await accessToken(oauth);
-      if (st.eventId) {
-        try {
-          await deleteEvent(token, wbId, st.eventId);
-        } catch {
-          /* replaced anyway */
+    const summary =
+      (hold ? HOLD_PREFIX : '') + serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone);
+    const description = formatBrief({
+      name: st.name,
+      phone: st.phone,
+      lang: st.lang,
+      service: st.service,
+      bullets: st.brief,
+    });
+    // The serialized owner checks the slot free again at write time: when
+    // two clients pick the same slot at once exactly one gets it.
+    const res = st.eventId
+      ? await calendarCall(this.env, {
+          action: 'move',
+          contactKey: contactKey('wa', st.phone),
+          startIso,
+          minutes,
+          summary,
+          description,
+          now: Date.now(),
+        })
+      : await calendarCall(this.env, {
+          action: 'reserve',
+          contactKey: contactKey('wa', st.phone),
+          service: st.service,
+          startIso,
+          minutes,
+          summary,
+          description,
+          now: Date.now(),
+        });
+    if (!res.ok) {
+      if (res.reason === 'slot-taken' || res.reason === 'no-booking') {
+        // The booking vanished under us (hand-deleted and reconciled): drop
+        // the stale event and re-offer as a fresh pick would.
+        if (res.reason === 'no-booking') {
+          st.eventId = undefined;
+          st.start = undefined;
+          st.phase = 'offered';
+          this.state('booking', JSON.stringify(st));
+        }
+        await this.slotTaken(m, st, minutes);
+        return;
+      }
+      if (res.reason === 'calendar-down') {
+        await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
+        return;
+      }
+      if (res.reason === 'existing' && !st.eventId) {
+        const status = await calendarCall(this.env, {
+          action: 'status',
+          contactKey: contactKey('wa', st.phone),
+          service: st.service,
+          minutes,
+          now: Date.now(),
+        });
+        if (status.ok && status.active) {
+          const active = status.active as ActiveInfo;
+          const seeded = seedFromActive(active, {
+            lang: st.lang,
+            phone: st.phone,
+            name: st.name,
+            service: st.service,
+            brief: st.brief,
+          });
+          this.state('booking', JSON.stringify(seeded));
+          const text = renderBooking(EXISTING[st.lang], { slot: formatSlot(active.start, st.lang) });
+          await sendText(this.env, m.from, text);
+          this.storeAssistant(m.timestamp, 'a-' + m.id + '-existing', text);
+          return;
         }
       }
-      const ev = await insertEvent(token, wbId, {
-        summary:
-          (hold ? HOLD_PREFIX : '') + serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone),
-        description: formatBrief({
-          name: st.name,
-          phone: st.phone,
-          lang: st.lang,
-          service: st.service,
-          bullets: st.brief,
-        }),
-        startIso,
-        endIso,
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, res.reason as 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves');
+      return;
+    }
+    const cfg = bookingConfig(this.env);
+    const now = Date.now();
+    const kind = res.kind === 'booked' ? 'booked' : 'hold';
+    st.phase = kind === 'hold' ? 'held' : 'booked';
+    st.eventId = res.eventId as string;
+    st.start = startIso;
+    if (kind === 'hold') st.createdAt = now;
+    this.state('booking', JSON.stringify(st));
+    if (kind === 'hold') {
+      const code = await register(this.env, {
+        phone: st.phone,
+        name: st.name,
+        lang: st.lang,
+        kind: 'hold',
+        service: st.service,
+        start: startIso,
+        eventId: st.eventId,
       });
-      createdId = ev.id;
-      const now = Date.now();
-      st.phase = hold ? 'held' : 'booked';
-      st.eventId = ev.id;
-      st.start = startIso;
-      if (hold) st.createdAt = now;
-      this.state('booking', JSON.stringify(st));
-      if (hold) {
-        const code = await register(this.env, {
-          phone: st.phone,
-          name: st.name,
-          lang: st.lang,
-          kind: 'hold',
-          service: st.service,
-          start: startIso,
-          eventId: ev.id,
-        });
-        this.state('code', code);
-      }
-      const slotText = formatSlot(startIso, st.lang);
-      const text = hold
+      this.state('code', code);
+    }
+    const slotText = formatSlot(startIso, st.lang);
+    const text =
+      kind === 'hold'
         ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang, st.phone) })
         : renderBooking(PICKED[st.lang], {
             slot: slotText,
             service: serviceLabel(st.lang, st.service),
           });
-      await sendText(this.env, m.from, text);
-      this.storeAssistant(m.timestamp, 'a-' + m.id + '-booked', text);
-      const ret = Number(this.state('retention') ?? '0');
-      const when = hold
-        ? ret > 0
-          ? Math.min(now + HOLD_CHECK_MS, ret)
-          : now + HOLD_CHECK_MS
-        : ret;
-      if (when > 0) await this.ctx.storage.setAlarm(when);
-    } catch {
-      if (createdId) {
-        try {
-          await deleteEvent(await accessToken(oauth), wbId, createdId);
-        } catch {
-          /* best effort: the operator still gets the brief */
-        }
-      }
-      await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
-    }
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-booked', text);
+    const ret = Number(this.state('retention') ?? '0');
+    const when = kind === 'hold'
+      ? ret > 0
+        ? Math.min(now + HOLD_CHECK_MS, ret)
+        : now + HOLD_CHECK_MS
+      : ret;
+    if (when > 0) await this.ctx.storage.setAlarm(when);
   }
 
   private async cancelBooking(
     m: Inbound,
-    st: BookingState,
-    cfg: BookingConfig,
-    oauth: GoogleOAuth,
-    wbId: string
+    st: BookingState
   ): Promise<void> {
     if (!st.eventId || !st.start) {
       await this.notify(m);
@@ -708,93 +795,87 @@ export class Conversation extends DurableObject<Env> {
     // The Terms' 24-hour move-once rule covers paid sessions, i.e. holds the
     // operator already confirmed; an unpaid hold is simply released.
     if (st.service === 'consultation' && st.phase === 'booked' && Date.parse(st.start) - Date.now() < HOLD_MS) {
-      await this.reoffer(m, st, cfg, oauth, wbId, '', true);
+      await this.reoffer(m, st, '', true);
       return;
     }
-    try {
-      const token = await accessToken(oauth);
-      try {
-        await deleteEvent(token, wbId, st.eventId);
-      } catch {
-        /* already gone */
-      }
-      this.state('booking', null);
-      this.state('handoff', '1');
-      const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
-      const code = await register(this.env, {
-        phone: st.phone,
-        name: st.name,
-        lang: st.lang,
-        kind: 'handoff',
-        service: st.service,
-      });
-      this.state('code', code);
-      await sendText(
-        this.env,
-        operator,
-        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
-          'UniverLab ·',
-          'UniverLab [' + code + '] ·'
-        )
-      );
-      const text = renderBooking(CANCELLED[st.lang], {
-        service: serviceLabel(st.lang, st.service),
-        slot: formatSlot(st.start, st.lang),
-      });
-      await sendText(this.env, m.from, text);
-      this.storeAssistant(m.timestamp, 'a-' + m.id + '-cancel', text);
-    } catch {
+    const res = await calendarCall(this.env, {
+      action: 'release',
+      contactKey: contactKey('wa', st.phone),
+    });
+    if (!res.ok && res.reason !== 'no-booking') {
       await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
+      return;
     }
+    this.state('booking', null);
+    this.state('handoff', '1');
+    const operator = this.env.OPERATOR_PHONE.replace(/\D/g, '');
+    const code = await register(this.env, {
+      phone: st.phone,
+      name: st.name,
+      lang: st.lang,
+      kind: 'handoff',
+      service: st.service,
+    });
+    this.state('code', code);
+    await sendText(
+      this.env,
+      operator,
+      formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief }).replace(
+        'UniverLab ·',
+        'UniverLab [' + code + '] ·'
+      )
+    );
+    const text = renderBooking(CANCELLED[st.lang], {
+      service: serviceLabel(st.lang, st.service),
+      slot: formatSlot(st.start, st.lang),
+    });
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-cancel', text);
   }
 
   private async reoffer(
     m: Inbound,
     st: BookingState,
-    cfg: BookingConfig,
-    oauth: GoogleOAuth,
-    wbId: string,
     dayKey = '',
     movedNote = false
   ): Promise<void> {
     const minutes = st.service === 'consultation' ? 60 : 15;
-    try {
-      const token = await accessToken(oauth);
-      const now = Date.now();
-      const timeMin = new Date(now).toISOString();
-      const timeMax = new Date(now + cfg.horizonDays * 86400000).toISOString();
-      const busy = await freeBusy(token, timeMin, timeMax, ['primary']);
-      const events = await listEvents(token, wbId, timeMin, timeMax);
-      const slots = freeSlots(cfg, busy, events, minutes, now);
-      let picked = dayKey ? slots.filter((s) => bogotaDateKey(Date.parse(s)) === dayKey) : slots;
-      if (picked.length === 0) picked = slots;
-      if (picked.length === 0) {
-        await this.notify(m);
-        const fallback = FALLBACK[st.lang];
-        await sendText(this.env, m.from, fallback);
-        this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
+    const res = await calendarCall(this.env, {
+      action: 'status',
+      contactKey: contactKey('wa', st.phone),
+      service: st.service,
+      minutes,
+      forMove: true,
+      now: Date.now(),
+    });
+    if (!res.ok) {
+      if (res.reason === 'calendar-down') {
+        await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
         return;
       }
-      st.offered = picked.slice(0, 5);
-      this.state('booking', JSON.stringify(st));
-      const text =
-        (movedNote ? MOVE_ONCE[st.lang] : '') +
-        offerText(st.lang, st.offered.map((s) => formatSlot(s, st.lang)));
-      await sendText(this.env, m.from, text);
-      this.storeAssistant(m.timestamp, 'a-' + m.id + '-reoffer', text);
-    } catch {
-      await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, res.reason as 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves');
+      return;
     }
+    let slots = (res.slots ?? []) as string[];
+    const picked = dayKey ? slots.filter((s) => bogotaDateKey(Date.parse(s)) === dayKey) : slots;
+    if (picked.length > 0) slots = picked;
+    if (slots.length === 0) {
+      await this.notify(m);
+      const fallback = FALLBACK[st.lang];
+      await sendText(this.env, m.from, fallback);
+      this.storeAssistant(m.timestamp, 'a-' + m.id, fallback);
+      return;
+    }
+    st.offered = slots.slice(0, 5);
+    this.state('booking', JSON.stringify(st));
+    const text =
+      (movedNote ? MOVE_ONCE[st.lang] : '') +
+      offerText(st.lang, st.offered.map((s) => formatSlot(s, st.lang)));
+    await sendText(this.env, m.from, text);
+    this.storeAssistant(m.timestamp, 'a-' + m.id + '-reoffer', text);
   }
 
   private async handleBooking(m: Inbound, st: BookingState): Promise<void> {
-    const cfg = bookingConfig(this.env);
-    const oauth = googleOAuth(this.env);
-    const wbId = this.env.WORKBENCH_CALENDAR_ID;
-    if (!oauth || !wbId) {
-      await this.calendarDown(m, st.lang, st.service, st.brief, st.name);
-      return;
-    }
     const res = await decide(
       this.env.AI,
       modelConfig(this.env),
@@ -809,15 +890,15 @@ export class Conversation extends DurableObject<Env> {
       m.text ?? ''
     );
     if (res.action === 'pick') {
-      await this.pickSlot(m, st, cfg, oauth, wbId, res.slot);
+      await this.pickSlot(m, st, res.slot);
       return;
     }
     if (res.action === 'cancel') {
-      await this.cancelBooking(m, st, cfg, oauth, wbId);
+      await this.cancelBooking(m, st);
       return;
     }
     if (res.action === 'move' || res.action === 'day') {
-      await this.reoffer(m, st, cfg, oauth, wbId, res.action === 'day' ? res.date : '');
+      await this.reoffer(m, st, res.action === 'day' ? res.date : '');
       return;
     }
     await this.notify(m);

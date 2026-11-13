@@ -96,6 +96,11 @@ jest.mock('../src/booking', () => {
   return { ...actual, decide: jest.fn() };
 });
 
+jest.mock('../src/reservations', () => {
+  const actual = jest.requireActual('../src/reservations') as Record<string, unknown>;
+  return { ...actual, calendarCall: jest.fn() };
+});
+
 import { answer, runModel } from '../src/brain';
 import { transcribe } from '../src/audio';
 import { markRead, sendText } from '../src/meta';
@@ -104,7 +109,7 @@ import { burstConfig } from '../src/env';
 import { burstDue, joinBurst, nextAlarm } from '../src/burst';
 import { decide } from '../src/booking';
 import { readProof } from '../src/proof';
-import { accessToken, deleteEvent, freeBusy, getEvent, listEvents } from '../src/google';
+import { calendarCall } from '../src/reservations';
 import { Conversation } from '../src/conversation';
 
 const env = {
@@ -225,9 +230,7 @@ beforeEach(() => {
   jest.spyOn(Date, 'now').mockImplementation(() => nowMs);
   (runModel as jest.Mock).mockResolvedValue('{"delete": false}');
   (decide as jest.Mock).mockResolvedValue({ action: 'other', slot: -1, date: '' });
-  (accessToken as jest.Mock).mockResolvedValue('tok');
-  (freeBusy as jest.Mock).mockResolvedValue([]);
-  (listEvents as jest.Mock).mockResolvedValue([]);
+  (calendarCall as jest.Mock).mockImplementation(async () => ({ ok: false, reason: 'calendar-down' }));
   // A voice note hands off unless the test transcribes it.
   (transcribe as jest.Mock).mockResolvedValue({ ok: false });
   // A receipt falls back to today's handoff unless the test reads it.
@@ -426,11 +429,9 @@ test('a hold deadline still fires while a burst is open, then the burst is answe
       start: '2026-11-18T20:00:00.000Z',
     })
   );
-  (getEvent as jest.Mock).mockResolvedValue({
-    id: 'ev1',
-    summary: '[Por confirmar] Consultoría · Ana',
-    start: '2026-11-18T20:00:00.000Z',
-    end: '2026-11-18T21:00:00.000Z',
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'expire') return { ok: true, expired: true, eventId: 'ev1' };
+    return { ok: false, reason: 'calendar-down' };
   });
 
   await c.receive(inbound({ id: 'wamid.h1', text: 'hola' }));
@@ -439,7 +440,7 @@ test('a hold deadline still fires while a burst is open, then the burst is answe
   await c.alarm();
 
   // The expired hold fires even though the burst is still open.
-  expect(deleteEvent).toHaveBeenCalledWith('tok', 'workbench-id', 'ev1');
+  expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'expire' }));
   expect(clientTexts().some((t) => t.includes('venció'))).toBe(true);
   expect(answer).not.toHaveBeenCalled();
 

@@ -48,6 +48,12 @@ the Worker as `WORKBENCH_CALENDAR_ID` and `BOOKING_CONFIG`.
   "maxPerDay": 3,
   "noticeHours": 12,
   "horizonDays": 14,
+  "freeCallDays": 90,
+  "expiredHoldDays": 14,
+  "expiredHoldsMax": 2,
+  "movesMax": 2,
+  "openHoldsMax": 4,
+  "bookingsPerDay": 4,
   "payments": {
     "es": "Bre-B en Colombia o PayPal desde el exterior",
     "en": "Bre-B in Colombia or PayPal from abroad"
@@ -60,6 +66,24 @@ the Worker as `WORKBENCH_CALENDAR_ID` and `BOOKING_CONFIG`.
 `payments` overrides the sentence telling the client how to pay
 (Bre-B in Colombia, PayPal from abroad); `payee` names the expected
 recipient of the payment, matched against the name on the receipt.
+`freeCallDays` blocks a second free first call inside that many days;
+`expiredHoldDays`/`expiredHoldsMax` block a further hold after that many
+unpaid holds expired inside the window; `movesMax` caps how many times one
+booking may be moved; `openHoldsMax` caps unconfirmed holds across all
+contacts; `bookingsPerDay` caps new holds and bookings created per Bogota
+calendar day across all contacts (a hold counts toward it).
+
+Every write to the Workbench calendar goes through one serialized owner,
+the `Calendar` Durable Object (one `calendar` instance shared by all client
+conversations), which re-checks the slot free at write time: when two
+clients pick the same slot at once exactly one gets it and the other is
+offered what remains. The same owner enforces one upcoming booking or hold
+per contact, the free-call, expired-hold, move and global caps above, and
+identifies a contact by an opaque key (`wa:<phone>`, so a second channel can
+use an email address instead). Refusals are fixed Spanish/English sentences
+in code, never the text model, and the client is told a person from the lab
+takes over with their notes. Contact records live no longer than the longest
+limit window, and BORRAR MIS DATOS / DELETE MY DATA removes them too.
 
 Consultations are created as holds whose title starts with
 `[Por confirmar]`; the operator confirms by removing that prefix in

@@ -3,6 +3,7 @@ import type { Env } from './env';
 
 export { Conversation } from './conversation';
 export { Operator } from './operator';
+export { Calendar } from './calendar';
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
