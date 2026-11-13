@@ -111,6 +111,7 @@ import { decide } from '../src/booking';
 import { readProof } from '../src/proof';
 import { calendarCall } from '../src/reservations';
 import { Conversation } from '../src/conversation';
+import { OPENING } from '../src/opening';
 
 const env = {
   OPERATOR_PHONE: '+57 300 999 8888',
@@ -143,6 +144,9 @@ function makeCtx() {
       if (query.startsWith('SELECT 1 FROM messages WHERE id')) {
         const found = rows.some((r) => r.id === params[0]);
         return { toArray: () => (found ? [1] : []) };
+      }
+      if (query.startsWith("SELECT 1 FROM messages WHERE role = 'user'")) {
+        return { toArray: () => (rows.some((r) => r.role === 'user') ? [1] : []) };
       }
       if (query.startsWith('SELECT id, at, type, text, media_id, mime FROM messages WHERE role')) {
         return {
@@ -218,6 +222,7 @@ function inbound(overrides: Partial<Inbound> = {}): Inbound {
   };
 }
 
+
 function clientTexts(): string[] {
   return (sendText as jest.Mock).mock.calls
     .filter((call) => call[1] === CLIENT)
@@ -255,14 +260,14 @@ test('a burst of four messages produces one model call and one reply', async () 
   expect(rows.filter((r) => r.role === 'user')).toHaveLength(4);
   expect(markRead).toHaveBeenCalledTimes(4);
   expect(answer).not.toHaveBeenCalled();
-  expect(clientTexts()).toEqual([]);
+  expect(clientTexts()).toEqual([OPENING.es]);
 
   nowMs += 7000;
   await c.alarm();
 
   expect(answer).toHaveBeenCalledTimes(1);
   expect(runModel).toHaveBeenCalledTimes(1);
-  expect(clientTexts()).toEqual(['todo junto']);
+  expect(clientTexts()).toEqual([OPENING.es, 'todo junto']);
   expect(storage.setAlarm).toHaveBeenCalledWith(retentionDeadline((AT + 3) * 1000));
   // The history keeps each message separately, in order, as one client turn.
   const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
@@ -279,12 +284,12 @@ test('a single message is answered after the quiet window, not before', async ()
   nowMs += 1000;
   await c.alarm();
   expect(answer).not.toHaveBeenCalled();
-  expect(clientTexts()).toEqual([]);
+  expect(clientTexts()).toEqual([OPENING.es]);
 
   nowMs += 6000;
   await c.alarm();
   expect(answer).toHaveBeenCalledTimes(1);
-  expect(clientTexts()).toEqual(['hola']);
+  expect(clientTexts()).toEqual([OPENING.es, 'hola']);
 });
 
 test('a client who keeps typing is answered at the 25-second cap', async () => {
@@ -303,7 +308,7 @@ test('a client who keeps typing is answered at the 25-second cap', async () => {
   }
 
   expect(answer).toHaveBeenCalledTimes(1);
-  expect(clientTexts()).toEqual(['ya voy']);
+  expect(clientTexts()).toEqual([OPENING.es, 'ya voy']);
   const history = (answer as jest.Mock).mock.calls[0][1] as Array<{ role: string; text: string }>;
   expect(history.filter((t) => t.role === 'user').map((t) => t.text)).toEqual(texts);
 });
@@ -323,6 +328,7 @@ test('a voice note that fails transcription hands off at receive, outside the bu
   // The failed note hands off at once; the text still waits for its burst.
   expect(answer).not.toHaveBeenCalled();
   expect(clientTexts()).toEqual([
+    OPENING.es,
     'No pude escuchar tu nota de voz. Una persona del laboratorio la escuchará y te responde pronto.',
   ]);
   expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[audio]'));
@@ -333,7 +339,7 @@ test('a voice note that fails transcription hands off at receive, outside the bu
   // One model call for the text burst, no second handoff for the audio.
   expect(answer).toHaveBeenCalledTimes(1);
   expect(clientTexts()).toContain('claro que sí');
-  expect(clientTexts()).toHaveLength(2);
+  expect(clientTexts()).toHaveLength(3);
 });
 
 test('a burst mixing text and audio answers the text and hands the media off once', async () => {
@@ -348,7 +354,7 @@ test('a burst mixing text and audio answers the text and hands the media off onc
   );
 
   expect(answer).not.toHaveBeenCalled();
-  expect(clientTexts()).toEqual([]);
+  expect(clientTexts()).toEqual([OPENING.es]);
 
   nowMs += 7000;
   await c.alarm();
@@ -356,7 +362,7 @@ test('a burst mixing text and audio answers the text and hands the media off onc
   // One model call for the whole burst, the text reply plus today's media
   // handoff, and one operator note about the image.
   expect(answer).toHaveBeenCalledTimes(1);
-  expect(clientTexts()).toHaveLength(2);
+  expect(clientTexts()).toHaveLength(3);
   expect(clientTexts()).toContain('claro que sí');
   expect(clientTexts()).toContain('Por ahora solo leo mensajes de texto. Le paso esto a una persona del laboratorio.');
   expect(sendText).toHaveBeenCalledWith(env, OPERATOR, expect.stringContaining('[image]'));
@@ -375,7 +381,7 @@ test('a transcribed voice note joins the burst as one answer with no handoff', a
   );
 
   expect(answer).not.toHaveBeenCalled();
-  expect(clientTexts()).toEqual([]);
+  expect(clientTexts()).toEqual([OPENING.es]);
 
   nowMs += 7000;
   await c.alarm();
@@ -387,7 +393,7 @@ test('a transcribed voice note joins the burst as one answer with no handoff', a
     'hola, una pregunta',
     'qué precio tiene',
   ]);
-  expect(clientTexts()).toEqual(['cuesta tanto']);
+  expect(clientTexts()).toEqual([OPENING.es, 'cuesta tanto']);
   expect(sendText).not.toHaveBeenCalledWith(env, OPERATOR, expect.anything());
 });
 
@@ -402,8 +408,9 @@ test('the exact deletion phrase mid-burst discards the burst with no answer', as
   expect(storage.deleteAll).toHaveBeenCalledTimes(1);
   expect(answer).not.toHaveBeenCalled();
   expect(runModel).not.toHaveBeenCalled();
-  expect(sendText).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledTimes(2);
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+  expect(clientTexts()[0]).toBe(OPENING.es);
 
   nowMs += 30000;
   await c.alarm();

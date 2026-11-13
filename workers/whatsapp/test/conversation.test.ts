@@ -109,6 +109,7 @@ import { CONFIRM_MS, ERASED, NOT_DELETED, operatorErased, PENDING_ERASE, retenti
 import { calendarCall } from '../src/reservations';
 import { decide } from '../src/booking';
 import { LIMIT_TEXT } from '../src/limits';
+import { OPENING } from '../src/opening';
 import { PROOF_RECEIVED, forwardUnread, readProof } from '../src/proof';
 import { GUARD_PAUSED } from '../src/guard';
 import { shortCode } from '../src/registry';
@@ -158,6 +159,9 @@ function makeCtx(handoff = false) {
         const found = rows.some((r) => r.id === params[0]);
         return { toArray: () => (found ? [1] : []) };
       }
+      if (query.startsWith("SELECT 1 FROM messages WHERE role = 'user'")) {
+        return { toArray: () => (rows.some((r) => r.role === 'user') ? [1] : []) };
+      }
       if (query.startsWith('SELECT id, at, type, text, media_id, mime FROM messages WHERE role')) {
         return {
           toArray: () =>
@@ -204,6 +208,7 @@ function makeCtx(handoff = false) {
     deleteAlarm: jest.fn(async () => {}),
     deleteAll: jest.fn(async () => {
       state.clear();
+      rows.length = 0;
     }),
   };
   const ctx = {
@@ -382,6 +387,7 @@ test('a fuzzy deletion request asks for confirmation without erasing', async () 
 
 test('confirming a pending request erases like the exact phrase', async () => {
   const { ctx, storage } = makeCtx();
+  seedMessage(ctx, 'wamid.prior-f2', 'user', 'hola', AT);
   seedPending(ctx, 'es', Date.now() + CONFIRM_MS);
   const c = new Conversation(ctx as never, env as never);
 
@@ -989,6 +995,7 @@ test('an operator cancel straight-cancels without the move-once reoffer', async 
 
 test('a burst queued before tomar is relayed, not answered, while taken', async () => {
   const { ctx } = makeCtx();
+  seedMessage(ctx, 'wamid.prior-t3', 'user', 'hola', AT);
   const c = new Conversation(ctx as never, env as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
   await c.receive(inbound({ id: 'wamid.t3', text: 'hola?', name: 'Ana' }));
@@ -1005,6 +1012,7 @@ test('a burst queued before tomar is relayed, not answered, while taken', async 
 test('tomar on an overdue burst flushes it as a relay right away', async () => {
   const burstEnv = { ...env, BURST_QUIET_MS: '60000' };
   const { ctx } = makeCtx();
+  seedMessage(ctx, 'wamid.prior-t4', 'user', 'hola', AT);
   const c = new Conversation(ctx as never, burstEnv as never);
   (answer as jest.Mock).mockResolvedValue({ reply: 'Hola', booking: false, handoff: false });
   await c.receive(inbound({ id: 'wamid.t4', text: 'hola?', name: 'Ana' }));
@@ -1532,6 +1540,7 @@ test('past the Worker model limit a held receipt falls back instead of going unr
 test('an over-limit voice note uses the conversation language', async () => {
   const { ctx } = makeCtx();
   const c = new Conversation(ctx as never, env as never);
+  seedMessage(ctx, 'wamid.prior-g12', 'user', 'hola', AT);
   seedState(
     ctx,
     'intake',
@@ -1543,4 +1552,89 @@ test('an over-limit voice note uses the conversation language', async () => {
 
   expect(transcribe).not.toHaveBeenCalled();
   expect(sendText).toHaveBeenCalledWith(env, CLIENT, expect.stringContaining('could not listen'));
+});
+
+test('the first message of a conversation hears the fixed opening before the answer', async () => {
+  const { ctx, rows } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'respuesta', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.o1', text: 'hola, quiero info' }));
+
+  const texts = clientTexts();
+  expect(texts[0]).toBe(OPENING.es);
+  expect(texts).toContain('respuesta');
+  expect(rows).toContainEqual(
+    expect.objectContaining({ id: 'a-wamid.o1-opening', role: 'assistant', text: OPENING.es })
+  );
+});
+
+test('the opening follows the language of the first message', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'answer-text', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.o2', text: 'hello, I want to book a session' }));
+
+  const texts = clientTexts();
+  expect(texts[0]).toBe(OPENING.en);
+  expect(texts).toContain('answer-text');
+});
+
+test('the opening is sent only once per conversation', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'respuesta', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.o3a', text: 'hola' }));
+  await say(c, inbound({ id: 'wamid.o3b', text: 'sigues ahí?' }));
+
+  expect(clientTexts().filter((t) => t === OPENING.es)).toHaveLength(1);
+});
+
+test('a number that writes after an erasure hears the opening again', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  (answer as jest.Mock).mockResolvedValue({ reply: 'respuesta', booking: false, handoff: false });
+
+  await say(c, inbound({ id: 'wamid.o4a', text: 'hola' }));
+  await c.receive(inbound({ id: 'wamid.o4b', text: 'BORRAR MIS DATOS' }));
+  await say(c, inbound({ id: 'wamid.o4c', text: 'hola de nuevo', timestamp: AT + 60 }));
+
+  expect(clientTexts().filter((t) => t === OPENING.es)).toHaveLength(2);
+  expect(clientTexts()).toContain(ERASED.es);
+});
+
+test('the exact deletion phrase as first message sends only the erasure notice', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+
+  await c.receive(inbound({ id: 'wamid.o5', text: 'BORRAR MIS DATOS' }));
+
+  expect(sendText).toHaveBeenCalledTimes(1);
+  expect(sendText).toHaveBeenCalledWith(env, CLIENT, ERASED.es);
+  expect(clientTexts()).not.toContain(OPENING.es);
+});
+
+test('the operator number never hears the opening', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+
+  await c.receive(inbound({ id: 'wamid.o6', from: OPERATOR, text: 'hola' }));
+
+  expect(sendText).not.toHaveBeenCalledWith(env, OPERATOR, OPENING.es);
+  expect(sendText).not.toHaveBeenCalledWith(env, OPERATOR, OPENING.en);
+});
+
+test('a taken conversation stays silent instead of sending the opening', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, env as never);
+  seedTaken(ctx, 'ab12', Date.now());
+  (answer as jest.Mock).mockResolvedValue({ reply: 'respuesta', booking: false, handoff: false });
+
+  await c.receive(inbound({ id: 'wamid.o7', text: 'hola?', name: 'Ana' }));
+
+  expect(answer).not.toHaveBeenCalled();
+  expect(clientTexts()).not.toContain(OPENING.es);
+  expect(clientTexts()).not.toContain(OPENING.en);
 });

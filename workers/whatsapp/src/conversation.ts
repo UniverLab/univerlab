@@ -32,6 +32,7 @@ import {
   type IntakeState,
 } from './intake';
 import { detectLang, type Lang } from './lang';
+import { OPENING } from './opening';
 import {
   alarmAt,
   CONFIRM_MS,
@@ -1090,6 +1091,8 @@ export class Conversation extends DurableObject<Env> {
         return;
       }
     }
+    const firstContact =
+      this.ctx.storage.sql.exec("SELECT 1 FROM messages WHERE role = 'user' LIMIT 1").toArray().length === 0;
     this.ctx.storage.sql.exec(
       'INSERT INTO messages (id, at, role, type, text, media_id, mime) VALUES (?, ?, ?, ?, ?, ?, ?)',
       m.id,
@@ -1122,6 +1125,12 @@ export class Conversation extends DurableObject<Env> {
       }
       await this.ctx.storage.setAlarm(alarm);
       return;
+    }
+    if (firstContact && this.state('taken') === null) {
+      const lang = detectLang(m.text ?? '');
+      const text = OPENING[lang];
+      await sendText(this.env, m.from, text);
+      this.storeAssistant(m.timestamp, 'a-' + m.id + '-opening', text);
     }
     // The Worker is over its daily model calls: the stored voice note gets
     // the fixed fallback sentence and a handoff, with no model call.
