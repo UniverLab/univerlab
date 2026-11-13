@@ -682,7 +682,6 @@ export const es: Dict = {
     intro: 'Todos los experimentos del laboratorio, cada uno con su máquina: las herramientas que puedes instalar hoy, la investigación en curso y lo archivado.',
     tabs: {
       aria: 'Filtrar por estado',
-      all: 'Todos',
       active: 'Activos',
       research: 'Investigación',
       archived: 'Archivo',

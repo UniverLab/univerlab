@@ -152,7 +152,7 @@ describe('facetmedia EXP-009', () => {
 
   it('beta entries show under the Active tab', () => {
     expect(ENC).toContain("beta: '‡'");
-    expect(ENC).toContain("f === 'active' && e.getAttribute('data-status') === 'beta'");
+    expect(ENC).toContain("s === f || (f === 'active' && s === 'beta')");
   });
 
   it('the palette knows facetmedia', () => {

@@ -14,6 +14,14 @@ export interface EntryModel {
   install?: string;
 }
 
+/** The tab selected when the encyclopedia opens: active experiments plus betas. */
+export const DEFAULT_TAB = 'active' as const;
+
+/** Whether an entry with `status` shows under tab `tab` (active includes beta). */
+export function visibleInTab(status: Status, tab: string): boolean {
+  return tab === status || (tab === 'active' && status === 'beta');
+}
+
 /** `localize` maps a root path to the page's language (localizePath in the view). */
 export function entryModels(localize: (path: string) => string): EntryModel[] {
   return experiments.map((exp) => {

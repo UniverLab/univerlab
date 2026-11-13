@@ -1,7 +1,7 @@
 ---
 import Machine from './Machine.astro';
 import { byId } from '../lib/experiments';
-import { entryModels } from '../lib/experiment-entries';
+import { DEFAULT_TAB, entryModels, visibleInTab } from '../lib/experiment-entries';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { iconSvg } from '../lib/icon-svg';
 import { copy } from '../lib/icons';
@@ -20,8 +20,7 @@ const entries = entryModels((path) => localizePath(path, lang));
 const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 ---
 <nav class="thumbs" aria-label={enc.tabs.aria}>
-  <button type="button" data-f="all" aria-pressed="true">{enc.tabs.all}</button>
-  <button type="button" data-f="active" aria-pressed="false">{enc.tabs.active}</button>
+  <button type="button" data-f="active" aria-pressed="true">{enc.tabs.active}</button>
   <button type="button" data-f="research" aria-pressed="false">{enc.tabs.research}</button>
   <button type="button" data-f="archived" aria-pressed="false">{enc.tabs.archived}</button>
 </nav>
@@ -31,13 +30,14 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
     const exp = byId(entry.id);
     const ec = expCopy(entry.id);
     const status = entry.status;
+    const show = visibleInTab(status, DEFAULT_TAB);
     const mark = statusMark[status] ?? '';
     const statusName = enc.titleStatus[status as keyof typeof enc.titleStatus] ?? status;
     const installCmd = entry.install;
     const linkLabel = entry.archived ? enc.use.archive : enc.use.plate;
     const repo = exp.github;
     return (
-      <article class="entry" id={entry.anchor} data-status={status}>
+      <article class="entry" id={entry.anchor} data-status={status} hidden={!show} data-exp={entry.id}>
         <div class="plate">
           <a class="plate-link" href={entry.href} aria-label={enc.use.open.replace('{name}', exp.name)}>
             {/* An archived experiment keeps a plate too: cadSpec's is its
@@ -101,17 +101,35 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
     // Tabs filter entries by status via the `hidden` attribute.
     var tabs = document.querySelectorAll('.thumbs button');
     var entries = document.querySelectorAll('.entry');
+    function applyFilter(f) {
+      tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-f') === f)); });
+      entries.forEach(function (e) {
+        var s = e.getAttribute('data-status');
+        var show = s === f || (f === 'active' && s === 'beta');
+        if (show) e.removeAttribute('hidden');
+        else e.setAttribute('hidden', '');
+      });
+    }
     tabs.forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var f = btn.getAttribute('data-f');
-        tabs.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
-        entries.forEach(function (e) {
-          var show = f === 'all' || e.getAttribute('data-status') === f || (f === 'active' && e.getAttribute('data-status') === 'beta');
-          if (show) e.removeAttribute('hidden');
-          else e.setAttribute('hidden', '');
-        });
+        applyFilter(btn.getAttribute('data-f'));
       });
     });
+    // An anchor to a non-active experiment still lands on it: select its filter.
+    var f = 'active';
+    var h = window.location.hash.slice(1);
+    if (h) {
+      // A malformed hash (quotes, stray brackets) throws on querySelector; it
+      // must not abort the script before the copy buttons below bind.
+      var t = null;
+      try { t = document.querySelector('.entry[id="' + h + '"],.entry[data-exp="' + h + '"]'); } catch { t = null; }
+      if (t) {
+        var s = t.getAttribute('data-status');
+        // Beta shows under Active and there is no beta tab to press.
+        f = s === 'beta' ? 'active' : (s || f);
+      }
+    }
+    applyFilter(f);
 
     // Copy install command. On success the icon morphs to a check and the
     // accessible name reads "Copied"; the static icon stays for no-JS.

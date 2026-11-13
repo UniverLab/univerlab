@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { experiments, byId, isArchived } from '../lib/experiments';
-import { entryModels } from '../lib/experiment-entries';
+import { DEFAULT_TAB, entryModels, visibleInTab } from '../lib/experiment-entries';
 import { plate } from '../lib/machines';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -83,12 +83,42 @@ describe('experiments encyclopedia entry list', () => {
 
   it('carries the tab labels and the key in both languages', () => {
     for (const dict of [en, es]) {
-      expect(dict.encyclopedia.tabs.all).toBeTruthy();
+      expect((dict.encyclopedia.tabs as { all?: unknown }).all).toBeUndefined();
       expect(dict.encyclopedia.tabs.active).toBeTruthy();
       expect(dict.encyclopedia.tabs.research).toBeTruthy();
       expect(dict.encyclopedia.tabs.archived).toBeTruthy();
       expect(dict.encyclopedia.key).toMatch(/§.*¶.*†/);
     }
+  });
+
+  it('opens on Active with no All filter', () => {
+    expect(VIEW).not.toContain('data-f="all"');
+    expect(VIEW).toContain('data-f="active" aria-pressed="true"');
+    expect(DEFAULT_TAB).toBe('active');
+  });
+
+  it('renders the Active list without JS', () => {
+    expect(VIEW).toContain('hidden={!show}');
+    expect(VIEW).toContain('const show = visibleInTab(status, DEFAULT_TAB)');
+    expect(visibleInTab('active', 'active')).toBe(true);
+    expect(visibleInTab('beta', 'active')).toBe(true);
+    expect(visibleInTab('research', 'active')).toBe(false);
+    expect(visibleInTab('archived', 'active')).toBe(false);
+    expect(visibleInTab('archived', 'archived')).toBe(true);
+  });
+
+  it('selects the filter of an anchored hidden entry', () => {
+    expect(VIEW).toContain('data-exp={entry.id}');
+    expect(VIEW).toContain('location.hash');
+    // The entry's own status becomes the filter — except beta, which shows
+    // under Active because there is no beta tab to press.
+    expect(VIEW).toContain("f = s === 'beta' ? 'active' : (s || f);");
+  });
+
+  it('keeps a malformed anchor hash from aborting the script', () => {
+    // A hash carrying a selector metacharacter throws on querySelector; the
+    // lookup is guarded so the copy buttons further down still bind.
+    expect(VIEW).toContain('catch { t = null; }');
   });
 });
 
@@ -149,7 +179,7 @@ describe('experiments encyclopedia view', () => {
   });
 
   it('gives each article its anchor id and status', () => {
-    expect(VIEW).toMatch(/<article class="entry" id=\{entry\.anchor\} data-status=\{status\}>/);
+    expect(VIEW).toMatch(/<article class="entry" id=\{entry\.anchor\} data-status=\{status\} hidden=\{!show\} data-exp=\{entry\.id\}>/);
   });
 
   it('hides non-matching entries with the hidden attribute and keeps aria-pressed on the tabs', () => {

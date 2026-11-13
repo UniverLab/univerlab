@@ -688,7 +688,6 @@ export const en = {
     intro: 'Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.',
     tabs: {
       aria: 'Filter by status',
-      all: 'All',
       active: 'Active',
       research: 'Research',
       archived: 'Archive',
