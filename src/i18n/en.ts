@@ -884,12 +884,11 @@ export const en = {
       title: 'Workbench audits — UniverLab consulting on artificial intelligence',
       description: 'The Workbench audit: a dedicated page, a PDF report and a private repository. Findings with evidence, a risk matrix and a roadmap.',
       head: 'Workbench audits',
-      lede: 'We review how your team uses artificial intelligence and agents, and we deliver what to fix first, what it costs and what risk you run if you do not.',
+      lede: 'We review how your team uses artificial intelligence and agents, and we deliver what to fix first and what risk you run if you do not.',
       scope: { kicker: 'What we review', items: [
         ['Agent security', 'What they can read, write and run: secrets, permissions, instruction injection and surfaces open to the internet.'],
         ['Technical judgement', 'Whether the model, the harness and the architecture fit each task, and what the alternatives are.'],
         ['Flow depth', 'Where a flow depends on someone reviewing by hand, where it fails silently and how to measure it.'],
-        ['Costs', 'What you pay in models and subscriptions per result, and where to spend less without losing quality.'],
         ['Data', 'What personal or business information reaches third-party models and what data-protection rules ask of you.'],
         ['Agent Experience (AX)', 'Whether your documentation, your APIs and your repositories serve an agent, not only a person.'],
       ] as [string, string][] },

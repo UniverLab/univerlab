@@ -14,10 +14,10 @@ const ROUTE = readFileSync(resolve(__dirname, '../pages/workbench/audits.astro')
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/workbench/audits.astro'), 'utf8');
 
 describe('workbench-audits', () => {
-  it('both languages carry the same audits keys with 6/4/4/3 items', () => {
+  it('both languages carry the same audits keys with 5/4/4/3 items', () => {
     expect(Object.keys(en.workbench.audits).sort()).toEqual(Object.keys(es.workbench.audits).sort());
     for (const dict of [en.workbench.audits, es.workbench.audits]) {
-      expect(dict.scope.items).toHaveLength(6);
+      expect(dict.scope.items).toHaveLength(5);
       for (const item of dict.scope.items) expect(item).toHaveLength(2);
       expect(dict.how.steps).toHaveLength(4);
       for (const step of dict.how.steps) expect(step).toHaveLength(2);
@@ -68,8 +68,8 @@ describe('workbench-audits', () => {
       expect(json).not.toMatch(/Ley 1581|Ley 1480/);
       expect(json).not.toMatch(/1[0-9]{3} de 20\d\d/);
     }
-    expect(es.workbench.audits.scope.items[4][1]).toMatch(/normas de protección de datos/);
-    expect(en.workbench.audits.scope.items[4][1]).toMatch(/data-protection rules/);
+    expect(es.workbench.audits.scope.items[3][1]).toMatch(/normas de protección de datos/);
+    expect(en.workbench.audits.scope.items[3][1]).toMatch(/data-protection rules/);
   });
 
   it('the build is the workbench flow service, from USD 150, with 30 days of support', () => {
@@ -132,15 +132,15 @@ describe('workbench-audits', () => {
 
   it('the Spanish lede is the spec sentence verbatim', () => {
     expect(es.workbench.audits.lede).toBe(
-      'Revisamos cómo usa tu equipo la inteligencia artificial y los agentes, y te entregamos qué arreglar primero, cuánto cuesta y qué riesgo corres si no lo haces.',
+      'Revisamos cómo usa tu equipo la inteligencia artificial y los agentes, y te entregamos qué arreglar primero y qué riesgo corres si no lo haces.',
     );
   });
 
-  it('Agent Experience (AX) names the workbench lede and the sixth scope item', () => {
+  it('Agent Experience (AX) names the workbench lede and the fifth scope item', () => {
     expect(es.workbench.intro).toContain('Agent Experience (AX)');
     expect(en.workbench.intro).toContain('Agent Experience (AX)');
-    expect(es.workbench.audits.scope.items[5][0]).toContain('Agent Experience (AX)');
-    expect(en.workbench.audits.scope.items[5][0]).toContain('Agent Experience (AX)');
+    expect(es.workbench.audits.scope.items[4][0]).toContain('Agent Experience (AX)');
+    expect(en.workbench.audits.scope.items[4][0]).toContain('Agent Experience (AX)');
   });
 
   it('the workbench audit card links the audits page', () => {

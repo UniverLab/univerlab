@@ -878,12 +878,11 @@ export const es: Dict = {
       title: 'Auditorías del Banco de trabajo — consultoría de UniverLab',
       description: 'La auditoría del Banco de trabajo: página dedicada, informe en PDF y repositorio privado. Hallazgos con evidencia, matriz de riesgo y hoja de ruta.',
       head: 'Auditorías del Banco de trabajo',
-      lede: 'Revisamos cómo usa tu equipo la inteligencia artificial y los agentes, y te entregamos qué arreglar primero, cuánto cuesta y qué riesgo corres si no lo haces.',
+      lede: 'Revisamos cómo usa tu equipo la inteligencia artificial y los agentes, y te entregamos qué arreglar primero y qué riesgo corres si no lo haces.',
       scope: { kicker: 'Qué revisamos', items: [
         ['Seguridad de los agentes', 'Qué pueden leer, escribir y ejecutar; secretos, permisos, inyección de instrucciones y superficies abiertas a internet.'],
         ['Criterio técnico', 'Si el modelo, el harness y la arquitectura sirven para cada tarea, y qué alternativas hay.'],
         ['Profundidad de los flujos', 'Dónde un flujo depende de alguien revisando a mano, dónde falla en silencio y cómo medirlo.'],
-        ['Costos', 'Cuánto pagas en modelos y suscripciones por resultado, y dónde gastar menos sin perder calidad.'],
         ['Datos', 'Qué información personal o del negocio llega a modelos de terceros y qué piden las normas de protección de datos.'],
         ['Agent Experience (AX)', 'Si tu documentación, tus APIs y tus repositorios le sirven a un agente, no solo a una persona.'],
       ] as [string, string][] },
