@@ -58,6 +58,7 @@ jobs:
             WORKBENCH_CALENDAR_ID
             BOOKING_CONFIG
             GUARD_CONFIG
+            AGENDA_CONFIG
         env:
           WA_APP_SECRET: ${{ secrets.WA_APP_SECRET }}
           WA_VERIFY_TOKEN: ${{ secrets.WA_VERIFY_TOKEN }}
@@ -73,3 +74,4 @@ jobs:
           WORKBENCH_CALENDAR_ID: ${{ vars.WA_WORKBENCH_CALENDAR_ID }}
           BOOKING_CONFIG: ${{ vars.WA_BOOKING_CONFIG }}
           GUARD_CONFIG: ${{ vars.WA_GUARD_CONFIG }}
+          AGENDA_CONFIG: ${{ vars.WA_AGENDA_CONFIG }}

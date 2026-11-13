@@ -226,6 +226,24 @@ deploy workflow:
 }
 ```
 
+Morning agenda (configuration, not code): the Worker's Cron Trigger
+wakes it every 30 minutes, and from the configured time on it sends the
+operator one message with that day's bookings — time, service,
+conversation name and payment state, in time order, read from the same
+Workbench calendar events the booking code writes. A day with nothing
+booked sends nothing. Later-day bookings, moves and cancellations wait
+for their own day's agenda; a same-day one that lands after the agenda
+went out is sent at once as one line. The `production` environment's
+variable `WA_AGENDA_CONFIG` reaches the Worker as `AGENDA_CONFIG` (a
+JSON object). Unset, it runs at 06:30 America/Bogota (inside quiet
+hours, so it uses the gate's quiet-hours exemption; while the operator
+is away it waits like any other note and goes out on `/active`). A
+retried run on the same day sends nothing twice:
+
+```json
+{ "hour": 6, "minute": 30, "enabled": true }
+```
+
 It deploys only through `.github/workflows/deploy-whatsapp.yml`
 (manual run from `main`). Webhook path: `/webhook`.
 

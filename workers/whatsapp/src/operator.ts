@@ -189,6 +189,14 @@ export class Operator extends DurableObject<Env> {
       await this.onNote(body as Record<string, unknown>);
       return Response.json({ ok: true });
     }
+    if (action === 'agenda') {
+      return Response.json(await this.onAgenda(body as Record<string, unknown>));
+    }
+    if (action === 'agendaSent') {
+      const dateKey = (body as { dateKey?: unknown }).dateKey;
+      const sent = typeof dateKey === 'string' && dateKey !== '' && this.guardGet('guard:agenda:' + dateKey) !== null;
+      return Response.json({ sent });
+    }
     if (action === 'passAlive') {
       const b = body as { name?: unknown; at?: unknown };
       const pass = this.getPass();
@@ -336,6 +344,26 @@ export class Operator extends DurableObject<Env> {
       this.ctx.storage.sql.exec('UPDATE conversations SET tag = ?, priority = ? WHERE name = ?', tag, priority, name);
     }
     await this.deliver({ name, text, tag, priority });
+  }
+
+  /**
+   * The morning agenda: one send per Bogota day, through the operator gate
+   * with the quiet-hours exemption (06:30 is inside quiet hours) but held
+   * like any other note while the operator is away. The day is marked when
+   * the gate takes the note — sent, queued or empty — so a retry never sends
+   * twice, /active still flushes the held agenda, and a booking that lands
+   * later on a quiet morning still reaches the operator at once.
+   */
+  private async onAgenda(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const dateKey = typeof body['dateKey'] === 'string' ? body['dateKey'] : '';
+    const text = typeof body['text'] === 'string' ? body['text'] : '';
+    if (!dateKey) return { sent: false };
+    const key = 'guard:agenda:' + dateKey;
+    if (this.guardGet(key) !== null) return { sent: false };
+    this.guardSet(key, '1');
+    if (!text) return { sent: false };
+    await this.deliver({ name: 'agenda', text, tag: 'AGENDA', priority: 'normal' }, { exemptQuiet: true });
+    return { sent: true };
   }
 
   /**

@@ -6,7 +6,7 @@ import { calendarCall } from './reservations';
 import { formatSlot } from './schedule';
 import { hashAddress } from './gate';
 import { nameBase, postNote } from './registry';
-import { noteBody } from './notices';
+import { changeLine, sameDayAfterAgenda } from './daybook';
 
 /**
  * The public HTTP door to the free 15-minute first call, served at
@@ -342,20 +342,16 @@ async function handleBook(req: Request, env: Env, origin: string | null, ip: str
     now,
   });
   if (res.ok) {
-    const langLabel = fields.lang === 'es' ? 'español' : 'English';
-    await postNote(env, {
-      name: nameBase(fields.email),
-      text: noteBody(
-        'Primera llamada agendada (web)',
-        'first-call',
-        fields.slot,
-        fields.lang,
-        'Nombre: ' + fields.name + '\nEmail: ' + fields.email + '\nIdioma: ' + langLabel +
-          (fields.note ? '\nNota: ' + fields.note : '')
-      ),
-      tag: 'Cita',
-      priority: 'normal',
-    });
+    // A web booking for a later day waits for that day's agenda; a
+    // same-day booking after the agenda went out still goes at once.
+    if (await sameDayAfterAgenda(env, fields.slot, now)) {
+      await postNote(env, {
+        name: nameBase(fields.email),
+        text: changeLine('Primera llamada agendada (web)', 'first-call', fields.slot, fields.name, true),
+        tag: 'CITA',
+        priority: 'normal',
+      });
+    }
     const meet = typeof res.meet === 'string' ? res.meet : '';
     return json({ ok: true, slot: fields.slot, meet }, 200, origin);
   }
@@ -435,18 +431,16 @@ async function handleCancelPost(req: Request, env: Env, origin: string | null): 
   });
   if (res.ok) {
     const email = claim.k.startsWith('web:') ? claim.k.slice(4) : claim.k;
-    await postNote(env, {
-      name: nameBase(email),
-      text: noteBody(
-        'Cita cancelada (web)',
-        'first-call',
-        claim.s,
-        claim.l,
-        'Nombre: ' + claim.n + '\nEmail: ' + email + '\nIdioma: ' + (claim.l === 'es' ? 'español' : 'English')
-      ),
-      tag: 'Cita',
-      priority: 'normal',
-    });
+    // A later-day web cancellation waits for that day's agenda; a
+    // same-day one after the agenda went out still goes at once.
+    if (await sameDayAfterAgenda(env, claim.s, now)) {
+      await postNote(env, {
+        name: nameBase(email),
+        text: changeLine('Cita cancelada (web)', 'first-call', claim.s, claim.n, false),
+        tag: 'CITA',
+        priority: 'normal',
+      });
+    }
     return page(
       copy.title,
       claim.l,

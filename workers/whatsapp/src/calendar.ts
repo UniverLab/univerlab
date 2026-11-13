@@ -5,6 +5,8 @@ import { minutesFor } from './booking';
 import {
   bookingConfig,
   bogotaDateKey,
+  bogotaParts,
+  bogotaToUtcMs,
   freeSlots,
   noticeHoursFor,
 } from './schedule';
@@ -167,6 +169,8 @@ export class Calendar extends DurableObject<Env> {
           return Response.json(await this.serial(() => this.opMove(args)));
         case 'confirm':
           return Response.json(await this.serial(() => this.opConfirm(args)));
+        case 'day':
+          return Response.json(await this.serial(() => this.opDay(args)));
         case 'release':
           return Response.json(await this.serial(() => this.opRelease(args)));
         case 'expire':
@@ -299,11 +303,12 @@ export class Calendar extends DurableObject<Env> {
     oauth: GoogleOAuth,
     wbId: string,
     now: number,
-    horizonDays: number
+    horizonDays: number,
+    fromMs: number = now
   ): Promise<{ busy: BusyBlock[]; events: CalEvent[] } | null> {
     try {
       const token = await accessToken(oauth);
-      const timeMin = new Date(now).toISOString();
+      const timeMin = new Date(fromMs).toISOString();
       const timeMax = new Date(now + horizonDays * DAY_MS).toISOString();
       const busy = await freeBusy(token, timeMin, timeMax, ['primary']);
       const events = await listEvents(token, wbId, timeMin, timeMax);
@@ -602,6 +607,27 @@ export class Calendar extends DurableObject<Env> {
       updated_at: now,
     });
     return { ok: true, eventId: created.id, start: startIso, end: endIso, kind };
+  }
+
+  /**
+   * The agenda's day read: the calendar events starting today in Bogota
+   * time, so the morning message lists every booking the code wrote. The
+   * read starts at midnight, so a late run still lists the whole day.
+   */
+  private async opDay(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const now = typeof args.now === 'number' ? args.now : Date.now();
+    const oauth = googleOAuth(this.env);
+    const wbId = this.env.WORKBENCH_CALENDAR_ID;
+    if (!oauth || !wbId) return { ok: false, reason: 'calendar-down' };
+    const cfg = bookingConfig(this.env);
+    const p = bogotaParts(now);
+    const dayStart = bogotaToUtcMs(p.year, p.month, p.day, 0, 0);
+    const live = await this.listing(oauth, wbId, now, cfg.horizonDays, dayStart);
+    if (!live) return { ok: false, reason: 'calendar-down' };
+    this.verify(live.events);
+    const today = bogotaDateKey(now);
+    const events = live.events.filter((e) => bogotaDateKey(Date.parse(e.start)) === today);
+    return { ok: true, events };
   }
 
   private async opConfirm(args: Record<string, unknown>): Promise<Record<string, unknown>> {

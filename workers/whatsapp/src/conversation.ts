@@ -67,6 +67,7 @@ import {
   type CaptureState,
 } from './reasons';
 import { HOLD_PREFIX } from './google';
+import { changeLine, sameDayAfterAgenda } from './daybook';
 import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
 import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
 import type { ActiveInfo } from './calendar';
@@ -1266,12 +1267,17 @@ export class Conversation extends DurableObject<Env> {
             : st.service === 'first-call'
               ? 'Primera llamada agendada'
               : 'Cita agendada';
-    await postNote(this.env, {
-      name: this.state('name') || nameBase(st.name || st.phone),
-      text: noteBody(ev, st.service, startIso, st.lang, description),
-      tag: 'Cita',
-      priority: 'normal',
-    });
+    // New bookings, moves and cancellations for later days reach the
+    // operator through that day's agenda; a same-day change after the agenda
+    // went out still goes at once as one line through the operator gate.
+    if (await sameDayAfterAgenda(this.env, startIso, Date.now())) {
+      await postNote(this.env, {
+        name: this.state('name') || nameBase(st.name || st.phone),
+        text: changeLine(ev, st.service, startIso, st.name || st.phone, kind !== 'hold'),
+        tag: 'CITA',
+        priority: 'normal',
+      });
+    }
     const slotText = formatSlot(startIso, st.lang);
     const text =
       st.service === 'delivery'
@@ -1328,21 +1334,25 @@ export class Conversation extends DurableObject<Env> {
       service: st.service,
     });
     this.state('name', cancelled);
-    // Every cancellation reaches the operator at once; a paid one is high
-    // priority so it skips the hourly cap and is never dropped in a queue.
+    // A same-day cancellation after the agenda went out reaches the
+    // operator at once; a paid one is high priority so it skips the hourly
+    // cap and is never dropped in a queue. Later-day cancellations wait for
+    // that day's agenda. The line keeps the cancellation naming.
     const paid = st.service === 'consultation' && st.phase === 'booked';
-    await postNote(this.env, {
-      name: cancelled,
-      text: noteBody(
-        paid ? 'Cita cancelada · estaba pagada' : 'Cita cancelada',
-        st.service,
-        st.start ?? '',
-        st.lang,
-        formatBrief({ name: st.name, phone: st.phone, lang: st.lang, service: st.service, bullets: st.brief })
-      ),
-      tag: 'Cita',
-      priority: paid ? 'high' : 'normal',
-    });
+    if (await sameDayAfterAgenda(this.env, st.start ?? '', Date.now())) {
+      await postNote(this.env, {
+        name: cancelled,
+        text: changeLine(
+          paid ? 'Cita cancelada · estaba pagada' : 'Cita cancelada',
+          st.service,
+          st.start ?? '',
+          st.name || st.phone,
+          paid
+        ),
+        tag: 'CITA',
+        priority: paid ? 'high' : 'normal',
+      });
+    }
     const text = renderBooking(CANCELLED[st.lang], {
       service: serviceLabel(st.lang, st.service),
       slot: formatSlot(st.start, st.lang),

@@ -117,6 +117,13 @@ jest.mock('../src/reasons', () => {
   return { ...actual, classify: jest.fn() };
 });
 
+jest.mock('../src/daybook', () => {
+  const actual = jest.requireActual('../src/daybook') as Record<string, unknown>;
+  // The agenda already went out by default, so booking notes keep their
+  // immediate line; one test pins the later-day wait with a single false.
+  return { ...actual, sameDayAfterAgenda: jest.fn(async () => true) };
+});
+
 import { answer, runModel } from '../src/brain';
 import { transcribe } from '../src/audio';
 import { brief, intake } from '../src/intake';
@@ -129,6 +136,7 @@ import { OPENING } from '../src/opening';
 import { PROOF_RECEIVED, forwardUnread, readProof } from '../src/proof';
 import { GUARD_PAUSED } from '../src/guard';
 import { classify } from '../src/reasons';
+import { sameDayAfterAgenda } from '../src/daybook';
 import { Conversation, NON_TEXT } from '../src/conversation';
 import { es } from '../../../src/i18n/es';
 
@@ -601,6 +609,23 @@ test('books a first call without a hold prefix', async () => {
   expect(operatorTexts().some((t) => t.includes('Primera llamada agendada'))).toBe(true);
   const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
   expect(alarms[alarms.length - 1]).toBe(retentionDeadline(AT * 1000));
+});
+
+test('a later-day booking waits for its agenda instead of an immediate note', async () => {
+  const { c } = await offerSlots('first-call');
+  (sameDayAfterAgenda as jest.Mock).mockResolvedValueOnce(false);
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'ev2', start: SLOT_B, end: SLOT_B, kind: 'booked' };
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  await say(c, inbound({ id: 'wamid.b3l', text: 'el segundo' }));
+
+  expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'reserve' }));
+  expect(operatorTexts().some((t) => t.includes('Primera llamada agendada'))).toBe(false);
+  expect(clientTexts()[clientTexts().length - 1]).toContain('agendé');
 });
 
 test('deletes an expired hold and tells the client', async () => {

@@ -1,5 +1,6 @@
 import { parseInbound, verifySignature } from './meta';
 import { handleAgenda } from './agenda';
+import { runAgenda } from './daybook';
 import type { Env } from './env';
 
 export { Conversation } from './conversation';
@@ -48,5 +49,8 @@ export default {
       return new Response('ok', { status: 200 });
     }
     return new Response('not found', { status: 404 });
+  },
+  async scheduled(event: { scheduledTime: number }, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(runAgenda(env, event.scheduledTime));
   },
 };

@@ -937,3 +937,65 @@ test('exemptQuiet skips quiet hours but never away', async () => {
   await deliver({ name: 'ana', text: 'nada', tag: 'AVISO', priority: 'normal' }, { exemptQuiet: true });
   expect(toOperator()).toEqual([]);
 });
+
+async function agenda(op: Operator, dateKey: string, text = 'Agenda de hoy (1):\n06:30 · Consultoría · Ana · pagada'): Promise<boolean> {
+  const res = await op.fetch(
+    new Request('https://registry/call', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'agenda', dateKey, text }),
+    })
+  );
+  return ((await res.json()) as { sent: boolean }).sent;
+}
+
+async function agendaSent(op: Operator, dateKey: string): Promise<boolean> {
+  const res = await op.fetch(
+    new Request('https://registry/call', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'agendaSent', dateKey }),
+    })
+  );
+  return ((await res.json()) as { sent: boolean }).sent;
+}
+
+test('the agenda sends once in quiet hours, a retry sends nothing twice', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  (sendText as jest.Mock).mockClear();
+
+  await expect(agenda(op, '2026-01-05')).resolves.toBe(true);
+  expect(toOperator()).toEqual(['[agenda] AGENDA · normal\nAgenda de hoy (1):\n06:30 · Consultoría · Ana · pagada']);
+  await expect(agendaSent(op, '2026-01-05')).resolves.toBe(true);
+
+  await expect(agenda(op, '2026-01-05')).resolves.toBe(false);
+  expect(toOperator()).toHaveLength(1);
+});
+
+test('the agenda waits while away and goes out on /active', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  await op.command(opMsg({ text: '/afk' }));
+  (sendText as jest.Mock).mockClear();
+
+  await expect(agenda(op, '2026-01-05')).resolves.toBe(true);
+  expect(toOperator()).toEqual([]);
+
+  await op.command(opMsg({ text: '/active' }));
+  expect(toOperator().some((t) => t.includes('Agenda de hoy'))).toBe(true);
+});
+
+test('a quiet day marks the agenda as handled without sending anything', async () => {
+  const { ctx } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
+  (sendText as jest.Mock).mockClear();
+
+  await expect(agenda(op, '2026-01-05', '')).resolves.toBe(false);
+  expect(toOperator()).toEqual([]);
+  await expect(agendaSent(op, '2026-01-05')).resolves.toBe(true);
+});

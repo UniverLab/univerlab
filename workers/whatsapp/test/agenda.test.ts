@@ -40,6 +40,7 @@ interface Scenario {
   gate?: (body: Record<string, unknown>) => Record<string, unknown>;
   turnstile?: boolean;
   secret?: string | null;
+  agendaSent?: boolean;
 }
 
 function makeEnv(s: Scenario): {
@@ -68,6 +69,7 @@ function makeEnv(s: Scenario): {
       }),
       REGISTRY: fakeNs((body) => {
         if (body.action === 'note') notes.push(body);
+        if (body.action === 'agendaSent') return { sent: s.agendaSent === true };
         return { name: 'ana' };
       }),
       OPERATOR_PHONE: '+57 300 999 8888',
@@ -295,9 +297,12 @@ test('a booking reserves through the shared owner and answers slot and meet', as
   expect(sent.description).toContain('/cancel?t=');
 });
 
-test('a web booking tells the operator with the form data', async () => {
+test('a same-day web booking tells the operator at once after the agenda', async () => {
+  // The slot is 10:00 Bogota on Nov 19, so the clock is pinned to that same morning.
+  jest.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 19, 12, 0));
   const { env, notes } = makeEnv({
     calendar: () => ({ ok: true, eventId: 'ev9', start: SLOT, end: SLOT, kind: 'booked', meet: 'https://meet.google.com/x' }),
+    agendaSent: true,
   });
   const res = await call('/book', env, {
     method: 'POST',
@@ -306,17 +311,32 @@ test('a web booking tells the operator with the form data', async () => {
   });
   expect(res.status).toBe(200);
   expect(notes).toHaveLength(1);
-  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'Cita', priority: 'normal' });
+  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'CITA', priority: 'normal' });
   const text = String((notes[0] as { text?: unknown }).text ?? '');
   expect(text).toContain('Primera llamada agendada (web)');
-  expect(text).toContain('Nombre: Ana');
-  expect(text).toContain('ana@example.com');
+  expect(text).toContain('10:00');
 });
 
-test('a web cancellation tells the operator with the token data', async () => {
+test('a later-day web booking waits for its agenda instead of an immediate note', async () => {
+  // The default clock is Nov 17 while the slot is Nov 19: a later day.
+  const { env, notes } = makeEnv({
+    calendar: () => ({ ok: true, eventId: 'ev9', start: SLOT, end: SLOT, kind: 'booked', meet: 'https://meet.google.com/x' }),
+    agendaSent: true,
+  });
+  const res = await call('/book', env, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Ana', email: 'ana@example.com', lang: 'es', note: 'quiero hablar', slot: SLOT, turnstileToken: 't' }),
+  });
+  expect(res.status).toBe(200);
+  expect(notes).toHaveLength(0);
+});
+
+test('a same-day web cancellation tells the operator at once after the agenda', async () => {
+  jest.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 19, 12, 0));
   const claim = { k: 'web:ana@example.com', s: SLOT, n: 'Ana', l: 'es' as const };
   const token = await signCancelToken(claim, SECRET);
-  const { env, notes } = makeEnv({ calendar: () => ({ ok: true, start: SLOT }) });
+  const { env, notes } = makeEnv({ calendar: () => ({ ok: true, start: SLOT }), agendaSent: true });
   const res = await call('/cancel', env, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -324,11 +344,10 @@ test('a web cancellation tells the operator with the token data', async () => {
   });
   expect(res.status).toBe(200);
   expect(notes).toHaveLength(1);
-  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'Cita', priority: 'normal' });
+  expect(notes[0]).toMatchObject({ name: 'ana', tag: 'CITA', priority: 'normal' });
   const text = String((notes[0] as { text?: unknown }).text ?? '');
   expect(text).toContain('Cita cancelada (web)');
-  expect(text).toContain('Nombre: Ana');
-  expect(text).toContain('ana@example.com');
+  expect(text).toContain('10:00');
 });
 
 test('refusals map to their fixed statuses and create nothing', async () => {
