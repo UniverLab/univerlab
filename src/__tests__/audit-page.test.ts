@@ -273,6 +273,38 @@ describe('middleware — audit page', () => {
     expect(pub).not.toContain('Open the repository');
   });
 
+  it('lists the audit signed documents with their state and downloads', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const id = 'a'.repeat(32);
+    const html = auditPageHtml(doc, SLUG, {
+      signedDocs: [
+        { id, title: 'NDA Acme', state: 'signed', signedHash: 'e'.repeat(64) },
+        { id: 'b'.repeat(32), title: 'Service order 7', state: 'ready', signedHash: null },
+      ],
+    });
+    expect(html).toContain('Signed documents');
+    expect(html).toContain('NDA Acme');
+    expect(html).toContain('Service order 7');
+    expect(html).toContain(`/api/sign-file?id=${id}&amp;signed=1`);
+    expect(html).not.toContain(`/api/sign-file?id=${'b'.repeat(32)}&amp;signed=1`);
+    // States are localized labels, never the raw link-state codes.
+    expect(html).toContain('— pending');
+    expect(html).not.toContain('— ready');
+    const bare = auditPageHtml(doc, SLUG);
+    expect(bare).not.toContain('audit-signed-docs');
+  });
+
+  it('localizes the signed document states with the audit language', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const esDoc = { ...doc, meta: { ...doc.meta, language: 'es' as const } };
+    const html = auditPageHtml(esDoc, SLUG, {
+      signedDocs: [{ id: 'a'.repeat(32), title: 'NDA Acme', state: 'signed', signedHash: 'e'.repeat(64) }],
+    });
+    expect(html).toContain('Documentos firmados');
+    expect(html).toContain('— firmado');
+    expect(html).not.toContain('— signed');
+  });
+
   it('answers 404 for a private audit, as if it did not exist', async () => {
     const doc = fixtureDoc();
     doc['visibility'] = 'private';

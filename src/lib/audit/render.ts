@@ -24,6 +24,17 @@ export interface AuditPageOptions {
   /** When set, the audit renders as a published audit with its dates,
    *  history links and client badge snippet. */
   published?: PublishedAuditLinks;
+  /** Signing requests bound to this audit (`auditSlug == slug`): the
+   *  private page lists them. Only the middleware passes this. */
+  signedDocs?: SignedDocEntry[];
+}
+
+/** One signing request of this audit, as the private page lists it. */
+export interface SignedDocEntry {
+  id: string;
+  title: string;
+  state: 'ready' | 'signed' | 'expired';
+  signedHash: string | null;
 }
 
 function dictOf(doc: AuditDocument): BlockCtx['t'] {
@@ -113,6 +124,21 @@ function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], ba
   }
   if (!cards.length) return '';
   return `<section class="audit-deliverables" aria-label="${esc(t.deliverables)}"><h2>${esc(t.deliverables)}</h2>${cards.join('')}</section>`;
+}
+
+/** The private page's signed documents: every signing request bound to this
+ *  audit, with its state and the signed download once signed. */
+function signedDocsHtml(docs: SignedDocEntry[], t: BlockCtx['t']): string {
+  const rows = docs.map((d) => {
+    const dl =
+      d.state === 'signed'
+        ? ` <a href="/api/sign-file?id=${esc(d.id)}&amp;signed=1">${esc(t.signedDocs.download)}</a>`
+        : '';
+    const state =
+      d.state === 'signed' ? t.signedDocs.stateSigned : d.state === 'expired' ? t.signedDocs.stateExpired : t.signedDocs.stateReady;
+    return `<li><strong>${esc(d.title)}</strong> — ${esc(state)}${dl}</li>`;
+  });
+  return `<section class="audit-signed-docs" aria-label="${esc(t.signedDocs.title)}"><h2>${esc(t.signedDocs.title)}</h2><ul>${rows.join('')}</ul></section>`;
 }
 
 function tocHtml(doc: AuditDocument, t: BlockCtx['t']): string {
@@ -290,12 +316,14 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   const published = opts.published
     ? publishedHtml(doc, slug, t, opts.published, new Date())
     : '';
+  const signedDocs = opts.signedDocs?.length ? signedDocsHtml(opts.signedDocs, t) : '';
   return (
     `<div class="audit audit-accent--${esc(accent)}">` +
     `<script type="application/json" id="audit-data">${data}</script>` +
     coverHtml(doc, slug, t, base) +
     published +
     deliverablesHtml(doc, slug, t, base, Boolean(opts.published)) +
+    signedDocs +
     tocHtml(doc, t) +
     sectionsHtml +
     findingsEntries +

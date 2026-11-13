@@ -19,6 +19,16 @@ const SITEMAP_EXCLUDED = new Set([
   '/audits/',
   '/audit-shell',
   '/audit-shell/',
+  // Signing pages are private capabilities: the shell only ever renders at
+  // request time, and the owner's console sits behind Cloudflare Access.
+  '/sign-shell',
+  '/sign-shell/',
+  '/es/sign-shell',
+  '/es/sign-shell/',
+  '/sign/owner',
+  '/sign/owner/',
+  '/es/sign/owner',
+  '/es/sign/owner/',
 ]);
 
 export default defineConfig({

@@ -417,3 +417,20 @@ describe('folder failures', () => {
     expect(errors[0].message).toContain('escapes');
   });
 });
+
+describe('signedDocId', () => {
+  it('accepts a signing request id on the deliverables', () => {
+    const folder = setup((doc) => {
+      (doc['deliverables'] as Record<string, unknown>)['signedDocId'] = 'a'.repeat(32);
+    });
+    expect(errorsOf(folder)).toEqual([]);
+  });
+
+  it('rejects anything but a request id', () => {
+    const folder = setup((doc) => {
+      (doc['deliverables'] as Record<string, unknown>)['signedDocId'] = 'nota-request-id';
+    });
+    const errors = errorsOf(folder);
+    expect(errors.map((e) => e.path)).toContain('$.deliverables.signedDocId');
+  });
+});

@@ -1,0 +1,142 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Postcard from '../../components/Postcard.astro';
+import { es } from '../../i18n/es';
+---
+// Sign shell: the built HTML holds only the container — the edge fills #sign
+// at request time from the SIGN_DOCS sidecar (functions/_middleware.ts), and
+// the client script wires the form. Never served directly (the middleware
+// answers 404) and never indexed: signing links are capabilities.
+<BaseLayout title={es.sign.shellTitle} description={es.sign.shellDescription} circadian noindex>
+  <section class="wrap sign">
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{es.sign.viewerLabel}</span>
+        <div id="sign"></div>
+      </div>
+      <Postcard page="sign" alt={es.postcards.sign} />
+    </div>
+  </section>
+
+  <script>
+    import { initSignPage } from '../../lib/sign/client';
+    initSignPage();
+  </script>
+</BaseLayout>
+
+<style>
+  .sign h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+    line-height: 1.15;
+    margin: 0.5rem 0 0.75rem;
+  }
+  .sign-hash {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+  .sign-hash code {
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.1em 0.35em;
+  }
+  .sign-viewer {
+    margin: 1.5rem 0;
+  }
+  .sign-viewer h2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem;
+  }
+  .sign-viewer iframe {
+    width: 100%;
+    height: 70vh;
+    min-height: 24rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: #fff;
+  }
+  .sign-hint {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+  }
+  .sign-field {
+    margin: 1rem 0;
+  }
+  .sign-field label {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+  .sign-field input {
+    width: 100%;
+    max-width: 28rem;
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.55rem 0.7rem;
+  }
+  .sign-field input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .sign-accept {
+    margin: 1.25rem 0;
+    max-width: 34rem;
+  }
+  .sign-accept label {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  .sign-accept input {
+    margin-top: 0.3rem;
+    accent-color: var(--accent);
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+  }
+  #sign-submit {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    padding: 0.65rem 1.4rem;
+    cursor: pointer;
+  }
+  #sign-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  #sign-submit:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+  .sign-error {
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .sign-state {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    margin: 1rem 0;
+  }
+  .sign-download {
+    font-family: var(--font-mono);
+  }
+  @media (max-width: 40rem) {
+    .sign-viewer iframe {
+      height: 60vh;
+      min-height: 20rem;
+    }
+  }
+</style>

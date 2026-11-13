@@ -49,6 +49,7 @@
     "marked": "^18.2.0",
     "mermaid": "^12.3.0",
     "morphicons": "^1.7.1",
+    "pdf-lib": "^1.17.1",
     "vega": "^6.4.0",
     "vega-embed": "^7.3.0",
     "vega-lite": "^6.5.0"

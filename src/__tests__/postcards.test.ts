@@ -3,7 +3,7 @@
  * Each opening carries its postcard; people/status/roadmap sit over the
  * blueprint drawing and the manifesto over the celestial chart.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -28,6 +28,10 @@ const carriers: Array<[string, string, string]> = [
   // The 404 dropped its postcard: the kraken chart is its opening now (see
   // not-found-kraken.test.ts). The postcard key stays for the asset history.
   ['src/pages/roadmap.astro', 'roadmap', 'en.postcards.roadmap'],
+  ['src/pages/sign-shell.astro', 'sign', 'en.postcards.sign'],
+  ['src/pages/es/sign-shell.astro', 'sign', 'es.postcards.sign'],
+  ['src/pages/sign/owner.astro', 'sign', 't.postcards.sign'],
+  ['src/pages/es/sign/owner.astro', 'sign', 't.postcards.sign'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -79,8 +83,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 9 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(9);
+  it('all 13 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(13);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -153,7 +157,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(6);
+    expect(others).toHaveLength(10);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
@@ -166,9 +170,9 @@ describe('Watermark component', () => {
 });
 
 describe('postcards dictionary', () => {
-  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'manifesto', 'not-found', 'roadmap', 'status', 'today'];
+  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
 
-  it('has the same 10 keys in both languages', () => {
+  it('has the same 11 keys in both languages', () => {
     expect(Object.keys(en.postcards).sort()).toEqual([...keys].sort());
     expect(Object.keys(es.postcards).sort()).toEqual([...keys].sort());
   });
@@ -189,5 +193,43 @@ describe('postcards dictionary', () => {
   it('keeps the roadmap card literal about the engraving that ships', () => {
     expect(en.postcards.roadmap).toMatch(/drafting table.*sea chart.*compass rose.*rolled maps.*dividers.*globe/i);
     expect(es.postcards.roadmap).toMatch(/mesa de dibujo.*carta marina.*rosa de los vientos.*mapas enrollados.*compás.*globo terráqueo/i);
+  });
+});
+
+describe('sign postcard assets', () => {
+  // FR4: the sign opening renders /bench/postcards/sign-{day,night}-{1600,800,mobile}.{avif,webp}.
+  // A missing file renders a broken image on /sign/<id> and /sign/owner, so pin all 12 on disk and in the manifest.
+  const files = [
+    'sign-day-1600.avif',
+    'sign-day-1600.webp',
+    'sign-day-800.avif',
+    'sign-day-800.webp',
+    'sign-day-mobile.avif',
+    'sign-day-mobile.webp',
+    'sign-night-1600.avif',
+    'sign-night-1600.webp',
+    'sign-night-800.avif',
+    'sign-night-800.webp',
+    'sign-night-mobile.avif',
+    'sign-night-mobile.webp',
+  ];
+
+  it('ships all 12 sign variants on disk, non-empty', () => {
+    expect(files).toHaveLength(12);
+    for (const f of files) {
+      const p = join(root, 'public', 'bench', 'postcards', f);
+      expect(existsSync(p)).toBe(true);
+      expect(statSync(p).size).toBeGreaterThan(0);
+    }
+  });
+
+  it('lists all 12 sign variants in the bench manifest', () => {
+    const manifest = JSON.parse(read('public/bench/manifest.json')) as {
+      assets: Array<{ file: string }>;
+    };
+    const listed = new Set(manifest.assets.map((a) => a.file));
+    for (const f of files) {
+      expect(listed.has(`postcards/${f}`)).toBe(true);
+    }
   });
 });

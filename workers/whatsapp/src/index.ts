@@ -48,6 +48,35 @@ export default {
     if (req.method === 'GET' && url.pathname === '/health') {
       return new Response('ok', { status: 200 });
     }
+    // The site's signing flow reports here when a document is signed: one
+    // line through the operator gate, so quiet hours and away still hold it.
+    // Shared secret with the site's SIGN_NOTIFY_* env, never committed.
+    if (req.method === 'POST' && url.pathname === '/internal/signed') {
+      const secret = env.SIGN_NOTIFY_SECRET;
+      if (!secret || req.headers.get('Authorization') !== `Bearer ${secret}`) {
+        return new Response('unauthorized', { status: 401 });
+      }
+      let payload: unknown;
+      try {
+        payload = await req.json();
+      } catch {
+        return new Response('bad request', { status: 400 });
+      }
+      const text =
+        typeof payload === 'object' && payload !== null && typeof (payload as { text?: unknown }).text === 'string'
+          ? ((payload as { text: string }).text ?? '')
+          : '';
+      if (text === '' || !env.REGISTRY) return new Response('bad request', { status: 400 });
+      const stub = env.REGISTRY.get(env.REGISTRY.idFromName('operator'));
+      await stub.fetch(
+        new Request('https://operator/note', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'note', name: 'firma', text, tag: 'FIRMA', priority: 'normal' }),
+        }),
+      );
+      return new Response('ok', { status: 200 });
+    }
     return new Response('not found', { status: 404 });
   },
   async scheduled(event: { scheduledTime: number }, env: Env, ctx: ExecutionContext): Promise<void> {

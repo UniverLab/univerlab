@@ -561,12 +561,15 @@ export function validateAgainstSchema(doc: unknown): SchemaIssue[] {
   }
   if (doc['deliverables'] !== undefined) {
     const d = doc['deliverables'];
-    if (enterObject(ctx, d, '$.deliverables', 'deliverables', ['report', 'bundle', 'repository', 'repositoryPublic'])) {
+    if (enterObject(ctx, d, '$.deliverables', 'deliverables', ['report', 'bundle', 'repository', 'repositoryPublic', 'signedDocId'])) {
       checkOptionalString(ctx, d['report'], '$.deliverables.report', 'report asset');
       checkOptionalString(ctx, d['bundle'], '$.deliverables.bundle', 'bundle asset');
       checkOptionalString(ctx, d['repository'], '$.deliverables.repository', 'repository URL', { format: 'uri', pattern: HTTPS_RE });
       if (d['repositoryPublic'] !== undefined && d['repositoryPublic'] !== true) {
         err(ctx, '$.deliverables.repositoryPublic', 'repository visibility must be true');
+      }
+      if (d['signedDocId'] !== undefined) {
+        checkString(ctx, d['signedDocId'], '$.deliverables.signedDocId', 'signed document id', { pattern: /^[0-9a-f]{32}$/ });
       }
     }
   }

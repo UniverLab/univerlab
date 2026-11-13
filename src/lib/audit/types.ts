@@ -138,6 +138,8 @@ export interface AuditDeliverables {
   bundle?: string;
   repository?: string;
   repositoryPublic?: true;
+  /** Signing request id whose signed PDF is this audit's signed document. */
+  signedDocId?: string;
 }
 
 export interface AuditCost {

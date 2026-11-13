@@ -220,7 +220,8 @@
         "report": { "type": "string", "minLength": 1, "description": "Asset id of the TeXForge PDF report. Required once the audit status is delivered or final." },
         "bundle": { "type": "string", "minLength": 1, "description": "Optional asset id of an archive bundling every asset." },
         "repository": { "type": "string", "format": "uri", "pattern": "^https://", "description": "HTTPS URL of the audit's repository." },
-        "repositoryPublic": { "enum": [true], "description": "True only when the repository is public too; omitted means private." }
+        "repositoryPublic": { "enum": [true], "description": "True only when the repository is public too; omitted means private." },
+        "signedDocId": { "type": "string", "pattern": "^[0-9a-f]{32}$", "description": "Optional signing request id whose signed PDF is this audit's signed document." }
       },
       "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
       "additionalProperties": false

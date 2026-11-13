@@ -13,6 +13,10 @@ import {
 } from '../src/lib/today-edition';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
+import { es } from '../src/i18n/es';
+import { linkState } from '../src/lib/sign/evidence';
+import { loadRequest, listRequests, type SignBucket } from '../src/lib/sign/store';
+import { signInnerHtml, type SignStrings } from '../src/lib/sign/page';
 import { validateAuditDocument } from '../src/lib/audit/validate-document';
 import { auditBadge } from '../src/lib/audit/badge';
 import { auditMarkdown, publicAuditUrl, PUBLIC_AUDIT_BASE } from '../src/lib/audit/markdown';
@@ -263,6 +267,27 @@ export interface AuditAccessEnv {
   ACCESS_AUD?: string;
 }
 
+/** The R2 surface the signing flow reads at the edge: sidecars and the
+ *  request listing. Writes happen in the API functions, never here. */
+export interface SignR2Bucket {
+  get(key: string): Promise<{
+    body: ReadableStream | Uint8Array | string | null;
+    text(): Promise<string>;
+    arrayBuffer(): Promise<ArrayBuffer>;
+  } | null>;
+  list?: (options?: { prefix?: string }) => Promise<{ objects: { key: string }[] }>;
+}
+
+/** Environment the signing routes read: the private SIGN_DOCS bucket plus
+ *  the owner allowlist (comma-separated emails, dashboard value). */
+export interface SignAccessEnv {
+  SIGN_DOCS?: SignR2Bucket;
+  SIGN_OWNER_EMAILS?: string;
+}
+
+const asSignBucket = (env: SignAccessEnv): SignBucket | undefined =>
+  env.SIGN_DOCS as unknown as SignBucket | undefined;
+
 const ACCESS_CERT_TTL_MS = 5 * 60 * 1000;
 
 let accessKeys: { fetchedAt: number; keys: Map<string, CryptoKey> } | null = null;
@@ -395,6 +420,99 @@ export function auditAllowed(doc: AuditDocument, email: string): boolean {
   if (!Array.isArray(list)) return false;
   const want = email.toLowerCase();
   return list.some((e) => typeof e === 'string' && e.toLowerCase() === want);
+}
+
+/** The signing shell is only ever filled at request time: asked for
+ *  directly it answers 404, like the audit shell. */
+const SIGN_SHELL_RE = /^\/sign-shell\/?$/;
+const SIGN_OWNER_RE = /^\/sign\/owner\/?$/;
+const SIGN_OWNER_ES_RE = /^\/es\/sign\/owner\/?$/;
+const SIGN_PAGE_RE = /^\/sign\/([0-9a-f]{32})\/?$/;
+const SIGN_PAGE_ES_RE = /^\/es\/sign\/([0-9a-f]{32})\/?$/;
+
+/** The Access JWT for a signing route: header first, then the
+ *  `CF_Authorization` cookie browsers carry after the email OTP. */
+function signToken(request: Request): string | null {
+  const header = request.headers.get('Cf-Access-Jwt-Assertion');
+  if (header) return header;
+  const cookie = request.headers.get('Cookie') ?? '';
+  for (const part of cookie.split(';')) {
+    const [k, ...rest] = part.trim().split('=');
+    if (k === 'CF_Authorization' && rest.length > 0) return rest.join('=').trim();
+  }
+  return null;
+}
+
+/** The owner's private console serves only to an allowlisted address with a
+ *  valid Access JWT — the same posture as a private audit, with the
+ *  allowlist in the environment instead of on a document. */
+async function signOwnerAllowed(request: Request, env: AuditAccessEnv & SignAccessEnv): Promise<boolean> {
+  const token = signToken(request);
+  if (!token) return false;
+  const email = await verifyAccessToken(token, env);
+  if (!email) return false;
+  const allowlist = (env.SIGN_OWNER_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e !== '');
+  return allowlist.includes(email.toLowerCase());
+}
+
+/** Fill the sign shell: language, title, description, canonical URL and the
+ *  request's state (form, signed or expired) into `#sign`. The shell stays
+ *  noindex: signing links are capabilities, never indexed. */
+async function rewriteSignShell(
+  shell: Response,
+  opts: { lang: string; title: string; desc: string; canonical: string; html: string },
+): Promise<Response> {
+  const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
+  if (typeof RW === 'function') {
+    const rewriter = new (RW as new () => {
+      on(s: string, h: unknown): unknown;
+      transform(r: Response): Response;
+    })();
+    const rw = rewriter as unknown as {
+      on(s: string, h: unknown): void;
+      transform(r: Response): Response;
+    };
+    rw.on('html', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('lang', opts.lang);
+      },
+    });
+    rw.on('title', {
+      element(el: { setInnerContent(c: string, o: unknown): void }) {
+        el.setInnerContent(opts.title, { html: false });
+      },
+    });
+    rw.on('meta[name="description"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('content', opts.desc);
+      },
+    });
+    rw.on('link[rel="canonical"]', {
+      element(el: { setAttribute(n: string, v: string): void }) {
+        el.setAttribute('href', opts.canonical);
+      },
+    });
+    rw.on('#sign', {
+      element(el: { setInnerContent(c: string, o: unknown): void }) {
+        el.setInnerContent(opts.html, { html: true });
+      },
+    });
+    return rw.transform(shell);
+  }
+  const shellText = await shell.text();
+  return new Response(
+    shellText
+      .replace(/<html([^>]*)>/, (_m, attrs: string) =>
+        `<html${String(attrs).replace(/\s*lang="[^"]*"/, '')} lang="${opts.lang}">`)
+      .replace(/<title>[^<]*<\/title>/, `<title>${esc(opts.title)}</title>`)
+      .replace(/(<meta name="description" content=")[^"]*(")/, `$1${esc(opts.desc)}$2`)
+      .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${esc(opts.canonical)}$2`)
+      .replace('<div id="sign"></div>', `<div id="sign">${opts.html}</div>`),
+    { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+  );
 }
 
 /** A private audit serves only when the configuration is present, the
@@ -672,7 +790,7 @@ export async function onRequest(context: {
   env: {
     ASSETS: { fetch: (input: string | Request) => Promise<Response> };
     AUDITS?: AuditR2Bucket;
-  } & AuditAccessEnv;
+  } & AuditAccessEnv & SignAccessEnv;
   next: () => Promise<Response>;
 }): Promise<Response> {
   const { request, env, next } = context;
@@ -719,6 +837,45 @@ export async function onRequest(context: {
     return new Response('not found', { status: 404 });
   }
 
+  // The signing shell is only ever filled at request time, and the owner's
+  // console only ever opens to an allowlisted address with a valid Access
+  // JWT. Both stay private and unindexed, like the private audits.
+  if (SIGN_SHELL_RE.test(pathname)) {
+    return new Response('not found', { status: 404 });
+  }
+  if (SIGN_OWNER_RE.test(pathname) || SIGN_OWNER_ES_RE.test(pathname)) {
+    if (!(await signOwnerAllowed(request, env))) return new Response('not found', { status: 404 });
+    const res = await next();
+    const headers = new Headers(res.headers);
+    for (const [k, v] of Object.entries(AUDIT_NO_STORE)) headers.set(k, v);
+    return new Response(res.body, { status: res.status, headers });
+  }
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const signAccept = request.headers.get('Accept');
+    const signPage = !wantsMarkdown(signAccept) ? (SIGN_PAGE_RE.exec(pathname) ?? SIGN_PAGE_ES_RE.exec(pathname)) : null;
+    if (signPage) {
+      const lang = SIGN_PAGE_ES_RE.test(pathname) ? 'es' : 'en';
+      const req = await loadRequest(asSignBucket(env), signPage[1]);
+      if (!req) return next();
+      const url = new URL(request.url);
+      const shellPath = lang === 'es' ? '/es/sign-shell/' : '/sign-shell/';
+      const shell = await env.ASSETS.fetch(new URL(shellPath, url.origin).href);
+      if (!shell.ok) return next();
+      const strings: SignStrings = (lang === 'es' ? es.sign : en.sign) as SignStrings;
+      const html = signInnerHtml(req, linkState(req), strings);
+      const desc = (lang === 'es' ? es.sign : en.sign).shellDescription;
+      const res = await rewriteSignShell(shell, {
+        lang,
+        title: `${req.title} — UniverLab`,
+        desc,
+        canonical: new URL(pathname, url.origin).href,
+        html,
+      });
+      for (const [k, v] of Object.entries(AUDIT_NO_STORE)) res.headers.set(k, v);
+      return res;
+    }
+  }
+
   const accept = request.headers.get('Accept');
 
   // Audits render at request time from the private R2 bucket, never from the
@@ -736,7 +893,20 @@ export async function onRequest(context: {
       const url = new URL(request.url);
       const shell = await env.ASSETS.fetch(new URL('/audits/', url.origin).href);
       if (!shell.ok) return next();
-      const html = auditPageHtml(doc, slug);
+      // A private audit lists its signed documents: every signing request
+      // bound to this slug, with its state and the signed download.
+      let signedDocs: Array<{ id: string; title: string; state: 'ready' | 'signed' | 'expired'; signedHash: string | null }> | undefined;
+      if (doc.visibility === 'private') {
+        try {
+          const reqs = await listRequests(asSignBucket(env));
+          signedDocs = reqs
+            .filter((r) => r.auditSlug === slug)
+            .map((r) => ({ id: r.id, title: r.title, state: linkState(r), signedHash: r.signedHash }));
+        } catch {
+          signedDocs = undefined;
+        }
+      }
+      const html = auditPageHtml(doc, slug, signedDocs?.length ? { signedDocs } : {});
       const lang = doc.meta.language;
       const title = `${doc.meta.title} — UniverLab`;
       const desc = doc.meta.subtitle || doc.meta.title;

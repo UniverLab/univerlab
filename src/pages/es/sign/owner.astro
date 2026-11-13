@@ -1,0 +1,170 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Postcard from '../../../components/Postcard.astro';
+import { useTranslations } from '../../../i18n';
+
+const t = useTranslations('es');
+const a = t.sign;
+---
+<!-- The owner's private console: the edge only serves it to an allowlisted
+     address (functions/_middleware.ts), it is never indexed, and every
+     request it makes carries the owner's Access JWT. -->
+<BaseLayout title={a.ownerTitle} description={a.ownerDescription} circadian noindex>
+  <section class="wrap sign-owner">
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{a.listTitle}</span>
+        <h1>{a.ownerH1}</h1>
+        <p class="intro">{a.ownerIntro}</p>
+      </div>
+      <Postcard page="sign" alt={t.postcards.sign} />
+    </div>
+
+    <h2>{a.upSubmit}</h2>
+    <form id="sign-create" method="post" action="/api/sign-request" enctype="multipart/form-data">
+      <p class="sign-field">
+        <label for="up-pdf">{a.upFile}</label>
+        <input id="up-pdf" name="pdf" type="file" accept="application/pdf,.pdf" required />
+      </p>
+      <p class="sign-field">
+        <label for="up-title">{a.upTitle}</label>
+        <input id="up-title" name="title" type="text" maxlength="140" required />
+      </p>
+      <p class="sign-field">
+        <label for="up-name">{a.upName}</label>
+        <input id="up-name" name="name" type="text" maxlength="120" required />
+      </p>
+      <p class="sign-field">
+        <label for="up-email">{a.upEmail}</label>
+        <input id="up-email" name="email" type="email" maxlength="120" required />
+      </p>
+      <p class="sign-field">
+        <label for="up-audit">{a.upAudit}</label>
+        <input id="up-audit" name="auditSlug" type="text" maxlength="128" />
+        <span class="sign-hint">{a.upAuditHint}</span>
+      </p>
+      <input type="hidden" name="lang" value="es" />
+      <p class="sign-error" id="sign-create-error" hidden></p>
+      <p id="sign-created" hidden>{a.upLink} <a id="sign-created-link" href="#"></a></p>
+      <p><button id="sign-create-submit" type="submit">{a.upSubmit}</button></p>
+    </form>
+
+    <h2>{a.listTitle}</h2>
+    <p id="sign-empty">{a.listEmpty}</p>
+    <table class="sign-table">
+      <thead>
+        <tr><th>{a.thTitle}</th><th>{a.thSigner}</th><th>{a.thState}</th><th>{a.thActions}</th></tr>
+      </thead>
+      <tbody
+        id="sign-requests"
+        data-list-empty={a.listEmpty}
+        data-th-title={a.thTitle}
+        data-th-signer={a.thSigner}
+        data-th-state={a.thState}
+        data-th-actions={a.thActions}
+        data-download={a.download}
+        data-up-error={a.upError}
+        data-up-link={a.upLink}
+        data-state-pending={a.statePending}
+        data-state-signed={a.stateSigned}
+        data-state-expired={a.stateExpired}
+      >
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    import { initOwnerPage } from '../../../lib/sign/owner-client';
+    const el = document.getElementById('sign-requests');
+    initOwnerPage({
+      listEmpty: el?.dataset['listEmpty'] ?? '',
+      thTitle: el?.dataset['thTitle'] ?? '',
+      thSigner: el?.dataset['thSigner'] ?? '',
+      thState: el?.dataset['thState'] ?? '',
+      thActions: el?.dataset['thActions'] ?? '',
+      download: el?.dataset['download'] ?? '',
+      upError: el?.dataset['upError'] ?? '',
+      upLink: el?.dataset['upLink'] ?? '',
+      statePending: el?.dataset['statePending'] ?? '',
+      stateSigned: el?.dataset['stateSigned'] ?? '',
+      stateExpired: el?.dataset['stateExpired'] ?? '',
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .sign-owner h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+    margin: 0.5rem 0 0.75rem;
+  }
+  .sign-owner h2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 1.4rem;
+    margin: 2rem 0 0.5rem;
+  }
+  .sign-owner .sign-field label {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+  .sign-owner .sign-field input {
+    width: 100%;
+    max-width: 28rem;
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.55rem 0.7rem;
+  }
+  .sign-owner .sign-hint {
+    display: block;
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+  }
+  .sign-owner button[type='submit'] {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    padding: 0.65rem 1.4rem;
+    cursor: pointer;
+  }
+  .sign-owner button[type='submit']:hover {
+    filter: brightness(1.08);
+  }
+  .sign-owner .sign-error {
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .sign-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .sign-table th,
+  .sign-table td {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .sign-table th {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+  }
+  @media (max-width: 40rem) {
+    .sign-table th:nth-child(2),
+    .sign-table td:nth-child(2) {
+      overflow-wrap: anywhere;
+    }
+  }
+</style>

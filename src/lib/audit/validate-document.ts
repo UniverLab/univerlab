@@ -119,6 +119,14 @@ export function validateAuditDocument(doc: unknown): { errors: SchemaIssue[]; wa
     errors.push({ path: '$.deliverables.report', message: `audits with status '${String(status)}' need their TeXForge PDF report` });
   }
   if (deliverables) {
+    // A signed document pointer names the signing request whose signed PDF
+    // is this audit's signed copy: a 32-hex request id, never a free string.
+    if (deliverables['signedDocId'] !== undefined) {
+      const sid = deliverables['signedDocId'];
+      if (typeof sid !== 'string' || !/^[0-9a-f]{32}$/.test(sid)) {
+        errors.push({ path: '$.deliverables.signedDocId', message: 'the signed document id must be a signing request id' });
+      }
+    }
     if (typeof deliverables['report'] === 'string' && deliverables['report'] !== '') {
       requireAsset(deliverables['report'], '$.deliverables.report');
       const kind = assetKind(deliverables['report']);
