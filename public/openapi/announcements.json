@@ -4,7 +4,7 @@
     "title": "UniverLab announcements API",
     "version": "1.0.0",
     "summary": "The public, read-only half of the UniverLab announcements API.",
-    "description": "The public, read-only half of the UniverLab announcements API — the Logbook and the roadmap that https://univerlab.org/newspaper/ and https://univerlab.org/roadmap/ render. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: https://univerlab.org`, so a page on univerlab.org can call them straight from the browser. Writing to the Logbook or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
+    "description": "The public, read-only half of the UniverLab announcements API — the Logbook and the roadmap that https://univerlab.org/newspaper/ and https://univerlab.org/roadmap/ render. Every operation in this document is an anonymous, read-only GET: no account, no key, nothing to negotiate. Responses are served with `Access-Control-Allow-Origin: *`, so a page on any origin, including a local build or a preview deployment, can call them straight from the browser. Writing to the Logbook or the roadmap (PUT, PATCH, POST, DELETE) is owner-only and is deliberately not described here. See https://univerlab.org/auth.md and https://univerlab.org/.well-known/api-catalog.",
     "contact": {
       "name": "Jheison Martinez Bolivar",
       "email": "hola@univerlab.org"

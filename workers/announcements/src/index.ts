@@ -203,7 +203,7 @@ const ROADMAP_POST_FIELDS = new Set([
 const ROADMAP_PATCH_FIELDS = new Set([...ROADMAP_POST_FIELDS, 'archived', 'archive']);
 
 const CORS = {
-  'Access-Control-Allow-Origin': 'https://univerlab.org',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
