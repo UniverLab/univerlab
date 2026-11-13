@@ -75,8 +75,10 @@ import {
   CANCELLED,
   CONFIRMED,
   decide,
+  DELIVERED,
   EXPIRED,
   HOLD_SENT,
+  minutesFor,
   MOVE_ONCE,
   offerText,
   paymentText,
@@ -450,7 +452,13 @@ export class Conversation extends DurableObject<Env> {
   }
 
   /** Run one operator command against this conversation. */
-  async control(action: { action?: unknown; name?: unknown; text?: unknown }): Promise<{ ok: boolean }> {
+  async control(action: {
+    action?: unknown;
+    name?: unknown;
+    text?: unknown;
+    phone?: unknown;
+    lang?: unknown;
+  }): Promise<{ ok: boolean }> {
     this.ensureSchema();
     if (action.action === 'take') {
       if (typeof action.name !== 'string' || !action.name) return { ok: false };
@@ -493,6 +501,9 @@ export class Conversation extends DurableObject<Env> {
     }
     if (action.action === 'operatorCancel') {
       return await this.operatorCancel();
+    }
+    if (action.action === 'operatorDelivery') {
+      return await this.operatorDelivery(action);
     }
     return { ok: false };
   }
@@ -561,6 +572,106 @@ export class Conversation extends DurableObject<Env> {
     } catch {
       return { ok: false };
     }
+  }
+
+  /** The client phone behind this conversation, from whatever state keeps it. */
+  private deliveryPhone(): string {
+    for (const key of ['booking', 'intake', 'capture']) {
+      try {
+        const raw = this.state(key);
+        if (!raw) continue;
+        const phone = (JSON.parse(raw) as { phone?: unknown }).phone;
+        if (typeof phone === 'string' && phone) return phone;
+      } catch {
+        /* corrupt state: try the next source */
+      }
+    }
+    return '';
+  }
+
+  /** Authorise one delivery session: offer the consultation-style slots, or
+   *  report the delivery already booked. The authorisation is consumed by the
+   *  booking it enables. */
+  private async operatorDelivery(action: {
+    phone?: unknown;
+    name?: unknown;
+    lang?: unknown;
+  }): Promise<{ ok: boolean; already?: boolean }> {
+    try {
+      const raw = this.state('booking');
+      if (raw) {
+        const st = JSON.parse(raw) as BookingState;
+        if (st.service === 'delivery' && st.eventId) return { ok: true, already: true };
+      }
+    } catch {
+      /* a corrupt booking state authorises fresh below */
+    }
+    const lang: Lang = action.lang === 'en' ? 'en' : action.lang === 'es' ? 'es' : this.clientLang();
+    const phone = (typeof action.phone === 'string' && action.phone) || this.deliveryPhone();
+    const name = typeof action.name === 'string' ? action.name : (this.state('name') ?? '');
+    if (!phone) return { ok: false };
+    const res = await calendarCall(this.env, {
+      action: 'status',
+      contactKey: contactKey('wa', phone),
+      service: 'delivery',
+      minutes: minutesFor('delivery'),
+      now: Date.now(),
+    });
+    if (!res.ok) {
+      return { ok: false };
+    }
+    if (res.active) {
+      const active = res.active as ActiveInfo;
+      const svc: BookingService =
+        active.service === 'delivery'
+          ? 'delivery'
+          : active.service === 'consultation'
+            ? 'consultation'
+            : 'first-call';
+      const seeded = seedFromActive(active, { lang, phone, name, service: svc, brief: [] });
+      this.state('booking', JSON.stringify(seeded));
+      const text = renderBooking(EXISTING[lang], { slot: formatSlot(active.start, lang) });
+      try {
+        await sendText(this.env, phone, text);
+      } catch {
+        /* the seeded state still stands */
+      }
+      this.storeAssistant(Math.floor(Date.now() / 1000), 'a-op-delivery-existing-' + active.eventId, text);
+      // No alarm: the next client message sets the retention deadline, and an
+      // empty armNext would wipe the stored booking. A booking the calendar
+      // already holds never authorises a new delivery session.
+      if (svc === 'delivery') return { ok: true, already: true };
+      return { ok: true };
+    }
+    const slots = ((res.slots ?? []) as string[]).slice(0, 5);
+    if (slots.length === 0) {
+      return { ok: false };
+    }
+    // The authorisation is created only with the offer it enables: a failed
+    // or refused /delivery must never book later.
+    this.state('deliveryAuth', '1');
+    const now = Date.now();
+    const booking: BookingState = {
+      service: 'delivery',
+      lang,
+      offered: slots,
+      phase: 'offered',
+      createdAt: now,
+      phone,
+      name,
+      brief: [],
+    };
+    this.state('booking', JSON.stringify(booking));
+    const text = offerText(lang, slots.map((s) => formatSlot(s, lang)));
+    try {
+      await sendText(this.env, phone, text);
+    } catch {
+      /* the offer stands in state even when the notice fails */
+    }
+    this.storeAssistant(Math.floor(now / 1000), 'a-op-delivery-offer', text);
+    // No alarm: the next client message sets the retention deadline, and an
+    // empty armNext would wipe the stored booking.
+    return { ok: true };
   }
 
   private async erase(m: Inbound, lang: Lang): Promise<void> {
@@ -821,8 +932,14 @@ export class Conversation extends DurableObject<Env> {
     st: IntakeState,
     service: BookingService
   ): Promise<void> {
+    // A delivery offer needs the operator's authorisation; without it the
+    // request hands off instead of ever showing slots.
+    if (service === 'delivery' && this.state('deliveryAuth') !== '1') {
+      await this.limitRefusal(m, st.lang, m.from, m.name ?? '', st.service, [], 'day-cap');
+      return;
+    }
     const b = await brief(this.ai(), st, modelConfig(this.env));
-    const minutes = service === 'consultation' ? 60 : 15;
+    const minutes = minutesFor(service);
     // The owner answers first: an active booking seeds the chat instead of
     // offering, a limit refuses with fixed wording, and only a free contact
     // gets an offer. Calendar trouble hands off as it does today.
@@ -882,6 +999,12 @@ export class Conversation extends DurableObject<Env> {
 
   /** The lost race: the slot is gone, so the remaining ones are offered. */
   private async slotTaken(m: Inbound, st: BookingState, minutes: number): Promise<void> {
+    // A delivery re-offer without the operator's authorisation hands off
+    // instead of showing slots; retrying a booked delivery's move skips this gate.
+    if (st.service === 'delivery' && st.eventId === undefined && this.state('deliveryAuth') !== '1') {
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, 'day-cap');
+      return;
+    }
     const res = await calendarCall(this.env, {
       action: 'status',
       contactKey: contactKey('wa', m.from),
@@ -941,12 +1064,21 @@ export class Conversation extends DurableObject<Env> {
       return;
     }
     const startIso = st.offered[idx];
-    const minutes = st.service === 'consultation' ? 60 : 15;
+    // A delivery pick without the operator's authorisation hands off instead
+    // of booking; a booked delivery moves like any other booking.
+    if (st.service === 'delivery' && st.eventId === undefined && this.state('deliveryAuth') !== '1') {
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, 'day-cap');
+      return;
+    }
+    const minutes = minutesFor(st.service);
     // A paid (operator-confirmed) consultation stays confirmed when the
-    // client moves it; only unpaid holds carry the [Por confirmar] prefix.
+    // client moves it; only unpaid holds carry the [Por confirmar] prefix. A
+    // delivery never holds: it books straight away like a first call.
     const hold = st.service === 'consultation' && st.phase !== 'booked';
     const summary =
-      (hold ? HOLD_PREFIX : '') + serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone);
+      st.service === 'delivery'
+        ? 'Entrega de auditoría · ' + (st.name || '+' + st.phone)
+        : (hold ? HOLD_PREFIX : '') + serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone);
     const description = formatBrief({
       name: st.name,
       phone: st.phone,
@@ -1030,6 +1162,8 @@ export class Conversation extends DurableObject<Env> {
     st.eventId = res.eventId as string;
     st.start = startIso;
     if (kind === 'hold') st.createdAt = now;
+    // One authorisation books once: the delivery consumes it here.
+    if (st.service === 'delivery') this.state('deliveryAuth', null);
     this.state('booking', JSON.stringify(st));
     if (kind === 'hold') {
       const held = await register(this.env, {
@@ -1043,13 +1177,18 @@ export class Conversation extends DurableObject<Env> {
       });
       this.state('name', held);
     }
-    const ev = isMove
-      ? 'Cita movida'
-      : kind === 'hold'
-        ? 'Apartado creado'
-        : st.service === 'first-call'
-          ? 'Primera llamada agendada'
-          : 'Cita agendada';
+    const ev =
+      st.service === 'delivery'
+        ? isMove
+          ? 'Entrega movida'
+          : 'Entrega agendada'
+        : isMove
+          ? 'Cita movida'
+          : kind === 'hold'
+            ? 'Apartado creado'
+            : st.service === 'first-call'
+              ? 'Primera llamada agendada'
+              : 'Cita agendada';
     await postNote(this.env, {
       name: this.state('name') || nameBase(st.name || st.phone),
       text: noteBody(ev, st.service, startIso, st.lang, description),
@@ -1058,12 +1197,14 @@ export class Conversation extends DurableObject<Env> {
     });
     const slotText = formatSlot(startIso, st.lang);
     const text =
-      kind === 'hold'
-        ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang, st.phone) })
-        : renderBooking(PICKED[st.lang], {
-            slot: slotText,
-            service: serviceLabel(st.lang, st.service),
-          });
+      st.service === 'delivery'
+        ? renderBooking(DELIVERED[st.lang], { slot: slotText })
+        : kind === 'hold'
+          ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang, st.phone) })
+          : renderBooking(PICKED[st.lang], {
+              slot: slotText,
+              service: serviceLabel(st.lang, st.service),
+            });
     await sendText(this.env, m.from, text);
     this.storeAssistant(m.timestamp, 'a-' + m.id + '-booked', text);
     const ret = Number(this.state('retention') ?? '0');
@@ -1139,7 +1280,13 @@ export class Conversation extends DurableObject<Env> {
     dayKey = '',
     movedNote = false
   ): Promise<void> {
-    const minutes = st.service === 'consultation' ? 60 : 15;
+    // A delivery re-offer without the operator's authorisation hands off
+    // instead of showing slots; moving a booked delivery skips this gate.
+    if (st.service === 'delivery' && st.eventId === undefined && this.state('deliveryAuth') !== '1') {
+      await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, 'day-cap');
+      return;
+    }
+    const minutes = minutesFor(st.service);
     const res = await calendarCall(this.env, {
       action: 'status',
       contactKey: contactKey('wa', st.phone),
@@ -1715,7 +1862,12 @@ export class Conversation extends DurableObject<Env> {
           }
           if (res.active) {
             const active = res.active as ActiveInfo;
-            const svc: BookingService = active.service === 'consultation' ? 'consultation' : 'first-call';
+            const svc: BookingService =
+            active.service === 'delivery'
+              ? 'delivery'
+              : active.service === 'consultation'
+                ? 'consultation'
+                : 'first-call';
             const seeded = seedFromActive(active, {
               lang,
               phone: m.from,

@@ -33,12 +33,14 @@ export const SERVICE_LABEL: Record<Lang, Record<string, string>> = {
     'first-call': 'Primera llamada',
     consultation: 'Consultoría',
     'audit-flow': 'Auditoría/flujo',
+    delivery: 'Entrega de auditoría',
     other: 'Otro',
   },
   en: {
     'first-call': 'First call',
     consultation: 'Consultation',
     'audit-flow': 'Audit/flow',
+    delivery: 'Delivery session',
     other: 'Other',
   },
 };

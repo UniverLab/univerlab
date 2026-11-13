@@ -2002,3 +2002,220 @@ function operatorBodies(): string[] {
     .filter((call) => call[1] === OPERATOR)
     .map((call) => call[2] as string);
 }
+
+function seedDeliveryBooking(ctx: unknown): void {
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'booking',
+    JSON.stringify({
+      service: 'delivery',
+      lang: 'es',
+      offered: [SLOT_A, SLOT_B],
+      phase: 'offered',
+      createdAt: AT * 1000,
+      phone: CLIENT,
+      name: 'ana',
+      brief: ['auditoría atlas'],
+    })
+  );
+}
+
+function deliveryCalendar(): void {
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string; startIso?: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') return { ok: true, eventId: 'evd', start: SLOT_A, kind: 'booked' };
+    if (body.action === 'move') return { ok: true, eventId: 'evd', start: body.startIso, kind: 'booked' };
+    if (body.action === 'release') return { ok: true, eventId: 'evd', start: SLOT_A };
+    return { ok: false, reason: 'calendar-down' };
+  });
+}
+
+test('an audit-delivery request asks which audit and hands off tagged ENTREGA', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  (classify as jest.Mock).mockResolvedValue('audit-delivery');
+  const ask = (es as unknown as { wa: { ask: Record<string, string[]> } }).wa.ask;
+
+  await say(c, inbound({ id: 'wamid.d0a', text: 'quiero agendar la entrega de mi auditoría' }));
+  expect(clientTexts()).toEqual([OPENING.es, ask['audit-delivery'][0]]);
+
+  await say(c, inbound({ id: 'wamid.d0b', text: 'la del atlas' }));
+  expect(clientTexts()).toContain(ask['audit-delivery'][1]);
+
+  await say(c, inbound({ id: 'wamid.d0c', text: 'nada más' }));
+  expect(operatorBodies().some((b) => b.includes('ENTREGA'))).toBe(true);
+  expect(clientTexts().some((t) => t.includes('solicitud de entrega'))).toBe(true);
+});
+
+test('a delivery pick without authorisation hands off and books nothing', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  seedDeliveryBooking(ctx);
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+
+  await say(c, inbound({ id: 'wamid.d1', text: 'el primero' }));
+
+  expect(calendarCall).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'reserve' }));
+  expect(clientTexts().some((t) => t.includes('cupos nuevos'))).toBe(true);
+  expect(operatorBodies().some((b) => b.includes('Límite de agenda'))).toBe(true);
+});
+
+test('operatorDelivery authorises and offers 60-minute slots', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+
+  const res = await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+
+  expect(res).toEqual({ ok: true });
+  expect(calendarCall).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ action: 'status', service: 'delivery', minutes: 60 })
+  );
+  const offers = clientTexts().filter((t) => t.includes('1) '));
+  expect(offers).toHaveLength(1);
+  expect(offers[0]).toContain('2) ');
+});
+
+test('an authorised delivery books direct, consumes the authorisation and reports already', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  deliveryCalendar();
+  await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+
+  await say(c, inbound({ id: 'wamid.d2', text: 'el primero' }));
+
+  expect(calendarCall).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      action: 'reserve',
+      service: 'delivery',
+      minutes: 60,
+      summary: 'Entrega de auditoría · ana',
+    })
+  );
+  expect(clientTexts().some((t) => t.includes('entrega de tu auditoría'))).toBe(true);
+  expect(clientTexts().some((t) => t.includes('Por confirmar') || t.includes('comprobante'))).toBe(false);
+  expect(operatorBodies().some((b) => b.includes('Entrega agendada'))).toBe(true);
+
+  // One authorisation books once: a second /delivery reports the booking.
+  const offersBefore = clientTexts().filter((t) => t.includes('1) ')).length;
+  const again = await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+  expect(again).toEqual({ ok: true, already: true });
+  expect(clientTexts().filter((t) => t.includes('1) '))).toHaveLength(offersBefore);
+});
+
+test('a booked delivery moves and cancels like any other booking', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  deliveryCalendar();
+  await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  await say(c, inbound({ id: 'wamid.d3a', text: 'el primero' }));
+
+  (decide as jest.Mock).mockResolvedValue({ action: 'move', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.d3b', text: 'mejor muévela' }));
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
+  await say(c, inbound({ id: 'wamid.d3c', text: 'la segunda' }));
+
+  expect(calendarCall).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ action: 'move', summary: 'Entrega de auditoría · ana' })
+  );
+  expect(operatorBodies().some((b) => b.includes('Entrega movida'))).toBe(true);
+
+  (decide as jest.Mock).mockResolvedValue({ action: 'cancel', slot: -1, date: '' });
+  await say(c, inbound({ id: 'wamid.d3d', text: 'mejor cancela' }));
+
+  expect(calendarCall).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'release' }));
+  expect(operatorBodies().some((b) => b.includes('Cita cancelada'))).toBe(true);
+  expect(operatorBodies().some((b) => b.includes('estaba pagada'))).toBe(false);
+  expect(clientTexts().some((t) => t.includes('cancelé'))).toBe(true);
+});
+
+test('a failed /delivery leaves no authorisation behind', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string; startIso?: string }) => {
+    if (body.action === 'status') return { ok: false, reason: 'calendar-down' };
+    if (body.action === 'reserve') return { ok: true, eventId: 'evd', start: body.startIso, kind: 'booked' };
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  const res = await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+  expect(res).toEqual({ ok: false });
+
+  // The failed authorisation must not book: a later pick hands off instead.
+  seedDeliveryBooking(ctx);
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  await say(c, inbound({ id: 'wamid.d4', text: 'el primero' }));
+
+  expect(calendarCall).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: 'reserve' }));
+  expect(clientTexts().some((t) => t.includes('cupos nuevos'))).toBe(true);
+  expect(operatorBodies().some((b) => b.includes('Límite de agenda'))).toBe(true);
+});
+
+test('a /delivery while the delivery is already booked reports it', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') {
+      return {
+        ok: true,
+        active: {
+          eventId: 'evd',
+          start: SLOT_A,
+          end: SLOT_A,
+          kind: 'booked',
+          service: 'delivery',
+          createdAt: AT * 1000,
+        },
+        slots: [],
+      };
+    }
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  const res = await c.control({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+
+  expect(res).toEqual({ ok: true, already: true });
+  expect(clientTexts().some((t) => t.includes('Ya tienes un espacio reservado'))).toBe(true);
+});
+
+test('a lost delivery race without authorisation hands off instead of re-offering', async () => {
+  const { ctx } = makeCtx();
+  const c = new Conversation(ctx as never, BOOKING_ENV as never);
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'move') return { ok: false, reason: 'no-booking' };
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    return { ok: false, reason: 'calendar-down' };
+  });
+  // A booked delivery whose authorisation was already consumed; the event
+  // vanished (hand-deleted), so the move finds no booking.
+  const storage = (ctx as { storage: { sql: { exec: (...args: unknown[]) => unknown } } }).storage;
+  storage.sql.exec(
+    'INSERT INTO state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'booking',
+    JSON.stringify({
+      service: 'delivery',
+      lang: 'es',
+      offered: [SLOT_A, SLOT_B],
+      phase: 'booked',
+      eventId: 'evd',
+      start: SLOT_A,
+      createdAt: AT * 1000,
+      phone: CLIENT,
+      name: 'ana',
+      brief: ['auditoría atlas'],
+    })
+  );
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 2, date: '' });
+
+  await say(c, inbound({ id: 'wamid.d5', text: 'la segunda' }));
+
+  expect(clientTexts().some((t) => t.includes('1) '))).toBe(false);
+  expect(clientTexts().some((t) => t.includes('cupos nuevos'))).toBe(true);
+  expect(operatorBodies().some((b) => b.includes('Límite de agenda'))).toBe(true);
+});
+

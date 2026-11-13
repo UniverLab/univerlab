@@ -320,6 +320,24 @@ test('erase removes the contact records while the release frees the event', asyn
   expect(status.active).toBeNull();
 });
 
+test('a delivery reserve books direct with no hold prefix', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const slots = freeSlots(quoteCfg(), [], [], 60, MON_12);
+  const res = await call(cal, {
+    action: 'reserve', contactKey: 'wa:del', service: 'delivery',
+    startIso: slots[0], minutes: 60, summary: 'Entrega de auditoría · Ana', description: '', now: MON_12,
+  });
+  expect(res.ok).toBe(true);
+  expect(res.kind).toBe('booked');
+  expect(calEvents).toHaveLength(1);
+  expect(calEvents[0].summary.startsWith('[Por confirmar]')).toBe(false);
+  expect(calEvents[0].summary).toBe('Entrega de auditoría · Ana');
+  expect(store.reservations).toHaveLength(1);
+  expect(store.reservations[0].kind).toBe('booked');
+  expect(store.reservations[0].service).toBe('delivery');
+});
+
 test('an insert failure is calendar-down and stores no row', async () => {
   const store = makeStore();
   const cal = makeCal(store);

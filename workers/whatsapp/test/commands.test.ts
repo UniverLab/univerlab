@@ -3,8 +3,8 @@ import { parseCommand, looksLegacy, normName, err, HELP } from '../src/commands'
 
 test('HELP lists every command on its own line', () => {
   const lines = HELP.split('\n');
-  expect(lines).toHaveLength(7);
-  for (const cmd of ['/help', '/recap', '/response', '/take', '/release', '/confirm', '/cancel']) {
+  expect(lines).toHaveLength(8);
+  for (const cmd of ['/help', '/recap', '/response', '/take', '/release', '/confirm', '/cancel', '/delivery']) {
     expect(lines.some((l) => l.startsWith(cmd))).toBe(true);
   }
 });
@@ -25,6 +25,8 @@ test('parseCommand accepts every command, case-insensitive', () => {
   expect(parseCommand('/release')).toEqual({ cmd: 'release' });
   expect(parseCommand('/confirm maria-g')).toEqual({ cmd: 'confirm', name: 'maria-g' });
   expect(parseCommand('/cancel juan-2')).toEqual({ cmd: 'cancel', name: 'juan-2' });
+  expect(parseCommand('/delivery maria-g')).toEqual({ cmd: 'delivery', name: 'maria-g' });
+  expect(parseCommand('/DELIVERY María')).toEqual({ cmd: 'delivery', name: 'maria' });
 });
 
 test('parseCommand rejects unknown or malformed commands', () => {
@@ -36,6 +38,9 @@ test('parseCommand rejects unknown or malformed commands', () => {
   expect(parseCommand('/take a b')).toBeNull();
   expect(parseCommand('/take María Gómez!')).toBeNull();
   expect(parseCommand('/response maria-g')).toBeNull();
+  expect(parseCommand('/delivery')).toBeNull();
+  expect(parseCommand('/delivery a b')).toBeNull();
+  expect(parseCommand('/delivery María Gómez!')).toBeNull();
   expect(parseCommand('/recap a b')).toBeNull();
   expect(parseCommand('/release x')).toBeNull();
   expect(parseCommand('/help x')).toBeNull();

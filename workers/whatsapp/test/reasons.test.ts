@@ -3,6 +3,7 @@ import {
   ask,
   CAPTURE_REASONS,
   classify,
+  classifyPrompt,
   cleanAnswer,
   closing,
   complaintSays,
@@ -27,9 +28,9 @@ function aiFor(content: string): { run: jest.Mock } {
   return { run: jest.fn(async () => ({ choices: [{ message: { content } }] })) };
 }
 
-test('exactly 19 reasons in the closed set', () => {
-  expect(REASONS).toHaveLength(19);
-  expect(new Set(REASONS).size).toBe(19);
+test('exactly 20 reasons in the closed set', () => {
+  expect(REASONS).toHaveLength(20);
+  expect(new Set(REASONS).size).toBe(20);
 });
 
 test.each(REASONS.map((r) => [r]) as Array<[Reason]>)(
@@ -243,6 +244,20 @@ test('capture hands off after two answers, or on decline, whatever they say', ()
   // Human asks once, then hands off.
   expect(nextCaptureStep('human', 'en', [], false).action).toBe('ask');
   expect(nextCaptureStep('human', 'en', ['about this'], false)).toEqual({ action: 'handoff' });
+});
+
+test('audit-delivery asks which audit and hands off tagged ENTREGA with normal priority', async () => {
+  expect(REASON_TAG['audit-delivery']).toBe('ENTREGA');
+  expect(priorityOf('audit-delivery')).toBe('normal');
+  expect(routeOf('audit-delivery')).toBe('capture');
+  expect(isCaptureReason('audit-delivery')).toBe(true);
+  expect(parseReason('{"reason": "audit-delivery"}')).toBe('audit-delivery');
+  expect(classifyPrompt('es')).toContain('audit-delivery');
+  expect(classifyPrompt('es')).toContain('20 names');
+  const ai = aiFor('{"reason": "audit-delivery"}');
+  await expect(classify(ai, CFG, 'quiero agendar la entrega de mi auditoría', 'es')).resolves.toBe(
+    'audit-delivery'
+  );
 });
 
 test('a complaint that already says what happened skips the question', () => {

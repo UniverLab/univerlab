@@ -4,8 +4,10 @@ import {
   CANCELLED,
   CONFIRMED,
   decide,
+  DELIVERED,
   EXPIRED,
   HOLD_SENT,
+  minutesFor,
   MOVE_ONCE,
   OFFER,
   offerText,
@@ -127,6 +129,27 @@ test('parseDecide keeps a date only today or later inside the horizon', () => {
     slot: -1,
     date: '',
   });
+});
+
+test('DELIVERED books the delivery with no hold or payment wording', () => {
+  for (const lang of ['es', 'en'] as const) {
+    const text = renderBooking(DELIVERED[lang], { slot: 'S' });
+    expect(text).toContain('S');
+    expect(text).not.toContain('{slot}');
+  }
+  expect(DELIVERED.es).toContain('entrega de tu auditoría');
+  expect(DELIVERED.en).toContain('delivery session');
+  for (const text of [DELIVERED.es, DELIVERED.en]) {
+    expect(text).not.toMatch(/Por confirmar|confirm it|held|hold/i);
+    expect(text).not.toMatch(/pag|pay|comprobante|receipt/i);
+  }
+});
+
+test('minutesFor gives the delivery the consultation length', () => {
+  expect(minutesFor('consultation')).toBe(60);
+  expect(minutesFor('delivery')).toBe(60);
+  expect(minutesFor('first-call')).toBe(15);
+  expect(minutesFor('other')).toBe(15);
 });
 
 test('decide sends client text as marked data, never in the system prompt', async () => {

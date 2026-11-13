@@ -972,6 +972,10 @@ export const es: Dict = {
         '¿Quién eres y a quién representas?',
         '¿Qué propones?',
       ],
+      'audit-delivery': [
+        '¿De qué auditoría se trata?',
+        '¿Hay algo más que deba saber la persona que prepara tu entrega?',
+      ],
     },
     closing: {
       support: 'Gracias, le pasé tu caso a una persona del laboratorio y te responde por aquí para seguirlo contigo.',
@@ -983,6 +987,7 @@ export const es: Dict = {
       'data-rights': 'Gracias, le pasé tu solicitud a una persona del laboratorio y te responde por aquí. Las consultas se responden dentro de los 10 días hábiles siguientes y los reclamos dentro de los 15.',
       human: 'Gracias, ya le pasé tu mensaje a una persona del laboratorio y te responde por aquí.',
       collab: 'Gracias, le pasé tu propuesta a una persona del laboratorio y te responde por aquí.',
+      'audit-delivery': 'Gracias, le pasé tu solicitud de entrega a una persona del laboratorio y te responde por aquí.',
     },
     fixed: {
       complaintAck: 'Lo que me cuentas lo lee una persona del laboratorio y te responde por aquí.',

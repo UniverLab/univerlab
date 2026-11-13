@@ -4,7 +4,17 @@ import { SERVICE_LABEL } from './intake';
 import type { Lang } from './lang';
 import type { BookingConfig } from './schedule';
 
-export type BookingService = 'first-call' | 'consultation';
+export type BookingService = 'first-call' | 'consultation' | 'delivery';
+
+export const DELIVERED: Record<Lang, string> = {
+  es: 'Listo, te agendé la entrega de tu auditoría: {slot}. Te escribo por aquí si algo cambia.',
+  en: 'Done, I booked your audit delivery session: {slot}. I will write here if anything changes.',
+};
+
+/** A delivery runs the consultation length: every other service is 15 minutes. */
+export function minutesFor(service: string): number {
+  return service === 'consultation' || service === 'delivery' ? 60 : 15;
+}
 export type BookingPhase = 'offered' | 'held' | 'booked';
 
 export interface BookingState {

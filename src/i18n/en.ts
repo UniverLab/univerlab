@@ -978,6 +978,10 @@ export const en = {
         'Who are you and who do you represent?',
         'What do you propose?',
       ],
+      'audit-delivery': [
+        'Which audit is it about?',
+        'Anything else the person preparing your delivery should know?',
+      ],
     },
     closing: {
       support: 'Thanks, I passed your case to a person at the lab and they will reply to you here to follow it with you.',
@@ -989,6 +993,7 @@ export const en = {
       'data-rights': 'Thanks, I passed your request to a person at the lab and they will reply to you here. Requests are answered within 10 business days and claims within 15.',
       human: 'Thanks, I already passed your message to a person at the lab and they will reply to you here.',
       collab: 'Thanks, I passed your proposal to a person at the lab and they will reply to you here.',
+      'audit-delivery': 'Thanks, I passed your delivery request to a person at the lab and they will reply to you here.',
     },
     fixed: {
       complaintAck: 'What you tell me is read by a person at the lab, who replies to you here.',

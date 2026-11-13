@@ -25,7 +25,8 @@ export type Reason =
   | 'open-source'
   | 'collab'
   | 'vendor'
-  | 'off-topic';
+  | 'off-topic'
+  | 'audit-delivery';
 
 export const REASONS: Reason[] = [
   'question',
@@ -47,6 +48,7 @@ export const REASONS: Reason[] = [
   'collab',
   'vendor',
   'off-topic',
+  'audit-delivery',
 ];
 
 /** Reasons that open a fixed-question capture and end in an operator note. */
@@ -59,7 +61,8 @@ export type CaptureReason =
   | 'complaint'
   | 'data-rights'
   | 'human'
-  | 'collab';
+  | 'collab'
+  | 'audit-delivery';
 
 export const CAPTURE_REASONS: CaptureReason[] = [
   'support',
@@ -71,6 +74,7 @@ export const CAPTURE_REASONS: CaptureReason[] = [
   'data-rights',
   'human',
   'collab',
+  'audit-delivery',
 ];
 
 export function isCaptureReason(r: string): r is CaptureReason {
@@ -106,6 +110,7 @@ export const REASON_TAG: Record<Reason, string | null> = {
   collab: 'COLABORACIÓN',
   vendor: null,
   'off-topic': null,
+  'audit-delivery': 'ENTREGA',
 };
 
 /** Where conversation.ts sends a classified new topic. */
@@ -144,6 +149,8 @@ export function routeOf(reason: Reason): Route {
       return 'vendor';
     case 'off-topic':
       return 'off-topic';
+    case 'audit-delivery':
+      return 'capture';
     default:
       return 'capture';
   }
@@ -185,8 +192,8 @@ export function classifyPrompt(lang: Lang): string {
     'The client writes in ' +
     langName +
     '; your output is JSON only, never chat text.\n' +
-    'Reasons: question (the knowledge text answers it) | first-call (wants the free 15-minute first call) | consultation (wants a paid consultation) | flow (wants an agentic flow built) | audit (wants an audit) | my-booking (asks about their own booking or hold) | payment (how to pay, or sends a receipt) | support (help with a flow the lab delivered) | audit-fixes (reports fixes for the verification of their audit) | publish (wants their audit made public) | refund (any refund) | invoice (wants an invoice) | complaint (unhappy with a service or how they were treated) | data-rights (knowing, correcting or stopping the use of their data) | human (wants a person, or anything not covered) | open-source (a question or bug about a lab open-source tool) | collab (partnership, press, a talk, research collaboration, sponsorship or a job) | vendor (selling something to the lab) | off-topic (anything unrelated to UniverLab).\n' +
-    'Output exactly one JSON object and nothing else: {"reason": "<one of the 19 names>"}\n' +
+    'Reasons: question (the knowledge text answers it) | first-call (wants the free 15-minute first call) | consultation (wants a paid consultation) | flow (wants an agentic flow built) | audit (wants an audit) | my-booking (asks about their own booking or hold) | payment (how to pay, or sends a receipt) | support (help with a flow the lab delivered) | audit-fixes (reports fixes for the verification of their audit) | publish (wants their audit made public) | refund (any refund) | invoice (wants an invoice) | complaint (unhappy with a service or how they were treated) | data-rights (knowing, correcting or stopping the use of their data) | human (wants a person, or anything not covered) | open-source (a question or bug about a lab open-source tool) | collab (partnership, press, a talk, research collaboration, sponsorship or a job) | vendor (selling something to the lab) | off-topic (anything unrelated to UniverLab) | audit-delivery (wants to book the delivery session of their audit).\n' +
+    'Output exactly one JSON object and nothing else: {"reason": "<one of the 20 names>"}\n' +
     'The DATA message carries the client message.'
   );
 }

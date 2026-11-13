@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { admit, type ContactState, type LimitReason } from './limits';
+import { minutesFor } from './booking';
 import {
   bookingConfig,
   bogotaDateKey,
@@ -68,10 +69,6 @@ interface ContactRow {
 type Sql = {
   exec(query: string, ...params: unknown[]): { toArray(): unknown[] };
 };
-
-function minutesFor(service: string): number {
-  return service === 'consultation' ? 60 : 15;
-}
 
 /** The owner owns the hold prefix: strip whatever the caller sent and re-add it by row kind. */
 function holdSummary(summary: string, hold: boolean): string {

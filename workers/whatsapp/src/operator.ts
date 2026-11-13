@@ -553,6 +553,25 @@ export class Operator extends DurableObject<Env> {
       await sendText(this.env, m.from, 'Abierto [' + row.name + ']: lo que escribas (que no sea un comando) va al cliente.');
       return;
     }
+    if (parsed.cmd === 'delivery') {
+      const delivered = await this.controlData<{ ok?: unknown; already?: unknown }>(row.phone, {
+        action: 'operatorDelivery',
+        phone: row.phone,
+        name: row.name,
+        lang: row.lang,
+      });
+      if (!delivered || delivered.ok !== true) {
+        await sendText(this.env, m.from, err('No pude autorizar la entrega de [' + row.name + '].'));
+        return;
+      }
+      // The authorisation stays open: the row is only released by a cancel.
+      if (delivered.already === true) {
+        await sendText(this.env, m.from, '[' + row.name + '] ya tiene su entrega agendada.');
+        return;
+      }
+      await sendText(this.env, m.from, 'Entrega autorizada para [' + row.name + '].');
+      return;
+    }
     const res = await this.control(row.phone, {
       action: parsed.cmd === 'confirm' ? 'operatorConfirm' : 'operatorCancel',
     });

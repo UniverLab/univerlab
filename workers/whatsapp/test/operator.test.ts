@@ -637,6 +637,59 @@ test('/cancel cancels and releases the name', async () => {
   expect(toOperator()).toEqual(['Cancelado [ana].']);
 });
 
+test('/delivery authorises the delivery and keeps the row', async () => {
+  const { ctx, rows } = makeCtx();
+  const env = makeEnv();
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op16', text: '/delivery ana' }));
+
+  const req = (env.fetchMock.mock.calls[0] as [Request])[0];
+  expect(await req.json()).toEqual({ action: 'operatorDelivery', phone: CLIENT, name: 'ana', lang: 'es' });
+  expect(rows).toHaveLength(1);
+  expect(toOperator()).toEqual(['Entrega autorizada para [ana].']);
+});
+
+test('a second /delivery reports the booked delivery', async () => {
+  const { ctx } = makeCtx();
+  const already = jest.fn(
+    async () => new Response(JSON.stringify({ ok: true, already: true }), { status: 200 })
+  );
+  const env = makeEnv(already);
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op17', text: '/delivery ana' }));
+
+  expect(toOperator()).toEqual(['[ana] ya tiene su entrega agendada.']);
+});
+
+test('a failed /delivery keeps the row and says so', async () => {
+  const { ctx, rows } = makeCtx();
+  const failing = jest.fn(async () => new Response(JSON.stringify({ ok: false }), { status: 200 }));
+  const env = makeEnv(failing);
+  const op = new Operator(ctx as never, env as never);
+  await register(op, { name: 'Ana' });
+  (sendText as jest.Mock).mockClear();
+
+  await op.command(opMsg({ id: 'wamid.op18', text: '/delivery ana' }));
+
+  expect(rows).toHaveLength(1);
+  expect(toOperator()).toEqual(['No pude autorizar la entrega de [ana]. · /help']);
+});
+
+test('/delivery without a conversation says so', async () => {
+  const { ctx } = makeCtx();
+  const op = new Operator(ctx as never, makeEnv() as never);
+
+  await op.command(opMsg({ id: 'wamid.op19', text: '/delivery ana' }));
+
+  expect(toOperator()).toEqual(['No hay conversación abierta con [ana]. · /help']);
+});
+
 test('the guard denies other phones sends while a passthrough is open', async () => {
   const { ctx } = makeCtx();
   const op = new Operator(ctx as never, makeEnv() as never);
