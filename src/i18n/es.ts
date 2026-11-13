@@ -776,7 +776,7 @@ export const es: Dict = {
           'Cómo usa su equipo la inteligencia artificial, revisado con rigor',
           'Hallazgos con evidencia · matriz de riesgo · hoja de ruta',
         ],
-        tail: 'Desde USD 250 · implementación cotizada por separado',
+        tail: 'Desde USD 400 · página dedicada, informe PDF y repositorio',
         link: 'Leer las auditorías',
       },
       install: {
@@ -847,7 +847,8 @@ export const es: Dict = {
     tags: { kicker: 'Servicios y precios', items: [
       ['Primera llamada', 'Gratis · 15 min', '', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
       ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.'],
-      ['Auditorías y flujos', 'Desde USD 250', 'En Colombia: desde 900.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Recibes los hallazgos y la hoja de ruta por escrito, con costos y riesgos. Construir la solución es un servicio aparte, cotizado por separado, con 30 días de soporte.'],
+      ['Flujo agéntico', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos un flujo agéntico alrededor de cómo ya trabaja tu equipo, con 30 días de soporte. El código termina en tu repositorio; tus suscripciones, tus harnesses y tus tokens de modelos son tus propias cuentas y tus propios costos.'],
+      ['Auditoría', 'Desde USD 400', 'En Colombia: desde 1.500.000 COP', 'Evaluamos con rigor cómo usas la inteligencia artificial: la tecnología, el criterio detrás de cada decisión y la profundidad de cada flujo. Recibes una página dedicada, un informe en PDF y el repositorio de la auditoría, con los hallazgos, la matriz de riesgo y la hoja de ruta por escrito.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
       ['Escribes', 'Nos cuentas tu caso por WhatsApp. Tomamos nota de lo que quieres tratar para llegar a la sesión con algo preparado.'],
@@ -899,12 +900,12 @@ export const es: Dict = {
         ['Opcional: registro público con DOI', 'Opcional: un registro público, permanente, verificable y citable con DOI, si decides publicar la auditoría.'],
       ] as [string, string][] },
       impl: { kicker: 'La implementación, un servicio aparte', paras: [
-        'Construir la solución agéntica que recomienda la auditoría es un servicio aparte: la construyes con el informe, reservas horas de consulta pagadas o contratas al laboratorio para construirla.',
-        'Se cotiza aparte y trae 30 días de soporte.',
+        'Construir la solución agéntica que recomienda la auditoría es el servicio de flujo agéntico del Banco de trabajo, desde USD 150 (desde 550.000 COP en Colombia): también puedes construirla con el informe o reservar horas de consulta pagadas.',
+        'Trae 30 días de soporte.',
         'No incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría, los guardamos 6 meses después de la entrega y los borramos antes si lo pides.', link: 'El detalle está en la política de privacidad →' },
-      price: { kicker: 'Precio', text: 'Desde USD 250. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.', cop: 'En Colombia: desde 900.000 COP. El alcance y el precio final quedan por escrito antes de empezar. La implementación se cotiza aparte.' },
+      price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
       cardLink: 'Qué revisamos y qué entregamos →',
       offers: { kicker: 'Publicar tu auditoría', founding: {
         title: 'Auditorías fundadoras',

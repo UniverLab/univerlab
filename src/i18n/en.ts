@@ -782,7 +782,7 @@ export const en = {
           'How your team uses artificial intelligence, reviewed with rigour',
           'Findings with evidence · risk chart · roadmap',
         ],
-        tail: 'From USD 250 · implementation quoted separately',
+        tail: 'From USD 400 · dedicated page, PDF report and repository',
         link: 'Read the audits',
       },
       install: {
@@ -853,7 +853,8 @@ export const en = {
     tags: { kicker: 'Services and prices', items: [
       ['First call', 'Free · 15 min', '', 'We look at what you need and whether the Workbench is the right place for it.'],
       ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab.'],
-      ['Audits and flows', 'From USD 250', 'From COP 900,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. You receive the findings and the roadmap in writing, with costs and risks. Building the solution is a separate service, quoted apart, with 30 days of support.'],
+      ['Agentic flow', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install an agentic flow around how your team already works, with 30 days of support. The code ends up in your repository; your subscriptions, your harnesses and your model tokens are your own accounts and your own costs.'],
+      ['Audit', 'From USD 400', 'In Colombia: from COP 1,500,000', 'We evaluate how you use artificial intelligence with rigour: the technology, the judgement behind each decision and the depth of every flow. You receive a dedicated page, a PDF report and the audit repository, with the findings, the risk matrix and the roadmap in writing.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
       ['You write', 'Tell us your case on WhatsApp. We note what you want to cover so we arrive at the session with something prepared.'],
@@ -905,12 +906,12 @@ export const en = {
         ['Optional: public record with DOI', 'Optional: a permanent, verifiable and citable public record with a DOI, if you decide to publish the audit.'],
       ] as [string, string][] },
       impl: { kicker: 'The build, a separate service', paras: [
-        'Building the agentic solution the audit recommends is a separate service: you build it from the report, book paid consultation hours, or hire the lab to build it.',
-        'It is quoted apart and comes with 30 days of support.',
+        "Building the agentic solution the audit recommends is the Workbench's agentic-flow service, from USD 150 (from COP 550,000 in Colombia): you can also build it from the report or book paid consultation hours.",
+        'It comes with 30 days of support.',
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit, we keep it for 6 months after delivery and we delete it sooner if you ask.', link: 'The detail is in the privacy policy →' },
-      price: { kicker: 'Price', text: 'From USD 250. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.', cop: 'In Colombia: from COP 900,000. The scope and the final price are agreed in writing before we start. Implementation is quoted separately.' },
+      price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
       cardLink: 'What we review and what you receive →',
       offers: { kicker: 'Publishing your audit', founding: {
         title: 'Founding audits',

@@ -62,8 +62,8 @@ describe('workbench-audits', () => {
   });
 
   it('no statute is named on the audits page or the audit card', () => {
-    const cardEs = JSON.stringify(es.workbench.tags.items[2]);
-    const cardEn = JSON.stringify(en.workbench.tags.items[2]);
+    const cardEs = JSON.stringify(es.workbench.tags.items[3]);
+    const cardEn = JSON.stringify(en.workbench.tags.items[3]);
     for (const json of [JSON.stringify(es.workbench.audits), JSON.stringify(en.workbench.audits), cardEs, cardEn]) {
       expect(json).not.toMatch(/Ley 1581|Ley 1480/);
       expect(json).not.toMatch(/1[0-9]{3} de 20\d\d/);
@@ -72,19 +72,21 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.scope.items[4][1]).toMatch(/data-protection rules/);
   });
 
-  it('the build is a separate service with three options, quoted apart, 30 days of support', () => {
+  it('the build is the workbench flow service, from USD 150, with 30 days of support', () => {
     expect(es.workbench.audits.impl.kicker).toMatch(/servicio aparte/);
     expect(en.workbench.audits.impl.kicker).toMatch(/separate service/);
     const esImpl = es.workbench.audits.impl.paras.join(' ');
     const enImpl = en.workbench.audits.impl.paras.join(' ');
+    expect(esImpl).toMatch(/flujo agéntico/);
+    expect(enImpl).toMatch(/agentic-flow service/);
+    expect(esImpl).toMatch(/USD 150/);
+    expect(enImpl).toMatch(/USD 150/);
+    expect(esImpl).toMatch(/550\.000 COP/);
+    expect(enImpl).toMatch(/550,000/);
     expect(esImpl).toMatch(/con el informe/);
     expect(esImpl).toMatch(/consulta/);
-    expect(esImpl).toMatch(/contratas al laboratorio/);
     expect(enImpl).toMatch(/from the report/);
     expect(enImpl).toMatch(/consultation hours/);
-    expect(enImpl).toMatch(/hire the lab/);
-    expect(esImpl).toMatch(/cotiza aparte/);
-    expect(enImpl).toMatch(/quoted apart/);
     expect(esImpl).toMatch(/30 días de soporte/);
     expect(enImpl).toMatch(/30 days of support/);
     expect(esImpl).toMatch(/tus suscripciones.*tus harnesses.*tus tokens de modelos/);
@@ -108,16 +110,24 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.how.steps[3][0]).toMatch(/Delivery/);
   });
 
-  it('the audit card stays one card with its price and no build promise', () => {
+  it('the audit card sits last with its price and no build promise', () => {
     for (const dict of [en.workbench.tags, es.workbench.tags]) {
-      expect(dict.items).toHaveLength(3);
+      expect(dict.items).toHaveLength(4);
     }
-    expect(es.workbench.tags.items[2][1]).toBe('Desde USD 250');
-    expect(en.workbench.tags.items[2][1]).toBe('From USD 250');
-    expect(es.workbench.tags.items[2][3]).not.toMatch(/diseñamos e instalamos/);
-    expect(en.workbench.tags.items[2][3]).not.toMatch(/design and install/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/cotizado por separado/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/quoted apart/);
+    expect(es.workbench.tags.items[2][1]).toBe('Desde USD 150');
+    expect(en.workbench.tags.items[2][1]).toBe('From USD 150');
+    expect(es.workbench.tags.items[3][1]).toBe('Desde USD 400');
+    expect(en.workbench.tags.items[3][1]).toBe('From USD 400');
+    expect(es.workbench.tags.items[3][3]).not.toMatch(/diseñamos e instalamos/);
+    expect(en.workbench.tags.items[3][3]).not.toMatch(/design and install/);
+    expect(es.workbench.tags.items[3][1]).not.toMatch(/150/);
+    expect(en.workbench.tags.items[2][1]).not.toMatch(/400/);
+    expect(es.workbench.tags.items[3][3]).toMatch(/página dedicada/);
+    expect(en.workbench.tags.items[3][3]).toMatch(/dedicated page/);
+    expect(es.workbench.tags.items[3][3]).toMatch(/PDF/);
+    expect(en.workbench.tags.items[3][3]).toMatch(/PDF/);
+    expect(es.workbench.tags.items[3][3]).toMatch(/repositorio/);
+    expect(en.workbench.tags.items[3][3]).toMatch(/repository/);
   });
 
   it('the Spanish lede is the spec sentence verbatim', () => {
@@ -138,6 +148,7 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.cardLink).toContain('What we review and what you receive');
     expect(CARD).toContain('w.audits.cardLink');
     expect(CARD).toContain("localizePath('/workbench/audits', lang)");
+    expect(CARD).toContain('i === 3');
   });
 
   it('both routes render the audits view', () => {
@@ -169,13 +180,17 @@ describe('workbench-audits', () => {
     }
   });
 
-  it('the price leads with USD 250 and keeps the peso line for Colombia', () => {
-    expect(es.workbench.audits.price.text).toContain('USD 250');
-    expect(en.workbench.audits.price.text).toContain('USD 250');
-    expect(es.workbench.audits.price.text).not.toContain('900.000 COP');
-    expect(en.workbench.audits.price.text).not.toContain('900,000');
-    expect(es.workbench.audits.price.cop).toContain('900.000 COP');
-    expect(en.workbench.audits.price.cop).toContain('900,000');
+  it('the price leads with USD 400 and keeps the peso line for Colombia', () => {
+    expect(es.workbench.audits.price.text).toContain('USD 400');
+    expect(en.workbench.audits.price.text).toContain('USD 400');
+    expect(es.workbench.audits.price.text).not.toContain('1.500.000 COP');
+    expect(en.workbench.audits.price.text).not.toContain('1,500,000');
+    expect(es.workbench.audits.price.cop).toContain('1.500.000 COP');
+    expect(en.workbench.audits.price.cop).toContain('1,500,000');
+    expect(es.workbench.audits.impl.paras.join(' ')).toContain('USD 150');
+    expect(en.workbench.audits.impl.paras.join(' ')).toContain('USD 150');
+    expect(es.workbench.audits.impl.paras.join(' ')).toContain('550.000 COP');
+    expect(en.workbench.audits.impl.paras.join(' ')).toContain('550,000');
     expect(es.workbench.audits.impl.paras.join(' ')).toContain('30 días de soporte');
     expect(en.workbench.audits.impl.paras.join(' ')).toContain('30 days of support');
   });

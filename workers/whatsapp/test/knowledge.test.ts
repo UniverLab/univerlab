@@ -5,7 +5,8 @@ test('spanish knowledge quotes pesos for a Colombian number and dollars otherwis
   const co = knowledge('es', '573001234567');
   for (const s of [
     '150.000 COP',
-    '900.000 COP',
+    '550.000 COP',
+    '1.500.000 COP',
     'Reservas y pagas',
     'Trabajamos tu caso',
     '30 días de soporte',
@@ -18,20 +19,22 @@ test('spanish knowledge quotes pesos for a Colombian number and dollars otherwis
     expect(co).toContain(s);
   }
   expect(co).not.toContain('USD 45');
-  expect(co).not.toContain('USD 250');
+  expect(co).not.toContain('USD 400');
   const abroad = knowledge('es', '14155552671');
   expect(abroad).toContain('USD 45');
-  expect(abroad).toContain('USD 250');
+  expect(abroad).toContain('USD 150');
+  expect(abroad).toContain('USD 400');
   expect(abroad).not.toContain('150.000 COP');
-  expect(abroad).not.toContain('900.000 COP');
+  expect(abroad).not.toContain('1.500.000 COP');
 });
 
 test('knowledge without a phone number defaults to dollars', () => {
   const k = knowledge('es');
   expect(k).toContain('USD 45');
-  expect(k).toContain('USD 250');
+  expect(k).toContain('USD 150');
+  expect(k).toContain('USD 400');
   expect(k).not.toContain('150.000 COP');
-  expect(k).not.toContain('900.000 COP');
+  expect(k).not.toContain('1.500.000 COP');
 });
 
 test('both languages carry the publishing offers from the same dictionaries', () => {
@@ -64,13 +67,15 @@ test('both languages carry the publishing offers from the same dictionaries', ()
 test('english knowledge quotes pesos for a Colombian number and dollars otherwise', () => {
   const co = knowledge('en', '+573001234567');
   expect(co).toContain('COP 150,000');
-  expect(co).toContain('COP 900,000');
+  expect(co).toContain('COP 550,000');
+  expect(co).toContain('COP 1,500,000');
   expect(co).not.toContain('USD 45');
-  expect(co).not.toContain('USD 250');
+  expect(co).not.toContain('USD 400');
   const abroad = knowledge('en', '14155552671');
   for (const s of [
     'USD 45',
-    'USD 250',
+    'USD 150',
+    'USD 400',
     'You book and pay',
     'We work your case',
     '30 days of support',
@@ -82,5 +87,5 @@ test('english knowledge quotes pesos for a Colombian number and dollars otherwis
     expect(abroad).toContain(s);
   }
   expect(abroad).not.toContain('COP 150,000');
-  expect(abroad).not.toContain('COP 900,000');
+  expect(abroad).not.toContain('COP 1,500,000');
 });
