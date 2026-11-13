@@ -24,6 +24,9 @@ export function knowledge(lang: Lang, phone = ''): string {
   for (const [title, body] of w.audits.scope.items) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.audits.deliver.kicker);
   for (const [title, body] of w.audits.deliver.items) lines.push('- ' + title + ': ' + body);
+  lines.push('### ' + w.audits.how.kicker);
+  for (const [title, body] of w.audits.how.steps) lines.push('- ' + title + ': ' + body);
+  lines.push(w.audits.not.kicker + ': ' + w.audits.not.text);
   for (const para of w.audits.impl.paras) lines.push(para);
   lines.push(co ? w.audits.price.cop : w.audits.price.text);
   lines.push('### ' + w.audits.offers.kicker);

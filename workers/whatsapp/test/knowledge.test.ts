@@ -89,3 +89,16 @@ test('english knowledge quotes pesos for a Colombian number and dollars otherwis
   expect(abroad).not.toContain('COP 150,000');
   expect(abroad).not.toContain('COP 1,500,000');
 });
+
+test('knowledge carries the audits lede, scope, deliverables, method and limits', () => {
+  for (const lang of ['es', 'en'] as const) {
+    const k = knowledge(lang, '14155552671');
+    expect(k).toContain(lang === 'es' ? 'sin indulgencia' : 'without indulgence');
+    expect(k).toContain(lang === 'es' ? 'Acceso y sesiones' : 'Access and sessions');
+    expect(k).toContain('TeXForge');
+    expect(k).toContain('60 d');
+    expect(k).toContain('DOI');
+    expect(k).toContain(lang === 'es' ? 'Tres fuentes' : 'Three sources');
+    expect(k).toContain(lang === 'es' ? 'Lo que una auditoría no es' : 'What an audit is not');
+  }
+});

@@ -37,6 +37,7 @@ const bookHref = localizePath('/workbench/book', lang);
           <li><b>{title}</b><span>{body}</span></li>
         ))}
       </ol>
+      <p class="wba-para">{a.scopeNote}</p>
     </section>
     <section class="wba-block">
       <span class="label">{a.how.kicker}</span>
@@ -53,6 +54,10 @@ const bookHref = localizePath('/workbench/book', lang);
           <li><b>{title}</b><span>{body}</span></li>
         ))}
       </ol>
+    </section>
+    <section class="wba-block">
+      <span class="label">{a.not.kicker}</span>
+      <p class="wba-para">{a.not.text}</p>
     </section>
     <section class="wba-block">
       <span class="label">{a.impl.kicker}</span>
