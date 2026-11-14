@@ -87,6 +87,7 @@ export const es: Dict = {
       canopy: 'construido con',
       ghscaff: 'repositorio configurado con',
       gitkit: 'commits revisados por',
+      facet: 'ilustraciones y recursos hechos con las herramientas que dieron origen a',
     },
     // Solo en páginas de experimento: la línea de créditos sobre el sello.
     forged: 'Artefacto concebido y forjado en UniverLab',
@@ -927,7 +928,7 @@ export const es: Dict = {
     proof: { kicker: 'Lo que ya salió de este Banco de trabajo', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
     close: { head: 'Lo que pagas en el Banco de trabajo financia el laboratorio: las herramientas siguen abiertas.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
-      machineAlt: 'Mesa de ensayador grabada: una balanza de precisión bajo campana de vidrio, una caja de pesas de latón, un libro mayor abierto con una lupa y una barra de lacre',
+      machineAlt: 'Mesa de ensayador grabada: un instrumento de ensayo de latón bajo campana de vidrio, una fila de pesas de latón, un libro mayor abierto con una lupa y un sello de mango granate',
       title: 'Auditorías: revisión independiente con evidencia — UniverLab',
       description: 'Una revisión independiente de tus agentes o inteligencia artificial, con evidencia reproducible: página dedicada, informe en PDF y repositorio.',
       head: 'Auditorías del Banco de trabajo',

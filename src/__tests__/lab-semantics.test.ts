@@ -48,8 +48,8 @@ describe('lab semantics', () => {
     expect(Object.keys(es.builtWithSegments).sort()).toEqual([...ALLOWED].sort());
   });
 
-  it('keeps footer.built to label + the three site tools in both languages', () => {
-    expect(Object.keys(en.footer.built).sort()).toEqual(['canopy', 'ghscaff', 'gitkit', 'label'].sort());
-    expect(Object.keys(es.footer.built).sort()).toEqual(['canopy', 'ghscaff', 'gitkit', 'label'].sort());
+  it('keeps footer.built to label + the four site tools in both languages', () => {
+    expect(Object.keys(en.footer.built).sort()).toEqual(['canopy', 'facet', 'ghscaff', 'gitkit', 'label'].sort());
+    expect(Object.keys(es.footer.built).sort()).toEqual(['canopy', 'facet', 'ghscaff', 'gitkit', 'label'].sort());
   });
 });

@@ -90,6 +90,7 @@ export const en = {
       canopy: 'built with',
       ghscaff: 'repository set up with',
       gitkit: 'commits checked by',
+      facet: 'artwork made with the tools that grew into',
     },
     // Experiment pages only: the colophon credits line above the seal.
     forged: 'Artifact conceived and forged at UniverLab',
@@ -933,7 +934,7 @@ export const en = {
     proof: { kicker: 'What already came out of this Workbench', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
     close: { head: 'What you pay at the Workbench funds the lab: the tools stay open.', cta: 'Write to the Workbench on WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
-      machineAlt: 'An engraved assayer’s desk: a precision balance under a glass case, a box of brass weights, an open ledger with a loupe, and a stick of sealing wax',
+      machineAlt: 'An engraved assayer’s desk: a brass assay instrument under a glass case, a row of brass weights, an open ruled ledger with a loupe, and a seal with a garnet handle',
       title: 'Workbench audits: independent review with evidence — UniverLab',
       description: 'An independent review of your agents or AI, with reproducible evidence: a dedicated page, a PDF report and a private repository.',
       head: 'Workbench audits',
