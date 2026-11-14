@@ -110,6 +110,16 @@ test('knowledge shows the live founding count, drops the offer at zero, keeps it
   }
 });
 
+test('knowledge calls the offer an agentic solution, never an agentic flow', () => {
+  const es = knowledge('es', '573001234567');
+  expect(es).toContain('Solución agéntica');
+  expect(es).not.toContain('flujo agéntico');
+  expect(es).not.toContain('flujos agénticos');
+  const en = knowledge('en', '14155552671');
+  expect(en).toContain('Agentic solution');
+  expect(en).not.toContain('agentic flow');
+});
+
 test('knowledge carries the audits lede, scope, deliverables, method and limits', () => {
   for (const lang of ['es', 'en'] as const) {
     const k = knowledge(lang, '14155552671');

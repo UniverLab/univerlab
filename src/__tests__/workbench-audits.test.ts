@@ -140,8 +140,8 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.impl.kicker).toMatch(/separate service/);
     const esImpl = es.workbench.audits.impl.paras.join(' ');
     const enImpl = en.workbench.audits.impl.paras.join(' ');
-    expect(esImpl).toMatch(/flujo agéntico/);
-    expect(enImpl).toMatch(/agentic-flow service/);
+    expect(esImpl).toMatch(/solución agéntica/);
+    expect(enImpl).toMatch(/agentic-solution service/);
     expect(esImpl).toMatch(/USD 150/);
     expect(enImpl).toMatch(/USD 150/);
     expect(esImpl).toMatch(/550\.000 COP/);

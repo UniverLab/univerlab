@@ -154,7 +154,7 @@ export const en = {
     lanternLink: 'See them in the projection room →',
     workbench: {
       kicker: 'The Workbench',
-      text: 'The tools are open; the hands that built them can be booked. A free 15-minute call, then consultations, audits and agentic flows built for you.',
+      text: 'The tools are open; the hands that built them can be booked. A free 15-minute call, then consultations, audits and agentic solutions built for you.',
       link: 'Visit the Workbench →',
     },
     about: {
@@ -871,7 +871,7 @@ export const en = {
     tags: { kicker: 'Services and prices', items: [
       ['First call', 'Free · 15 min', '', 'We look at what you need and whether the Workbench is the right place for it.'],
       ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab. Bring anything in artificial intelligence: harnesses and models, agent engineering, the app idea on your mind or what came out this week. Every answer comes from something we already built, used and broke in the lab.'],
-      ['Agentic flow', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install an agentic flow around how your team already works, with 30 days of support counted from installation. The code ends up in your repository; your subscriptions, your harnesses and your model tokens are your own accounts and your own costs.'],
+      ['Agentic solution', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install the agentic solution your case calls for: a custom Canopy graph with gates and well-designed prompts; an agent on LangGraph or a similar framework on your own cloud (AWS, Google Cloud or Azure); artificial intelligence added to a tool you already use; a chat assistant over your own information; or a WhatsApp agent that answers and books. With 30 days of support counted from installation. The code ends up in your repository; your subscriptions, your harnesses, your cloud and your model tokens are your own accounts and your own costs.'],
       ['Audit', 'From USD 400', 'In Colombia: from COP 1,500,000', 'An independent review of how you use artificial intelligence, with reproducible evidence for every finding. You receive a dedicated page, a PDF report and the audit repository, with the findings, the risk matrix and the roadmap in writing.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'How a session goes', steps: [
@@ -883,7 +883,7 @@ export const en = {
       ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
       ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. The lab answers between 07:00 and 19:00 Colombia time on business days; anything arriving outside those hours is answered on the next business day.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
+    policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic solutions are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. The lab answers between 07:00 and 19:00 Colombia time on business days; anything arriving outside those hours is answered on the next business day.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
       'Less than 24 hours before, the session can be moved once at no cost; it is not refunded, except under the right of retraction below.',
       'If you join late, the session still ends at the booked time; if you do not join within 15 minutes of the start, it counts as given.',
@@ -891,7 +891,7 @@ export const en = {
       'No session is held without a confirmed payment: a payment that cannot be verified releases the slot.',
       'Refunds go back by the method you paid with, within 5 business days.',
       'The free first call can be cancelled at any time; just tell us.',
-      'Audits and agentic flows follow the terms of their written quote.',
+      'Audits and agentic solutions follow the terms of their written quote.',
       'Right of retraction: if you book a session more than five days ahead, you may withdraw within 5 business days of booking and get all your money back, whatever the 24-hour rule says, unless the service has already started at your request.',
     ] },
     money: { kicker: 'Where the money goes', text: 'What comes in at the bench pays for the lab: artificial intelligence models, compute and infrastructure. The tools, the experiments and what we learn stay open.' },
@@ -932,12 +932,12 @@ export const en = {
       ] as [string, string][] },
       not: { kicker: 'What an audit is not', text: 'An audit is not a certification or a guarantee of continuous security. It does not price or build the fixes. Its findings stay private until you approve publishing.' },
       impl: { kicker: 'The build, a separate service', paras: [
-        "Building the agentic solution the audit recommends is the Workbench's agentic-flow service, from USD 150 (from COP 550,000 in Colombia): you can also build it from the report or book paid consultation hours.",
+        "Building the agentic solution the audit recommends is the Workbench's agentic-solution service, from USD 150 (from COP 550,000 in Colombia): you can also build it from the report or book paid consultation hours.",
         'It comes with 30 days of support counted from installation.',
         'It does not include your subscriptions, your harnesses or your model tokens: those are your own accounts and your own costs.',
       ] },
       privacy: { kicker: 'Confidentiality', text: 'We use your data only for the audit. The report, the evidence, your data and the audit repository are deleted 6 months after delivery, or sooner if you ask, except for an audit with a signed publication authorisation that is not yet published, which is kept until it is published or the publication process closes.', link: 'The detail is in the privacy policy →' },
-      price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
+      price: { kicker: 'Price', text: 'From USD 400. The scope and the final price are agreed in writing before we start. Audits and agentic solutions are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client.', cop: 'In Colombia: from COP 1,500,000. The scope and the final price are agreed in writing before we start.' },
       cardLink: 'What we review and what you receive →',
       offers: { kicker: 'Publishing your audit', founding: {
         title: 'Founding audits',

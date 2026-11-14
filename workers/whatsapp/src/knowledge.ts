@@ -55,8 +55,8 @@ export function knowledge(lang: Lang, phone = '', foundingLeft?: number | null):
   lines.push('## ' + (lang === 'es' ? 'Soporte, verificación y publicación' : 'Support, verification and publishing'));
   lines.push(
     lang === 'es'
-      ? 'Un flujo agéntico trae 30 días de soporte contados desde la instalación: el código termina en tu repositorio.'
-      : 'An agentic flow comes with 30 days of support counted from installation: the code ends up in your repository.'
+      ? 'Una solución agéntica trae 30 días de soporte contados desde la instalación: el código termina en tu repositorio.'
+      : 'An agentic solution comes with 30 days of support counted from installation: the code ends up in your repository.'
   );
   lines.push(
     lang === 'es'

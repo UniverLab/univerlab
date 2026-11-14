@@ -254,6 +254,8 @@ test('audit-delivery asks which audit and hands off tagged ENTREGA with normal p
   expect(parseReason('{"reason": "audit-delivery"}')).toBe('audit-delivery');
   expect(classifyPrompt('es')).toContain('audit-delivery');
   expect(classifyPrompt('es')).toContain('20 names');
+  expect(classifyPrompt('es')).toContain('solución agéntica');
+  expect(classifyPrompt('en')).toContain('agentic solution');
   const ai = aiFor('{"reason": "audit-delivery"}');
   await expect(classify(ai, CFG, 'quiero agendar la entrega de mi auditoría', 'es')).resolves.toBe(
     'audit-delivery'

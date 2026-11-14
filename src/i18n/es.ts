@@ -152,7 +152,7 @@ export const es: Dict = {
     lanternLink: 'Verlos en la sala de proyección →',
     workbench: {
       kicker: 'El Banco de trabajo',
-      text: 'Las herramientas son abiertas; las manos que las construyeron se pueden reservar. Una llamada gratis de 15 minutos, luego consultas, auditorías y flujos agénticos a tu medida.',
+      text: 'Las herramientas son abiertas; las manos que las construyeron se pueden reservar. Una llamada gratis de 15 minutos, luego consultas, auditorías y soluciones agénticas a tu medida.',
       link: 'Ir al Banco de trabajo →',
     },
     about: {
@@ -865,7 +865,7 @@ export const es: Dict = {
     tags: { kicker: 'Servicios y precios', items: [
       ['Primera llamada', 'Gratis · 15 min', '', 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.'],
       ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio. Trae lo que sea de inteligencia artificial: harnesses y modelos, ingeniería de agentes, la idea de app que tienes en la cabeza o lo que salió esta semana. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.'],
-      ['Flujo agéntico', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos un flujo agéntico alrededor de cómo ya trabaja tu equipo, con 30 días de soporte contados desde la instalación. El código termina en tu repositorio; tus suscripciones, tus harnesses y tus tokens de modelos son tus propias cuentas y tus propios costos.'],
+      ['Solución agéntica', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos la solución agéntica que tu caso pide: un grafo Canopy a medida con compuertas, roles y prompts bien diseñados; un agente sobre LangGraph o un framework similar desplegado en tu propia nube (AWS, Google Cloud o Azure); inteligencia artificial agregada a una herramienta que ya usas; un asistente de chat sobre tu propia información; o un agente de WhatsApp que responde y agenda. Con 30 días de soporte contados desde la instalación. El código termina en tu repositorio; tus suscripciones, tus harnesses, tu nube y tus tokens de modelos son tus propias cuentas y tus propios costos.'],
       ['Auditoría', 'Desde USD 400', 'En Colombia: desde 1.500.000 COP', 'Una revisión independiente de cómo usas la inteligencia artificial, con evidencia reproducible para cada hallazgo. Recibes una página dedicada, un informe en PDF y el repositorio de la auditoría, con los hallazgos, la matriz de riesgo y la hoja de ruta por escrito.'],
     ] as [string, string, string, string][] },
     how: { kicker: 'Cómo es una sesión', steps: [
@@ -877,7 +877,7 @@ export const es: Dict = {
       ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
       ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
     ] as [string, string][] },
-    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente. El laboratorio responde entre las 07:00 y las 19:00, hora de Colombia, en días hábiles; lo que llegue fuera de ese horario se responde el siguiente día hábil.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
+    policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y las soluciones agénticas se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente. El laboratorio responde entre las 07:00 y las 19:00, hora de Colombia, en días hábiles; lo que llegue fuera de ese horario se responde el siguiente día hábil.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
       'Con menos de 24 horas, la sesión se puede mover una vez sin costo; no se reembolsa, salvo por el derecho de retracto descrito abajo.',
       'Si llegas tarde, la sesión termina a la hora reservada; si no te conectas en los primeros 15 minutos, cuenta como dada.',
@@ -885,7 +885,7 @@ export const es: Dict = {
       'No hay sesión sin un pago confirmado: un pago que no se puede verificar libera el espacio.',
       'Los reembolsos vuelven por el mismo medio con que pagaste, en un plazo de 5 días hábiles.',
       'La primera llamada gratis se puede cancelar cuando quieras; solo avísanos.',
-      'Las auditorías y los flujos agénticos siguen los términos de su cotización escrita.',
+      'Las auditorías y las soluciones agénticas siguen los términos de su cotización escrita.',
       'Derecho de retracto: si reservas una sesión con más de cinco días de anticipación, puedes retractarte dentro de los 5 días hábiles siguientes a la reserva y recibir todo tu dinero, sin importar la regla de las 24 horas, salvo que el servicio ya haya empezado a pedido tuyo.',
     ] },
     money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al Banco de trabajo paga el laboratorio: modelos de inteligencia artificial, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
@@ -926,12 +926,12 @@ export const es: Dict = {
       ] as [string, string][] },
       not: { kicker: 'Lo que una auditoría no es', text: 'Una auditoría no es una certificación ni una garantía de seguridad continua. No cotiza ni construye las correcciones. Sus hallazgos siguen privados hasta que apruebes su publicación.' },
       impl: { kicker: 'La implementación, un servicio aparte', paras: [
-        'Construir la solución agéntica que recomienda la auditoría es el servicio de flujo agéntico del Banco de trabajo, desde USD 150 (desde 550.000 COP en Colombia): también puedes construirla con el informe o reservar horas de consulta pagadas.',
+        'Construir la solución agéntica que recomienda la auditoría es el servicio de solución agéntica del Banco de trabajo, desde USD 150 (desde 550.000 COP en Colombia): también puedes construirla con el informe o reservar horas de consulta pagadas.',
         'Trae 30 días de soporte contados desde la instalación.',
         'No incluye tus suscripciones, tus harnesses ni tus tokens de modelos: son tus propias cuentas y tus propios costos.',
       ] },
       privacy: { kicker: 'Confidencialidad', text: 'Usamos tus datos solo para la auditoría. El informe, las evidencias, tus datos y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si lo pides, salvo una auditoría con autorización de publicación firmada que aún no se publica, que se conserva hasta que se publique o hasta que el proceso de publicación se cierre.', link: 'El detalle está en la política de privacidad →' },
-      price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar. Las auditorías y los flujos agénticos se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
+      price: { kicker: 'Precio', text: 'Desde USD 400. El alcance y el precio final quedan por escrito antes de empezar. Las auditorías y las soluciones agénticas se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente.', cop: 'En Colombia: desde 1.500.000 COP. El alcance y el precio final quedan por escrito antes de empezar.' },
       cardLink: 'Qué revisamos y qué entregamos →',
       offers: { kicker: 'Publicar tu auditoría', founding: {
         title: 'Auditorías fundadoras',

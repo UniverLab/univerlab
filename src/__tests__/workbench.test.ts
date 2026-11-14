@@ -98,14 +98,26 @@ describe('workbench', () => {
     expect(es.workbench.tags.items[1][3]).toContain('laboratorio');
     expect(en.workbench.tags.items[2][3]).toContain('30 days of support');
     expect(es.workbench.tags.items[2][3]).toContain('30 días de soporte');
-    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['First call', 'Consultation', 'Agentic flow', 'Audit']);
-    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Primera llamada', 'Consulta', 'Flujo agéntico', 'Auditoría']);
+    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['First call', 'Consultation', 'Agentic solution', 'Audit']);
+    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Primera llamada', 'Consulta', 'Solución agéntica', 'Auditoría']);
     expect(en.workbench.tags.items[2][3]).toContain('design and install');
     expect(es.workbench.tags.items[2][3]).toContain('Diseñamos e instalamos');
     expect(en.workbench.tags.items[2][3]).toContain('your repository');
     expect(es.workbench.tags.items[2][3]).toContain('tu repositorio');
     expect(en.workbench.tags.items[2][3]).toContain('your own costs');
     expect(es.workbench.tags.items[2][3]).toContain('tus propios costos');
+    expect(en.workbench.tags.items[2][3]).toContain('Canopy');
+    expect(en.workbench.tags.items[2][3]).toContain('LangGraph');
+    expect(en.workbench.tags.items[2][3]).toContain('AWS, Google Cloud or Azure');
+    expect(en.workbench.tags.items[2][3]).toContain('artificial intelligence added to a tool');
+    expect(en.workbench.tags.items[2][3]).toContain('chat assistant');
+    expect(en.workbench.tags.items[2][3]).toContain('WhatsApp agent that answers and books');
+    expect(es.workbench.tags.items[2][3]).toContain('grafo Canopy');
+    expect(es.workbench.tags.items[2][3]).toContain('LangGraph');
+    expect(es.workbench.tags.items[2][3]).toContain('AWS, Google Cloud o Azure');
+    expect(es.workbench.tags.items[2][3]).toContain('inteligencia artificial agregada a una herramienta');
+    expect(es.workbench.tags.items[2][3]).toContain('asistente de chat');
+    expect(es.workbench.tags.items[2][3]).toContain('agente de WhatsApp que responde y agenda');
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.tags.items.map((t) => t.join(' ')).join(' ').toLowerCase()).not.toContain('abroad');
     }

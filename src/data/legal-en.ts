@@ -185,7 +185,7 @@ export const termsEn: LegalDoc = {
       paras: [
         'UniverLab grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the services for your own lawful purposes.',
         'UniverLab may modify, suspend or discontinue any free and open-source tool or site it publishes, or your access to it, at any time, with or without notice, with no support obligation for them: they run as an open laboratory, not a contracted product.',
-        'Paid Workbench services — consultation, agentic flows and audits — are delivered as described on the Workbench pages and in the written scope agreed before starting, including the support period and the verification of fixes, and the lab cannot change that scope on its own. Audits and agentic flows are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. A refund for dissatisfaction is exceptional and is arranged with the client.',
+        'Paid Workbench services — consultation, agentic solutions and audits — are delivered as described on the Workbench pages and in the written scope agreed before starting, including the support period and the verification of fixes, and the lab cannot change that scope on its own. Audits and agentic solutions are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. A refund for dissatisfaction is exceptional and is arranged with the client.',
         'Your use of the services is also governed by the <a href="/privacy/">Privacy Policy</a>, which describes what data each service records. If these terms and the policy disagree about data, the policy controls.',
       ],
     },
