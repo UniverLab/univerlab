@@ -763,6 +763,7 @@ export const en = {
     empty: 'No science events for today.',
     error: 'Failed to load the day’s letters.',
     pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
+    fit: 'Fit',
     plate: "The sundial, the paper's engraving",
     labPlate: "The ticker, the paper's engraving",
     ads: {

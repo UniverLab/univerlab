@@ -757,6 +757,7 @@ export const es: Dict = {
     empty: 'No hay eventos científicos para hoy.',
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
+    fit: 'Ajustar',
     plate: 'El reloj de sol, el grabado del periódico',
     labPlate: 'El teletipo, el grabado del periódico',
     ads: {

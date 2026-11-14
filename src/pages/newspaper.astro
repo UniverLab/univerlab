@@ -26,9 +26,11 @@ import TodaysPaper from '../components/TodaysPaper.astro';
     import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
     import { labPageHtml } from '../lib/lab-page';
     import { bindLabPage } from '../lib/lab-page-client';
+    import { initPaperSheet } from '../lib/paper-sheet';
 
     (function () {
       bindLabPage(document);
+      initPaperSheet(document);
       var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
       var day = editionDateFor(window.location.search);
       var picked = /[?&]d=/.test(window.location.search);
