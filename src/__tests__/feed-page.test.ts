@@ -99,7 +99,7 @@ describe('feed page', () => {
 });
 
 describe('retired status page links to nothing', () => {
-  it('no page links to /status/ anymore: the logbook lives at /newspaper/#lab', () => {
+  it('no page links to /status/ anymore: the Logbook lives at /logbook/', () => {
     for (const f of ['../pages/roadmap.astro', '../components/FieldNotes.astro', '../components/Header.astro']) {
       const src = readFileSync(resolve(__dirname, f), 'utf8');
       expect(`${f}\n${src}`).not.toMatch(/href="\/status\/?"/);

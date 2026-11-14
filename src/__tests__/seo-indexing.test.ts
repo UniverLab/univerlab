@@ -327,6 +327,13 @@ describe('astro.config.mjs', () => {
     expect(config).toContain('SITEMAP_EXCLUDED');
     for (const p of ['/newspaper', '/es/newspaper']) expect(config).toContain(`'${p}'`);
   });
+
+  it('filters the Logbook out of the sitemap like the newspaper', () => {
+    // The sitemap filter cannot know the build-time entries, so a build with
+    // no entries would list a noindex URL — the "Excluded by noindex" error
+    // checkSitemap reports. Like the newspaper, the Logbook stays out.
+    for (const p of ['/logbook', '/es/logbook']) expect(config).toContain(`'${p}'`);
+  });
 });
 
 describe('noindex placement', () => {
@@ -337,6 +344,17 @@ describe('noindex placement', () => {
   it.each(['src/pages/archive.astro', 'src/pages/es/archive.astro'])('%s stays indexable', (p) => {
     expect(read(p)).not.toContain('noindex');
   });
+
+  it.each(['src/pages/logbook.astro', 'src/pages/es/logbook.astro'])(
+    '%s is noindex only when the built page holds no entries',
+    (p) => {
+      // A static noindex would drop a healthy Logbook from the index; an
+      // always-indexable shell would put an empty noindex page in the
+      // sitemap. The flag follows the build-time entries instead.
+      expect(read(p)).toContain('noindex={initialEntries.length === 0}');
+      expect(read(p)).not.toMatch(/<BaseLayout[^>]*\bnoindex[}\s]/);
+    },
+  );
 });
 
 describe('removed Astro.redirect stubs', () => {

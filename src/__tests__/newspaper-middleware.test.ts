@@ -131,7 +131,8 @@ describe('middleware — /newspaper/ HTML', () => {
     const res = await onRequest(context('/newspaper/', 'text/html'));
 
     expect(res.status).toBe(200);
-    expect(FakeHTMLRewriter.last?.selector).toBe('#lab-body');
+    expect(FakeHTMLRewriter.last?.selector).toBe('#lab2-body');
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('lab-heading');
     const inner = FakeHTMLRewriter.last?.writes['#edition'] || '';
     // The edition itself: dateline, columns, and the same count the pool has.
     const facts = buildPool(FIX, 'en');
@@ -197,6 +198,125 @@ describe('middleware — page 2 when the lab feed cannot be read', () => {
     const md = await res.text();
     expect(md).toContain('## Lab news');
     expect(md).toContain('The lab mail did not arrive');
+  });
+});
+
+describe('middleware — the classifieds third page', () => {
+  const stubFetchLab = (entries: unknown[]) =>
+    jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes('wikipedia.org')) {
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      if (url.includes('founding-spots')) {
+        return new Response(JSON.stringify({ left: null }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ entries }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+  const twenty = Array.from({ length: 20 }, (_, i) => ({
+    id: `m${i}`,
+    date: `2026-09-${String(28 - i).padStart(2, '0')}T10:00:00.000Z`,
+    title: `Item ${i}`,
+    body: 'Body.',
+    type: i < 2 ? 'launch' : 'note',
+    topic: 'canopy',
+    link: null,
+  }));
+
+  it('fills #lab2-body with the second classifieds page', async () => {
+    global.fetch = stubFetchLab(twenty);
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/newspaper/', 'text/html'));
+
+    expect(res.status).toBe(200);
+    const page2 = FakeHTMLRewriter.last?.writes['#lab2-body'] || '';
+    expect(page2).toContain('id="lab-log2"');
+    expect(page2).toContain('Lab news · continued');
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('id="lab-log"');
+  });
+
+  it('leaves #lab2-body empty when everything fits one page', async () => {
+    global.fetch = stubFetchLab(twenty.slice(0, 3));
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    await onRequest(context('/es/newspaper/', 'text/html'));
+
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toBe('');
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('id="lab-log"');
+  });
+});
+
+describe('middleware — the Logbook page', () => {
+  const two = [
+    {
+      id: 'l1', date: '2026-10-06T01:09:26.735Z', title: 'Newest', body: 'First.',
+      type: 'launch', topic: 'canopy', link: null,
+    },
+    {
+      id: 'l2', date: '2026-10-05T10:00:00.000Z', title: 'Second', body: 'Second body.',
+      type: 'note', topic: 'texforge', link: 'https://example.com/o',
+    },
+  ];
+  const stubFetchLogbook = jest.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('announcements.univerlab.org/?limit=')) {
+      return new Response(JSON.stringify({ entries: two }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ left: null }), { status: 200 });
+  }) as unknown as typeof fetch;
+
+  it('fills #logbook-body with the complete record in full', async () => {
+    global.fetch = stubFetchLogbook;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/logbook/', 'text/html'));
+
+    expect(res.status).toBe(200);
+    const body = FakeHTMLRewriter.last?.writes['#logbook-body'] || '';
+    expect(body).toContain('<h2 class="lab-heading">Logbook</h2>');
+    expect(body).toContain('id="logbook-list"');
+    // Newest first, every entry in full with its meta line.
+    expect(body.indexOf('>Newest<')).toBeLessThan(body.indexOf('>Second<'));
+    expect(body.match(/<p class="entry-meta">.*?<\/p>/g)).toHaveLength(2);
+  });
+
+  it('fills the Spanish Logbook under its own heading', async () => {
+    global.fetch = stubFetchLogbook;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    await onRequest(context('/es/logbook/', 'text/html'));
+
+    expect(FakeHTMLRewriter.last?.writes['#logbook-body']).toContain(
+      '<h2 class="lab-heading">Cuaderno de bitácora</h2>',
+    );
+  });
+
+  it('says the Logbook did not arrive instead of empty filter rows', async () => {
+    global.fetch = jest.fn(async () => {
+      throw new Error('announcements down');
+    }) as unknown as typeof fetch;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/logbook/', 'text/html'));
+
+    expect(res.status).toBe(200);
+    const body = FakeHTMLRewriter.last?.writes['#logbook-body'] || '';
+    expect(body).toContain('lab-empty');
+    expect(body).toContain('The Logbook did not arrive');
+    expect(body).not.toContain('lab-filter');
+  });
+
+  it('serves the Logbook markdown twin under its own heading', async () => {
+    global.fetch = stubFetchLogbook;
+
+    const res = await onRequest(context('/logbook/index.md', 'text/markdown'));
+
+    expect(res.status).toBe(200);
+    const md = await res.text();
+    expect(md.split('\n')[0]).toBe('## Logbook');
+    expect(md).toContain('**Newest**');
   });
 });
 

@@ -1,8 +1,9 @@
 import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
 import { foundingRoute, rewriteFoundingSpots } from './founding-spots';
 import { fetchFoundingLeft } from '../src/lib/founding-spots';
-import { labPageHtml, labPageMarkdown } from '../src/lib/lab-page';
+import { labPageHtml, labPageHtml2, labPageMarkdown } from '../src/lib/lab-page';
 import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
+import { liveLogbook, logbookRoute, rewriteSelector } from './logbook-edge';
 import { buildPool } from '../src/lib/science-filter';
 import {
   editionDateFor,
@@ -106,7 +107,7 @@ async function liveTodayEdition(
   fetchImpl: typeof fetch,
   signal: AbortSignal,
   date: Date,
-): Promise<{ html: string; labHtml: string; markdown: string }> {
+): Promise<{ html: string; labHtml: string; lab2Html: string; markdown: string }> {
   // Both reads run together: the shared 3 s deadline must not be spent twice,
   // and a slow Wikipedia response must not push the lab mail past it.
   const otd = fetchImpl(otdUrl(lang, date), {
@@ -126,6 +127,7 @@ async function liveTodayEdition(
   return {
     html: todayEditionHtml(feed, lang, date),
     labHtml: labPageHtml(lab, lang, { unavailable, foundingLeft }),
+    lab2Html: labPageHtml2(lab, lang, { unavailable, foundingLeft }),
     markdown: `${todayEditionMarkdown(feed, lang, date)}\n${labPageMarkdown(lab, lang, { unavailable, foundingLeft })}\n`,
   };
 }
@@ -1058,9 +1060,9 @@ export async function onRequest(context: {
   }
 
   // The newspaper: fetch the static page, then set #edition to the day's
-  // edition and #lab-body to the logbook's second page. Any failure
-  // (timeout 3 s, non-OK) serves the static page, whose client script fills
-  // both with the same renderers.
+  // edition and #lab-body / #lab2-body to the classifieds' two pages. Any
+  // failure (timeout 3 s, non-OK) serves the static page, whose client
+  // script fills all three with the same renderers.
   const todayLang = request.method === 'GET' && !wantsMarkdown(accept) ? todayRoute(pathname) : null;
   if (todayLang) {
     const staticRes = await next();
@@ -1068,7 +1070,7 @@ export async function onRequest(context: {
     try {
       const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
       try {
-        const { html, labHtml } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
+        const { html, labHtml, lab2Html } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
         const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
         if (typeof RW === 'function') {
           const rewriter = new (RW as new () => {
@@ -1087,9 +1089,33 @@ export async function onRequest(context: {
               el.setInnerContent(labHtml, { html: true });
             },
           });
+          (rewriter.on as (s: string, h: unknown) => void)('#lab2-body', {
+            element(el: { setInnerContent(c: string, o: unknown): void }) {
+              el.setInnerContent(lab2Html, { html: true });
+            },
+          });
           return rewriter.transform(staticRes);
         }
         return staticRes;
+      } finally {
+        clear();
+      }
+    } catch {
+      return staticRes;
+    }
+  }
+
+  // The Logbook: fetch the static page, then set #logbook-body to the full
+  // record. Same failure rule as the newspaper: the client script fills it.
+  const logbookLang = request.method === 'GET' && !wantsMarkdown(accept) ? logbookRoute(pathname) : null;
+  if (logbookLang) {
+    const staticRes = await next();
+    if (!staticRes.ok) return staticRes;
+    try {
+      const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+      try {
+        const { bodyHtml } = await liveLogbook(logbookLang, fetch, signal, apiInit());
+        return rewriteSelector(staticRes, '#logbook-body', bodyHtml);
       } finally {
         clear();
       }
@@ -1133,6 +1159,22 @@ export async function onRequest(context: {
         try {
           const { markdown } = await liveTodayEdition(todayMdLang, fetch, signal, editionDateFor(url.search));
           return new Response(markdown, { headers: MARKDOWN_HEADERS });
+        } finally {
+          clear();
+        }
+      } catch {
+        // fall through to static twin
+      }
+    }
+
+    // The Logbook's markdown twin: the full record, rendered live the same way.
+    const logbookMdLang = request.method === 'GET' ? logbookRoute(url.pathname) : null;
+    if (logbookMdLang) {
+      try {
+        const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
+        try {
+          const { twin } = await liveLogbook(logbookMdLang, fetch, signal, apiInit());
+          return new Response(twin, { headers: MARKDOWN_HEADERS });
         } finally {
           clear();
         }

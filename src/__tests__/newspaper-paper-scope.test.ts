@@ -92,15 +92,18 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('sets page 2 as dense ruled columns, not row-aligned grid cells', () => {
-    expect(css).toMatch(/\.paper #lab-log \{[^}]*column-count:\s*3/);
+  it('sets pages 2 and 3 as one composed grid: display full, boxed half, small third', () => {
+    expect(css).toMatch(/\.paper \.classifieds \{[^}]*display:\s*grid/);
+    expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-column:\s*1 \/ -1/);
+    expect(css).toMatch(/\.paper \.ad-boxed,[^}]*grid-column:\s*span 3/);
+    expect(css).toMatch(/\.paper \.ad-small \{[^}]*grid-column:\s*span 2/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
-    expect(css).toMatch(/\.paper \.log-entry \{[^}]*break-inside:\s*avoid/);
+    expect(css).toMatch(/\.paper \.notice-run \.notice \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('keeps the page-2 plate whole inside the logbook columns', () => {
-    expect(css).toMatch(/\.paper #lab-log \.paper-plate \{[^}]*break-inside:\s*avoid/);
-    expect(css).toMatch(/\.paper #lab-log \.paper-plate \{[^}]*max-width:\s*100%/);
+  it('keeps the display engraving inside its ad, never stretched by the entry', () => {
+    expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-template-columns:[^}]*minmax\(0, 2fr\) minmax\(0, 3fr\)/);
+    expect(css).toMatch(/\.paper \.ad-art \{[^}]*margin:\s*0/);
   });
 
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {

@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { en } from '../i18n/en';
+import { loadEntries } from '../lib/lab-feed';
+import { logbookPageHtml } from '../lib/lab-page';
+
+const lb = en.today.logbook;
+
+// The complete announcements record, filled at build time like the roadmap
+// board and refreshed at the edge (functions/_middleware.ts) and by the
+// client script below with the same renderer. When the build-time read holds
+// no entries the page is noindex like the newspaper, for the same reason:
+// a noindex URL in the sitemap is a reported error.
+let initialEntries: unknown[] = [];
+let unavailable = false;
+try {
+  initialEntries = await loadEntries();
+} catch {
+  unavailable = true;
+}
+const initialHtml = logbookPageHtml(initialEntries as never[], 'en', { unavailable });
+---
+<!-- `noindex` only when the built HTML holds no entries: then the page is a
+     shell the edge or the client fills, exactly like the newspaper. -->
+<BaseLayout title={lb.title} description={lb.description} circadian noindex={initialEntries.length === 0}>
+  <section class="wrap logbook-page">
+    <div class="paper" id="logbook">
+      <div id="logbook-body" set:html={initialHtml}></div>
+    </div>
+  </section>
+
+  <style is:global>
+    /* The Logbook keeps the paper's look: the bound register the
+       newspaper's classifieds come from — same tokens, faces and rules. */
+    .logbook-page { max-width: 72rem; padding-block: 4rem 5rem; }
+    .paper {
+      --p-ground: var(--bench-c-parchment);
+      --p-deep: var(--bench-c-parchment-deep);
+      --p-ink: var(--bench-c-ink);
+      --p-soft: var(--bench-c-sepia);
+      --p-rule: var(--bench-c-graphite);
+      --p-emphasis: var(--bench-c-garnet);
+      display: grid; gap: 18px;
+      background: var(--p-ground);
+      padding: clamp(16px, 3vw, 28px);
+    }
+    [data-bench-theme='night'] .paper {
+      --p-ground: #e3e5e2;
+      --p-deep: #d7dad6;
+      --p-ink: #16191c;
+      --p-soft: #454e54;
+      --p-rule: #6d787e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-bench-theme='day']) .paper {
+        --p-ground: #e3e5e2;
+        --p-deep: #d7dad6;
+        --p-ink: #16191c;
+        --p-soft: #454e54;
+        --p-rule: #6d787e;
+      }
+    }
+    .paper .lab-heading { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
+    .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
+    .paper .lab-filters { display: grid; gap: 6px; }
+    .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .paper .lab-filter-row { border-top: 1px solid var(--p-ink); padding-top: 6px; }
+    .paper .lab-filter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 3px 10px; cursor: pointer; }
+    .paper .lab-filter.is-active { color: var(--p-ink); border-color: var(--p-ink); }
+    .paper .lab-filter-count { opacity: 0.7; margin-left: 6px; font-size: 10.5px; }
+    .paper .logbook-list { display: grid; gap: 0; border-top: 3px double var(--p-ink); }
+    .paper .log-entry { display: block; min-width: 0; padding-block: 14px; border-bottom: 1px dotted var(--p-rule); }
+    .paper .log-entry time { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--p-soft); }
+    .paper .log-entry .type-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-emphasis); border: 1px solid var(--p-emphasis); padding: 2px 8px; border-radius: 0; }
+    .paper .log-entry .entry-body { display: grid; gap: 6px; }
+    .paper .log-entry h3 { font-family: var(--font-serif); line-height: 1.25; margin: 0; text-wrap: balance; color: var(--p-ink); }
+    .paper .log-entry h3.sz-lg { font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: 0.02em; }
+    .paper .log-entry h3.sz-md { font-weight: 700; font-size: 20px; }
+    .paper .log-entry h3.sz-sm { font-weight: 400; font-size: 18px; font-style: italic; }
+    .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 15.5px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
+    .paper .log-entry .entry-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; border-top: 1px solid var(--p-rule); padding-top: 6px; }
+    .paper .log-entry p a, .paper .log-entry .log-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
+    .paper.js .log-entry.is-hidden { display: none; }
+  </style>
+
+  <script>
+    // The client fallback for the Logbook: when the edge did not fill
+    // #logbook-body, fetch the announcements and fill it with the same
+    // renderer the edge uses. The filters bind either way.
+    import { logbookPageHtml } from '../lib/lab-page';
+    import { bindLogbook, setLogbookEntries } from '../lib/lab-page-client';
+
+    (function () {
+      bindLogbook(document);
+      var lang = 'en';
+      var body = document.getElementById('logbook-body');
+      var need = body && !(body.textContent || '').replace(/\s/g, '');
+      if (!need) return;
+      fetch('https://announcements.univerlab.org/?limit=100')
+        .then(function (res) {
+          if (!res.ok) throw new Error('API ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          return Array.isArray(data?.entries) ? data.entries : [];
+        })
+        .catch(function () { return null; })
+        .then(function (entries) {
+          if (!body) return;
+          body.innerHTML = logbookPageHtml(entries || [], lang, { unavailable: entries === null });
+          setLogbookEntries(document, { entries: entries || [], lang: lang });
+        });
+    })();
+  </script>
+</BaseLayout>

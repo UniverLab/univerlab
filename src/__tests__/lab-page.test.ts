@@ -1,12 +1,17 @@
 import {
-  LAB_SHOWN,
   LAB_TOPICS,
   LAB_TYPES,
+  displayArt,
+  finalEntryHref,
   labPageHtml,
+  labPageHtml2,
   labPageMarkdown,
+  logbookMarkdown,
+  logbookPageHtml,
   sortEntries,
 } from '../lib/lab-page';
-import { bindLabPage } from '../lib/lab-page-client';
+import { layoutClassifieds } from '../lib/lab-classifieds';
+import { bindLabPage, bindLogbook, setLabEntries, setLogbookEntries } from '../lib/lab-page-client';
 import type { Entry } from '../lib/lab-feed';
 
 const entries: Entry[] = [
@@ -24,7 +29,7 @@ const entries: Entry[] = [
   { id: 'e12', date: '2026-09-25T10:00:00.000Z', title: 'Twelfth', body: 'Body twelve.', type: 'launch', topic: 'astro-denoise', link: null },
 ];
 
-describe('lab page (newspaper page 2)', () => {
+describe('lab page (newspaper pages 2 and 3)', () => {
   it('sorts newest first', () => {
     const sorted = sortEntries([...entries].reverse());
     expect(sorted.map((e) => e.id)).toEqual([
@@ -32,17 +37,78 @@ describe('lab page (newspaper page 2)', () => {
     ]);
   });
 
-  it('prints every entry newest first, folded past ten', () => {
+  it('composes one classifieds page from twelve entries: releases on top', () => {
     const html = labPageHtml(entries, 'en');
     const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)].map((m) => m[1]);
+    // Ranked by type then recency: the four launches, the incident, the
+    // bugfix and update, then the notes newest first.
     expect(titles).toEqual([
-      'Newest', 'Notes on TexForge', 'Mystery topic', 'General note', 'Bugfix',
-      'Incident', 'Update', 'Old launch', 'Older note', 'Tenth', 'Eleventh', 'Twelfth',
+      'Newest', 'Mystery topic', 'Old launch', 'Twelfth', 'Incident', 'Bugfix',
+      'Update', 'Notes on TexForge', 'General note', 'Older note', 'Tenth', 'Eleventh',
     ]);
-    expect(html).toContain(`data-shown="${LAB_SHOWN}"`);
-    expect(LAB_SHOWN).toBe(10);
-    const folded = html.match(/class="log-entry is-folded"/g) || [];
-    expect(folded).toHaveLength(2);
+    expect(html).toContain('id="lab-log"');
+    expect(html).not.toContain('id="lab-log2"');
+    expect(labPageHtml2(entries, 'en')).toBe('');
+  });
+
+  it('has no older control and never folds', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).not.toContain('lab-older');
+    expect(html).not.toContain('data-shown');
+    expect(html).not.toContain('is-folded');
+  });
+
+  it('sizes the display line by rank and closes full ads with the meta line', () => {
+    const html = labPageHtml(entries, 'en');
+    // The two newest releases read largest, then boxed, then small.
+    expect(html).toContain('<h3 class="sz-lg">Newest</h3>');
+    expect(html).toContain('<h3 class="sz-lg">Mystery topic</h3>');
+    expect(html).toContain('<h3 class="sz-md">Incident</h3>');
+    expect(html).toContain('<h3 class="sz-md">Notes on TexForge</h3>');
+    expect(html).toContain('<h3 class="sz-sm">General note</h3>');
+    const metas = html.match(/<p class="entry-meta">.*?<\/p>/g) ?? [];
+    // Display and boxed ads carry the meta line; small ads and notices do not.
+    expect(metas).toHaveLength(8);
+    expect(metas[0]).toContain('type-badge');
+    expect(metas[0]).toContain('<time datetime="2026-10-06T01:09:26.735Z" data-mission="">');
+  });
+
+  it('cuts small ads short, ending in the link', () => {
+    // Two launches then nine notes: the ninth note lands in a small slot.
+    const rows: Entry[] = [
+      { id: 'l1', date: '2026-10-06T10:00:00.000Z', title: 'L1', body: 'B.', type: 'launch', topic: 'canopy', link: null },
+      { id: 'l2', date: '2026-10-05T10:00:00.000Z', title: 'L2', body: 'B.', type: 'launch', topic: 'canopy', link: null },
+      ...Array.from({ length: 9 }, (_, i) => ({
+        id: `s${i}`,
+        date: new Date(Date.UTC(2026, 9, 4) - i * 86400000).toISOString(),
+        title: i === 8 ? 'Cut note' : `Note ${i}`,
+        body: i === 8 ? 'First.\n\nSecond.' : 'Body.',
+        type: 'note',
+        topic: 'texforge',
+        link: i === 8 ? 'https://example.com/o' : null,
+      }) as Entry),
+    ];
+    const html = labPageHtml(rows, 'en');
+    expect(html).toContain('<h3 class="sz-sm">Cut note</h3>');
+    expect(html).toContain('<p>First. <a class="log-link"');
+    expect(html).not.toContain('Second.');
+  });
+
+  it('runs overflow entries as one-line notices of title and link only', () => {
+    const rows: Entry[] = Array.from({ length: 20 }, (_, i) => {
+      const day = String(28 - i).padStart(2, '0');
+      return {
+        id: `n${i}`, date: `2026-09-${day}T10:00:00.000Z`, title: `Notice ${i}`,
+        body: 'Body.', type: 'note', topic: 'canopy', link: i % 2 ? 'https://example.com/o' : null,
+      } as Entry;
+    });
+    // Ranks 18 and 19 read as lines on the second page, grouped in a run.
+    expect(labPageHtml(rows, 'en')).not.toContain('notice-run');
+    const html2 = labPageHtml2(rows, 'en');
+    expect(html2).toContain('id="lab-log2"');
+    expect(html2).toContain('notice-run');
+    expect(html2).toContain('<p class="notice-line">');
+    expect(html2.match(/<article class="log-entry notice"/g)).toHaveLength(2);
   });
 
   it('counts every entry on the All filters and per topic/type', () => {
@@ -52,26 +118,20 @@ describe('lab page (newspaper page 2)', () => {
     // canopy ×4 (e1, e5, e7, e11); unknown + null topics fold into general.
     expect(html).toContain('data-topic="canopy" aria-pressed="false">Canopy<span class="lab-filter-count">4</span>');
     expect(html).toContain('>General<span class="lab-filter-count">2</span>');
-    // launch ×3, note ×5.
+    // launch ×3 (e1, e8, e12; e3 is a deploy), note ×5.
     expect(html).toContain('data-type="launch" aria-pressed="false">launch<span class="lab-filter-count">3</span>');
     expect(html).toContain('data-type="note" aria-pressed="false">note<span class="lab-filter-count">5</span>');
   });
 
-  it('carries the filter axes on every row for the client', () => {
-    const html = labPageHtml(entries, 'en');
+  it('carries the filter axes on every ad for the client', () => {
+    const html = labPageHtml(entries, 'en') + labPageHtml2(entries, 'en');
     expect(html).toContain('data-topic="canopy" data-type="launch" data-roadmap="r1"');
     expect(html).toContain('data-topic="general" data-type="deploy" data-roadmap=""');
   });
 
-  it('ships the older control hidden with its copy', () => {
-    const html = labPageHtml(entries, 'en');
-    expect(html).toContain('<button type="button" id="lab-older" hidden>Older entries</button>');
-  });
-
-  it('renders the heading and control in Spanish', () => {
+  it('renders the heading and the filters in Spanish', () => {
     const html = labPageHtml(entries, 'es');
     expect(html).toContain('<h2 class="lab-heading">Noticias del laboratorio</h2>');
-    expect(html).toContain('<button type="button" id="lab-older" hidden>Ver anteriores</button>');
     expect(html).toContain('>Todas<span class="lab-filter-count">12</span>');
     expect(html).toContain('>lanzamiento<span class="lab-filter-count">3</span>');
   });
@@ -89,6 +149,7 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).not.toContain('lab-filter');
     expect(html).not.toContain('lab-log');
     expect(html).not.toContain('lab-older');
+    expect(html).not.toContain('coupon');
   });
 
   it('says the same in Spanish', () => {
@@ -98,25 +159,106 @@ describe('lab page (newspaper page 2)', () => {
     expect(html).not.toContain('lab-filter');
   });
 
-  it('sizes the display line by type and closes with the meta line', () => {
-    const html = labPageHtml(entries, 'en');
-    // A release reads largest, an incident next, a note smallest.
-    expect(html).toContain('<h3 class="sz-lg">Newest</h3>');
-    expect(html).toContain('<h3 class="sz-lg">Mystery topic</h3>');
-    expect(html).toContain('<h3 class="sz-md">Incident</h3>');
-    expect(html).toContain('<h3 class="sz-sm">Notes on TexForge</h3>');
-    const metas = html.match(/<p class="entry-meta">.*?<\/p>/g) ?? [];
-    expect(metas).toHaveLength(12);
-    expect(metas[0]).toContain('type-badge');
-    expect(metas[0]).toContain('<time datetime="2026-10-06T01:09:26.735Z" data-mission="">');
-    expect(metas[1]).toContain('<time datetime="2026-10-05T10:00:00.000Z" data-mission="">');
-    expect(metas[1]).toContain('class="log-link"');
-  });
-
   it('keeps the filter rows when the feed simply has no entries', () => {
     const html = labPageHtml([], 'en');
     expect(html).toContain('lab-filter');
     expect(html).not.toContain('lab-empty');
+  });
+
+  it('escapes entry text', () => {
+    const html = labPageHtml(
+      [{ id: 'x', date: '2026-10-06T01:09:26.735Z', title: '<b>Hi</b>', body: 'a&b', type: 'note', topic: 'canopy', link: null }],
+      'en',
+    );
+    expect(html).not.toContain('<b>Hi</b>');
+    expect(html).toContain('&lt;b&gt;Hi&lt;/b&gt;');
+    expect(html).toContain('a&amp;b');
+  });
+
+  it('mixes the four coupons among the ads at boxed and small sizes, never in a band', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).not.toContain('coupon-band');
+    expect(html).not.toContain('coupon-grid');
+    expect(html.match(/class="coupon"/g)).toHaveLength(4);
+    const log = html.slice(html.indexOf('id="lab-log"'));
+    // The first half rides after the third slot; all four keep the cut border.
+    const firstCard = log.indexOf('class="coupon"');
+    const thirdSlot = log.indexOf('</article>', log.indexOf('</article>', log.indexOf('</article>') + 1) + 1);
+    expect(firstCard).toBeGreaterThan(thirdSlot);
+    expect((log.match(/class="coupon-cut"/g) || [])).toHaveLength(4);
+    // Every coupon keeps its figure, condition, link and dashed border.
+    expect(html).toContain('<span class="coupon-figure">Free</span>');
+    expect(html).toContain('<span class="coupon-figure">50 %</span>');
+    expect(html).toContain('✂ cut here');
+  });
+
+  it('reads every coupon figure from the Workbench copy, never invented', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).toContain('<span class="coupon-figure">Free</span>');
+    expect(html).toContain('<span class="coupon-figure">50 %</span>');
+    expect(html).toContain('<span class="coupon-figure">20 %</span>');
+    expect(html).toContain('<span class="coupon-figure">30 %</span>');
+    expect(html).toContain('The first 5 audits: 50 % of the price');
+    expect(html).toContain('costs 30 % less');
+  });
+
+  it('links the call to the Workbench and the audits to the audits page', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html).toContain('href="/workbench/"');
+    expect(html.match(/href="\/workbench\/audits\/"/g)).toHaveLength(3);
+    const esHtml = labPageHtml(entries, 'es');
+    expect(esHtml).toContain('href="/es/workbench/"');
+    expect(esHtml.match(/href="\/es\/workbench\/audits\/"/g)).toHaveLength(3);
+    expect(esHtml).toContain('<span class="coupon-figure">Gratis</span>');
+    expect(esHtml).toContain('✂ recorta aquí');
+  });
+
+  it('prints the no-stack rule once under the coupons', () => {
+    const html = labPageHtml(entries, 'en');
+    expect(html.match(/largest one applies/g)).toHaveLength(1);
+    expect(labPageHtml(entries, 'es')).toContain('aplica el mayor');
+  });
+
+  it('sets display art from the lab assets: machine plates for experiments, a postcard crop otherwise', () => {
+    expect(displayArt('canopy')).toBe('/bench/machines/canopy-day-900.webp');
+    expect(displayArt('general')).toBe('/bench/postcards/status-day-800.webp');
+    expect(displayArt('unknown-thing')).toBe('/bench/postcards/status-day-800.webp');
+    const html = labPageHtml(entries, 'en');
+    // The newest release belongs to canopy: its display ad carries the plate.
+    expect(html).toContain('<figure class="photo ad-art"><div class="print"><img src="/bench/machines/canopy-day-900.webp"');
+    expect(html).toContain('loading="lazy"');
+  });
+
+  it('caps the section at two pages and points the overflow at the Logbook', () => {
+    // The live mix: 14 launch, 13 note, 5 update, 1 incident.
+    const kinds: Array<Entry['type']> = [
+      ...Array<Entry['type']>(14).fill('launch'),
+      ...Array<Entry['type']>(13).fill('note'),
+      ...Array<Entry['type']>(5).fill('update'),
+      'incident',
+    ];
+    const live: Entry[] = kinds.map((type, i) => ({
+      id: `l${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Live ${i}`,
+      body: 'Body.',
+      type,
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    const { pages, truncated } = layoutClassifieds(live);
+    expect(pages).toHaveLength(2);
+    // Five entries run past the 28 slots: the five oldest boxed/small ads
+    // step down to lines first, and each page holds fourteen slots, hard cap.
+    expect(pages[0]).toHaveLength(14);
+    expect(pages[1]).toHaveLength(14);
+    expect(truncated).toBe(true);
+    const html2 = labPageHtml2(live, 'en');
+    expect(html2).toContain('id="lab-log2"');
+    expect(html2).toContain('Lab news · continued');
+    expect(html2).toContain('<p class="lab-more"><a href="/logbook/">The complete record continues in the Logbook →</a></p>');
+    const es2 = labPageHtml2(live, 'es');
+    expect(es2).toContain('<p class="lab-more"><a href="/es/logbook/">El registro completo continúa en el Cuaderno →</a></p>');
   });
 
   it('the markdown twin carries the unavailable line under the coupons', () => {
@@ -141,93 +283,6 @@ describe('lab page (newspaper page 2)', () => {
     expect(labPageMarkdown(entries, 'es').split('\n')[0]).toBe('## Noticias del laboratorio');
   });
 
-  it('escapes entry text', () => {
-    const html = labPageHtml(
-      [{ id: 'x', date: '2026-10-06T01:09:26.735Z', title: '<b>Hi</b>', body: 'a&b', type: 'note', topic: 'canopy', link: null }],
-      'en',
-    );
-    expect(html).not.toContain('<b>Hi</b>');
-    expect(html).toContain('&lt;b&gt;Hi&lt;/b&gt;');
-    expect(html).toContain('a&amp;b');
-  });
-
-  it('bands four clip-out coupons between the heading and the filters', () => {
-    const html = labPageHtml(entries, 'en');
-    expect(html).toContain('coupon-band');
-    expect(html).toContain('Clip-out coupons');
-    expect(html.match(/class="coupon"/g)).toHaveLength(4);
-    expect(html.indexOf('coupon-band')).toBeGreaterThan(html.indexOf('lab-heading'));
-    expect(html.indexOf('coupon-band')).toBeLessThan(html.indexOf('lab-filters'));
-  });
-
-  it('reads every coupon figure from the Workbench copy, never invented', () => {
-    const html = labPageHtml(entries, 'en');
-    expect(html).toContain('<span class="coupon-figure">Free</span>');
-    expect(html).toContain('<span class="coupon-figure">50 %</span>');
-    expect(html).toContain('<span class="coupon-figure">20 %</span>');
-    expect(html).toContain('<span class="coupon-figure">30 %</span>');
-    expect(html).toContain('✂ cut here');
-    expect(html).toContain('The first 5 audits: 50 % of the price');
-    expect(html).toContain('costs 30 % less');
-  });
-
-  it('links the call to the Workbench and the audits to the audits page', () => {
-    const html = labPageHtml(entries, 'en');
-    expect(html).toContain('href="/workbench/"');
-    expect(html.match(/href="\/workbench\/audits\/"/g)).toHaveLength(3);
-    const esHtml = labPageHtml(entries, 'es');
-    expect(esHtml).toContain('href="/es/workbench/"');
-    expect(esHtml.match(/href="\/es\/workbench\/audits\/"/g)).toHaveLength(3);
-    expect(esHtml).toContain('<span class="coupon-figure">Gratis</span>');
-    expect(esHtml).toContain('Cupones para recortar');
-    expect(esHtml).toContain('✂ recorta aquí');
-  });
-
-  it('prints the no-stack rule once under the coupons', () => {
-    const html = labPageHtml(entries, 'en');
-    expect(html.match(/largest one applies/g)).toHaveLength(1);
-    expect(labPageHtml(entries, 'es')).toContain('aplica el mayor');
-  });
-
-  it('keeps the coupon band when the feed is unavailable', () => {
-    const html = labPageHtml([], 'en', { unavailable: true });
-    expect(html).toContain('coupon-band');
-    expect(html).toContain('lab-empty');
-  });
-
-  it('sets the ticker engraving among the columns, before the first entry', () => {
-    for (const lang of ['en', 'es'] as const) {
-      const html = labPageHtml(entries, lang);
-      expect(html).toContain('<figure class="photo paper-plate">');
-      expect(html).toContain('/bench/postcards/status-day-1600.avif 1600w');
-      expect(html).toContain('/bench/postcards/status-day-800.avif 800w');
-      expect(html).toContain('/bench/postcards/status-day-1600.webp 1600w');
-      expect(html).toContain('/bench/postcards/status-day-800.webp 800w');
-      expect(html).toContain('loading="lazy"');
-      expect(html).not.toContain('status-night');
-      expect(html).not.toContain('status-mobile');
-      const caption = lang === 'es' ? 'El teletipo, el grabado del periódico' : "The ticker, the paper's engraving";
-      expect(html).toContain(caption);
-      // The plate opens the logbook so the columns balance around it.
-      expect(html.indexOf('paper-plate')).toBeLessThan(html.indexOf('log-entry'));
-      // The bare engraving carries no postcard chrome.
-      const fig = html.slice(html.indexOf('<figure'), html.indexOf('</figure>'));
-      expect(fig).not.toContain('lab-log');
-      expect(fig).not.toContain('postmark');
-      expect(fig).not.toContain('stamp');
-    }
-  });
-
-  it('keeps the plate on page 2 when the feed is unavailable', () => {
-    const html = labPageHtml([], 'en', { unavailable: true });
-    expect(html).toContain('<figure class="photo paper-plate">');
-    expect(html).toContain('status-day-800.webp');
-    expect(html).toContain('lab-empty');
-    expect(html).not.toContain('id="lab-log"');
-    expect(html).not.toContain('lab-filter');
-    expect(html).not.toContain('lab-older');
-  });
-
   it('twins the coupons as plain markdown lines with links', () => {
     const md = labPageMarkdown(entries, 'en');
     expect(md).toContain('*✂ Free — ');
@@ -241,6 +296,91 @@ describe('lab page (newspaper page 2)', () => {
   });
 });
 
+describe('finalEntryHref', () => {
+  it('leaves foreign hosts, files and the root alone', () => {
+    expect(finalEntryHref('https://example.com/o')).toBe('https://example.com/o');
+    expect(finalEntryHref('https://announcements.univerlab.org/feed.atom')).toBe(
+      'https://announcements.univerlab.org/feed.atom',
+    );
+    expect(finalEntryHref('https://univerlab.org')).toBe('https://univerlab.org');
+    expect(finalEntryHref('')).toBe('');
+  });
+
+  it('gives same-site page links their trailing slash, keeping queries and fragments', () => {
+    expect(finalEntryHref('https://univerlab.org/archive#exp-005')).toBe(
+      'https://univerlab.org/archive/#exp-005',
+    );
+    expect(finalEntryHref('/workbench')).toBe('/workbench/');
+    expect(finalEntryHref('/roadmap/?lane=now')).toBe('/roadmap/?lane=now');
+  });
+
+  it('resolves the retired status address to its redirect target', () => {
+    expect(finalEntryHref('https://univerlab.org/status')).toBe('https://univerlab.org/newspaper/#lab');
+  });
+
+  it('advertises the final URL on the entry link', () => {
+    const stale: Entry[] = [
+      {
+        id: 's1', date: '2026-10-06T01:09:26.735Z', title: 'Status', body: 'B.',
+        type: 'launch', topic: 'canopy', link: 'https://univerlab.org/status',
+      },
+      {
+        id: 's2', date: '2026-10-05T10:00:00.000Z', title: 'Archived', body: 'B.',
+        type: 'note', topic: 'canopy', link: 'https://univerlab.org/archive#exp-005',
+      },
+    ];
+    const html = logbookPageHtml(stale, 'en');
+    expect(html).toContain('href="https://univerlab.org/newspaper/#lab"');
+    expect(html).toContain('href="https://univerlab.org/archive/#exp-005"');
+    expect(html).not.toContain('href="https://univerlab.org/status"');
+    expect(html).not.toContain('href="https://univerlab.org/archive#exp-005"');
+  });
+});
+
+describe('logbook page', () => {
+  it('prints the complete record newest first, every entry in full', () => {
+    const html = logbookPageHtml(entries, 'en');
+    const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)].map((m) => m[1]);
+    expect(titles).toEqual([
+      'Newest', 'Notes on TexForge', 'Mystery topic', 'General note', 'Bugfix',
+      'Incident', 'Update', 'Old launch', 'Older note', 'Tenth', 'Eleventh', 'Twelfth',
+    ]);
+    expect(html).toContain('<h2 class="lab-heading">Logbook</h2>');
+    expect(html).toContain('id="logbook-list"');
+    // Full: every entry closes with the meta line, bodies uncut.
+    expect(html.match(/<p class="entry-meta">.*?<\/p>/g)).toHaveLength(12);
+    expect(html).toContain('First.');
+    expect(logbookPageHtml(entries, 'es')).toContain('<h2 class="lab-heading">Cuaderno de bitácora</h2>');
+  });
+
+  it('carries the same topic and type filters as the classifieds', () => {
+    const html = logbookPageHtml(entries, 'en');
+    expect(html).toContain('lab-filter-row" data-kind="topic"');
+    expect(html).toContain('lab-filter-row" data-kind="type"');
+    expect(html.match(/data-topic="all" aria-pressed="true">All<span class="lab-filter-count">12<\/span>/)).not.toBeNull();
+  });
+
+  it('says the Logbook did not arrive instead of empty filter rows', () => {
+    const html = logbookPageHtml([], 'en', { unavailable: true });
+    expect(html).toContain('<h2 class="lab-heading">Logbook</h2>');
+    expect(html).toContain('<p class="lab-empty">The Logbook did not arrive — try again later.</p>');
+    expect(html).not.toContain('lab-filter');
+    expect(html).not.toContain('logbook-list');
+  });
+
+  it('says the same in Spanish and names the empty shelf', () => {
+    expect(logbookPageHtml([], 'es', { unavailable: true })).toContain('El Cuaderno no llegó; inténtelo más tarde.');
+    expect(logbookPageHtml([], 'en')).toContain('No announcements yet — the lab is quiet.');
+    expect(logbookPageHtml([], 'es')).toContain('Aún no hay anuncios — el laboratorio está en silencio.');
+  });
+
+  it('twins the Logbook under its own heading', () => {
+    const md = logbookMarkdown(entries, 'en');
+    expect(md.split('\n')[0]).toBe('## Logbook');
+    expect(md.indexOf('**Newest**')).toBeLessThan(md.indexOf('**Twelfth**'));
+  });
+});
+
 describe('bindLabPage', () => {
   const scaffold = (lang: 'en' | 'es', rows: Entry[]): void => {
     document.body.innerHTML =
@@ -248,30 +388,43 @@ describe('bindLabPage', () => {
       `<nav class="paper-tabs">` +
       `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
       `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
+      `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
       `</nav>` +
       `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
       `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(rows, lang)}</div></section>` +
+      `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(rows, lang)}</div></section>` +
       `</div>`;
   };
 
   beforeEach(() => {
     window.location.hash = '';
     history.replaceState({}, '', '/newspaper/');
+    // The client fetches once when the edge filled the pages; stay offline
+    // by default so filter clicks never leave the test runner.
+    (globalThis as { fetch?: unknown }).fetch = jest.fn().mockRejectedValue(new Error('offline'));
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
+    jest.restoreAllMocks();
+    delete (globalThis as { fetch?: unknown }).fetch;
   });
 
-  it('opens page 2 directly on #lab', () => {
+  it('opens page 2 directly on #lab and page 3 on #lab2', () => {
     scaffold('en', entries);
     window.location.hash = '#lab';
     bindLabPage(document);
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
     expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
     const tabs = Array.from(document.querySelectorAll('.paper-tab'));
+    expect(tabs).toHaveLength(3);
     expect(tabs[1].classList.contains('is-active')).toBe(true);
     expect(tabs[0].classList.contains('is-active')).toBe(false);
+    window.location.hash = '#lab2';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(false);
+    expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
+    expect(tabs[2].classList.contains('is-active')).toBe(true);
   });
 
   it('keeps page 1 without a hash', () => {
@@ -281,42 +434,183 @@ describe('bindLabPage', () => {
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
   });
 
-  it('unfolds ten more on the older control', () => {
+  it('recomposes both pages from the filters once entries arrive', () => {
     scaffold('en', entries);
     bindLabPage(document);
-    const rows = Array.from(document.querySelectorAll('.log-entry'));
-    expect(rows.filter((r) => r.classList.contains('is-folded'))).toHaveLength(2);
-    const older = document.getElementById('lab-older') as HTMLButtonElement;
-    expect(older.hidden).toBe(false);
-    older.click();
-    expect(document.querySelectorAll('.log-entry.is-folded')).toHaveLength(0);
-    expect(older.hidden).toBe(true);
-  });
-
-  it('filters toggle is-hidden over every entry', () => {
-    scaffold('en', entries);
-    bindLabPage(document);
-    const canopy = document.querySelector('button[data-topic="canopy"]') as HTMLButtonElement;
+    setLabEntries(document, { entries, lang: 'en' });
+    const canopy = document.querySelector('#lab button[data-topic="canopy"]') as HTMLButtonElement;
     canopy.click();
-    const visible = Array.from(document.querySelectorAll('.log-entry')).filter(
-      (r) => !(r as HTMLElement).classList.contains('is-hidden'),
-    );
-    expect(visible).toHaveLength(4);
-    // A filter searches the whole logbook: folded rows read too.
-    expect(document.querySelectorAll('.log-entry.is-folded')).toHaveLength(0);
+    // A filter searches the whole record: four canopy entries recompose page 1.
+    expect(document.querySelectorAll('#lab-log .log-entry')).toHaveLength(4);
+    expect(document.querySelector('#lab2')).not.toBeNull();
+    expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(true);
+    // aria-pressed follows the filter.
+    expect(canopy.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('honours ?roadmap= and ?topic= on page 2', () => {
     scaffold('en', entries);
     history.replaceState({}, '', '/newspaper/?roadmap=r1');
     bindLabPage(document);
+    setLabEntries(document, { entries, lang: 'en' });
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
-    const visible = Array.from(document.querySelectorAll('.log-entry')).filter(
-      (r) => !(r as HTMLElement).classList.contains('is-hidden'),
+    const titles = Array.from(document.querySelectorAll('#lab-log .log-entry h3')).map(
+      (h) => h.textContent,
     );
-    expect(visible.map((r) => (r as HTMLElement).querySelector('h3')?.textContent)).toEqual([
-      'Newest',
-      'Update',
-    ]);
+    expect(titles).toEqual(['Newest', 'Update']);
+  });
+
+  it('recomposes the edge-filled pages from one fetched read', async () => {
+    // No setLabEntries on a fresh root: the edge filled the pages, so the
+    // first click only refreshes the pressed state — then the fetched
+    // entries arrive and the pages recompose from the matching entries.
+    (globalThis as { fetch?: unknown }).fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ entries }) } as Response);
+    const fresh = document.implementation.createHTMLDocument();
+    fresh.body.innerHTML =
+      `<div class="paper">` +
+      `<nav class="paper-tabs">` +
+      `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+      `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
+      `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
+      `</nav>` +
+      `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+      `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
+      `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
+      `</div>`;
+    bindLabPage(fresh);
+    const canopy = fresh.querySelector('#lab button[data-topic="canopy"]') as HTMLButtonElement;
+    canopy.click();
+    await new Promise((r) => setTimeout(r, 0));
+    // A filter searches the whole record: four canopy entries recompose page 1.
+    expect(fresh.querySelectorAll('#lab-log .log-entry')).toHaveLength(4);
+    expect((fresh.getElementById('lab2') as HTMLElement).hidden).toBe(true);
+    // The filter rows still describe the whole record: All counts every entry.
+    expect(
+      fresh.querySelector('#lab [data-topic="all"]')?.textContent,
+    ).toContain('12');
+    expect(canopy.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('keeps the edge-filled pages when the fetched read fails', async () => {
+    // No setLabEntries on a fresh root: the edge filled the pages, but the
+    // API is down — the failed read must not wipe the edge content with an
+    // empty recompose.
+    (globalThis as { fetch?: unknown }).fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('offline'));
+    const fresh = document.implementation.createHTMLDocument();
+    fresh.body.innerHTML =
+      `<div class="paper">` +
+      `<nav class="paper-tabs">` +
+      `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+      `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
+      `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
+      `</nav>` +
+      `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+      `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
+      `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
+      `</div>`;
+    bindLabPage(fresh);
+    const before = fresh.querySelectorAll('#lab-log .log-entry').length;
+    expect(before).toBeGreaterThan(0);
+    const canopy = fresh.querySelector('#lab button[data-topic="canopy"]') as HTMLButtonElement;
+    canopy.click();
+    await new Promise((r) => setTimeout(r, 0));
+    // The edge grid survives; only the pressed state follows the filter.
+    expect(fresh.querySelectorAll('#lab-log .log-entry')).toHaveLength(before);
+    expect(canopy.getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+describe('bindLogbook', () => {
+  // A fresh host per test: filter state is keyed by the bound root, so
+  // binding the shared document would leak ?roadmap=/clicks between tests.
+  const scaffold = (lang: 'en' | 'es', rows: Entry[]): HTMLDivElement => {
+    const host = document.createElement('div');
+    host.innerHTML =
+      `<div class="paper" id="logbook"><div id="logbook-body">${logbookPageHtml(rows, lang)}</div></div>`;
+    document.body.appendChild(host);
+    return host;
+  };
+
+  beforeEach(() => {
+    history.replaceState({}, '', '/logbook/');
+    // The client fetches once when the edge filled the page; stay offline
+    // by default so filter clicks never leave the test runner.
+    (globalThis as { fetch?: unknown }).fetch = jest.fn().mockRejectedValue(new Error('offline'));
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    jest.restoreAllMocks();
+    delete (globalThis as { fetch?: unknown }).fetch;
+  });
+
+  it('arms the hide rule and filters the edge-rendered entries in place', () => {
+    const host = scaffold('en', entries);
+    bindLogbook(host);
+    // The hide rule is `.paper.js .log-entry.is-hidden`: without the class
+    // the filter would run but every entry would stay visible.
+    expect(host.querySelector('#logbook')?.classList.contains('js')).toBe(true);
+    const canopy = host.querySelector('#logbook button[data-topic="canopy"]') as HTMLButtonElement;
+    canopy.click();
+    const visible = Array.from(host.querySelectorAll('#logbook-list .log-entry')).filter(
+      (el) => !(el as HTMLElement).classList.contains('is-hidden'),
+    );
+    // Four canopy entries: Newest, Bugfix, Update, Eleventh.
+    expect(visible).toHaveLength(4);
+    expect(canopy.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('recomposes the list from the filters once entries arrive', () => {
+    const host = scaffold('en', entries);
+    bindLogbook(host);
+    setLogbookEntries(host, { entries, lang: 'en' });
+    const note = host.querySelector('#logbook button[data-type="note"]') as HTMLButtonElement;
+    note.click();
+    // Five notes: Notes on TexForge, General note, Older note, Tenth, Eleventh.
+    expect(host.querySelectorAll('#logbook-list .log-entry')).toHaveLength(5);
+    // The filter rows still describe the whole record: All counts every
+    // entry and no topic/type button drops out.
+    expect(host.querySelector('#logbook [data-topic="all"]')?.textContent).toContain('12');
+    expect(host.querySelector('#logbook [data-topic="canopy"]')?.textContent).toContain('4');
+    expect(host.querySelector('#logbook [data-type="note"]')?.textContent).toContain('5');
+    // Recomposing rebuilds the filter rows, so re-query the live button.
+    const noteNow = host.querySelector('#logbook button[data-type="note"]') as HTMLButtonElement;
+    expect(noteNow.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('recomposes the edge-filled list from one fetched read', async () => {
+    // No setLogbookEntries: the edge filled the page, so the first click
+    // only hides in place — then the fetched entries arrive and the list
+    // recomposes from the matching entries, keeping the full filter rows.
+    const host = scaffold('en', entries);
+    bindLogbook(host);
+    (globalThis as { fetch?: unknown }).fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ entries }) } as Response);
+    const canopy = host.querySelector('#logbook button[data-topic="canopy"]') as HTMLButtonElement;
+    canopy.click();
+    await new Promise((r) => setTimeout(r, 0));
+    const visible = Array.from(host.querySelectorAll('#logbook-list .log-entry'));
+    expect(visible).toHaveLength(4);
+    expect(host.querySelector('#logbook [data-topic="all"]')?.textContent).toContain('12');
+    expect(host.querySelector('#logbook [data-topic="canopy"]')?.textContent).toContain('4');
+    // Recomposing rebuilds the filter rows, so re-query the live button.
+    const canopyNow = host.querySelector('#logbook button[data-topic="canopy"]') as HTMLButtonElement;
+    expect(canopyNow.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('honours ?topic= on the Logbook', () => {
+    const host = scaffold('en', entries);
+    history.replaceState({}, '', '/logbook/?topic=canopy');
+    bindLogbook(host);
+    setLogbookEntries(host, { entries, lang: 'en' });
+    const titles = Array.from(host.querySelectorAll('#logbook-list .log-entry h3')).map(
+      (h) => h.textContent,
+    );
+    expect(titles).toEqual(['Newest', 'Bugfix', 'Update', 'Eleventh']);
   });
 });

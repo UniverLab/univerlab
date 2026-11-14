@@ -86,7 +86,7 @@ describe('composeAbout — every experiment in the registry', () => {
 describe('composeAbout — the pointers', () => {
   it('points at llms.txt, the live twin and the Atom feed', () => {
     expect(about).toContain('https://univerlab.org/llms.txt');
-    expect(about).toContain('https://univerlab.org/newspaper/index.md');
+    expect(about).toContain('https://univerlab.org/logbook/index.md');
     expect(about).toContain('https://univerlab.org/roadmap/index.md');
     expect(about).not.toContain('Logbook and roadmap');
     expect(about).toContain('https://announcements.univerlab.org/feed.atom');

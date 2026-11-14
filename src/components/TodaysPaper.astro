@@ -24,6 +24,7 @@ const t = useTranslations(lang);
     <nav class="paper-tabs">
       <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
       <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
+      <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
     </nav>
   </header>
   <section id="page-1" class="paper-page" aria-label={t.today.tabs.p1}>
@@ -37,6 +38,9 @@ const t = useTranslations(lang);
   </section>
   <section id="lab" class="paper-page" aria-label={t.today.tabs.p2}>
     <div id="lab-body"></div>
+  </section>
+  <section id="lab2" class="paper-page" aria-label={t.today.tabs.p3}>
+    <div id="lab2-body"></div>
   </section>
 </div>
   </div>
@@ -169,10 +173,12 @@ const t = useTranslations(lang);
   .paper .paper-tab.is-active { color: var(--p-ink); border-color: var(--p-rule); }
   .paper .paper-page { display: grid; gap: 18px; }
   .paper.js .paper-page[hidden] { display: none; }
-  /* Page 2: the logbook in the paper's column style. The page's own scroll
-     reads it — never an inner scroller. Folded and filtered rows hide only
-     when JS manages them, so no-JS readers get every entry. */
+  /* Pages 2 and 3: the announcements as a classifieds section — a composed
+     grid of display, boxed and small ads with runs of one-line notices, set
+     in the paper's own type. Filtered rows hide only when JS manages them,
+     so no-JS readers get every entry. */
   .paper .lab-heading { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
+  .paper .lab-heading--cont { border-bottom: 1px solid var(--p-rule); }
   .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
   .paper .lab-filters { display: grid; gap: 6px; }
   .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -180,13 +186,33 @@ const t = useTranslations(lang);
   .paper .lab-filter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 3px 10px; cursor: pointer; }
   .paper .lab-filter.is-active { color: var(--p-ink); border-color: var(--p-ink); }
   .paper .lab-filter-count { opacity: 0.7; margin-left: 6px; font-size: 10.5px; }
-  /* The classifieds: three dense ruled stacks on a wide page, one on a
-     phone. Multi-column flow packs the notices instead of aligning them in
-     grid rows, which would leave a shelf of blank paper under short ones. */
-  .paper #lab-log { column-gap: 32px; }
+  /* The classifieds: one composed grid per page. Display ads read across
+     the full measure with their engraving; boxed ads take half, small ads a
+     third, and one-line notices run in dense ruled columns. Dense flow packs
+     the small ads instead of leaving a shelf of blank paper under short ones. */
+  .paper .classifieds { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-auto-flow: dense; }
+  .paper .classifieds > * { min-width: 0; }
   @media (min-width: 48rem) {
-    .paper #lab-log { column-count: 3; column-rule: 1px solid var(--p-rule); }
+    .paper .classifieds { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .paper .ad-display { grid-column: 1 / -1; }
+    .paper .ad-boxed, .paper .classifieds > .coupon { grid-column: span 3; }
+    .paper .ad-small { grid-column: span 2; }
+    .paper .notice-run { grid-column: 1 / -1; }
   }
+  .paper .ad-display { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+  @media (min-width: 48rem) {
+    .paper .ad-display { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  }
+  .paper .ad-art { margin: 0; }
+  .paper .notice-run { column-count: 2; column-gap: 24px; column-rule: 1px solid var(--p-rule); }
+  @media (min-width: 48rem) {
+    .paper .notice-run { column-count: 3; }
+  }
+  .paper .notice-run .notice { break-inside: avoid; }
+  .paper .notice-line { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .paper .notice-title { color: var(--p-soft); }
+  .paper .lab-more { margin: 0; border-top: 3px double var(--p-ink); padding-top: 8px; text-align: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+  .paper .lab-more a { color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper .log-entry { display: block; min-width: 0; break-inside: avoid; padding-block: 14px; border-bottom: 1px dotted var(--p-rule); }
   .paper .log-entry time { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--p-soft); }
   .paper .log-entry .type-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-emphasis); border: 1px solid var(--p-emphasis); padding: 2px 8px; border-radius: 0; }
@@ -198,9 +224,8 @@ const t = useTranslations(lang);
   .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 15.5px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
   .paper .log-entry .entry-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; border-top: 1px solid var(--p-rule); padding-top: 6px; }
   .paper .log-entry p a, .paper .log-entry .log-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
-  .paper.js .log-entry.is-hidden, .paper.js .log-entry.is-folded { display: none; }
-  .paper #lab-older { justify-self: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--p-emphasis); background: transparent; border: 1px solid var(--p-rule); padding: 8px 22px; cursor: pointer; }
-  .paper #lab-older[hidden] { display: none; }
+  .paper.js .log-entry.is-hidden { display: none; }
+  .paper.js .notice-run[hidden] { display: none; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
   .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
@@ -261,7 +286,6 @@ const t = useTranslations(lang);
   /* The sundial engraving: an old plate set among the columns, under the
     shorter one; on phones it sits between sections at column width. */
   .paper .paper-plate { margin: 4px 0 0; }
-  .paper #lab-log .paper-plate { break-inside: avoid; max-width: 100%; margin: 4px 0 12px; }
   /* The lab's own advertisements: period notices in type, honestly
     labelled, each shaped by its weight. Never the lead story. */
   .paper .ad { border: 3px double var(--p-ink); padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
@@ -278,13 +302,9 @@ const t = useTranslations(lang);
   .paper .ad .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
   .paper .ad-pair { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
   .paper .ad-pair > * { min-width: 0; }
-  /* Page 2's clip-out coupons: a sibling of the display ads, set in the
-    same type. Each coupon cuts out along its dashed border. */
-  .paper .coupon-band { display: grid; gap: 10px; margin: 12px 0 4px; min-width: 0; }
-  .paper .coupon-kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-block: 1px solid var(--p-rule); padding-block: 4px; }
-  .paper .coupon-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); min-width: 0; }
-  .paper .coupon-grid > * { min-width: 0; }
-  .paper .coupon { border: 1px dashed var(--p-ink); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; text-decoration: none; }
+  /* The standing coupons ride the classifieds as ads of their own, set in
+    the same type. Each coupon cuts out along its dashed border. */
+  .paper .coupon { border: 1px dashed var(--p-ink); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; text-decoration: none; break-inside: avoid; }
   .paper .coupon-cut { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-soft); }
   .paper .coupon-figure { font-family: var(--font-serif); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; margin: 0; text-transform: uppercase; color: var(--p-ink); }
   .paper .coupon-cond { margin: 0; font-family: var(--font-body); font-size: 14.5px; line-height: 1.45; color: var(--p-ink); }
@@ -331,7 +351,12 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .masthead-name { grid-column: 2; grid-row: 1; font-size: 86px; }
   .paper-viewport.sheet .paper .masthead .ear--right { grid-column: 3; grid-row: 1; }
   .paper-viewport.sheet .paper .masthead .motto { font-size: 19px; }
-  .paper-viewport.sheet .paper #lab-log { column-count: 3; column-rule: 1px solid var(--p-rule); }
+  .paper-viewport.sheet .paper .classifieds { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .paper-viewport.sheet .paper .ad-boxed, .paper-viewport.sheet .paper .classifieds > .coupon { grid-column: span 3; }
+  .paper-viewport.sheet .paper .ad-small { grid-column: span 2; }
+  .paper-viewport.sheet .paper .notice-run { grid-column: 1 / -1; column-count: 3; }
+  .paper-viewport.sheet .paper .lab-heading--cont { font-size: 30px; }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }

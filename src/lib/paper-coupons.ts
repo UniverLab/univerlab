@@ -77,27 +77,35 @@ function noStack(lang: PaperCouponLang): string {
   return rules.find((r) => /stack|acumulan/i.test(r)) ?? '';
 }
 
-/** Page 2's coupon band as HTML: everything between the heading and the
- *  logbook filters. */
-export function paperCouponsHtml(lang: PaperCouponLang, foundingLeft?: number | null): string {
-  const t = today(lang);
-  const cut = t.labPage.coupons.cut;
-  const cards = coupons(lang, foundingLeft)
-    .map(
-      (c) =>
-        `<a class="coupon" href="${esc(c.href)}">` +
-        `<span class="coupon-cut">✂ ${esc(cut)}</span>` +
-        `<span class="coupon-figure">${esc(c.figure)}</span>` +
-        `<span class="coupon-cond">${esc(c.cond)}</span>` +
-        `<span class="coupon-link">${esc(c.link)}</span></a>`,
-    )
-    .join('');
+/** One coupon as a classifieds ad of its own: the same content as the old
+ *  band card — figure, condition, link and the dashed cut-out border. */
+export interface CouponAd {
+  figure: string;
+  cond: string;
+  href: string;
+  link: string;
+}
+
+/** The standing offers as classifieds ads, in reading order. */
+export function couponAds(lang: PaperCouponLang, foundingLeft?: number | null): CouponAd[] {
+  return coupons(lang, foundingLeft);
+}
+
+/** One coupon card as HTML: an ad among the ads, cut along its dashed border. */
+export function couponAdHtml(lang: PaperCouponLang, ad: CouponAd): string {
+  const cut = today(lang).labPage.coupons.cut;
   return (
-    `<div class="coupon-band">` +
-    `<p class="coupon-kicker">${esc(t.labPage.coupons.kicker)}</p>` +
-    `<div class="coupon-grid">${cards}</div>` +
-    `<p class="coupon-note">${esc(noStack(lang))}</p></div>`
+    `<a class="coupon" href="${esc(ad.href)}">` +
+    `<span class="coupon-cut">✂ ${esc(cut)}</span>` +
+    `<span class="coupon-figure">${esc(ad.figure)}</span>` +
+    `<span class="coupon-cond">${esc(ad.cond)}</span>` +
+    `<span class="coupon-link">${esc(ad.link)}</span></a>`
   );
+}
+
+/** The no-stacking rule, printed once under the last classifieds page. */
+export function couponNoteHtml(lang: PaperCouponLang): string {
+  return `<p class="coupon-note">${esc(noStack(lang))}</p>`;
 }
 
 /** The twin's coupons: one plain italic line per coupon, then the rule. */

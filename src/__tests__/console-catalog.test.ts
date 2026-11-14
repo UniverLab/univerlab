@@ -219,8 +219,9 @@ describe('the taped slips', () => {
 
   it('the newspaper leaves arrival to the mailbox: no slip, toast or dev mock in the paper', () => {
     // Arrival is the mailbox's business on every page; the paper's second
-    // page renders the logbook at the edge and pages it with the older
-    // control, so no EventSource, slip, toast or dev mock may be left in it.
+    // and third pages render the classifieds at the edge and recompose them
+    // from the filters, so no EventSource, slip, toast or dev mock may be
+    // left in it.
     expect(PAPER).not.toContain('slipNotice');
     expect(PAPER).not.toContain('showToast');
     expect(PAPER).not.toContain('isDev');

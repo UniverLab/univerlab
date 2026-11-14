@@ -45,11 +45,11 @@ describe('English-only pages are never linked with the /es prefix', () => {
     expect(hasCounterpart(`/${n}/`, 'es')).toBe(false);
   });
 
-  it('field notes link to the newspaper logbook in every language', () => {
+  it('field notes link to the Logbook in every language', () => {
     const src = read('src/components/FieldNotes.astro');
-    // Page 2 exists in both languages now, so the link localizes: an es
-    // reader lands on /es/newspaper/ with the ?topic filter intact.
-    expect(src).toContain('localizePath(`/newspaper/?topic=${exp.id}#lab`, lang)');
+    // The Logbook is its own page in both languages, so the link localizes:
+    // an es reader lands on /es/logbook/ with the ?topic filter intact.
+    expect(src).toContain('localizePath(`/logbook/?topic=${exp.id}`, lang)');
   });
 
   it('the header nav links to /roadmap/', () => {
@@ -58,10 +58,11 @@ describe('English-only pages are never linked with the /es prefix', () => {
     expect(src).not.toMatch(/localizePath\('\/roadmap'/);
   });
 
-  it('the command palette links to the newspaper logbook', () => {
+  it('the command palette links the Logbook to its own page', () => {
     const src = read('src/layouts/BaseLayout.astro');
-    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/newspaper/#lab' }");
+    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' }");
     expect(src).not.toContain("base + '/status/'");
+    expect(src).not.toContain("base + '/newspaper/#lab'");
   });
 });
 

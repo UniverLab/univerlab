@@ -186,8 +186,16 @@ describe('rewriteFoundingSpots', () => {
 });
 
 describe('lab page coupons with a live count', () => {
+  const one = [
+    {
+      id: 'e1', date: '2026-10-06T01:09:26.735Z', title: 'Newest', body: 'First.',
+      type: 'launch', topic: 'canopy', link: null,
+    },
+  ];
   it('drops only the founding coupon at zero, in HTML and markdown', () => {
-    const html = labPageHtml([], 'en', { unavailable: true, foundingLeft: 0 });
+    // The coupons ride the classifieds as ads, so the count needs entries;
+    // an unreadable feed prints the one unavailable line with no coupons.
+    const html = labPageHtml(one, 'en', { foundingLeft: 0 });
     expect(html.match(/class="coupon"/g)).toHaveLength(3);
     expect(html).not.toContain('The first 5 audits');
     expect(html).toContain('Any other audit gets 20 % of the price');
@@ -195,9 +203,14 @@ describe('lab page coupons with a live count', () => {
     expect(md).not.toContain('The first 5 audits');
   });
   it('keeps all four coupons when the count is unreadable', () => {
-    const html = labPageHtml([], 'en', { unavailable: true, foundingLeft: null });
+    const html = labPageHtml(one, 'en', { foundingLeft: null });
     expect(html.match(/class="coupon"/g)).toHaveLength(4);
     expect(html).toContain('The first 5 audits');
+  });
+  it('prints no coupons with the unavailable line', () => {
+    const html = labPageHtml([], 'en', { unavailable: true, foundingLeft: null });
+    expect(html).toContain('lab-empty');
+    expect(html).not.toContain('class="coupon"');
   });
 });
 

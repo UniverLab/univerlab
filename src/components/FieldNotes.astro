@@ -7,10 +7,10 @@ const { id } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-// The logbook is the newspaper's second page in both languages, so the link
-// takes the /es prefix on Spanish pages — an unprefixed one lands on the
-// English edition with the ?topic query intact but the wrong language.
-const statusHref = localizePath(`/newspaper/?topic=${exp.id}#lab`, lang);
+// The logbook is its own page in both languages, so the link takes the /es
+// prefix on Spanish pages — an unprefixed one lands on the English edition
+// with the ?topic query intact but the wrong language.
+const statusHref = localizePath(`/logbook/?topic=${exp.id}`, lang);
 ---
 <section class="wrap field-notes" data-exp-id={exp.id} data-exp-name={exp.name}
          data-status-link={t.notes.statusLink}
@@ -56,7 +56,7 @@ const statusHref = localizePath(`/newspaper/?topic=${exp.id}#lab`, lang);
     const id = section.dataset.expId ?? '';
     const name = section.dataset.expName ?? '';
     const statusLink = section.dataset.statusLink ?? '';
-    const statusHref = section.dataset.statusHref ?? `/newspaper/?topic=${id}#lab`;
+    const statusHref = section.dataset.statusHref ?? `/logbook/?topic=${id}`;
     let lanes: Record<string, string> | null = null;
     try {
       lanes = section.dataset.lanes ? JSON.parse(section.dataset.lanes) : null;

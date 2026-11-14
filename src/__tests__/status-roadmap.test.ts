@@ -160,8 +160,8 @@ describe('roadmap board + newspaper logbook guards', () => {
     expect(pageSrc).not.toMatch(/<form[^>]*roadmap/i);
   });
 
-  it('the board head links the logbook at the newspaper', () => {
-    expect(pageSrc).toContain('href="/newspaper/#lab"');
+  it('the board head links the Logbook page', () => {
+    expect(pageSrc).toContain('href="/logbook/"');
   });
 });
 

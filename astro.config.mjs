@@ -15,6 +15,10 @@ const SITEMAP_EXCLUDED = new Set([
   '/newspaper/',
   '/es/newspaper',
   '/es/newspaper/',
+  '/logbook',
+  '/logbook/',
+  '/es/logbook',
+  '/es/logbook/',
   '/audits',
   '/audits/',
   '/audit-shell',
@@ -64,7 +68,11 @@ export default defineConfig({
       // `/newspaper/` and `/es/newspaper/` render a heading plus a client-side fetch of
       // Wikipedia's feed — nothing indexable at build time, which is what Google
       // reported as a Soft 404 — so they are `noindex` in BaseLayout and are
-      // dropped here too. A noindex URL in the sitemap is a reported
+      // dropped here too. `/logbook/` and `/es/logbook/` are conditional in the
+      // same way: when the build-time announcements read holds no entries the
+      // pages are shells the edge fills, and they answer `noindex` — and the
+      // sitemap filter cannot know the build outcome, so they are dropped here
+      // unconditionally. A noindex URL in the sitemap is a reported
       // "Excluded by noindex" error, so the two must move together. Redirects
       // never build an HTML file, hence nothing else to exclude. Real
       // verification (every `<loc>` maps to a non-noindex file) lives in

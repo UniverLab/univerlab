@@ -181,8 +181,8 @@ describe('source guards', () => {
     expect(notes).toContain('loadBoardData');
     expect(notes).not.toContain('notes.empty');
     expect(notes.match(/href=/g)?.length ?? 0).toBeLessThanOrEqual(1);
-    expect(notes).toContain('/newspaper/?topic=');
-    expect(notes).toContain('#lab');
+    expect(notes).toContain('/logbook/?topic=');
+    expect(notes).not.toContain('#lab');
     expect(notes).toContain('section.remove()');
   });
 
