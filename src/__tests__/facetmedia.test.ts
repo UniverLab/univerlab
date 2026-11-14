@@ -14,7 +14,8 @@ const BASE = readFileSync(resolve(__dirname, '../layouts/BaseLayout.astro'), 'ut
 const ROUTE = readFileSync(resolve(__dirname, '../pages/facetmedia.astro'), 'utf8');
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/facetmedia.astro'), 'utf8');
 const CI = readFileSync(resolve(__dirname, '../../.github/workflows/ci.yml'), 'utf8');
-const DEPLOY = readFileSync(resolve(__dirname, '../../.github/workflows/deploy-site.yml'), 'utf8');
+// The release and preview deploys build through the shared build-site action.
+const DEPLOY = readFileSync(resolve(__dirname, '../../.github/actions/build-site/action.yml'), 'utf8');
 const REGISTRY_PIN = JSON.parse(
   readFileSync(resolve(__dirname, '../../scripts/facet-registry.json'), 'utf8'),
 ) as { repository: string; ref: string };

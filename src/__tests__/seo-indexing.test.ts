@@ -1096,8 +1096,11 @@ describe('checkDocsPages', () => {
  * every page in production even though every assertion above still passes.
  */
 describe('deploy-site.yml checkout depth', () => {
+  // The release deploy builds through the shared build-site action (the
+  // preview deploy uses it too), so the sibling checkouts live there.
   const workflow = read('.github/workflows/deploy-site.yml');
-  const checkouts = workflow
+  const build = read('.github/actions/build-site/action.yml');
+  const checkouts = build
     .split(/\n(?=\s+- uses: actions\/checkout)/)
     .filter((s) => s.includes('actions/checkout@v4') && s.includes('repository:'));
 
@@ -1120,6 +1123,10 @@ describe('deploy-site.yml checkout depth', () => {
     }
   });
 
+  it('builds the release through the shared build-site action', () => {
+    expect(workflow).toContain('uses: ./univerlab/.github/actions/build-site');
+  });
+
   it('leaves the landing checkout itself alone (it is never a date source)', () => {
     const landing =
       /- name: Checkout landing\s+uses: actions\/checkout@v4\s+with:\s+path: univerlab/.exec(workflow)?.[0] ?? '';
@@ -1131,7 +1138,7 @@ describe('deploy-site.yml checkout depth', () => {
     // `demo-stage` 302s to `demostage`, but the *path* is what breaks the
     // build: under `demo-stage` the collection resolves to nothing, and
     // getCollection warns and returns [] instead of failing.
-    for (const file of ['.github/workflows/deploy-site.yml', '.github/workflows/ci.yml']) {
+    for (const file of ['.github/actions/build-site/action.yml', '.github/workflows/ci.yml']) {
       const src = read(file);
       expect(src).toContain('repository: UniverLab/demostage');
       expect(src).toContain('path: demostage');

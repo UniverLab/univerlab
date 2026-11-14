@@ -56,14 +56,6 @@ jobs:
           repository: UniverLab/demostage
           path: demostage
           sparse-checkout: docs
-      # facetMedia's docs live on its default branch like the others; until
-      # its v0.1 line reaches main the collection is empty and /facetmedia/docs/
-      # does not build.
-      - uses: actions/checkout@v4
-        with:
-          repository: UniverLab/facetmedia
-          path: facetmedia
-          sparse-checkout: docs
       # Canopy registry — platforms/ directory for platform badges
       - uses: actions/checkout@v4
         with:
@@ -85,6 +77,15 @@ jobs:
           repository: ${{ steps.facet-registry.outputs.repository }}
           ref: ${{ steps.facet-registry.outputs.ref }}
           path: facetmedia-registry
+      # facetMedia's docs come from the same pinned ref as its registry
+      # (scripts/facet-registry.json): they only exist on feature/v0.1 until
+      # facet releases, and the facet page links /facetmedia/docs/.
+      - uses: actions/checkout@v4
+        with:
+          repository: UniverLab/facetmedia
+          ref: ${{ steps.facet-registry.outputs.ref }}
+          path: facetmedia
+          sparse-checkout: docs
 
       - uses: actions/setup-node@v4
         with:
