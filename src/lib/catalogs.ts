@@ -100,6 +100,8 @@ export interface FacetCapability {
   kind: string;
   summary: string;
   facet: string;
+  gpu?: boolean;
+  vramGb?: number;
   /** Per-language summaries from `[capabilities.<cap>.i18n.<lang>] summary`. */
   i18n?: Record<string, string>;
   verify?: Record<string, number | string>;
@@ -159,6 +161,8 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
   let tool = '';
   let facet = '';
   let section = '';
+  let reqGpu = false;
+  let reqVram: number | undefined;
   let cap: Partial<FacetCapability> | null = null;
   const caps: FacetCapability[] = [];
   const verifyByCap = new Map<string, Record<string, number | string>>();
@@ -232,6 +236,19 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
       if (tm) verifyByCap.set(`${pkg}.${verifySection[1]}`, parseThresholds(tm[1]));
       continue;
     }
+    if (section === 'requirements') {
+      const gm = line.match(/^gpu\s*=\s*(true|false)\s*$/);
+      if (gm) {
+        if (gm[1] === 'true') reqGpu = true;
+        continue;
+      }
+      const vm = line.match(/^vram_gb\s*=\s*([0-9.]+)\s*$/);
+      if (vm) {
+        const n = Number(vm[1]);
+        if (Number.isFinite(n)) reqVram = n;
+        continue;
+      }
+    }
     const m = line.match(/^([A-Za-z_-]+)\s*=\s*(["'])(.*?)\2/);
     if (!m) continue;
     if (!section && m[1] === 'tool_name') tool = m[3];
@@ -247,6 +264,10 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
     const verify = verifyByCap.get(c.id);
     if (verify && Object.keys(verify).length > 0) c.verify = verify;
     if (seedCaps.has(c.id)) c.seed = true;
+    if (reqGpu) {
+      c.gpu = true;
+      if (reqVram !== undefined) c.vramGb = reqVram;
+    }
     const i18n = i18nByCap.get(c.id);
     if (i18n && Object.keys(i18n).length > 0) c.i18n = i18n;
   }

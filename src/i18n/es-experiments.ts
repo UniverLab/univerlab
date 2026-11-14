@@ -492,6 +492,8 @@ export const experiments: Dict['experiments'] = {
         tabsAria: 'Capacidades por faceta',
         copy: 'Copiar comando',
         copied: 'Copiado',
+        gpu: 'GPU NVIDIA',
+        vram: 'GB VRAM',
       },
       subproject: {
         kicker: 'Subproyecto',
@@ -499,7 +501,7 @@ export const experiments: Dict['experiments'] = {
         body: 'La tabla de arriba lee este registro abierto en compilación, una fila por capacidad. Cuando falta el checkout, la página muestra esta nota en vez de una tabla vacía.',
         link: 'https://github.com/UniverLab/facetmedia-registry',
       },
-      installNote: 'Funciona en Linux y dentro de WSL en Windows.',
+      installNote: 'Funciona en Linux x86_64 y WSL2 (Windows 10/11).\nEn Windows nativo instala dentro de WSL2 primero (wsl --install); macOS todavía no es compatible.\nLos paquetes GPU piden NVIDIA; en WSL2 basta el driver NVIDIA de Windows.',
       record: {
         title: '— Cada activo deja su registro',
         body: 'Junto a cada archivo queda un .facet.json con la capacidad, el paquete, los modelos, los parámetros, la verificación y las licencias: lo necesario para repetirlo o saber de dónde salió.',
@@ -513,7 +515,7 @@ export const experiments: Dict['experiments'] = {
         title: '— Preguntas',
         items: [
           ['¿Qué hace facet, en concreto?', 'Instala cada herramienta de creación (Whisper, Blender, ComfyUI, FFmpeg, CadQuery…) en su propio entorno fijado, sin Docker, y le da a tu agente un solo comando para usarlas todas. Cada ejecución produce los archivos que pediste, con un registro de cómo se hicieron.'],
-          ['¿Ya se puede usar?', 'Está en beta interna (0.1.0b1) y todavía no está en PyPI. Cuando salga se instalará con <code>uv tool install facetmedia</code>. Por ahora funciona solo en Linux y en WSL.'],
+          ['¿Ya se puede usar?', 'Está en beta interna (0.1.0b1) y todavía no está en PyPI. Cuando salga se instalará con <code>uv tool install facetmedia</code>. Funciona en Linux x86_64 y WSL2 (Windows 10/11): en Windows nativo instala dentro de WSL2 primero (<code>wsl --install</code>); macOS todavía no es compatible.'],
           ['¿Qué es una faceta?', 'Un grupo de herramientas según lo que producen: imagen, video, audio, voz, texto, presentación y CAD. Hoy son 7 facetas, con 23 paquetes y 43 capacidades, como blender.scene o whisper.transcribe.'],
           ['¿Cómo lo usa un agente?', 'Cada comando acepta <code>--json</code>, responde siempre con el mismo formato y tiene códigos de salida documentados. <code>facet skill</code> le da al agente las instrucciones del paquete que va a usar en el momento en que las necesita, en vez de cargarle todo de entrada.'],
           ['¿Cómo sé que lo que salió está bien?', 'Junto a cada archivo queda un registro (<code>.facet.json</code>) con los parámetros, la semilla, las versiones exactas de la herramienta y del modelo, y las licencias. La ejecución verifica el resultado (duración, volumen, resolución o transcripción, según la herramienta), y <code>facet check</code> lo vuelve a verificar cuando quieras.'],

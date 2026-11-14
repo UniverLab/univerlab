@@ -282,4 +282,32 @@ describe('facetmedia EXP-009', () => {
     expect(BASE.match(/'quorum', 'facetmedia'\]/g)).toHaveLength(2);
     expect(BASE).toContain('facetmedia: \'https://github.com/UniverLab/facetmedia\'');
   });
+
+  it('states the supported machines beside the install command, three lines', () => {
+    const LAYOUT = readFileSync(resolve(__dirname, '../layouts/ExperimentLayout.astro'), 'utf8');
+    expect(LAYOUT).toContain('white-space: pre-line');
+    for (const note of [enFm.installNote, esFm.installNote]) {
+      expect(note.split('\n')).toHaveLength(3);
+    }
+    for (const line of ['Linux x86_64', 'WSL2', 'wsl --install', 'macOS', 'NVIDIA']) {
+      expect(enFm.installNote).toContain(line);
+    }
+    expect(esFm.installNote).toContain('Linux x86_64');
+    expect(esFm.installNote).toContain('WSL2');
+    expect(esFm.installNote).toContain('wsl --install');
+    expect(esFm.installNote).toContain('NVIDIA');
+  });
+
+  it('marks GPU capabilities with a registry-driven badge', () => {
+    expect(VIEW).toContain('cap.gpu');
+    expect(VIEW).toContain('cap.vramGb');
+    expect(VIEW).toContain('fm-gpu');
+  });
+
+  it('the availability answer agrees with the install block', () => {
+    for (const items of [enFm.faq.items, esFm.faq.items]) {
+      expect(items[1][1]).toContain('WSL2');
+      expect(items[1][1]).toContain('<code>wsl --install</code>');
+    }
+  });
 });

@@ -377,12 +377,58 @@ thresholds = { mode = "strict", steps_min = 1 }
     expect(parseFacetPackage(toml, 'pkg')[0].verify).toEqual({ mode: 'strict', steps_min: 1 });
   });
 
+  it('reads gpu and vram_gb from a requirements section', () => {
+    const toml = `tool_name = "T"
+facet = "image"
+
+[capabilities.scene]
+summary = "Scene"
+kind = "image"
+
+[requirements]
+gpu = true
+vram_gb = 24
+`;
+    const out = parseFacetPackage(toml, 'comfy-xl');
+    expect(out).toHaveLength(1);
+    expect(out[0].gpu).toBe(true);
+    expect(out[0].vramGb).toBe(24);
+  });
+
+  it('leaves the gpu key off when gpu is false', () => {
+    const toml = `tool_name = "T"
+facet = "image"
+
+[capabilities.normalize]
+summary = "Normalize"
+kind = "audio"
+
+[requirements]
+gpu = false
+`;
+    const out = parseFacetPackage(toml, 'ffmpeg');
+    expect(out).toHaveLength(1);
+    expect('gpu' in out[0]).toBe(false);
+    expect(out[0].vramGb).toBeUndefined();
+  });
+
   it('acestep.bed carries its real thresholds and seed', () => {
     const caps = readFacetCapabilities();
     const bed = caps.find((c) => c.id === 'acestep.bed');
     expect(bed).toBeDefined();
     expect(bed!.verify).toEqual({ duration_tolerance_s: 1, peak_dbfs_min: -40 });
     expect(bed!.seed).toBe(true);
+  });
+
+  it('the real registry marks comfy-xl.still gpu with 24 GB VRAM, ffmpeg.normalize without gpu', () => {
+    const caps = readFacetCapabilities();
+    const still = caps.find((c) => c.id === 'comfy-xl.still');
+    expect(still).toBeDefined();
+    expect(still!.gpu).toBe(true);
+    expect(still!.vramGb).toBe(24);
+    const normalize = caps.find((c) => c.id === 'ffmpeg.normalize');
+    expect(normalize).toBeDefined();
+    expect('gpu' in normalize!).toBe(false);
   });
 });
 

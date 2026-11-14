@@ -95,7 +95,7 @@ const recordHtml = [
                   <span translate="no">{cap.id}</span>
                   <span>{cap.tool}</span>
                   <span>{cap.kind}</span>
-                  <span>{capabilitySummary(cap, lang)}</span>
+                  <span>{capabilitySummary(cap, lang)}{cap.gpu && (<span class="fm-gpu">{e.capabilities.gpu}{cap.vramGb ? ` · ${cap.vramGb} ${e.capabilities.vram}` : ''}</span>)}</span>
                   <span class="fm-try">
                     <code translate="no">{facetTryCommand(cap.id)}</code>
                     <button
@@ -280,6 +280,17 @@ const recordHtml = [
   }
   .fm-index .fm-no {
     font-family: var(--font-mono);
+    color: var(--surface-ink-dim);
+  }
+  .fm-gpu {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0 0.4rem;
+    border: 1px solid var(--surface-line);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
     color: var(--surface-ink-dim);
   }
   .fm-cap .thumbs { display: flex; justify-content: center; gap: 0; flex-wrap: wrap; overflow-x: auto; }

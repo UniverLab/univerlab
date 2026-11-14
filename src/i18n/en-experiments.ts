@@ -490,6 +490,8 @@ export const experiments = {
         tabsAria: 'Capabilities by facet',
         copy: 'Copy command',
         copied: 'Copied',
+        gpu: 'NVIDIA GPU',
+        vram: 'GB VRAM',
       },
       subproject: {
         kicker: 'Subproject',
@@ -497,7 +499,7 @@ export const experiments = {
         body: 'The table above reads this open registry at build time, one row per capability. When the checkout is missing, the page shows this note instead of an empty table.',
         link: 'https://github.com/UniverLab/facetmedia-registry',
       },
-      installNote: 'Runs on Linux and inside WSL on Windows.',
+      installNote: 'Runs on Linux x86_64 and WSL2 (Windows 10/11).\nNative Windows: install inside WSL2 first (wsl --install); macOS is not supported yet.\nGPU packages need NVIDIA; on WSL2 only the Windows NVIDIA driver is needed.',
       record: {
         title: '— Every asset leaves its record',
         body: 'Beside every file stays a .facet.json with the capability, the package, the models, the parameters, the check and the licences: enough to make it again or to know where it came from.',
@@ -511,7 +513,7 @@ export const experiments = {
         title: '— Questions',
         items: [
           ['What does facet actually do?', 'It installs each creation tool (Whisper, Blender, ComfyUI, FFmpeg, CadQuery…) in its own pinned environment, with no Docker, and gives your agent one command to use them all. Each run produces the files you asked for, with a record of how they were made.'],
-          ['Can I use it yet?', 'It is an internal beta (0.1.0b1) and is not on PyPI yet. Once it ships, you will install it with <code>uv tool install facetmedia</code>. For now it runs on Linux and WSL only.'],
+          ['Can I use it yet?', 'It is an internal beta (0.1.0b1) and is not on PyPI yet. Once it ships, you will install it with <code>uv tool install facetmedia</code>. It runs on Linux x86_64 and WSL2 (Windows 10/11): on native Windows install inside WSL2 first (<code>wsl --install</code>); macOS is not supported yet.'],
           ['What is a facet?', 'A group of tools by what they produce: image, video, audio, voice, text, presentation and CAD. Today there are 7 facets, with 23 packages and 43 capabilities, such as blender.scene or whisper.transcribe.'],
           ['How does an agent use it?', 'Every command takes <code>--json</code>, always answers in the same envelope and has documented exit codes. <code>facet skill</code> gives the agent the instructions for the package it is about to use, when it needs them, instead of loading everything up front.'],
           ['How do I know the output is right?', 'Next to every file sits a record (<code>.facet.json</code>) with the parameters, the seed, the exact tool and model versions, and the licences. The run verifies the result (duration, loudness, resolution or transcript, depending on the tool), and <code>facet check</code> re-verifies it whenever you want.'],
