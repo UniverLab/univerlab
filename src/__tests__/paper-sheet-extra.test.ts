@@ -253,3 +253,61 @@ describe('paper sheet gestures', () => {
     expect(viewport.style.height).not.toBe('');
   });
 });
+
+describe('paper sheet page-scroll handoff', () => {
+  it('at fit a vertical swipe scrolls the page and never moves the sheet', () => {
+    const { viewport, sheet } = mount();
+    initPaperSheet(document);
+    const fitted = sheet.style.transform;
+    document.documentElement.scrollTop = 100;
+    try {
+      viewport.dispatchEvent(pointer('pointerdown', 1, 200, 300));
+      viewport.dispatchEvent(pointer('pointermove', 1, 200, 350));
+      viewport.dispatchEvent(pointer('pointerup', 1, 200, 350));
+      // The sheet is already at its top edge, so the clamp eats the whole
+      // drag: the transform never moves and the page scrolls toward the
+      // site header instead.
+      expect(sheet.style.transform).toBe(fitted);
+      expect(document.documentElement.scrollTop).toBe(50);
+    } finally {
+      document.documentElement.scrollTop = 0;
+    }
+  });
+
+  it('a horizontal drag at fit never scrolls the page', () => {
+    const { viewport, sheet } = mount();
+    initPaperSheet(document);
+    const fitted = sheet.style.transform;
+    document.documentElement.scrollTop = 100;
+    try {
+      viewport.dispatchEvent(pointer('pointerdown', 1, 200, 300));
+      viewport.dispatchEvent(pointer('pointermove', 1, 260, 300));
+      viewport.dispatchEvent(pointer('pointerup', 1, 260, 300));
+      expect(sheet.style.transform).toBe(fitted);
+      expect(document.documentElement.scrollTop).toBe(100);
+    } finally {
+      document.documentElement.scrollTop = 0;
+    }
+  });
+
+  it('zoomed, a drag past the sheet edge clamps the pan and hands off to page scroll', () => {
+    const { viewport, sheet } = mount();
+    initPaperSheet(document);
+    viewport.dispatchEvent(wheel(true));
+    const scale = scaleOf(sheet.style.transform);
+    expect(scale).toBeGreaterThan(VIEW_W / SHEET_W);
+    document.documentElement.scrollTop = 100;
+    try {
+      viewport.dispatchEvent(pointer('pointerdown', 1, 200, 300));
+      viewport.dispatchEvent(pointer('pointermove', 1, 200, -500));
+      viewport.dispatchEvent(pointer('pointerup', 1, 200, -500));
+      // The pan stops at the sheet's bottom edge while the leftover drag
+      // carries on into page scroll, toward the footer.
+      const ty = Number(/translate\([-\d.]+px, ([-\d.]+)px\)/.exec(sheet.style.transform)?.[1]);
+      expect(ty).toBeCloseTo(600 - SHEET_H * scale, 0);
+      expect(document.documentElement.scrollTop).toBeGreaterThan(100);
+    } finally {
+      document.documentElement.scrollTop = 0;
+    }
+  });
+});

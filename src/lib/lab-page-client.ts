@@ -41,8 +41,32 @@ function langOf(root: ParentNode, fallback: LabSource | undefined): LabPageLang 
 
 const PAGE_ORDER = ['page-1', 'lab', 'lab2'] as const;
 
-/** Which page reads now: the one section not hidden, page 1 when unsure. */
+const TURN_CLASSES = ['turn-leave-next', 'turn-return-prev', 'turn-under'] as const;
+
+/** Newest turn wins: each tabShow bumps the token its landing timeout must
+ *  still match, so a turn interrupted mid-flight never hides a page the
+ *  newer turn made visible or strips the classes it just added. */
+const turnSeq = new WeakMap<object, number>();
+
+/** The page whose turn is still in flight. A repeated request for it (a
+ *  second binding's click listener, a double tap on the tab) must not rerun
+ *  tabShow: the hidden pass would hide the leaf mid-air. */
+const turnPending = new WeakMap<object, PageId>();
+
+function clearTurns(scope: ParentNode): void {
+  for (const page of PAGE_ORDER) {
+    const el = scope.querySelector?.(`#${page}`) as HTMLElement | null;
+    el?.classList.remove(...TURN_CLASSES);
+  }
+}
+
+/** Which page reads now: the active tab first — both sections stay visible
+ *  mid-turn, so the hidden scan alone would misread — falling back to the
+ *  one section not hidden, page 1 when unsure. */
 function currentPage(scope: ParentNode): PageId {
+  const active = scope.querySelector?.('.paper-tab.is-active') as HTMLElement | null;
+  const tabPage = active?.getAttribute('data-page');
+  if (tabPage === 'page-1' || tabPage === 'lab' || tabPage === 'lab2') return tabPage;
   for (const page of PAGE_ORDER) {
     const section = scope.querySelector?.(`#${page}`) as HTMLElement | null;
     if (section && !section.hidden) return page;
@@ -91,10 +115,13 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   // The masthead tabs live inside the sheet; the slim strip outside it
   // carries arrows and a count. Sync every tab in the document.
   const scope: ParentNode = paper.ownerDocument ?? paper;
+  if (turnPending.get(scope) === id) return;
   const prev = currentPage(scope);
+  // Both pages stay readable through the turn: only pages outside the
+  // leaving/incoming pair hide, so the leaf and the sheet beneath overlap.
   for (const page of PAGE_ORDER) {
     const section = scope.querySelector?.(`#${page}`) as HTMLElement | null;
-    if (section) section.hidden = page !== id;
+    if (section) section.hidden = page !== id && page !== prev;
   }
   const tabs = scope.querySelectorAll
     ? (Array.from(scope.querySelectorAll('.paper-tab')) as HTMLElement[])
@@ -103,17 +130,44 @@ function tabShow(paper: HTMLElement, id: PageId): void {
     tab.classList.toggle('is-active', tab.getAttribute('data-page') === id);
   }
   paintStrip(scope, id);
+  const seq = (turnSeq.get(scope) ?? 0) + 1;
+  turnSeq.set(scope, seq);
+  // A turn still in flight loses its leaf and its shadow at once; the
+  // hidden flags above already settled which pages read.
+  clearTurns(scope);
   if (prev === id) return;
-  // The page-turn: the incoming leaf swings over its edge, forward one way
-  // and back the other. The sheet keeps its fitted scale throughout; only
-  // the page animates, with transform and opacity, never layout.
+  // The page-turn: the leaving leaf turns over around the spine and the
+  // next page waits beneath it; coming back, the earlier page lays down
+  // over the current one. The sheet keeps its fitted scale throughout;
+  // only the pages animate, with transform and opacity, never layout.
+  const prevEl = scope.querySelector?.(`#${prev}`) as HTMLElement | null;
   const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
-  if (!section) return;
-  const cls = PAGE_ORDER.indexOf(id) > PAGE_ORDER.indexOf(prev) ? 'turn-next' : 'turn-prev';
-  section.classList.remove('turn-next', 'turn-prev');
-  section.classList.add(cls);
+  if (!prevEl || !section) {
+    fitPaper(scope);
+    return;
+  }
+  const reduced =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    prevEl.hidden = true;
+    // The newly shown page was hidden (nothing measured there): fit it now
+    // that it reads. Already-fitted pages measure clean and stay untouched.
+    fitPaper(scope);
+    return;
+  }
+  const fwd = PAGE_ORDER.indexOf(id) > PAGE_ORDER.indexOf(prev);
+  const leaf = fwd ? prevEl : section;
+  const under = fwd ? section : prevEl;
+  leaf.classList.add(fwd ? 'turn-leave-next' : 'turn-return-prev');
+  under.classList.add('turn-under');
+  turnPending.set(scope, id);
   window.setTimeout(() => {
-    section.classList.remove('turn-next', 'turn-prev');
+    if (turnSeq.get(scope) !== seq) return;
+    turnPending.delete(scope);
+    leaf.classList.remove('turn-leave-next', 'turn-return-prev');
+    under.classList.remove('turn-under');
+    prevEl.hidden = true;
   }, 620);
   // The newly shown page was hidden (nothing measured there): fit it now that
   // it reads. Already-fitted pages measure clean and stay untouched.

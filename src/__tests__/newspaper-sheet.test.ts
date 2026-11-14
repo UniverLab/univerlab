@@ -61,9 +61,17 @@ describe('the sheet hooks wrap the paper', () => {
     expect(css).toContain('2.75rem');
     // The compact date yields before any control leaves the strip.
     expect(css).toMatch(/\.words--strip \[data-words-short\] \{[^}]*text-overflow: ellipsis/);
-    // The turn swings the leaf over its edge, never slides it sideways.
-    expect(css).toContain('paper-turn-next');
-    expect(css).toContain('paper-turn-prev');
+    // The pages pile in one stack so the turn never shifts layout.
+    expect(paper).toContain('paper-pages');
+    expect(css).toMatch(/\.paper \.paper-pages \{[^}]*position:\s*relative/);
+    // Forward the leaving leaf turns over the spine while the next page
+    // waits beneath; back the earlier page lays down over the current one.
+    // Never a slide sideways, never the reversed incoming swing.
+    expect(css).toContain('paper-leave-next');
+    expect(css).toContain('paper-return-prev');
+    expect(css).toContain('turn-under');
+    expect(css).not.toContain('paper-turn-next');
+    expect(css).not.toContain('paper-turn-prev');
     expect(css).toContain('rotateY');
     expect(css).toContain('0.55s');
     expect(css).not.toContain('translateX(14%)');

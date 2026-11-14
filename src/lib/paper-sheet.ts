@@ -209,9 +209,19 @@ export function initPaperSheet(root: ParentNode = document): void {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (pointers.size === 1) {
       moved += Math.abs(dx) + Math.abs(dy);
+      // The sheet eats only what it can pan: whatever the clamp refuses
+      // carries on into page scroll, like a nested native scroller handing
+      // off at its edge. At fitted scale nothing pans, so a vertical swipe
+      // scrolls the page to the header above or the footer below.
+      const py = ty;
       tx += dx;
       ty += dy;
       clampPan();
+      const ly = dy - (ty - py);
+      const scroller = document.scrollingElement ?? document.documentElement;
+      if (ly !== 0 && scroller) {
+        scroller.scrollTop -= ly;
+      }
       paint();
     } else if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];

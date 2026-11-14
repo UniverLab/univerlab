@@ -647,20 +647,30 @@ describe('bindLabPage', () => {
   });
 
   it('opens page 2 directly on #lab and page 3 on #lab2', () => {
-    scaffold('en', entries);
-    window.location.hash = '#lab';
-    bindLabPage(document);
-    expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
-    expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
-    const tabs = Array.from(document.querySelectorAll('.paper-tab'));
-    expect(tabs).toHaveLength(3);
-    expect(tabs[1].classList.contains('is-active')).toBe(true);
-    expect(tabs[0].classList.contains('is-active')).toBe(false);
-    window.location.hash = '#lab2';
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-    expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(false);
-    expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
-    expect(tabs[2].classList.contains('is-active')).toBe(true);
+    jest.useFakeTimers();
+    try {
+      scaffold('en', entries);
+      window.location.hash = '#lab';
+      bindLabPage(document);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      // The turn overlaps: the leaving page hides only when the leaf lands.
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+      jest.advanceTimersByTime(700);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
+      const tabs = Array.from(document.querySelectorAll('.paper-tab'));
+      expect(tabs).toHaveLength(3);
+      expect(tabs[1].classList.contains('is-active')).toBe(true);
+      expect(tabs[0].classList.contains('is-active')).toBe(false);
+      window.location.hash = '#lab2';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+      expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      jest.advanceTimersByTime(700);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
+      expect(tabs[2].classList.contains('is-active')).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('keeps page 1 without a hash', () => {
@@ -708,29 +718,95 @@ describe('bindLabPage', () => {
       nextBtn.click();
       expect(push).toHaveBeenCalledWith({}, '', '#lab');
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
-      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
+      // Mid-turn the leaving page is still readable; it hides on landing.
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
       expect(num()).toBe('2 / 3');
       expect(name()).toBe('Page 2');
       expect(prevBtn.classList.contains('disabled')).toBe(false);
       expect(nextBtn.classList.contains('disabled')).toBe(false);
-      // Forward travel turns next; the class clears after the ~0.55 s turn.
-      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(true);
+      // Forward travel: the leaving page lifts off while the next page waits
+      // beneath; both stay readable through the ~0.55 s turn, then the old
+      // page hides and the turn classes clear.
+      expect((document.getElementById('page-1') as HTMLElement).classList.contains('turn-leave-next')).toBe(true);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-under')).toBe(true);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
       jest.advanceTimersByTime(700);
-      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(false);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
+      expect((document.getElementById('page-1') as HTMLElement).classList.contains('turn-leave-next')).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-under')).toBe(false);
       // The last page disables its forward arrow; stepping back re-enables.
       nextBtn.click();
       expect(num()).toBe('3 / 3');
       expect(name()).toBe('Page 3');
       expect(nextBtn.classList.contains('disabled')).toBe(true);
       expect(nextBtn.getAttribute('aria-disabled')).toBe('true');
+      jest.advanceTimersByTime(700);
       prevBtn.click();
       expect(push).toHaveBeenCalledWith({}, '', '#lab');
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
-      expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(true);
       expect(num()).toBe('2 / 3');
       expect(nextBtn.classList.contains('disabled')).toBe(false);
-      // Back travel turns prev.
-      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-prev')).toBe(true);
+      // Back travel: the earlier page comes back and lays down over the
+      // current one, which waits beneath until the turn ends.
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-return-prev')).toBe(true);
+      expect((document.getElementById('lab2') as HTMLElement).classList.contains('turn-under')).toBe(true);
+      expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(false);
+      jest.advanceTimersByTime(700);
+      expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(true);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-return-prev')).toBe(false);
+      expect((document.getElementById('lab2') as HTMLElement).classList.contains('turn-under')).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('swaps pages instantly when reduced motion is on', () => {
+    const realMatchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+      onchange: null,
+    })) as unknown as typeof window.matchMedia;
+    try {
+      scaffold('en', entries);
+      bindLabPage(document);
+      const tab = document.querySelector('a.paper-tab[data-page="lab"]') as HTMLElement;
+      tab.click();
+      // No leaf, no wait: the old page hides at once and nothing animates.
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
+      expect((document.getElementById('page-1') as HTMLElement).classList.contains('turn-leave-next')).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-under')).toBe(false);
+    } finally {
+      window.matchMedia = realMatchMedia;
+    }
+  });
+
+  it('a turn interrupted mid-flight still lands on the newest page', () => {
+    jest.useFakeTimers();
+    try {
+      scaffold('en', entries);
+      bindLabPage(document);
+      const tab = (p: string) =>
+        document.querySelector(`a.paper-tab[data-page="${p}"]`) as HTMLElement;
+      tab('lab').click();
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+      // Turn back before the first leaf lands: the stale cleanup must not
+      // hide the page the reader asked for nor strip the new turn's classes.
+      tab('page-1').click();
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      jest.advanceTimersByTime(700);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
+      expect((document.getElementById('page-1') as HTMLElement).classList.contains('turn-return-prev')).toBe(false);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-under')).toBe(false);
     } finally {
       jest.useRealTimers();
     }

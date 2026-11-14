@@ -28,6 +28,7 @@ const t = useTranslations(lang);
       <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
     </nav>
   </header>
+  <div class="paper-pages">
   <section id="page-1" class="paper-page" aria-label={t.today.tabs.p1}>
     <div id="edition"></div>
     <div id="today-loading" class="today-loading" role="status" aria-label={t.today.loading}>
@@ -43,6 +44,7 @@ const t = useTranslations(lang);
   <section id="lab2" class="paper-page" aria-label={t.today.tabs.p3}>
     <div id="lab2-body"></div>
   </section>
+  </div>
 </div>
   </div>
 </div>
@@ -489,22 +491,34 @@ const t = useTranslations(lang);
     }
     .paper-bar .paper-fit:focus-visible { outline: 1px solid var(--bar-emphasis); outline-offset: 2px; }
   }
-  /* The page-turn: the incoming leaf swings over its edge with perspective,
-     like a real page — forward turns over the left edge, back over the
-     right — with printed shading and a soft shadow. Transform and opacity
-     only, so the turn never shifts layout. */
-  @keyframes paper-turn-next {
-    from { transform: perspective(1400px) rotateY(-86deg); transform-origin: 0 50%; opacity: 0.5; box-shadow: inset 90px 0 130px -60px rgba(22, 25, 28, 0.5), 18px 0 34px -18px rgba(22, 25, 28, 0.35); }
-    to { transform: perspective(1400px) rotateY(0deg); transform-origin: 0 50%; opacity: 1; box-shadow: none; }
+  /* The pages stack in one pile so a turn never shifts layout: the leaving
+     leaf lifts off the pile while the next page waits beneath it. */
+  .paper .paper-pages { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; gap: 18px; }
+  /* The page-turn: the leaving leaf rises from its outer right edge and
+     turns over towards the left around the spine, uncovering the next page
+     lying beneath it; coming back, the earlier page lays down over the
+     current one the same way in reverse. Printed shading on the curling
+     leaf, a soft shadow on the page beneath. Transform and opacity only. */
+  @keyframes paper-leave-next {
+    from { transform: perspective(1400px) rotateY(0deg); transform-origin: 0 50%; opacity: 1; box-shadow: none; }
+    to { transform: perspective(1400px) rotateY(-86deg); transform-origin: 0 50%; opacity: 0.4; box-shadow: inset -90px 0 130px -60px rgba(22, 25, 28, 0.5), -18px 0 34px -18px rgba(22, 25, 28, 0.35); }
   }
-  @keyframes paper-turn-prev {
+  @keyframes paper-return-prev {
     from { transform: perspective(1400px) rotateY(86deg); transform-origin: 100% 50%; opacity: 0.5; box-shadow: inset -90px 0 130px -60px rgba(22, 25, 28, 0.5), -18px 0 34px -18px rgba(22, 25, 28, 0.35); }
     to { transform: perspective(1400px) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; box-shadow: none; }
   }
-  .paper .paper-page.turn-next { transform-origin: 0 50%; animation: paper-turn-next 0.55s ease-in-out; }
-  .paper .paper-page.turn-prev { transform-origin: 100% 50%; animation: paper-turn-prev 0.55s ease-in-out; }
+  @keyframes paper-turn-under {
+    from { opacity: 0; }
+    50% { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .paper .paper-page.turn-leave-next, .paper .paper-page.turn-return-prev { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .paper .paper-page.turn-leave-next { transform-origin: 0 50%; animation: paper-leave-next 0.55s ease-in-out; }
+  .paper .paper-page.turn-return-prev { transform-origin: 100% 50%; animation: paper-return-prev 0.55s ease-in-out; }
+  .paper .paper-page.turn-under { position: relative; }
+  .paper .paper-page.turn-under::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; box-shadow: inset 0 0 120px -30px rgba(22, 25, 28, 0.3); animation: paper-turn-under 0.55s ease-in-out; }
   @media (prefers-reduced-motion: reduce) {
-    .paper .paper-page.turn-next, .paper .paper-page.turn-prev { animation: none; }
+    .paper .paper-page.turn-leave-next, .paper .paper-page.turn-return-prev, .paper .paper-page.turn-under::after { animation: none; }
   }
   .paper-viewport.sheet .paper { padding: 28px; }
   .paper-viewport.sheet .paper .masthead { grid-template-columns: 1fr auto 1fr; }
