@@ -86,12 +86,12 @@ describe('facetmedia EXP-009', () => {
     }
   });
 
-  it('the page shows the shared hero plate and keeps its own dial', () => {
+  it('the page shows the shared hero plate with no dial', () => {
     expect(VIEW).not.toContain('hideMachine');
     expect(VIEW).not.toContain('<Machine');
     expect(VIEW).not.toContain("from '../../components/Machine.astro'");
-    expect(VIEW).toContain('class="fm-dial"');
-    expect(VIEW).toContain('data-fm-dial');
+    expect(VIEW).not.toContain('class="fm-dial"');
+    expect(VIEW).not.toContain('data-fm-dial');
     expect(VIEW).not.toContain('class="fm-arch"');
     expect(VIEW).not.toContain('0/{caps.length}');
     expect(VIEW).toContain('id="capacidades"');
@@ -105,9 +105,9 @@ describe('facetmedia EXP-009', () => {
     expect(VIEW).toContain('facetLabelsFor');
     expect(VIEW).toContain('g.caps.map((cap, i)');
     expect(VIEW).toContain('caps.length');
-    expect(VIEW).toContain('dialArcs');
-    expect(VIEW).toContain('demoCap');
-    expect(VIEW).toContain('demoText');
+    expect(VIEW).not.toContain('dialArcs');
+    expect(VIEW).not.toContain('demoCap');
+    expect(VIEW).not.toContain('demoText');
     expect(VIEW).toContain('set:html');
     expect(VIEW).toContain('{e.subproject.kicker}');
     expect(VIEW).toContain('{e.subproject.body}');
@@ -213,8 +213,8 @@ describe('facetmedia EXP-009', () => {
     // The three .ok spans left are exactly the record JSON values.
     expect(VIEW).not.toContain('<span class="ok">{');
     expect(VIEW.match(/class="ok"/g)).toHaveLength(3);
-    // var(--essence) is used by .ok and by the lit dial arc.
-    expect(VIEW.match(/var\(--essence\)/g)).toHaveLength(2);
+    // var(--essence) is used only by .ok now that the dial is gone.
+    expect(VIEW.match(/var\(--essence\)/g)).toHaveLength(1);
   });
 
   it('beta entries show under the Active tab', () => {
@@ -239,15 +239,6 @@ describe('facetmedia EXP-009', () => {
       expect(narrow).toContain(area);
     }
     expect(narrow).toMatch(/\.fm-index \.fm-try \{[^}]*grid-area: try;[^}]*flex-wrap: wrap;/);
-  });
-
-  it('lays the dial labels out in flow on narrow screens so they cannot overlap', () => {
-    const narrow = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
-    expect(narrow).toMatch(/\.fm-dial \{[^}]*aspect-ratio: auto;/);
-    expect(narrow).toMatch(/\.fm-dial-center,\s*\.fm-more,\s*\.fm-dial-demos \{[^}]*position: static;/);
-    // display:block above beats the hidden attribute, so the demos caption
-    // needs its own guard or it flashes as an empty block before the script runs.
-    expect(narrow).toMatch(/\.fm-dial-demos\[hidden\] \{[^}]*display: none;/);
   });
 
   it('scales the install banner down so the facetmedia art fits a 360px phone', () => {

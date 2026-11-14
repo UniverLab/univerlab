@@ -10,7 +10,6 @@ import {
   facetTryCommand,
   facetPullCommand,
 } from '../../lib/catalogs';
-import { dialArcs, demoCap, demoText } from '../../lib/facet-dial';
 import { iconSvg } from '../../lib/icon-svg';
 import { copy } from '../../lib/icons';
 const lang = getLang(Astro.url);
@@ -20,7 +19,6 @@ const exp = byId('facetmedia');
 const { caps, facets: regFacets } = readFacetCatalog();
 const facets = groupFacetCapabilities(caps, facetLabelsFor(regFacets, lang));
 const groups = [{ facet: 'all', label: e.capabilities.all, caps }, ...facets];
-const arcs = dialArcs(facets, caps.length);
 
 // The record beside every asset, laid out over 10 lines as in the mockup.
 // Yellow (span.ok) marks only what was verified: the status and the metrics.
@@ -46,22 +44,6 @@ const recordHtml = [
         <p class="fm-headline">{e.headline}</p>
         <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{facets.map((f) => f.label).join(' / ')}</span></p>
       </div>
-      <figure class="fm-dial" data-fm-dial>
-        <svg viewBox="0 0 240 240" role="img" aria-label={e.capabilities.dial.aria}>
-          <circle class="fm-dial-track" cx="120" cy="120" r="96"></circle>
-          {arcs.map((a) => (
-            <path class="fm-dial-arc" data-facet={a.facet} d={a.d}></path>
-          ))}
-        </svg>
-        <span class="fm-dial-center">{caps.length} {e.capabilities.dial.capabilities} · {facets.length} {e.capabilities.dial.facets}</span>
-        <a class="fm-more" href="#capacidades">{e.capabilities.kicker}</a>
-        <figcaption class="fm-dial-demos" hidden>
-          {facets.map((f) => {
-            const cap = demoCap(f);
-            return cap && <span class="fm-dial-demo" data-facet={f.facet} hidden>{cap.id} → {demoText(cap, e.capabilities.dial)}</span>;
-          })}
-        </figcaption>
-      </figure>
     </div>
   </Fragment>
 
@@ -196,23 +178,6 @@ const recordHtml = [
         }, COPY_DONE_MS);
       });
     });
-    var dial = document.querySelector('[data-fm-dial]');
-    if (dial && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      var arcs = Array.prototype.slice.call(dial.querySelectorAll('.fm-dial-arc'));
-      var demos = Array.prototype.slice.call(dial.querySelectorAll('.fm-dial-demo'));
-      var caption = dial.querySelector('.fm-dial-demos');
-      if (arcs.length && arcs.length === demos.length) {
-        var i = 0;
-        var show = function (n) {
-          i = n % arcs.length;
-          arcs.forEach(function (a, j) { a.classList.toggle('is-lit', j === i); });
-          demos.forEach(function (d, j) { d.hidden = j !== i; });
-          if (caption) caption.hidden = false;
-        };
-        show(0);
-        setInterval(function () { show(i + 1); }, 4000);
-      }
-    }
     var root = document.querySelector('[data-fm-tabs]');
     if (!root) return;
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[role=tab]'));
@@ -268,70 +233,6 @@ const recordHtml = [
   .fm-hero {
     display: grid;
     gap: 0;
-  }
-  .fm-dial {
-    position: relative;
-    margin: 1.2rem 0 0;
-    aspect-ratio: 2 / 1;
-    max-width: 100%;
-  }
-  .fm-dial svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  .fm-dial-track {
-    fill: none;
-    stroke: var(--surface-line);
-    stroke-width: 10;
-  }
-  .fm-dial-arc {
-    fill: none;
-    stroke: var(--surface-ink-faint);
-    stroke-width: 10;
-  }
-  .fm-dial-arc.is-lit {
-    stroke: var(--essence);
-  }
-  .fm-dial-center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-family: var(--font-mono);
-    color: var(--surface-ink-dim);
-  }
-  .fm-dial-demos {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0.5rem;
-    margin: 0;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: var(--surface-ink-dim);
-  }
-  .fm-more {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.75rem;
-    font-family: var(--font-mono);
-    color: var(--surface-ink-dim);
-  }
-  @media (min-width: 48rem) {
-    .fm-hero {
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 2rem;
-    }
-    .fm-dial {
-      margin: 0;
-      width: clamp(180px, 20vw, 260px);
-      aspect-ratio: 1 / 1;
-    }
   }
   .fm-index .fm-row {
     display: grid;
@@ -504,25 +405,6 @@ const recordHtml = [
     .fm-index .fm-try {
       grid-area: try;
       flex-wrap: wrap;
-    }
-    .fm-dial {
-      aspect-ratio: auto;
-      max-width: 100%;
-      margin-inline: auto;
-    }
-    .fm-dial-center,
-    .fm-more,
-    .fm-dial-demos {
-      position: static;
-      display: block;
-      text-align: center;
-      margin: 0.3rem 0;
-    }
-    /* display:block above beats the hidden attribute (author styles win over
-       the UA [hidden] rule); without this the demos caption flashes as an
-       empty block on phones before the dial script unhides it. */
-    .fm-dial-demos[hidden] {
-      display: none;
     }
     .fm-hero-text {
       min-width: 0;
