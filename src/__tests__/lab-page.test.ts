@@ -12,6 +12,7 @@ import {
 } from '../lib/lab-page';
 import {
   CLASSIFIEDS_COUPON_COST,
+  CLASSIFIEDS_HEAD_COST,
   CLASSIFIEDS_PAGE_BUDGET,
   CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
@@ -280,14 +281,139 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const reserved = [2 * CLASSIFIEDS_COUPON_COST, 2 * CLASSIFIEDS_COUPON_COST];
     pages.forEach((page, p) => {
       const used = page.reduce((sum, s) => sum + CLASSIFIEDS_SIZE_COST[s.size], 0);
-      expect(used + reserved[p]).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+      expect(used + reserved[p] + CLASSIFIEDS_HEAD_COST).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
     });
     const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
     expect(html2).toContain('Lab news · continued');
-    expect(html2).toContain('<p class="lab-more"><a href="/logbook/">The complete record continues in the Logbook →</a></p>');
+    expect(html2).toContain('<p class="lab-more"><a href="/logbook/"><img src="/bench/classifieds/manicule.webp"');
+    expect(html2).toContain('The complete record continues in the Logbook →</a></p>');
     const es2 = labPageHtml2(live, 'es');
-    expect(es2).toContain('<p class="lab-more"><a href="/es/logbook/">El registro completo continúa en el Cuaderno →</a></p>');
+    expect(es2).toContain('<p class="lab-more"><a href="/es/logbook/"><img src="/bench/classifieds/manicule.webp"');
+    expect(es2).toContain('El registro completo continúa en el Cuaderno →</a></p>');
+  });
+
+  it('opens each classifieds page with the engraved section head, words in type', () => {
+    const kinds: Array<Entry['type']> = [
+      ...Array<Entry['type']>(14).fill('launch'),
+      ...Array<Entry['type']>(13).fill('note'),
+      ...Array<Entry['type']>(5).fill('update'),
+      'incident',
+    ];
+    const live: Entry[] = kinds.map((type, i) => ({
+      id: `h${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Live ${i}`,
+      body: 'Body.',
+      type,
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    const html1 = labPageHtml(live, 'en');
+    expect(html1).toContain('<header class="lab-head"><img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
+    expect(html1).toContain('<h2 class="lab-heading">Lab news</h2>');
+    const html2 = labPageHtml2(live, 'en');
+    expect(html2).toContain('<header class="lab-head"><img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
+    expect(html2).toContain('<h2 class="lab-heading lab-heading--cont">Lab news · continued</h2>');
+    // The words are set in type, never inside the image.
+    expect(html1).not.toMatch(/<img[^>]*Lab news/);
+  });
+
+  it('maps one engraved cut per entry type', () => {
+    const rows: Entry[] = [
+      { id: 'l1', date: '2026-10-06T10:00:00.000Z', title: 'Launch', body: 'B.', type: 'launch', topic: 'canopy', link: null },
+      { id: 'd1', date: '2026-10-05T10:00:00.000Z', title: 'Deploy', body: 'B.', type: 'deploy', topic: 'canopy', link: null },
+      { id: 'u1', date: '2026-10-04T10:00:00.000Z', title: 'Update', body: 'B.', type: 'update', topic: 'canopy', link: null },
+      { id: 'b1', date: '2026-10-03T10:00:00.000Z', title: 'Bugfix', body: 'B.', type: 'bugfix', topic: 'canopy', link: null },
+      { id: 'i1', date: '2026-10-02T10:00:00.000Z', title: 'Incident', body: 'B.', type: 'incident', topic: 'canopy', link: null },
+      { id: 'n1', date: '2026-10-01T10:00:00.000Z', title: 'Note', body: 'B.', type: 'note', topic: 'canopy', link: null },
+      { id: 'x1', date: '2026-09-30T10:00:00.000Z', title: 'Odd', body: 'B.', type: 'mystery', topic: 'canopy', link: null },
+    ];
+    const html = labPageHtml(rows, 'en');
+    // One cut per known type: launch and deploy share the launch cut, update
+    // and bugfix share the update cut.
+    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/launch.webp"');
+    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/update.webp"');
+    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/incident.webp"');
+    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/note.webp"');
+    expect(html.match(/<span class="ad-cut"><img src="\/bench\/classifieds\/launch.webp"/g)).toHaveLength(2);
+    expect(html.match(/<span class="ad-cut"><img src="\/bench\/classifieds\/update.webp"/g)).toHaveLength(2);
+    // The cuts open the entry body, never the h3: every h3 still reads bare.
+    expect(html).toContain('<div class="entry-body"><span class="ad-cut">');
+    expect(html).not.toMatch(/<h3[^>]*>[^<]*ad-cut/);
+    // The cuts are decorative and sized.
+    expect(html).toContain('alt=""');
+    // The unknown type goes without one.
+    const oddStart = html.lastIndexOf('<article', html.indexOf('>Odd</h3>'));
+    const oddArticle = html.slice(oddStart, html.indexOf('</article>', oddStart));
+    expect(oddArticle).not.toContain('ad-cut');
+  });
+
+  it('sets the cut on small ads and never on one-line notices', () => {
+    // Thirty notes by space: one highest entry takes display, the page-1 tail
+    // steps down to a small ad, and the last overflows to a one-line notice.
+    // The fixture must reach both sizes or this test says nothing about them.
+    const rows: Entry[] = Array.from({ length: 30 }, (_, i) => ({
+      id: `s${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Small ${i}`,
+      body: 'Body.',
+      type: 'note',
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    const html = labPageHtml(rows, 'en') + labPageHtml2(rows, 'en');
+    const articles = (cls: string): string[] =>
+      html.match(new RegExp(`<article class="log-entry ${cls}"[\\s\\S]*?</article>`, 'g')) ?? [];
+    const small = articles('ad-small');
+    const line = articles('notice');
+    // Both sizes really occur, so the assertions below have teeth.
+    expect(small).toHaveLength(1);
+    expect(line).toHaveLength(1);
+    // A small ad shows its type's cut; a line notice never carries one.
+    expect(small[0]).toContain('<span class="ad-cut"><img src="/bench/classifieds/note.webp"');
+    expect(small[0]).toContain('<div class="entry-body"><span class="ad-cut">');
+    expect(line[0]).toContain('<p class="notice-line">');
+    expect(line[0]).not.toContain('ad-cut');
+  });
+
+  it('divides the one-line runs with a fleuron, and only where a run is', () => {
+    // Twenty notes fit the two pages by space: no run, no fleuron.
+    const rows: Entry[] = Array.from({ length: 20 }, (_, i) => {
+      const day = String(28 - i).padStart(2, '0');
+      return {
+        id: `f${i}`, date: `2026-09-${day}T10:00:00.000Z`, title: `Notice ${i}`,
+        body: 'Body.', type: 'note', topic: 'canopy', link: null,
+      } as Entry;
+    });
+    expect(labPageHtml2(rows, 'en')).not.toContain('notice-fleuron');
+    // The live mix overflows into one run on page 3: exactly one fleuron.
+    const kinds: Array<Entry['type']> = [
+      ...Array<Entry['type']>(14).fill('launch'),
+      ...Array<Entry['type']>(13).fill('note'),
+      ...Array<Entry['type']>(5).fill('update'),
+      'incident',
+    ];
+    const live: Entry[] = kinds.map((type, i) => ({
+      id: `g${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Live ${i}`,
+      body: 'Body.',
+      type,
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    const html2 = labPageHtml2(live, 'en');
+    expect(html2.match(/<div class="notice-fleuron"><img src="\/bench\/classifieds\/fleuron.webp" alt="" width="480" height="134"/g)).toHaveLength(1);
+    // The fleuron stands before the run, never inside it.
+    expect(html2.indexOf('notice-fleuron')).toBeLessThan(html2.indexOf('notice-run'));
+  });
+
+  it('marks the coupons and the logbook line with the pointing hand', () => {
+    const html = labPageHtml(entries, 'en');
+    // Four coupons, one hand each, inside the link span before the text.
+    expect(html.match(/<span class="coupon-link"><img src="\/bench\/classifieds\/manicule.webp" alt="" width="192" height="113"/g)).toHaveLength(4);
+    expect(html).toContain('class="coupon"');
   });
 
   it('the markdown twin carries the unavailable line under the coupons', () => {

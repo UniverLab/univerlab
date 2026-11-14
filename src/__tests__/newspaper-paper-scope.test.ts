@@ -107,6 +107,26 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad-art \{[^}]*margin:\s*0/);
   });
 
+  it('prints the classifieds ornaments like the paper halftones, under .paper', () => {
+    // The engraved head, cuts, fleurons and hands read on the sheet in both
+    // themes: sepia, multiplied in, never dark.
+    expect(css).toContain('.paper .lab-head-ornament');
+    expect(css).toMatch(/\.paper \.ad-cut img[^}]*width:\s*100%/);
+    expect(css).toMatch(/\.paper \.notice-fleuron[^}]*grid-column:\s*1 \/ -1/);
+    expect(css).toMatch(/\.paper \.manicule \{[^}]*width:\s*1\.7rem/);
+    expect(css).toContain('grayscale(1) sepia(.22) contrast(1.12)');
+    expect(css).toContain('mix-blend-mode: multiply');
+  });
+
+  it('lets the section head wrap instead of pushing a narrow sheet sideways', () => {
+    // The ornament is capped at 16rem and the words sit beside it; on a phone
+    // the pair does not fit on one line, so the row must wrap. Without this
+    // the head is 33px wider than a 320px sheet and the paper scrolls.
+    expect(css).toMatch(/\.paper \.lab-head \{[^}]*flex-wrap:\s*wrap/);
+    expect(css).toMatch(/\.paper \.lab-head \.lab-heading \{[^}]*min-width:\s*0/);
+    expect(css).toMatch(/\.paper \.lab-head-ornament \{[^}]*flex:\s*0 1 auto/);
+  });
+
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
     // A long event body must not pull a tall grey mat below the photo: the
     // figure sits at the start of its grid area, so the halftone frame wraps

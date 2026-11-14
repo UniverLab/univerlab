@@ -36,8 +36,11 @@ export interface ClassifiedLayout {
   truncated: boolean;
 }
 
-/** Space units per classifieds page (paper pages 2 and 3): the fixed sheet. */
-export const CLASSIFIEDS_PAGE_BUDGET = 146;
+/** Space units per classifieds page (paper pages 2 and 3): the fixed sheet.
+ *  The section head ornament costs space on every page, so the budget counts
+ *  it: HEAD_COST units of the BUDGET are the head, the rest is entries. */
+export const CLASSIFIEDS_HEAD_COST = 7;
+export const CLASSIFIEDS_PAGE_BUDGET = 153;
 
 /** Space units one coupon ad reserves on its page. */
 export const CLASSIFIEDS_COUPON_COST = 9;
@@ -90,7 +93,7 @@ export function layoutClassifieds(entries: Entry[], couponCount = 0): Classified
   const pages: AdSlot[][] = [];
   let i = 0;
   for (let p = 0; p < CLASSIFIEDS_MAX_PAGES && i < ranked.length; p += 1) {
-    let remaining = CLASSIFIEDS_PAGE_BUDGET - reserved[p];
+    let remaining = CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST - reserved[p];
     const page: AdSlot[] = [];
     while (i < ranked.length) {
       const allowed: AdSize[] =

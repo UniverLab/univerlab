@@ -1,5 +1,6 @@
 import {
   CLASSIFIEDS_COUPON_COST,
+  CLASSIFIEDS_HEAD_COST,
   CLASSIFIEDS_MAX_PAGES,
   CLASSIFIEDS_PAGE_BUDGET,
   CLASSIFIEDS_SIZE_COST,
@@ -134,9 +135,9 @@ describe('layoutClassifieds', () => {
       const reserved = [half * CLASSIFIEDS_COUPON_COST, (coupons - half) * CLASSIFIEDS_COUPON_COST];
       pages.forEach((page, p) => {
         const sizes = page.map((s) => s.size);
-        expect(cost(sizes) + reserved[p]).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+        expect(cost(sizes) + reserved[p] + CLASSIFIEDS_HEAD_COST).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
         // Entries remain after this page, yet not even a line fits: no blank band.
-        const leftover = CLASSIFIEDS_PAGE_BUDGET - reserved[p] - cost(sizes);
+        const leftover = CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST - reserved[p] - cost(sizes);
         expect(leftover).toBeLessThan(CLASSIFIEDS_SIZE_COST.line);
       });
     }
@@ -168,5 +169,11 @@ describe('layoutClassifieds', () => {
 
   it('returns no pages for no entries', () => {
     expect(layoutClassifieds([])).toEqual({ pages: [], truncated: false });
+  });
+
+  it('reserves the section head inside the budget: entries still fill the old sheet', () => {
+    // The head ornament costs space without reflowing the entries: the net
+    // sheet is what it always was.
+    expect(CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST).toBe(146);
   });
 });

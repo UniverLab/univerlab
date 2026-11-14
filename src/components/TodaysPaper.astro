@@ -182,6 +182,21 @@ const t = useTranslations(lang);
      so no-JS readers get every entry. */
   .paper .lab-heading { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
   .paper .lab-heading--cont { border-bottom: 1px solid var(--p-rule); }
+  /* The classifieds section head: the engraved head ornament with the words
+     set in type beside it. Every ornament is printed like the paper's own
+     halftones — sepia, multiplied into the sheet — so it reads in both
+     themes and stays decorative to assistive technology (alt=""). */
+  .paper .lab-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
+  .paper .lab-head .lab-heading { border-bottom: 0; padding-bottom: 0; min-width: 0; }
+  .paper .lab-head-ornament { width: min(16rem, 100%); height: auto; flex: 0 1 auto; }
+  .paper .ad-cut { display: block; width: 2.4rem; }
+  .paper .ad-cut img { width: 100%; height: auto; }
+  .paper .notice-fleuron { grid-column: 1 / -1; text-align: center; }
+  .paper .notice-fleuron img { width: 4.5rem; height: auto; }
+  .paper .manicule { display: inline-block; width: 1.7rem; height: auto; margin-right: 4px; vertical-align: -.18em; }
+  .paper .lab-head-ornament, .paper .ad-cut img, .paper .notice-fleuron img, .paper .manicule {
+    filter: grayscale(1) sepia(.22) contrast(1.12); mix-blend-mode: multiply; opacity: .9;
+  }
   .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
   .paper .lab-filters { display: grid; gap: 6px; }
   .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

@@ -9,6 +9,7 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { entriesMarkdown, firstParagraph, sortEntries, type Entry } from './lab-feed';
 import { layoutClassifieds, type AdSlot } from './lab-classifieds';
+import { ornamentImg, typeOrnament } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
 import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
 import { normalizeTopic } from './field-notes';
@@ -126,6 +127,15 @@ function entryMeta(e: Entry, t: Dict): string {
   );
 }
 
+/** The engraved cut for an entry: display, boxed and small ads open with
+ *  the cut of their entry type, first inside .entry-body and never inside
+ *  the h3. One-line notices and unknown types go without one. */
+function adCut(e: Entry): string {
+  const name = typeOrnament(e.type);
+  if (!name) return '';
+  return `<span class="ad-cut">${ornamentImg(name)}</span>`;
+}
+
 function slotHtml(slot: AdSlot, t: Dict): string {
   const e = slot.entry;
   const title = esc(e.title || '');
@@ -135,7 +145,7 @@ function slotHtml(slot: AdSlot, t: Dict): string {
       `<figure class="photo ad-art"><div class="print">` +
       `<img src="${esc(displayArt(e.topic))}" alt="" loading="lazy">` +
       `</div></figure>` +
-      `<div class="entry-body"><h3 class="sz-lg">${title}</h3>` +
+      `<div class="entry-body">${adCut(e)}<h3 class="sz-lg">${title}</h3>` +
       `<p>${linkify(e.body || '')}</p>` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
@@ -144,7 +154,7 @@ function slotHtml(slot: AdSlot, t: Dict): string {
   if (slot.size === 'boxed') {
     return (
       `<article class="log-entry ad ad-boxed" ${slotAttrs(e)}>` +
-      `<div class="entry-body"><h3 class="sz-md">${title}</h3>` +
+      `<div class="entry-body">${adCut(e)}<h3 class="sz-md">${title}</h3>` +
       `<p>${linkify(e.body || '')}</p>` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
@@ -157,7 +167,7 @@ function slotHtml(slot: AdSlot, t: Dict): string {
       : '';
     return (
       `<article class="log-entry ad-small" ${slotAttrs(e)}>` +
-      `<div class="entry-body"><h3 class="sz-sm">${title}</h3>` +
+      `<div class="entry-body">${adCut(e)}<h3 class="sz-sm">${title}</h3>` +
       `<p>${cut}${link}</p>` +
       `</div></article>`
     );
@@ -182,7 +192,10 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
   let out = '';
   let run: string[] = [];
   const flush = (): void => {
-    if (run.length) out += `<div class="notice-run">${run.join('')}</div>`;
+    if (run.length) {
+      out += `<div class="notice-fleuron">${ornamentImg('fleuron')}</div>` +
+        `<div class="notice-run">${run.join('')}</div>`;
+    }
     run = [];
   };
   parts.forEach((html, i) => {
@@ -232,6 +245,15 @@ export interface ClassifiedsOpts {
   foundingLeft?: number | null;
 }
 
+/** A classifieds section head: the engraved head ornament with the words
+ *  set in type beside it, never inside the image. `cont` marks the page-3
+ *  continuation head. */
+function headHtml(t: Dict, cont: boolean): string {
+  const words = cont ? `${esc(t.labPage.heading)} · ${esc(t.continued)}` : esc(t.labPage.heading);
+  const cls = cont ? 'lab-heading lab-heading--cont' : 'lab-heading';
+  return `<header class="lab-head">${ornamentImg('head', 'lab-head-ornament')}<h2 class="${cls}">${words}</h2></header>`;
+}
+
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
  *  empty when everything fits one page — never an empty page). Coupons ride
  *  as ads of their own: the first half after the third slot, the rest after
@@ -254,11 +276,11 @@ export function classifiedsHtml(
   let page2 = '';
   if (pages[1]) {
     page2 =
-      `<h2 class="lab-heading lab-heading--cont">${esc(t.labPage.heading)} · ${esc(t.continued)}</h2>` +
+      headHtml(t, true) +
       `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang)}</div>`;
   }
   if (truncated) {
-    page2 += `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${esc(t.labPage.logbookPointer)}</a></p>`;
+    page2 += `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
   }
   return { page1, page2, truncated };
 }
@@ -274,11 +296,11 @@ export function labPageHtml(
   const t = dict(lang);
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
-    return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
+    return headHtml(t, false) +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
   const { page1 } = classifiedsHtml(rows, lang, opts);
-  return `<h2 class="lab-heading">${esc(t.labPage.heading)}</h2>` +
+  return headHtml(t, false) +
     filtersHtml(rows, t) +
     page1;
 }

@@ -7,6 +7,7 @@
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { ornamentImg } from './classifieds-ornaments';
 
 export type PaperCouponLang = 'en' | 'es';
 
@@ -99,7 +100,7 @@ export function couponAdHtml(lang: PaperCouponLang, ad: CouponAd): string {
     `<span class="coupon-cut">✂ ${esc(cut)}</span>` +
     `<span class="coupon-figure">${esc(ad.figure)}</span>` +
     `<span class="coupon-cond">${esc(ad.cond)}</span>` +
-    `<span class="coupon-link">${esc(ad.link)}</span></a>`
+    `<span class="coupon-link">${ornamentImg('manicule', 'manicule')}${esc(ad.link)}</span></a>`
   );
 }
 
