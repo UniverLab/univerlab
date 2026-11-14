@@ -8,7 +8,8 @@
  * means "when the runner checked the repository out" and would report every
  * page as freshly rewritten on every deploy.
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 
@@ -171,12 +172,25 @@ describe('prebuild snapshot', () => {
     expect(docLastModified(realSibling)).toBeNull();
   });
 
-  it('fails open to git when the snapshot is unparseable', () => {
+  // Only where the sibling has real history: CI clones siblings shallow on
+  // purpose, and a shallow clone answers no date by design.
+  const failOpenFile = resolve(ROOT, '../facetmedia/docs/preview.md');
+  const hasHistory = ((): boolean => {
+    try {
+      return (
+        existsSync(failOpenFile) &&
+        execFileSync('git', ['-C', resolve(ROOT, '../facetmedia'), 'rev-parse', '--is-shallow-repository'], { encoding: 'utf8' }).trim() === 'false'
+      );
+    } catch {
+      return false;
+    }
+  })();
+  (hasHistory ? it : it.skip)('fails open to git when the snapshot is unparseable', () => {
     // Garbage bytes are the same as no snapshot: the lookup shells out. A
     // dedicated sibling file (no other test queries it, so the memo is cold)
     // with real history proves git ran by answering a date.
     writeFileSync(process.env[SNAP_KEY]!, 'not json{');
-    const value = docLastModified(resolve(ROOT, '../facetmedia/docs/preview.md'));
+    const value = docLastModified(failOpenFile);
     expect(value).not.toBeNull();
     expect(Number.isNaN(Date.parse(value!))).toBe(false);
   });
