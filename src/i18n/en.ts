@@ -581,6 +581,7 @@ export const en = {
     contributors: 'An engraved meeting room with a long table holding an open ledger, chairs along both sides and three empty picture frames',
     experiments: 'An engraved wall of labelled drawers with a leaning ladder beside them',
     feed: 'An engraved desk with a duplicating press, a typewriter and printed sheets on a wire',
+    logbook: 'An engraved bound register open on a slanted desk, a quill resting across the pages and a small brass bell beside it',
     manifesto: 'An engraved observatory dome open to the stars with a telescope on a tripod',
     'not-found': 'An engraved torn sea chart with a corner gone, dividers resting over the water',
     roadmap: 'An engraved drafting table with a half-drawn sea chart, a compass rose, rolled maps, dividers and a globe',

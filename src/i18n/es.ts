@@ -577,6 +577,7 @@ export const es: Dict = {
     contributors: 'Una sala de reuniones grabada con una mesa larga que sostiene un libro abierto, sillas a ambos lados y tres marcos vacíos',
     experiments: 'Una pared grabada de cajones etiquetados con una escalera apoyada al lado',
     feed: 'Un escritorio grabado con una prensa de copiar, una máquina de escribir y hojas impresas en un alambre',
+    logbook: 'Un registro encuadernado grabado abierto sobre un pupitre inclinado, una pluma sobre las páginas y una pequeña campana de latón al lado',
     manifesto: 'Una cúpula de observatorio grabada abierta a las estrellas con un telescopio sobre un trípode',
     'not-found': 'Una carta marina grabada y rasgada con una esquina perdida, un compás sobre el agua',
     roadmap: 'Una mesa de dibujo grabada con una carta marina a medio trazar, una rosa de los vientos, mapas enrollados, un compás y un globo terráqueo',

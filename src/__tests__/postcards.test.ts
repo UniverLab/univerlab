@@ -32,6 +32,8 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/es/sign-shell.astro', 'sign', 'es.postcards.sign'],
   ['src/pages/sign/owner.astro', 'sign', 't.postcards.sign'],
   ['src/pages/es/sign/owner.astro', 'sign', 't.postcards.sign'],
+  ['src/pages/logbook.astro', 'logbook', 'en.postcards.logbook'],
+  ['src/pages/es/logbook.astro', 'logbook', 'es.postcards.logbook'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -83,8 +85,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 13 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(13);
+  it('all 15 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(15);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -157,7 +159,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(10);
+    expect(others).toHaveLength(12);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
@@ -170,9 +172,9 @@ describe('Watermark component', () => {
 });
 
 describe('postcards dictionary', () => {
-  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
+  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'logbook', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
 
-  it('has the same 11 keys in both languages', () => {
+  it('has the same 12 keys in both languages', () => {
     expect(Object.keys(en.postcards).sort()).toEqual([...keys].sort());
     expect(Object.keys(es.postcards).sort()).toEqual([...keys].sort());
   });
