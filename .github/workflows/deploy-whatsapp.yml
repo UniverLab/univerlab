@@ -3,6 +3,9 @@ name: Deploy whatsapp worker
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     name: CI on main

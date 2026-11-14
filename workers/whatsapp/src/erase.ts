@@ -2,14 +2,26 @@ import { runModel, type ModelConfig } from './brain';
 import { DATA_LABEL, DATA_RULES } from './prompt';
 import type { Lang } from './lang';
 
+const isAlnum = (c: string): boolean => (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+
+/** Strip leading and trailing non-alphanumerics in linear time: the message
+ *  text is untrusted, and an end-anchored regex would backtrack on it. */
+function trimToAlnum(s: string): string {
+  let start = 0;
+  let end = s.length;
+  while (start < end && !isAlnum(s[start])) start++;
+  while (end > start && !isAlnum(s[end - 1])) end--;
+  return s.slice(start, end);
+}
+
 export function normalize(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '')
-    .trim();
+  return trimToAlnum(
+    text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' '),
+  );
 }
 
 export function deletionRequest(text: string): Lang | null {

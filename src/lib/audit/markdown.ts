@@ -38,7 +38,7 @@ function findingMarkdown(doc: AuditDocument, f: AuditFinding): string {
 }
 
 function cell(v: string | number): string {
-  return String(v).replace(/\s+/g, ' ').trim().replace(/\|/g, '\\|');
+  return String(v).replace(/\s+/g, ' ').trim().replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 }
 
 function blockMarkdown(doc: AuditDocument, slug: string, b: AuditBlock): string {
@@ -167,7 +167,7 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
       : `Client: ${m.client.name} · Auditors: ${m.auditors.map((a) => a.name).join(', ')} · Period: ${m.auditPeriod.start} – ${m.auditPeriod.end} · Version: ${m.version} · Status: ${m.status}`;
   const head = [
     '---',
-    `title: "${doc.meta.title.replace(/"/g, '\\"')}"`,
+    `title: "${doc.meta.title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`,
     `source: "${canonical}"`,
     '---',
     '',
