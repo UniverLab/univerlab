@@ -128,7 +128,7 @@ describe('workbench-solutions', () => {
   it('both routes render the solutions view with the plate and the watermark', () => {
     expect(ROUTE).toContain('WorkbenchSolutions');
     expect(ROUTE_ES).toContain('WorkbenchSolutions');
-    expect(VIEW).toContain('<Machine id="workbench"');
+    expect(VIEW).toContain('<Machine id="agentic"');
     expect(VIEW).toContain('<Watermark kind="blueprint" />');
     expect(VIEW).toContain('bookTarget(lang)');
     expect(VIEW).toContain('{w.altCta}');
@@ -146,7 +146,7 @@ describe('workbench-solutions', () => {
 
   it('below 48rem the poster comes first, centred, at the collaborators weight', () => {
     expect(VIEW).not.toContain('wbs-thumb');
-    expect(VIEW.match(/<Machine id="workbench"/g)).toHaveLength(1);
+    expect(VIEW.match(/<Machine id="agentic"/g)).toHaveLength(1);
     const phone = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
     expect(phone).toContain('.wbs-figure { display: block; order: -1; --machine-h-phone: 260px; }');
   });

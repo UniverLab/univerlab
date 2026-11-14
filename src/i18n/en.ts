@@ -880,6 +880,7 @@ export const en = {
     ] as [string, string, string, string][] },
     freeCall: { figure: 'Free', cond: 'We look at what you need and whether the Workbench is the right place for it.' },
     solutions: {
+      machineAlt: 'An engraved clockwork automaton of riveted brass seated at a small desk, writing with a quill, gears turning in its open chest',
       title: 'Agentic solutions: design and installation — UniverLab',
       description: 'We design and install the agentic solution your case calls for: Canopy graphs, LangGraph agents, chat and WhatsApp, with 30 days of support.',
       head: 'Agentic solutions',
@@ -932,6 +933,7 @@ export const en = {
     proof: { kicker: 'What already came out of this Workbench', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
     close: { head: 'What you pay at the Workbench funds the lab: the tools stay open.', cta: 'Write to the Workbench on WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
+      machineAlt: 'An engraved assayer’s desk: a precision balance under a glass case, a box of brass weights, an open ledger with a loupe, and a stick of sealing wax',
       title: 'Workbench audits: independent review with evidence — UniverLab',
       description: 'An independent review of your agents or AI, with reproducible evidence: a dedicated page, a PDF report and a private repository.',
       head: 'Workbench audits',

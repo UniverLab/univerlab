@@ -13,9 +13,15 @@ const { id, ink = 'night', height = '240px', class: className, eager = false } =
 const inks: ReadonlyArray<'day' | 'night'> = ink === 'theme' ? ['day', 'night'] : [ink];
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-// The engraving's description, written once per machine: the workbench keeps
-// its own key, every experiment keeps one under experiments[id].
-const alt = id === 'workbench' ? t.workbench.machineAlt : t.experiments[id as keyof typeof t.experiments].machineAlt;
+// The engraving's description, written once per machine: the Workbench and
+// its two service pages keep their own keys, every experiment keeps one under
+// experiments[id].
+const benchAlts: Record<string, string> = {
+  workbench: t.workbench.machineAlt,
+  agentic: t.workbench.solutions.machineAlt,
+  audits: t.workbench.audits.machineAlt,
+};
+const alt = benchAlts[id] ?? t.experiments[id as keyof typeof t.experiments].machineAlt;
 // A lone plate is the page's hero art: its URLs ship inline and eager. A theme
 // pair ships every URL in data-* and the swap script below populates only the
 // live phase at parse time (the other phase loads if the theme changes), so

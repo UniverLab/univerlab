@@ -874,6 +874,7 @@ export const es: Dict = {
     ] as [string, string, string, string][] },
     freeCall: { figure: 'Gratis', cond: 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.' },
     solutions: {
+      machineAlt: 'Autómata de relojería grabado, de latón remachado, sentado ante un pequeño escritorio escribiendo con pluma, con los engranajes a la vista en el pecho abierto',
       title: 'Soluciones agénticas: diseño e instalación — UniverLab',
       description: 'Diseñamos e instalamos la solución agéntica que tu caso pide: grafos Canopy, agentes sobre LangGraph, chat y WhatsApp, con 30 días de soporte.',
       head: 'Soluciones agénticas',
@@ -926,6 +927,7 @@ export const es: Dict = {
     proof: { kicker: 'Lo que ya salió de este Banco de trabajo', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
     close: { head: 'Lo que pagas en el Banco de trabajo financia el laboratorio: las herramientas siguen abiertas.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
+      machineAlt: 'Mesa de ensayador grabada: una balanza de precisión bajo campana de vidrio, una caja de pesas de latón, un libro mayor abierto con una lupa y una barra de lacre',
       title: 'Auditorías: revisión independiente con evidencia — UniverLab',
       description: 'Una revisión independiente de tus agentes o inteligencia artificial, con evidencia reproducible: página dedicada, informe en PDF y repositorio.',
       head: 'Auditorías del Banco de trabajo',
