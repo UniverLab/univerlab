@@ -312,4 +312,9 @@ describe('workbench', () => {
     expect(VIEW).toContain('#workbench-bookings');
     expect(VIEW).not.toContain('class="policy"');
   });
+
+  it('the page styles sit inside the layout, so the first frame paints styled', () => {
+    expect(VIEW.indexOf('<style is:inline')).toBeGreaterThan(-1);
+    expect(VIEW.indexOf('<style is:inline')).toBeLessThan(VIEW.indexOf('</BaseLayout>'));
+  });
 });

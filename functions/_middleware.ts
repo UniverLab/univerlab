@@ -12,6 +12,7 @@ import {
   todayEditionMarkdown,
   todayRoute,
 } from '../src/lib/today-edition';
+import { rewriteEditionWords } from './edition-words';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
 import { es } from '../src/i18n/es';
@@ -1070,7 +1071,8 @@ export async function onRequest(context: {
     try {
       const { signal, clear } = timeoutSignal(API_TIMEOUT_MS);
       try {
-        const { html, labHtml, lab2Html } = await liveTodayEdition(todayLang, fetch, signal, editionDateFor(new URL(request.url).search));
+        const edDate = editionDateFor(new URL(request.url).search);
+        const { html, labHtml, lab2Html } = await liveTodayEdition(todayLang, fetch, signal, edDate);
         const RW = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter;
         if (typeof RW === 'function') {
           const rewriter = new (RW as new () => {
@@ -1094,6 +1096,7 @@ export async function onRequest(context: {
               el.setInnerContent(lab2Html, { html: true });
             },
           });
+          rewriteEditionWords(rewriter, edDate, todayLang);
           return rewriter.transform(staticRes);
         }
         return staticRes;

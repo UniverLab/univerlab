@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
-import { editionDate, todayAside, todayLead } from '../lib/today-edition';
+import { editionDate, editionDateFor, editionDateWords, todayAside, todayLead } from '../lib/today-edition';
 import { buildPool } from '../lib/science-filter';
 
 const FIX = JSON.parse(
@@ -131,7 +131,7 @@ describe('middleware — /newspaper/ HTML', () => {
     const res = await onRequest(context('/newspaper/', 'text/html'));
 
     expect(res.status).toBe(200);
-    expect(FakeHTMLRewriter.last?.selector).toBe('#lab2-body');
+    expect(FakeHTMLRewriter.last?.selector).toBe('span[data-words]');
     expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('lab-heading');
     const inner = FakeHTMLRewriter.last?.writes['#edition'] || '';
     // The edition itself: dateline, columns, and the same count the pool has.
@@ -397,6 +397,24 @@ describe('middleware — /newspaper/ picked day (?d=)', () => {
       }
       return new Response(JSON.stringify({ entries: [] }), { status: 200 });
     }) as unknown as typeof fetch;
+
+  it('fills the masthead date words with the edition renderer', async () => {
+    global.fetch = jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes('wikipedia.org')) {
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+
+    const res = await onRequest(context('/newspaper/', 'text/html'));
+
+    expect(res.status).toBe(200);
+    expect(FakeHTMLRewriter.last?.writes['span[data-words]']).toBe(
+      editionDateWords(editionDateFor('', new Date()), 'en'),
+    );
+  });
 
   it('the edge prints the picked day', async () => {
     const calls: string[] = [];

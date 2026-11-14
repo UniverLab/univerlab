@@ -13,62 +13,6 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
 const bookHref = bookTarget(lang);
 ---
 <BaseLayout title={s.title} description={s.description} circadian>
-  <Watermark kind="blueprint" />
-  <section class="wrap workbench">
-    <header class="wbs-hero">
-      <div class="wbs-hero-text">
-        <span class="label">{w.label}</span>
-        <div class="wbs-thumb"><Machine id="workbench" ink="theme" height="112px" /></div>
-        <h1>{s.head}</h1>
-        <p class="wbs-lede">{s.lede}</p>
-        <p class="wbs-ctas">
-          <a class="wbs-btn" href={bookHref}><span class="wbs-long">{w.cta}</span><span class="wbs-short">{w.ctaShort}</span></a>
-          <a class="wbs-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a>
-          <small>{w.ctaNote}</small>
-        </p>
-      </div>
-      <figure class="wbs-figure">
-        <Machine id="workbench" ink="theme" height="260px" class="wbs-machine" />
-      </figure>
-    </header>
-    <section class="wbs-block">
-      <span class="label">{s.kinds.kicker}</span>
-      <ol class="wbs-scope">
-        {s.kinds.items.map(([title, body]) => (
-          <li><b>{title}</b><span>{body}</span></li>
-        ))}
-      </ol>
-    </section>
-    <section class="wbs-block">
-      <span class="label">{s.how.kicker}</span>
-      <ol class="wbs-steps">
-        {s.how.steps.map(([title, body]) => (
-          <li><b>{title}</b><span>{body}</span></li>
-        ))}
-      </ol>
-    </section>
-    <section class="wbs-block">
-      <span class="label">{s.deliver.kicker}</span>
-      <ol class="wbs-deliver">
-        {s.deliver.items.map(([title, body]) => (
-          <li><b>{title}</b><span>{body}</span></li>
-        ))}
-      </ol>
-    </section>
-    <section class="wbs-block wbs-price">
-      <span class="label">{s.price.kicker}</span>
-      <p>{s.price.text}</p>
-      {lang === 'es' && <p class="wbs-price-cop">{s.price.cop}</p>}
-    </section>
-    <section class="wbs-close">
-      <h2>{w.close.head}</h2>
-      <p><a class="wbs-btn" href={waHref} target="_blank" rel="noopener">{w.close.cta}</a></p>
-      <small>{w.close.phone}</small>
-    </section>
-  </section>
-  <div class="wbs-sticky"><a class="wbs-btn" href={bookHref}>{w.ctaShort}</a><a class="wbs-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
-</BaseLayout>
-
 {/* Inlined so the page ships no CSS chunk: every chunk is linked site-wide
     and counted on the budgeted pages, and this design must not move them. */}
 <style is:inline>
@@ -124,3 +68,58 @@ const bookHref = bookTarget(lang);
     .wbs-sticky .wbs-alt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.06em; white-space: nowrap; }
   }
 </style>
+  <Watermark kind="blueprint" />
+  <section class="wrap workbench">
+    <header class="wbs-hero">
+      <div class="wbs-hero-text">
+        <span class="label">{w.label}</span>
+        <div class="wbs-thumb"><Machine id="workbench" ink="theme" height="112px" /></div>
+        <h1>{s.head}</h1>
+        <p class="wbs-lede">{s.lede}</p>
+        <p class="wbs-ctas">
+          <a class="wbs-btn" href={bookHref}><span class="wbs-long">{w.cta}</span><span class="wbs-short">{w.ctaShort}</span></a>
+          <a class="wbs-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a>
+          <small>{w.ctaNote}</small>
+        </p>
+      </div>
+      <figure class="wbs-figure">
+        <Machine id="workbench" ink="theme" height="260px" class="wbs-machine" />
+      </figure>
+    </header>
+    <section class="wbs-block">
+      <span class="label">{s.kinds.kicker}</span>
+      <ol class="wbs-scope">
+        {s.kinds.items.map(([title, body]) => (
+          <li><b>{title}</b><span>{body}</span></li>
+        ))}
+      </ol>
+    </section>
+    <section class="wbs-block">
+      <span class="label">{s.how.kicker}</span>
+      <ol class="wbs-steps">
+        {s.how.steps.map(([title, body]) => (
+          <li><b>{title}</b><span>{body}</span></li>
+        ))}
+      </ol>
+    </section>
+    <section class="wbs-block">
+      <span class="label">{s.deliver.kicker}</span>
+      <ol class="wbs-deliver">
+        {s.deliver.items.map(([title, body]) => (
+          <li><b>{title}</b><span>{body}</span></li>
+        ))}
+      </ol>
+    </section>
+    <section class="wbs-block wbs-price">
+      <span class="label">{s.price.kicker}</span>
+      <p>{s.price.text}</p>
+      {lang === 'es' && <p class="wbs-price-cop">{s.price.cop}</p>}
+    </section>
+    <section class="wbs-close">
+      <h2>{w.close.head}</h2>
+      <p><a class="wbs-btn" href={waHref} target="_blank" rel="noopener">{w.close.cta}</a></p>
+      <small>{w.close.phone}</small>
+    </section>
+  </section>
+  <div class="wbs-sticky"><a class="wbs-btn" href={bookHref}>{w.ctaShort}</a><a class="wbs-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
+</BaseLayout>

@@ -21,7 +21,7 @@ const t = useTranslations(lang);
     <h1 class="masthead-name">{t.today.name}</h1>
     <div class="ear ear--right"><span>{t.today.price}</span></div>
     <p class="motto">{t.today.motto}</p>
-    <form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words></span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form>
+    <form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form>
     <nav class="paper-tabs">
       <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
       <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
@@ -52,7 +52,7 @@ const t = useTranslations(lang);
     <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
     <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
   </nav>
-  <form class="edition-pick edition-pick--bar" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words></span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /></form>
+  <form class="edition-pick edition-pick--bar" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /></form>
   <button class="paper-fit" data-paper-fit type="button" hidden>{t.today.fit}</button>
 </div>
 
@@ -60,7 +60,7 @@ const t = useTranslations(lang);
   // The masthead date controls: the built page cannot know ?d=, so the
   // edition's words, the prev/next steps and the today/past label are set
   // here, from the same day key the edition renderer uses.
-  import { editionYmd, editionDateFor, solOf } from '../lib/today-edition';
+  import { editionYmd, editionDateFor, editionDateWords, solOf } from '../lib/today-edition';
 
   (function () {
     var d = editionDateFor(window.location.search);
@@ -91,12 +91,7 @@ const t = useTranslations(lang);
       }
       var words = form.querySelector('[data-words]');
       if (words) {
-        words.textContent = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }).format(d);
+        words.textContent = editionDateWords(d, lang);
       }
       var prev = form.querySelector('[data-prev]');
       if (prev) prev.setAttribute('href', '?d=' + editionYmd(new Date(d.getTime() - 86400000)));

@@ -65,6 +65,11 @@ describe('today pick form', () => {
     expect(paper.match(/type="submit"/g)).toHaveLength(1);
   });
 
+  it('the words span reserves its height before the script fills it', () => {
+    expect(paper).toContain('<span data-words>&nbsp;</span>');
+    expect(paper.match(/<span data-words>&nbsp;<\/span>/g)).toHaveLength(2);
+  });
+
   it('both pages use the picked day in the fallback', () => {
     for (const page of [todayEn, todayEs]) {
       expect(page).toContain('editionDateFor(window.location.search)');

@@ -88,6 +88,19 @@ export function editionLabel(lang: TodayLang, date: Date, now: Date = new Date()
   return fmt(t.editionPast, { date: words });
 }
 
+/** The masthead date words: the edition's full date line. The edge
+ *  (functions/_middleware.ts) fills `span[data-words]` with it at request
+ *  time so the row paints at final height; the client script in
+ *  TodaysPaper.astro uses the same renderer as its fallback. */
+export function editionDateWords(date: Date, lang: TodayLang): string {
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
 /** The day's Wikipedia feed in the page language. */
 export function otdUrl(lang: TodayLang, date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');

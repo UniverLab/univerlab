@@ -139,6 +139,11 @@ describe('workbench-solutions', () => {
     expect(VIEW).not.toContain('mailto:');
   });
 
+  it('the page styles sit inside the layout, so the first frame paints styled', () => {
+    expect(VIEW.indexOf('<style is:inline')).toBeGreaterThan(-1);
+    expect(VIEW.indexOf('<style is:inline')).toBeLessThan(VIEW.indexOf('</BaseLayout>'));
+  });
+
   it('the page is linked from the card, kept in the sitemap and listed in llms.txt', () => {
     expect(CARD).toContain("localizePath('/workbench/solutions', lang)");
     expect(LLMS).toContain('(https://univerlab.org/workbench/solutions/)');

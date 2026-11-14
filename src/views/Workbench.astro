@@ -35,113 +35,6 @@ const proof = w.proof.items.map((id) => ({
 }));
 ---
 <BaseLayout title={w.title} description={w.description} circadian>
-  <Watermark kind="blueprint" />
-  <section class="wrap workbench">
-    <header class="wb-hero">
-      <div class="wb-hero-text">
-        <span class="label">{w.label}</span>
-        <div class="wb-thumb"><Machine id="workbench" ink="theme" height="112px" eager /></div>
-        <h1>{headPre}<em>{w.headEm}</em>{headPost}</h1>
-        <p class="wb-intro">{w.intro}</p>
-        <p class="wb-ctas">
-          <a class="wb-btn" href={bookHref}><span class="wb-long">{w.cta}</span><span class="wb-short">{w.ctaShort}</span></a>
-          <a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a>
-          <small>{w.ctaNote}</small>
-        </p>
-      </div>
-      <figure class="wb-figure">
-        <Machine id="workbench" ink="theme" height="260px" class="wb-machine" />
-      </figure>
-    </header>
-    <section class="wb-tags" aria-label={w.tags.kicker}>
-      {w.tags.items.map(([title, price, note, body], i) => (
-        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 1 && <ul class="wb-kinds">{w.solutions.kinds.items.map(([kind]) => (<li>{kind}</li>))}</ul>}{i === 1 && <p class="wb-card-link"><a class="wb-more" href={localizePath('/workbench/solutions', lang)}>{w.solutions.cardLink}</a></p>}{i === 2 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
-      ))}
-    </section>
-    <section class="wb-block">
-      <span class="label">{w.how.kicker}</span>
-      <ol class="wb-steps">
-        {w.how.steps.map(([title, body]) => (
-          <li><b>{title}</b><span>{body}</span></li>
-        ))}
-      </ol>
-    </section>
-    <section class="wb-block wb-proof">
-      <span class="label">{w.proof.kicker}</span>
-      <ul>
-        {proof.map((p) => (
-          <li><a href={p.href}><b>{p.name}</b> · {p.tagline}</a></li>
-        ))}
-      </ul>
-    </section>
-    <section class="wb-block wb-policy">
-      <span class="label">{w.policy.kicker}</span>
-      <p>{w.policy.summary}</p>
-      <p><a href={localizePath('/terms', lang) + '#workbench-bookings'}>{w.policy.link}</a></p>
-    </section>
-    <section class="book" id={lang === 'es' ? 'primera-llamada' : 'first-call'}>
-      <header class="book-hero">
-        <span class="label">{b.label}</span>
-        <h2>{b.h1}</h2>
-        <p class="book-intro">{b.intro}</p>
-      </header>
-      <div class="book-fallback" id="book-fallback">
-        <h2>{b.fallbackTitle}</h2>
-        <p>{b.fallbackText}</p>
-        <p class="book-fallback-links">
-          <a class="book-btn" href={bookWaHref} target="_blank" rel="noopener">{b.whatsapp}</a>
-          <span>{b.emailLabel} <a href={`mailto:${contactEmail}`}>{contactEmail}</a></span>
-        </p>
-      </div>
-      <form class="book-form" id="book-form" hidden data-api={api} data-lang={lang} novalidate>
-        <p class="book-status" id="book-status" role="status"></p>
-        <fieldset class="book-field" id="book-slots">
-          <legend>{b.form.slots}</legend>
-          <div id="book-slot-list"></div>
-          <p class="book-err" id="book-slot-err" hidden></p>
-        </fieldset>
-        <div class="book-field">
-          <label for="book-name">{b.form.name}</label>
-          <input id="book-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-invalid="false" aria-describedby="book-name-err" />
-          <p class="book-err" id="book-name-err" hidden></p>
-        </div>
-        <div class="book-field">
-          <label for="book-email">{b.form.email}</label>
-          <input id="book-email" name="email" type="email" autocomplete="email" maxlength="254" required aria-invalid="false" aria-describedby="book-email-err" />
-          <p class="book-err" id="book-email-err" hidden></p>
-        </div>
-        <div class="book-field">
-          <label for="book-note">{b.form.note}</label>
-          <textarea id="book-note" name="note" rows="3" maxlength="500" aria-invalid="false" aria-describedby="book-note-hint book-note-err"></textarea>
-          <p class="book-hint" id="book-note-hint">{b.form.noteHint}</p>
-          <p class="book-err" id="book-note-err" hidden></p>
-        </div>
-        <div class="book-field">
-          <div class="cf-turnstile" data-sitekey={sitekey} role="group" aria-label={b.form.check}></div>
-        </div>
-        <p><button class="book-btn" id="book-submit" type="submit">{b.form.submit}</button></p>
-      </form>
-      <div class="book-success" id="book-success" hidden>
-        <h2 id="book-success-title">{b.success.title}</h2>
-        <p id="book-success-when"></p>
-        <p id="book-success-meet"></p>
-        <p id="book-success-invite"></p>
-      </div>
-      <script type="application/json" id="book-i18n" set:html={copy} />
-      <script>
-        import { bindBookForm } from '../lib/book-client';
-        bindBookForm(document);
-      </script>
-    </section>
-    <section class="wb-close">
-      <h2>{w.close.head}</h2>
-      <p><a class="wb-btn" href={waHref} target="_blank" rel="noopener">{w.close.cta}</a></p>
-      <small>{w.close.phone}</small>
-    </section>
-  </section>
-  <div class="wb-sticky"><a class="wb-btn" href={bookHref}>{w.ctaShort}</a><a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
-</BaseLayout>
-
 {/* Inlined so the page ships no CSS chunk: every chunk is linked site-wide
     and counted on the budgeted pages, and this design must not move them. */}
 <style is:inline>
@@ -256,3 +149,109 @@ const proof = w.proof.items.map((id) => ({
     .book-hero h2 { font-size: 1.95rem; }
   }
 </style>
+  <Watermark kind="blueprint" />
+  <section class="wrap workbench">
+    <header class="wb-hero">
+      <div class="wb-hero-text">
+        <span class="label">{w.label}</span>
+        <div class="wb-thumb"><Machine id="workbench" ink="theme" height="112px" eager /></div>
+        <h1>{headPre}<em>{w.headEm}</em>{headPost}</h1>
+        <p class="wb-intro">{w.intro}</p>
+        <p class="wb-ctas">
+          <a class="wb-btn" href={bookHref}><span class="wb-long">{w.cta}</span><span class="wb-short">{w.ctaShort}</span></a>
+          <a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a>
+          <small>{w.ctaNote}</small>
+        </p>
+      </div>
+      <figure class="wb-figure">
+        <Machine id="workbench" ink="theme" height="260px" class="wb-machine" />
+      </figure>
+    </header>
+    <section class="wb-tags" aria-label={w.tags.kicker}>
+      {w.tags.items.map(([title, price, note, body], i) => (
+        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 1 && <ul class="wb-kinds">{w.solutions.kinds.items.map(([kind]) => (<li>{kind}</li>))}</ul>}{i === 1 && <p class="wb-card-link"><a class="wb-more" href={localizePath('/workbench/solutions', lang)}>{w.solutions.cardLink}</a></p>}{i === 2 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
+      ))}
+    </section>
+    <section class="wb-block">
+      <span class="label">{w.how.kicker}</span>
+      <ol class="wb-steps">
+        {w.how.steps.map(([title, body]) => (
+          <li><b>{title}</b><span>{body}</span></li>
+        ))}
+      </ol>
+    </section>
+    <section class="wb-block wb-proof">
+      <span class="label">{w.proof.kicker}</span>
+      <ul>
+        {proof.map((p) => (
+          <li><a href={p.href}><b>{p.name}</b> · {p.tagline}</a></li>
+        ))}
+      </ul>
+    </section>
+    <section class="wb-block wb-policy">
+      <span class="label">{w.policy.kicker}</span>
+      <p>{w.policy.summary}</p>
+      <p><a href={localizePath('/terms', lang) + '#workbench-bookings'}>{w.policy.link}</a></p>
+    </section>
+    <section class="book" id={lang === 'es' ? 'primera-llamada' : 'first-call'}>
+      <header class="book-hero">
+        <span class="label">{b.label}</span>
+        <h2>{b.h1}</h2>
+        <p class="book-intro">{b.intro}</p>
+      </header>
+      <div class="book-fallback" id="book-fallback">
+        <h2>{b.fallbackTitle}</h2>
+        <p>{b.fallbackText}</p>
+        <p class="book-fallback-links">
+          <a class="book-btn" href={bookWaHref} target="_blank" rel="noopener">{b.whatsapp}</a>
+          <span>{b.emailLabel} <a href={`mailto:${contactEmail}`}>{contactEmail}</a></span>
+        </p>
+      </div>
+      <form class="book-form" id="book-form" hidden data-api={api} data-lang={lang} novalidate>
+        <p class="book-status" id="book-status" role="status"></p>
+        <fieldset class="book-field" id="book-slots">
+          <legend>{b.form.slots}</legend>
+          <div id="book-slot-list"></div>
+          <p class="book-err" id="book-slot-err" hidden></p>
+        </fieldset>
+        <div class="book-field">
+          <label for="book-name">{b.form.name}</label>
+          <input id="book-name" name="name" type="text" autocomplete="name" maxlength="80" required aria-invalid="false" aria-describedby="book-name-err" />
+          <p class="book-err" id="book-name-err" hidden></p>
+        </div>
+        <div class="book-field">
+          <label for="book-email">{b.form.email}</label>
+          <input id="book-email" name="email" type="email" autocomplete="email" maxlength="254" required aria-invalid="false" aria-describedby="book-email-err" />
+          <p class="book-err" id="book-email-err" hidden></p>
+        </div>
+        <div class="book-field">
+          <label for="book-note">{b.form.note}</label>
+          <textarea id="book-note" name="note" rows="3" maxlength="500" aria-invalid="false" aria-describedby="book-note-hint book-note-err"></textarea>
+          <p class="book-hint" id="book-note-hint">{b.form.noteHint}</p>
+          <p class="book-err" id="book-note-err" hidden></p>
+        </div>
+        <div class="book-field">
+          <div class="cf-turnstile" data-sitekey={sitekey} role="group" aria-label={b.form.check}></div>
+        </div>
+        <p><button class="book-btn" id="book-submit" type="submit">{b.form.submit}</button></p>
+      </form>
+      <div class="book-success" id="book-success" hidden>
+        <h2 id="book-success-title">{b.success.title}</h2>
+        <p id="book-success-when"></p>
+        <p id="book-success-meet"></p>
+        <p id="book-success-invite"></p>
+      </div>
+      <script type="application/json" id="book-i18n" set:html={copy} />
+      <script>
+        import { bindBookForm } from '../lib/book-client';
+        bindBookForm(document);
+      </script>
+    </section>
+    <section class="wb-close">
+      <h2>{w.close.head}</h2>
+      <p><a class="wb-btn" href={waHref} target="_blank" rel="noopener">{w.close.cta}</a></p>
+      <small>{w.close.phone}</small>
+    </section>
+  </section>
+  <div class="wb-sticky"><a class="wb-btn" href={bookHref}>{w.ctaShort}</a><a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
+</BaseLayout>

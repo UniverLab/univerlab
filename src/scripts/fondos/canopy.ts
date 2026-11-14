@@ -108,6 +108,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   const gc = glow.getContext('2d') as CanvasRenderingContext2D;
   for (const el of [lit, glow]) {
     el.style.position = 'absolute';
+    el.style.display = 'none';
     layer.appendChild(el);
   }
   glow.style.opacity = '0.9';
@@ -159,6 +160,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       el.style.top = oy + 'px';
       el.style.width = map.w * s + 'px';
       el.style.height = map.h * s + 'px';
+      el.style.display = '';
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, canvas.width, canvas.height);
