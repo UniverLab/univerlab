@@ -22,7 +22,7 @@ describe('canonical URLs — trailing slash', () => {
   });
 
   describe('localizePath is idempotent', () => {
-    const paths = ['/', '/manifesto', '/contributors', '/status', '/canopy'];
+    const paths = ['/', '/manifesto', '/contributors', '/roadmap', '/canopy'];
     const langs = ['en', 'es'] as const;
 
     it.each(
@@ -47,7 +47,7 @@ describe('canonical URLs — trailing slash', () => {
 
   describe('switchLangPath round-trips', () => {
     it('en → es → en returns the starting path', () => {
-      const paths = ['/', '/manifesto/', '/contributors/', '/status/'];
+      const paths = ['/', '/manifesto/', '/contributors/', '/roadmap/'];
       for (const path of paths) {
         const url = new URL(`http://localhost${path}`);
         const switched = switchLangPath(url, 'es');

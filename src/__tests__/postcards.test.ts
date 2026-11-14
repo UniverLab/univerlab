@@ -3,7 +3,7 @@
  * Each opening carries its postcard; people/status/roadmap sit over the
  * blueprint drawing and the manifesto over the celestial chart.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
@@ -22,16 +22,20 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/archive.astro', 'archive', 't.postcards.archive'],
   ['src/pages/es/archive.astro', 'archive', 't.postcards.archive'],
   ['src/views/People.astro', 'contributors', 't.postcards.contributors'],
-  ['src/views/Experiments.astro', 'experiments', 't.postcards.experiments'],
   ['src/pages/feed.astro', 'feed', 't.postcards.feed'],
   ['src/pages/es/feed.astro', 'feed', 't.postcards.feed'],
   ['src/views/Manifesto.astro', 'manifesto', 't.postcards.manifesto'],
   // The 404 dropped its postcard: the kraken chart is its opening now (see
   // not-found-kraken.test.ts). The postcard key stays for the asset history.
   ['src/pages/roadmap.astro', 'roadmap', 'en.postcards.roadmap'],
-  ['src/pages/status.astro', 'status', 'en.postcards.status'],
-  ['src/pages/today.astro', 'today', 't.postcards.today'],
-  ['src/pages/es/today.astro', 'today', 't.postcards.today'],
+  ['src/pages/sign-shell.astro', 'sign', 'en.postcards.sign'],
+  ['src/pages/es/sign-shell.astro', 'sign', 'es.postcards.sign'],
+  ['src/pages/sign/owner.astro', 'sign', 't.postcards.sign'],
+  ['src/pages/es/sign/owner.astro', 'sign', 't.postcards.sign'],
+  ['src/pages/logbook.astro', 'logbook', 'en.postcards.logbook'],
+  ['src/pages/es/logbook.astro', 'logbook', 'es.postcards.logbook'],
+  ['src/pages/audits/index.astro', 'audit', 'en.postcards.audit'],
+  ['src/pages/audit-shell.astro', 'audit', 'en.postcards.audit'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -83,8 +87,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 13 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(13);
+  it('all 17 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(17);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -94,6 +98,12 @@ describe('page openings', () => {
       expect(src).not.toContain('bg="cosmic"');
       expect(src).not.toMatch(/bg=\{/);
     }
+  });
+
+  it('drops the postcard from /experiments so the room shares one centred axis', () => {
+    const src = read('src/views/Experiments.astro');
+    expect(src).not.toContain('Postcard');
+    expect(src).not.toContain('page-open');
   });
 
   it('lays the opening out in global.css: card above h1 on mobile, two columns from 64rem', () => {
@@ -143,15 +153,15 @@ describe('Watermark component', () => {
     expect(watermark).toMatch(/:global\(body\)\s*\{\s*isolation:\s*isolate;\s*position:\s*relative;?\s*\}/);
   });
 
-  it('lands on the manifesto (celestial) and on people, status, roadmap (blueprint)', () => {
+  it('lands on the manifesto (celestial) and on people and roadmap (blueprint)', () => {
     expect(read('src/views/Manifesto.astro')).toContain('<Watermark kind="celestial"');
-    for (const f of ['src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro']) {
+    for (const f of ['src/views/People.astro', 'src/pages/roadmap.astro']) {
       expect(`${f}: ${read(f)}`).toContain('<Watermark kind="blueprint"');
     }
     const others = carriers
       .map(([f]) => f)
-      .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/status.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(9);
+      .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
+    expect(others).toHaveLength(14);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
@@ -160,14 +170,13 @@ describe('Watermark component', () => {
   it('veils dense text over the drawing instead of lowering the opacity', () => {
     expect(read('src/views/Manifesto.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
     expect(read('src/pages/roadmap.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
-    expect(read('src/pages/status.astro')).toContain('color-mix(in srgb, var(--bg) 80%, transparent)');
   });
 });
 
 describe('postcards dictionary', () => {
-  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'manifesto', 'not-found', 'roadmap', 'status', 'today'];
+  const keys = ['api', 'archive', 'audit', 'contributors', 'experiments', 'feed', 'logbook', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
 
-  it('has the same 10 keys in both languages', () => {
+  it('has the same 13 keys in both languages', () => {
     expect(Object.keys(en.postcards).sort()).toEqual([...keys].sort());
     expect(Object.keys(es.postcards).sort()).toEqual([...keys].sort());
   });
@@ -188,5 +197,94 @@ describe('postcards dictionary', () => {
   it('keeps the roadmap card literal about the engraving that ships', () => {
     expect(en.postcards.roadmap).toMatch(/drafting table.*sea chart.*compass rose.*rolled maps.*dividers.*globe/i);
     expect(es.postcards.roadmap).toMatch(/mesa de dibujo.*carta marina.*rosa de los vientos.*mapas enrollados.*compás.*globo terráqueo/i);
+  });
+});
+
+describe('sign postcard assets', () => {
+  // FR4: the sign opening renders /bench/postcards/sign-{day,night}-{1600,800,mobile}.{avif,webp}.
+  // A missing file renders a broken image on /sign/<id> and /sign/owner, so pin all 12 on disk and in the manifest.
+  const files = [
+    'sign-day-1600.avif',
+    'sign-day-1600.webp',
+    'sign-day-800.avif',
+    'sign-day-800.webp',
+    'sign-day-mobile.avif',
+    'sign-day-mobile.webp',
+    'sign-night-1600.avif',
+    'sign-night-1600.webp',
+    'sign-night-800.avif',
+    'sign-night-800.webp',
+    'sign-night-mobile.avif',
+    'sign-night-mobile.webp',
+  ];
+
+  it('ships all 12 sign variants on disk, non-empty', () => {
+    expect(files).toHaveLength(12);
+    for (const f of files) {
+      const p = join(root, 'public', 'bench', 'postcards', f);
+      expect(existsSync(p)).toBe(true);
+      expect(statSync(p).size).toBeGreaterThan(0);
+    }
+  });
+
+  it('lists all 12 sign variants in the bench manifest', () => {
+    const manifest = JSON.parse(read('public/bench/manifest.json')) as {
+      assets: Array<{ file: string }>;
+    };
+    const listed = new Set(manifest.assets.map((a) => a.file));
+    for (const f of files) {
+      expect(listed.has(`postcards/${f}`)).toBe(true);
+    }
+  });
+});
+
+describe('audit postcard assets', () => {
+  // FR2: the audit opening renders /bench/postcards/audit-{day,night}-{1600,800,mobile}.{avif,webp}.
+  // A missing file renders a broken image on /audits/<slug>/ and /workbench/audits/<slug>/, so pin all 12 on disk and in the manifest.
+  const files = [
+    'audit-day-1600.avif',
+    'audit-day-1600.webp',
+    'audit-day-800.avif',
+    'audit-day-800.webp',
+    'audit-day-mobile.avif',
+    'audit-day-mobile.webp',
+    'audit-night-1600.avif',
+    'audit-night-1600.webp',
+    'audit-night-800.avif',
+    'audit-night-800.webp',
+    'audit-night-mobile.avif',
+    'audit-night-mobile.webp',
+  ];
+
+  it('ships all 12 audit variants on disk, non-empty', () => {
+    expect(files).toHaveLength(12);
+    for (const f of files) {
+      const p = join(root, 'public', 'bench', 'postcards', f);
+      expect(existsSync(p)).toBe(true);
+      expect(statSync(p).size).toBeGreaterThan(0);
+    }
+  });
+
+  it('lists all 12 audit variants in the bench manifest', () => {
+    const manifest = JSON.parse(read('public/bench/manifest.json')) as {
+      assets: Array<{ file: string }>;
+    };
+    const listed = new Set(manifest.assets.map((a) => a.file));
+    for (const f of files) {
+      expect(listed.has(`postcards/${f}`)).toBe(true);
+    }
+  });
+
+  it('sits before #audit in both shells so the edge rewrite keeps it', () => {
+    // The middleware fills only #audit at request time
+    // (functions/_middleware.ts); a postcard inside that div would be wiped
+    // on every route, so pin its position ahead of the container.
+    for (const f of ['src/pages/audits/index.astro', 'src/pages/audit-shell.astro']) {
+      const src = read(f);
+      const figureAt = src.indexOf('audit-page-pc');
+      const auditAt = src.indexOf('<div id="audit">');
+      expect(figureAt).toBeGreaterThanOrEqual(0);
+      expect(auditAt).toBeGreaterThan(figureAt);
+    }
   });
 });

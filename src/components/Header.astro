@@ -11,12 +11,16 @@ import {
 } from '../i18n';
 import { experiments } from '../lib/experiments';
 import Mailbox from './Mailbox.astro';
+import { iconSvg } from '../lib/icon-svg';
+import { heart, menu, xIcon } from '../lib/icons';
 
 interface Props {
   /** Only circadian pages honour the celestial disc; the rest never paint it. */
   circadian?: boolean;
+  /** Single-language pages (audits) set this false to hide the corner. */
+  langCorner?: boolean;
 }
-const { circadian = true } = Astro.props;
+const { circadian = true, langCorner = true } = Astro.props;
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -27,19 +31,20 @@ const path = Astro.url.pathname;
 const seg = path.replace(/^\/es(?=\/|$)/, '').split('/').filter(Boolean)[0] ?? '';
 const onExperiment = experiments.some((e) => e.id === seg);
 
-// On docs pages the header points GitHub at the project's own repo (not the org).
+// Docs pages light up the Experiments entry too.
 // Docs are circadian like the rest of the site — no manual theme toggle.
 const docsMatch = path.match(/^\/([^/]+)\/docs/);
 const docExp = docsMatch ? experiments.find((e) => e.id === docsMatch[1]) : undefined;
 const isDocs = !!docExp;
-const githubHref = docExp ? docExp.github : 'https://github.com/UniverLab';
 
 const nav = [
   { href: localizePath('/experiments', lang), label: t.nav.experiments, exp: true },
   { href: localizePath('/manifesto', lang), label: t.nav.manifesto },
-  { href: '/status/', label: t.nav.log }, // English-only page, no /es twin
+  { href: '/roadmap/', label: t.nav.roadmap }, // English-only page, no /es twin
   { href: localizePath('/contributors', lang), label: t.nav.people },
-  { href: githubHref, label: t.nav.github, ext: true },
+  { href: localizePath('/workbench', lang), label: t.nav.workbench },
+  // The newspaper takes the slot GitHub had: GitHub stays in the footer's icons.
+  { href: localizePath('/newspaper', lang), label: t.nav.observable },
   { href: 'https://github.com/sponsors/JheisonMB', label: t.nav.sponsors, ext: true, sponsor: true },
 ];
 const other = lang === 'en' ? 'es' : 'en';
@@ -78,7 +83,7 @@ const signals = [
 ---
 <header>
   <div class="wrap bar">
-    <a href={localizePath('/', lang)} class="home" aria-label="UniverLab">
+    <a href={localizePath('/', lang)} class="home">
       <Mark size={42} />
       <NameGloss senses={t.home.hero.senses} tagline={t.home.hero.tagline} />
     </a>
@@ -89,7 +94,8 @@ const signals = [
       aria-expanded="false"
       aria-controls="site-nav"
     >
-      <span class="bars"></span>
+      <span class="burger-icon burger-menu" set:html={iconSvg(menu, { size: 20 })} />
+      <span class="burger-icon burger-close" set:html={iconSvg(xIcon, { size: 20 })} />
     </button>
     <nav id="site-nav">
       {nav.map((item) => (
@@ -99,7 +105,8 @@ const signals = [
           rel={(item as any).ext ? 'noopener noreferrer' : undefined}
           class:list={['label', { active: navActive(item as any), sponsor: (item as any).sponsor }]}
           aria-current={navActive(item as any) ? 'page' : undefined}
-        >{(item as any).sponsor ? <><svg class="heart-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
+          aria-label={(item as any).sponsor ? t.nav.sponsors : undefined}
+        >{(item as any).sponsor ? <><span class="heart-icon" set:html={iconSvg(heart, { size: 12 })} /><span class="heart-text">{(item as any).label}</span></> : (item as any).label}</a>
       ))}
       <span class="nav-waves" aria-hidden="true">
         <svg viewBox={`0 0 ${WAVE_W} 28`}>
@@ -119,14 +126,16 @@ const signals = [
     </button>
   )}
   <Mailbox />
+  {langCorner && (
   <a
     class="peel"
     href={toggleHref}
     data-set-lang={other}
     hreflang={other}
-    aria-label={`${t.header.switchTo} ${t.header.langLabel[other]}`}
+    aria-label={`${t.header.switchTo} ${t.header.langLabel[other]} (${languages[other]})`}
     id="lang-corner"
-  ><span class="under"><span class="label"><span class="short">{languages[other]}</span><span class="long">{t.header.langLabel[other]}</span></span></span><span class="flap"></span></a>
+  ><span class="under"><span class="label"><span class="long">{t.header.langLabel[other]}</span>{' '}<span class="short">{languages[other]}</span></span></span><span class="flap"></span></a>
+  )}
 </header>
 
 <script>
@@ -346,20 +355,57 @@ const signals = [
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setOpen(false);
     });
+
+    // Fold into the burger exactly when the single-line bar no longer fits:
+    // measure with the nav forced onto one line, then restore. The reserved
+    // brand width (NameGloss) keeps the cycle from moving the fold point.
+    const bar = document.querySelector('.bar');
+    const home = document.querySelector('a.home');
+    const headerEl = bar?.closest('header');
+    function syncNav() {
+      if (!bar || !headerEl || !siteNav) return;
+      // Measure the unfolded bar: the folded rule releases the brand's
+      // reserved width (width:auto !important) and shows the burger, so
+      // measuring while folded would under-read and flap between states
+      // on every ResizeObserver tick. Reading with the fold off makes the
+      // result a pure function of the viewport, with a stable fixed point.
+      headerEl.classList.remove('nav-burger');
+      const m = siteNav.style;
+      m.display = 'flex';
+      m.flexWrap = 'nowrap';
+      // Overflow into the bar's own padding-right (the mailbox gutter) never
+      // grows scrollWidth, so compare the nav's right edge against the
+      // content-box right edge instead: clientWidth includes the padding.
+      const pr = parseFloat(getComputedStyle(bar).paddingRight || '0') || 0;
+      const barRect = bar.getBoundingClientRect();
+      const navRect = siteNav.getBoundingClientRect();
+      const over = navRect.right > barRect.left + bar.clientWidth - pr + 1;
+      m.display = '';
+      m.flexWrap = '';
+      headerEl.classList.toggle('nav-burger', over);
+    }
+    syncNav();
+    if ('ResizeObserver' in window) {
+      if (bar) new ResizeObserver(syncNav).observe(bar);
+      if (home) new ResizeObserver(syncNav).observe(home);
+    }
+    if (document.fonts) document.fonts.ready.then(syncNav);
   }
 </script>
 
 <style>
   /* The header owns the page-corner switch, which is fixed at the viewport's bottom
      right: a stacking context of its own keeps it painted above the footer's ground
-     (a later sibling) while the footer's own popups still layer above it. */
-  header { position: relative; z-index: 1; }
+     (a later sibling) while the footer's own popups (z 20) still layer above it.
+     It sits above every hero too (an experiment hero is its own z 1 context
+     later in the page), so the phone menu never drops behind a machine. */
+  header { position: relative; z-index: 10; }
   .bar {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.6rem;
     /* No more hr.rule at the foot: the bar's own padding-bottom
        carries the 1px so the header keeps the total height it had. */
     padding-top: 1.1rem;
@@ -374,18 +420,18 @@ const signals = [
   /* The living wordmark — a compact NameGloss lockup, sized down for the bar. */
   .home {
     display: inline-flex; align-items: center; gap: 0.65rem; text-decoration: none;
-    --ng-word: 1rem; --ng-line: 1rem; --ng-slogan: 0.66rem; --ng-gloss: 0.86rem; --ng-gap: 0.02rem;
-    /* The cycled suffix in a true gold (not the lemony circadian accent), so it
-       reads on both light and dark headers. */
-    --ng-suffix: #c9a227;
+    --ng-word: 0.9rem; --ng-line: 1rem; --ng-slogan: 0.66rem; --ng-gloss: 0.72rem; --ng-gap: 0.02rem;
   }
-  nav { display: flex; gap: 1.6rem; flex-wrap: wrap; align-items: center; }
-  nav a { text-decoration: none; color: #8a8d93; }
+  nav { display: flex; gap: 0.85rem; flex-wrap: nowrap; align-items: center; }
+  nav a { text-decoration: none; color: #8a8d93; white-space: nowrap; letter-spacing: 0.08em; }
   nav a:hover, nav a.active { color: var(--ink); }
-  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.5rem; }
+  nav a.sponsor { color: var(--accent, var(--bench-emphasis)); display: inline-flex; align-items: center; animation: heartbeat 2s ease-in-out infinite; margin-right: 0.25rem; }
   nav a.sponsor svg { display: block; }
+  nav a.sponsor .heart-icon { display: inline-flex; line-height: 0; }
   nav a.sponsor .heart-text { display: none; }
   nav a.sponsor:hover { color: color-mix(in srgb, var(--accent, var(--bench-emphasis)) 75%, var(--bench-line)); animation-play-state: paused; }
+  /* The wave strip lives only in the folded menu; the inline bar never shows it. */
+  .nav-waves { display: none; }
 
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
@@ -571,76 +617,59 @@ const signals = [
     color: var(--ink-dim);
   }
   .burger:hover { color: var(--ink); }
-  .burger .bars,
-  .burger .bars::before,
-  .burger .bars::after {
-    content: '';
+  /* The menu and close marks stack: the menu shows collapsed, the X open. */
+  .burger-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+  .burger-icon svg { display: block; }
+  .burger .burger-close { display: none; }
+  .burger[aria-expanded='true'] .burger-menu { display: none; }
+  .burger[aria-expanded='true'] .burger-close { display: inline-flex; }
+
+  /* JS fit-check (see the burger script): when the single-line bar no longer
+     fits, the header folds the menu into the burger — never wraps. */
+  header.nav-burger .burger { display: inline-flex; align-items: center; justify-content: center; }
+  header.nav-burger nav a.sponsor .heart-icon { display: none; }
+  header.nav-burger nav a.sponsor .heart-text { display: inline; }
+  header.nav-burger nav {
+    display: none;
     position: absolute;
-    left: 50%;
-    width: 1.1rem;
-    height: 1.5px;
-    background: currentColor;
-    transform: translateX(-50%);
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    top: calc(100% + 0.6rem);    /* float a little below the bar */
+    right: 0;                    /* anchored under the burger; .wrap padding keeps it off the page edge */
+    z-index: 30;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    gap: 1.1rem;
+    min-width: 11rem;
+    padding: 1.1rem 1.3rem 1.6rem; /* extra bottom room for the wave strip */
+    background: var(--menu-bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    overflow: hidden;              /* clip the wave strip to the rounded card */
   }
-  .burger .bars { top: 50%; transform: translate(-50%, -50%); }
-  .burger .bars::before { top: -6px; }
-  .burger .bars::after { top: 6px; }
-  /* Morph into an X when open. */
-  .burger[aria-expanded='true'] .bars { background: transparent; }
-  .burger[aria-expanded='true'] .bars::before { top: 0; transform: translateX(-50%) rotate(45deg); }
-  .burger[aria-expanded='true'] .bars::after { top: 0; transform: translateX(-50%) rotate(-45deg); }
+  header.nav-burger nav.open { display: flex; }
 
-  @media (max-width: 1024px) {
-    /* The mailbox stands at the rule's right end and rises into the bar:
-       keep the burger and menu clear of it. */
-    .bar { padding-right: 56px; }
-    .burger { display: inline-flex; }
-    nav a.sponsor .heart-icon { display: none; }
-    nav a.sponsor .heart-text { display: inline; }
-    nav {
-      display: none;
-      position: absolute;
-      top: calc(100% + 0.6rem);    /* float a little below the bar */
-      right: 0;                    /* anchored under the burger; .wrap padding keeps it off the page edge */
-      z-index: 30;
-      flex-direction: column;
-      align-items: flex-end;
-      text-align: right;
-      gap: 1.1rem;
-      min-width: 11rem;
-      padding: 1.1rem 1.3rem 1.6rem; /* extra bottom room for the wave strip */
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-      overflow: hidden;              /* clip the wave strip to the rounded card */
-    }
-    nav.open { display: flex; }
-
-    /* Several short signals drift along the bottom of the open menu, each at its
-       own speed — a faint P2P chatter. */
-    .nav-waves {
-      display: block;
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 26px;
-      pointer-events: none;
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);
-      mask-image: linear-gradient(90deg, transparent, #000 42%);
-    }
-    .nav-waves svg { display: block; width: 780px; height: 28px; }
-    .nav-waves g { animation: nav-signal var(--dur, 3s) linear infinite; }
-    @keyframes nav-signal { to { transform: translateX(calc(-1 * var(--tx, 22px))); } }
+  /* Several short signals drift along the bottom of the open menu, each at its
+     own speed — a faint P2P chatter. */
+  header.nav-burger .nav-waves {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 26px;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);
+    mask-image: linear-gradient(90deg, transparent, #000 42%);
   }
+  header.nav-burger .nav-waves svg { display: block; width: 780px; height: 28px; }
+  header.nav-burger .nav-waves g { animation: nav-signal var(--dur, 3s) linear infinite; }
+  @keyframes nav-signal { to { transform: translateX(calc(-1 * var(--tx, 22px))); } }
 
-  /* Hidden on desktop, where the inline nav already fills the bar. Scoped to a
-     min-width query so it can't override the max-width rule above by source order. */
-  @media (min-width: 1181px) {
-    .nav-waves { display: none; }
-  }
+  /* Folded: the brand releases its reserved width so bar + burger fit phones,
+     and the mailbox shrinks as it did under the old breakpoint. */
+  header.nav-burger .home { width: auto !important; flex: 0 1 auto !important; }
+  header.nav-burger :global(.mailbox) { width: 40px; height: 52px; }
 
   @media (prefers-reduced-motion: reduce) {
     .nav-waves g { animation: none !important; }

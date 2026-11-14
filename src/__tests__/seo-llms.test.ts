@@ -88,7 +88,7 @@ describe('checkMarkdownTwins', () => {
   it('requires no link on noindex pages and on 404.html', () => {
     const dist = distFixture({
       'index.html': twinPage('https://univerlab.org/'),
-      'today/index.html': page(NOINDEX),
+      'newspaper/index.html': page(NOINDEX),
       '404.html': page(),
       'index.md': '# home',
     });
@@ -133,14 +133,14 @@ describe('checkMarkdownTwins', () => {
     const failures = withDist(
       {
         'index.html': twinPage('https://univerlab.org/'),
-        'today/index.html': twinPage('https://univerlab.org/today/', NOINDEX),
+        'newspaper/index.html': twinPage('https://univerlab.org/newspaper/', NOINDEX),
         '404.html': twinPage('https://univerlab.org/404/'),
         'index.md': '# home',
-        'today/index.md': '# today',
+        'newspaper/index.md': '# newspaper',
       },
       checkMarkdownTwins,
     );
-    expect(failures.join('\n')).toMatch(/\/today\/: noindex page must not advertise/);
+    expect(failures.join('\n')).toMatch(/\/newspaper\/: noindex page must not advertise/);
     expect(failures.join('\n')).toMatch(/\/404\.html: must not advertise/);
   });
 

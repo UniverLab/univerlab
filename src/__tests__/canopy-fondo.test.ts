@@ -81,4 +81,23 @@ describe('canopy fondo', () => {
     expect(src).toContain("glow.style.mixBlendMode = 'plus-lighter'");
     expect(src).toMatch(/if \(now - lastDraw < DRAW_MS\) return;/);
   });
+
+  it('hides the script-made canvases until they have their final geometry', () => {
+    // lit and glow are appended at the default 300x150 and only sized once
+    // celdas.json and the comb image load: they stay display:none until
+    // layout() sets their box, then appear in the same style pass.
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
+    expect(src).toContain("el.style.display = 'none'");
+    expect(src).toContain("el.style.display = ''");
+    expect(src.indexOf("el.style.display = 'none'")).toBeLessThan(src.indexOf('if (!map || !comb) return;'));
+    expect(src.indexOf("el.style.display = ''")).toBeGreaterThan(src.indexOf('if (!map || !comb) return;'));
+  });
+
+  it('scales the sized comb into the cell map, so the lit cells stay on the engraving', () => {
+    // celdas.json is 1813×977 while the shipped panal is 1600×862; drawing the
+    // image at natural size inside the map's transform would slide it off.
+    const src = readFileSync(resolve(__dirname, '..', 'scripts', 'fondos', 'canopy.ts'), 'utf8');
+    expect(src).toContain('c.drawImage(comb, 0, 0, map.w, map.h)');
+    expect(src).not.toMatch(/c\.drawImage\(comb, 0, 0\)/);
+  });
 });

@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TodaysPaper from '../../components/TodaysPaper.astro';
+---
+<!-- `noindex` porque el HTML construido solo trae el cabezal: la edición la
+     compone el edge (functions/_middleware.ts), y el script de abajo llena
+     #edition con el mismo renderer cuando el edge no lo hizo. El filtro del
+     sitemap en astro.config.mjs la excluye por lo mismo — una URL noindex en
+     el sitemap es un error reportado. -->
+<BaseLayout title="El Observable — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." circadian noindex paperDisplayFonts>
+  <section class="wrap today-page">
+    <TodaysPaper />
+  </section>
+
+  <style is:global>
+    /* El periódico necesita el ancho completo: tres columnas desde 48rem,
+       como en el mockup. La lista anterior limitaba la página a 42rem. */
+    .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
+  </style>
+
+  <script>
+    // El respaldo del cliente para el periódico: por cada plana que el edge no
+    // compuso (#edition, #lab-body aún vacías), trae lo que necesita y la
+    // llena con el mismo renderer que usa el edge. Las pestañas van siempre.
+    import { readOtdCache, fetchPool, FULL_POOL } from '../../lib/science-filter';
+    import { todayEditionHtml, editionDateFor } from '../../lib/today-edition';
+    import { labPageHtml, labPageHtml2 } from '../../lib/lab-page';
+    import { bindLabPage, setLabEntries } from '../../lib/lab-page-client';
+    import { initPaperSheet } from '../../lib/paper-sheet';
+    import { fitPaper } from '../../lib/paper-fit';
+
+    (function () {
+      bindLabPage(document);
+      initPaperSheet(document);
+      var lang = 'es';
+      var day = editionDateFor(window.location.search);
+      var picked = /[?&]d=/.test(window.location.search);
+      var ed = document.getElementById('edition');
+      var labBody = document.getElementById('lab-body');
+      var lab2Body = document.getElementById('lab2-body');
+      var needEdition = ed && !(ed.textContent || '').replace(/\s/g, '');
+      var needLab = labBody && !(labBody.textContent || '').replace(/\s/g, '');
+      var needLab2 = lab2Body && !(lab2Body.textContent || '').replace(/\s/g, '');
+      // El alto fijo de la hoja reserva el espacio de cada plana, así que
+      // encajar nunca mueve el layout; se reencaja al cargar las imágenes.
+      var refit = function () { fitPaper(document); };
+      window.addEventListener('load', refit);
+      if (!needEdition && !needLab && !needLab2) { refit(); return; }
+
+      var loading = document.getElementById('today-loading');
+      var failed = function () {
+        if (loading) loading.style.display = 'none';
+        var err = document.getElementById('today-error');
+        if (err) {
+          err.style.display = 'block';
+          // El texto vive en src/i18n (t.today.error), lo pone el componente.
+          err.textContent = err.getAttribute('data-msg') || '';
+        }
+      };
+
+      var facts = !picked && readOtdCache(lang);
+      var factsP = facts && facts.length
+        ? Promise.resolve(facts)
+        // El mismo día que pide el edge: la fecha del laboratorio (UTC−5), no
+        // la del visitante, para no imprimir las cartas de otro día.
+        : fetchPool(fetch, lang, day, FULL_POOL);
+      // El buzón del laboratorio es opcional: si su lectura falla (CORS, una
+      // caída) igual se imprimen las cartas del día, sin ese recuadro.
+      var labP = needLab || needEdition
+        ? fetch('https://announcements.univerlab.org/?limit=100')
+          .then(function (res) {
+            if (!res.ok) throw new Error('API ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            return Array.isArray(data?.entries) ? data.entries : [];
+          })
+          .catch(function () { return null; })
+        : Promise.resolve([]);
+
+      Promise.all([factsP, labP]).then(
+        function (parts) {
+          // Las páginas 2 y 3 no dependen de las cartas del día: se llenan
+          // aunque la lectura de Wikipedia falle y la página 1 muestre el error.
+          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang, { unavailable: parts[1] === null });
+          if (needLab2) lab2Body.innerHTML = labPageHtml2(parts[1] || [], lang, { unavailable: parts[1] === null });
+          setLabEntries(document, { entries: parts[1] || [], lang: lang });
+          if (needEdition) {
+            if (!parts[0] || !parts[0].length) { failed(); return; }
+            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] || [] }, lang, day);
+          }
+          // Se encaja antes de mostrar la hoja: el llenado de arriba corrió
+          // en la misma tarea, así que nada pinta a medio encajar.
+          refit();
+        },
+        function () { failed(); },
+      );
+    })();
+  </script>
+</BaseLayout>

@@ -6,12 +6,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { experiments, byId, isArchived } from '../lib/experiments';
-import { entryModels } from '../lib/experiment-entries';
+import { DEFAULT_TAB, entryModels, visibleInTab } from '../lib/experiment-entries';
 import { plate } from '../lib/machines';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
-const VIEW = readFileSync(resolve(__dirname, '../views/Experiments.astro'), 'utf8');
+const VIEW = readFileSync(resolve(__dirname, '../components/Encyclopedia.astro'), 'utf8');
 const entries = entryModels((path) => path);
 
 /** The pronunciation every entry shows right after its headword, slashes included. */
@@ -24,12 +24,13 @@ const IPA: Record<string, string> = {
   'astro-denoise': '/ˈæs.troʊ diːˈnɔɪz/',
   demostage: '/ˈdɛm.oʊ.steɪdʒ/',
   quorum: '/ˈkwɔː.rəm/',
+  facetmedia: '/ˈfæs.ɪt ˈmiː.di.ə/',
 };
 
 /** GitKit's figurative sense, copied from the spec for both languages. */
 const GITKIT_FIGURE = {
-  en: "The craftsman's case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.",
-  es: 'Estuche del artesano que le saca a git todo el jugo: los ganchos que nadie configura y las reglas que todos olvidan, guardados en un solo estuche que se abre igual en cada repositorio.',
+  en: 'A sugar-cane mill that presses the cane to the last drop: that is how GitKit gets everything out of git, with the hooks nobody sets up and the rules everybody forgets in place the same way in every repository.',
+  es: 'Trapiche que exprime la caña hasta la última gota: así le saca GitKit a git todo el jugo, con los ganchos que nadie configura y las reglas que todos olvidan puestos igual en cada repositorio.',
 };
 
 type ExperimentCopy = { etymology?: string; figure?: string };
@@ -82,12 +83,42 @@ describe('experiments encyclopedia entry list', () => {
 
   it('carries the tab labels and the key in both languages', () => {
     for (const dict of [en, es]) {
-      expect(dict.encyclopedia.tabs.all).toBeTruthy();
+      expect((dict.encyclopedia.tabs as { all?: unknown }).all).toBeUndefined();
       expect(dict.encyclopedia.tabs.active).toBeTruthy();
       expect(dict.encyclopedia.tabs.research).toBeTruthy();
       expect(dict.encyclopedia.tabs.archived).toBeTruthy();
       expect(dict.encyclopedia.key).toMatch(/§.*¶.*†/);
     }
+  });
+
+  it('opens on Active with no All filter', () => {
+    expect(VIEW).not.toContain('data-f="all"');
+    expect(VIEW).toContain('data-f="active" aria-pressed="true"');
+    expect(DEFAULT_TAB).toBe('active');
+  });
+
+  it('renders the Active list without JS', () => {
+    expect(VIEW).toContain('hidden={!show}');
+    expect(VIEW).toContain('const show = visibleInTab(status, DEFAULT_TAB)');
+    expect(visibleInTab('active', 'active')).toBe(true);
+    expect(visibleInTab('beta', 'active')).toBe(true);
+    expect(visibleInTab('research', 'active')).toBe(false);
+    expect(visibleInTab('archived', 'active')).toBe(false);
+    expect(visibleInTab('archived', 'archived')).toBe(true);
+  });
+
+  it('selects the filter of an anchored hidden entry', () => {
+    expect(VIEW).toContain('data-exp={entry.id}');
+    expect(VIEW).toContain('location.hash');
+    // The entry's own status becomes the filter — except beta, which shows
+    // under Active because there is no beta tab to press.
+    expect(VIEW).toContain("f = s === 'beta' ? 'active' : (s || f);");
+  });
+
+  it('keeps a malformed anchor hash from aborting the script', () => {
+    // A hash carrying a selector metacharacter throws on querySelector; the
+    // lookup is guarded so the copy buttons further down still bind.
+    expect(VIEW).toContain('catch { t = null; }');
   });
 });
 
@@ -128,8 +159,9 @@ describe('experiments encyclopedia pronunciation and second sense', () => {
     expect(first).toBeGreaterThan(-1);
     expect(second).toBeGreaterThan(first);
     expect(second - first).toBeLessThan(600);
-    // Both senses share the .def style so they read as one entry.
-    expect(VIEW).toContain('.def.fig { margin-top: 2px; }');
+    // Both senses share the .def style so they read as one entry, the second
+    // set smaller and dimmer as a secondary line.
+    expect(VIEW).toContain('.def.fig { font-size: 0.92em; color: var(--bench-line-soft); margin-top: 0.15rem; }');
   });
 
   it('labels the second sense the same way in both languages', () => {
@@ -147,7 +179,7 @@ describe('experiments encyclopedia view', () => {
   });
 
   it('gives each article its anchor id and status', () => {
-    expect(VIEW).toMatch(/<article class="entry" id=\{entry\.anchor\} data-status=\{status\}>/);
+    expect(VIEW).toMatch(/<article class="entry" id=\{entry\.anchor\} data-status=\{status\} hidden=\{!show\} data-exp=\{entry\.id\}>/);
   });
 
   it('hides non-matching entries with the hidden attribute and keeps aria-pressed on the tabs', () => {
@@ -170,7 +202,8 @@ describe('experiments encyclopedia plate', () => {
     // The plate is the large engraving, sized by --plate-h so the machine and
     // the archived number frame always share one height.
     expect(VIEW).toContain('height="var(--plate-h)"');
-    expect(VIEW).toContain('clamp(180px, 19vw, 260px)');
+    expect(VIEW).toContain('clamp(150px, 13vw, 190px)');
+    expect(VIEW).not.toContain('clamp(180px, 19vw, 260px)');
     expect(VIEW).not.toContain('<video');
     expect(VIEW).not.toContain('IntersectionObserver');
   });
@@ -201,7 +234,7 @@ describe('experiments encyclopedia plate', () => {
     // Neither this view nor status.astro's global `.entry` may draw a line.
     expect(VIEW).not.toMatch(/\.(entry|plate) \{[^}]*border-bottom/);
     expect(VIEW).toMatch(/\.entry \{[^}]*border: 0;/);
-    expect(VIEW).toContain('padding-block: 2.25rem');
+    expect(VIEW).toContain('padding-block: 1.25rem');
   });
 
   it('leaves no phantom board row under the entry body', () => {
@@ -212,9 +245,9 @@ describe('experiments encyclopedia plate', () => {
 
   it('centres the text block against a smaller plate from 900px up', () => {
     expect(VIEW).toMatch(
-      /@media \(min-width: 900px\) \{\s*\.entry \{ grid-template-columns: minmax\(12rem, 17rem\) minmax\(0, 1fr\); align-items: center; \}/,
+      /@media \(min-width: 900px\) \{\s*\.entry \{ grid-template-columns: minmax\(10rem, 13rem\) minmax\(0, 1fr\); align-items: center; \}/,
     );
-    expect(VIEW).toContain('--plate-h: clamp(180px, 19vw, 260px)');
+    expect(VIEW).toContain('--plate-h: clamp(150px, 13vw, 190px)');
   });
 
   it('gives the archived entry its own covered plate, dimmed like the rest of the entry', () => {
@@ -300,3 +333,4 @@ describe('experiments encyclopedia links under each entry', () => {
     expect(es.encyclopedia.use.repo).toBe('Repositorio ↗');
   });
 });
+

@@ -8,6 +8,7 @@
 import {
   activeRoadmap,
   ANNOUNCEMENTS_API,
+  BOARD_LANES,
   DONE_CAP,
   ENTRIES_URL,
   entriesMarkdown,
@@ -334,5 +335,12 @@ describe('lane type', () => {
   it('is the union the tool schema advertises', () => {
     const lane: Lane = 'idea';
     expect(LANE_ORDER).toContain(lane);
+  });
+});
+
+describe('BOARD_LANES', () => {
+  it('is the four board lanes, with no idea lane', () => {
+    expect(BOARD_LANES).toEqual(['now', 'next', 'later', 'done']);
+    expect(BOARD_LANES).not.toContain('idea');
   });
 });

@@ -1,12 +1,12 @@
 /**
  * The lab's public feed — one data layer for every reader of it.
  *
- * AGR1's markdown twin (`functions/status-twin.ts`) and AGR2's WebMCP tools
- * (`src/lib/webmcp.ts`) both read the same two public endpoints of the
- * announcements API, and both must say the same thing: the agent that asks a
- * tool and the reader that fetches `/status/index.md` get one format, one
- * filter rule, one ordering. So the fetch, the filtering and the markdown live
- * here, and both callers only decide *how much* to ask for.
+ * The newspaper's live markdown twin (`functions/_middleware.ts`) and AGR2's
+ * WebMCP tools (`src/lib/webmcp.ts`) both read the same two public endpoints
+ * of the announcements API, and both must say the same thing: the agent that
+ * asks a tool and the reader that fetches `/newspaper/index.md` get one
+ * format, one filter rule, one ordering. So the fetch, the filtering and the
+ * markdown live here, and both callers only decide *how much* to ask for.
  *
  * Pure by design: no i18n import (that is what keeps this safe to ship to the
  * browser — the only `src/` types it reuses are the API's own row shapes), no
@@ -35,6 +35,11 @@ export const FEED_URL = `${ANNOUNCEMENTS_API}/feed.atom`;
 /** Lane order as the board renders it: work in flight first, shipped last. */
 export const LANE_ORDER = ['now', 'next', 'later', 'idea', 'done'] as const;
 export type Lane = (typeof LANE_ORDER)[number];
+
+/** The four lanes the roadmap board shows. `idea` keeps rendering in the
+ *  markdown twin but has no board column (nothing is filed there today). */
+export const BOARD_LANES = ['now', 'next', 'later', 'done'] as const;
+export type BoardLane = (typeof BOARD_LANES)[number];
 
 /** The `done` lane lists at most this many of the most recently shipped items. */
 export const DONE_CAP = 10;

@@ -175,13 +175,14 @@ describe('source guards', () => {
     expect(plate).toContain('lp-doi');
   });
 
-  it('notes use heading/statusLink strings, one status link, the shared loader, and never an empty section', () => {
+  it('notes use heading/statusLink strings, one logbook link, the shared loader, and never an empty section', () => {
     expect(notes).toContain('notes.heading');
     expect(notes).toContain('notes.statusLink');
     expect(notes).toContain('loadBoardData');
     expect(notes).not.toContain('notes.empty');
     expect(notes.match(/href=/g)?.length ?? 0).toBeLessThanOrEqual(1);
-    expect(notes).toContain('/status');
+    expect(notes).toContain('/logbook/?topic=');
+    expect(notes).not.toContain('#lab');
     expect(notes).toContain('section.remove()');
   });
 

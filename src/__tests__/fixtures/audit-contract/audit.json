@@ -1,0 +1,153 @@
+{
+  "contract": "univerlab.audit/1",
+  "meta": {
+    "title": "Contract fixture audit (not a real audit)",
+    "subtitle": "Exercises every layout and block type once",
+    "language": "en",
+    "client": { "name": "Fixture Client (not a real client)" },
+    "auditors": [{ "name": "Contract Test Team" }],
+    "auditPeriod": { "start": "2026-01-05", "end": "2026-01-09" },
+    "version": "1.0",
+    "status": "delivered",
+    "scope": "Only the audit document contract itself; no client system was reviewed."
+  },
+  "visibility": "public",
+  "accent": "lab",
+  "cover": { "layout": { "type": "band" } },
+  "assets": [
+    { "id": "report-pdf", "path": "assets/report.pdf", "kind": "pdf", "title": "Fixture PDF report", "bytes": 206, "sha256": "087dc8d597fa2d9e1ea9b212f1cc4c02518ed3a52c0909897e6b8d79cc0610ad" },
+    { "id": "figure-svg", "path": "assets/figure.svg", "kind": "image", "title": "Fixture figure", "alt": "Garnet circle on a cream square", "bytes": 202, "sha256": "3aca6a31c4ee673e4868bf9721e0653edad336b96f688bac3fdec63a02856814" },
+    { "id": "clip-mp4", "path": "assets/clip.mp4", "kind": "video", "title": "Fixture animation", "alt": "Placeholder clip for the looping-animation figure", "bytes": 82, "sha256": "376ec8a0bc030cfe6dcb53afc48f8424c79ffccf95f50dcd1e20a3d0d74e5eb6" },
+    { "id": "chart-data", "path": "assets/chart-data.json", "kind": "data", "title": "Fixture chart data", "bytes": 87, "sha256": "47784e5d1650b662eeeafd092b8c614197967f793d798a4b0c5ba14ac17b84e1" },
+    { "id": "snippet-py", "path": "assets/snippet.py", "kind": "code", "title": "Fixture snippet", "bytes": 144, "sha256": "337468a5ef6164640612e1b2828109603288694c79c76590da41a900ff1f0625" }
+  ],
+  "deliverables": { "report": "report-pdf", "repository": "https://github.com/univerlab/fixture-repo", "repositoryPublic": true },
+  "findings": [
+    {
+      "id": "F-01",
+      "title": "Fixture critical finding",
+      "severity": "critical",
+      "likelihood": 4,
+      "impact": 5,
+      "area": "authentication",
+      "status": "open",
+      "summary": "A placeholder finding proving the critical path renders.",
+      "evidence": [{ "type": "asset", "id": "figure-svg" }, { "type": "source", "id": "owasp" }],
+      "recommendation": "Replace this fixture text with the real remediation.",
+      "effort": "medium"
+    },
+    {
+      "id": "F-02",
+      "title": "Fixture fixed finding",
+      "severity": "high",
+      "likelihood": 3,
+      "impact": 4,
+      "area": "flows",
+      "status": "fixed",
+      "summary": "A placeholder finding already remediated.",
+      "evidence": [{ "type": "source", "id": "vega" }],
+      "recommendation": "Kept as a fixed-state example.",
+      "effort": "small",
+      "cost": { "amount": 800, "currency": "USD" },
+      "fixedIn": "1.0"
+    },
+    {
+      "id": "F-03",
+      "title": "Fixture informational note",
+      "severity": "info",
+      "likelihood": 1,
+      "impact": 1,
+      "area": "docs",
+      "status": "accepted",
+      "summary": "A placeholder informational note.",
+      "evidence": [{ "type": "asset", "id": "chart-data" }],
+      "recommendation": "No action needed beyond reading.",
+      "effort": "small"
+    }
+  ],
+  "sources": [
+    { "id": "owasp", "title": "OWASP Top Ten (fixture citation)", "url": "https://owasp.org/Top10/", "publisher": "OWASP", "accessed": "2026-01-06" },
+    { "id": "vega", "title": "Vega-Lite documentation (fixture citation)", "url": "https://vega.github.io/vega-lite/" }
+  ],
+  "glossary": [
+    { "term": "flow", "definition": "Fixture definition: one client journey through the audited system." },
+    { "term": "token", "definition": "Fixture definition: the credential placeholder used across examples." }
+  ],
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "navLabel": "Overview",
+      "layout": { "type": "single" },
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "Fixture overview" },
+        { "type": "prose", "markdown": "This fixture cites {{finding:F-01}}, {{source:owasp}}, {{term:flow}} and {{asset:figure-svg}} to prove inline references resolve." },
+        { "type": "divider" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "Summary",
+      "layout": { "type": "wide" },
+      "blocks": [
+        { "type": "callout", "tone": "warning", "title": "Fixture notice", "markdown": "Nothing here describes a real client; see {{term:token}} for how terms resolve." },
+        { "type": "quote", "text": "A fixture quote proving attribution renders.", "attribution": "Contract Test Team", "sourceId": "vega" },
+        { "type": "stats", "items": [
+          { "value": "3", "label": "Fixture findings", "delta": "+0, nothing was really audited" },
+          { "value": "5", "label": "Fixture assets" }
+        ] },
+        { "type": "figure", "asset": "figure-svg", "caption": "Fixture image figure." }
+      ]
+    },
+    {
+      "id": "risks",
+      "title": "Risks",
+      "layout": { "type": "split", "ratio": "2-1" },
+      "blocks": [
+        { "type": "finding", "findingId": "F-01" },
+        { "type": "findingsTable", "severity": ["critical", "high"] },
+        { "type": "riskMatrix", "title": "Fixture risk matrix" }
+      ]
+    },
+    {
+      "id": "evidence",
+      "title": "Evidence",
+      "layout": { "type": "grid", "columns": 3 },
+      "blocks": [
+        { "type": "chart", "span": 2, "spec": { "$schema": "https://vega.github.io/schema/vega-lite/v5.json", "mark": "bar", "encoding": {} }, "caption": "Inline fixture chart." },
+        { "type": "chart", "dataAsset": "chart-data", "caption": "Fixture chart fed by a data asset." },
+        { "type": "figure", "asset": "clip-mp4", "poster": "figure-svg", "caption": "Looping fixture animation with poster." },
+        { "type": "diagram", "mermaid": "flowchart LR\n  A[Fixture] --> B[Contract]", "caption": "Fixture diagram." },
+        { "type": "code", "language": "python", "source": "print(\"fixture\")\n", "highlight": [1] },
+        { "type": "code", "language": "python", "sourceAsset": "snippet-py" },
+        { "type": "table", "caption": "Fixture table.", "columns": ["Area", "Count"], "rows": [["authentication", 1], ["flows", 1], ["docs", 1]] },
+        { "type": "compare", "before": "Before: no contract.", "after": "After: this fixture.", "caption": "Fixture comparison." }
+      ]
+    },
+    {
+      "id": "roadmap",
+      "title": "Roadmap",
+      "layout": { "type": "band" },
+      "blocks": [
+        { "type": "timeline", "steps": [
+          { "title": "Replace fixture text", "description": "Real audits write real steps.", "effort": "small", "cost": { "amount": 200, "currency": "USD" } },
+          { "title": "Publish the audit", "effort": "medium" }
+        ] },
+        { "type": "stepper", "steps": [
+          { "title": "Read", "markdown": "Read the {{term:flow}} summary first." },
+          { "title": "Download", "markdown": "Download the report for the full text." }
+        ] }
+      ]
+    },
+    {
+      "id": "appendix",
+      "title": "Appendix",
+      "layout": { "type": "sidebar" },
+      "blocks": [
+        { "type": "assetCard", "asset": "report-pdf", "description": "Fixture PDF download card." },
+        { "type": "sources", "ids": ["owasp", "vega"] },
+        { "type": "divider", "label": "End of fixture" }
+      ]
+    }
+  ]
+}

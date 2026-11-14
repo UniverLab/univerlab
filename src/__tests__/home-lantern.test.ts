@@ -15,9 +15,11 @@ import { es } from '../i18n/es';
 
 const SRC = resolve(__dirname, '..');
 const HOME = readFileSync(resolve(SRC, 'views', 'Home.astro'), 'utf8');
+const LAB_LANTERN = readFileSync(resolve(SRC, 'components', 'LabLantern.astro'), 'utf8');
 const LAYOUT = readFileSync(resolve(SRC, 'layouts', 'BaseLayout.astro'), 'utf8');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const LANTERN = readFileSync(resolve(SRC, 'scripts', 'lantern.ts'), 'utf8');
+const HOME_CHROME = readFileSync(resolve(SRC, 'scripts', 'home-chrome.ts'), 'utf8');
 const TUNE = readFileSync(resolve(SRC, 'scripts', 'tune.ts'), 'utf8');
 const FONDOS_INDEX = readFileSync(resolve(SRC, 'scripts', 'fondos', 'index.ts'), 'utf8');
 const LIVE_BG = readFileSync(resolve(SRC, 'components', 'LiveBackground.astro'), 'utf8');
@@ -44,7 +46,7 @@ function manifestViewer(variant: 'day' | 'night'): string {
 }
 
 function homeViewer(phase: 'day' | 'night'): string {
-  const match = HOME.match(new RegExp(`data-viewer-${phase}="([^"]+)"`));
+  const match = LAB_LANTERN.match(new RegExp(`data-viewer-${phase}="([^"]+)"`));
   if (!match) throw new Error(`Home has no data-viewer-${phase}`);
   return match[1];
 }
@@ -87,42 +89,65 @@ describe('Home — frontispiece', () => {
     expect(HOME).toContain("import { formatSolLabel } from '../lib/mission-time'");
     expect(HOME).toMatch(/formatSolLabel\(builtAt\.toISOString\(\)\)/);
     expect(HOME).toMatch(/id="imprint"/);
-    expect(LANTERN).toMatch(/formatSolLabel\(now\.toISOString\(\)\)/);
+    expect(HOME).toContain('startHomeChrome');
+    expect(HOME_CHROME).toMatch(/formatSolLabel\(now\.toISOString\(\)\)/);
   });
 
-  it('labels the lantern as Plate I', () => {
-    expect(HOME).toContain('{t.home.plate.lead}');
-    expect(HOME).toContain('{t.home.plate.title}');
+  it('labels the encyclopedia on the home', () => {
+    expect(HOME).toContain('{t.encyclopedia.tome}');
     expect(HOME).toMatch(/class="plate-label"/);
   });
 });
 
 describe('Home — Plate I, the lantern', () => {
   it('ships the day and night frames as AVIF/WebP srcsets at 450 and 900', () => {
-    expect(HOME).toContain("(['day', 'night'] as const).flatMap");
-    expect(HOME).toContain("(['avif', 'webp'] as const).map");
-    expect(HOME).toContain(
+    expect(LAB_LANTERN).toContain("(['day', 'night'] as const).flatMap");
+    expect(LAB_LANTERN).toContain("(['avif', 'webp'] as const).map");
+    expect(LAB_LANTERN).toContain(
       'srcset: `/bench/live/lantern-${phase}-450.${type}${v} 450w, /bench/live/lantern-${phase}-900.${type}${v} 900w`',
     );
     // The day engraving was redrawn (its posts had faded mid-height): its URL is versioned.
-    expect(HOME).toContain("const lanternVersion = { day: '?v=3', night: '' } as const;");
-    expect(HOME).toContain(
-      'const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;',
-    );
-    expect(HOME).toContain('data-phase={src.phase}');
-    expect(HOME).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
-    expect(HOME).toMatch(/width="1178"/);
-    expect(HOME).toMatch(/height="900"/);
-    expect(HOME).toContain('{t.home.lantern.alt}');
+    expect(LAB_LANTERN).toContain("const lanternVersion = { day: '?v=3', night: '' } as const;");
+    // The frame is the page's largest element: the live phase's 900 px AVIF
+    // travels in data-avif and becomes the img src at parse time.
+    expect(LAB_LANTERN).toContain('lantern-day-900.avif${lanternVersion.day}');
+    expect(LAB_LANTERN).toContain('lantern-night-900.avif${lanternVersion.night}');
+    expect(LAB_LANTERN).toContain('data-avif-day={lanternFrameAvif.day}');
+    expect(LAB_LANTERN).toContain('data-avif-night={lanternFrameAvif.night}');
+    expect(LAB_LANTERN).toContain('data-phase={src.phase}');
+    expect(LAB_LANTERN).toContain('data-srcset={src.srcset}');
+    // No real srcset or src ships in the frame: the parse-time script
+    // populates only the live phase, so one variant downloads, never both.
+    // (A bare space before the name: data-srcset and data-src must not match.)
+    expect(LAB_LANTERN).not.toMatch(/<source[^>]* srcset=/);
+    expect(LAB_LANTERN).not.toMatch(/<img[^>]* src=/);
+    expect(LAB_LANTERN).toContain('sizes="(min-width: 50rem) 760px, 100vw"');
+    expect(LAB_LANTERN).toMatch(/width="1178"/);
+    expect(LAB_LANTERN).toMatch(/height="900"/);
+    expect(LAB_LANTERN).toContain('{t.home.lantern.alt}');
+  });
+
+  it('populates only the live phase at parse time, at high priority', () => {
+    // The is:inline script runs while the document parses: it copies the
+    // active phase's data-* into real URLs and leaves the other phase parked.
+    expect(LAB_LANTERN).toContain('<script is:inline data-lantern-swap>');
+    expect(LAB_LANTERN).toContain("dataset.benchTheme === 'night'");
+    expect(LAB_LANTERN).toContain("setAttribute('src', url)");
+    expect(LAB_LANTERN).toContain("setAttribute('srcset',");
+    expect(LAB_LANTERN).toContain("img[data-avif-day]");
+    expect(LAB_LANTERN).toContain('fetchpriority="high"');
+    // A theme flip populates the newly shown phase instead.
+    expect(LANTERN).toContain("getAttribute('data-srcset')");
+    expect(LANTERN).toContain("setAttribute('srcset', ds)");
   });
 
   it('draws the engraving again over the screen, so the cloth shows whole behind the frame', () => {
-    expect(HOME.match(/\{lanternSources\.map/g)).toHaveLength(2);
-    expect(HOME).toMatch(/<picture class="lantern-front" aria-hidden="true">/);
-    expect(HOME).toMatch(/\.lantern-front \{[^}]*z-index: 4;[^}]*pointer-events: none;/);
-    expect(HOME).not.toMatch(/\.screen\[data-phase=[^\]]*\] \{\s*clip-path/);
+    expect(LAB_LANTERN.match(/\{lanternSources\.map/g)).toHaveLength(2);
+    expect(LAB_LANTERN).toMatch(/<picture class="lantern-front" aria-hidden="true">/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-front \{[^}]*z-index: 4;[^}]*pointer-events: none;/);
+    expect(LAB_LANTERN).not.toMatch(/\.screen\[data-phase=[^\]]*\] \{\s*clip-path/);
     // Day and night share one 1178x900 canvas, so the frame never resizes on a theme flip.
-    expect(HOME.match(/width="1178"/g)).toHaveLength(2);
+    expect(LAB_LANTERN.match(/width="1178"/g)).toHaveLength(2);
     expect(LANTERN).not.toMatch(/img\.width = /);
   });
 
@@ -136,25 +161,35 @@ describe('Home — Plate I, the lantern', () => {
   it('keeps the image behind the screen, but hands it the clicks as the projector', () => {
     // The screen paints above the picture (z 3 > 2), so click-to-open stays on
     // the screen; the picture takes every click outside the viewer rect.
-    expect(HOME).toMatch(/\.lantern-pic \{[^}]*z-index:\s*2/);
-    expect(HOME).toMatch(/\.lantern-pic \{[^}]*cursor:\s*pointer/);
-    expect(HOME).toMatch(/\.screen \{[^}]*z-index:\s*3/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic \{[^}]*z-index:\s*2/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic \{[^}]*cursor:\s*pointer/);
+    expect(LAB_LANTERN).toMatch(/\.screen \{[^}]*z-index:\s*3/);
   });
 
   it('renders one video per live experiment, with the title slide first', () => {
-    expect(HOME).toMatch(/class="slide title-slide is-on"/);
-    expect(HOME).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?src=\{`\/bench\/clips\/\$\{exp\.id\}\.mp4`\}/);
-    expect(HOME).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?poster=\{`\/bench\/clips\/\$\{exp\.id\}\.webp`\}/);
-    expect((HOME.match(/<video/g) ?? []).length).toBe(1);
-    expect(HOME).toContain('object-fit: contain');
-    expect(HOME).toMatch(/preload="none"/);
-    expect(HOME).toMatch(/muted\s+loop\s+playsinline/);
+    expect(LAB_LANTERN).toMatch(/class="slide title-slide is-on"/);
+    expect(LAB_LANTERN).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?src=\{`\/bench\/clips\/\$\{exp\.id\}\.mp4`\}/);
+    expect(LAB_LANTERN).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?poster=\{`\/bench\/clips\/\$\{exp\.id\}\.webp`\}/);
+    expect((LAB_LANTERN.match(/<video/g) ?? []).length).toBe(1);
+    expect(LAB_LANTERN).toContain('object-fit: contain');
+    expect(LAB_LANTERN).toMatch(/preload="none"/);
+    expect(LAB_LANTERN).toMatch(/muted\s+loop\s+playsinline/);
   });
 
   it('loads only the clip after the current slide', () => {
     expect(LANTERN).toMatch(
       /!reduce && \(i === current \|\| i === current \+ 1\) \? 'auto' : 'none'/,
     );
+  });
+
+  it('parks every clip unloaded while the screen is off view', () => {
+    // The screen observer pauses the rotation off view (no bytes, no frames)
+    // and resumes it — plus the next clip's preload — on return. The rotation
+    // itself must stop too, or the next cut would play a clip and reload it.
+    expect(LANTERN).toMatch(/video\.preload = 'none'/);
+    expect(LANTERN).toMatch(/!reduce && onView && !paused/);
+    expect(LANTERN).toMatch(/Back on view: the current clip resumes/);
+    expect(LANTERN).toMatch(/syncPreload\(\);\s*\n\s*playCurrent\(\);/);
   });
 
   it('loads no clip at all under reduced motion (the poster is the slide)', () => {
@@ -165,15 +200,15 @@ describe('Home — Plate I, the lantern', () => {
   it('centres the title slide as a group and the caption along the bottom', () => {
     // .slide no longer lays out its children in rows, so the title slide's
     // mark, name and motto stay together in the middle of the screen.
-    expect(HOME).toMatch(/\.slide \{[^}]*position:\s*absolute;[^}]*opacity:\s*0/);
-    expect(HOME).not.toMatch(/\.slide \{[^}]*grid-template-rows/);
-    expect(HOME).toMatch(/\.title-slide \{[^}]*align-content:\s*center/);
+    expect(LAB_LANTERN).toMatch(/\.slide \{[^}]*position:\s*absolute;[^}]*opacity:\s*0/);
+    expect(LAB_LANTERN).not.toMatch(/\.slide \{[^}]*grid-template-rows/);
+    expect(LAB_LANTERN).toMatch(/\.title-slide \{[^}]*align-content:\s*center/);
     // The caption is an overlay (mockup), not a row: `main p { max-width: 65ch }`
     // must not narrow it or push it off the screen.
-    expect(HOME).toMatch(/\.caption \{[^}]*position:\s*absolute/);
-    expect(HOME).toMatch(/\.caption \{[^}]*max-width:\s*none/);
-    expect(HOME).toMatch(/\.caption \{[^}]*z-index:\s*4/);
-    expect(HOME).toMatch(/\.slide video \{[^}]*object-fit:\s*contain/);
+    expect(LAB_LANTERN).toMatch(/\.caption \{[^}]*position:\s*absolute/);
+    expect(LAB_LANTERN).toMatch(/\.caption \{[^}]*max-width:\s*none/);
+    expect(LAB_LANTERN).toMatch(/\.caption \{[^}]*z-index:\s*4/);
+    expect(LAB_LANTERN).toMatch(/\.slide video \{[^}]*object-fit:\s*contain/);
   });
 
   it('cycles every 7 s with a 240 ms flash cut', () => {
@@ -198,7 +233,7 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/root\.dataset\.benchTheme === 'night'/);
     expect(LANTERN).toMatch(/MutationObserver\(applyPhase\)/);
     expect(LANTERN).toContain("'univerlab:themechange'");
-    expect(HOME).toMatch(/filter: var\(--bench-clip-filter\)/);
+    expect(LAB_LANTERN).toMatch(/filter: var\(--bench-clip-filter\)/);
     expect(readFileSync(resolve(SRC, 'styles', 'bench-tokens.css'), 'utf8')).toMatch(
       /--bench-clip-filter: invert\(1\) hue-rotate\(180deg\)/,
     );
@@ -210,19 +245,28 @@ describe('Home — Plate I, the lantern', () => {
     expect(LANTERN).toMatch(/held < 0/);
     expect(LANTERN).toContain("document.addEventListener('visibilitychange'");
     expect(LANTERN).toMatch(/pauseBtn\.setAttribute\('aria-pressed'/);
-    // The projector itself is the pause control: id/role/tabindex/aria live on
-    // the <picture>, and the standalone bench-foot button is gone.
-    expect(HOME).toMatch(
-      /<picture\s+class="lantern-pic"\s+id="lantern-pause"\s+role="button"\s+tabindex="0"\s+aria-pressed="false"/,
+    // The projector itself is the pause control: a real <button> wrapping an
+    // inner <picture> — no role or tabindex, and the standalone bench-foot
+    // button is gone.
+    expect(LAB_LANTERN).toMatch(
+      /<button\s+type="button"\s+class="lantern-pic"\s+id="lantern-pause"\s+aria-pressed="false"/,
     );
-    expect(HOME).toMatch(/aria-label=\{t\.home\.lantern\.pause\}/);
-    expect(HOME).toMatch(/data-pause-label=\{t\.home\.lantern\.pause\}/);
-    expect(HOME).toMatch(/data-resume-label=\{t\.home\.lantern\.resume\}/);
-    expect(HOME).not.toMatch(/class="lantern-pause"/);
-    expect(HOME).not.toMatch(/\.lantern-pause \{/);
-    // Keyboard: Enter/Space toggle, and the paused plate follows aria-pressed.
-    expect(LANTERN).toMatch(/pauseBtn\.addEventListener\('keydown'/);
-    expect(LANTERN).toMatch(/key === 'Enter' \|\| \(ev as KeyboardEvent\)\.key === ' '/);
+    expect(LAB_LANTERN).toMatch(/<button[\s\S]*?class="lantern-pic"[\s\S]*?>\s*<picture>/);
+    expect(LAB_LANTERN).not.toContain('role="button"');
+    expect(LAB_LANTERN).not.toContain('tabindex');
+    expect(LAB_LANTERN).not.toMatch(/<picture\s+class="lantern-pic"/);
+    expect(LAB_LANTERN).toMatch(/aria-label=\{t\.home\.lantern\.pause\}/);
+    expect(LAB_LANTERN).toMatch(/data-pause-label=\{t\.home\.lantern\.pause\}/);
+    expect(LAB_LANTERN).toMatch(/data-resume-label=\{t\.home\.lantern\.resume\}/);
+    // The button carries no UA chrome: the reset keeps the engraving's look.
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic \{[^}]*background:\s*none/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-pic picture \{[^}]*display:\s*block/);
+    expect(LAB_LANTERN).not.toMatch(/class="lantern-pause"/);
+    expect(LAB_LANTERN).not.toMatch(/\.lantern-pause \{/);
+    // Keyboard: Enter/Space come free with the native button (no keydown
+    // handler), and the paused plate follows aria-pressed.
+    expect(LANTERN).toMatch(/as HTMLButtonElement/);
+    expect(LANTERN).not.toMatch(/pauseBtn\.addEventListener\('keydown'/);
     expect(LANTERN).toMatch(/getElementById\('lantern-paused'\)/);
     // hidden is the force argument: it must come OFF while paused, so the
     // flag is negated (the inverse silently keeps the plate invisible).
@@ -244,35 +288,51 @@ describe('Home — Plate I, the lantern', () => {
 
 describe('Home — the bench', () => {
   it('renders one button per live experiment with its day and night plates', () => {
-    expect(HOME).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?data-exp=\{exp\.id\}/);
-    expect(HOME).toMatch(/\/bench\/machines\/\$\{exp\.id\}-day-450\.avif/);
-    expect(HOME).toMatch(/\/bench\/machines\/\$\{exp\.id\}-day-450\.webp/);
-    expect(HOME).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.avif/);
-    expect(HOME).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.webp/);
-    expect(HOME).toMatch(/class="plate"/);
+    expect(LAB_LANTERN).toMatch(/liveExperiments\.map\(\(exp\) => \{[\s\S]*?data-exp=\{exp\.id\}/);
+    expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-day-450\.avif/);
+    expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-day-450\.webp/);
+    expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.avif/);
+    expect(LAB_LANTERN).toMatch(/\/bench\/machines\/\$\{exp\.id\}-night-450\.webp/);
+    expect(LAB_LANTERN).toMatch(/class="plate"/);
   });
 
-  it('gives every plate the same height, 120 px from 48rem and 84 px below', () => {
-    expect(HOME).toMatch(/\.plate picture \{[^}]*height:\s*120px/);
-    expect(HOME).toMatch(/@media \(max-width: 47\.999rem\) \{ \.plate picture \{ height: 84px; \} \}/);
-    expect(HOME).toMatch(/\.plate img \{[^}]*height:\s*100%/);
+  it('describes the projected machine once, in the page language', () => {
+    expect(LAB_LANTERN).toContain('alt={e.machineAlt}');
+    for (const id of ['canopy', 'texforge', 'gitkit', 'ghscaff', 'demostage', 'astro-denoise', 'quorum', 'facetmedia'] as const) {
+      expect(en.experiments[id].machineAlt).toBeTruthy();
+      expect(es.experiments[id].machineAlt).toBeTruthy();
+      expect(en.experiments[id].machineAlt).not.toBe(es.experiments[id].machineAlt);
+    }
+    expect(en.experiments.canopy.machineAlt).toContain('hive');
+  });
+
+  it('gives every plate the same height, up to 120 px so the bench fits a desktop row, and 84 px below 48rem', () => {
+    expect(LAB_LANTERN).toMatch(/\.plate picture \{[^}]*height:\s*clamp\(84px, 7\.4vw, 120px\)/);
+    expect(LAB_LANTERN).toMatch(/@media \(max-width: 47\.999rem\) \{ \.plate picture \{ height: 84px; \} \}/);
+    expect(LAB_LANTERN).toMatch(/\.plate img \{[^}]*height:\s*100%/);
   });
 
   it('scrolls the row inside its own container on small screens', () => {
-    expect(HOME).toMatch(/\.row-wrap \{[^}]*overflow-x:\s*auto/);
-    expect(HOME).toMatch(/\.row \{[^}]*min-width:\s*max-content/);
+    expect(LAB_LANTERN).toMatch(/\.row-wrap \{[^}]*overflow-x:\s*auto/);
+    expect(LAB_LANTERN).toMatch(/\.row \{[^}]*min-width:\s*max-content/);
   });
 
-  it('keeps plates out of the LCP path without lazy-loading them', () => {
-    expect(HOME).toMatch(/<img[\s\S]*?fetchpriority="low"/);
-    expect(HOME).not.toContain('loading="lazy"');
+  it('lazy-loads every bench plate below the fold in the live phase only', () => {
+    expect(LAB_LANTERN).toMatch(/<img[\s\S]*?fetchpriority="low"/);
+    expect(LAB_LANTERN).toContain('liveExperiments.map((exp) => {');
+    expect(LAB_LANTERN).toContain('loading="lazy"');
+    expect(LAB_LANTERN).not.toContain("loading={i >= 2 ? 'lazy' : undefined}");
+    // Plates ship data-only URLs; the parse-time script populates the live
+    // phase and the flip populates the newly shown one.
+    expect(LAB_LANTERN).toContain('data-srcset={`/bench/machines/${exp.id}-day-450.avif`}');
+    expect(LAB_LANTERN).toContain('data-day-src={`/bench/machines/${exp.id}-day-450.webp`}');
   });
 
   it('marks only the projected machine current and names every button', () => {
-    expect(HOME).toMatch(/\.plate\[aria-current='true'\] \{ opacity: 1; \}/);
-    expect(HOME).toMatch(/\.plate \{[^}]*opacity: 0\.55/);
-    expect(HOME).toMatch(/<button[\s\S]*?class="plate"[\s\S]*?<span>\{exp\.name\}<\/span>/);
-    expect(HOME).toContain('{t.home.lantern.benchLabel}');
+    expect(LAB_LANTERN).toMatch(/\.plate\[aria-current='true'\] \{ opacity: 1; \}/);
+    expect(LAB_LANTERN).toMatch(/\.plate \{[^}]*opacity: 0\.55/);
+    expect(LAB_LANTERN).toMatch(/<button[\s\S]*?class="plate"[\s\S]*?<span>\{exp\.name\}<\/span>/);
+    expect(LAB_LANTERN).toContain('{t.home.lantern.benchLabel}');
   });
 });
 
@@ -294,15 +354,15 @@ describe('Home — tuning into an experiment', () => {
   });
 
   it('clears the shared name on Back restore', () => {
-    expect(HOME).toContain("addEventListener('pageshow', untune)");
+    expect(LAB_LANTERN).toContain("addEventListener('pageshow', untune)");
     expect(TUNE).toContain("removeProperty('view-transition-name')");
     expect(LAYOUT).not.toContain('crt-restore');
   });
 
   it('keeps Enter on a focused machine working through the native button', () => {
-    expect(HOME).toMatch(/<button[\s\S]*?type="button"[\s\S]*?class="plate"/);
-    expect(HOME).toMatch(/btn\.addEventListener\('click'/);
-    expect(HOME).toContain('data-href={localizePath(`/${exp.id}`, lang)}');
+    expect(LAB_LANTERN).toMatch(/<button[\s\S]*?type="button"[\s\S]*?class="plate"/);
+    expect(LAB_LANTERN).toMatch(/btn\.addEventListener\('click'/);
+    expect(LAB_LANTERN).toContain('data-href={localizePath(`/${exp.id}`, lang)}');
   });
 });
 
@@ -314,7 +374,7 @@ describe('Home — separators', () => {
     );
     expect(HOME).toContain('SCI · CLI · BIO');
     expect(HOME).toContain('id="horizon-mask"');
-    expect(LANTERN).toMatch(/box\.width \+ 52/);
+    expect(HOME_CHROME).toMatch(/box\.width \+ 52/);
   });
 
   it('uses the asterism dinkus between the lower sections', () => {
@@ -346,63 +406,72 @@ describe('Home — Plate I world mode', () => {
     // no iframe — the module downloads only on the first hover over the screen.
     expect(LANTERN).not.toMatch(/import\(['"]\.\/fondos\//);
     expect(LANTERN).not.toContain('<iframe');
-    expect(HOME).not.toContain('<iframe');
+    expect(LAB_LANTERN).not.toContain('<iframe');
     expect(LANTERN).toMatch(/base:\s*`\/bench\/fondos\/\$\{id\}\/`/);
   });
 
+  it('starts the experiment background after first paint, never before', () => {
+    // The fondo's script work and its data/images stay off the critical path:
+    // the run waits for load and then an idle slot (or 5 s).
+    expect(LIVE_BG).toContain('requestIdleCallback(run, { timeout: 5000 })');
+    expect(LIVE_BG).toContain('setTimeout(run, 5000)');
+    expect(LIVE_BG).toContain("window.addEventListener('load', later, { once: true })");
+    expect(LIVE_BG).not.toMatch(/readyState.*run\(\)/);
+  });
+
   it('opens the screen with a world host, a typed block and a catcher', () => {
-    expect(HOME).toMatch(/class="world-host" id="world-host"[^>]*aria-hidden="true"/);
-    expect(HOME).toMatch(/<div class="typed" id="typed" aria-hidden="true">/);
-    expect(HOME).toMatch(/data-typed="k".*data-typed="cmd".*data-typed="line"/s);
-    expect(HOME).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
+    expect(LAB_LANTERN).toMatch(/class="world-host" id="world-host"[^>]*aria-hidden="true"/);
+    expect(LAB_LANTERN).toMatch(/<div class="typed" id="typed" aria-hidden="true">/);
+    expect(LAB_LANTERN).toMatch(/data-typed="k".*data-typed="cmd".*data-typed="line"/s);
+    expect(LAB_LANTERN).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
     // The typed block is aria-hidden: each slide's caption keeps the
     // accessible text.
-    expect(HOME).toMatch(/<p class="caption"><b>\{exp\.name\}<\/b>/);
+    expect(LAB_LANTERN).toMatch(/<p class="caption"><b>\{exp\.name\}<\/b>/);
     // Every experiment slide carries what the typing needs: tagline, bench
     // fallback and the localized world hint.
-    expect(HOME).toContain('data-tagline={e.tagline}');
-    expect(HOME).toContain('data-bench={bench}');
-    expect(HOME).toMatch(/data-world-hint=\{t\.home\.lantern\.worldHint\[exp\.id\]\}/);
+    expect(LAB_LANTERN).toContain('data-tagline={e.tagline}');
+    expect(LAB_LANTERN).toContain('data-bench={bench}');
+    expect(LAB_LANTERN).toMatch(/data-world-hint=\{t\.home\.lantern\.worldHint\[exp\.id\]\}/);
     // Each slide names the surface its world paints on: the modules draw over
     // their page's ground, so the host must carry it, not the lantern's paper.
-    expect(HOME).toContain('data-surface={exp.surface}');
-    expect(HOME).toMatch(/\.world-host \{[^}]*background:\s*var\(--surface-bg, var\(--bench-c-parchment\)\)/);
+    expect(LAB_LANTERN).toContain('data-surface={exp.surface}');
+    expect(LAB_LANTERN).toMatch(/\.world-host \{[^}]*background:\s*var\(--surface-bg, var\(--bench-c-parchment\)\)/);
     // The ground shows the moment world mode opens — even before the module
     // paints (a dark world would otherwise flash parchment under its chalk
     // text on the first hover) — and never outside world mode.
-    expect(HOME).toMatch(/\.screen:not\(\.is-world\) \.world-host \{[^}]*display:\s*none/);
+    expect(LAB_LANTERN).toMatch(/\.screen:not\(\.is-world\) \.world-host \{[^}]*display:\s*none/);
     expect(LANTERN).toMatch(/worldHost\.dataset\.surface = surface/);
   });
 
   it('shrinks the clip to the lower right with the world blend modes', () => {
-    expect(HOME).toMatch(/\.screen\.is-world \.slide\.is-on \{[^}]*transform:\s*translate\(27%, 20%\) scale\(\.48\)/);
-    expect(HOME).toMatch(/mask-image:\s*radial-gradient\(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%\)/);
-    expect(HOME).toMatch(/\.screen\.is-world\.on-light \.slide\.is-on \{[^}]*mix-blend-mode:\s*multiply/);
-    expect(HOME).toMatch(/\.screen\.is-world\.on-dark \.slide\.is-on \{[^}]*filter:\s*invert\(1\) hue-rotate\(180deg\)[^}]*mix-blend-mode:\s*screen/);
-    expect(HOME).toMatch(/transition:[^;]*transform 0?\.6s/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.is-world \.slide\.is-on \{[^}]*transform:\s*translate\(27%, 20%\) scale\(\.48\)/);
+    expect(LAB_LANTERN).toMatch(/mask-image:\s*radial-gradient\(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%\)/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.is-world\.on-light \.slide\.is-on \{[^}]*mix-blend-mode:\s*multiply/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.is-world\.on-dark \.slide\.is-on \{[^}]*filter:\s*invert\(1\) hue-rotate\(180deg\)[^}]*mix-blend-mode:\s*screen/);
+    expect(LAB_LANTERN).toMatch(/transition:[^;]*transform 0?\.6s/);
     // The caption rides inside the shrinking slide; hide it visually so it
     // does not print over the machine, but keep it in the tree (opacity, not
     // visibility/display) because it holds the accessible text.
-    expect(HOME).toMatch(/\.screen\.is-world \.slide\.is-on \.caption \{[^}]*opacity:\s*0/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.is-world \.slide\.is-on \.caption \{[^}]*opacity:\s*0/);
     // Stacking: the world host under the clip, the film over it, the typed
     // block above the film, the catcher on top.
-    expect(HOME).toMatch(/\.world-host \{[^}]*z-index:\s*1/);
-    expect(HOME).toMatch(/\.slide \{[^}]*z-index:\s*2/);
-    expect(HOME).toMatch(/\.film \{[^}]*z-index:\s*3/);
-    expect(HOME).toMatch(/\.typed \{[^}]*z-index:\s*4/);
-    expect(HOME).toMatch(/\.catch \{[^}]*z-index:\s*5[^}]*cursor:\s*crosshair/);
+    expect(LAB_LANTERN).toMatch(/\.world-host \{[^}]*z-index:\s*1/);
+    expect(LAB_LANTERN).toMatch(/\.slide \{[^}]*z-index:\s*2/);
+    expect(LAB_LANTERN).toMatch(/\.film \{[^}]*z-index:\s*3/);
+    expect(LAB_LANTERN).toMatch(/\.typed \{[^}]*z-index:\s*4/);
+    expect(LAB_LANTERN).toMatch(/\.catch \{[^}]*z-index:\s*5[^}]*cursor:\s*crosshair/);
   });
 
   it('types the freed corner in Sometype Mono with world ink', () => {
-    expect(HOME).toMatch(/\.typed \{[^}]*font-family:\s*var\(--font-mono\)/);
-    expect(HOME).toMatch(/\.typed \{[^}]*left:\s*4%[^}]*top:\s*6%[^}]*max-width:\s*74%/);
+    expect(LAB_LANTERN).toMatch(/\.typed \{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(LAB_LANTERN).toMatch(/\.typed \{[^}]*left:\s*4%[^}]*top:\s*6%[^}]*max-width:\s*74%/);
     // Phone-sized screens are narrow and short: the clamps shrink the three
     // lines so the command and tagline stay inside the screen.
-    expect(HOME).toMatch(/\.typed \.k \{[^}]*font-size:\s*clamp\(9px, 1\.1vw, 11px\)/);
-    expect(HOME).toMatch(/\.typed \.cmd \{[^}]*font-size:\s*clamp\(9px, 1\.3vw, 14px\)/);
-    expect(HOME).toMatch(/\.typed \.line \{[^}]*font-size:\s*clamp\(12px, 1\.9vw, 16px\)/);
-    expect(HOME).toMatch(/\.screen\.on-light \.typed \{[^}]*color:\s*#2a2118[^}]*radial-gradient/);
-    expect(HOME).toMatch(/\.screen\.on-dark \.typed \{[^}]*color:\s*#ece4d4[^}]*radial-gradient/);
+    expect(LAB_LANTERN).toMatch(/\.typed \.k \{[^}]*font-size:\s*clamp\(9px, 1\.1vw, 11px\)/);
+    expect(LAB_LANTERN).toMatch(/\.typed \.cmd \{[^}]*font-size:\s*clamp\(9px, 1\.3vw, 14px\)/);
+    expect(LAB_LANTERN).toMatch(/\.typed \.line \{[^}]*font-size:\s*clamp\(12px, 1\.9vw, 16px\)/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.on-light \.typed \{[^}]*color:\s*#2a2118[^}]*radial-gradient/);
+    expect(LAB_LANTERN).toMatch(/\.screen\.on-dark \.typed \{[^}]*color:\s*#ece4d4[^}]*radial-gradient/);
   });
 
   it('mounts on hover, types at 28 ms, and returns touch worlds after 12 s', () => {
@@ -477,15 +546,15 @@ describe('Home — copy in both dictionaries', () => {
 
   it('shows a paused plate under the projector, hidden until paused', () => {
     // Hidden by default, absolutely positioned so the bench row never shifts.
-    expect(HOME).toMatch(/<p class="lantern-paused" id="lantern-paused" hidden>/);
-    expect(HOME).toContain('{t.home.lantern.paused}');
-    expect(HOME).toMatch(/\.lantern-paused \{[^}]*position:\s*absolute/);
-    expect(HOME).toMatch(/\.lantern-paused \{[^}]*z-index:\s*4/);
+    expect(LAB_LANTERN).toMatch(/<p class="lantern-paused" id="lantern-paused" hidden>/);
+    expect(LAB_LANTERN).toContain('{t.home.lantern.paused}');
+    expect(LAB_LANTERN).toMatch(/\.lantern-paused \{[^}]*position:\s*absolute/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-paused \{[^}]*z-index:\s*4/);
     // It sits inside the engraving's clean bottom strip: a large bottom offset
     // would put the word on the tripod base, whose pedestal post crosses it at
     // phone width; negative offsets would drift it onto the bench row.
-    expect(HOME).toMatch(/\.lantern-paused \{[^}]*bottom:\s*0\.15rem/);
-    expect(HOME).not.toMatch(/\.lantern-paused \{[^}]*bottom:\s*-/);
+    expect(LAB_LANTERN).toMatch(/\.lantern-paused \{[^}]*bottom:\s*0\.15rem/);
+    expect(LAB_LANTERN).not.toMatch(/\.lantern-paused \{[^}]*bottom:\s*-/);
     expect(en.home.lantern.paused).toBe('Paused');
     expect(es.home.lantern.paused).toBe('En pausa');
   });
@@ -538,23 +607,23 @@ describe('Home — clicking the screen opens the projected experiment', () => {
     );
     // Shown on the first cut and initialised once before the first show().
     expect((LANTERN.match(/screen\.dataset\.currentExp = /g) ?? []).length).toBe(2);
-    expect(HOME).toMatch(/dataset\.currentExp/);
+    expect(LAB_LANTERN).toMatch(/dataset\.currentExp/);
   });
 
   it('wires the catcher click through the helper and the tuning', () => {
-    expect(HOME).toContain('shouldScreenNavigate');
-    expect(HOME).toMatch(/catcher\?\.addEventListener\('click'/);
-    expect(HOME).toMatch(/dx: upX - downX/);
-    expect(HOME).toMatch(/dy: upY - downY/);
-    expect(HOME).toMatch(/pointerType: pointerKind/);
-    expect(HOME).toMatch(/worldOpen: worldOpenAtDown/);
-    expect(HOME).toMatch(/tuneNavigate\(href, currentExp, screen\)/);
+    expect(LAB_LANTERN).toContain('shouldScreenNavigate');
+    expect(LAB_LANTERN).toMatch(/catcher\?\.addEventListener\('click'/);
+    expect(LAB_LANTERN).toMatch(/dx: upX - downX/);
+    expect(LAB_LANTERN).toMatch(/dy: upY - downY/);
+    expect(LAB_LANTERN).toMatch(/pointerType: pointerKind/);
+    expect(LAB_LANTERN).toMatch(/worldOpen: worldOpenAtDown/);
+    expect(LAB_LANTERN).toMatch(/tuneNavigate\(href, currentExp, screen\)/);
     // The href is the localized path the matching plate already carries.
-    expect(HOME).toMatch(/\.plate\[data-exp="\$\{currentExp\}"\]/);
+    expect(LAB_LANTERN).toMatch(/\.plate\[data-exp="\$\{currentExp\}"\]/);
     // The world state must be read before startLantern()'s own pointerdown
     // opens the world, or the first touch tap would navigate instead.
-    const down = HOME.indexOf("catcher?.addEventListener('pointerdown'");
-    const start = HOME.indexOf('startLantern()');
+    const down = LAB_LANTERN.indexOf("catcher?.addEventListener('pointerdown'");
+    const start = LAB_LANTERN.indexOf('startLantern()');
     expect(down).toBeGreaterThan(-1);
     expect(start).toBeGreaterThan(down);
     // The four existing lantern handlers stay put, in lantern.ts.
@@ -565,21 +634,21 @@ describe('Home — clicking the screen opens the projected experiment', () => {
   });
 
   it('affords the click: pointer cursor while projected, crosshair on the title', () => {
-    expect(HOME).toMatch(/\.catch \{[^}]*cursor:\s*crosshair/);
-    expect(HOME).toMatch(
+    expect(LAB_LANTERN).toMatch(/\.catch \{[^}]*cursor:\s*crosshair/);
+    expect(LAB_LANTERN).toMatch(
       /\.screen\[data-current-exp\]:not\(\[data-current-exp=''\]\) \.catch \{[^}]*cursor:\s*pointer/,
     );
   });
 
   it('stays aria-hidden and out of the tab order (plates are the keyboard path)', () => {
-    expect(HOME).toMatch(/id="screen"[\s\S]{0,400}?aria-hidden="true"/);
-    expect(HOME).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
-    expect(HOME).not.toMatch(/id="screen"[^>]*tabindex/i);
-    expect(HOME).not.toMatch(/id="catch"[^>]*tabindex/i);
+    expect(LAB_LANTERN).toMatch(/id="screen"[\s\S]{0,400}?aria-hidden="true"/);
+    expect(LAB_LANTERN).toMatch(/class="catch" id="catch"[^>]*aria-hidden="true"/);
+    expect(LAB_LANTERN).not.toMatch(/id="screen"[^>]*tabindex/i);
+    expect(LAB_LANTERN).not.toMatch(/id="catch"[^>]*tabindex/i);
   });
 
   it('appends the open hint to the world hint while a world is open', () => {
-    expect(HOME).toContain('data-open-hint={t.home.lantern.open}');
+    expect(LAB_LANTERN).toContain('data-open-hint={t.home.lantern.open}');
     expect(LANTERN).toMatch(
       /\(slide\?\.dataset\.worldHint \?\? hintText\) \+\s*\(hint\.dataset\.openHint/,
     );
@@ -588,5 +657,17 @@ describe('Home — clicking the screen opens the projected experiment', () => {
     expect(en.home.lantern.open).toContain('click the screen to open it');
     expect(es.home.lantern.open).toContain('haz clic en la pantalla para abrirlo');
     expect(en.home.lantern.open).not.toBe(es.home.lantern.open);
+  });
+});
+
+describe('Home — the lantern lives in its component', () => {
+  it('the home carries the encyclopedia under the frontispiece', () => {
+    expect(HOME.indexOf('<Encyclopedia />')).toBeGreaterThan(HOME.indexOf('class="frontis"'));
+    expect(HOME.indexOf('<Encyclopedia />')).toBeLessThan(HOME.indexOf('two-col about'));
+    expect(HOME).toContain('t.home.lanternLink');
+    expect(HOME).not.toContain('<LabLantern');
+    expect(LAB_LANTERN).toContain('id="screen"');
+    expect(LAB_LANTERN).toContain('id="lantern-pause"');
+    expect(LAB_LANTERN).toContain('startLantern');
   });
 });

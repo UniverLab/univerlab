@@ -22,6 +22,8 @@ interface Props {
   ogImage?: string;
   /** Core pages: shift the palette progressively with the time of day. */
   circadian?: boolean;
+  /** Single-language pages (audits) set this false to hide the language corner. */
+  langCorner?: boolean;
   /** Experiment pages: a fixed visual surface (paper, tui, blueprint, …). */
   surface?: string;
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
@@ -51,6 +53,9 @@ interface Props {
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
+  /** The newspaper's classifieds display faces (Oswald, Alfa Slab One,
+   *  Pirata One): loaded only by the newspaper pages, never elsewhere. */
+  paperDisplayFonts?: boolean;
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -69,6 +74,8 @@ const {
   markdownTwin = true,
   expId,
   fondo,
+  langCorner = true,
+  paperDisplayFonts = false,
 } = Astro.props;
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
@@ -144,10 +151,30 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
          `display=swap` shows fallback text immediately. -->
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
+    {/* The newspaper's classifieds display faces: a condensed grotesque, a
+         fat face and a period ornamental, all OFL. Same non-render-blocking
+         pattern; `display=swap` with metric-matched local fallbacks in the
+         paper's CSS keeps the sheet from shifting when they arrive. */}
+    {paperDisplayFonts && (
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Alfa+Slab+One&family=Pirata+One&display=swap" media="print" onload="this.media='all'" />
+    )}
+    {paperDisplayFonts && (
+      <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Alfa+Slab+One&family=Pirata+One&display=swap" /></noscript>
+    )}
+    {/* Pre-paint the hero's typefaces: the latin cuts of the three families,
+         so the first frame sets headings in their final metrics (no FOUT
+         shift on h1, koan, lede, seal and actions). Preloads are fetched, not
+         render-blocking. */}
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL99U6g.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR1SDk.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q6bHM.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVeqlq4.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tS1Zf.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/sometypemono/v4/70lVu745KGk_R3uxyq0WrROhKpShQQ.woff2" />
     <EssenceTokens />
     {/* Experiment banners are block ASCII tuned to DejaVu Sans Mono (see Banner.astro). */}
     {surface && (
-      <link rel="preload" href="/fonts/DejaVuSansMono.ttf" as="font" type="font/ttf" crossorigin />
+      <link rel="preload" href="/fonts/DejaVuSansMono-banner.woff2" as="font" type="font/woff2" crossorigin />
     )}
     {showAlts && (
       <>
@@ -401,7 +428,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     </script>
     {circadian && (
       <script is:inline>
-        (function(){try{var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#8a6a2c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'};var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#9a5530','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'};var NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#d6955b','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'};var NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#d9b878','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'};try{var pa=document.documentElement.getAttribute('data-circadian-palette');if(pa){var sp=JSON.parse(pa);if(sp.day){DG=sp.day;DW=sp.day}if(sp.night){NS=sp.night;NB=sp.night}}}catch(_){}function hx(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}function lerp(a,b,t){var x=hx(a),y=hx(b);function h(n){return('0'+Math.round(n).toString(16)).slice(-2)}return'#'+h(x[0]+(y[0]-x[0])*t)+h(x[1]+(y[1]-x[1])*t)+h(x[2]+(y[2]-x[2])*t)}function mix(a,b,f){var o={};for(var k in a)o[k]=lerp(a[k],b[k],f);return o}function ap(p){var r=document.documentElement;for(var k in p)r.style.setProperty(k,p[k])}function updateMoon(){var d=new Date(),E=Date.UTC(2000,0,6,18,14),S=29.530588853,dn=(d.getTime()-E)/864e4,ph=(dn%S)/S;if(ph<0)ph+=1;var il=(1-Math.cos(2*Math.PI*ph))/2,mo=8*(1-2*Math.abs(ph-.5)),sg=ph<.5?-1:1,r=document.documentElement;r.style.setProperty('--moon-offset',(sg*mo).toFixed(2)+'px');r.style.setProperty('--moon-glow',Math.round(il*70)+'%')}function nat(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,y=d.getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,doy=Math.floor((d-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}return{h:h,sr:12-hf,ss:12+hf,day:h>=12-hf&&h<12+hf}}
+        (function(){try{var DG={'--bg':'#f4f0ea','--bg-raise':'#eee7dc','--ink':'#1d1510','--ink-dim':'#6b5a43','--ink-faint':'#8a7a63','--line':'#d9cfbf','--accent':'#87222c','--canvas-color':'#6b5a43','--canvas-mute':'#b3a892'};var DW={'--bg':'#f1e9dc','--bg-raise':'#e9dfcf','--ink':'#241a12','--ink-dim':'#6e5a40','--ink-faint':'#8f7b5e','--line':'#d6c8b2','--accent':'#87222c','--canvas-color':'#9a5530','--canvas-mute':'#b3a089'};var NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#e6c84a','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'};var NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#e6c84a','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'};try{var pa=document.documentElement.getAttribute('data-circadian-palette');if(pa){var sp=JSON.parse(pa);if(sp.day){DG=sp.day;DW=sp.day}if(sp.night){NS=sp.night;NB=sp.night}}}catch(_){}function hx(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}function lerp(a,b,t){var x=hx(a),y=hx(b);function h(n){return('0'+Math.round(n).toString(16)).slice(-2)}return'#'+h(x[0]+(y[0]-x[0])*t)+h(x[1]+(y[1]-x[1])*t)+h(x[2]+(y[2]-x[2])*t)}function mix(a,b,f){var o={};for(var k in a)o[k]=lerp(a[k],b[k],f);return o}function ap(p){var r=document.documentElement;for(var k in p)r.style.setProperty(k,p[k])}function updateMoon(){var d=new Date(),E=Date.UTC(2000,0,6,18,14),S=29.530588853,dn=(d.getTime()-E)/864e4,ph=(dn%S)/S;if(ph<0)ph+=1;var il=(1-Math.cos(2*Math.PI*ph))/2,mo=8*(1-2*Math.abs(ph-.5)),sg=ph<.5?-1:1,r=document.documentElement;r.style.setProperty('--moon-offset',(sg*mo).toFixed(2)+'px');r.style.setProperty('--moon-glow',Math.round(il*70)+'%')}function nat(){var d=new Date(),h=d.getHours()+d.getMinutes()/60,y=d.getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,doy=Math.floor((d-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}return{h:h,sr:12-hf,ss:12+hf,day:h>=12-hf&&h<12+hf}}
 function dropStale(){var T=window.univerlabTheme,s=T.read();if((s==='day'||s==='night')&&s===(nat().day?'day':'night'))T.clear()}
 function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,de=sr+1,ds=ss-1;if(h<de)w=1-(h-sr)/1;else if(h>=ds)w=(h-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{var sse=h>=ss?h-ss:h+(24-ss),nl=24-(ss-sr),np=nl>0?sse/nl:0,ibh=!1;if(np<.15){pal=mix(NB,NS,np/.15);ibh=np<.08}else if(np<.85){pal=NS}else{pal=mix(NS,NB,(np-.85)/.15);ibh=np>.92}}ap(pal);var pos;if(day){pos=((h-sr)/(ss-sr))*100}else{var ss2=h>=ss?h-ss:h+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{cel=ibh?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';r.dataset.circadian='true';updateMoon();try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'circadian'}}))}catch(_){}}window.scrubTime=function(hour){if(localStorage.getItem('univerlab-theme'))return;hour=((hour%24)+24)%24;var y=new Date().getFullYear(),kJ=new Date(y,0,1).getTimezoneOffset(),kL=new Date(y,6,1).getTimezoneOffset(),hf=6;if(kJ!==kL){var so=kJ<kL,now=new Date(),doy=Math.floor((now-new Date(y,0,0))/864e4),s=Math.cos(2*Math.PI*(doy-172)/365.25);if(so)s=-s;hf=6+2.5*s}var sr=12-hf,ss=12+hf,day=hour>=sr&&hour<ss,pal,w=0,nl,np,sse;if(day){var de=sr+1,ds=ss-1;if(hour<de)w=1-(hour-sr)/1;else if(hour>=ds)w=(hour-ds)/1;pal=mix(DG,DW,Math.max(0,Math.min(w,1)))}else{sse=hour>=ss?hour-ss:hour+(24-ss);nl=24-(ss-sr);np=nl>0?sse/nl:0;if(np<.15)pal=mix(NB,NS,np/.15);else if(np<.85)pal=NS;else pal=mix(NS,NB,(np-.85)/.15)}ap(pal);var pos;if(day){pos=((hour-sr)/(ss-sr))*100}else{var ss2=hour>=ss?hour-ss:hour+(24-ss),nl2=24-(ss-sr);pos=(ss2/nl2)*100}var r=document.documentElement;r.style.setProperty('--sun-pos',pos.toFixed(2)+'%');var cel;if(day){var wf=Math.max(0,Math.min(w,1));if(wf>.01){var sw=lerp('#e8b830','#bf3417',wf);cel=lerp(pal['--canvas-color'],sw,.5+wf*.3)}else{cel=pal['--canvas-color']}}else{var ib=(np<.08||np>.92);cel=ib?'#b8a8b0':'#a8adb5'}if(day&&wf>.02)r.dataset.sunlow='true';else delete r.dataset.sunlow;r.style.setProperty('--celestial-color',cel);r.dataset.celestial=day?'sun':'moon';r.dataset.benchTheme=day?'day':'night';updateMoon();var mi={hour:Math.round(hour*10)/10,nightPos:0,palettes:[]};if(!day){mi.nightPos=Math.round(np*1000)/10;if(np<.15){var f=np/.15;mi.palettes=[{name:'Twilight',pct:Math.round((1-f)*100)},{name:'Night',pct:Math.round(f*100)}]}else if(np<.85)mi.palettes=[{name:'Night',pct:100}];else{var f=(np-.85)/.15;mi.palettes=[{name:'Night',pct:Math.round((1-f)*100)},{name:'Dawn',pct:Math.round(f*100)}]}}else{if(w>.01)mi.palettes=[{name:'Day',pct:Math.round((1-w)*100)},{name:hour<12?'Dawn':'Dusk',pct:Math.round(w*100)}];else mi.palettes=[{name:'Day',pct:100}]}window.__scrubInfo=mi;window.__scrubHour=hour;try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:'scrub'}}))}catch(_){}};window.resetScrub=function(){calc();var b=document.querySelector('.celestial-btn');if(b){b.style.transition='left .2s ease-out';setTimeout(function(){b.style.transition=''},250)}};window.calc=calc;window.applyTheme=function(mode){if(mode==='day'){ap(DG);document.documentElement.dataset.celestial='sun';document.documentElement.dataset.benchTheme='day';document.documentElement.dataset.circadian='true';delete document.documentElement.dataset.sunlow}else if(mode==='night'){ap(NS);document.documentElement.dataset.celestial='moon';document.documentElement.dataset.benchTheme='night';document.documentElement.dataset.circadian='true'}else{calc()}if(mode!=='circadian'){updateMoon();var r=document.documentElement;r.style.setProperty('--celestial-color',mode==='night'?'#a8adb5':DG['--canvas-color'])}if(mode!=='circadian'){try{window.dispatchEvent(new CustomEvent('univerlab:themechange',{detail:{mode:mode}}))}catch(_){}}};dropStale();var sv=localStorage.getItem('univerlab-theme');if(sv==='day'||sv==='night')applyTheme(sv);else calc();var tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme')){calc();clearInterval(tm);tm=setInterval(function(){updateMoon();dropStale();if(!localStorage.getItem('univerlab-theme'))calc()},6e4)}}})}catch(e){}})()
       </script>
@@ -427,15 +454,15 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
   <body>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
     {fondo && <LiveBackground id={fondo} />}
-    <Header circadian={circadian} />
+    <Header circadian={circadian} langCorner={langCorner} />
     <main id="main">
       <slot />
     </main>
     <Footer expId={expId} />
     <GhostHint hints={[
-      { id: 'cmd-palette', msg: 'Press <kbd>/</kbd> for commands', first: true },
-      { id: 'today-science', msg: 'The celestial marker hides a fact from today in science', prob: 0.16 },
-      { id: 'footer-commit', msg: 'The branch label opens a small terminal trace', prob: 0.1 },
+      { id: 'cmd-palette', msg: t.hints.palette, first: true },
+      { id: 'theme-mark', msg: t.hints.themeMark, prob: 0.16 },
+      { id: 'footer-commit', msg: t.hints.branch, prob: 0.1 },
     ]} />
     {/* The palette reads its strings (drawer labels, foot line, theme names,
         the 42 answer) from this JSON at runtime: one source, the i18n
@@ -617,7 +644,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           { cmd: '/manifesto', label: 'Manifesto', href: base + '/manifesto/' },
           { cmd: '/contributors', label: 'Contributors', href: base + '/contributors/' },
           { cmd: '/random', label: 'Surprise me', action: function () {
-            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
+            var ids = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum', 'facetmedia'];
             var pages = ['/', '/manifesto/', '/contributors/', '/archive/'];
             var all = ids.map(function (id) { return base + '/' + id; }).concat(pages.map(function (p) { return base + p; }));
             var history = [];
@@ -655,7 +682,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
               checkScroll();
             }
           }},
-          { cmd: '/today', label: 'Today in science (full page)', href: base + '/today/' },
+          { cmd: '/newspaper', label: 'The Observable (full page)', href: base + '/newspaper/' },
           { cmd: '/tip', label: 'Tip', action: function () {
             var tips = {
               en: [
@@ -713,13 +740,13 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
-          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: '/status/' },
+          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' },
           { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 
         // Experiment IDs — auto-generated from the registry.
         // Keep this list in sync with experiments.ts (add new IDs here).
-        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum'];
+        var experimentIds = ['canopy', 'texforge', 'gitkit', 'ghscaff', 'astro-denoise', 'demostage', 'quorum', 'facetmedia'];
         var experimentGithub = {
           canopy: 'https://github.com/UniverLab/harness-canopy',
           texforge: 'https://github.com/UniverLab/texforge',
@@ -728,6 +755,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           'astro-denoise': 'https://github.com/UniverLab',
           demostage: 'https://github.com/UniverLab/demostage',
           quorum: 'https://github.com/UniverLab/quorum',
+          facetmedia: 'https://github.com/UniverLab/facetmedia',
         };
         function currentExpId() {
           var m = window.location.pathname.match(/\/(?:es\/)?(\w[\w-]*)\/?$/);

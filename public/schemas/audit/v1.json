@@ -1,0 +1,767 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://univerlab.org/schemas/audit/v1.json",
+  "title": "UniverLab audit document, v1",
+  "description": "Versioned contract for a UniverLab audit page: metadata, findings, assets, deliverables and sections of typed blocks. A document declares contract 'univerlab.audit/1'. Unknown block types and properties prefixed 'x-' are valid extension points; renderers skip unknown blocks and validators warn about them. Breaking changes require 'univerlab.audit/2'.",
+  "type": "object",
+  "required": ["contract", "meta", "visibility", "cover", "assets", "deliverables", "findings", "sources", "glossary", "sections"],
+  "properties": {
+    "contract": {
+      "const": "univerlab.audit/1",
+      "description": "Contract version this document is written against. Must be exactly 'univerlab.audit/1' for v1 documents."
+    },
+    "meta": {
+      "$ref": "#/$defs/meta",
+      "description": "Descriptive metadata: title, language, client, auditors, audit period, version, status and scope."
+    },
+    "visibility": {
+      "enum": ["public", "private"],
+      "description": "Whether the audit page is public or restricted. Private audits list reader emails in 'access'; the access list is contract data only and is never sent to the browser."
+    },
+    "access": {
+      "$ref": "#/$defs/access",
+      "description": "Reader allowlist for private audits: the email addresses allowed to read it. Required and non-empty when visibility is private; ignored for public audits. Never sent to the browser."
+    },
+    "accent": {
+      "enum": ["lab", "experiment"],
+      "description": "Optional accent from the site palette tinting the audit page. Omitted means the renderer default. Part of how two audits look different without new code."
+    },
+    "badge": {
+      "$ref": "#/$defs/badge",
+      "description": "Optional badge for a published audit: issue date, validity, a short scope line and an optional link to the previous audit of the same system. Old documents without it stay valid."
+    },
+    "deposit": {
+      "$ref": "#/$defs/deposit",
+      "description": "Optional Zenodo deposit of a published audit: the version and concept DOIs, the deposit date and the client's recorded consent to a permanent deposit. Old documents without it stay valid."
+    },
+    "cover": {
+      "$ref": "#/$defs/cover",
+      "description": "The audit cover, which also picks a layout like any section."
+    },
+    "assets": {
+      "type": "array",
+      "description": "Asset catalogue: every file the document references, each with an id, a path inside the audit folder, a kind, a title, alt text where it applies, and its size and SHA-256 so the validator can confirm the file. Annex files are catalogue assets too, referenced by id from the annex.",
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "annexes": {
+      "type": "array",
+      "description": "Optional annexes: described deliverables with instructions, each bundling one or more catalogue asset files and carrying its own visibility. Private annexes stay off the public page and its files answer 404 on the public route.",
+      "items": { "$ref": "#/$defs/annex" }
+    },
+    "deliverables": {
+      "$ref": "#/$defs/deliverables",
+      "description": "Downloadable deliverables by asset id, plus the audit's repository URL. The page never generates a PDF itself; the TeXForge PDF report is required once status is delivered or final."
+    },
+    "findings": {
+      "type": "array",
+      "description": "Ranked findings, each with severity, likelihood and impact, area, status, evidence, recommendation, effort, optional cost and the version where it was fixed.",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Sources cited by prose, quotes and evidence entries.",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "glossary": {
+      "type": "array",
+      "description": "Glossary terms that prose can reference inline for interactive definitions.",
+      "items": { "$ref": "#/$defs/glossaryTerm" }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Ordered page sections. Each picks a layout and holds an ordered list of blocks; two audits look different through different layouts, accents and block orders, not new code.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/section" }
+    }
+  },
+  "patternProperties": {
+    "^x-": { "description": "Extension point: properties prefixed 'x-' carry tool-specific data and are always valid." }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "title": "Audit metadata",
+      "description": "Who the audit is for, who wrote it, when it ran, which version and status it has, and what it covers.",
+      "type": "object",
+      "required": ["title", "language", "client", "auditors", "auditPeriod", "version", "status", "scope"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "description": "Audit title, e.g. the client flow or system under review." },
+        "subtitle": { "type": "string", "minLength": 1, "description": "Optional subtitle shown under the title on the cover." },
+        "language": { "enum": ["es", "en"], "description": "Document language: Spanish or English." },
+        "client": { "$ref": "#/$defs/client", "description": "The audited client or organisation." },
+        "auditors": {
+          "type": "array",
+          "description": "People or teams that performed the audit.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/person" }
+        },
+        "auditPeriod": { "$ref": "#/$defs/auditPeriod", "description": "Calendar period the audit work covers." },
+        "version": { "type": "string", "minLength": 1, "description": "Document version, e.g. '1.0'. Findings fixed later name the version that fixed them." },
+        "status": { "enum": ["draft", "delivered", "final"], "description": "Lifecycle status. Delivered and final audits must name their TeXForge PDF report in deliverables." },
+        "scope": { "type": "string", "minLength": 1, "description": "What the audit covers and, briefly, what it leaves out." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "client": {
+      "title": "Client",
+      "description": "The audited client or organisation.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "Client display name." },
+        "url": { "type": "string", "format": "uri", "description": "Optional client website URL." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "person": {
+      "title": "Person",
+      "description": "A named auditor with an optional link.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "Auditor or team name." },
+        "url": { "type": "string", "format": "uri", "description": "Optional link to the auditor profile or team page." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "auditPeriod": {
+      "title": "Audit period",
+      "description": "Calendar period the audit work covers, as ISO dates.",
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "string", "format": "date", "description": "First day of the audit period (YYYY-MM-DD)." },
+        "end": { "type": "string", "format": "date", "description": "Last day of the audit period (YYYY-MM-DD)." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "access": {
+      "title": "Access allowlist",
+      "description": "Reader allowlist for private audits. Never sent to the browser.",
+      "type": "object",
+      "required": ["emails"],
+      "properties": {
+        "emails": {
+          "type": "array",
+          "description": "Email addresses allowed to read a private audit. Must be non-empty when visibility is private.",
+          "items": { "type": "string", "format": "email" }
+        }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "badge": {
+      "title": "Badge",
+      "description": "Optional badge for a published audit: issue date, validity, a short scope line and an optional link to the previous audit of the same system.",
+      "type": "object",
+      "required": ["issued", "scope"],
+      "properties": {
+        "issued": { "type": "string", "format": "date", "description": "Badge issue date (YYYY-MM-DD): the date the audit was published." },
+        "validUntil": { "type": "string", "format": "date", "description": "Optional end of the badge validity. Omitted means 12 months after the issue date." },
+        "scope": { "type": "string", "minLength": 1, "description": "Short scope line shown on the badge, e.g. the audited system or flow." },
+        "previous": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$", "description": "Optional slug of the previous audit of the same system, forming the re-audit history." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "deposit": {
+      "title": "Zenodo deposit",
+      "description": "The permanent Zenodo deposit of a published audit: the version DOI of this audit, the concept DOI shared with its re-audits, the deposit date and the client's recorded consent. A Zenodo publication cannot be undone, so consent must be literally true.",
+      "type": "object",
+      "properties": {
+        "versionDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Version DOI of this audit's Zenodo record, e.g. '10.5281/zenodo.1234567'. Written by the deposit command after publication." },
+        "conceptDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "Concept DOI shared by every audit of the same system: each re-audit publishes a new version under it. Written by the deposit command after publication." },
+        "depositedAt": { "type": "string", "format": "date", "description": "Deposit date (YYYY-MM-DD): the day the record was published in Zenodo." },
+        "consent": { "const": true, "description": "The client's recorded consent to a permanent public deposit in Zenodo. Must be literally true: the deposit command refuses to publish without it." },
+        "draftDepositionId": { "type": "integer", "minimum": 1, "description": "Unpublished Zenodo draft deposition id for this audit, e.g. 11. Written by the draft step so a rerun updates the same draft and publication publishes it." },
+        "draftDoi": { "type": "string", "pattern": "^10\\.[0-9]+/.+", "description": "DOI Zenodo reserved for the unpublished draft, e.g. '10.5281/zenodo.1234567'. Written by the draft step; it becomes the version DOI on publication." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "cover": {
+      "title": "Cover",
+      "description": "The audit cover, which picks a layout like any section.",
+      "type": "object",
+      "required": ["layout"],
+      "properties": {
+        "layout": { "$ref": "#/$defs/layout", "description": "Layout the cover is rendered with." },
+        "background": { "type": "string", "minLength": 1, "description": "Optional background: an asset id for a cover image or video, or a palette token." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "asset": {
+      "title": "Asset",
+      "description": "One file in the audit folder catalogue, verified by the validator against the file on disk.",
+      "type": "object",
+      "required": ["id", "path", "kind", "title", "bytes", "sha256"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique asset id used by blocks, evidence, deliverables and annexes to reference this file." },
+        "path": { "type": "string", "minLength": 1, "description": "File path relative to the audit folder, e.g. 'assets/report.pdf'." },
+        "kind": { "type": "string", "minLength": 1, "description": "Asset kind. Conveniences the renderer knows: pdf, image, video, audio, data, code, archive. Media kinds (image, video, audio) require alt text. Any other non-empty kind is valid: the page shows it by file extension and media type." },
+        "title": { "type": "string", "minLength": 1, "description": "Human-readable asset title for download cards and captions." },
+        "alt": { "type": "string", "minLength": 1, "description": "Alt text for media assets (image, video, audio). Required by the validator for those kinds." },
+        "bytes": { "type": "integer", "minimum": 0, "description": "Exact file size in bytes; the validator compares it against the file on disk." },
+        "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$", "description": "SHA-256 hex digest of the file; the validator recomputes it from disk." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "deliverables": {
+      "title": "Deliverables",
+      "description": "Deliverables by asset id plus the audit's repository. The page offers the files for download and links the repository; it never generates a PDF itself.",
+      "type": "object",
+      "properties": {
+        "report": { "type": "string", "minLength": 1, "description": "Asset id of the TeXForge PDF report. Required once the audit status is delivered or final." },
+        "bundle": { "type": "string", "minLength": 1, "description": "Optional asset id of an archive bundling every asset." },
+        "repository": { "type": "string", "format": "uri", "pattern": "^https://", "description": "HTTPS URL of the audit's repository." },
+        "repositoryPublic": { "enum": [true], "description": "True only when the repository is public too; omitted means private." },
+        "signedDocId": { "type": "string", "pattern": "^[0-9a-f]{32}$", "description": "Optional signing request id whose signed PDF is this audit's signed document." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "cost": {
+      "title": "Cost",
+      "description": "An estimated cost with its currency.",
+      "type": "object",
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": { "type": "number", "description": "Estimated cost amount in the named currency." },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "description": "Three-letter ISO currency code, e.g. 'USD'." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "annex": {
+      "title": "Annex",
+      "description": "One described annex: a title, a Markdown description, optional Markdown usage instructions, one or more catalogue asset files by id, and its own visibility. Omitted visibility means private: the annex is hidden from the public page and its files answer 404 on the public route.",
+      "type": "object",
+      "required": ["id", "title", "description", "assets"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique annex id referenced by evidence entries and prose as {{annex:id}}." },
+        "title": { "type": "string", "minLength": 1, "description": "Annex title shown in the annexes section." },
+        "description": { "type": "string", "minLength": 1, "description": "What the annex is, as Markdown without raw HTML." },
+        "instructions": { "type": "string", "minLength": 1, "description": "Optional usage instructions as Markdown without raw HTML, e.g. how to run a sandbox." },
+        "assets": {
+          "type": "array",
+          "description": "Catalogue asset ids bundled in this annex; the validator checks each one exists.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "visibility": { "enum": ["public", "private"], "description": "Who sees this annex. Omitted means private: it stays off the public page and its files answer 404 on the public route." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "title": "Evidence",
+      "description": "One pointer backing a finding: an asset file, a cited source or a described annex.",
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["asset", "source", "annex"], "description": "Whether the evidence id names an asset, a source or an annex." },
+        "id": { "type": "string", "minLength": 1, "description": "The referenced asset id, source id or annex id; the validator checks it exists." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "finding": {
+      "title": "Finding",
+      "description": "One ranked audit finding with severity, likelihood, impact, evidence, recommendation, effort and optional cost.",
+      "type": "object",
+      "required": ["id", "title", "severity", "likelihood", "impact", "area", "status", "summary", "evidence", "recommendation", "effort"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique finding id, e.g. 'F-01'. Referenced by finding cards, findings tables and prose." },
+        "title": { "type": "string", "minLength": 1, "description": "Short finding title." },
+        "severity": { "enum": ["critical", "high", "medium", "low", "info"], "description": "Finding severity, used by the findings table filter and the risk matrix." },
+        "likelihood": { "type": "integer", "minimum": 1, "maximum": 5, "description": "Likelihood score from 1 (rare) to 5 (almost certain); the risk matrix plots it against impact." },
+        "impact": { "type": "integer", "minimum": 1, "maximum": 5, "description": "Impact score from 1 (negligible) to 5 (catastrophic); the risk matrix plots likelihood against it." },
+        "area": { "type": "string", "minLength": 1, "description": "System area the finding belongs to, e.g. 'authentication'." },
+        "status": { "enum": ["open", "fixed", "accepted", "wont-fix"], "description": "Remediation status: open, fixed, accepted as risk, or decided as won't fix." },
+        "summary": { "type": "string", "minLength": 1, "description": "Plain summary of what is wrong and why it matters." },
+        "evidence": {
+          "type": "array",
+          "description": "Pointers backing the finding: asset or source references the validator resolves.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/evidence" }
+        },
+        "recommendation": { "type": "string", "minLength": 1, "description": "What the client should do about the finding." },
+        "effort": { "enum": ["small", "medium", "large"], "description": "Estimated remediation effort." },
+        "cost": { "$ref": "#/$defs/cost", "description": "Optional estimated remediation cost with currency." },
+        "fixedIn": { "type": "string", "minLength": 1, "description": "Document version that fixed the finding, e.g. '1.1'." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "source": {
+      "title": "Source",
+      "description": "One cited source for prose, quotes and evidence.",
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique source id referenced by blocks, evidence and prose." },
+        "title": { "type": "string", "minLength": 1, "description": "Source title." },
+        "url": { "type": "string", "format": "uri", "description": "Optional source URL." },
+        "publisher": { "type": "string", "minLength": 1, "description": "Optional publisher or author name." },
+        "accessed": { "type": "string", "format": "date", "description": "Optional access date (YYYY-MM-DD) for retrievable sources." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "glossaryTerm": {
+      "title": "Glossary term",
+      "description": "One defined term that prose can reference inline for interactive definitions.",
+      "type": "object",
+      "required": ["term", "definition"],
+      "properties": {
+        "term": { "type": "string", "minLength": 1, "description": "The defined term, referenced inline by prose as {{term:...}}." },
+        "definition": { "type": "string", "minLength": 1, "description": "Definition shown by the renderer where the term is referenced." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "section": {
+      "title": "Section",
+      "description": "One page section: an id, a title, an optional navigation label, a layout and an ordered list of blocks.",
+      "type": "object",
+      "required": ["id", "title", "layout", "blocks"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$", "description": "Unique section id, used for anchor links." },
+        "title": { "type": "string", "minLength": 1, "description": "Section heading." },
+        "navLabel": { "type": "string", "minLength": 1, "description": "Optional shorter label for the page navigation." },
+        "layout": { "$ref": "#/$defs/layout", "description": "Layout the section is rendered with." },
+        "blocks": {
+          "type": "array",
+          "description": "Ordered blocks composing the section.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/block" }
+        }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "layout": {
+      "title": "Layout",
+      "description": "A closed list of layouts the renderer understands. Two audits look different through different layouts, not new code.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["single", "wide", "split", "grid", "band", "sidebar"], "description": "Layout shape: single column, wide single column, two columns with a ratio, a 2-4 column grid, a full-bleed band, or content with a sticky aside." },
+        "ratio": { "enum": ["1-2", "2-1", "1-3", "3-1"], "description": "Column ratio for the split layout; ignored by other layouts." },
+        "columns": { "type": "integer", "minimum": 2, "maximum": 4, "description": "Column count for the grid layout (2-4); ignored by other layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "block": {
+      "title": "Block",
+      "description": "One typed content block. Known types are validated strictly; any other type is a valid extension that renderers skip and validators report as a warning.",
+      "anyOf": [
+        { "$ref": "#/$defs/headingBlock" },
+        { "$ref": "#/$defs/proseBlock" },
+        { "$ref": "#/$defs/calloutBlock" },
+        { "$ref": "#/$defs/statsBlock" },
+        { "$ref": "#/$defs/findingBlock" },
+        { "$ref": "#/$defs/findingsTableBlock" },
+        { "$ref": "#/$defs/riskMatrixBlock" },
+        { "$ref": "#/$defs/chartBlock" },
+        { "$ref": "#/$defs/figureBlock" },
+        { "$ref": "#/$defs/diagramBlock" },
+        { "$ref": "#/$defs/codeBlock" },
+        { "$ref": "#/$defs/quoteBlock" },
+        { "$ref": "#/$defs/tableBlock" },
+        { "$ref": "#/$defs/timelineBlock" },
+        { "$ref": "#/$defs/stepperBlock" },
+        { "$ref": "#/$defs/compareBlock" },
+        { "$ref": "#/$defs/assetCardBlock" },
+        { "$ref": "#/$defs/sourcesBlock" },
+        { "$ref": "#/$defs/dividerBlock" },
+        { "$ref": "#/$defs/extensionBlock" }
+      ]
+    },
+    "span": {
+      "title": "Grid span",
+      "description": "How many grid columns a block spans inside grid layouts (1-4). Ignored by other layouts.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "headingBlock": {
+      "title": "Heading block",
+      "description": "A section heading inside the block flow.",
+      "type": "object",
+      "required": ["type", "level", "text"],
+      "properties": {
+        "type": { "const": "heading", "description": "Block type discriminator." },
+        "level": { "type": "integer", "minimum": 1, "maximum": 6, "description": "Heading level, 1-6." },
+        "text": { "type": "string", "minLength": 1, "description": "Heading text." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "proseBlock": {
+      "title": "Prose block",
+      "description": "Markdown prose without raw HTML. Inline {{finding:ID}}, {{source:ID}}, {{term:term}}, {{asset:ID}} and {{annex:ID}} references become interactive in the renderer.",
+      "type": "object",
+      "required": ["type", "markdown"],
+      "properties": {
+        "type": { "const": "prose", "description": "Block type discriminator." },
+        "markdown": { "type": "string", "minLength": 1, "description": "Markdown content. No raw HTML or script; the contract only carries declarative text." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "calloutBlock": {
+      "title": "Callout block",
+      "description": "A toned aside box with an optional title.",
+      "type": "object",
+      "required": ["type", "tone", "markdown"],
+      "properties": {
+        "type": { "const": "callout", "description": "Block type discriminator." },
+        "tone": { "enum": ["info", "success", "warning", "danger"], "description": "Callout tone styling the box." },
+        "title": { "type": "string", "minLength": 1, "description": "Optional callout heading." },
+        "markdown": { "type": "string", "minLength": 1, "description": "Callout body as Markdown, without raw HTML." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "statsBlock": {
+      "title": "Stats block",
+      "description": "A row of headline statistics.",
+      "type": "object",
+      "required": ["type", "items"],
+      "properties": {
+        "type": { "const": "stats", "description": "Block type discriminator." },
+        "items": {
+          "type": "array",
+          "description": "Statistics shown in a row.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/statItem" }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "statItem": {
+      "title": "Stat item",
+      "description": "One headline statistic: a value, its label and an optional delta.",
+      "type": "object",
+      "required": ["value", "label"],
+      "properties": {
+        "value": { "type": "string", "minLength": 1, "description": "Headline value, e.g. '42' or '98%'." },
+        "label": { "type": "string", "minLength": 1, "description": "What the value measures." },
+        "delta": { "type": "string", "minLength": 1, "description": "Optional change note, e.g. '+12 since last quarter'." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "findingBlock": {
+      "title": "Finding card block",
+      "description": "Renders one finding as a card by reference.",
+      "type": "object",
+      "required": ["type", "findingId"],
+      "properties": {
+        "type": { "const": "finding", "description": "Block type discriminator." },
+        "findingId": { "type": "string", "minLength": 1, "description": "Id of the finding to render; the validator checks it exists." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "findingsTableBlock": {
+      "title": "Findings table block",
+      "description": "A table of findings filterable by severity and status.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "findingsTable", "description": "Block type discriminator." },
+        "severity": {
+          "type": "array",
+          "description": "Optional preset severity filter; the renderer still lets readers change it.",
+          "items": { "enum": ["critical", "high", "medium", "low", "info"] }
+        },
+        "status": {
+          "type": "array",
+          "description": "Optional preset remediation-status filter; the renderer still lets readers change it.",
+          "items": { "enum": ["open", "fixed", "accepted", "wont-fix"] }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "riskMatrixBlock": {
+      "title": "Risk matrix block",
+      "description": "A likelihood-by-impact matrix computed from the findings.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "riskMatrix", "description": "Block type discriminator." },
+        "title": { "type": "string", "minLength": 1, "description": "Optional matrix heading." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "chartBlock": {
+      "title": "Chart block",
+      "description": "A declarative Vega-Lite chart, inline or pointing at a data asset. At least one of spec or dataAsset is required.",
+      "type": "object",
+      "required": ["type"],
+      "anyOf": [
+        { "required": ["spec"] },
+        { "required": ["dataAsset"] }
+      ],
+      "properties": {
+        "type": { "const": "chart", "description": "Block type discriminator." },
+        "spec": { "type": "object", "description": "Inline Vega-Lite specification. Kept open so any declarative chart validates; never script or HTML." },
+        "dataAsset": { "type": "string", "minLength": 1, "description": "Asset id of a data file feeding the chart; the validator checks it exists." },
+        "caption": { "type": "string", "minLength": 1, "description": "Optional chart caption." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "figureBlock": {
+      "title": "Figure block",
+      "description": "An image or video asset with a caption. A muted looping video is how an animation is shown; video figures may name a poster asset.",
+      "type": "object",
+      "required": ["type", "asset"],
+      "properties": {
+        "type": { "const": "figure", "description": "Block type discriminator." },
+        "asset": { "type": "string", "minLength": 1, "description": "Image or video asset id to show; the validator checks it exists." },
+        "caption": { "type": "string", "minLength": 1, "description": "Optional figure caption." },
+        "poster": { "type": "string", "minLength": 1, "description": "Optional poster image asset id for video figures." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "diagramBlock": {
+      "title": "Diagram block",
+      "description": "A Mermaid diagram rendered from declarative source.",
+      "type": "object",
+      "required": ["type", "mermaid"],
+      "properties": {
+        "type": { "const": "diagram", "description": "Block type discriminator." },
+        "mermaid": { "type": "string", "minLength": 1, "description": "Mermaid diagram source. Declarative text only; never script or HTML." },
+        "caption": { "type": "string", "minLength": 1, "description": "Optional diagram caption." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "codeBlock": {
+      "title": "Code block",
+      "description": "A code listing with a language, source inline or from a code asset, and optional highlighted lines.",
+      "type": "object",
+      "required": ["type", "language"],
+      "anyOf": [
+        { "required": ["source"] },
+        { "required": ["sourceAsset"] }
+      ],
+      "properties": {
+        "type": { "const": "code", "description": "Block type discriminator." },
+        "language": { "type": "string", "minLength": 1, "description": "Programming language for highlighting, e.g. 'python'." },
+        "source": { "type": "string", "minLength": 1, "description": "Inline code source. One of source or sourceAsset is required." },
+        "sourceAsset": { "type": "string", "minLength": 1, "description": "Asset id of a code file holding the source. One of source or sourceAsset is required." },
+        "highlight": {
+          "type": "array",
+          "description": "Optional 1-based line numbers to highlight.",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "quoteBlock": {
+      "title": "Quote block",
+      "description": "A pull quote with optional attribution and source reference.",
+      "type": "object",
+      "required": ["type", "text"],
+      "properties": {
+        "type": { "const": "quote", "description": "Block type discriminator." },
+        "text": { "type": "string", "minLength": 1, "description": "Quoted text." },
+        "attribution": { "type": "string", "minLength": 1, "description": "Optional who said or wrote it." },
+        "sourceId": { "type": "string", "minLength": 1, "description": "Optional source id backing the quote; the validator checks it exists." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "tableBlock": {
+      "title": "Table block",
+      "description": "A data table with a header row and rows of cells.",
+      "type": "object",
+      "required": ["type", "columns", "rows"],
+      "properties": {
+        "type": { "const": "table", "description": "Block type discriminator." },
+        "caption": { "type": "string", "minLength": 1, "description": "Optional table caption." },
+        "columns": {
+          "type": "array",
+          "description": "Header row column names.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rows": {
+          "type": "array",
+          "description": "Table body rows. Kept open: each row is a list of cells, and the validator checks every row matches the header width.",
+          "items": {
+            "type": "array",
+            "items": { "type": ["string", "number"] }
+          }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "timelineStep": {
+      "title": "Timeline step",
+      "description": "One prioritised remediation step with optional effort and cost.",
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "description": "Step title." },
+        "description": { "type": "string", "minLength": 1, "description": "Optional step detail." },
+        "effort": { "enum": ["small", "medium", "large"], "description": "Optional estimated effort for this step." },
+        "cost": { "$ref": "#/$defs/cost", "description": "Optional estimated cost for this step." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "timelineBlock": {
+      "title": "Timeline block",
+      "description": "A timeline or roadmap of prioritised steps with effort and cost.",
+      "type": "object",
+      "required": ["type", "steps"],
+      "properties": {
+        "type": { "const": "timeline", "description": "Block type discriminator." },
+        "steps": {
+          "type": "array",
+          "description": "Prioritised steps in order.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/timelineStep" }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "stepperStep": {
+      "title": "Stepper step",
+      "description": "One step of content revealed step by step.",
+      "type": "object",
+      "required": ["title", "markdown"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "description": "Step title." },
+        "markdown": { "type": "string", "minLength": 1, "description": "Step body as Markdown, without raw HTML." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "stepperBlock": {
+      "title": "Stepper block",
+      "description": "Content revealed step by step, e.g. a guided fix sequence.",
+      "type": "object",
+      "required": ["type", "steps"],
+      "properties": {
+        "type": { "const": "stepper", "description": "Block type discriminator." },
+        "steps": {
+          "type": "array",
+          "description": "Steps revealed in order.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/stepperStep" }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "compareBlock": {
+      "title": "Before/after block",
+      "description": "A before/after comparison of two states.",
+      "type": "object",
+      "required": ["type", "before", "after"],
+      "properties": {
+        "type": { "const": "compare", "description": "Block type discriminator." },
+        "before": { "type": "string", "minLength": 1, "description": "The 'before' side as Markdown." },
+        "after": { "type": "string", "minLength": 1, "description": "The 'after' side as Markdown." },
+        "caption": { "type": "string", "minLength": 1, "description": "Optional comparison caption." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "assetCardBlock": {
+      "title": "Asset download card block",
+      "description": "A download card for one catalogue asset.",
+      "type": "object",
+      "required": ["type", "asset"],
+      "properties": {
+        "type": { "const": "assetCard", "description": "Block type discriminator." },
+        "asset": { "type": "string", "minLength": 1, "description": "Asset id to offer for download; the validator checks it exists." },
+        "description": { "type": "string", "minLength": 1, "description": "Optional card text describing the download." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "sourcesBlock": {
+      "title": "Sources list block",
+      "description": "Renders a list of cited sources by reference.",
+      "type": "object",
+      "required": ["type", "ids"],
+      "properties": {
+        "type": { "const": "sources", "description": "Block type discriminator." },
+        "ids": {
+          "type": "array",
+          "description": "Source ids to list; the validator checks each one exists.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "dividerBlock": {
+      "title": "Divider block",
+      "description": "A visual divider with an optional label.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "divider", "description": "Block type discriminator." },
+        "label": { "type": "string", "minLength": 1, "description": "Optional divider label." },
+        "span": { "$ref": "#/$defs/span", "description": "Optional grid span (1-4) inside grid layouts." }
+      },
+      "patternProperties": { "^x-": { "description": "Extension point: properties prefixed 'x-' are always valid." } },
+      "additionalProperties": false
+    },
+    "extensionBlock": {
+      "title": "Extension block",
+      "description": "Any block type outside the v1 catalogue. Valid by design: renderers skip unknown types and validators report them as warnings, not errors. Kept open so new types need no document changes.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "not": { "enum": ["heading", "prose", "callout", "stats", "finding", "findingsTable", "riskMatrix", "chart", "figure", "diagram", "code", "quote", "table", "timeline", "stepper", "compare", "assetCard", "sources", "divider"] },
+          "description": "Extension block type: any string outside the v1 catalogue."
+        }
+      }
+    }
+  }
+}

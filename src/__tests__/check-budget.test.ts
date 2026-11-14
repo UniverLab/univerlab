@@ -33,6 +33,7 @@ const FIXTURE = `<!doctype html><html><head>
 <video id="meta" poster="/bench/meta-poster.webp" preload="metadata"><source src="/bench/meta.mp4"></video>
 <picture><source type="image/avif" srcset="/bench/pic-450.avif 450w, /bench/pic-900.avif 900w"><source type="image/webp" srcset="/bench/pic-450.webp 450w"><img src="/bench/pic-fallback.webp" alt=""></picture>
 <picture><source type="image/avif" srcset="/bench/lazy-pic.avif"><img src="/bench/lazy-pic.webp" loading="lazy" alt=""></picture>
+<picture><source type="image/avif" data-srcset="/bench/pair-450.avif 450w"><source type="image/webp" data-srcset="/bench/pair-450.webp"><img data-src="/bench/pair-450.webp" loading="lazy" alt=""></picture>
 <script>const fake = '<img src="/bench/fake-in-script.webp">';
 </script>
 </body></html>`;
@@ -77,6 +78,21 @@ describe('firstViewItems', () => {
   it('counts nothing of a picture whose img is lazy', () => {
     expect(items).not.toContain('/bench/lazy-pic.avif');
     expect(items).not.toContain('/bench/lazy-pic.webp');
+  });
+
+  it('counts an eager picture whose URLs ship in data-* (the swap script realises them before paint)', () => {
+    // A theme pair ships data-only URLs; the parse-time script copies the live
+    // phase into src/srcset before first paint, so an eager one really fetches.
+    const eager =
+      '<picture><source type="image/avif" data-srcset="/bench/pair-450.avif 450w"><img data-src="/bench/pair-450.webp" alt=""></picture>';
+    expect(firstViewItems(eager)).toContain('/bench/pair-450.avif');
+  });
+
+  it('still counts nothing of that pair when its img is lazy', () => {
+    // The fixture's pair is below the fold: lazy loading holds it back, so it
+    // costs nothing on the first view.
+    expect(items).not.toContain('/bench/pair-450.avif');
+    expect(items).not.toContain('/bench/pair-450.webp');
   });
 
   it('never lists the Google Fonts stylesheet (main adds a fixed 120 KB)', () => {
@@ -147,10 +163,11 @@ describe('budgetedPages', () => {
     }
   });
 
-  it('gives /experiments/ 1,200 KB and the static sections 800 KB', () => {
-    expect(byRoute.get('/experiments/')).toBe(1200 * KB);
-    expect(byRoute.get('/es/experiments/')).toBe(1200 * KB);
-    for (const route of ['/roadmap/', '/manifesto/', '/contributors/', '/status/']) {
+  it('gives /experiments/ 1,210 KB and the static sections 800 KB', () => {
+    // Re-reviewed 2026-11-10: the ninth plate (facetmedia EXP-009) added ~44 KB.
+    expect(byRoute.get('/experiments/')).toBe(1210 * KB);
+    expect(byRoute.get('/es/experiments/')).toBe(1210 * KB);
+    for (const route of ['/roadmap/', '/manifesto/', '/contributors/']) {
       expect(byRoute.get(route)).toBe(800 * KB);
     }
   });

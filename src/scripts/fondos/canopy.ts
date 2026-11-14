@@ -78,7 +78,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       c.drawImage(still, 0, 0);
       c.globalAlpha = 1;
     };
-    loadImage(base + 'panal.webp').then((img) => {
+    loadImage(base + 'panal-1600.webp').then((img) => {
       still = img;
       paintStill();
     });
@@ -108,6 +108,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   const gc = glow.getContext('2d') as CanvasRenderingContext2D;
   for (const el of [lit, glow]) {
     el.style.position = 'absolute';
+    el.style.display = 'none';
     layer.appendChild(el);
   }
   glow.style.opacity = '0.9';
@@ -159,12 +160,16 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
       el.style.top = oy + 'px';
       el.style.width = map.w * s + 'px';
       el.style.height = map.h * s + 'px';
+      el.style.display = '';
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, canvas.width, canvas.height);
     c.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
     c.globalAlpha = COMB_ALPHA;
-    c.drawImage(comb, 0, 0);
+    // Scale the comb into the cell map's coordinate space (celdas.json is
+    // 1813×977): the file ships sized, not at map size, so drawing it at
+    // natural size would pull it off the lit cells.
+    c.drawImage(comb, 0, 0, map.w, map.h);
     c.globalAlpha = 1;
   };
 
@@ -306,7 +311,7 @@ export const mount: MountFondo = (host: HTMLElement, opts: FondoOpts): Fondo => 
   Promise.all([
     fetch(base + 'celdas.json').then((r) => r.json()),
     loadImage(base + 'celdas.png'),
-    loadImage(base + 'panal.webp'),
+    loadImage(base + 'panal-1600.webp'),
   ]).then(([m, labels, img]) => {
     map = m;
     cells = m.cells;

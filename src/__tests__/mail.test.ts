@@ -29,10 +29,22 @@ import { es } from '../i18n/es';
 const DAY = 86400000;
 const NOW = new Date('2026-10-24T12:00:00Z');
 
-// The mailbox's own script, read as text: it owns the letter AND the science
-// pool warm-up the header used to run before it stopped opening letters.
+// The mailbox's own script, read as text: it owns the letter, and it fetches
+// the past letter lazily on the first open — never during load.
 const MAIL_SRC = readFileSync(resolve(__dirname, '..', 'scripts', 'mail.ts'), 'utf8');
 const MAIL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'mail.css'), 'utf8');
+
+/** The declarations of one exact stylesheet rule: matching the selector alone
+ *  would confuse `.letter p` with `.letter.past p`. */
+function rule(selector: string): string {
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`${esc}\\s*\\{([^}]*)\\}`).exec(MAIL_CSS)?.[1] ?? '';
+}
+
+/** A custom property's value, as declared on `:root`. */
+function token(name: string): string {
+  return new RegExp(`${name}:\\s*([^;]+);`).exec(MAIL_CSS)?.[1].trim() ?? '';
+}
 
 const EXP_CANOPY: ExperimentInfo = {
   id: 'canopy',
@@ -55,7 +67,7 @@ function ann(id: string, daysAgo: number, topic: string | null = 'canopy'): Anno
 
 const COPY = {
   open: 'Mailbox: {n} new letters',
-  openOne: 'Mailbox: one new letter',
+  openOne: 'Mailbox: 1 new letter',
   openNone: 'Mailbox: no new letters',
 };
 
@@ -157,9 +169,9 @@ describe('labLetters', () => {
   it('leaves an entry that names no experiment without an experiment line', () => {
     const [general] = labLetters([ann('g1', 1, 'general')], [], NOW, [EXP_CANOPY]);
     expect(general.exp).toBeUndefined();
-    expect(general.link).toBe('/status/');
+    expect(general.link).toBe('/newspaper/#lab');
     const [canopy] = labLetters([ann('g2', 1, 'canopy')], [], NOW, [EXP_CANOPY]);
-    expect(canopy.link).toBe('/status/?topic=canopy');
+    expect(canopy.link).toBe('/newspaper/?topic=canopy#lab');
   });
 });
 
@@ -257,8 +269,8 @@ describe('the letter from the past carries a summary', () => {
 });
 
 /* The two touches on the past letter: it links to the newspaper and it reads
-   in italic. build() is closure-local, so both halves are asserted on the
-   sources the dialog renders from — the class branch and the stylesheet. */
+   in its period hand. build() is closure-local, so both halves are asserted on
+   the sources the dialog renders from — the class branch and the stylesheet. */
 describe('a letter from the past', () => {
   it('carries the past class on its letter node; the lab letter does not', () => {
     // One ternary, chosen by the lab branch, written on the article — remove
@@ -270,20 +282,119 @@ describe('a letter from the past', () => {
     expect(MAIL_SRC).toMatch(/const letterCls = lab \? 'letter' :/);
   });
 
-  it('sets its body paragraphs in italic and leaves the upright letters alone', () => {
-    expect(MAIL_CSS).toMatch(/\.mail-pop \.letter\.past p \{\s*font-style: italic;\s*\}/);
-    // No italic on the shared rule: a lab letter keeps its upright body.
-    expect(MAIL_CSS).not.toMatch(/\.mail-pop \.letter p \{[^}]*font-style: italic/);
-    // The headline stays out of the italic: it sits outside the paragraphs.
-    expect(MAIL_CSS).not.toMatch(/\.mail-pop \.letter\.past h2/);
+  it('sets the past headline and body in the period hand and leaves lab letters in mono', () => {
+    // The hand sits on the past-only rules — remove either half and the past
+    // letter loses its face.
+    expect(rule('.mail-pop .letter.past h2')).toMatch(/font-family:\s*var\(--mail-hand\)/);
+    expect(rule('.mail-pop .letter.past p')).toMatch(/font-family:\s*var\(--mail-hand\)/);
+    // Ceiling: the hand is smaller than today's text, which is the point of it.
+    const head = parseFloat(token('--mail-past-head'));
+    const body = parseFloat(token('--mail-past-body'));
+    expect(head).toBeLessThan(parseFloat(token('--mail-head')));
+    expect(body).toBeLessThan(parseFloat(token('--mail-body')));
+    // The sizes are read from those tokens, never written inline in the rule.
+    expect(rule('.mail-pop .letter.past h2')).toMatch(/font-size:\s*var\(--mail-past-head\)/);
+    expect(rule('.mail-pop .letter.past p')).toMatch(/font-size:\s*var\(--mail-past-body\)/);
+    // No hand on the shared rules: a lab letter stays upright in mono.
+    expect(rule('.mail-pop .letter p')).toMatch(/font-family:\s*var\(--font-mono\)/);
+    expect(rule('.mail-pop .letter h2')).toMatch(/font-family:\s*var\(--font-serif\)/);
+    // Meta and links keep the site's type so dates and links stay legible.
+    expect(rule('.mail-pop .letter .meta')).toMatch(/font-family:\s*var\(--font-mono\)/);
+    expect(rule('.mail-pop .letter a')).toMatch(/font-family:\s*var\(--font-mono\)/);
+    // The italic is gone from letter text: the hand carries the period now.
+    // (The address side keeps its own italic, which is not letter text.)
+    expect(rule('.mail-pop .letter.past p')).not.toMatch(/font-style/);
+    expect(rule('.mail-pop .letter.past h2')).not.toMatch(/font-style/);
+    expect(rule('.mail-pop .letter p')).not.toMatch(/font-style/);
+    expect(rule('.mail-pop .letter h2')).not.toMatch(/font-style/);
+  });
+
+  it('gives the hand the leading its ink needs', () => {
+    // Homemade Apple's ascender-to-descender ink is ~1.8em, so a wrapped
+    // headline at the shared 1.15 collides with itself. The past rules set
+    // their own, and it is looser than the shared one.
+    const shared = parseFloat(/line-height:\s*([\d.]+)/.exec(rule('.mail-pop .letter h2'))?.[1] ?? '0');
+    const past = parseFloat(/line-height:\s*([\d.]+)/.exec(rule('.mail-pop .letter.past h2'))?.[1] ?? '0');
+    expect(past).toBeGreaterThan(shared);
+    expect(parseFloat(/line-height:\s*([\d.]+)/.exec(rule('.mail-pop .letter.past p'))?.[1] ?? '0')).toBeGreaterThan(1.5);
   });
 
   it('says "See the newspaper" under the letter in both languages', () => {
     expect(en.header.mailbox.allToday).toBe('See the newspaper →');
     expect(es.header.mailbox.allToday).toBe('Ver el periódico →');
-    // The past letter alone renders the link, to /today/ — the newspaper.
+    // The past letter alone renders the link, to /newspaper/ — the newspaper.
     expect(MAIL_SRC).toMatch(/copy\.allToday/);
-    expect(MAIL_SRC).toMatch(/const todayHref = lang === 'es' \? '\/es\/today\/' : '\/today\/';/);
+    expect(MAIL_SRC).toMatch(/const todayHref = lang === 'es' \? '\/es\/newspaper\/' : '\/newspaper\/';/);
+  });
+});
+
+/* The sheet keeps a letter page's proportions at every width, and the hand
+   is self-hosted. */
+describe('the sheet keeps a letter page', () => {
+  it('holds portrait proportions with the body scrolling inside', () => {
+    // The sheet is a page near 1 : 1.3, never a strip that stretches.
+    const ratio = /aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(rule('.mail-pop .letter'));
+    expect(ratio).not.toBeNull();
+    expect(parseFloat(ratio![2]) / parseFloat(ratio![1])).toBeCloseTo(1.3, 2);
+    expect(MAIL_CSS).not.toMatch(/min-height:\s*118%/);
+    // A long body scrolls inside the sheet instead of stretching it.
+    expect(rule('.mail-pop .letter p')).toMatch(/overflow-y:\s*auto/);
+    // A flex item only shrinks below its content with min-height:0. A floor
+    // here (the old 6.2em) let a long headline push the links past the
+    // fixed-height sheet, where overflow:hidden clipped them.
+    expect(rule('.mail-pop .letter p')).toMatch(/min-height:\s*0/);
+    expect(rule('.mail-pop .letter p')).not.toMatch(/min-height:\s*6\.2em/);
+    // The sheet clips its own edges for the deckle, so nothing may escape it.
+    expect(rule('.mail-pop .letter')).toMatch(/overflow:\s*hidden/);
+    // An unbroken token wraps instead of forcing a sideways scroll.
+    expect(rule('.mail-pop .letter p')).toMatch(/overflow-wrap:\s*anywhere/);
+  });
+
+  it('keeps the typed line in view while the body scrolls', () => {
+    // Typing happens inside a now-scrollable body: without moving the page
+    // with the caret, everything after the first screenful types off-screen.
+    expect(MAIL_SRC).toMatch(/const typed = \$\('\.typed'\)[^\n]*\.letter p'\)/);
+    expect(MAIL_SRC).toMatch(
+      /typed\.textContent = text\.slice\(0, i\);\s*body\.scrollTop = body\.scrollHeight;/,
+    );
+  });
+
+  it('types the whole body and cuts nothing to fit', () => {
+    // fitBody cut the text on a word to fit a stretching sheet; the sheet now
+    // scrolls instead, so the full text is typed.
+    expect(MAIL_SRC).not.toMatch(/fitBody/);
+    expect(MAIL_SRC).not.toMatch(/MIN_WORDS/);
+    expect(MAIL_SRC).toMatch(/const text = bodyOf\(letter\)/);
+  });
+});
+
+describe('the past hand is self-hosted', () => {
+  it('declares the face in mail.css and ships the file, loading nothing on first paint', () => {
+    expect(MAIL_CSS).toMatch(/@font-face/);
+    expect(MAIL_CSS).toMatch(/\/fonts\/HomemadeApple-Regular\.ttf/);
+    expect(MAIL_CSS).toMatch(/font-display:\s*swap/);
+    // The token only the letter's past rules use — so no other rule can pull
+    // the file onto the first paint.
+    expect(token('--mail-hand')).toMatch(/'Homemade Apple'/);
+    // The file the face points at is really on disk, and it is a TrueType
+    // font whose embedded notices name the licence it actually ships under.
+    const ttf = readFileSync(
+      resolve(__dirname, '..', '..', 'public', 'fonts', 'HomemadeApple-Regular.ttf'),
+    );
+    expect(ttf.length).toBeGreaterThan(0);
+    expect(ttf.toString('latin1').includes('Homemade Apple')).toBe(true);
+    expect(ttf.toString('latin1')).toMatch(/Apache License, Version 2\.0/);
+    // The licence text ships beside it, and it is the Apache one the font
+    // declares — not an OFL text that contradicts the embedded notices.
+    const lic = readFileSync(
+      resolve(__dirname, '..', '..', 'public', 'fonts', 'HomemadeApple-LICENSE.txt'),
+      'utf8',
+    );
+    expect(lic).toMatch(/Apache License/);
+    // No preload: the face is used only by letter text, so it is fetched
+    // the first time a letter opens, adding nothing to the first load.
+    const layout = readFileSync(resolve(__dirname, '..', 'layouts', 'BaseLayout.astro'), 'utf8');
+    expect(layout).not.toMatch(/HomemadeApple/);
   });
 });
 
@@ -297,21 +408,33 @@ describe('the rest of the papers', () => {
 
   it('names the count in the accessible label', () => {
     expect(boxLabel(COPY, 0)).toBe('Mailbox: no new letters');
-    expect(boxLabel(COPY, 1)).toBe('Mailbox: one new letter');
+    expect(boxLabel(COPY, 1)).toBe('Mailbox: 1 new letter');
     expect(boxLabel(COPY, 3)).toBe('Mailbox: 3 new letters');
+  });
+
+  it('names the badge digit in the accessible label, both languages', () => {
+    // label-content-name-mismatch: the badge shows the digit, so the name
+    // must contain it — "one"/"una" would not contain the visible "1".
+    for (const copy of [en.header.mailbox, es.header.mailbox]) {
+      expect(boxLabel(copy, 1)).toContain('1');
+      expect(boxLabel(copy, 2)).toContain('2');
+    }
+    expect(en.header.mailbox.openOne).toBe('Mailbox: 1 new letter');
+    expect(es.header.mailbox.openOne).toBe('Buzón: 1 carta nueva');
   });
 });
 
 describe('the science pool warm-up', () => {
-  it('lives in the mailbox script so the first letter opens without the network', () => {
-    // Moved here from Header.astro, which no longer opens letters: the pool
-    // is warmed off the critical path under the same idle schedule as before.
-    expect(MAIL_SRC).toMatch(
-      /const warmLang: FilterLang = document\.documentElement\.lang === 'es' \? 'es' : 'en'/,
-    );
-    expect(MAIL_SRC).toMatch(/if \(!readOtdCache\(warmLang\)\)/);
-    expect(MAIL_SRC).toMatch(/requestIdleCallback\(warm, \{ timeout: 5000 \}\)/);
-    expect(MAIL_SRC).toMatch(/setTimeout\(warm, 4000\)/);
+  it('is gone: no feed downloads until the visitor opens the mailbox', () => {
+    // The warm block used to fetch the Wikipedia pool during load. Now the
+    // first open fetches the past letter once and opens it when it lands.
+    expect(MAIL_SRC).not.toMatch(/warmLang/);
+    expect(MAIL_SRC).not.toMatch(/requestIdleCallback\(warm/);
+    expect(MAIL_SRC).not.toContain('void loadPast();');
+    expect(MAIL_SRC).toContain('let pastRequested = false;');
+    expect(MAIL_SRC).toMatch(/if \(!pastRequested\)/);
+    expect(MAIL_SRC).toMatch(/pastRequested = true/);
+    expect(MAIL_SRC).toMatch(/void loadPast\(\)\.then/);
     // The mailbox keeps the only letter hook the site has.
     expect(MAIL_SRC).toMatch(/univerlabOpenMail/);
   });

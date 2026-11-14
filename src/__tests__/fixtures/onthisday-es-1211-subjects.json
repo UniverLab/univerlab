@@ -1,0 +1,83 @@
+{
+  "events": [
+    {
+      "year": 1965,
+      "text": "La Unión Soviética lanza hacia Venus la sonda Venera 2.",
+      "pages": [
+        {
+          "titles": { "normalized": "Unión Soviética" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Uni%C3%B3n_Sovi%C3%A9tica" } },
+          "extract": "La Unión Soviética fue un país federal de Eurasia. Su capital fue Moscú."
+        },
+        {
+          "titles": { "normalized": "Venus (planeta)" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Venus_(planeta)" } },
+          "extract": "Venus es el segundo planeta del sistema solar. Es el objeto más brillante del cielo tras el Sol y la Luna."
+        },
+        {
+          "titles": { "normalized": "Venera 2" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Venera_2" } },
+          "extract": "Venera 2 fue una sonda espacial soviética lanzada en 1965 hacia Venus. Pasó junto al planeta sin devolver datos."
+        }
+      ]
+    },
+    {
+      "year": 1912,
+      "text": "En la Antártida descubren el cadáver congelado del explorador británico Robert Scott.",
+      "pages": [
+        {
+          "titles": { "normalized": "Antártida" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Ant%C3%A1rtida" } },
+          "extract": "La Antártida es un continente que rodea el polo sur. Está casi por completo cubierta de hielo."
+        },
+        {
+          "titles": { "normalized": "Robert Falcon Scott" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Robert_Falcon_Scott" } },
+          "extract": "Robert Falcon Scott fue un explorador británico. Murió en 1912 durante su expedición a la Antártida."
+        }
+      ]
+    },
+    {
+      "year": 2014,
+      "text": "Por primera vez aterriza una sonda espacial sobre un cometa (Philae, a bordo de Rosetta).",
+      "pages": [
+        {
+          "titles": { "normalized": "Sonda espacial" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Sonda_espacial" } },
+          "extract": "Una sonda espacial es un artefacto que se envía al espacio para estudiar los astros. No lleva tripulación a bordo."
+        },
+        {
+          "titles": { "normalized": "Cometa" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Cometa" } },
+          "extract": "Un cometa es un cuerpo celeste de hielo y polvo. Al acercarse al Sol desarrolla una cola visible."
+        },
+        {
+          "titles": { "normalized": "Philae (sonda espacial)" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Philae_(sonda_espacial)" } },
+          "extract": "Philae fue el módulo de aterrizaje de la misión Rosetta. Aterrizó sobre el cometa 67P en 2014."
+        },
+        {
+          "titles": { "normalized": "67P/Churyumov-Gerasimenko" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/67P/Churyumov-Gerasimenko" } },
+          "extract": "67P/Churyumov-Gerasimenko es un cometa de la familia de Júpiter. La misión Rosetta lo estudió en 2014."
+        }
+      ]
+    },
+    {
+      "year": 1980,
+      "text": "La sonda Voyager I hace su primera aproximación a Saturno.",
+      "pages": [
+        {
+          "titles": { "normalized": "Voyager 1" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Voyager_1" } },
+          "extract": "La Voyager 1 es una sonda espacial lanzada por la NASA. Estudia los límites del sistema solar."
+        },
+        {
+          "titles": { "normalized": "Saturno (planeta)" },
+          "content_urls": { "desktop": { "page": "https://es.wikipedia.org/wiki/Saturno_(planeta)" } },
+          "extract": "Saturno es el sexto planeta del sistema solar. Es conocido por su sistema de anillos."
+        }
+      ]
+    }
+  ]
+}

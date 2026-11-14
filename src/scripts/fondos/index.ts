@@ -11,4 +11,5 @@ export const fondoLoaders: Record<string, () => Promise<unknown>> = {
   demostage: () => import('./demostage'),
   'astro-denoise': () => import('./astro-denoise'),
   quorum: () => import('./quorum'),
+  facetmedia: () => import('./facetmedia'),
 };

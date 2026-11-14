@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
+import { en } from '../i18n/en';
+import '../styles/sign.css';
+---
+<BaseLayout title={en.sign.shellTitle} description={en.sign.shellDescription} circadian noindex>
+  <section class="wrap sign">
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{en.sign.viewerLabel}</span>
+        <div id="sign"></div>
+      </div>
+      <Postcard page="sign" alt={en.postcards.sign} />
+    </div>
+  </section>
+
+  <script>
+    import { initSignPage } from '../lib/sign/client';
+    initSignPage();
+  </script>
+</BaseLayout>

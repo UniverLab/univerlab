@@ -3,6 +3,8 @@
  * and the /date command-palette translator. Loaded once from BaseLayout.
  */
 import { translateMissionDate } from './mission-time';
+import { iconSvg } from './icon-svg';
+import { copy } from './icons';
 
 /** One shared tooltip element for every time[data-mission] on the page. */
 export function initMissionDateTooltip(): void {
@@ -122,11 +124,28 @@ export function openDateTranslator(closePalette: () => void, lang: string): void
     var b = document.createElement('button');
     b.className = 'date-t-copy';
     b.type = 'button';
-    b.textContent = es ? 'Copiar' : 'Copy';
+    b.setAttribute('aria-label', es ? 'Copiar' : 'Copy');
+    // The static Lucide copy icon ships in a fixed slot (readable with
+    // scripting off); on success it morphs into a check and back, like
+    // every other copy button on the site.
+    b.innerHTML =
+      '<span class="copy-icon">' + iconSvg(copy, { size: 16 }) + '</span>' +
+      '<span class="copy-text">' + (es ? 'Copiar' : 'Copy') + '</span>';
     b.addEventListener('click', function () {
+      var label = b.querySelector('.copy-text');
       navigator.clipboard.writeText(text).then(function () {
-        b.textContent = es ? 'Copiado' : 'Copied';
-        setTimeout(function () { b.textContent = es ? 'Copiar' : 'Copy'; }, 1200);
+        if (label) label.textContent = es ? 'Copiado' : 'Copied';
+        b.setAttribute('aria-label', es ? 'Copiado' : 'Copied');
+        // copy-morph touches morphicons (ESM the CJS jest runtime cannot
+        // require), so it loads on the click path only, never at module boot.
+        import('./copy-morph').then(function (m) {
+          m.setCopyState(b, true);
+          setTimeout(function () {
+            if (label) label.textContent = es ? 'Copiar' : 'Copy';
+            b.setAttribute('aria-label', es ? 'Copiar' : 'Copy');
+            m.setCopyState(b, false);
+          }, m.COPY_DONE_MS);
+        });
       });
     });
     return b;

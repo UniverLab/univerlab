@@ -1,13 +1,16 @@
-// The day's newspaper: El Correo del Pasado. One renderer for the edge
-// (functions/_middleware.ts fills #edition through HTMLRewriter), the client
-// (pages/today.astro fills #edition when the edge did not) and the markdown
-// twin (/today/index.md). Escape every text field from the feed.
+// The day's newspaper: El Observable / The Observable. One renderer for the
+// edge (functions/_middleware.ts fills #edition through HTMLRewriter), the
+// client (pages/newspaper.astro fills #edition when the edge did not) and the
+// markdown twin (/newspaper/index.md). Escape every text field from the feed.
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
+import { balanceHeads } from './paper-fit';
+import { paperAdHtml, paperAdsMarkdown, paperHouseDuoHtml, paperWorkbenchDuoHtml } from './paper-ads';
+import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
 export type TodayLang = FilterLang;
@@ -52,6 +55,53 @@ export function editionDate(now: Date = new Date()): Date {
   return new Date(y, m - 1, d, 12, 0, 0);
 }
 
+/** The edition picked by `?d=YYYY-MM-DD`: that day at local noon when the
+ *  parameter is a real calendar day no later than today's edition, otherwise
+ *  today's edition. */
+export function editionDateFor(search: string, now: Date = new Date()): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(new URLSearchParams(search).get('d') || '');
+  if (m) {
+    const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+    if (
+      dt.getMonth() === Number(m[2]) - 1 &&
+      dt.getDate() === Number(m[3]) &&
+      editionYmd(dt) <= editionYmd(now)
+    ) {
+      return dt;
+    }
+  }
+  return editionDate(now);
+}
+
+/** Whether the edition's day is the lab's today. */
+export function isToday(date: Date, now: Date = new Date()): boolean {
+  return editionYmd(date) === editionYmd(now);
+}
+
+/** The masthead's edition line: "today" only for today's edition, otherwise
+ *  the edition's own date in words ("Edition of 14 November"). The short
+ *  locale prints day-first in both languages (en-GB, not en-US). */
+export function editionLabel(lang: TodayLang, date: Date, now: Date = new Date()): string {
+  const t = dict(lang);
+  if (isToday(date, now)) return t.edition;
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
+  const words = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date);
+  return fmt(t.editionPast, { date: words });
+}
+
+/** The masthead date words: the edition's full date line. The edge
+ *  (functions/_middleware.ts) fills `span[data-words]` with it at request
+ *  time so the row paints at final height; the client script in
+ *  TodaysPaper.astro uses the same renderer as its fallback. */
+export function editionDateWords(date: Date, lang: TodayLang): string {
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
 /** The day's Wikipedia feed in the page language. */
 export function otdUrl(lang: TodayLang, date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -62,8 +112,8 @@ export function otdUrl(lang: TodayLang, date: Date): string {
 /** The newspaper routes, with or without trailing slash or index.md. */
 export function todayRoute(pathname: string): TodayLang | null {
   const p = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
-  if (p === '/today' || p === '/today/index.md') return 'en';
-  if (p === '/es/today' || p === '/es/today/index.md') return 'es';
+  if (p === '/newspaper' || p === '/newspaper/index.md') return 'en';
+  if (p === '/es/newspaper' || p === '/es/newspaper/index.md') return 'es';
   return null;
 }
 
@@ -97,12 +147,48 @@ function leadHeadline(lead: Fact): string {
   return lead.kind === 'event' ? text : lead.page || text.slice(0, 72);
 }
 
-/** The lead's body, under the headline. With a summary, the summary is the
- *  drop-cap paragraph; without one, an event keeps its old silence (its one
- *  line is already the headline) and a person prints their line. */
+/** A printed letter's body, under its line. With a summary, the summary is
+ *  the paragraph (trimmed by the same rules the lead uses, so columns keep
+ *  fitting); without one, an event keeps its old silence (its one line is
+ *  already the headline) and a person prints their line. */
+function itemBody(fact: Fact): string {
+  if (fact.long) return summaryText({ summary: fact.long, summaryCut: fact.longCut });
+  if (fact.summary) return summaryText(fact);
+  return fact.kind === 'event' ? '' : fact.text;
+}
+
+/** The lead's body, under the headline: the same rules as every letter. */
 function leadBody(lead: Fact): string {
-  if (lead.summary) return summaryText(lead);
-  return lead.kind === 'event' ? '' : lead.text;
+  return itemBody(lead);
+}
+
+const SENTENCE_ABBREV = new Set([
+  'mr', 'mrs', 'ms', 'mme', 'dr', 'dra', 'sr', 'sra', 'srta', 'ud', 'uds',
+  'vs', 'viz', 'cf', 'al', 'eg', 'ie', 'fig',
+  // Life dates in a person's line: (b. 1746), (n. 1746), (d. 1823), (f. 1823), c. 1500.
+  'b', 'n', 'd', 'f', 'c',
+]);
+
+/** The first sentence of a column body: columns print one sentence, never a
+ *  wall of italic paragraphs. The lead keeps its whole paragraph. */
+export function firstSentence(s: string): string {
+  const flat = (s || '').replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < flat.length; i++) {
+    const c = flat[i];
+    if (c !== '.' && c !== '!' && c !== '?' && c !== '…') continue;
+    const atEnd = i + 1 >= flat.length;
+    if (!atEnd && flat[i + 1] !== ' ') continue;
+    if (c === '.') {
+      const prev = flat[i - 1] || '';
+      const after = flat[i + 1] || '';
+      if (/\d/.test(prev) && /\d/.test(after)) continue;
+      const tail = /([A-Za-z]+(?:\.[A-Za-z]+)*)$/.exec(flat.slice(0, i))?.[1] || '';
+      const bare = tail.replace(/\./g, '').toLowerCase();
+      if (tail.includes('.') || /^[A-Z]$/.test(tail) || SENTENCE_ABBREV.has(bare)) continue;
+    }
+    return flat.slice(0, i + 1);
+  }
+  return flat;
 }
 
 /** The edition's lead: the same letter the mailbox delivers, chosen by the
@@ -120,15 +206,20 @@ export function todayAside(facts: Fact[], lead: Fact | null): Fact[] {
     .reverse();
 }
 
+/** Every lab announcement published on the edition's day, newest first. */
+export function todayLabBoxes(lab: TodayLab[], date: Date): TodayLab[] {
+  const ymd = editionYmd(date);
+  return [...(lab || [])]
+    .filter((e) => {
+      const t = Date.parse(e?.date || '');
+      return Number.isFinite(t) && editionYmd(new Date(t)) === ymd;
+    })
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
 /** The newest lab announcement published on the edition's day, if any. */
 export function todayLabBox(lab: TodayLab[], date: Date): TodayLab | null {
-  const ymd = editionYmd(date);
-  const rows = [...(lab || [])].sort((a, b) => (a.date < b.date ? 1 : -1));
-  for (const e of rows) {
-    const t = Date.parse(e?.date || '');
-    if (Number.isFinite(t) && editionYmd(new Date(t)) === ymd) return e;
-  }
-  return null;
+  return todayLabBoxes(lab, date)[0] ?? null;
 }
 
 function expNameOf(topic: unknown): string {
@@ -149,16 +240,22 @@ function typeOf(box: TodayLab, t: Dict): string {
 }
 
 /** The day-of-year number the dateline prints as `Sol n`. Noon keeps a DST
- *  shift from rounding the count down a day. */
-function solOf(date: Date): number {
+ *  shift from rounding the count down a day. Exported for the masthead ear,
+ *  which prints the same number beside the edition label. */
+export function solOf(date: Date): number {
   const start = new Date(date.getFullYear(), 0, 0);
   return Math.floor((date.getTime() - start.getTime()) / 86400000);
 }
 
+/** The engraving's size on the page: the lead's picture spans columns, the
+ *  side column's pictures are next in weight, column events print smaller
+ *  and births and deaths keep their small portraits. */
+export type PhotoSize = 'lead' | 'medium' | 'event' | 'stamp';
+
 function photoFigure(
   fact: Fact,
   t: Dict,
-  opts: { eager: boolean; caption: boolean },
+  opts: { eager: boolean; caption: boolean; size: PhotoSize },
 ): string {
   const src = fact.thumb?.src || '';
   if (!src) return '';
@@ -170,32 +267,147 @@ function photoFigure(
   const loading = opts.eager ? '' : ' loading="lazy"';
   const cap = opts.caption && name ? `<figcaption>${esc(fmt(t.caption, { name }))}</figcaption>` : '';
   return (
-    `<figure class="photo"><div class="print">` +
+    `<figure class="photo photo--${opts.size}"><div class="print">` +
     `<img src="${esc(src)}" alt="${alt}"${dims}${loading}></div>${cap}</figure>`
   );
 }
 
-function itemHtml(fact: Fact, t: Dict, date: Date, photo: boolean): string {
+function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): string {
   const years = yearsOnWay(fact, date);
   const text = fact.text ? fact.text.charAt(0).toUpperCase() + fact.text.slice(1) : '';
-  const img = photo ? photoFigure(fact, t, { eager: false, caption: false }) : '';
-  const cls = img ? 'item has-photo' : 'item';
+  const img = photoFigure(fact, t, { eager: false, caption: false, size });
+  const cls = img ? `item has-photo item--${size}` : 'item';
   const link = fact.link
     ? `<a href="${esc(fact.link)}" target="_blank" rel="noopener noreferrer">${esc(t.wikiLink)}</a>`
     : '';
+  // The body's own paragraph: the first sentence only, so a long summary
+  // never leaves one column longer than the rest. Skipped when empty or when
+  // it would repeat the line above (a person with no summary, whose line is
+  // already the body). The lead keeps its whole paragraph. The kind rides as
+  // data so the client fit can re-issue headings after moving whole letters.
+  const raw = itemBody(fact);
+  const body = raw === fact.text ? '' : firstSentence(raw);
+  const bodyHtml = body ? `<p class="body">${esc(body)}</p>` : '';
   return (
-    `<article class="${cls}">${img}` +
-    `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.yearsWay, { years }))}</span></div>` +
-    `<p>${esc(text)}</p>${link}</article>`
+    `<article class="${cls}" data-kind="${fact.kind}">${img}` +
+    `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
+    `<p>${esc(text)}</p>${bodyHtml}${link}</article>`
   );
 }
 
-function columnHtml(title: string, items: Fact[], t: Dict, date: Date): string {
-  return (
-    `<section class="col"><h3>${esc(title)}</h3>` +
-    items.map((f) => itemHtml(f, t, date, f.kind !== 'event')).join('') +
-    `</section>`
-  );
+/** A column shows this many letters before the rest fold under "show more". */
+export const COLUMN_FOLD = 6;
+
+/** One column entry: its kind sets the heading it prints under. */
+export interface ColEntry {
+  kind: Fact['kind'];
+  fact: Fact;
+}
+
+/** A printed column's weight in body lines: the line, one sentence of body
+ *  and the engraving's own rows. The splitter below balances columns by it. */
+export function estimate(f: Fact): number {
+  const raw = itemBody(f);
+  const body = raw === f.text ? '' : firstSentence(raw);
+  return Math.ceil((f.text || '').length / 26) + Math.ceil(body.length / 34) + (f.thumb ? 7 : 0) + 2;
+}
+
+const kindTitle = (kind: Fact['kind'], t: Dict): string =>
+  kind === 'event' ? t.events : kind === 'born' ? t.births : t.deaths;
+
+/** Split the day's letters into balanced columns. Entries stay contiguous in
+ *  kind order; the two cuts are the pair that leaves the columns' weights
+ *  closest, so the columns end within a few lines of each other. Short days
+ *  (or days with a single kind) keep one column per kind instead. */
+export function splitColumns(entries: ColEntry[]): ColEntry[][] {
+  if (!entries.length) return [];
+  if (entries.length === 1) return [[entries[0]]];
+  const kinds = new Set(entries.map((e) => e.kind));
+  const total = entries.reduce((n, e) => n + estimate(e.fact), 0);
+  if (!(total > 45 && kinds.size >= 2)) {
+    const cols: ColEntry[][] = [];
+    for (const e of entries) {
+      const last = cols[cols.length - 1];
+      if (last && last[0].kind === e.kind) last.push(e);
+      else cols.push([e]);
+    }
+    return cols;
+  }
+  const cum: number[] = [];
+  let running = 0;
+  for (const e of entries) {
+    running += estimate(e.fact);
+    cum.push(running);
+  }
+  // Every pair of cuts is tried (a day has a few dozen letters at most) and
+  // the pair whose longest column runs least past its shortest wins; every
+  // column keeps at least one letter.
+  const n = entries.length;
+  const span = (a: number, b: number): number => cum[b] - (a > 0 ? cum[a - 1] : 0);
+  let cut1 = 0;
+  let cut2 = Math.min(1, n - 1);
+  let bestSpread = Infinity;
+  for (let i = 0; i <= n - 3; i++) {
+    for (let j = i + 1; j <= n - 2; j++) {
+      const w = [span(0, i), span(i + 1, j), span(j + 1, n - 1)];
+      const spread = Math.max(...w) - Math.min(...w);
+      if (spread < bestSpread) {
+        bestSpread = spread;
+        cut1 = i;
+        cut2 = j;
+      }
+    }
+  }
+  return [
+    entries.slice(0, cut1 + 1),
+    entries.slice(cut1 + 1, cut2 + 1),
+    entries.slice(cut2 + 1),
+  ].filter((c) => c.length > 0);
+}
+
+/** Which footing the house ads take at the foot of the columns: a column
+ *  ending well short of the page's foot (`<= 0.85` of the longest column)
+ *  has room for a notice of its own. Two or more short columns split the two
+ *  notices; otherwise the notices merge into one in the lightest column, so
+ *  no column on page 1 ends in blank paper. The weight math is the same
+ *  estimate the splitter balances by, so the edge renderer and the client
+ *  fallback agree. */
+export function chooseHouseSlots(weights: number[]): 'split' | 'merged' {
+  if (!weights.length) return 'merged';
+  const max = Math.max(...weights);
+  const short = weights.filter((w) => w <= 0.85 * max).length;
+  return short >= 2 ? 'split' : 'merged';
+}
+
+/** One balanced column: a heading per kind change, marked as a continuation
+ *  when the kind runs on from the previous column. The column renders its
+ *  head whole — no fold: letters beyond the head are left out of the page
+ *  (the markdown twin still lists every letter) and the client fit trims
+ *  further to the laid-out sheet. Fillers never render here; the client
+ *  appends them from the page's templates into measured free space. */
+function balancedColumnHtml(
+  col: ColEntry[],
+  openKind: Fact['kind'] | null,
+  t: Dict,
+  date: Date,
+  lang: TodayLang,
+): { html: string; endKind: Fact['kind'] | null } {
+  let cur: Fact['kind'] | null = null;
+  let first = true;
+  let html = `<section class="col">`;
+  for (const e of col) {
+    if (e.kind !== cur) {
+      const continuing = first && cur === null && openKind === e.kind;
+      html +=
+        `<h3>${esc(kindTitle(e.kind, t))}` +
+        (continuing ? ` <span class="cont">${esc(t.continued)}</span>` : '') +
+        `</h3>`;
+      cur = e.kind;
+    }
+    first = false;
+    html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp');
+  }
+  return { html: html + `</section>`, endKind: cur };
 }
 
 /** The edition's inner HTML: everything inside `#edition`. */
@@ -204,7 +416,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   const facts = feed?.facts || [];
   const lead = todayLead(facts, date);
   const aside = todayAside(facts, lead);
-  const box = todayLabBox(feed?.lab || [], date);
+  const boxes = todayLabBoxes(feed?.lab || [], date);
 
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
     weekday: 'long',
@@ -213,13 +425,15 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     year: 'numeric',
   }).format(date);
   const sol = solOf(date);
-  const counts = fmt(t.counts, { n: facts.length, m: box ? 1 : 0 });
+  const counts = fmt(t.counts, { n: facts.length, m: boxes.length });
 
   let out =
     `<div class="dateline"><span>${esc(full)}</span>` +
     `<span>${esc(t.sol)} ${sol}</span><span>${esc(counts)}</span></div>`;
 
-  if (box) {
+  out += `<div class="banner">${esc(t.banner)}</div><div class="front">`;
+
+  for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)
@@ -229,7 +443,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<p class="kicker">${esc(kicker)}</p>` +
       `<h2>${esc(box.title || '')}</h2>` +
       `<p>${esc(firstParagraph(box.body || ''))}</p>` +
-      `<a href="/status/">${esc(t.labLink)}</a></article>`;
+      `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
   }
 
   if (lead) {
@@ -237,37 +451,86 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const headline = leadHeadline(lead);
     const body = leadBody(lead);
     out +=
-      `<article class="lead"><div class="story">` +
+      `<article class="lead${aside.length ? '' : ' solo'}"><div class="story">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
-      (lead.kind !== 'event' ? photoFigure(lead, t, { eager: true, caption: true }) : '') +
+      photoFigure(lead, t, { eager: true, caption: true, size: 'lead' }) +
       (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
         : '') +
-      `</div>`;
-    if (aside.length) {
-      const side = aside
-        .map((f) => {
-          const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
-          return `<p><b>${esc(f.year)}</b>${esc(text)}</p>`;
-        })
-        .join('');
-      out += `<aside>${side}</aside>`;
-    }
-    out += `</article>`;
+      `</div></article>`;
   }
 
-  const rest = (kind: Fact['kind']) =>
-    facts.filter((f) => f.kind === kind && f !== lead).sort(byYearAsc);
-  out +=
-    `<div class="cols">` +
-    columnHtml(t.events, rest('event'), t, date) +
-    columnHtml(t.births, rest('born'), t, date) +
-    columnHtml(t.deaths, rest('died'), t, date) +
-    `</div>`;
+  // The rail beside the lead: only the events the lead pushed aside read
+  // here. Nothing else shares it, so a long side column can no longer
+  // stretch past the lead and leave a hole under it.
+  const side = aside.length
+    ? `<aside class="also">` +
+      aside
+        .map((f) => {
+          const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
+          const raw = itemBody(f);
+          const body = raw === f.text ? '' : firstSentence(raw);
+          const bodyHtml = body ? `<p class="aside-body">${esc(body)}</p>` : '';
+          const img = photoFigure(f, t, { eager: false, caption: false, size: 'medium' });
+          return (
+            `<div class="aside-item${img ? ' has-photo' : ''}">${img}<div>` +
+            `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}</div></div>`
+          );
+        })
+        .join('') +
+      `</aside>`
+    : '';
+  if (side) {
+    out += `<div class="rail">${side}</div>`;
+  }
 
-  out += `<p class="colophon-note">${esc(t.colophon)}</p>`;
+  // The single Workbench display spans the front under the lead and, when
+  // the day has one, the rail — never the lead slot itself. It carries both
+  // offers, the free first call and the audits, each with its own link.
+  out += paperWorkbenchDuoHtml(lang);
+
+  const rest = (kind: Fact['kind']) =>
+    facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
+  // Every letter whose article carries a photo prints it, like births and
+  // deaths do; the column folds the overflow under "show more" instead.
+  const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
+    rest(kind).map((fact) => ({ kind, fact })),
+  );
+  const cols = splitColumns(entries);
+  if (cols.length) {
+    // Each column prints its head whole; letters beyond the head are left
+    // out of the page (the twin below still lists every letter) and the
+    // client fit trims further to the laid-out sheet. The heads are
+    // rebalanced by whole letters until they end within one estimate line.
+    const heads = cols.map((col) => col.slice(0, COLUMN_FOLD));
+    const weights = heads.map((head) => head.map((e) => estimate(e.fact)));
+    balanceHeads(heads, weights);
+    let openKind: Fact['kind'] | null = null;
+    out += `<div class="cols">`;
+    heads.forEach((col) => {
+      const rendered = balancedColumnHtml(col, openKind, t, date, lang);
+      out += rendered.html;
+      openKind = rendered.endKind;
+    });
+    out += `</div>`;
+    // The fillers wait in templates: the client appends the plate or a house
+    // notice into a column's measured free foot only when it fits whole —
+    // never both in one column. Page one keeps the single Workbench duo
+    // above plus at most these two house notices.
+    out +=
+      `<template data-filler="plate">${paperPlateHtml(lang)}</template>` +
+      `<template data-filler="install">${paperAdHtml(lang, 'install')}</template>` +
+      `<template data-filler="collab">${paperAdHtml(lang, 'collab')}</template>` +
+      `<template data-filler="house-duo">${paperHouseDuoHtml(lang)}</template>`;
+  } else {
+    // No columns: no foot to fill, so the merged house notice closes the
+    // front on its own and both offers stay on the page.
+    out += paperHouseDuoHtml(lang);
+  }
+
+  out += `</div><p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
 }
 
@@ -277,9 +540,9 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   const facts = feed?.facts || [];
   const lead = todayLead(facts, date);
   const aside = todayAside(facts, lead);
-  const box = todayLabBox(feed?.lab || [], date);
+  const boxes = todayLabBoxes(feed?.lab || [], date);
 
-  const path = lang === 'es' ? 'https://univerlab.org/es/today/' : 'https://univerlab.org/today/';
+  const path = lang === 'es' ? 'https://univerlab.org/es/newspaper/' : 'https://univerlab.org/newspaper/';
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
     weekday: 'long',
     day: 'numeric',
@@ -300,15 +563,15 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     // was set, exactly as the page prints it.
     `**${full} · ${t.sol} ${solOf(date)}**`,
     '',
-    `${fmt(t.counts, { n: facts.length, m: box ? 1 : 0 })}`,
+    `${fmt(t.counts, { n: facts.length, m: boxes.length })}`,
     '',
   ];
 
-  if (box) {
+  for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)].filter((s) => s).join(' · ');
     lines.push(`## ${kicker}`, '', `**${box.title || ''}**`, '', firstParagraph(box.body || ''));
-    lines.push('', `[${t.labLink}](https://univerlab.org/status/)`, '');
+    lines.push('', `[${t.labLink}](${path}#lab)`, '');
   }
 
   if (lead) {
@@ -325,13 +588,15 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
       for (const f of aside) {
         const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
         lines.push(`- **${f.year}**: ${text}`);
+        const body = itemBody(f);
+        if (body && body !== f.text) lines.push(`  ${body}`);
       }
     }
     lines.push('');
   }
 
   const rest = (kind: Fact['kind']) =>
-    facts.filter((f) => f.kind === kind && f !== lead).sort(byYearAsc);
+    facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
   const cols: Array<[string, Fact[]]> = [
     [t.events, rest('event')],
     [t.births, rest('born')],
@@ -344,9 +609,20 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
       const years = yearsOnWay(f, date);
       const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
       const link = f.link ? ` ([${t.wikiLink.trim()}](${f.link}))` : '';
-      lines.push(`- **${f.year}** (${fmt(t.yearsWay, { years })}): ${text}${link}`);
+      lines.push(`- **${f.year}** (${fmt(t.ago[f.kind], { years })}): ${text}${link}`);
+      const body = itemBody(f);
+      if (body && body !== f.text) lines.push(`  ${body}`);
     }
     lines.push('');
   }
+  // The lab's advertisements ride the twin on the same lines the page
+  // prints: the Workbench duo, then the house footing the columns take.
+  const twinEntries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
+    rest(kind).map((fact) => ({ kind, fact })),
+  );
+  const twinWeights = splitColumns(twinEntries).map((c) =>
+    c.reduce((n, e) => n + estimate(e.fact), 0),
+  );
+  lines.push(paperAdsMarkdown(lang, chooseHouseSlots(twinWeights)), '');
   return lines.join('\n');
 }

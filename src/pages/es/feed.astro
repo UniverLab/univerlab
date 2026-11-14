@@ -2,6 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Postcard from '../../components/Postcard.astro';
 import { useTranslations } from '../../i18n';
+import { iconSvg } from '../../lib/icon-svg';
+import { copy } from '../../lib/icons';
 const t = useTranslations('es');
 const f = t.feed;
 const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
@@ -18,7 +20,7 @@ const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
     </div>
     <div class="feed-row">
       <code class="feed-url" id="feed-url">{FEED_URL}</code>
-      <button type="button" class="feed-copy" aria-label={f.copy} data-feed-copy data-copied={f.copied}>{f.copy}</button>
+      <button type="button" class="feed-copy" aria-label={f.copy} data-feed-copy data-copied={f.copied}><span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} /><span class="copy-text">{f.copy}</span></button>
     </div>
     <p class="hint">{f.hint}</p>
   </section>
@@ -80,6 +82,9 @@ const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
   }
   .feed-copy {
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-mono);
     font-size: 0.72rem;
     letter-spacing: 0.04em;
@@ -91,6 +96,9 @@ const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+  .feed-copy .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .feed-copy .copy-icon > svg, .feed-copy .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
   .feed-copy:hover,
   .feed-copy:focus-visible {
     color: var(--ink);
@@ -102,22 +110,26 @@ const FEED_URL = 'https://announcements.univerlab.org/feed.atom';
   }
 </style>
 
-<script is:inline>
+<script>
+  import { COPY_DONE_MS, setCopyState } from '../../lib/copy-morph';
   (function () {
     var btn = document.querySelector('[data-feed-copy]');
     var urlEl = document.getElementById('feed-url');
     if (!btn || !urlEl) return;
-    var orig = btn.textContent;
+    var label = btn.querySelector('.copy-text');
+    var orig = label ? label.textContent : '';
     var copied = btn.getAttribute('data-copied') || 'Copied';
     btn.addEventListener('click', function () {
       var text = urlEl.textContent || '';
       function onCopied() {
-        btn.textContent = copied;
+        if (label) label.textContent = copied;
         btn.classList.add('done');
+        setCopyState(btn, true);
         setTimeout(function () {
-          btn.textContent = orig;
+          if (label) label.textContent = orig;
           btn.classList.remove('done');
-        }, 1600);
+          setCopyState(btn, false);
+        }, COPY_DONE_MS);
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(onCopied).catch(function () {

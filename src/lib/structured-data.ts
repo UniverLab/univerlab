@@ -55,7 +55,7 @@ export function organizationNode(site: URL, description: string): Record<string,
     url: site.href,
     logo: new URL('/favicon.svg', site).href,
     description,
-    sameAs: ['https://github.com/UniverLab'],
+    sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social'],
   };
 }
 

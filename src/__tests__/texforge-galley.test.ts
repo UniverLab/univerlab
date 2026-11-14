@@ -17,8 +17,10 @@ const galleySrc = readFileSync(GALLEY, 'utf8');
 const surfacesSrc = readFileSync(SURFACES, 'utf8');
 
 describe('GalleyProof hero figure', () => {
-  it('should render GalleyProof in the hero-visual slot', () => {
-    expect(texforgeSrc).toMatch(/<GalleyProof\s+slot="hero-visual"/);
+  it('should render GalleyProof in the press section, clear of the hero plate', () => {
+    expect(texforgeSrc).toContain('<div class="press-plate"><GalleyProof /></div>');
+    expect(texforgeSrc).not.toMatch(/slot="hero-visual"/);
+    expect(texforgeSrc).toContain('.press-plate');
   });
 
   it('should be an inline SVG with viewBox 420x340 and aria-hidden', () => {

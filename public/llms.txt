@@ -10,6 +10,8 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Manifesto — Pensamiento Cósmico](https://univerlab.org/manifesto/): The philosophy behind the lab — a philosophy of the continuity of consciousness, and the values that guide which experiments get built.
 - [Contributors](https://univerlab.org/contributors/): The people and language models behind the lab, and how to contribute.
 - [Experiments](https://univerlab.org/experiments/): Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.
+- [Workbench audits](https://univerlab.org/workbench/audits/): What a Workbench audit reviews, how we work, what you receive and what it costs.
+- [Agentic solutions](https://univerlab.org/workbench/solutions/): What a Workbench agentic solution covers, how we work, what you receive and what it costs.
 
 ## Experiments
 
@@ -29,7 +31,8 @@ Different problems, one method: take work that lives in fragile, manual procedur
 
 ## Live
 
-- Logbook: https://univerlab.org/status/index.md — the latest lab entries, rendered live from the announcements API on every request.
+- Newspaper: https://univerlab.org/newspaper/ — the day's edition on page 1, lab news on pages 2-3 (the latest lab entries, rendered live from the announcements API on every request).
+- Logbook: https://univerlab.org/logbook/ — the complete announcements record, newest first, rendered live from the announcements API on every request.
 - Roadmap: https://univerlab.org/roadmap/index.md — every roadmap item by lane (now, next, later, ideas, recently shipped), rendered live from the announcements API on every request.
 - Atom feed: https://announcements.univerlab.org/feed.atom — the same logbook entries, in your reader.
 - Agent catalog: https://univerlab.org/.well-known/ai-catalog.json — what an agent can use here: the API catalog, the Agent Skills index and this file.
@@ -61,7 +64,7 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Node Documents](https://univerlab.org/canopy/docs/graphs-nodes/index.md): Reusable node documents: install, list, add, remove. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [Graph Operations](https://univerlab.org/canopy/docs/graphs-operations/index.md): Archive and restore, node run history, the event log, and engine tuning. Canopy documentation — A graph engine for AI coding agents — every harness, one
 - [RAG Pipeline](https://univerlab.org/canopy/docs/rag/index.md): Local-first semantic search over your own documents. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
-- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 34 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
+- [MCP Tools](https://univerlab.org/canopy/docs/mcp-tools/index.md): All 36 MCP tools exposed by the canopy daemon, by category. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 - [CLI Reference](https://univerlab.org/canopy/docs/cli-reference/index.md): Every canopy command and flag. Canopy documentation — A graph engine for AI coding agents — every harness, one workflow.
 
 ### TeXForge
@@ -109,4 +112,13 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Commands](https://univerlab.org/demostage/docs/commands/index.md): Reference for demo capture, record, export, edit, doctor, update and the live capture-control commands. DemoStage documentation — Demos as Code — capture
 - [The smart normalizer](https://univerlab.org/demostage/docs/normalizer/index.md): How normalizing prunes typos, humanizes typing and trims idle time. DemoStage documentation — Demos as Code — capture, record and export reproducible terminal
 - [Export targets](https://univerlab.org/demostage/docs/export-targets/index.md): gif is pure-Rust and offline; mp4 needs ffmpeg; browser panes need chromium. DemoStage documentation — Demos as Code — capture, record and export reproducible
+
+### facetMedia
+
+- [facet](https://univerlab.org/facetmedia/docs/index.md): Install creation tools in pinned environments and drive them through one verifiable --json contract. facetMedia documentation — Creation tools for agents, each
+- [Command reference](https://univerlab.org/facetmedia/docs/commands/index.md): Every facet verb, its flags and its human and --json output. facetMedia documentation — Creation tools for agents, each in its own pinned environment, with
+- [The --json contract](https://univerlab.org/facetmedia/docs/contract/index.md): The JSON envelope every facet command prints, its error codes and exit statuses. facetMedia documentation — Creation tools for agents, each in its own pinned
+- [facet preview](https://univerlab.org/facetmedia/docs/preview/index.md): How facet shows an asset to an agent as data and to a person through its viewer. facetMedia documentation — Creation tools for agents, each in its own pinned
+- [Licences](https://univerlab.org/facetmedia/docs/licenses/index.md): How models with terms are accepted once, explicitly, before facet uses them. facetMedia documentation — Creation tools for agents, each in its own pinned
+- [Adding a package](https://univerlab.org/facetmedia/docs/adding-a-package/index.md): How to write a registry package: its manifest, runner, skill and tests. facetMedia documentation — Creation tools for agents, each in its own pinned
 # END GENERATED by scripts/build-llms.ts

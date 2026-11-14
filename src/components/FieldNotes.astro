@@ -1,15 +1,16 @@
 ---
 import { byId, type ExperimentId } from '../lib/experiments';
-import { getLang, useTranslations } from '../i18n';
+import { getLang, localizePath, useTranslations } from '../i18n';
 
 interface Props { id: ExperimentId; }
 const { id } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
-// The status page is English-only (no /es/status/ page exists), so the link
-// never takes the /es prefix — a localized one 404s with the ?topic query.
-const statusHref = `/status/?topic=${exp.id}`;
+// The logbook is its own page in both languages, so the link takes the /es
+// prefix on Spanish pages — an unprefixed one lands on the English edition
+// with the ?topic query intact but the wrong language.
+const statusHref = localizePath(`/logbook/?topic=${exp.id}`, lang);
 ---
 <section class="wrap field-notes" data-exp-id={exp.id} data-exp-name={exp.name}
          data-status-link={t.notes.statusLink}
@@ -55,7 +56,7 @@ const statusHref = `/status/?topic=${exp.id}`;
     const id = section.dataset.expId ?? '';
     const name = section.dataset.expName ?? '';
     const statusLink = section.dataset.statusLink ?? '';
-    const statusHref = section.dataset.statusHref ?? `/status/?topic=${id}`;
+    const statusHref = section.dataset.statusHref ?? `/logbook/?topic=${id}`;
     let lanes: Record<string, string> | null = null;
     try {
       lanes = section.dataset.lanes ? JSON.parse(section.dataset.lanes) : null;

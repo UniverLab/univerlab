@@ -1,0 +1,54 @@
+name = "univerlab-whatsapp"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "SITE_STATE"
+id = "6456e427df724870ba557449758fe47d"
+
+[[durable_objects.bindings]]
+name = "CONVERSATION"
+class_name = "Conversation"
+
+[[durable_objects.bindings]]
+name = "REGISTRY"
+class_name = "Operator"
+
+[[durable_objects.bindings]]
+name = "CALENDAR"
+class_name = "Calendar"
+
+[[durable_objects.bindings]]
+name = "GATE"
+class_name = "Gate"
+
+# SQLite-backed is required on the Workers Free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Conversation"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Operator"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Calendar"]
+
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["Gate"]
+
+[[routes]]
+pattern = "agenda.univerlab.org"
+custom_domain = true
+
+[observability]
+enabled = true
+
+[triggers]
+crons = ["*/30 * * * *"]

@@ -25,9 +25,8 @@ const SRC = resolve(__dirname, '..');
 const LAYOUT = readFileSync(resolve(SRC, 'layouts', 'BaseLayout.astro'), 'utf8');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const TOKENS = readFileSync(resolve(SRC, 'styles', 'bench-tokens.css'), 'utf8');
-const FOOTER = readFileSync(resolve(SRC, 'components', 'Footer.astro'), 'utf8');
 const GHOST = readFileSync(resolve(SRC, 'components', 'GhostHint.astro'), 'utf8');
-const STATUS = readFileSync(resolve(SRC, 'pages', 'status.astro'), 'utf8');
+const PAPER = readFileSync(resolve(SRC, 'components', 'TodaysPaper.astro'), 'utf8');
 
 /** Every source file under src (excluding the tests themselves). */
 function srcFiles(dir: string): string[] {
@@ -78,11 +77,6 @@ describe('the retired console pieces leave no trace under src', () => {
   it('removes the two old palette keys the same one time', () => {
     expect(hitsOf(OLD_DAY).length).toBe(1);
     expect(hitsOf(OLD_NIGHT).length).toBe(1);
-  });
-
-  it('the footer privacy line forgets the log and comes from the dictionary', () => {
-    expect(FOOTER).toContain('{t.footer.privacy}');
-    expect(FOOTER).not.toMatch(/no external tracking/);
   });
 
   it('the roadmap links through the renamed status feed key', () => {
@@ -167,7 +161,7 @@ describe('the catalog card', () => {
   });
 
   it('/fact asks the mailbox for today\u2019s letter instead of driving the sky body', () => {
-    const fact = LAYOUT.slice(LAYOUT.indexOf("cmd: '/fact'"), LAYOUT.indexOf("cmd: '/today'"));
+    const fact = LAYOUT.slice(LAYOUT.indexOf("cmd: '/fact'"), LAYOUT.indexOf("cmd: '/newspaper'"));
     expect(fact).toContain("label: 'Today in science'");
     // It no longer fakes mouse events on the celestial button: that click is
     // the theme toggle now (the header forwards it to toggleTheme), so a
@@ -201,7 +195,7 @@ describe('the taped slips', () => {
     // The dark gold toast and its backdrop are gone with it.
     expect(LAYOUT).not.toContain('gl-toast');
     expect(GLOBAL).not.toContain('gl-toast');
-    expect(STATUS).not.toContain('gl-toast');
+    expect(PAPER).not.toContain('gl-toast');
   });
 
   it('the /tip command tapes up a tip slip, one at a time', () => {
@@ -223,19 +217,16 @@ describe('the taped slips', () => {
     expect(GHOST).not.toContain('ghost-hint--visible');
   });
 
-  it('the status page leaves arrival to the mailbox and only keeps the live list', () => {
-    // Arrival is the mailbox's business on every page (mail.ts wireEvents /
-    // arrive / syncBox) plus loadLabMail on reload: status.astro only keeps
-    // its own EventSource for the newspaper list itself, so no slip, toast or
-    // dev mock may be left in the page.
-    expect(STATUS).not.toContain('slipNotice');
-    expect(STATUS).not.toContain('showToast');
-    expect(STATUS).not.toContain('isDev');
-    expect(STATUS).not.toContain('MOCK');
-    // The live list still prepends rows without a reload.
-    expect(STATUS).toContain("new EventSource(API + '/events')");
-    expect(STATUS).toContain('function prependEntry');
-    expect(STATUS).toContain('prependEntry(entry);');
+  it('the newspaper leaves arrival to the mailbox: no slip, toast or dev mock in the paper', () => {
+    // Arrival is the mailbox's business on every page; the paper's second
+    // and third pages render the classifieds at the edge and recompose them
+    // from the filters, so no EventSource, slip, toast or dev mock may be
+    // left in it.
+    expect(PAPER).not.toContain('slipNotice');
+    expect(PAPER).not.toContain('showToast');
+    expect(PAPER).not.toContain('isDev');
+    expect(PAPER).not.toContain('MOCK');
+    expect(PAPER).not.toContain('EventSource');
   });
 });
 
@@ -269,11 +260,6 @@ describe('i18n — the console dictionary in both languages', () => {
     expect(es.console.answer).toBe('La Respuesta a la Pregunta Fundamental de la Vida, el Universo y Todo lo Demás.');
     expect(en.console.guide).toBe("The Hitchhiker's Guide to the Galaxy");
     expect(es.console.guide).toBe('Guía del autoestopista galáctico');
-  });
-
-  it('the footer privacy line matches the spec verbatim', () => {
-    expect(en.footer.privacy).toBe("no external tracking. theme preferences stay in your browser's local storage.");
-    expect(es.footer.privacy).toBe('sin rastreo externo. tus preferencias de tema se quedan en el almacenamiento local de tu navegador.');
   });
 
   it('the README names the three themes in the /theme help line', () => {

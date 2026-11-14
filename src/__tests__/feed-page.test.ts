@@ -40,6 +40,11 @@ describe('feed page', () => {
     expect(feedEs).toMatch(/data-copied/);
     expect(feedEn).toMatch(/classList\.add\('done'\)/);
     expect(feedEs).toMatch(/classList\.add\('done'\)/);
+    // …and the icon morphs to a check and back through the shared helper.
+    expect(feedEn).toMatch(/setCopyState\(btn, true\)/);
+    expect(feedEs).toMatch(/setCopyState\(btn, true\)/);
+    expect(feedEn).toMatch(/setCopyState\(btn, false\)/);
+    expect(feedEs).toMatch(/setCopyState\(btn, false\)/);
     // when clipboard unavailable, leaves URL selectable rather than failing silently:
     // fallback uses execCommand and does not hide URL; also catch block is empty / no error throw
     expect(feedEn).toMatch(/execCommand\('copy'\)/);
@@ -67,11 +72,20 @@ describe('feed page', () => {
     expect(feedEn).not.toMatch(/<noscript.*feed-url/);
   });
 
-  it('uses BaseLayout (site layout) and no new dependency / icon set', () => {
+  it('uses BaseLayout (site layout) and the shared Lucide icon, not a new icon set', () => {
     expect(feedEn).toContain("import BaseLayout");
     expect(feedEs).toContain("import BaseLayout");
-    expect(feedEn).not.toMatch(/import.*icon/i);
-    expect(feedEs).not.toMatch(/import.*icon/i);
+    // The copy button's icon comes from the shared lib (lib/icon-svg over the
+    // site's lucide vocabulary in lib/icons), inlined at build time — no icon
+    // font, sprite request, or third icon system.
+    expect(feedEn).toContain("import { iconSvg } from '../lib/icon-svg'");
+    expect(feedEn).toContain("import { copy } from '../lib/icons'");
+    expect(feedEs).toContain("import { iconSvg } from '../../lib/icon-svg'");
+    expect(feedEs).toContain("import { copy } from '../../lib/icons'");
+    for (const src of [feedEn, feedEs]) {
+      expect(src).toMatch(/<span class="copy-icon" set:html=\{iconSvg\(copy, \{ size: 16 \}\)\} \/>/);
+      expect(src).not.toMatch(/<svg[^>]*viewBox/);
+    }
     expect(feedEn).not.toMatch(/analytics/i);
     expect(feedEs).not.toMatch(/analytics/i);
   });
@@ -84,25 +98,13 @@ describe('feed page', () => {
   });
 });
 
-describe('status page links to feed', () => {
-  const status = readFileSync(resolve(__dirname, '../pages/status.astro'), 'utf8');
-
-  it('contains a link to /feed in the shared board header', () => {
-    expect(status).toMatch(/href="\/feed\/?"/);
-    // link text is RSS (same word as feed page heading)
-    expect(status).toMatch(/>RSS<\/a>/);
-    // Spec 4 split: the feed link lives in the shared .board-head (header row
-    // spanning both columns), which now precedes the LOGBOOK col-label
-    // rather than sitting beside it in the old .log-head.
-    const headEnd = status.indexOf('</header>');
-    const feedIdx = status.indexOf('href="/feed');
-    expect(feedIdx).toBeGreaterThan(-1);
-    expect(feedIdx).toBeLessThan(headEnd);
-  });
-
-  it('status feed link uses the same label as feed heading', () => {
-    const statusFeedLabel = status.match(/<a[^>]*href="\/feed\/?"[^>]*>([^<]+)<\/a>/)?.[1]?.trim();
-    expect(statusFeedLabel).toBe('RSS');
+describe('retired status page links to nothing', () => {
+  it('no page links to /status/ anymore: the Logbook lives at /logbook/', () => {
+    for (const f of ['../pages/roadmap.astro', '../components/FieldNotes.astro', '../components/Header.astro']) {
+      const src = readFileSync(resolve(__dirname, f), 'utf8');
+      expect(`${f}\n${src}`).not.toMatch(/href="\/status\/?"/);
+      expect(`${f}\n${src}`).not.toContain('/status/?');
+    }
     expect(en.feed.heading).toBe('RSS');
     expect(es.feed.heading).toBe('RSS');
   });

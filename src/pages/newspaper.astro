@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TodaysPaper from '../components/TodaysPaper.astro';
+---
+<!-- `noindex` because the built HTML holds only the masthead: the edition is
+     set at the edge by functions/_middleware.ts, and the client script below
+     fills #edition with the same renderer when the edge did not. The sitemap
+     filter in astro.config.mjs excludes it for the same reason — a noindex
+     URL in the sitemap is a reported error. -->
+<BaseLayout title="The Observable — UniverLab" description="Every science event that happened on this day in history." circadian noindex paperDisplayFonts>
+  <section class="wrap today-page">
+    <TodaysPaper />
+  </section>
+
+  <style is:global>
+    /* The newspaper needs the full wrap: three columns from 48rem, as in the
+       mockup. The old list layout capped the page at 42rem. */
+    .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
+  </style>
+
+  <script>
+    // The client fallback for the newspaper: for each page the edge did not
+    // set (#edition, #lab-body still empty), fetch what it needs and fill it
+    // with the same renderer the edge uses. The tabs bind either way.
+    import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
+    import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
+    import { labPageHtml, labPageHtml2 } from '../lib/lab-page';
+    import { bindLabPage, setLabEntries } from '../lib/lab-page-client';
+    import { initPaperSheet } from '../lib/paper-sheet';
+    import { fitPaper } from '../lib/paper-fit';
+
+    (function () {
+      bindLabPage(document);
+      initPaperSheet(document);
+      var lang = document.documentElement.lang === 'es' ? 'es' : 'en';
+      var day = editionDateFor(window.location.search);
+      var picked = /[?&]d=/.test(window.location.search);
+      var ed = document.getElementById('edition');
+      var labBody = document.getElementById('lab-body');
+      var lab2Body = document.getElementById('lab2-body');
+      var needEdition = ed && !(ed.textContent || '').replace(/\s/g, '');
+      var needLab = labBody && !(labBody.textContent || '').replace(/\s/g, '');
+      var needLab2 = lab2Body && !(lab2Body.textContent || '').replace(/\s/g, '');
+      // The sheet's fixed height reserves every page's space, so fitting
+      // never shifts layout; fit again once images land, which moves feet.
+      var refit = function () { fitPaper(document); };
+      window.addEventListener('load', refit);
+      if (!needEdition && !needLab && !needLab2) { refit(); return; }
+
+      var loading = document.getElementById('today-loading');
+      var failed = function () {
+        if (loading) loading.style.display = 'none';
+        var err = document.getElementById('today-error');
+        if (err) {
+          err.style.display = 'block';
+          // Copy lives in src/i18n (t.today.error), set by the component.
+          err.textContent = err.getAttribute('data-msg') || '';
+        }
+      };
+
+      var facts = !picked && readOtdCache(lang);
+      var factsP = facts && facts.length
+        ? Promise.resolve(facts)
+        // The same day the edge asks for: the lab's date (UTC−5), not the
+        // visitor's, so a reader abroad never prints another day's letters.
+        : fetchPool(fetch, lang, day, FULL_POOL);
+      // The lab mailbox is optional: a failed announcements read (CORS, an
+      // outage) still prints the day's letters, just without that box.
+      var labP = needLab || needEdition
+        ? fetch('https://announcements.univerlab.org/?limit=100')
+          .then(function (res) {
+            if (!res.ok) throw new Error('API ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            return Array.isArray(data?.entries) ? data.entries : [];
+          })
+          .catch(function () { return null; })
+        : Promise.resolve([]);
+
+      Promise.all([factsP, labP]).then(
+        function (parts) {
+          // Pages 2 and 3 do not depend on the day's facts: fill them even
+          // when the Wikipedia read failed and page 1 reports the error.
+          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang, { unavailable: parts[1] === null });
+          if (needLab2) lab2Body.innerHTML = labPageHtml2(parts[1] || [], lang, { unavailable: parts[1] === null });
+          setLabEntries(document, { entries: parts[1] || [], lang: lang });
+          if (needEdition) {
+            if (!parts[0] || !parts[0].length) { failed(); return; }
+            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] || [] }, lang, day);
+          }
+          // Fit before the sheet is shown: the fill above ran in the same
+          // task, so nothing paints half-fitted.
+          refit();
+        },
+        function () { failed(); },
+      );
+    })();
+  </script>
+</BaseLayout>

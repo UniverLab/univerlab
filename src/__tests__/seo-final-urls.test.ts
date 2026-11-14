@@ -44,16 +44,16 @@ describe('checkFinalUrls', () => {
 
   it('fails an hreflang that _redirects redirects', () => {
     const dist = distFixture({
-      'index.html': page('<link rel="alternate" hreflang="es" href="https://univerlab.org/es/status/" />'),
-      'es/status/index.html': page(),
-      'status/index.html': page(),
-      '_redirects': '/es/status/ /status/ 301\n/legacy /status/ 301\n',
+      'index.html': page('<link rel="alternate" hreflang="es" href="https://univerlab.org/es/roadmap/" />'),
+      'es/roadmap/index.html': page(),
+      'roadmap/index.html': page(),
+      '_redirects': '/es/roadmap/ /roadmap/ 301\n/legacy /roadmap/ 301\n',
     });
     try {
       // Through the real parser: a broken `redirectSources` would silently
       // unplug this half of the invariant.
       expect(checkFinalUrls(dist, redirectSources(dist))).toEqual([
-        '/: alternate hreflang "https://univerlab.org/es/status/" is a redirect source',
+        '/: alternate hreflang "https://univerlab.org/es/roadmap/" is a redirect source',
       ]);
     } finally {
       rmSync(dist, { recursive: true, force: true });
@@ -97,8 +97,8 @@ describe('checkFinalUrls', () => {
 });
 
 describe('hasCounterpart', () => {
-  it('/status/ has no Spanish counterpart', () => {
-    expect(hasCounterpart('/status/', 'es')).toBe(false);
+  it('/roadmap/ has no Spanish counterpart', () => {
+    expect(hasCounterpart('/roadmap/', 'es')).toBe(false);
   });
 
   it('/gitkit/ has a Spanish counterpart', () => {

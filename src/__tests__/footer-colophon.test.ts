@@ -1,6 +1,6 @@
 /**
- * Tests for the footer colophon: the engraved frieze band, the wax seal on
- * the credits line, the per-experiment forged line, and the braille easter egg.
+ * Tests for the footer colophon: the frieze with the logo seal, the centred
+ * book colophon, and the braille easter egg.
  *
  * Astro components aren't directly renderable in Jest, so the markup and
  * style contracts are verified at source level (the level the component's
@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { toBraille, fromBraille, BRAILLE_SENTENCE } from '../lib/braille';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { byId } from '../lib/experiments';
 
 const FOOTER = resolve(__dirname, '..', 'components', 'Footer.astro');
 const src = readFileSync(FOOTER, 'utf8');
@@ -54,9 +55,14 @@ describe('braille — Spanish grade 1, one cell per letter', () => {
   });
 });
 
-describe('Footer — the engraved frieze band', () => {
-  it('opens the footer with an aria-hidden picture as its first child', () => {
-    expect(src).toMatch(/<footer>\s*<!--[^>]*-->\s*<picture class="colophon-band" aria-hidden="true">/);
+describe('Footer — the frieze with the logo seal', () => {
+  it('wraps the picture in the .frieze band as its first child', () => {
+    expect(src).toMatch(/<footer>\s*<!--[^>]*-->\s*<div class="frieze">/);
+    const friezeAt = markup.indexOf('class="frieze"');
+    const pictureAt = markup.indexOf('class="colophon-band"');
+    expect(friezeAt).toBeGreaterThan(-1);
+    expect(pictureAt).toBeGreaterThan(friezeAt);
+    expect(markup).toMatch(/<div class="frieze">\s*<picture class="colophon-band" aria-hidden="true">/);
   });
 
   it('loads the lab frieze in the exact AVIF/WebP ladder from /bench/colophon', () => {
@@ -67,85 +73,130 @@ describe('Footer — the engraved frieze band', () => {
   });
 
   it('the assets really exist on disk', () => {
-    for (const f of ['frieze-960.avif', 'frieze-1920.avif', 'frieze-960.webp', 'frieze-1920.webp', 'sello-lacre.svg']) {
+    for (const f of ['frieze-960.avif', 'frieze-1920.avif', 'frieze-960.webp', 'frieze-1920.webp']) {
       expect(existsSync(resolve(__dirname, '..', '..', 'public', 'bench', 'colophon', f))).toBe(true);
     }
   });
 
-  it('styles the band like Quorum: absolute top, 16rem, sinking mask', () => {
-    expect(src).toMatch(/\.colophon-band\s*\{[^}]*position:\s*absolute/);
-    expect(src).toMatch(/\.colophon-band\s*\{[^}]*height:\s*16rem/);
-    expect(src).toContain('mask-image: linear-gradient(180deg, #000 30%, transparent 90%)');
-    expect(src).toContain('-webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 90%)');
-    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-fit:\s*cover/);
-    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-position:\s*50% 45%/);
+  it('seals the band with the real Mark at 24px, linking the site repository', () => {
+    expect(markup).toContain('class="seal"');
+    expect(markup).toContain('href="https://github.com/UniverLab/univerlab"');
+    expect(markup).toContain('aria-label="UniverLab website repository"');
+    expect(markup).toContain('<Mark size={24} />');
+    const friezeAt = markup.indexOf('class="frieze"');
+    const sealAt = markup.indexOf('class="seal"');
+    const colophonAt = markup.indexOf('wrap colophon');
+    expect(sealAt).toBeGreaterThan(friezeAt);
+    expect(sealAt).toBeLessThan(colophonAt);
   });
 
-  it('the footer is relative and starts below the band', () => {
-    expect(src).toMatch(/footer\s*\{[^}]*position:\s*relative/);
-    expect(src).toMatch(/\.inner\s*\{[^}]*padding-block:\s*12rem/);
-    // Under 40rem the headroom shrinks to 9rem so mobile content starts lower
-    // but still clears the band.
-    expect(src).toMatch(/max-width:\s*40rem[^{]*\{[^}]*\.inner\s*\{[^}]*padding-top:\s*9rem/s);
+  it('rides the seal on the frieze lower edge: 48px round seal, top 100%', () => {
+    expect(src).toMatch(/\.seal\s*\{[^}]*width:\s*48px/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*height:\s*48px/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*top:\s*100%/s);
+    expect(src).toMatch(/\.seal\s*\{[^}]*border-radius:\s*50%/s);
+  });
+
+  it('sinks the band into the ink through a mask, covering at 50% 45%', () => {
+    expect(src).toMatch(/\.colophon-band\s*\{[^}]*mask-image:\s*linear-gradient/s);
+    expect(src).toContain('-webkit-mask-image: linear-gradient(#000 35%, transparent 96%)');
+    expect(src).toContain('mask-image: linear-gradient(#000 35%, transparent 96%)');
+    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-fit:\s*cover/s);
+    expect(src).toMatch(/\.colophon-band img\s*\{[^}]*object-position:\s*50% 45%/s);
   });
 });
 
-describe('Footer — everything it already held stays, in order', () => {
-  it('the wrap column follows the band directly (the flight bar is gone)', () => {
-    const bandAt = markup.indexOf('colophon-band');
-    const innerAt = markup.indexOf('wrap inner');
-    expect(bandAt).toBeGreaterThan(-1);
-    expect(innerAt).toBeGreaterThan(bandAt);
-    expect(markup).not.toContain('flight');
-  });
-
-  it('keeps mark link, quote, footer nav, built-with, word + branch, privacy — in that order', () => {
+describe('Footer — the centred colophon order', () => {
+  it('reads frieze, quote, nav, cta, word, braille, small, branch, panel — in that order', () => {
     const order = [
-      'class="mark-link"',
+      'class="frieze"',
       'class="quote"',
       'class="foot-nav"',
-      'class="wrap lab-built"',
-      '>UNIVERLAB</span>',
+      'class="cta"',
+      'class="word-rule"',
+      'class="braille"',
+      'class="icon-row"',
+      'class="small"',
       'class="branch mono"',
       'id="cosmic-commit"',
-      'class="privacy"',
     ];
     const at = order.map((s) => markup.indexOf(s));
     expect(at.every((i) => i > -1)).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
   });
+
+  it('hides the quote on the manifesto, as today', () => {
+    expect(src).toMatch(/const isManifesto = Astro\.url\.pathname\.endsWith\('\/manifesto'\)/);
+    expect(markup).toContain('{!isManifesto && <p class="quote">{t.footer.quote}</p>}');
+  });
+
+  it('leads the free call to the booking section with the dictionary CTA', () => {
+    expect(markup).toContain("{t.footer.cta}");
+    expect(src).toContain("bookTarget(lang)");
+    expect(markup).toMatch(/<a class="cta" href=\{bookTarget\(lang\)\}>/);
+  });
+
+  it('rules the UNIVERLAB word across the colophon', () => {
+    expect(markup).toContain('<p class="word-rule">');
+    expect(markup).toContain('<span class="word" translate="no">UNIVERLAB</span>');
+    expect(src).toMatch(/\.word-rule::before,\s*\.word-rule::after/);
+  });
+
+  it('stacks the groups in one column, then opens two columns at 40rem', () => {
+    expect(src).toMatch(/\.foot-nav\s*\{[^}]*display:\s*grid/s);
+    const at = src.indexOf('.foot-nav {');
+    expect(src.slice(at, src.indexOf('}', at))).not.toMatch(/grid-template-columns/);
+    expect(src).toMatch(/@media \(min-width:\s*40rem\)[^{]*\{[^}]*\.foot-nav\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*auto\)/s);
+  });
 });
 
-describe('Footer — wax seal and the forged line', () => {
-  it('prepends the garnet seal to the privacy line', () => {
-    expect(markup).toContain('<img src="/bench/colophon/sello-lacre.svg" width="28" height="28" alt="" aria-hidden="true">');
+describe('Footer — the wax seal and the easter eggs are gone from the old lines', () => {
+  it('carries no wax seal, sello-lacre, tag, lab-built or credits row', () => {
+    expect(markup).not.toContain('sello-lacre');
+    expect(markup).not.toContain('class="tag"');
+    expect(markup).not.toContain('lab-built');
+    expect(markup).not.toContain('colophon-credits');
+    expect(markup).not.toContain('mark-link');
   });
+});
 
-  it('styles the credits like Quorum: flex row, 0.6rem gap, 25% currentColor rule', () => {
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*display:\s*flex/);
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*gap:\s*0\.6rem/);
-    expect(src).toMatch(/\.colophon-credits\s*\{[^}]*border-top:\s*1px solid color-mix\(in srgb, currentColor 25%, transparent\)/);
-    expect(src).toMatch(/\.colophon-credits img\s*\{[^}]*flex:\s*none/);
-  });
-
-  it('renders the forged line only when an expId prop is passed, before the privacy line', () => {
+describe('Footer — forged line inside the small block', () => {
+  it('renders the forged line only when an expId prop is passed', () => {
     expect(src).toMatch(/interface Props\s*\{[^}]*expId\?:\s*ExperimentId/s);
     expect(src).toMatch(/forged && \(|forged \?/);
     expect(src).toContain('t.footer.forged');
-    const forgedAt = markup.indexOf('class="wrap forged"');
-    const privacyAt = markup.indexOf('class="wrap colophon-credits"');
-    // The forged line is behind the privacy/credits block in the document,
-    // and is conditional — a non-experiment page renders neither line nor prop plumbing.
-    expect(forgedAt).toBeGreaterThan(-1);
-    expect(forgedAt).toBeLessThan(privacyAt);
     expect(src).toContain('{forged && (');
   });
 
-  it('uses the experiment registry for the name in the mono face', () => {
+  it('nests the forged sentence in .small with the experiment registry name', () => {
     expect(src).toMatch(/const forged = expId \? byId\(expId\) : null/);
-    expect(src).toMatch(/class="forged-name"/);
+    const smallAt = markup.indexOf('class="small"');
+    const forgedAt = markup.indexOf('class="forged"');
+    expect(smallAt).toBeGreaterThan(-1);
+    expect(forgedAt).toBeGreaterThan(smallAt);
+    expect(markup).toMatch(/class="forged-name"/);
     expect(src).toMatch(/\.forged-name\s*\{\s*font-family:\s*var\(--font-mono\)/);
-    expect(src).toMatch(/\.forged\s*\{[^}]*font-family:\s*var\(--font-mono\)/s);
+  });
+
+  it('splits the bottom information into centred lines inside the small block', () => {
+    expect(markup).not.toContain('{t.footer.privacy}');
+    expect(markup).not.toContain('class="privacy"');
+    // A <div> of separate <p> lines, not one wrapping paragraph.
+    expect(markup).toMatch(/<div class="small">/);
+    expect(markup).toMatch(/<p><span class="operator">/);
+    expect(markup).toMatch(/<p><span class="built">/);
+    expect(markup).toContain('class="built"');
+    expect(markup).toContain('t.footer.built.label');
+    const smallAt = markup.indexOf('class="small"');
+    const operatorAt = markup.indexOf('<p><span class="operator">');
+    const builtAt = markup.indexOf('<p><span class="built">');
+    const branchAt = markup.indexOf('class="branch mono"');
+    expect(operatorAt).toBeGreaterThan(smallAt);
+    expect(builtAt).toBeGreaterThan(operatorAt);
+    expect(branchAt).toBeGreaterThan(builtAt);
+    // The operator line is the one carrying the legal links.
+    expect(markup.slice(operatorAt, builtAt)).toContain('legalLinks.map');
+    expect(markup.slice(builtAt)).toContain('t.footer.built.gitkit');
   });
 });
 
@@ -153,10 +204,10 @@ describe('Footer — the braille easter egg', () => {
   it('sits under the UNIVERLAB word as role=img with the sentence as its label', () => {
     const wordAt = markup.indexOf('>UNIVERLAB</span>');
     const brailleAt = markup.indexOf('class="braille"');
-    const metaAt = markup.indexOf('class="meta"');
+    const smallAt = markup.indexOf('class="small"');
     expect(wordAt).toBeGreaterThan(-1);
     expect(brailleAt).toBeGreaterThan(wordAt);
-    expect(brailleAt).toBeLessThan(metaAt);
+    expect(brailleAt).toBeLessThan(smallAt);
     expect(markup).toMatch(/class="braille" role="img" aria-label=\{BRAILLE_SENTENCE\}/);
   });
 
@@ -165,18 +216,36 @@ describe('Footer — the braille easter egg', () => {
   });
 
   it('encrypts the sentence at build time through the lib, not a pasted literal', () => {
-    expect(src).toContain('import { BRAILLE_SENTENCE, toBraille } from \'../lib/braille\'');
+    expect(src).toContain("import { BRAILLE_SENTENCE, toBraille } from '../lib/braille'");
     expect(src).toContain('const brailleCells = toBraille(BRAILLE_SENTENCE);');
     // No visible translation and no hover affordance: the sentence text must
     // not be hardcoded in the footer, and the braille class must not react.
     expect(src).not.toContain('el universo se lee');
   });
 
-  it('styles it faint and quiet: 0.45 opacity, 15px, 2px tracking, braille-capable fallback stack', () => {
-    expect(src).toMatch(/\.braille\s*\{[^}]*opacity:\s*0\.45/s);
+  it('styles it quiet: 0.9 opacity, 15px, 2px tracking, braille-capable fallback stack', () => {
+    expect(src).toMatch(/\.braille\s*\{[^}]*opacity:\s*0\.9/s);
     expect(src).toMatch(/\.braille\s*\{[^}]*font-size:\s*15px/s);
     expect(src).toMatch(/\.braille\s*\{[^}]*letter-spacing:\s*2px/s);
     expect(src).toContain('"DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace');
+  });
+
+  it('meets contrast: the braille line reads at 4.5:1 on the fixed black footer', () => {
+    // The footer ground is fixed black day and night, so one check covers
+    // both themes. The 0.45 opacity read #3e3f42 on #000 = 1.99:1; 0.9
+    // reads ~5.2:1. Any future dimming below ~0.84 breaks this test first.
+    const opacity = Number(src.match(/\.braille\s*\{[^}]*opacity:\s*([\d.]+)/s)![1]);
+    const dim = src.match(/--f-ink-dim:\s*(#[0-9a-f]{6})/i)![1];
+    expect(opacity).toBeGreaterThanOrEqual(0.84);
+    const channel = (c: number) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const blend = (fg: number, bg: number, a: number) => a * fg + (1 - a) * bg;
+    const hex = dim.replace('#', '');
+    const eff = [0, 2, 4].map((i) => blend(parseInt(hex.slice(i, i + 2), 16), 0, opacity));
+    const effLum = 0.2126 * channel(eff[0]) + 0.7152 * channel(eff[1]) + 0.0722 * channel(eff[2]);
+    expect((effLum + 0.05) / 0.05).toBeGreaterThanOrEqual(4.5);
   });
 });
 
@@ -184,11 +253,15 @@ describe('Footer — the lab faces', () => {
   it('nav links read in the serif face, labels and lines in the mono face', () => {
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*font-family:\s*var\(--font-serif\)/s);
     expect(src).toMatch(/\.word\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
-    expect(src).toMatch(/\.privacy\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(src).toMatch(/\.small p\s*\{[^}]*margin-block:\s*0/s);
   });
 
   it('nav targets stay tappable at 32px', () => {
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
+  });
+
+  it('the CTA reads in the lifted lab colour for the black footer', () => {
+    expect(src).toMatch(/\.cta\s*\{[^}]*color:\s*var\(--accent-lift\)/s);
   });
 });
 
@@ -210,13 +283,85 @@ describe('Layouts — expId plumbing', () => {
   });
 });
 
-describe('i18n — footer.forged in both languages', () => {
+describe('Footer — two grouped link headings', () => {
+  it('the footer groups its links under two headings', () => {
+    expect(src).toContain('t.footer.groups.work');
+    expect(src).toContain('t.footer.groups.lab');
+    expect(src).not.toContain('t.footer.groups.open');
+    expect(src).toContain('class="foot-group"');
+    expect(src).toContain('class="foot-head"');
+    expect(src).not.toContain('const footNav');
+  });
+
+  it('the footer keeps its links', () => {
+    for (const href of ['/experiments', '/archive', '/roadmap/', '/manifesto', '/contributors', '/workbench', '/newspaper', '/api', '/privacy', '/terms', 'https://github.com/UniverLab', 'https://github.com/sponsors/JheisonMB', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social']) {
+      expect(src).toContain(href);
+    }
+    expect(src).not.toContain('/status/');
+  });
+
+  it('links the newspaper under the lab group in both languages', () => {
+    expect(src).toContain("localizePath('/newspaper', lang)");
+    expect(src).toContain('label: t.nav.observable');
+    // Inside the lab group, not the experiments one.
+    expect(src.indexOf("localizePath('/newspaper', lang)")).toBeGreaterThan(src.indexOf('t.footer.groups.lab'));
+    expect(en.nav.observable).toBe('The Observable');
+    expect(es.nav.observable).toBe('El Observable');
+  });
+
+  it('the footer links the lab on X and Bluesky', () => {
+    expect(src).toContain('https://x.com/UniverLab');
+    expect(src).toContain('https://bsky.app/profile/univerlab.bsky.social');
+    expect(src.indexOf('https://x.com/UniverLab')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
+    expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
+  });
+
+  it('the social and API links read as icons in one centred row', () => {
+    // GitHub, API and the sponsor heart come from the shared Lucide lib at
+    // 20px; X and Bluesky use their official fill marks (Lucide lacks them).
+    expect(src).toContain("import { iconSvg } from '../lib/icon-svg'");
+    expect(src).toMatch(/import \{ codeXml, github, heart \} from '\.\.\/lib\/icons'/);
+    expect(src).toMatch(/iconSvg\(github, \{ size: 20 \}\)/);
+    expect(src).toMatch(/iconSvg\(codeXml, \{ size: 20 \}\)/);
+    expect(src).toMatch(/iconSvg\(heart, \{ size: 20 \}\)/);
+    expect(src).toContain('X_PATH');
+    expect(src).toContain('BLUESKY_PATH');
+    expect(src).toMatch(/\.icon-row\s*\{[^}]*justify-content:\s*center/s);
+    // Every icon keeps its name for assistive tech and hover — no new i18n,
+    // the existing dictionary labels are reused.
+    expect(src).toMatch(/class="icon-link"[\s\S]*?aria-label=\{item\.label\}[\s\S]*?title=\{item\.label\}/);
+    expect(src).toMatch(/aria-label=\{t\.nav\.sponsors\}[\s\S]*?title=\{t\.nav\.sponsors\}/);
+    // The old text links and the hand-drawn heart are gone.
+    expect(src).not.toMatch(/label: 'heart'/);
+    expect(src).not.toContain('M20.84 4.61');
+  });
+
+  it('the colophon type runs smaller and the frieze less faded', () => {
+    expect(src).toMatch(/\.foot-nav a \{[^}]*font-size:\s*0\.85rem/s);
+    expect(src).toMatch(/\.quote \{[^}]*font-size:\s*clamp\(0\.95rem, 1\.4vw, 1\.1rem\)/);
+    expect(src).toMatch(/\.foot-head \{[^}]*font-size:\s*0\.6rem/s);
+    expect(src).toMatch(/\.small \{[^}]*font-size:\s*0\.62rem/s);
+    expect(src).toMatch(/\.colophon-band \{[^}]*opacity:\s*0\.8/s);
+    // …but every target keeps its tap reach.
+    expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
+    expect(src).toMatch(/\.icon-link\s*\{[^}]*min-height:\s*32px/s);
+  });
+
+  it('both dictionaries name the two groups', () => {
+    expect(Object.keys(en.footer.groups).sort()).toEqual(['lab', 'work']);
+    expect(Object.keys(es.footer.groups).sort()).toEqual(['lab', 'work']);
+  });
+});
+
+describe('i18n — footer.cta and footer.forged in both languages', () => {
   it('carries the exact spec strings', () => {
+    expect(en.footer.cta).toBe('Workbench · free first call →');
+    expect(es.footer.cta).toBe('Banco de trabajo · primera llamada gratis →');
     expect(en.footer.forged).toBe('Artifact conceived and forged at UniverLab');
     expect(es.footer.forged).toBe('Artefacto concebido y forjado en UniverLab');
   });
 
-  it('keeps the footer dictionaries in parity (forged exists in both, nothing else moved)', () => {
+  it('keeps the footer dictionaries in parity (cta and forged exist in both, nothing else moved)', () => {
     expect(Object.keys(en.footer).sort()).toEqual(Object.keys(es.footer).sort());
     expect(Object.keys(en.footer.built).sort()).toEqual(Object.keys(es.footer.built).sort());
   });
@@ -224,9 +369,9 @@ describe('i18n — footer.forged in both languages', () => {
 
 describe('Footer — the wrap lines sit inside the centred column', () => {
   // A scoped `.margin: 0` is more specific than `.wrap { margin-inline: auto }`,
-  // so the built-with and forged lines drifted to the viewport's left edge at
-  // wide widths instead of lining up with the nav above them. Only the block
-  // axis may be zeroed: the inline margins belong to `.wrap`.
+  // so a zeroed margin drifts the line to the viewport's left edge at wide
+  // widths instead of lining up with the column above. Only the block axis may
+  // be zeroed: the inline margins belong to `.wrap`.
   const GLOBAL_CSS = readFileSync(resolve(__dirname, '..', 'styles', 'global.css'), 'utf8');
 
   /** The declaration list of the first `selector {` rule in the component. */
@@ -241,28 +386,128 @@ describe('Footer — the wrap lines sit inside the centred column', () => {
     expect(GLOBAL_CSS).toMatch(/\.wrap\s*\{[^}]*margin-inline:\s*auto/);
   });
 
-  it('.lab-built and .forged zero the block axis only — never the shorthand', () => {
-    for (const sel of ['.lab-built', '.forged']) {
+  it('.small, .word-rule and .forged zero the block axis only — never the shorthand', () => {
+    for (const sel of ['.small', '.word-rule', '.forged']) {
       const decls = rule(sel);
-      expect(decls).toMatch(/margin-block:\s*0/);
+      expect(decls).toMatch(/margin(-block)?:\s*0/);
       expect(decls).not.toMatch(/\bmargin:\s*0/);
     }
   });
 
-  it('neither line narrows its .wrap width', () => {
-    for (const sel of ['.lab-built', '.forged']) {
-      expect(rule(sel)).not.toMatch(/max-width/);
+  it('no .wrap block narrows its width', () => {
+    for (const sel of ['.colophon', '.base']) {
+      const at = src.indexOf(`${sel} {`);
+      if (at > -1) expect(src.slice(at, src.indexOf('}', at))).not.toMatch(/max-width/);
     }
+    expect(rule('.word-rule')).toMatch(/width:\s*min\(/);
   });
 
-  it('.forged stays centred and .lab-built stays left-aligned in the column', () => {
-    expect(rule('.forged')).toMatch(/text-align:\s*center/);
-    expect(rule('.lab-built')).not.toMatch(/text-align:\s*center/);
+  it('.small stays centred', () => {
+    expect(rule('.small')).toMatch(/text-align:\s*center/);
   });
 
   it('the other .wrap blocks carry no margin override of their own', () => {
-    for (const sel of ['.inner', '.base', '.colophon-credits']) {
+    for (const sel of ['.colophon', '.base']) {
       expect(rule(sel)).not.toMatch(/\bmargin[a-z-]*\s*:/);
     }
+  });
+});
+
+describe('Footer — the copyright line', () => {
+  it('prints «© 2026 Jheison Martinez Bolivar · Apache-2.0» with the license linking the site LICENSE', () => {
+    expect(en.footer.copyright).toBe('© 2026 Jheison Martinez Bolivar');
+    expect(es.footer.copyright).toBe('© 2026 Jheison Martinez Bolivar');
+    expect(en.footer.licenseName).toBe('Apache-2.0');
+    expect(es.footer.licenseName).toBe('Apache-2.0');
+    expect(markup).toContain('{t.footer.copyright}');
+    expect(markup).toContain('{t.footer.licenseName}');
+    expect(markup).toContain('href="https://github.com/UniverLab/univerlab/blob/main/LICENSE"');
+  });
+
+  it('sits after the operator line inside the small block, in the .copyright span', () => {
+    const smallAt = markup.indexOf('class="small"');
+    const operatorAt = markup.indexOf('<p><span class="operator">');
+    const copyrightAt = markup.indexOf('class="copyright"');
+    expect(copyrightAt).toBeGreaterThan(operatorAt);
+    expect(copyrightAt).toBeGreaterThan(smallAt);
+  });
+
+  it('never says «all rights reserved» — the lab is open', () => {
+    expect(src).not.toMatch(/all rights reserved/i);
+    expect(src).not.toMatch(/todos los derechos reservados/i);
+    expect(en.footer.copyright).not.toMatch(/all rights reserved/i);
+    expect(es.footer.copyright).not.toMatch(/todos los derechos reservados/i);
+  });
+
+  it('keeps the footer dictionaries in parity (copyright and licenseName exist in both)', () => {
+    expect(Object.keys(en.footer).sort()).toEqual(Object.keys(es.footer).sort());
+    expect(en.common.license).toBe('License');
+    expect(es.common.license).toBe('Licencia');
+    expect(Object.keys(en.common).sort()).toEqual(Object.keys(es.common).sort());
+  });
+});
+
+describe('ExperimentLayout — the self-drawn license badge', () => {
+  it('renders the license from the registry data, linked to the license file', () => {
+    expect(EXP).toContain('{t.common.license}');
+    expect(EXP).toContain('{exp.license}');
+    expect(EXP).toContain('licenseUrl(exp)');
+    expect(EXP).toContain("import { byId, licenseUrl, liveExperiments, type ExperimentId } from '../lib/experiments'");
+    expect(EXP).not.toContain('shields.io');
+  });
+
+  it('pins the badge text to the SPDX value of each experiment', () => {
+    const pinned: Record<string, string> = {
+      canopy: 'MIT OR Apache-2.0',
+      demostage: 'MIT OR Apache-2.0',
+      texforge: 'MIT',
+      gitkit: 'MIT',
+      ghscaff: 'MIT',
+      cadspec: 'MIT',
+      quorum: 'Apache-2.0',
+      'astro-denoise': 'Apache-2.0',
+      facetmedia: 'Apache-2.0',
+    };
+    for (const [id, license] of Object.entries(pinned)) {
+      expect(byId(id).license).toBe(license);
+    }
+  });
+});
+
+describe('Footer — the branch button meets contrast and the separators hide', () => {
+  it('inks the branch at dim, not faint, and lights it on hover', () => {
+    // #4a4d53 on black is ~2.5:1; #8a8d93 is ~6:1, over the 4.5:1 bar.
+    expect(src).toMatch(/\.branch \{[^}]*color:\s*var\(--f-ink-dim\)/);
+    expect(src).toMatch(/\.branch:hover, \.branch\[aria-expanded='true'\] \{[^}]*color:\s*var\(--f-ink\)/);
+    expect(src).not.toMatch(/\.branch \{[^}]*--f-ink-faint/);
+  });
+
+  it('hides every base separator from assistive tech', () => {
+    for (const m of markup.matchAll(/<span class="sep"[^>]*>/g)) {
+      expect(m[0]).toContain('aria-hidden="true"');
+    }
+    expect((markup.match(/<span class="sep"/g) ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('paints footer svg marks dim, not faint', () => {
+    expect(src).toContain('footer :global(svg) { color: var(--f-ink-dim); }');
+  });
+});
+
+describe('Footer — the cosmic branch names the Orion Arm', () => {
+  it('prints milky-way/orion in both languages and nothing still says main', () => {
+    expect(en.cosmos.branch).toBe('branch: milky-way/orion');
+    expect(es.cosmos.branch).toBe('branch: milky-way/orion');
+    expect(markup).toContain('{t.cosmos.branch}');
+    // The easter egg prints no branch of its own…
+    expect(markup.slice(markup.indexOf('id="cosmic-commit"'))).not.toMatch(/milky-way/);
+    // …and no string anywhere still calls it main.
+    expect(src).not.toContain('milky-way/main');
+    for (const d of [en, es]) {
+      expect(d.cosmos.branch).not.toMatch(/\bmain\b/);
+      expect(d.cosmos.branchTooltip).not.toMatch(/\bmain\b|principal/);
+    }
+    expect(en.cosmos.branchTooltip).toContain('Orion');
+    expect(es.cosmos.branchTooltip).toContain('Orión');
   });
 });

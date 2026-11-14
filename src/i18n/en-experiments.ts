@@ -6,6 +6,7 @@ export const experiments = {
       tagline:
         'A graph engine for AI coding agents — every harness, one workflow.',
       etymology: '(From <em>canopy</em>, the forest’s crown.)',
+      machineAlt: 'An engraved wooden hive tower with honeycomb panels and bees, worked by a crank at its base',
       figure: 'A wooden hive where many agents work under one roof, each in its own cell and all in one flow. Like the forest canopy, it does not grow the trees: it covers and orders them so the light reaches every one.',
       thread: {
         problem: 'AI agents',
@@ -18,6 +19,8 @@ export const experiments = {
         'An open-source graph engine for AI coding agents: specs walk agent, check and gate nodes, ensembles vote across harnesses, failures route back.',
       koan: 'In a forest, the canopy is where the crowns touch — separate trees, one living layer.',
       lede:
+        'AI coding agents write code nobody is watching. <strong>Canopy</strong> puts every change through your own tests and reviewers before it is committed.',
+      how:
         'A Rust daemon and terminal UI with a <strong>graph engine</strong> at its core. Work enters as a spec and walks a graph you design: <strong>agent</strong> nodes on any harness, <strong>check</strong> nodes that run your real commands, <strong>ensembles</strong> that fan out to several models and keep a quorum, <strong>routers</strong> that pick the branch, and a <strong>resilience</strong> node that turns a quota death into a scheduled wake-up. Underneath: memory, scheduling and sync for every agent.',
       morph: [
         ['Gated implement', 'checks run your real commands — red routes the work back, never to you'],
@@ -51,10 +54,7 @@ export const experiments = {
           ['Multi-agent sync', 'Agents declare their mission, report status and message each other, so several sessions can share one workspace without stepping on each other.'],
         ] as [string, string][],
       },
-      cta: {
-        catalogue: 'Graph catalogue',
-        remote: 'Remote',
-      },
+      cta: { catalogue: 'Catalogue' },
       remote: {
         kicker: 'Remote',
         title: 'Your sessions and graphs from your phone',
@@ -110,6 +110,7 @@ export const experiments = {
       tagline:
         'A unified LaTeX workspace — writing, diagrams, and PDFs in one self-contained tool.',
       etymology: '(From <em>TeX</em> and <em>forge</em>.)',
+      machineAlt: 'An engraved wooden printing press with a hand wheel, an ink roller and a pull lever',
       figure: 'A type press for the age of machines: the manuscript goes in, the printed sheet comes out. With it LaTeX stops being an installer\'s trade and becomes again what it always was, the art of setting a page well.',
       thread: {
         problem: 'LaTeX',
@@ -181,7 +182,8 @@ export const experiments = {
       tagline:
         'Guided git repository setup — hooks, ignores, attributes, and config in one flow.',
       etymology: '(From <em>git</em> and <em>kit</em>, a case of tools.)',
-      figure: 'The craftsman\'s case that gets the most out of git: the hooks nobody sets up and the rules everybody forgets, kept in one case that opens the same way in every repository.',
+      machineAlt: 'An engraved wooden winding reel with a hand crank, spooling pink thread into a bowl',
+      figure: 'A sugar-cane mill that presses the cane to the last drop: that is how GitKit gets everything out of git, with the hooks nobody sets up and the rules everybody forgets in place the same way in every repository.',
       thread: {
         problem: 'repository setup',
         method: 'saved, idempotent builds',
@@ -244,6 +246,7 @@ export const experiments = {
       tagline:
         'An interactive wizard that scaffolds and enforces conventions on GitHub repositories.',
       etymology: '(From <em>GitHub</em> and <em>scaffold</em>.)',
+      machineAlt: 'An engraved wooden scaffold tower with ropes, a pulley and a ladder',
       figure: 'Scaffolding raised before the building: it guards the branches, lifts the checks and leaves every repository standing from day one, so whatever is built on top never needs propping up later.',
       thread: {
         problem: 'GitHub repositories',
@@ -310,6 +313,7 @@ export const experiments = {
       tagline:
         'CAD as code: declarative geometry compiled deterministically to DXF.',
       etymology: '(From <em>CAD</em> and <em>spec</em>, specification.)',
+      machineAlt: 'An engraved drafting table draped with a dust cloth, with a ruler resting on top',
       figure: 'A drafting table that declared parts instead of drawing them. It was archived when the lab chose to wrap the best tools rather than reinvent them; its idea lives on in the tools that replaced it.',
       thread: {
         problem: 'CAD',
@@ -326,7 +330,8 @@ export const experiments = {
       tagline:
         'A research proposal for benchmarking astronomical noise reduction — evaluated on the science it recovers, not how clean it looks.',
       etymology: '(From Greek <em>ástron</em>, star, and <em>denoise</em>.)',
-      figure: 'An eyepiece that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
+      machineAlt: 'An engraved brass telescope on a tripod, its lens catching purple light',
+      figure: 'A telescope that parts light from noise: between the grain the sensor leaves and the star that is really there, a line of research that measures before it claims.',
       thread: {
         problem: 'noise reduction',
         method: 'a benchmark scored by the science',
@@ -353,23 +358,19 @@ export const experiments = {
         items: [
           {
             state: 'complete',
-            text: 'A modular, extensible ecosystem with a common command-line protocol, where each method is packaged separately with its own environment and a new method joins without changing the orchestrator.',
+            text: 'Design a modular, reproducible platform to integrate, run and compare noise-reduction methods on simulated Vera C. Rubin Observatory images, so that new techniques can be added without changing its structure.',
           },
           {
             state: 'in progress',
-            text: 'Reliable source-recovery metrics (completeness, purity, completeness by magnitude and photometric accuracy, by one-to-one matching against the DC2 truth catalogue) and image-quality metrics (PSNR, SSIM and background noise), each checked against at least two independent sources in the literature.',
+            text: 'Define a set of evaluation metrics, grounded in the literature, to analyse how well methods recover faint astronomical sources, preserve image quality and keep scientific measurements accurate, as well as their computational cost under comparable conditions.',
           },
           {
             state: 'in progress',
-            text: "Tools that measure each method's computational cost (time per region, peak memory and regions per unit of time) from outside its process, reported with a description of the hardware.",
-          },
-          {
-            state: 'in progress',
-            text: 'The methods under test: BM3D, and a U-Net trained only on DC2 regions outside the evaluation set, with its training recipe and weights published.',
+            text: 'Integrate into the platform two representative noise-reduction methods, one based on classical image-processing techniques and one on deep learning.',
           },
           {
             state: 'pending',
-            text: 'A reproducible benchmark on a curated, versioned DESC DC2 dataset of multiband regions from several sky areas; each version is identified by checksums and declares its regions, and every result is reported against one version.',
+            text: 'Evaluate the integrated methods on a documented, versioned dataset built from the DC2 simulation images and reference catalogues, so that experiments can be repeated and results compared under the same conditions.',
           },
         ],
       },
@@ -418,7 +419,8 @@ export const experiments = {
       need: 'Planning poker usually means a server in the middle — an account to create, a room to host, one more tool between you and a number.',
       tagline: 'Serverless planning poker — share a link, estimate together, no sign-up.',
       etymology: '(From Latin <em>quorum</em>, ‘of whom’.)',
-      figure: 'A table of face-down cards: everyone plays their estimate at once and nobody sways the others; agreement appears when they turn over.',
+      machineAlt: 'An engraved brass siphon apparatus with a flask of dark liquid, pipes and a hand wheel',
+      figure: 'A balance siphon coffee maker: the water rises, meets the coffee and, when the weight evens out, the flame goes out by itself; nobody has to serve it. That is how Quorum estimates: everyone puts down a number at once and the agreement comes out on its own, with no server in between.',
       thread: {
         problem: 'estimation',
         method: 'a peer-to-peer room',
@@ -460,12 +462,73 @@ export const experiments = {
           'No accounts, no user limits, no data stored on a server. Quorum is open-source and runs entirely in the browser via WebRTC. Your estimation data never leaves your team\'s devices.'],
       ] as [string, string][],
     },
+    'facetmedia': {
+      need: 'An agent can ask for a voice, a model or an image, but it cannot hear, see or measure what came back. The tool has to say whether the result passed.',
+      tagline: 'Creation tools for agents, each in its own pinned environment, with every result verified.',
+      etymology: '(From French <em>facette</em>, the small face of a cut stone, and Latin <em>media</em>.)',
+      machineAlt: 'An engraved gem-cutting machine holding a yellow stone, with an angle gauge and a crank',
+      figure: 'A gem faceting machine: the rough stone goes in and comes out cut face by face, and each face is measured before the next one is polished.',
+      thread: {
+        problem: 'agents that make media blind',
+        method: 'one verifiable --json contract over every tool',
+        artifact: 'assets that carry their own record',
+      },
+      title: 'facetMedia — creation tools for AI agents, every result verified',
+      description: 'Voice, audio, image and CAD tools for AI agents, each in its own pinned environment and run through one --json contract that verifies every asset.',
+      koan: 'A stone is not cut all at once: one face, a measure, then the next.',
+      lede: 'facet installs each creation tool in its own pinned environment, runs it through one <strong>--json</strong> contract and leaves beside every file its <strong>record</strong>: what made it, under which licence and whether it <strong>passed</strong>.',
+      genesis: {
+        kicker: 'Genesis',
+        title: 'A lab that fits in one command.',
+        body: 'facet was born from an 8 GB GPU bought with the naive idea of running language models. It is far too short of memory for that, but it does very well at images, voice, audio and CAD. To choose the tools we ran a qualitative evaluation: we surveyed the free tools available and asked many models which ones caused the least friction. What remained were the tools that deliver decent quality with little friction, and with them a lab of more than 100 GB of models and toolchain. Replicating it on another machine was hard: you had to know which tool did what, and not every day needs all of them. facet packages that selection: each tool installs into its own uv environment, its dependencies contained, and is removed or reinstalled with one command. And so as not to fill an agent\'s context with dozens of skills it does not use every day, the same binary serves each package\'s skill when it is needed, always matched to the installed version. It is media as code: audiovisual creation tools made portable.',
+      },
+      headline: '— Creation tools for agents, each with its result verified',
+      release: 'In development · arrives with 0.1.0b1',
+      capabilities: {
+        columns: ['No.', 'Capability', 'Tool', 'Output', 'What it does', 'Try'] as string[],
+        all: 'All',
+        tabsAria: 'Capabilities by facet',
+        copy: 'Copy command',
+        copied: 'Copied',
+        gpu: 'NVIDIA GPU',
+        vram: 'GB VRAM',
+      },
+      subproject: {
+        kicker: 'Subproject',
+        name: 'facetmedia-registry',
+        body: 'The table above reads this open registry at build time, one row per capability. When the checkout is missing, the page shows this note instead of an empty table.',
+        link: 'https://github.com/UniverLab/facetmedia-registry',
+      },
+      installNote: 'Runs on Linux x86_64 and WSL2 (Windows 10/11).\nNative Windows: install inside WSL2 first (wsl --install); macOS is not supported yet.\nGPU packages need NVIDIA; on WSL2 only the Windows NVIDIA driver is needed.',
+      record: {
+        title: '— Every asset leaves its record',
+        body: 'Beside every file stays a .facet.json with the capability, the package, the models, the parameters, the check and the licences: enough to make it again or to know where it came from.',
+        caption: 'Fig. 1 / the record of the plate on this page',
+      },
+      verbs: {
+        title: '— Six verbs, nothing installed in the agent',
+        items: [['skill', 'learns each tool from its skill, served on demand'], ['list', 'sees the capabilities by facet, with their weight'], ['doctor', 'checks the tool and the machine; every failure brings its fix'], ['run', 'makes from a piece and verifies every asset'], ['preview', 'reads the data of what failed and corrects it without ears or eyes'], ['check', 'judges an asset again against its record']] as [string, string][],
+      },
+      faq: {
+        title: '— Questions',
+        items: [
+          ['What does facet actually do?', 'It installs each creation tool (Whisper, Blender, ComfyUI, FFmpeg, CadQuery…) in its own pinned environment, with no Docker, and gives your agent one command to use them all. Each run produces the files you asked for, with a record of how they were made.'],
+          ['Can I use it yet?', 'It is an internal beta (0.1.0b1) and is not on PyPI yet. Once it ships, you will install it with <code>uv tool install facetmedia</code>. It runs on Linux x86_64 and WSL2 (Windows 10/11): on native Windows install inside WSL2 first (<code>wsl --install</code>); macOS is not supported yet.'],
+          ['What is a facet?', 'A group of tools by what they produce: image, video, audio, voice, text, presentation and CAD. Today there are 7 facets, with 23 packages and 43 capabilities, such as blender.scene or whisper.transcribe.'],
+          ['How does an agent use it?', 'Every command takes <code>--json</code>, always answers in the same envelope and has documented exit codes. <code>facet skill</code> gives the agent the instructions for the package it is about to use, when it needs them, instead of loading everything up front.'],
+          ['How do I know the output is right?', 'Next to every file sits a record (<code>.facet.json</code>) with the parameters, the seed, the exact tool and model versions, and the licences. The run verifies the result (duration, loudness, resolution or transcript, depending on the tool), and <code>facet check</code> re-verifies it whenever you want.'],
+          ['Who decides how it looks or sounds?', 'You or your agent. In Blender you bring your own script, in ComfyUI your own flow and in HyperFrames your own composition. facet takes care of the output, the models and the verification; its defaults are only a starting point.'],
+          ['Do I need a GPU? And who accepts the licences?', 'Only 6 of the 23 packages use a GPU: Blender, both ComfyUI packages, ACE-Step, MOSS and VoiceStudio, tested on an 8 GB card; the rest run on CPU. If a model requires accepting its terms, the run stops and shows the exact command: a person runs <code>facet license accept</code>, never facet on its own.'],
+        ] as [string, string][],
+      },
+    },
     'demostage': {
       need: 'Recording demos by hand is fiddly — typos, uneven pacing, dead air, and a prompt leaking your host.',
       tagline:
         'Demos as Code — capture, record and export reproducible terminal demos.',
       etymology: '(From <em>demo</em> and <em>stage</em>.)',
-      figure: 'A zoetrope for the terminal: every demo is written like a score and plays back the same, frame by frame, like the gallop Muybridge broke apart so it could finally be seen.',
+      machineAlt: 'An engraved bellows camera with a brass lens mount and a red glass eye',
+      figure: 'A bellows camera: what passes in front of the lens is fixed exactly as it was and can be developed the same way as many times as needed. That is how DemoStage records terminal demos: written like a score, they play back the same frame by frame.',
       thread: {
         problem: 'terminal demos',
         method: 'an event score',

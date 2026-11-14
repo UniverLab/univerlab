@@ -50,7 +50,7 @@ const gradColor = (i: number) => {
 <style>
   @font-face {
     font-family: 'DejaVu Sans Mono';
-    src: url('/fonts/DejaVuSansMono.ttf') format('truetype');
+    src: url('/fonts/DejaVuSansMono-banner.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -72,7 +72,7 @@ const gradColor = (i: number) => {
        · `max-width:100%` + `min-width:0` + `overflow:hidden` make it
          structurally incapable of forcing a horizontal scrollbar — the grid
          and flex parents both size to it, never the other way round.
-       · the font-size clamp is tuned so the WIDEST art (demostage, 94 columns,
+       · the font-size clamp is tuned so the WIDEST art (facetmedia, 100 columns,
          0.6023em advance in DejaVu Sans Mono) still fits the narrowest content
          column at 320px, so it shrinks to fit rather than being clipped.
      `text-align:left` is load-bearing too: several hero surfaces centre their
@@ -103,13 +103,13 @@ const gradColor = (i: number) => {
     text-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent);
     scrollbar-width: none;
   }
-  /* Below 40rem the base clamp bottoms out on its 5px floor, which leaves the
-     widest art 60px short of the column on a 375px screen. This range trades
-     the old floor for a slightly larger glyph (5.44px at 375px), which still
-     fits — 94 columns × 5.44px × 0.6023em ≈ 308px inside 343px. Legibility,
-     not overflow: the guards above are what make clipping impossible. */
+  /* Below 40rem the base clamp bottoms out on its 5px floor, which clips the
+     widest art (facetmedia, 100 columns). This range scales the glyph with the
+     viewport instead — 1.35vw is 4.86px at 360px, so 100 columns × 4.86px ×
+     0.6023em ≈ 293px inside a 328px column. Legibility, not overflow: the
+     guards above are what make clipping impossible. */
   @media (max-width: 40rem) {
-    .banner { font-size: clamp(3px, 1.45vw, 6px); }
+    .banner { font-size: clamp(2.5px, 1.35vw, 6px); }
   }
   .banner::-webkit-scrollbar { display: none; }
   .banner code {

@@ -38,8 +38,6 @@ import {
 
 const API = 'https://announcements.univerlab.org';
 const SEAL = '/bench/identidad/sello-lacre.svg';
-/** A letter cut to fit the screen keeps at least this many words. */
-const MIN_WORDS = 14;
 const MARK = '/bench/identidad/logo-grabado.svg';
 const SUN = SUN_SRC;
 const SYNODIC = 29.530588853;
@@ -175,6 +173,7 @@ function startMailbox(): void {
 
   let queue: MailLetter[] = [];
   let past: PastLetter | null = null;
+  let pastRequested = false;
   // Today's opened ids plus every lab letter ever opened here: the lab list
   // outlives the day, so a release letter is delivered once, not daily.
   let opened: string[] = readOpened().concat(readLabSeen());
@@ -200,7 +199,7 @@ function startMailbox(): void {
   /* ── The address side and the letter ─────────────────────────────────── */
   function build(m: MailLetter): HTMLElement {
     const lab = m.kind === 'lab';
-    // A letter from the past reads in italic; lab letters stay upright.
+    // A letter from the past reads in its period hand; lab letters stay upright.
     const letterCls = lab ? 'letter' : 'letter past';
     const now = new Date();
     const w = Math.min(320, innerWidth - 32);
@@ -214,7 +213,7 @@ function startMailbox(): void {
     const sent = Number.isFinite(posted.getTime()) ? posted : now;
     const sentToday = sent.toDateString() === now.toDateString();
     const mark = `${sent.getDate()} ${monthName(sent, lang, 'short').toUpperCase()}`;
-    const todayHref = lang === 'es' ? '/es/today/' : '/today/';
+    const todayHref = lang === 'es' ? '/es/newspaper/' : '/newspaper/';
 
     const el = document.createElement('div');
     el.className = 'mail-pop';
@@ -240,9 +239,10 @@ function startMailbox(): void {
         ? `<h2>${esc(parts.headline)}</h2>`
         : '';
 
+    const labHref = lang === 'es' ? '/es/newspaper/' : '/newspaper/';
     const links = lab
       ? `<a href="${
-          m.exp ? `/status/?topic=${encodeURIComponent(m.exp.id)}` : '/status/'
+          m.exp ? `${labHref}?topic=${encodeURIComponent(m.exp.id)}#lab` : `${labHref}#lab`
         }">${esc(copy.readAnnouncement)}</a>`
       : `<a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${esc(
           parts ? parts.linkLabel : copy.readWikipedia,
@@ -313,6 +313,20 @@ function startMailbox(): void {
   /* ── Opening ─────────────────────────────────────────────────────────── */
   function openLetter(from?: HTMLElement | null): void {
     if (pop) return;
+    // No fetch runs at load: the first open fetches the past letter once and
+    // opens it when it lands.
+    if (!queue.length && !past) {
+      if (!pastRequested) {
+        pastRequested = true;
+        void loadPast().then(() => {
+          if (queue.length || past) openLetter(from);
+          // A failed fetch must not silence the box for the rest of the
+          // session: the next open tries again.
+          else pastRequested = false;
+        });
+      }
+      return;
+    }
     const now = new Date();
     const letter: MailLetter | null = queue.length ? (queue.shift() as MailLetter) : past;
     if (!letter) return;
@@ -326,7 +340,7 @@ function startMailbox(): void {
     const $ = (s: string) => me.querySelector(s) as HTMLElement;
     const stage = $('.stage'), flap = $('.flap'), holder = $('.holder');
     const sheet = $('.letter'), seal = $('.seal'), face = $('.face');
-    const typed = $('.typed'), links = $('.links'), x = $('.close');
+    const typed = $('.typed'), links = $('.links'), x = $('.close'), body = $('.letter p');
     const shadow = $('.shadow'), lshadow = $('.letter-shadow'), hint = $('.hint-step');
     deckle(sheet);
     me.querySelectorAll<HTMLElement>('.grime').forEach((g) =>
@@ -338,38 +352,9 @@ function startMailbox(): void {
     const up = -(letterTop + sheet.offsetHeight * 0.62);
     const front = Math.round(stageH * 0.4) - letterTop;
     const nb = $('.next');
-    const text = fitBody(bodyOf(letter));
-
-    /** The letter laid in front must end above the viewport's bottom edge.
-     *  Its top lands at the stage's 40% line, so the body is measured there
-     *  in full (with the "next" button a waiting queue adds) and, if the
-     *  sheet would spill, cut on a word with an ellipsis — never below
-     *  MIN_WORDS: on a very short screen the fact outranks the margin. */
-    function fitBody(full: string): string {
-      const room = innerHeight - 14 - (stage.getBoundingClientRect().top + stageH * 0.4);
-      nb.hidden = queue.length === 0;
-      nb.textContent = fmt(copy.next, { n: queue.length });
-      const fits = (body: string): boolean => {
-        typed.textContent = body;
-        return sheet.offsetHeight <= room;
-      };
-      let out = full;
-      if (!fits(full)) {
-        const words = full.split(/\s+/);
-        let lo = Math.min(MIN_WORDS, words.length);
-        let hi = words.length - 1;
-        const cut = (n: number) => words.slice(0, n).join(' ').replace(/[\s,;:.\u2014-]+$/, '') + '…';
-        while (lo < hi) {
-          const mid = (lo + hi + 1) >> 1;
-          if (fits(cut(mid))) lo = mid;
-          else hi = mid - 1;
-        }
-        out = cut(lo);
-      }
-      typed.textContent = '';
-      nb.hidden = true;
-      return out;
-    }
+    // The sheet keeps its proportions and the body scrolls inside it, so the
+    // full text is always typed — nothing is cut to fit the screen.
+    const text = bodyOf(letter);
 
     // Remembered per day: a reload does not raise the flag again. The mode
     // is decided with the ids as they were *before* this open marked it.
@@ -542,11 +527,13 @@ function startMailbox(): void {
       if (pop !== me) return;
 
       /* 6. The fact is typed onto the letter, 7 ms a character, 40 after a
-       *    comma or a full stop. */
+       *    comma or a full stop. The body scrolls inside the sheet, so the
+       *    page follows the caret and the line being typed stays in view. */
       x.classList.add('on');
       for (let i = 1; i <= text.length; i++) {
         if (pop !== me) return;
         typed.textContent = text.slice(0, i);
+        body.scrollTop = body.scrollHeight;
         await wait(text[i - 1] === ',' || text[i - 1] === '.' ? 40 : 7);
       }
       me.querySelector('.caret')?.remove();
@@ -693,22 +680,10 @@ function startMailbox(): void {
 
   syncBox();
   void loadLabMail();
-  void loadPast();
   wireEvents();
 }
 
 if (typeof document !== 'undefined') {
-  // Warm today's filtered science pool once, in the background, so the first
-  // letter arrives with no network wait. High timeout keeps it off FCP/LCP.
-  // (This warm-up moved here from the header, which no longer opens letters.)
-  const warmLang: FilterLang = document.documentElement.lang === 'es' ? 'es' : 'en';
-  if (!readOtdCache(warmLang)) {
-    const warm = () => {
-      fetchPool(fetch, warmLang).catch(() => {});
-    };
-    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 5000 });
-    else setTimeout(warm, 4000);
-  }
   if (document.readyState === 'complete') startMailbox();
   else {
     addEventListener('load', () => startMailbox(), { once: true });

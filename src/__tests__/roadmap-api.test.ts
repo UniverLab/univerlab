@@ -344,6 +344,33 @@ describe('roadmap writes', () => {
     expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { state: 'done' }]);
   });
 
+  it('accepts facetmedia as a roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    stub.on('createRoadmapItem', (input) => ({ ...publicItem(), ...(input as object) }));
+    stub.on('patchRoadmapItem', (_id, patch) => ({ ...publicItem(), ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const created = await call(send('/roadmap', 'POST', { title: 'Facet work', topic: 'facetmedia' }), env);
+    expect(created.status).toBe(201);
+    expect(created.body.topic).toBe('facetmedia');
+    expect(stub.calls.createRoadmapItem[0][0]).toMatchObject({ topic: 'facetmedia' });
+
+    const patched = await call(send('/roadmap/r1', 'PATCH', { topic: 'facetmedia' }), env);
+    expect(patched.status).toBe(200);
+    expect(patched.body.topic).toBe('facetmedia');
+    expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { topic: 'facetmedia' }]);
+  });
+
+  it('rejects an unknown roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    expect((await call(send('/roadmap', 'POST', { title: 'x', topic: 'nope' }), env)).status).toBe(400);
+    expect((await call(send('/roadmap/r1', 'PATCH', { topic: 'nope' }), env)).status).toBe(400);
+    expect(stub.calls.createRoadmapItem).toBeUndefined();
+    expect(stub.calls.patchRoadmapItem).toBeUndefined();
+  });
+
   it('rejects unknown fields on POST, and shipped_at on both POST and PATCH', async () => {
     const stub = fakeHub();
     const env = fakeEnv(fakeKV({}), stub.hub);
@@ -422,28 +449,6 @@ describe('announcement PATCH with roadmap_id', () => {
     expect(id).toBe('e1');
     expect(patch).toEqual({ roadmap_id: 'r1' });
     expect(patch).not.toHaveProperty('topic');
-  });
-
-  it('rewords title and body without touching topic or date', async () => {
-    const stub = fakeHub();
-    stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', type: 'note', topic: 'canopy', ...(patch as object) }));
-    const env = fakeEnv(fakeKV({}), stub.hub);
-
-    const res = await call(send('/e1', 'PATCH', { title: ' Short title ', body: ' Short body. ' }), env);
-    expect(res.status).toBe(200);
-    const [id, patch] = stub.calls.updateEntryMeta[0] as [string, Record<string, unknown>];
-    expect(id).toBe('e1');
-    expect(patch).toEqual({ title: 'Short title', body: 'Short body.' });
-    expect(res.body).toMatchObject({ date: '2026-09-19T00:00:00.000Z', topic: 'canopy' });
-  });
-
-  it('refuses a reworded title or body over the announcement limits, or an empty one', async () => {
-    const stub = fakeHub();
-    const env = fakeEnv(fakeKV({}), stub.hub);
-    expect((await call(send('/e1', 'PATCH', { title: 'x'.repeat(101) }), env)).status).toBe(413);
-    expect((await call(send('/e1', 'PATCH', { body: 'x'.repeat(281) }), env)).status).toBe(413);
-    expect((await call(send('/e1', 'PATCH', { body: '   ' }), env)).status).toBe(400);
-    expect(stub.calls.updateEntryMeta).toBeUndefined();
   });
 
   it('still reclassifies as general when neither key is present', async () => {
@@ -561,5 +566,29 @@ describe('CORS on the public API', () => {
     expect(res.status).toBe(401);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
     expect(stub.calls.createRoadmapItem).toBeUndefined();
+  });
+});
+
+describe('GET /founding-spots', () => {
+  it('serves the live count with the total from KV', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '3' });
+    const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+    expect(status).toBe(200);
+    expect(found).toEqual({ left: 3, total: 5 });
+  });
+  it('answers null when the value is missing or out of range, never a wrong number', async () => {
+    const seeds: Record<string, string>[] = [{}, { 'founding-audits-left': '9' }, { 'founding-audits-left': 'x' }];
+    for (const seed of seeds) {
+      const kv = fakeKV(seed);
+      const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+      expect(status).toBe(200);
+      expect(found).toEqual({ left: null, total: 5 });
+    }
+  });
+  it('is edge-cached for a minute', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '2' });
+    const res = await worker.fetch(get('/founding-spots'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
   });
 });

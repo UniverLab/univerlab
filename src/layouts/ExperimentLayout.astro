@@ -3,18 +3,20 @@ import BaseLayout from './BaseLayout.astro';
 import Banner from '../components/Banner.astro';
 import DemoFigure from '../components/DemoFigure.astro';
 import LabPlate from '../components/LabPlate.astro';
-import Machine from '../components/Machine.astro';
-import { machineInk } from '../lib/machines';
+import HeroPlate from '../components/HeroPlate.astro';
+import { machineInk, plateTuning } from '../lib/machines';
 import FieldNotes from '../components/FieldNotes.astro';
-import { byId, liveExperiments, type ExperimentId } from '../lib/experiments';
+import { byId, licenseUrl, liveExperiments, type ExperimentId } from '../lib/experiments';
 import { experimentAppNode } from '../lib/structured-data';
 import { citationTexts } from '../lib/citation';
 import { latestRelease } from '../lib/releases';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { startSolLabel } from '../lib/mission-time';
+import { iconSvg } from '../lib/icon-svg';
+import { copy } from '../lib/icons';
 
-interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; }
-const { id, hideGithub = false, hideDemo = false } = Astro.props;
+interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; hideMachine?: boolean; }
+const { id, hideGithub = false, hideDemo = false, hideMachine = false } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -22,6 +24,8 @@ const hasHeroMark = Astro.slots.has('hero-mark');
 const hasHeroVisual = Astro.slots.has('hero-visual');
 const e = t.experiments[id];
 const surface = exp.surface;
+const heroPlate = exp.status !== 'archived' && !hideMachine;
+const tuning = plateTuning(exp);
 
 // Cyclical prev/next so you can browse experiments without going back home.
 const idx = liveExperiments.findIndex((x) => x.id === id);
@@ -90,8 +94,9 @@ const ogImage = `/og/${id}.png`;
       <span>{exp.number}</span>
     </p>
     {Astro.slots.has('site-nav') && <slot name="site-nav" />}
-    <div class:list={['hero-frame', { 'has-machine': exp.status !== 'archived' }]}>
+    <div class="hero-frame">
     <section class="wrap hero" style={`view-transition-name: exp-${id}; view-transition-class: exp-zoom`}>
+      {heroPlate && <HeroPlate id={id} ink={machineInk(exp)} offset={tuning.offset} alpha={tuning.alpha} />}
       {hasHeroMark && <slot name="hero-mark" />}
       <h1 class="exp-name" translate="no">{exp.name}</h1>
       <p class="koan">{e.koan}{id === 'quorum' && (<>{' · '}<a href="https://quorum.univerlab.org" target="_blank" rel="noopener noreferrer">{t.experiments.quorum.bench}</a></>)}</p>
@@ -106,6 +111,11 @@ const ogImage = `/og/${id}.png`;
           )}
           <slot name="cta" />
       </div>
+      <p class="seal" translate="no">
+        {exp.citation && (<a class="seal-part" href={`https://doi.org/${exp.citation.doi}`} target="_blank" rel="noopener noreferrer"><span class="seal-key">DOI</span><span class="seal-val">{exp.citation.doi}</span></a>)}
+        {release && (<a class="seal-part" href={release.url} target="_blank" rel="noopener noreferrer"><span class="seal-key">{t.plate.release}</span><span class="seal-val">{release.version}</span></a>)}
+        <a class="seal-part" href={licenseUrl(exp)} target="_blank" rel="noopener noreferrer"><span class="seal-key">{t.common.license}</span><span class="seal-val">{exp.license}</span></a>
+      </p>
       {exp.install && (
         <div class="install" id="install" data-install>
           {exp.install && (
@@ -125,18 +135,18 @@ const ogImage = `/og/${id}.png`;
                   <code class="cmd-line" data-os="windows" hidden>{exp.install.windows}</code>
                 )}
                 <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-                  <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+                  <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
                 </button>
               </div>
             </>
+          )}
+          {'installNote' in e && e.installNote && (
+            <p class="install-note">{e.installNote}</p>
           )}
           <Banner id={id} color={exp.essenceHex} />
         </div>
       )}
     </section>
-    {exp.status !== 'archived' && (
-      <Machine id={id} ink={machineInk(exp)} height="240px" class="hero-machine" />
-    )}
     </div>
 
     <LabPlate id={id} />
@@ -174,7 +184,7 @@ const ogImage = `/og/${id}.png`;
         <div class="cmd cite-cmd" data-cite translate="no">
           <pre class="cite-bib"><code>{cite.bibtex}</code></pre>
           <button class="copy" type="button" title={t.common.copy} aria-label={t.common.copy}>
-            <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+            <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
           </button>
         </div>
       </section>
@@ -196,16 +206,16 @@ const ogImage = `/og/${id}.png`;
     )}
 
     <nav class="wrap exp-nav" aria-label="Experiments">
-      <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={prevExp.name}>
+      <a class="exp-nav-link prev" href={localizePath(`/${prevExp.id}`, lang)} style={`--essence: ${prevExp.essenceHex}`} aria-label={`${prevExp.number} ${prevExp.name}`}>
         <span class="arrow" aria-hidden="true">←</span>
         <span class="meta">
-          <span class="label n">{prevExp.number}</span>
+          <span class="label n">{prevExp.number}</span>{' '}
           <span class="nm">{prevExp.name}</span>
         </span>
       </a>
-      <a class="exp-nav-link next" href={localizePath(`/${nextExp.id}`, lang)} style={`--essence: ${nextExp.essenceHex}`} aria-label={nextExp.name}>
+      <a class="exp-nav-link next" href={localizePath(`/${nextExp.id}`, lang)} style={`--essence: ${nextExp.essenceHex}`} aria-label={`${nextExp.number} ${nextExp.name}`}>
         <span class="meta">
-          <span class="label n">{nextExp.number}</span>
+          <span class="label n">{nextExp.number}</span>{' '}
           <span class="nm">{nextExp.name}</span>
         </span>
         <span class="arrow" aria-hidden="true">→</span>
@@ -248,10 +258,13 @@ const ogImage = `/og/${id}.png`;
   .lab-strip a:hover { color: var(--essence); }
 
   /* Hero */
-  /* The machine is a sibling of the hero, not a child: the hero's view
-     transition name makes it an isolated group, and a blend inside it has no
-     page behind it to mix with. The frame is the machine's containing block. */
+  /* The machine is the hero's first child at z-index -1: a negative-z child
+     paints over the hero ground but under the hero content, so the plate
+     shows through even where the hero background is opaque. The hero keeps
+     its stacking context (position + z-index 1) so the plate never slips
+     behind the page itself. */
   .hero-frame { position: relative; }
+  .hero-frame > .hero { position: relative; z-index: 1; }
   .hero { padding-block: 2.5rem 1.5rem; position: relative; }
   .hero { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
   .hero-visual { width: 100%; }
@@ -340,42 +353,16 @@ const ogImage = `/og/${id}.png`;
   .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
   .btn.ghost:hover { border-color: var(--essence); color: var(--essence); background: transparent; }
 
-  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; background: #16130f; color: #ecebe4; border-radius: 4px; font-family: var(--font-mono); padding: 0.9rem 1rem; }
+  .install { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 42rem; width: 100%; min-width: 0; background: #16130f; color: #ecebe4; border-radius: 4px; font-family: var(--font-mono); padding: 0.9rem 1rem; }
   .install .cmd { background: #0e0c09; border-color: #3a352d; }
   .install .copy { border-left-color: #3a352d; }
   .install .cmd-line { color: #ecebe4; }
-  /* The machine is an engraved plate with a transparent ground, already
-     inked for its surface: no recolouring, it shows as engraved. */
-  @media (min-width: 40rem) {
-    :global(.hero-machine) {
-      position: absolute;
-      right: var(--page-gutter);
-      bottom: 1.5rem;
-    }
-    /* The machine floats in the hero's lower right, under the install bench,
-       not over it: the hero keeps the room the machine needs at its foot. */
-    .hero-frame.has-machine { padding-bottom: calc(240px + 2.5rem); }
-  }
-  /* The observatory's hero is a left-aligned column with no install bench:
-     the telescope stands in the empty sky to its right, not in a band of its
-     own under the hero. */
-  @media (min-width: 64rem) {
-    :global(html[data-surface='observatory']) .hero-frame.has-machine { padding-bottom: 0; }
-    :global(html[data-surface='observatory'] .hero-machine) {
-      top: 50%;
-      bottom: auto;
-      right: max(var(--page-gutter), calc((100% - 72rem) / 2 + 6rem));
-      transform: translateY(-50%);
-    }
-  }
-  /* On phones the plate is static under the hero; Machine.astro centres it
-     (display: block, width: fit-content, margin-inline: auto). */
-  @media (max-width: 39.999rem) {
-    :global(.hero-machine) {
-      position: static;
-      margin-bottom: 1.5rem;
-    }
-  }
+  .install-note { margin: 0; font-size: 0.78rem; color: #a8a294; white-space: pre-line; line-height: 1.45; }
+  .seal { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; }
+  .seal-part { display: inline-flex; border: 1px solid color-mix(in srgb, var(--essence) 55%, transparent); color: var(--ink); text-decoration: none; }
+  .seal-part:hover { border-color: var(--essence); }
+  .seal-key { padding: 0.2rem 0.45rem; background: color-mix(in srgb, var(--essence) 18%, transparent); text-transform: uppercase; }
+  .seal-val { padding: 0.2rem 0.5rem; }
   .install-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .os-tabs { display: inline-flex; gap: 0.9rem; }
   .os-tab {
@@ -403,9 +390,11 @@ const ogImage = `/og/${id}.png`;
     font-family: var(--font-mono); transition: color 0.15s ease;
   }
   .copy:hover { color: var(--essence); }
-  .copy .copy-done { display: none; color: var(--essence); }
-  .copy.done .copy-idle { display: none; }
-  .copy.done .copy-done { display: inline; }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout;
+     the check takes the essence colour through the slot's data-icon. */
+  .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .copy-icon > svg, .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .copy-icon[data-icon='check'] { color: var(--essence); }
 
   :global(.exp .genesis .prose strong) { color: var(--ink); font-weight: 500; }
   :global(.exp .genesis .prose code) { color: var(--essence); font-size: 0.9em; }
@@ -495,7 +484,7 @@ const ogImage = `/og/${id}.png`;
   :global(html[data-surface='paper'] .os-tab) { color: var(--ink-faint); }
   :global(html[data-surface='paper'] .os-tab[aria-selected='true']) { color: var(--ink); }
   :global(html[data-surface='paper'] .copy:hover),
-  :global(html[data-surface='paper'] .exp .copy.done .copy-done) { color: var(--ink); }
+  :global(html[data-surface='paper'] .exp .copy-icon[data-icon='check']) { color: var(--ink); }
 
   /* Lede & genesis emphasis and inline code: bistre, no display weight jump
      (400 only) — the essence accent is not this surface's voice. */
@@ -537,6 +526,7 @@ const ogImage = `/og/${id}.png`;
 <script>
   // Install block: pick the platform tab (defaulting to the detected OS) and
   // copy whichever command is currently shown.
+  import { COPY_DONE_MS, setCopyState } from '../lib/copy-morph';
   document.querySelectorAll<HTMLElement>('[data-install]').forEach((box) => {
     const lines = Array.from(box.querySelectorAll<HTMLElement>('.cmd-line'));
     const tabs = Array.from(box.querySelectorAll<HTMLButtonElement>('.os-tab'));
@@ -559,7 +549,11 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(active.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied (e.g. non-secure context) — leave the button untouched.
       }
@@ -575,7 +569,11 @@ const ogImage = `/og/${id}.png`;
       try {
         await navigator.clipboard.writeText(pre.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied — leave the button untouched.
       }

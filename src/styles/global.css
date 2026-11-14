@@ -22,12 +22,15 @@
   --ink-faint: #7f7c76;
   --line: #23252c;
 
-  /* UniverLab accent — the lab's own colour (yellow), reserved for the main site */
-  --accent: #e6c84a;
+  /* Lab colour: garnet by day, gold by night (see the night override below) */
+  --accent: #87222c;
+  /* Garnet lifted for the always-black footer; pure garnet is 2.3:1 on #000 */
+  --accent-lift: #e0a2a6;
 
   /* Experiment essences */
   --canopy: #00a9a0;
   --astro-denoise: #a78bfa;
+  --facetmedia: #e8c547;
 
   --font-mono: 'Sometype Mono', ui-monospace, Menlo, monospace;
   --font-body: 'EB Garamond', Garamond, Georgia, serif;
@@ -36,6 +39,19 @@
   --measure: 64ch;
   --space: clamp(1rem, 2.5vw, 1.75rem);
   --page-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+/* Lab colour by night: the gold the site has always worn, on dark grounds. */
+html[data-bench-theme='night'] {
+  --accent: #e6c84a;
+  --accent-lift: #e6c84a;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-bench-theme='day']) {
+    --accent: #e6c84a;
+    --accent-lift: #e6c84a;
+  }
 }
 
 /* Fixed per-experiment surfaces. Each palette lives in ONE token group, keyed by the
@@ -145,6 +161,16 @@
   --surface-ink-dim: #b8a583;
   --surface-ink-faint: #948365;
   --surface-line: #40331f;
+}
+
+/* facetmedia — a terminal in a gallery at night: static ground, bone ink, yellow only for what is verified. */
+[data-surface='facet'] {
+  --surface-bg: #161616;
+  --surface-bg-raise: #1e1d1b;
+  --surface-ink: #e7ded1;
+  --surface-ink-dim: #9a938a;
+  --surface-ink-faint: #6f6a63;
+  --surface-line: #3a3733;
 }
 
 /* demostage — Altius thermal command room (docs/landing-poc/styles/altius.md).
@@ -571,7 +597,7 @@ body > header { view-transition-name: site-header; }
 }
 .slip::before { left: 14px; transform: rotate(-7deg); }
 .slip::after { right: 14px; transform: rotate(6deg); }
-.slip kbd { font: inherit; border-bottom: 1.5px solid #87222c; }
+.slip kbd { font: inherit; border-bottom: 1.5px solid var(--bench-c-garnet); }
 .slip.tip {
   right: max(20px, env(safe-area-inset-right, 0px));
   bottom: calc(58px + 12px);
@@ -667,8 +693,8 @@ body > header { view-transition-name: site-header; }
 .find-prev:hover, .find-next:hover { color: #e0e0e0; background: rgba(255,255,255,0.08); }
 .find-close { font-size: 1rem; }
 .find-close:hover { color: #e0e0e0; }
-.find-hl { background: rgba(230, 200, 74, 0.3); border-radius: 2px; }
-.find-hl.find-active { background: rgba(230, 200, 74, 0.6); }
+.find-hl { background: color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 2px; }
+.find-hl.find-active { background: color-mix(in srgb, var(--accent) 60%, transparent); }
 /* Demo dialog — full-screen overlay for expanded demo view. */
 #demo-dialog {
   position: fixed;
@@ -779,8 +805,15 @@ body > header { view-transition-name: site-header; }
   font-family: var(--font-mono);
   font-size: 0.68rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 .date-t-copy:hover { color: var(--accent); border-color: var(--accent); }
+/* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+.date-t-copy .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+.date-t-copy .copy-icon > svg, .date-t-copy .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+.date-t-copy .copy-icon[data-icon='check'] { color: var(--accent); }
 .date-t-error { color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.78rem; }
 
 /* Mission-date tooltip: one shared element, positioned above the date. */
