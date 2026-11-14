@@ -243,12 +243,11 @@ describe('workbench', () => {
     expect(es.workbench.policy.items[8]).toContain('salvo que el servicio ya haya empezado a pedido tuyo');
   });
 
-  it('the phone thumbnail is a wrapper, so Machine cannot outrank its hiding', () => {
-    expect(VIEW).toContain('<div class="wb-thumb"><Machine');
-    expect(VIEW).not.toMatch(/<Machine[^>]*class="wb-thumb"/);
-    expect(VIEW).toContain('.wb-thumb { display: none; }');
-    // The hero thumbnail is above the fold: its live phase loads eager.
-    expect(VIEW).toContain('<Machine id="workbench" ink="theme" height="112px" eager />');
+  it('below 48rem the poster comes first, centred, at the collaborators weight', () => {
+    expect(VIEW).not.toContain('wb-thumb');
+    expect(VIEW.match(/<Machine id="workbench"/g)).toHaveLength(1);
+    const phone = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(phone).toContain('.wb-figure { display: block; order: -1; --machine-h-phone: 260px; }');
   });
 
   it('three tags go three across on wide screens, one column below, never four plus none', () => {

@@ -300,4 +300,11 @@ describe('workbench-audits', () => {
     expect(VIEW.indexOf('<style is:inline')).toBeGreaterThan(-1);
     expect(VIEW.indexOf('<style is:inline')).toBeLessThan(VIEW.indexOf('</BaseLayout>'));
   });
+
+  it('below 48rem the poster comes first, centred, at the collaborators weight', () => {
+    expect(VIEW).not.toContain('wba-thumb');
+    expect(VIEW.match(/<Machine id="workbench"/g)).toHaveLength(1);
+    const phone = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(phone).toContain('.wba-figure { display: block; order: -1; --machine-h-phone: 260px; }');
+  });
 });

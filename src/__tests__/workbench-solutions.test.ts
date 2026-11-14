@@ -144,6 +144,13 @@ describe('workbench-solutions', () => {
     expect(VIEW.indexOf('<style is:inline')).toBeLessThan(VIEW.indexOf('</BaseLayout>'));
   });
 
+  it('below 48rem the poster comes first, centred, at the collaborators weight', () => {
+    expect(VIEW).not.toContain('wbs-thumb');
+    expect(VIEW.match(/<Machine id="workbench"/g)).toHaveLength(1);
+    const phone = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(phone).toContain('.wbs-figure { display: block; order: -1; --machine-h-phone: 260px; }');
+  });
+
   it('the page is linked from the card, kept in the sitemap and listed in llms.txt', () => {
     expect(CARD).toContain("localizePath('/workbench/solutions', lang)");
     expect(LLMS).toContain('(https://univerlab.org/workbench/solutions/)');

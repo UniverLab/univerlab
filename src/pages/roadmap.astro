@@ -113,6 +113,9 @@ const boardLanes = (['now', 'next', 'later', 'done'] as const).map((id) => ({
       #roadmap-lanes.rm-board[data-active-lane="later"] .rm-seg:not([data-lane="later"]) { display: none; }
       #roadmap-lanes.rm-board[data-active-lane="done"] .rm-seg:not([data-lane="done"]) { display: none; }
     }
+    @media (max-width: 47.99rem) {
+      .board-figure { order: -1; justify-self: center; width: min(22rem, 100%); }
+    }
   </style>
 
   <script>

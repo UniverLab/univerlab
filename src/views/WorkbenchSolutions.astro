@@ -28,7 +28,6 @@ const bookHref = bookTarget(lang);
          transition: background 0.15s ease, color 0.15s ease; }
   .wbs-btn:hover { background: var(--accent); color: var(--bg); }
   .wbs-ctas .wbs-short { display: none; }
-  .wbs-thumb { display: none; }
   .wbs-figure { margin: 0; }
   .wbs-machine { justify-self: center; width: min(22rem, 100%); }
   .wbs-block { margin-top: 3rem; }
@@ -55,9 +54,7 @@ const bookHref = bookTarget(lang);
   .wbs-sticky { display: none; }
   @media (max-width: 47.99rem) {
     .wbs-hero { grid-template-columns: minmax(0, 1fr); }
-    .wbs-figure { display: none; }
-    .wbs-thumb { display: block; float: right; --machine-h-phone: 112px; margin: -0.4rem -0.25rem 0.25rem 0.65rem; }
-    .wbs-lede { clear: both; }
+    .wbs-figure { display: block; order: -1; --machine-h-phone: 260px; }
     .wbs-hero h1 { font-size: 1.95rem; }
     .wbs-ctas .wbs-btn { width: 100%; display: flex; justify-content: center; }
     .wbs-ctas .wbs-long { display: none; }
@@ -73,7 +70,6 @@ const bookHref = bookTarget(lang);
     <header class="wbs-hero">
       <div class="wbs-hero-text">
         <span class="label">{w.label}</span>
-        <div class="wbs-thumb"><Machine id="workbench" ink="theme" height="112px" /></div>
         <h1>{s.head}</h1>
         <p class="wbs-lede">{s.lede}</p>
         <p class="wbs-ctas">

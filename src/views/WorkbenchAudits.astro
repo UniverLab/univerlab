@@ -28,7 +28,6 @@ const bookHref = bookTarget(lang);
          transition: background 0.15s ease, color 0.15s ease; }
   .wba-btn:hover { background: var(--accent); color: var(--bg); }
   .wba-ctas .wba-short { display: none; }
-  .wba-thumb { display: none; }
   .wba-figure { margin: 0; }
   .wba-machine { justify-self: center; width: min(22rem, 100%); }
   .wba-block { margin-top: 3rem; }
@@ -61,9 +60,7 @@ const bookHref = bookTarget(lang);
   .wba-sticky { display: none; }
   @media (max-width: 47.99rem) {
     .wba-hero { grid-template-columns: minmax(0, 1fr); }
-    .wba-figure { display: none; }
-    .wba-thumb { display: block; float: right; --machine-h-phone: 112px; margin: -0.4rem -0.25rem 0.25rem 0.65rem; }
-    .wba-lede { clear: both; }
+    .wba-figure { display: block; order: -1; --machine-h-phone: 260px; }
     .wba-hero h1 { font-size: 1.95rem; }
     .wba-ctas .wba-btn { width: 100%; display: flex; justify-content: center; }
     .wba-ctas .wba-long { display: none; }
@@ -79,7 +76,6 @@ const bookHref = bookTarget(lang);
     <header class="wba-hero">
       <div class="wba-hero-text">
         <span class="label">{w.label}</span>
-        <div class="wba-thumb"><Machine id="workbench" ink="theme" height="112px" /></div>
         <h1>{a.head}</h1>
         <p class="wba-lede">{a.lede}</p>
         <p class="wba-ctas">

@@ -163,6 +163,16 @@ describe('roadmap board + newspaper logbook guards', () => {
   it('the board head links the Logbook page', () => {
     expect(pageSrc).toContain('href="/logbook/"');
   });
+
+  it('below 48rem the poster comes first, centred, after the tablet rules', () => {
+    const tablet = pageSrc.indexOf('@media (max-width: 59.99rem)');
+    const phone = pageSrc.indexOf('@media (max-width: 47.99rem)');
+    expect(tablet).toBeGreaterThan(-1);
+    expect(phone).toBeGreaterThan(tablet);
+    expect(pageSrc.slice(phone)).toContain('order: -1');
+    expect(pageSrc.slice(phone)).toContain('justify-self: center');
+    expect(pageSrc.slice(phone)).toContain('.board-figure { order: -1; justify-self: center; width: min(22rem, 100%); }');
+  });
 });
 
 describe('roadmap i18n parity', () => {

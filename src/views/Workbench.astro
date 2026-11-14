@@ -52,7 +52,6 @@ const proof = w.proof.items.map((id) => ({
          transition: background 0.15s ease, color 0.15s ease; }
   .wb-btn:hover { background: var(--accent); color: var(--bg); }
   .wb-ctas .wb-short { display: none; }
-  .wb-thumb { display: none; }
   .wb-figure { margin: 0; }
   .wb-machine { justify-self: center; width: min(22rem, 100%); }
   .wb-tags { display: grid; grid-template-columns: 1fr; gap: 1.2rem; padding-block: 2rem; border-block: 1px solid var(--line); margin-top: 3rem; }
@@ -97,9 +96,7 @@ const proof = w.proof.items.map((id) => ({
   @media (max-width: 47.99rem) {
     .workbench { padding-block: 1.5rem 7rem; }
     .wb-hero { grid-template-columns: minmax(0, 1fr); }
-    .wb-figure { display: none; }
-    .wb-thumb { display: block; float: right; --machine-h-phone: 112px; margin: -0.4rem -0.25rem 0.25rem 0.65rem; }
-    .wb-intro { clear: both; }
+    .wb-figure { display: block; order: -1; --machine-h-phone: 260px; }
     .wb-hero h1 { font-size: 1.95rem; }
     .wb-ctas .wb-btn { width: 100%; display: flex; justify-content: center; }
     .wb-ctas .wb-long { display: none; }
@@ -158,7 +155,6 @@ const proof = w.proof.items.map((id) => ({
     <header class="wb-hero">
       <div class="wb-hero-text">
         <span class="label">{w.label}</span>
-        <div class="wb-thumb"><Machine id="workbench" ink="theme" height="112px" eager /></div>
         <h1>{headPre}<em>{w.headEm}</em>{headPost}</h1>
         <p class="wb-intro">{w.intro}</p>
         <p class="wb-ctas">
