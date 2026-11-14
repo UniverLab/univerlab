@@ -158,15 +158,25 @@ function adCut(e: Entry, page: number, used: Set<string>): string {
 }
 
 /** The big figure of a figure-set ad (type-v5): a version number from the
- *  entry's own words, else the experiment's number, else the year. */
+ *  entry's own words, else a count from its headline or first sentence;
+ *  empty when the entry has neither, and the ad then takes another voice. */
 function figureFor(e: Entry): string {
   const m = /v?\d+\.\d+(?:\.\d+)?/.exec(`${e.title || ''} ${e.body || ''}`);
   if (m) return m[0];
+  // A count from the headline or its first sentence (55 specs, 21 entries)
+  // reads as a period price figure; a year never does.
+  const n = /\b(?!(?:19|20)\d\d\b)\d{2,4}\b/.exec(`${e.title || ''} ${firstParagraph(e.body || '')}`);
+  if (n) return n[0];
+  return '';
+}
+
+/** The word a repeated-word ad (type-v7) stacks in falling sizes, as the
+ *  period soap ads repeated their brand: the experiment's name, else the
+ *  lab's. The title follows it in full. */
+function repWordFor(e: Entry): string {
   const id = typeof e.topic === 'string' ? e.topic.trim().toLowerCase() : '';
   const exp = liveExperiments.find((x) => x.id === id);
-  if (exp && exp.number) return exp.number;
-  const y = new Date(e.date || '').getFullYear();
-  return Number.isFinite(y) ? String(y) : '';
+  return exp ? exp.name : 'UniverLab';
 }
 
 /** A spare frame accent for a few ads: a light single or double rule, as
@@ -185,10 +195,11 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
   const figure = variant === 5 ? `<span class="ad-figure">${esc(figureFor(e))}</span>` : '';
   // The two extra voices: a small run-in notice with a bold lead word and
   // no h3, and the title repeated in three stacked sizes over the body.
+  const word = esc(repWordFor(e));
   const repWords =
-    `<span class="rep-word rep-0">${title}</span>` +
-    `<span class="rep-word rep-1">${title}</span>` +
-    `<span class="rep-word rep-2">${title}</span>`;
+    `<span class="rep-word rep-0" aria-hidden="true">${word}</span>` +
+    `<span class="rep-word rep-1" aria-hidden="true">${word}</span>` +
+    `<span class="rep-word rep-2" aria-hidden="true">${word}</span>`;
   if (slot.size === 'display') {
     const cls = lead ? 'log-entry ad-display ad-lead' : 'log-entry ad-display';
     const kicker = lead ? `<p class="lead-kicker">${esc(t.labPage.leadKicker)}</p>` : '';
@@ -209,7 +220,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
       variant === 6
         ? `<p class="run-in"><b>${title}.</b> ${linkify(e.body || '')}</p>`
         : variant === 7
-          ? `${repWords}<p>${linkify(e.body || '')}</p>`
+          ? `${repWords}<h3 class="sz-md">${title}</h3><p>${linkify(e.body || '')}</p>`
           : `${figure}<h3 class="sz-md">${title}</h3><p>${linkify(e.body || '')}</p>`;
     return (
       `<article class="log-entry ad-boxed${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
@@ -227,7 +238,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
       variant === 6
         ? `<p class="run-in"><b>${title}.</b> ${cut}${link}</p>`
         : variant === 7
-          ? `${repWords}<p>${cut}${link}</p>`
+          ? `${repWords}<h3 class="sz-sm">${title}</h3><p>${cut}${link}</p>`
           : `${figure}<h3 class="sz-sm">${title}</h3><p>${cut}${link}</p>`;
     return (
       `<article class="log-entry ad-small${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
@@ -294,7 +305,7 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     const voices = s.size === 'display' ? 6 : 8;
     let tv = (hashSeed(s.entry.id || '') + n) % voices;
     n += 1;
-    while (tv === prevTv) tv = (tv + 1) % voices;
+    while (tv === prevTv || (tv === 5 && !figureFor(s.entry))) tv = (tv + 1) % voices;
     let span = spanFor(s.entry, s.size, si);
     si += 1;
     if (span === prevSpan) span = span === 1 ? 2 : span === 2 ? (s.size === 'small' ? 1 : 3) : 2;

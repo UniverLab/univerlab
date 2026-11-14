@@ -31,20 +31,20 @@ const mixed: Entry[] = [
 
 describe('the packed classifieds page', () => {
   it('packs five narrow columns with mixed spans under a central lead', () => {
-    // Five columns at every width, including the zoomed phone sheet: no
-    // four-column fallback may remain.
-    expect(css).toContain('repeat(5, minmax(0, 1fr))');
-    expect(css).toContain('calc(100% / 5)');
-    expect(css).not.toContain('repeat(4');
-    // The lead sits central and largest; the small type runs tight.
-    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column: 2 \/ span 3/);
-    expect(css).toContain('clamp(32px, 4.6vw, 54px)');
+    // Five narrow columns filled top to bottom, like the 1886 ad pages: the
+    // column flow leaves no half-empty column, and the phone sheet scales
+    // the same composition.
+    expect(css).toMatch(/\.paper \.classifieds \{[^}]*column-count: 5/);
+    expect(css).toContain('column-rule: 1px solid var(--p-rule)');
+    expect(css).not.toMatch(/\.paper \.classifieds \{[^}]*display: grid/);
+    // The lead spans the page above the columns, largest of all.
+    expect(css).toMatch(/\.paper \.classifieds > \.ad-lead, \.paper \.classifieds > \.classifieds-rule \{ column-span: all; \}/);
     expect(css).toContain('.paper .ad-cut.cut-lg img { width: 100%; }');
-    expect(css).toContain('.paper .classifieds .log-entry p { font-size: 13.5px; line-height: 1.45; }');
+    // The small type runs tight and justified, with no prose measure.
+    expect(css).toContain('.paper .classifieds .log-entry p { font-size: 12.5px; line-height: 1.38; max-width: none;');
     const html = labPageHtml(mixed, 'en') + labPageHtml2(mixed, 'en');
     // The latest launch leads central; one-, two- and three-column ads mix.
     expect(html).toContain('<article class="log-entry ad-display ad-lead type-v');
-    expect(html).toContain('span3');
     expect(html).toContain('ad-boxed');
     expect(html).toContain('class="coupon"');
     // No ad is an empty frame: every entry card shows its title as a

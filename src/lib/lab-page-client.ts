@@ -168,6 +168,7 @@ function tabShow(paper: HTMLElement, id: PageId): void {
     leaf.classList.remove('turn-leave-next', 'turn-return-prev');
     under.classList.remove('turn-under');
     prevEl.hidden = true;
+    fitPaper(scope);
   }, 620);
   // The newly shown page was hidden (nothing measured there): fit it now that
   // it reads. Already-fitted pages measure clean and stay untouched.
@@ -251,7 +252,10 @@ function paintLab(root: ParentNode): void {
     if (lab2 && lab2Body) {
       lab2Body.innerHTML = page2;
       const hasPage = page2.trim().length > 0;
-      lab2.hidden = !hasPage;
+      // Page 3 shows only when it is the page being read: an inactive page
+      // stays hidden, or it would stack under the active one.
+      const active = paper.querySelector?.('.paper-tab.is-active')?.getAttribute('data-page');
+      lab2.hidden = !hasPage || (active != null && active !== 'lab2');
       const scope: ParentNode = paper.ownerDocument ?? paper;
       for (const tab3 of Array.from(
         scope.querySelectorAll?.('.paper-tab[data-page="lab2"]') ?? [],

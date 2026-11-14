@@ -413,6 +413,23 @@ export interface ClassifiedsFit {
   pointers: number;
 }
 
+const TURN_CLASSES = ['turn-leave-next', 'turn-return-prev', 'turn-under'];
+
+/** True when another paper page of the same sheet is shown and stacked
+ *  after this one. A page mid-turn overlaps the sheet instead of stacking,
+ *  so it never counts. */
+function siblingPageShown(page: Element): boolean {
+  const parent = page.parentElement;
+  if (!parent) return false;
+  return Array.from(parent.children).some(
+    (k) =>
+      k !== page &&
+      k.classList.contains('paper-page') &&
+      !(k as HTMLElement).hidden &&
+      !TURN_CLASSES.some((c) => k.classList.contains(c)),
+  );
+}
+
 /** Fit pages two and three to the sheet: each classifieds grid keeps only
  *  the ads that fit whole, and a grid that lost ads points at the Logbook —
  *  reusing the page's own pointer line, added only when trimming happened. */
@@ -424,6 +441,10 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
   for (const grid of grids) {
     const page = (grid as Element).closest?.('.paper-page');
     if (page && (page as HTMLElement).hidden) continue;
+    // Before the tabs hide the other pages they all stack in one sheet and a
+    // later page sits below the sheet's foot: measuring then would trim it
+    // bare. The page turn fits it again once it is the only page shown.
+    if (page && siblingPageShown(page)) continue;
     const paper = (grid as Element).closest?.('.paper') || grid;
     const limit = rectBottom(paper as Element);
     if (limit <= 0) continue;

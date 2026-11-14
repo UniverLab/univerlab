@@ -95,16 +95,14 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('sets pages 2 and 3 as one packed grid of five columns: lead centered, mixed spans, ruled', () => {
-    expect(css).toMatch(/\.paper \.classifieds \{[^}]*display:\s*grid/);
-    expect(css).toMatch(/\.paper \.classifieds \{[^}]*repeat\(5, minmax\(0, 1fr\)\)/);
-    expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-column:\s*1 \/ -1/);
-    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column:\s*2 \/ span 3/);
-    expect(css).toMatch(/\.paper \.ad-boxed \{[^}]*grid-column:\s*span 2/);
-    expect(css).toMatch(/\.paper \.ad-small[^{]*\{[^}]*grid-column:\s*span 1/);
-    expect(css).toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border-top:\s*1px solid/);
-    expect(css).not.toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border:\s*3px double/);
+  it('sets pages 2 and 3 as five ruled columns that fill top to bottom, the lead across them', () => {
+    expect(css).toMatch(/\.paper \.classifieds \{[^}]*display: block;[^}]*column-count: 5/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
+    expect(css).toMatch(/\.paper \.classifieds > \* \{[^}]*break-inside: avoid/);
+    expect(css).toMatch(/\.paper \.classifieds > \.ad-lead \{[^}]*grid-template-columns: minmax\(0, 2fr\) minmax\(0, 3fr\)/);
+    // Each ad ends on a rule; the framed treatments carry their own frames.
+    expect(css).toMatch(/\.paper \.classifieds > \.log-entry:not\(\.ad-lead\) \{[^}]*border-bottom: 1px solid var\(--p-ink\)/);
+    expect(css).toMatch(/\.paper \.classifieds > \.log-entry\.type-v3 \{[^}]*border: 4px double/);
     expect(css).toMatch(/\.paper \.notice-run \.notice \{[^}]*break-inside:\s*avoid/);
   });
 
@@ -120,7 +118,7 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad-cut\.cut-sm img[^}]*width:\s*1\.8rem/);
     expect(css).toMatch(/\.paper \.ad-cut\.cut-md img[^}]*width:\s*2\.6rem/);
     expect(css).toMatch(/\.paper \.ad-cut\.cut-lg img[^}]*width:\s*100%/);
-    expect(css).toMatch(/\.paper \.notice-fleuron[^}]*grid-column:\s*1 \/ -1/);
+    expect(css).toMatch(/\.paper \.classifieds \.notice-fleuron \{/);
     expect(css).toMatch(/\.paper \.manicule \{[^}]*width:\s*1\.7rem/);
     expect(css).toContain('grayscale(1) sepia(.22) contrast(1.12)');
     expect(css).toContain('mix-blend-mode: multiply');

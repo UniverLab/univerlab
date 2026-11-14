@@ -884,6 +884,9 @@ describe('bindLabPage', () => {
     // Page 2 reads (hidden pages measure nothing and are fitted on turn).
     scaffold('en', entries);
     window.location.hash = '#lab';
+    // The tabs show one page at a time; stacked pages are never measured.
+    (document.getElementById('page-1') as HTMLElement).hidden = true;
+    (document.getElementById('lab2') as HTMLElement).hidden = true;
     bindLabPage(document);
     const before = document.querySelector('#lab-log')?.children.length ?? 0;
     expect(before).toBeGreaterThan(4);

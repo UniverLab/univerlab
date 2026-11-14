@@ -239,24 +239,7 @@ const t = useTranslations(lang);
   .paper .lab-filter { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 1px 5px; cursor: pointer; }
   .paper .lab-filter.is-active { color: var(--p-ink); border-color: var(--p-ink); }
   .paper .lab-filter-count { opacity: 0.7; margin-left: 3px; font-size: 9.5px; }
-  /* The classifieds: a packed period page. Narrow columns divided by thin
-     vertical rules; ads stacked flush, each as tall as its content, divided
-     by thin horizontal rules — no boxes, no fixed heights and no blank
-     inside an ad. Page 1 sets the lead story across the middle half with
-     columns on both sides and below it; page 2 flows the same grid. Dense
-     flow packs the small ads instead of leaving blank paper under short
-     ones. Spanning ads mask the column rules they cross with the paper's
-     own ground; single-column ads leave them standing in the gutters. */
-  .paper .classifieds { display: grid; gap: 0 26px; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-flow: dense; flex: 1 1 auto; min-height: 0; background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 5) 100%; }
   .paper .classifieds > * { min-width: 0; }
-  .paper .ad-display { grid-column: 1 / -1; }
-  .paper .ad-lead { grid-column: 2 / span 3; grid-row: span 2; }
-  .paper .ad-boxed { grid-column: span 2; }
-  .paper .classifieds > .span2 { grid-column: span 2; }
-  .paper .classifieds > .span3 { grid-column: span 3; }
-  .paper .ad-small, .paper .classifieds > .coupon { grid-column: span 1; }
-  .paper .notice-run, .paper .notice-fleuron, .paper .classifieds-rule, .paper .classifieds-ribbon { grid-column: 1 / -1; }
-  .paper .classifieds > .ad-lead, .paper .classifieds > .ad-boxed, .paper .classifieds > .span2, .paper .classifieds > .span3, .paper .classifieds > .coupon, .paper .classifieds > .notice-run, .paper .classifieds > .notice-fleuron, .paper .classifieds > .classifieds-rule, .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
   @media (min-width: 48rem) {
     .paper .notice-run { column-count: 3; }
   }
@@ -326,6 +309,79 @@ const t = useTranslations(lang);
   .paper .log-entry p a, .paper .log-entry .log-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper.js .log-entry.is-hidden { display: none; }
   .paper.js .notice-run[hidden] { display: none; }
+  /* The classifieds, set like a Victorian advertising page (The Graphic,
+     1886): five narrow columns filled top to bottom and ruled between, every
+     ad as tall as its words, so no column is ever left half empty. The lead
+     and the closing rule span the page. Each ad wears one of eight period
+     treatments, and neighbours never share one: condensed capitals, a ruled
+     box, a reversed block, a double frame, thick-thin rules with small caps,
+     a big figure, a run-in notice and a repeated word in falling sizes. */
+  .paper .classifieds { display: block; column-count: 5; column-gap: 18px; column-rule: 1px solid var(--p-rule); flex: 0 0 auto; }
+  .paper .classifieds > * { break-inside: avoid; margin: 0 0 12px; }
+  .paper .classifieds > .ad-lead, .paper .classifieds > .classifieds-rule { column-span: all; }
+  .paper .classifieds > .ad-lead { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 22px; align-items: center; border-block: 3px double var(--p-ink); padding: 12px 0; margin-bottom: 4px; }
+  .paper .classifieds > .ad-lead .ad-art { max-height: 17rem; }
+  .paper .classifieds > .ad-lead .ad-art img { object-fit: contain; }
+  .paper .classifieds > .ad-lead h3.sz-lg { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 46px; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
+  .paper .classifieds > .ad-lead p { font-size: 15px; line-height: 1.5; }
+  .paper .classifieds > .log-entry:not(.ad-lead) { border: 0; padding: 0 0 10px; border-bottom: 1px solid var(--p-ink); }
+  .paper .classifieds .entry-body { gap: 5px; }
+  .paper .classifieds .log-entry p { font-size: 12.5px; line-height: 1.38; max-width: none; text-align: justify; hyphens: auto; }
+  .paper .classifieds .entry-meta { gap: 3px 6px; padding-top: 4px; }
+  .paper .classifieds .entry-meta time { font-size: 9.5px; letter-spacing: 0.02em; }
+  .paper .classifieds .type-badge { font-size: 9px; padding: 1px 4px; }
+  .paper .classifieds .log-link { font-size: 10.5px; }
+  .paper .classifieds .ad-cut { text-align: center; }
+  .paper .classifieds .ad-cut.cut-md img { width: 3.6rem; }
+  .paper .classifieds .ad-cut.cut-sm img { width: 2.2rem; }
+  .paper .classifieds .frame-accent { outline: 0; }
+  .paper .classifieds .log-entry h3 { line-height: 1.05; text-wrap: balance; }
+  /* v0 — condensed capitals, centred and big. */
+  .paper .classifieds .type-v0 { text-align: center; }
+  .paper .classifieds .type-v0 h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 25px; text-transform: uppercase; letter-spacing: 0.01em; font-style: normal; }
+  /* v1 — a ruled box with a fat-face line. */
+  .paper .classifieds > .log-entry.type-v1 { border: 1px solid var(--p-ink); padding: 8px 9px; }
+  .paper .classifieds .type-v1 h3 { font-family: 'Alfa Slab One', 'Rockwell', serif; font-weight: 400; font-size: 20px; text-align: center; font-style: normal; text-transform: none; }
+  /* v2 — reversed: light letters on an ink block. */
+  .paper .classifieds > .log-entry.type-v2 { padding: 9px 10px; border-bottom: 0; }
+  .paper .classifieds .type-v2 h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 22px; text-transform: uppercase; text-align: center; letter-spacing: 0.04em; padding: 0; font-style: normal; }
+  .paper .classifieds .type-v2 .entry-meta { border-top-color: var(--p-ground); }
+  .paper .classifieds .type-v2 .ad-cut img { filter: invert(1) grayscale(1); mix-blend-mode: screen; }
+  /* v3 — a double frame round a blackletter line. */
+  .paper .classifieds > .log-entry.type-v3 { border: 4px double var(--p-ink); padding: 9px 10px; }
+  .paper .classifieds .type-v3 h3 { font-family: 'Pirata One', 'Old Standard TT', serif; font-weight: 400; font-size: 27px; text-align: center; font-style: normal; text-transform: none; }
+  /* v4 — thick-thin rules above and below, small capitals. */
+  .paper .classifieds > .log-entry.type-v4 { border-top: 4px solid var(--p-ink); border-bottom: 1px solid var(--p-ink); box-shadow: inset 0 1px 0 var(--p-ground), inset 0 2px 0 var(--p-ink); padding-top: 8px; }
+  .paper .classifieds .type-v4 h3 { font-family: var(--font-serif); font-weight: 700; font-size: 17px; font-variant: small-caps; letter-spacing: 0.08em; text-align: center; text-transform: none; font-style: normal; }
+  /* v5 — a big figure over a quiet italic line. */
+  .paper .classifieds .type-v5 { text-align: center; }
+  .paper .classifieds .type-v5 .ad-figure { font-size: 50px; line-height: 0.95; margin: 0; }
+  .paper .classifieds .type-v5 h3 { font-family: var(--font-serif); font-weight: 400; font-style: italic; font-size: 17px; text-transform: none; }
+  /* v6 — a run-in notice: the bold lead word opens the paragraph. */
+  .paper .classifieds .type-v6 .run-in { font-size: 12.5px; }
+  .paper .classifieds .type-v6 .run-in b { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; text-transform: uppercase; font-size: 14px; letter-spacing: 0.02em; }
+  /* v7 — one word repeated in falling sizes, as the soap ads did. */
+  .paper .classifieds .type-v7 { text-align: center; }
+  .paper .classifieds .type-v7 .rep-word { display: block; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; text-transform: uppercase; line-height: 1; margin: 0; color: var(--p-ink); }
+  .paper .classifieds .type-v7 .rep-word.rep-0 { font-size: 36px; letter-spacing: 0.01em; }
+  .paper .classifieds .type-v7 .rep-word.rep-1 { font-size: 24px; letter-spacing: 0.08em; }
+  .paper .classifieds .type-v7 .rep-word.rep-2 { font-size: 15px; letter-spacing: 0.3em; }
+  .paper .classifieds .type-v7 h3 { font-family: var(--font-serif); font-weight: 400; font-style: italic; font-size: 15px; text-transform: none; }
+  /* Notices and coupons in the column flow. */
+  .paper .classifieds .notice-run { column-count: 1; border-block: 1px solid var(--p-ink); padding-block: 4px; }
+  .paper .classifieds .notice-line { white-space: normal; font-size: 10.5px; line-height: 1.35; padding-block: 3px; border-bottom: 1px dotted var(--p-rule); }
+  .paper .classifieds .notice-fleuron { padding: 2px 0 0; margin-bottom: 4px; }
+  .paper .classifieds .coupon { padding: 8px 9px; }
+  .paper .classifieds .coupon-figure { font-size: 40px; text-align: center; }
+  .paper .classifieds .coupon-cond { font-size: 12.5px; line-height: 1.38; text-align: justify; hyphens: auto; }
+  .paper .classifieds .coupon-art { text-align: center; }
+  .paper .classifieds .coupon-note { column-span: all; }
+  .paper .lab-more { width: 100%; }
+  /* The section cartouche: the page's words centred inside the engraving. */
+  .paper .lab-head .head-cartouche { display: grid; justify-items: center; align-items: center; width: 100%; max-width: 100%; }
+  .paper .lab-head .head-cartouche > img, .paper .lab-head .head-cartouche > .lab-heading { grid-area: 1 / 1; }
+  .paper .lab-head .head-cartouche > .lab-heading { position: static; place-self: center; max-width: 62%; font-size: 30px; line-height: 1.05; }
+  .paper .lab-head .head-cartouche > .lab-heading--cont { font-size: 22px; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
   .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
@@ -550,18 +606,11 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .masthead-name { grid-column: 2; grid-row: 1; font-size: 86px; }
   .paper-viewport.sheet .paper .masthead .ear--right { grid-column: 3; grid-row: 1; }
   .paper-viewport.sheet .paper .masthead .motto { font-size: 19px; }
-  .paper-viewport.sheet .paper .classifieds { grid-template-columns: repeat(5, minmax(0, 1fr)); background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 5) 100%; }
   .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-  .paper-viewport.sheet .paper .ad-lead { grid-column: 2 / span 3; grid-row: span 2; }
-  .paper-viewport.sheet .paper .ad-boxed { grid-column: span 2; }
-  .paper-viewport.sheet .paper .classifieds > .span2 { grid-column: span 2; }
-  .paper-viewport.sheet .paper .classifieds > .span3 { grid-column: span 3; }
-  .paper-viewport.sheet .paper .ad-small, .paper-viewport.sheet .paper .classifieds > .coupon { grid-column: span 1; }
-  .paper-viewport.sheet .paper .notice-run, .paper-viewport.sheet .paper .notice-fleuron, .paper-viewport.sheet .paper .classifieds-rule, .paper-viewport.sheet .paper .classifieds-ribbon { grid-column: 1 / -1; }
-  .paper-viewport.sheet .paper .classifieds > .ad-lead, .paper-viewport.sheet .paper .classifieds > .ad-boxed, .paper-viewport.sheet .paper .classifieds > .span2, .paper-viewport.sheet .paper .classifieds > .span3, .paper-viewport.sheet .paper .classifieds > .coupon, .paper-viewport.sheet .paper .classifieds > .notice-run, .paper-viewport.sheet .paper .classifieds > .notice-fleuron, .paper-viewport.sheet .paper .classifieds > .classifieds-rule, .paper-viewport.sheet .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
-  .paper-viewport.sheet .paper .notice-run { column-count: 3; }
   .paper-viewport.sheet .paper .lab-heading--cont { font-size: 30px; }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }
+  .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading { font-size: 30px; }
+  .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading--cont { font-size: 22px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
   .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }
