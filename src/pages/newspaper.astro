@@ -27,6 +27,7 @@ import TodaysPaper from '../components/TodaysPaper.astro';
     import { labPageHtml, labPageHtml2 } from '../lib/lab-page';
     import { bindLabPage, setLabEntries } from '../lib/lab-page-client';
     import { initPaperSheet } from '../lib/paper-sheet';
+    import { fitPaper } from '../lib/paper-fit';
 
     (function () {
       bindLabPage(document);
@@ -40,7 +41,11 @@ import TodaysPaper from '../components/TodaysPaper.astro';
       var needEdition = ed && !(ed.textContent || '').replace(/\s/g, '');
       var needLab = labBody && !(labBody.textContent || '').replace(/\s/g, '');
       var needLab2 = lab2Body && !(lab2Body.textContent || '').replace(/\s/g, '');
-      if (!needEdition && !needLab && !needLab2) return;
+      // The sheet's fixed height reserves every page's space, so fitting
+      // never shifts layout; fit again once images land, which moves feet.
+      var refit = function () { fitPaper(document); };
+      window.addEventListener('load', refit);
+      if (!needEdition && !needLab && !needLab2) { refit(); return; }
 
       var loading = document.getElementById('today-loading');
       var failed = function () {
@@ -84,6 +89,9 @@ import TodaysPaper from '../components/TodaysPaper.astro';
             if (!parts[0] || !parts[0].length) { failed(); return; }
             ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] || [] }, lang, day);
           }
+          // Fit before the sheet is shown: the fill above ran in the same
+          // task, so nothing paints half-fitted.
+          refit();
         },
         function () { failed(); },
       );

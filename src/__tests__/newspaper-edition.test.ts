@@ -219,7 +219,7 @@ describe('todayEditionHtml (en)', () => {
     expect(one).not.toContain('<div class="cols">');
   });
 
-  it('a column folds after six letters', () => {
+  it('a column prints its head whole and leaves out the rest: the sheet fits, the twin keeps all', () => {
     const births: Fact[] = Array.from({ length: 9 }, (_, i) => ({
       year: String(1800 + i),
       text: `notable person ${i} was born`,
@@ -228,13 +228,18 @@ describe('todayEditionHtml (en)', () => {
       page: `Person ${i}`,
     }));
     const html = todayEditionHtml({ facts: births, lab: [] }, 'en', DATE);
-    const at = html.indexOf('<details class="more">');
-    expect(at).toBeGreaterThan(-1);
-    expect(html.slice(0, at).match(/class="item/g)).toHaveLength(6);
-    expect(html.slice(at).match(/class="item/g)).toHaveLength(3);
-    expect(html).toContain('Show 3 more');
-    const es = todayEditionHtml({ facts: births, lab: [] }, 'es', DATE);
-    expect(es).toContain('Ver 3 más');
+    // No fold: the column prints its head and stops, like the client fit
+    // trims whole letters to the laid-out sheet.
+    expect(html).not.toContain('<details');
+    expect(html).not.toContain('class="more"');
+    expect(html).not.toContain('Show 3 more');
+    const cols = [...html.matchAll(/<section class="col">([\s\S]*?)<\/section>/g)];
+    expect(cols).toHaveLength(1);
+    expect((cols[0][1].match(/class="item/g) ?? [])).toHaveLength(6);
+    // The letters left out of the page are all still in the twin.
+    const md = todayEditionMarkdown({ facts: births, lab: [] }, 'en', DATE);
+    expect(md.match(/^- \*\*/gm)).toHaveLength(9);
+    for (const b of births) expect(md).toContain(`- **${b.year}**`);
   });
 
   it('the markdown twin lists every letter', () => {
@@ -401,7 +406,7 @@ describe('the sundial engraving sits inside the grid', () => {
     expect(esFig).toContain('El teletipo, el grabado del periódico');
   });
 
-  it('is appended in the shortest column, ties to the first', () => {
+  it('waits in a template and never inside a column: the client foots only measured free space', () => {
     const mk = (kind: Fact['kind'], year: string): Fact => ({
       year,
       text: `${kind} letter of ${year}`,
@@ -415,17 +420,21 @@ describe('the sundial engraving sits inside the grid', () => {
       'en',
       DATE,
     );
+    // One plate figure in the page, carried by its template — and no column
+    // carries a plate or a house notice: fillers land only in measured
+    // free feet, never by estimate.
     expect(html.match(/paper-plate/g)).toHaveLength(1);
-    expect(html.indexOf('paper-plate')).toBeGreaterThan(html.indexOf('<h3>Deaths</h3>'));
-    // Equal columns: the first one takes the plate.
-    const tied = todayEditionHtml(
-      { facts: [mk('born', '1800'), mk('born', '1801'), mk('died', '1900'), mk('died', '1901')], lab: [] },
-      'en',
-      DATE,
-    );
-    const at = tied.indexOf('paper-plate');
-    expect(at).toBeGreaterThan(tied.indexOf('<h3>Births</h3>'));
-    expect(at).toBeLessThan(tied.indexOf('<h3>Deaths</h3>'));
+    expect(html).toContain('<template data-filler="plate">');
+    const colsHtml = [...html.matchAll(/<section class="col">([\s\S]*?)<\/section>/g)];
+    expect(colsHtml.length).toBeGreaterThan(0);
+    for (const [, body] of colsHtml) {
+      expect(body).not.toContain('paper-plate');
+      expect(body).not.toContain('class="ad ad--small"');
+    }
+    // The house notices wait beside it: split apart and merged.
+    expect(html).toContain('<template data-filler="install">');
+    expect(html).toContain('<template data-filler="collab">');
+    expect(html).toContain('<template data-filler="house-duo">');
   });
 });
 

@@ -245,6 +245,12 @@ export interface ClassifiedsOpts {
   foundingLeft?: number | null;
 }
 
+/** The Logbook pointer line: the overflow's way on. The client materializes
+ *  it from the template when its own measure-trim drops ads the server kept. */
+function logbookPointerHtml(t: Dict, lang: LabPageLang): string {
+  return `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
+}
+
 /** A classifieds section head: the engraved head ornament with the words
  *  set in type beside it, never inside the image. `cont` marks the page-3
  *  continuation head. */
@@ -272,15 +278,17 @@ export function classifiedsHtml(
   const rest = ads.slice(half);
   const page1 =
     `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang)}` +
-    `${pages[1] ? '' : gridHtml([], rest, 8, t, lang)}${couponNoteHtml(lang)}</div>`;
+    `${pages[1] ? '' : gridHtml([], rest, 8, t, lang)}${couponNoteHtml(lang)}` +
+    `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template></div>`;
   let page2 = '';
   if (pages[1]) {
     page2 =
       headHtml(t, true) +
-      `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang)}</div>`;
+      `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang)}</div>` +
+      `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>`;
   }
   if (truncated) {
-    page2 += `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
+    page2 += logbookPointerHtml(t, lang);
   }
   return { page1, page2, truncated };
 }

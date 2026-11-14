@@ -646,6 +646,44 @@ describe('bindLabPage', () => {
     expect(canopy.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('trims the recomposed grids to the sheet once entries arrive', () => {
+    // Recomposed grids are full grids again: the paint after the entries
+    // land must fit them, not wait for a tab switch. The sheet ends at
+    // 300px and every grid card costs one 50px row, so the foot falls off.
+    // Page 2 reads (hidden pages measure nothing and are fitted on turn).
+    scaffold('en', entries);
+    window.location.hash = '#lab';
+    bindLabPage(document);
+    const before = document.querySelector('#lab-log')?.children.length ?? 0;
+    expect(before).toBeGreaterThan(4);
+    const real = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this.classList?.contains('classifieds')) {
+        return {
+          x: 0, y: 0, width: 100, height: 0, top: 100, left: 0,
+          bottom: 100 + this.children.length * 50, right: 100, toJSON: () => ({}),
+        } as DOMRect;
+      }
+      if (this.classList?.contains('paper')) {
+        return {
+          x: 0, y: 0, width: 100, height: 0, top: 0, left: 0,
+          bottom: 300, right: 100, toJSON: () => ({}),
+        } as DOMRect;
+      }
+      return real.call(this);
+    };
+    try {
+      setLabEntries(document, { entries, lang: 'en' });
+      const grid = document.querySelector('#lab-log') as HTMLElement;
+      expect(grid.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
+      expect(grid.children.length).toBeLessThan(before);
+      // The trimmed grid points at the Logbook, exactly once.
+      expect(document.querySelectorAll('#lab-body .lab-more')).toHaveLength(1);
+    } finally {
+      Element.prototype.getBoundingClientRect = real;
+    }
+  });
+
   it('honours ?roadmap= and ?topic= on page 2', () => {
     scaffold('en', entries);
     history.replaceState({}, '', '/newspaper/?roadmap=r1');

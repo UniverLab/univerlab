@@ -113,20 +113,31 @@ describe('a long edition balances its columns', () => {
     expect(html.slice(railStart, railEnd)).not.toContain('class="ad');
   });
 
-  it('foots the short columns with the house ads and leaves no ad-pair', () => {
+  it('keeps the columns free of footers: the plate and the notices wait in templates', () => {
     expect(html).not.toContain('ad-pair');
     const colsHtml = html.slice(html.indexOf('<div class="cols">'));
-    const colBodies = [...colsHtml.matchAll(/<section class="col">(.*?)<\/section>/gs)].map(
+    const colBodies = [...colsHtml.matchAll(/<section class="col">([\s\S]*?)<\/section>/gs)].map(
       (m) => m[1],
     );
     expect(colBodies.length).toBeGreaterThan(0);
-    const houseInCols =
-      colBodies.reduce((n, b) => n + (b.match(/<aside class="ad ad--small"/g) ?? []).length, 0);
-    const houseEverywhere = (html.match(/<aside class="ad ad--small"/g) ?? []).length;
-    // One merged dual-offer notice or the two notices apart — and every
-    // house notice sits inside a column foot, none below the columns.
-    expect([1, 2]).toContain(houseEverywhere);
-    expect(houseInCols).toBe(houseEverywhere);
+    // No estimate footing: no column carries the plate or a house notice.
+    // The client foots only measured free space, one filler per foot.
+    for (const body of colBodies) {
+      expect(body).not.toContain('paper-plate');
+      expect(body).not.toContain('<aside class="ad ad--small"');
+    }
+    // The fillers wait in templates: the plate, the two notices apart and
+    // the merged duo — the page keeps the single Workbench duo plus at most
+    // these two house notices.
+    for (const kind of ['plate', 'install', 'collab', 'house-duo']) {
+      expect(html).toContain(`<template data-filler="${kind}">`);
+    }
+    // Each waiting notice is complete: a display line, copy and a boxed
+    // call to action — the client appends it whole or not at all.
+    for (const m of html.matchAll(/<template data-filler="(install|collab|house-duo)">([\s\S]*?)<\/template>/g)) {
+      expect(m[2]).toContain('class="ad-display"');
+      expect(m[2]).toContain('class="ad-cta"');
+    }
   });
 
   it('prints the same composition in Spanish, twin included', () => {
@@ -150,11 +161,13 @@ describe('a long edition balances its columns', () => {
   });
 
   it('prints every ad as a display ad sized to its content', () => {
-    const ads = [...html.matchAll(/<aside class="ad ad--\w+"[^>]*>(.*?)<\/aside>/gs)];
-    // The single Workbench duo plus the house footing: one merged notice
-    // or the two notices apart.
-    expect(ads.length).toBeGreaterThanOrEqual(2);
-    expect(ads.length).toBeLessThanOrEqual(3);
+    // Rendered asides only — the templates below are inert until the client
+    // foots measured free space. The single Workbench duo prints; the plate
+    // and the house notices wait their turn.
+    const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
+    const ads = [...rendered.matchAll(/<aside class="ad ad--\w+"[^>]*>(.*?)<\/aside>/gs)];
+    expect(ads).toHaveLength(1);
+    expect(ads[0][0]).toContain('ad--feature');
     for (const [, body] of ads) {
       expect(body).toContain('class="ad-display"');
       expect(body).toContain('class="ad-copy"');
@@ -225,16 +238,17 @@ describe('a short edition keeps one column per kind', () => {
     expect(html).not.toContain('Then she taught for decades.');
   });
 
-  it('merges the house ads into one when a single column leaves one foot', () => {
-    // One foot of space: a single merged notice carrying both offers, and
-    // it stands inside the columns — never in a row below them.
-    const asides = [...html.matchAll(/<aside class="ad[^>]*>(.*?)<\/aside>/gs)].map((m) => m[1]);
-    const merged = asides.filter((b) => b.includes('/canopy/') && b.includes('/contributors/'));
-    expect(merged).toHaveLength(1);
+  it('stages the house ads in templates when a single column prints', () => {
+    // One column: the notices wait in templates instead of a row below the
+    // columns — the client foots the single foot with the duo or one notice.
+    const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
+    expect(rendered).not.toContain('class="ad ad--small"');
     expect(html).not.toContain('ad-pair');
     const colsStart = html.indexOf('<div class="cols">');
     expect(colsStart).toBeGreaterThan(-1);
-    expect(html.indexOf('/contributors/', colsStart)).toBeGreaterThan(colsStart);
+    const duo = html.match(/<template data-filler="house-duo">([\s\S]*?)<\/template>/);
+    expect(duo?.[1]).toContain('/canopy/');
+    expect(duo?.[1]).toContain('/contributors/');
   });
 });
 

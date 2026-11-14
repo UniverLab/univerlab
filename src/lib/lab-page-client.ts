@@ -8,6 +8,7 @@ import {
   type Entry,
   type LabPageLang,
 } from './lab-page';
+import { fitClassifieds, fitPaper } from './paper-fit';
 import { normalizeTopic } from './field-notes';
 
 export interface LabSource {
@@ -75,6 +76,9 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   window.setTimeout(() => {
     section.classList.remove('turn-next', 'turn-prev');
   }, 320);
+  // The newly shown page was hidden (nothing measured there): fit it now that
+  // it reads. Already-fitted pages measure clean and stay untouched.
+  fitPaper(scope);
 }
 
 function matchState(el: HTMLElement, topic: string, type: string, roadmap: string | null): boolean {
@@ -164,12 +168,18 @@ function paintLab(root: ParentNode): void {
       if (!hasPage && !lab.hidden) tabShow(paper, 'lab');
     }
     pressFresh(root, '#lab', st);
+    // Recomposed grids are full grids again: trim them to the sheet, as
+    // after every fill. Hidden pages and zero measurements are safe no-ops.
+    fitClassifieds(root);
     return;
   }
   // No entries yet (the edge filled the pages): never hide in place —
   // filtering always recomposes the pages from the matching entries, so
   // wait for the one fetched read (see ensureEntries) to repaint.
   pressFresh(root, '#lab', st);
+  // Recomposed grids are full grids again: trim them to the sheet, as after
+  // every fill. Hidden pages and zero measurements are safe no-ops.
+  fitClassifieds(root);
 }
 
 /** One read of the announcements for a root that the edge filled: the

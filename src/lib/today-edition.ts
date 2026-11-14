@@ -8,6 +8,7 @@ import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
+import { balanceHeads } from './paper-fit';
 import { paperAdHtml, paperAdsMarkdown, paperHouseDuoHtml, paperWorkbenchDuoHtml } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
@@ -282,12 +283,13 @@ function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): str
   // The body's own paragraph: the first sentence only, so a long summary
   // never leaves one column longer than the rest. Skipped when empty or when
   // it would repeat the line above (a person with no summary, whose line is
-  // already the body). The lead keeps its whole paragraph.
+  // already the body). The lead keeps its whole paragraph. The kind rides as
+  // data so the client fit can re-issue headings after moving whole letters.
   const raw = itemBody(fact);
   const body = raw === fact.text ? '' : firstSentence(raw);
   const bodyHtml = body ? `<p class="body">${esc(body)}</p>` : '';
   return (
-    `<article class="${cls}">${img}` +
+    `<article class="${cls}" data-kind="${fact.kind}">${img}` +
     `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
     `<p>${esc(text)}</p>${bodyHtml}${link}</article>`
   );
@@ -378,45 +380,33 @@ export function chooseHouseSlots(weights: number[]): 'split' | 'merged' {
 }
 
 /** One balanced column: a heading per kind change, marked as a continuation
- *  when the kind runs on from the previous column. */
+ *  when the kind runs on from the previous column. The column renders its
+ *  head whole — no fold: letters beyond the head are left out of the page
+ *  (the markdown twin still lists every letter) and the client fit trims
+ *  further to the laid-out sheet. Fillers never render here; the client
+ *  appends them from the page's templates into measured free space. */
 function balancedColumnHtml(
   col: ColEntry[],
   openKind: Fact['kind'] | null,
   t: Dict,
   date: Date,
   lang: TodayLang,
-  plate: boolean,
-  footHtml = '',
 ): { html: string; endKind: Fact['kind'] | null } {
-  const head = col.slice(0, COLUMN_FOLD);
-  const extra = col.slice(COLUMN_FOLD);
   let cur: Fact['kind'] | null = null;
   let first = true;
-  const render = (items: ColEntry[]): string => {
-    let html = '';
-    for (const e of items) {
-      if (e.kind !== cur) {
-        const continuing = first && cur === null && openKind === e.kind;
-        html +=
-          `<h3>${esc(kindTitle(e.kind, t))}` +
-          (continuing ? ` <span class="cont">${esc(t.continued)}</span>` : '') +
-          `</h3>`;
-        cur = e.kind;
-      }
-      first = false;
-      html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp');
+  let html = `<section class="col">`;
+  for (const e of col) {
+    if (e.kind !== cur) {
+      const continuing = first && cur === null && openKind === e.kind;
+      html +=
+        `<h3>${esc(kindTitle(e.kind, t))}` +
+        (continuing ? ` <span class="cont">${esc(t.continued)}</span>` : '') +
+        `</h3>`;
+      cur = e.kind;
     }
-    return html;
-  };
-  let html = `<section class="col">` + render(head);
-  if (extra.length) {
-    html +=
-      `<details class="more"><summary>${esc(fmt(t.more, { n: extra.length }))}</summary>` +
-      render(extra) +
-      `</details>`;
+    first = false;
+    html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp');
   }
-  if (plate) html += paperPlateHtml(lang);
-  if (footHtml) html += footHtml;
   return { html: html + `</section>`, endKind: cur };
 }
 
@@ -510,31 +500,30 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   );
   const cols = splitColumns(entries);
   if (cols.length) {
-    // The engraving absorbs the slack the day's content leaves: it is
-    // appended in the lightest column (ties to the first), and the house
-    // notices foot the columns that end short of the page's foot — split
-    // across two short columns, or merged into one in the lightest column.
-    const weights = cols.map((col) => col.reduce((n, e) => n + estimate(e.fact), 0));
-    const slot = chooseHouseSlots(weights);
-    const byWeight = weights
-      .map((w, i) => i)
-      .sort((a, b) => weights[a] - weights[b]);
-    const plateAt = byWeight[0];
-    const feet: string[] = cols.map(() => '');
-    if (slot === 'split') {
-      feet[byWeight[0]] = paperAdHtml(lang, 'install');
-      feet[byWeight[1]] = paperAdHtml(lang, 'collab');
-    } else {
-      feet[byWeight[0]] = paperHouseDuoHtml(lang);
-    }
+    // Each column prints its head whole; letters beyond the head are left
+    // out of the page (the twin below still lists every letter) and the
+    // client fit trims further to the laid-out sheet. The heads are
+    // rebalanced by whole letters until they end within one estimate line.
+    const heads = cols.map((col) => col.slice(0, COLUMN_FOLD));
+    const weights = heads.map((head) => head.map((e) => estimate(e.fact)));
+    balanceHeads(heads, weights);
     let openKind: Fact['kind'] | null = null;
     out += `<div class="cols">`;
-    cols.forEach((col, i) => {
-      const rendered = balancedColumnHtml(col, openKind, t, date, lang, i === plateAt, feet[i]);
+    heads.forEach((col) => {
+      const rendered = balancedColumnHtml(col, openKind, t, date, lang);
       out += rendered.html;
       openKind = rendered.endKind;
     });
     out += `</div>`;
+    // The fillers wait in templates: the client appends the plate or a house
+    // notice into a column's measured free foot only when it fits whole —
+    // never both in one column. Page one keeps the single Workbench duo
+    // above plus at most these two house notices.
+    out +=
+      `<template data-filler="plate">${paperPlateHtml(lang)}</template>` +
+      `<template data-filler="install">${paperAdHtml(lang, 'install')}</template>` +
+      `<template data-filler="collab">${paperAdHtml(lang, 'collab')}</template>` +
+      `<template data-filler="house-duo">${paperHouseDuoHtml(lang)}</template>`;
   } else {
     // No columns: no foot to fill, so the merged house notice closes the
     // front on its own and both offers stay on the page.

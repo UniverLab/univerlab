@@ -81,12 +81,20 @@ describe('the sheet keeps the desktop composition', () => {
     expect(css).toMatch(/\.paper-viewport \.paper-sheet \{[^}]*width:\s*var\(--paper-sheet-w\)[^}]*max-width:\s*100%/);
   });
 
-  it('gives every page the same fixed sheet: one min-height, flex-filled pages', () => {
+  it('gives every page the same fixed sheet: one exact height, flex-filled pages', () => {
     // The .paper-sheet div carries both vars; every .paper-page flex-fills
     // the sheet, so switching tabs never changes the sheet's size.
     expect(paper).toContain('--paper-sheet-h:${SHEET_HEIGHT_REM}rem');
-    expect(SHEET_HEIGHT_REM).toBe(224);
-    expect(css).toContain('min-height: var(--paper-sheet-h)');
+    // A real broadsheet proportion: the height runs 1.4–1.5x the width.
+    expect(SHEET_HEIGHT_REM).toBe(99);
+    const ratio = SHEET_HEIGHT_REM / SHEET_WIDTH_REM;
+    expect(ratio).toBeGreaterThanOrEqual(1.4);
+    expect(ratio).toBeLessThanOrEqual(1.5);
+    // The height is exact, not a minimum: no page grows past the sheet or
+    // falls short of it, on any edition date and at any viewport width.
+    expect(css).toMatch(/\.paper \{[^}]*height:\s*var\(--paper-sheet-h\)/);
+    expect(css).not.toContain('min-height: var(--paper-sheet-h)');
+    expect(css).toMatch(/\.paper \{[^}]*overflow:\s*hidden/);
     expect(css).toMatch(/\.paper \.paper-page \{[^}]*display:\s*flex/);
     expect(css).toMatch(/\.paper \.paper-page \{[^}]*flex:\s*1 1 auto/);
   });

@@ -60,10 +60,12 @@ describe("today's paper styles stay on the paper", () => {
 
   it('fills the lead and the rail instead of leaving blank paper', () => {
     // The story is a full-height flex column and the lead engraving grows
-    // into the slack; the rail matches the lead's height the same way.
+    // into the slack; the rail matches the lead's height the same way. The
+    // pictures scale down to make room — never cropped out of the sheet.
     expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*100%/);
     expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
-    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*object-fit:\s*cover/);
+    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*object-fit:\s*contain/);
+    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*max-height:\s*100%/);
     expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
     expect(css).toContain('.paper .photo--medium');
   });
