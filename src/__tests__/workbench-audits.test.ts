@@ -124,8 +124,8 @@ describe('workbench-audits', () => {
   });
 
   it('no statute, video or cost analysis is named on the audits page or the audit card', () => {
-    const cardEs = JSON.stringify(es.workbench.tags.items[3]);
-    const cardEn = JSON.stringify(en.workbench.tags.items[3]);
+    const cardEs = JSON.stringify(es.workbench.tags.items[2]);
+    const cardEn = JSON.stringify(en.workbench.tags.items[2]);
     for (const json of [JSON.stringify(es.workbench.audits), JSON.stringify(en.workbench.audits), cardEs, cardEn]) {
       expect(json).not.toMatch(/Ley 1581|Ley 1480/);
       expect(json).not.toMatch(/1[0-9]{3} de 20\d\d/);
@@ -201,26 +201,26 @@ describe('workbench-audits', () => {
 
   it('the audit card sits last with its price and names the independent review with evidence', () => {
     for (const dict of [en.workbench.tags, es.workbench.tags]) {
-      expect(dict.items).toHaveLength(4);
+      expect(dict.items).toHaveLength(3);
     }
-    expect(es.workbench.tags.items[2][1]).toBe('Desde USD 150');
-    expect(en.workbench.tags.items[2][1]).toBe('From USD 150');
-    expect(es.workbench.tags.items[3][1]).toBe('Desde USD 400');
-    expect(en.workbench.tags.items[3][1]).toBe('From USD 400');
-    expect(es.workbench.tags.items[3][3]).not.toMatch(/diseñamos e instalamos/);
-    expect(en.workbench.tags.items[3][3]).not.toMatch(/design and install/);
-    expect(es.workbench.tags.items[3][1]).not.toMatch(/150/);
-    expect(en.workbench.tags.items[2][1]).not.toMatch(/400/);
-    expect(es.workbench.tags.items[3][3]).toMatch(/revisión independiente/);
-    expect(en.workbench.tags.items[3][3]).toMatch(/independent review/);
-    expect(es.workbench.tags.items[3][3]).toMatch(/evidencia reproducible/);
-    expect(en.workbench.tags.items[3][3]).toMatch(/reproducible evidence/);
-    expect(es.workbench.tags.items[3][3]).toMatch(/página dedicada/);
-    expect(en.workbench.tags.items[3][3]).toMatch(/dedicated page/);
-    expect(es.workbench.tags.items[3][3]).toMatch(/PDF/);
-    expect(en.workbench.tags.items[3][3]).toMatch(/PDF/);
-    expect(es.workbench.tags.items[3][3]).toMatch(/repositorio/);
-    expect(en.workbench.tags.items[3][3]).toMatch(/repository/);
+    expect(es.workbench.tags.items[1][1]).toBe('Desde USD 150');
+    expect(en.workbench.tags.items[1][1]).toBe('From USD 150');
+    expect(es.workbench.tags.items[2][1]).toBe('Desde USD 400');
+    expect(en.workbench.tags.items[2][1]).toBe('From USD 400');
+    expect(es.workbench.tags.items[2][3]).not.toMatch(/diseñamos e instalamos/);
+    expect(en.workbench.tags.items[2][3]).not.toMatch(/design and install/);
+    expect(es.workbench.tags.items[2][1]).not.toMatch(/150/);
+    expect(en.workbench.tags.items[1][1]).not.toMatch(/400/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/revisión independiente/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/independent review/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/evidencia reproducible/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/reproducible evidence/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/página dedicada/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/dedicated page/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/PDF/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/PDF/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/repositorio/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/repository/);
   });
 
   it('Agent Experience names the model, the harness and the architecture in the last scope item', () => {
@@ -237,7 +237,7 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.cardLink).toContain('What we review and what you receive');
     expect(CARD).toContain('w.audits.cardLink');
     expect(CARD).toContain("localizePath('/workbench/audits', lang)");
-    expect(CARD).toContain('i === 3');
+    expect(CARD).toContain('i === 2');
   });
 
   it('both routes render the audits view', () => {

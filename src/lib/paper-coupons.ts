@@ -50,10 +50,9 @@ function coupons(lang: PaperCouponLang, foundingLeft?: number | null): Coupon[] 
   const t = today(lang);
   const p = prefix(lang);
   const wb = dict(lang).workbench;
-  const callPrice = wb.tags.items[0][1] ?? '';
   const call: Coupon = {
-    figure: callPrice.split('·')[0]?.trim() ?? '',
-    cond: wb.tags.items[0][3] ?? '',
+    figure: wb.freeCall.figure,
+    cond: wb.freeCall.cond,
     href: `${p}/workbench/`,
     link: t.ads.workbench.link,
   };

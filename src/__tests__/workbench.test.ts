@@ -19,7 +19,7 @@ describe('workbench', () => {
   it('both languages carry the same workbench keys', () => {
     expect(Object.keys(en.workbench).sort()).toEqual(Object.keys(es.workbench).sort());
     for (const dict of [en.workbench, es.workbench]) {
-      expect(dict.tags.items).toHaveLength(4);
+      expect(dict.tags.items).toHaveLength(3);
       for (const tag of dict.tags.items) expect(tag).toHaveLength(4);
       expect(dict.how.steps).toHaveLength(3);
       expect(dict.proof.items).toHaveLength(4);
@@ -75,54 +75,77 @@ describe('workbench', () => {
     expect(VIEW).not.toContain('Or by email');
   });
 
-  it('the four price tags lead with US dollars and keep pesos for Colombia', () => {
-    expect(en.workbench.tags.items[0][1]).toContain('Free');
-    expect(en.workbench.tags.items[0][1]).toContain('15 min');
-    expect(es.workbench.tags.items[0][1]).toContain('Gratis');
-    expect(en.workbench.tags.items[1][1]).toContain('USD 45');
-    expect(es.workbench.tags.items[1][1]).toContain('USD 45');
+  it('the three price tags lead with US dollars and keep pesos for Colombia', () => {
+    expect(en.workbench.tags.items[0][1]).toContain('USD 45');
+    expect(en.workbench.tags.items[0][1]).not.toContain('Free');
+    expect(es.workbench.tags.items[0][1]).toContain('USD 45');
+    expect(es.workbench.tags.items[0][2]).toContain('En Colombia');
+    expect(es.workbench.tags.items[0][2]).toContain('150.000 COP');
+    expect(en.workbench.tags.items[0][2]).toContain('COP 150,000');
+    expect(en.workbench.tags.items[1][1]).toContain('USD 150');
+    expect(es.workbench.tags.items[1][1]).toContain('USD 150');
     expect(es.workbench.tags.items[1][2]).toContain('En Colombia');
-    expect(es.workbench.tags.items[1][2]).toContain('150.000 COP');
-    expect(en.workbench.tags.items[1][2]).toContain('COP 150,000');
-    expect(en.workbench.tags.items[2][1]).toContain('USD 150');
-    expect(es.workbench.tags.items[2][1]).toContain('USD 150');
+    expect(es.workbench.tags.items[1][2]).toContain('550.000 COP');
+    expect(en.workbench.tags.items[1][2]).toContain('COP 550,000');
+    expect(en.workbench.tags.items[2][1]).toContain('USD 400');
+    expect(es.workbench.tags.items[2][1]).toContain('USD 400');
     expect(es.workbench.tags.items[2][2]).toContain('En Colombia');
-    expect(es.workbench.tags.items[2][2]).toContain('550.000 COP');
-    expect(en.workbench.tags.items[2][2]).toContain('COP 550,000');
-    expect(en.workbench.tags.items[3][1]).toContain('USD 400');
-    expect(es.workbench.tags.items[3][1]).toContain('USD 400');
-    expect(es.workbench.tags.items[3][2]).toContain('En Colombia');
-    expect(es.workbench.tags.items[3][2]).toContain('1.500.000 COP');
-    expect(en.workbench.tags.items[3][2]).toContain('COP 1,500,000');
-    expect(en.workbench.tags.items[1][3]).toContain('harness');
-    expect(es.workbench.tags.items[1][3]).toContain('laboratorio');
-    expect(en.workbench.tags.items[2][3]).toContain('30 days of support');
-    expect(es.workbench.tags.items[2][3]).toContain('30 días de soporte');
-    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['First call', 'Consultation', 'Agentic solution', 'Audit']);
-    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Primera llamada', 'Consulta', 'Solución agéntica', 'Auditoría']);
-    expect(en.workbench.tags.items[2][3]).toContain('design and install');
-    expect(es.workbench.tags.items[2][3]).toContain('Diseñamos e instalamos');
-    expect(en.workbench.tags.items[2][3]).toContain('your repository');
-    expect(es.workbench.tags.items[2][3]).toContain('tu repositorio');
-    expect(en.workbench.tags.items[2][3]).toContain('your own costs');
-    expect(es.workbench.tags.items[2][3]).toContain('tus propios costos');
-    expect(en.workbench.tags.items[2][3]).toContain('Canopy');
-    expect(en.workbench.tags.items[2][3]).toContain('LangGraph');
-    expect(en.workbench.tags.items[2][3]).toContain('AWS, Google Cloud or Azure');
-    expect(en.workbench.tags.items[2][3]).toContain('artificial intelligence added to a tool');
-    expect(en.workbench.tags.items[2][3]).toContain('chat assistant');
-    expect(en.workbench.tags.items[2][3]).toContain('WhatsApp agent that answers and books');
-    expect(es.workbench.tags.items[2][3]).toContain('grafo Canopy');
-    expect(es.workbench.tags.items[2][3]).toContain('LangGraph');
-    expect(es.workbench.tags.items[2][3]).toContain('AWS, Google Cloud o Azure');
-    expect(es.workbench.tags.items[2][3]).toContain('inteligencia artificial agregada a una herramienta');
-    expect(es.workbench.tags.items[2][3]).toContain('asistente de chat');
-    expect(es.workbench.tags.items[2][3]).toContain('agente de WhatsApp que responde y agenda');
+    expect(es.workbench.tags.items[2][2]).toContain('1.500.000 COP');
+    expect(en.workbench.tags.items[2][2]).toContain('COP 1,500,000');
+    expect(en.workbench.tags.items[0][3]).toContain('harness');
+    expect(es.workbench.tags.items[0][3]).toContain('laboratorio');
+    expect(en.workbench.tags.items[1][3]).toContain('30 days of support');
+    expect(es.workbench.tags.items[1][3]).toContain('30 días de soporte');
+    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['Consultation', 'Agentic solution', 'Audit']);
+    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Consulta', 'Solución agéntica', 'Auditoría']);
+    expect(en.workbench.tags.items[1][3]).toContain('design and install');
+    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e instalamos');
+    // The ownership terms left the card: no repository, subscription,
+    // harness, token or cost word survives on the agentic card.
+    expect(en.workbench.tags.items[1][3]).not.toMatch(/repositor|scripci|harness|token|cost/i);
+    expect(es.workbench.tags.items[1][3]).not.toMatch(/repositor|scripci|harness|token|cost/i);
+    // The five kinds moved to the solutions page, not the card body.
+    expect(en.workbench.solutions.kinds.items.map(([t]) => t)).toContain('Custom Canopy graph');
+    expect(en.workbench.solutions.kinds.items.map(([t]) => t)).toContain('WhatsApp agent');
+    expect(es.workbench.solutions.kinds.items.map(([t]) => t)).toContain('Grafo Canopy a medida');
+    expect(es.workbench.solutions.kinds.items.map(([t]) => t)).toContain('Agente de WhatsApp');
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.tags.items.map((t) => t.join(' ')).join(' ').toLowerCase()).not.toContain('abroad');
     }
     expect(en.workbench.tags.items.map((t) => t.join(' ')).join(' ')).not.toContain('exterior');
     expect(es.workbench.tags.items.map((t) => t.join(' ')).join(' ')).not.toContain('exterior');
+  });
+
+  it('the redundant first-call card is gone; its copy lives on as the free call', () => {
+    for (const dict of [en.workbench, es.workbench]) {
+      expect(dict.tags.items.map(([t]) => t)).not.toContain('First call');
+      expect(dict.tags.items.map(([t]) => t)).not.toContain('Primera llamada');
+      expect(Object.keys(dict.freeCall).sort()).toEqual(['cond', 'figure']);
+    }
+    expect(en.workbench.freeCall.figure).toBe('Free');
+    expect(es.workbench.freeCall.figure).toBe('Gratis');
+    expect(en.workbench.freeCall.cond).toContain('whether the Workbench is the right place for it');
+    expect(es.workbench.freeCall.cond).toContain('si el Banco de trabajo es el lugar indicado');
+  });
+
+  it('the agentic card is short: two sentences, support counted from installation', () => {
+    const bodies: Array<[string, string]> = [
+      [en.workbench.tags.items[1][3], '30 days of support counted from installation'],
+      [es.workbench.tags.items[1][3], '30 días de soporte contados desde la instalación'],
+    ];
+    for (const [body, support] of bodies) {
+      expect(body).toContain(support);
+      expect(body.split(/(?<=[.!?])\s+/)).toHaveLength(2);
+    }
+  });
+
+  it('the agentic card lists the five kinds of solution and links its page', () => {
+    expect(VIEW).toContain('wb-kinds');
+    expect(VIEW).toContain('w.solutions.kinds');
+    expect(VIEW).toContain('wb-card-link');
+    expect(VIEW).toContain('{w.solutions.cardLink}');
+    expect(VIEW).toContain("localizePath('/workbench/solutions', lang)");
+    expect(VIEW).toContain('i === 1');
   });
 
   it('the peso line renders as a smaller Spanish-only note', () => {
@@ -223,10 +246,10 @@ describe('workbench', () => {
     expect(VIEW).toContain('<Machine id="workbench" ink="theme" height="112px" eager />');
   });
 
-  it('four tags go four across on wide screens, two by two below, never three plus one', () => {
-    expect(VIEW).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
-    expect(VIEW).toContain('@media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(4, minmax(0, 1fr)); } }');
-    expect(VIEW).not.toMatch(/repeat\(3,/);
+  it('three tags go three across on wide screens, one column below, never four plus none', () => {
+    expect(VIEW).toContain('grid-template-columns: 1fr;');
+    expect(VIEW).toContain('@media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
+    expect(VIEW).not.toMatch(/repeat\(4,/);
   });
 
   it('the phone price tags drop the desktop columns before scrolling sideways', () => {

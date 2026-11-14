@@ -11,6 +11,7 @@ Different problems, one method: take work that lives in fragile, manual procedur
 - [Contributors](https://univerlab.org/contributors/): The people and language models behind the lab, and how to contribute.
 - [Experiments](https://univerlab.org/experiments/): Every experiment of the lab, each with its machine: the tools you can install today, the research in progress, and what was archived.
 - [Workbench audits](https://univerlab.org/workbench/audits/): What a Workbench audit reviews, how we work, what you receive and what it costs.
+- [Agentic solutions](https://univerlab.org/workbench/solutions/): What a Workbench agentic solution covers, how we work, what you receive and what it costs.
 
 ## Experiments
 

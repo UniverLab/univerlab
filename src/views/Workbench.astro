@@ -38,7 +38,7 @@ const proof = w.proof.items.map((id) => ({
     </header>
     <section class="wb-tags" aria-label={w.tags.kicker}>
       {w.tags.items.map(([title, price, note, body], i) => (
-        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 3 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
+        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 1 && <ul class="wb-kinds">{w.solutions.kinds.items.map(([kind]) => (<li>{kind}</li>))}</ul>}{i === 1 && <p class="wb-card-link"><a class="wb-more" href={localizePath('/workbench/solutions', lang)}>{w.solutions.cardLink}</a></p>}{i === 2 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
       ))}
     </section>
     <section class="wb-block">
@@ -91,9 +91,13 @@ const proof = w.proof.items.map((id) => ({
   .wb-thumb { display: none; }
   .wb-figure { margin: 0; }
   .wb-machine { justify-self: center; width: min(22rem, 100%); }
-  .wb-tags { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; padding-block: 2rem; border-block: 1px solid var(--line); margin-top: 3rem; }
-  @media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .wb-tag { background: var(--bg-raise); border: 1px solid var(--line); padding: 1.4rem 1.2rem 1.1rem; }
+  .wb-tags { display: grid; grid-template-columns: 1fr; gap: 1.2rem; padding-block: 2rem; border-block: 1px solid var(--line); margin-top: 3rem; }
+  @media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .wb-tag { background: var(--bg-raise); border: 1px solid var(--line); padding: 1.4rem 1.2rem 1.1rem; display: flex; flex-direction: column; }
+  .wb-kinds { list-style: none; margin: 0.7rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+  .wb-kinds li { font-size: 0.9rem; color: var(--ink-dim); line-height: 1.5; }
+  .wb-kinds li::before { content: '— '; color: var(--accent); }
+  .wb-tag .wb-card-link, .wb-tag .wb-founding { margin-top: auto; padding-top: 0.5rem; }
   .wb-tag h2 { font-family: var(--font-mono); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; color: var(--accent); }
   .wb-tag .wb-price { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1; margin: 0.5rem 0 0.25rem; }
   .wb-price-cop { font-family: var(--font-mono); font-size: .75rem; color: var(--ink-dim); margin: .15rem 0 .25rem; }
