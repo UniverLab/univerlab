@@ -95,11 +95,14 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('sets pages 2 and 3 as one composed grid: display full, boxed half, small third', () => {
+  it('sets pages 2 and 3 as one packed grid: lead centered, boxed half, small quarter, ruled', () => {
     expect(css).toMatch(/\.paper \.classifieds \{[^}]*display:\s*grid/);
     expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-column:\s*1 \/ -1/);
-    expect(css).toMatch(/\.paper \.ad-boxed,[^}]*grid-column:\s*span 3/);
-    expect(css).toMatch(/\.paper \.ad-small \{[^}]*grid-column:\s*span 2/);
+    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column:\s*2 \/ span 2/);
+    expect(css).toMatch(/\.paper \.ad-boxed,[^}]*grid-column:\s*span 2/);
+    expect(css).toMatch(/\.paper \.ad-small \{[^}]*grid-column:\s*span 1/);
+    expect(css).toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border-top:\s*1px solid/);
+    expect(css).not.toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border:\s*3px double/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
     expect(css).toMatch(/\.paper \.notice-run \.notice \{[^}]*break-inside:\s*avoid/);
   });
@@ -113,7 +116,9 @@ describe("today's paper styles stay on the paper", () => {
     // The engraved head, cuts, fleurons and hands read on the sheet in both
     // themes: sepia, multiplied in, never dark.
     expect(css).toContain('.paper .lab-head-ornament');
-    expect(css).toMatch(/\.paper \.ad-cut img[^}]*width:\s*100%/);
+    expect(css).toMatch(/\.paper \.ad-cut\.cut-sm img[^}]*width:\s*1\.8rem/);
+    expect(css).toMatch(/\.paper \.ad-cut\.cut-md img[^}]*width:\s*2\.6rem/);
+    expect(css).toMatch(/\.paper \.ad-cut\.cut-lg img[^}]*width:\s*3\.6rem/);
     expect(css).toMatch(/\.paper \.notice-fleuron[^}]*grid-column:\s*1 \/ -1/);
     expect(css).toMatch(/\.paper \.manicule \{[^}]*width:\s*1\.7rem/);
     expect(css).toContain('grayscale(1) sepia(.22) contrast(1.12)');

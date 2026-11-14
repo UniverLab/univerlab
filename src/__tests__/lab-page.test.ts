@@ -2,6 +2,7 @@ import {
   LAB_TOPICS,
   LAB_TYPES,
   displayArt,
+  displayArtSize,
   finalEntryHref,
   labPageHtml,
   labPageHtml2,
@@ -250,9 +251,13 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(displayArt('canopy')).toBe('/bench/machines/canopy-day-900.webp');
     expect(displayArt('general')).toBe('/bench/postcards/status-day-800.webp');
     expect(displayArt('unknown-thing')).toBe('/bench/postcards/status-day-800.webp');
+    expect(displayArtSize('canopy')).toEqual({ width: 611, height: 900 });
+    expect(displayArtSize('texforge')).toEqual({ width: 842, height: 900 });
+    expect(displayArtSize('general')).toEqual({ width: 800, height: 450 });
     const html = labPageHtml(entries, 'en');
-    // The newest release belongs to canopy: its display ad carries the plate.
-    expect(html).toContain('<figure class="photo ad-art"><div class="print"><img src="/bench/machines/canopy-day-900.webp"');
+    // The newest release belongs to canopy: its display ad carries the plate,
+    // lazy with its dimensions reserved like the cuts.
+    expect(html).toContain('<figure class="photo ad-art"><div class="print"><img src="/bench/machines/canopy-day-900.webp" alt="" width="611" height="900" loading="lazy" decoding="async">');
     expect(html).toContain('loading="lazy"');
   });
 
@@ -319,7 +324,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(html1).not.toMatch(/<img[^>]*Lab news/);
   });
 
-  it('maps one engraved cut per entry type', () => {
+  it('sets the experiment cut on entry ads, never twice on a page', () => {
     const rows: Entry[] = [
       { id: 'l1', date: '2026-10-06T10:00:00.000Z', title: 'Launch', body: 'B.', type: 'launch', topic: 'canopy', link: null },
       { id: 'd1', date: '2026-10-05T10:00:00.000Z', title: 'Deploy', body: 'B.', type: 'deploy', topic: 'canopy', link: null },
@@ -328,25 +333,82 @@ describe('lab page (newspaper pages 2 and 3)', () => {
       { id: 'i1', date: '2026-10-02T10:00:00.000Z', title: 'Incident', body: 'B.', type: 'incident', topic: 'canopy', link: null },
       { id: 'n1', date: '2026-10-01T10:00:00.000Z', title: 'Note', body: 'B.', type: 'note', topic: 'canopy', link: null },
       { id: 'x1', date: '2026-09-30T10:00:00.000Z', title: 'Odd', body: 'B.', type: 'mystery', topic: 'canopy', link: null },
+      { id: 'g1', date: '2026-09-29T10:00:00.000Z', title: 'General', body: 'B.', type: 'note', topic: 'general', link: null },
     ];
     const html = labPageHtml(rows, 'en');
-    // One cut per known type: launch and deploy share the launch cut, update
-    // and bugfix share the update cut.
-    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/launch.webp"');
-    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/update.webp"');
-    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/incident.webp"');
-    expect(html).toContain('<span class="ad-cut"><img src="/bench/classifieds/note.webp"');
-    expect(html.match(/<span class="ad-cut"><img src="\/bench\/classifieds\/launch.webp"/g)).toHaveLength(2);
-    expect(html.match(/<span class="ad-cut"><img src="\/bench\/classifieds\/update.webp"/g)).toHaveLength(2);
+    // The canopy announcements share one tree cut: the first takes it, the
+    // rest go without. The general note takes its subject's envelope cut.
+    expect(html.match(/<img src="\/bench\/classifieds\/tree.webp"/g)).toHaveLength(1);
+    expect(html).toContain('<img src="/bench/classifieds/envelope.webp"');
     // The cuts open the entry body, never the h3: every h3 still reads bare.
-    expect(html).toContain('<div class="entry-body"><span class="ad-cut">');
+    expect(html).toContain('<div class="entry-body"><span class="ad-cut cut-');
     expect(html).not.toMatch(/<h3[^>]*>[^<]*ad-cut/);
-    // The cuts are decorative and sized.
+    // The cuts are decorative, lazy and sized.
     expect(html).toContain('alt=""');
-    // The unknown type goes without one.
+    expect(html).toContain('loading="lazy"');
+    expect(html).toContain('width="318" height="211"');
+    // The lead carries the machine plate instead of a cut.
+    const leadStart = html.indexOf('ad-lead');
+    const leadArticle = html.slice(html.lastIndexOf('<article', leadStart), html.indexOf('</article>', leadStart));
+    expect(leadArticle).toContain('/bench/machines/canopy-day-900.webp');
+    expect(leadArticle).not.toContain('ad-cut');
+    // The repeat-topic tail goes without one.
     const oddStart = html.lastIndexOf('<article', html.indexOf('>Odd</h3>'));
     const oddArticle = html.slice(oddStart, html.indexOf('</article>', oddStart));
     expect(oddArticle).not.toContain('ad-cut');
+  });
+
+  it('sets the lead story center with its kicker, plate and full text, ruled not boxed', () => {
+    const html = labPageHtml(entries, 'en');
+    // The newest launch leads: centered, with its kicker and its full body.
+    expect(html).toContain('<article class="log-entry ad-display ad-lead type-v');
+    const leadStart = html.indexOf('ad-lead');
+    const lead = html.slice(html.lastIndexOf('<article', leadStart), html.indexOf('</article>', leadStart));
+    expect(lead).toContain('Latest launch');
+    expect(lead).toContain('/bench/machines/canopy-day-900.webp');
+    expect(lead).toContain('Second.');
+    // A rule closes the lead; a ribbon opens page 2.
+    expect(html).toContain('class="classifieds-rule"');
+    // Ruled, not boxed: the ads carry no heavy box and no fixed height.
+    expect(html).not.toContain('log-entry ad ');
+    expect(html).not.toMatch(/class="[^"]*ad-lead[^"]*"[^>]*style=/);
+    expect(lead).not.toContain('height:');
+    // The kicker reads in Spanish too.
+    expect(labPageHtml(entries, 'es')).toContain('Último lanzamiento');
+  });
+
+  it('rotates six display treatments so adjacent ads never share one', () => {
+    // A two-page section: the live mix overflows onto page 3.
+    const kinds: Array<Entry['type']> = [
+      ...Array<Entry['type']>(14).fill('launch'),
+      ...Array<Entry['type']>(13).fill('note'),
+      ...Array<Entry['type']>(5).fill('update'),
+      'incident',
+    ];
+    const live: Entry[] = kinds.map((type, i) => ({
+      id: `m${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Live ${i}`,
+      body: 'Body.',
+      type,
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    const seen = new Set<string>();
+    for (const html of [labPageHtml(entries, 'en'), labPageHtml(live, 'en'), labPageHtml2(live, 'en')]) {
+      const variants = [...html.matchAll(/<article class="[^"]*type-v(\d)/g)].map((m) => m[1]);
+      expect(variants.length).toBeGreaterThan(1);
+      for (let i = 1; i < variants.length; i += 1) {
+        expect(variants[i]).not.toBe(variants[i - 1]);
+      }
+      variants.forEach((v) => seen.add(v));
+    }
+    // All six voices occur across the section.
+    for (const v of ['0', '1', '2', '3', '4', '5']) {
+      expect(seen.has(v)).toBe(true);
+    }
+    // The rotation is stable: the same entries print the same page.
+    expect(labPageHtml(entries, 'en')).toBe(labPageHtml(entries, 'en'));
   });
 
   it('sets the cut on small ads and never on one-line notices', () => {
@@ -364,15 +426,20 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     }) as Entry);
     const html = labPageHtml(rows, 'en') + labPageHtml2(rows, 'en');
     const articles = (cls: string): string[] =>
-      html.match(new RegExp(`<article class="log-entry ${cls}"[\\s\\S]*?</article>`, 'g')) ?? [];
+      html.match(new RegExp(`<article class="log-entry ${cls}[\\s"][\\s\\S]*?</article>`, 'g')) ?? [];
     const small = articles('ad-small');
     const line = articles('notice');
     // Both sizes really occur, so the assertions below have teeth.
     expect(small).toHaveLength(1);
     expect(line).toHaveLength(1);
-    // A small ad shows its type's cut; a line notice never carries one.
-    expect(small[0]).toContain('<span class="ad-cut"><img src="/bench/classifieds/note.webp"');
-    expect(small[0]).toContain('<div class="entry-body"><span class="ad-cut">');
+    // Every cut on these all-canopy pages is the canopy tree, taken at most
+    // once per page; the cuts open their entry body. A line notice never
+    // carries one.
+    const cutSrcs = [...html.matchAll(/<span class="ad-cut cut-\w+"><img src="([^"]+)"/g)].map((m) => m[1]);
+    expect(cutSrcs.length).toBeGreaterThan(0);
+    expect(cutSrcs.length).toBeLessThanOrEqual(2);
+    expect(new Set(cutSrcs)).toEqual(new Set(['/bench/classifieds/tree.webp']));
+    expect(html).toContain('<div class="entry-body"><span class="ad-cut cut-');
     expect(line[0]).toContain('<p class="notice-line">');
     expect(line[0]).not.toContain('ad-cut');
   });
@@ -414,6 +481,20 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // Four coupons, one hand each, inside the link span before the text.
     expect(html.match(/<span class="coupon-link"><img src="\/bench\/classifieds\/manicule.webp" alt="" width="192" height="113"/g)).toHaveLength(4);
     expect(html).toContain('class="coupon"');
+  });
+
+  it('cuts the house ads: the bench for the Workbench, the loupe for audits', () => {
+    const html = labPageHtml(entries, 'en');
+    // The free-call coupon carries the bench; each audits coupon the loupe.
+    expect(html.match(/<img src="\/bench\/classifieds\/bench\.webp" alt="" width="300" height="256"/g)).toHaveLength(1);
+    expect(html.match(/<img src="\/bench\/classifieds\/loupe\.webp" alt="" width="415" height="271"/g)).toHaveLength(3);
+    // The bench rides the Workbench coupon: its enclosing anchor books the
+    // free call, never the audits page.
+    const benchAt = html.indexOf('/bench/classifieds/bench.webp');
+    const anchorAt = html.lastIndexOf('<a class="coupon"', benchAt);
+    const anchorHref = html.slice(anchorAt, benchAt);
+    expect(anchorHref).toContain('/workbench/');
+    expect(anchorHref).not.toContain('/audits/');
   });
 
   it('the markdown twin carries the unavailable line under the coupons', () => {

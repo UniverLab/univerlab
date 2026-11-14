@@ -41,6 +41,8 @@ interface Coupon {
   cond: string;
   href: string;
   link: string;
+  /** The house-ad cut: the bench for the Workbench, the loupe for audits. */
+  cut: 'bench' | 'loupe';
 }
 
 /** The four standing offers, in reading order: the free first call, then
@@ -56,6 +58,7 @@ function coupons(lang: PaperCouponLang, foundingLeft?: number | null): Coupon[] 
     cond: wb.freeCall.cond,
     href: `${p}/workbench/${BOOK_ANCHOR[lang]}`,
     link: t.ads.workbench.link,
+    cut: 'bench',
   };
   const auditsHref = `${p}/workbench/audits/`;
   const auditsLink = t.ads.audits.link;
@@ -63,12 +66,12 @@ function coupons(lang: PaperCouponLang, foundingLeft?: number | null): Coupon[] 
   const founding: Coupon[] =
     foundingLeft === 0
       ? []
-      : [{ figure: percentFigure(offers.founding.text), cond: offers.founding.text, href: auditsHref, link: auditsLink }];
+      : [{ figure: percentFigure(offers.founding.text), cond: offers.founding.text, href: auditsHref, link: auditsLink, cut: 'loupe' }];
   return [
     call,
     ...founding,
-    { figure: percentFigure(offers.public.text), cond: offers.public.text, href: auditsHref, link: auditsLink },
-    { figure: percentFigure(offers.reaudit.text), cond: offers.reaudit.text, href: auditsHref, link: auditsLink },
+    { figure: percentFigure(offers.public.text), cond: offers.public.text, href: auditsHref, link: auditsLink, cut: 'loupe' },
+    { figure: percentFigure(offers.reaudit.text), cond: offers.reaudit.text, href: auditsHref, link: auditsLink, cut: 'loupe' },
   ];
 }
 
@@ -85,6 +88,8 @@ export interface CouponAd {
   cond: string;
   href: string;
   link: string;
+  /** The house-ad cut: the bench for the Workbench, the loupe for audits. */
+  cut: 'bench' | 'loupe';
 }
 
 /** The standing offers as classifieds ads, in reading order. */
@@ -92,12 +97,15 @@ export function couponAds(lang: PaperCouponLang, foundingLeft?: number | null): 
   return coupons(lang, foundingLeft);
 }
 
-/** One coupon card as HTML: an ad among the ads, cut along its dashed border. */
+/** One coupon card as HTML: an ad among the ads, cut along its dashed border.
+ *  The house cut opens the card: the bench for the Workbench, the loupe for
+ *  audits. The manicule stays as the pointer in the link line. */
 export function couponAdHtml(lang: PaperCouponLang, ad: CouponAd): string {
   const cut = today(lang).labPage.coupons.cut;
   return (
     `<a class="coupon" href="${esc(ad.href)}">` +
     `<span class="coupon-cut">✂ ${esc(cut)}</span>` +
+    `<span class="coupon-art">${ornamentImg(ad.cut)}</span>` +
     `<span class="coupon-figure">${esc(ad.figure)}</span>` +
     `<span class="coupon-cond">${esc(ad.cond)}</span>` +
     `<span class="coupon-link">${ornamentImg('manicule', 'manicule')}${esc(ad.link)}</span></a>`

@@ -9,7 +9,7 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { entriesMarkdown, firstParagraph, sortEntries, type Entry } from './lab-feed';
 import { layoutClassifieds, type AdSlot } from './lab-classifieds';
-import { ornamentImg, typeOrnament } from './classifieds-ornaments';
+import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
 import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
 import { normalizeTopic } from './field-notes';
@@ -116,6 +116,26 @@ export function displayArt(topic: unknown): string {
   return '/bench/postcards/status-day-800.webp';
 }
 
+/** Intrinsic widths of the experiment plates (all 900 tall); the postcard
+ *  crop is 800x450. The lead's engraving reserves these, like the cuts. */
+const PLATE_WIDTHS: Record<string, number> = {
+  canopy: 611,
+  texforge: 842,
+  gitkit: 906,
+  ghscaff: 706,
+  quorum: 785,
+  demostage: 953,
+  facetmedia: 743,
+  'astro-denoise': 688,
+  cadspec: 929,
+};
+
+export function displayArtSize(topic: unknown): { width: number; height: number } {
+  const id = typeof topic === 'string' ? topic.trim().toLowerCase() : '';
+  if (id && PLATE_IDS.has(id)) return { width: PLATE_WIDTHS[id] ?? 900, height: 900 };
+  return { width: 800, height: 450 };
+}
+
 function entryMeta(e: Entry, t: Dict): string {
   const type = typeof e.type === 'string' ? e.type.toLowerCase() : '';
   return (
@@ -128,24 +148,51 @@ function entryMeta(e: Entry, t: Dict): string {
 }
 
 /** The engraved cut for an entry: display, boxed and small ads open with
- *  the cut of their entry type, first inside .entry-body and never inside
- *  the h3. One-line notices and unknown types go without one. */
-function adCut(e: Entry): string {
-  const name = typeOrnament(e.type);
-  if (!name) return '';
-  return `<span class="ad-cut">${ornamentImg(name)}</span>`;
+ *  the cut cutFor chose for this entry on this page, first inside
+ *  .entry-body and never inside the h3. One-line notices and entries the
+ *  chooser left cut-less go without one. */
+function adCut(e: Entry, page: number, used: Set<string>): string {
+  const cut = cutFor(e, page, used);
+  if (!cut) return '';
+  return `<span class="ad-cut cut-${cut.size}">${ornamentImg(cut.name, `cut-${cut.size}`)}</span>`;
 }
 
-function slotHtml(slot: AdSlot, t: Dict): string {
+/** The big figure of a figure-set ad (type-v5): a version number from the
+ *  entry's own words, else the experiment's number, else the year. */
+function figureFor(e: Entry): string {
+  const m = /v?\d+\.\d+(?:\.\d+)?/.exec(`${e.title || ''} ${e.body || ''}`);
+  if (m) return m[0];
+  const id = typeof e.topic === 'string' ? e.topic.trim().toLowerCase() : '';
+  const exp = liveExperiments.find((x) => x.id === id);
+  if (exp && exp.number) return exp.number;
+  const y = new Date(e.date || '').getFullYear();
+  return Number.isFinite(y) ? String(y) : '';
+}
+
+/** A spare frame accent for a few ads: a light single or double rule, as
+ *  in the references. Deterministic per entry; most ads take none. */
+function frameAccent(e: Entry): string {
+  const h = hashSeed(`frame|${e.id || ''}`);
+  if (h % 9 === 0) return ' frame-accent frame-double';
+  if (h % 5 === 0) return ' frame-accent';
+  return '';
+}
+
+function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Set<string>, lead: boolean): string {
   const e = slot.entry;
   const title = esc(e.title || '');
+  const v = ` type-v${((variant % 6) + 6) % 6}`;
+  const figure = variant % 6 === 5 ? `<span class="ad-figure">${esc(figureFor(e))}</span>` : '';
   if (slot.size === 'display') {
+    const cls = lead ? 'log-entry ad-display ad-lead' : 'log-entry ad-display';
+    const kicker = lead ? `<p class="lead-kicker">${esc(t.labPage.leadKicker)}</p>` : '';
+    const art = displayArtSize(e.topic);
     return (
-      `<article class="log-entry ad ad-display" ${slotAttrs(e)}>` +
+      `<article class="${cls}${v}" ${slotAttrs(e)}>` +
       `<figure class="photo ad-art"><div class="print">` +
-      `<img src="${esc(displayArt(e.topic))}" alt="" loading="lazy">` +
+      `<img src="${esc(displayArt(e.topic))}" alt="" width="${art.width}" height="${art.height}" loading="lazy" decoding="async">` +
       `</div></figure>` +
-      `<div class="entry-body">${adCut(e)}<h3 class="sz-lg">${title}</h3>` +
+      `<div class="entry-body">${kicker}${figure}<h3 class="sz-lg">${title}</h3>` +
       `<p>${linkify(e.body || '')}</p>` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
@@ -153,8 +200,8 @@ function slotHtml(slot: AdSlot, t: Dict): string {
   }
   if (slot.size === 'boxed') {
     return (
-      `<article class="log-entry ad ad-boxed" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e)}<h3 class="sz-md">${title}</h3>` +
+      `<article class="log-entry ad-boxed${frameAccent(e)}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${adCut(e, page, used)}${figure}<h3 class="sz-md">${title}</h3>` +
       `<p>${linkify(e.body || '')}</p>` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
@@ -166,8 +213,8 @@ function slotHtml(slot: AdSlot, t: Dict): string {
       ? ` <a class="log-link" href="${esc(finalEntryHref(e.link || ''))}" target="_blank" rel="noopener noreferrer">${esc(t.labPage.view)}</a>`
       : '';
     return (
-      `<article class="log-entry ad-small" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e)}<h3 class="sz-sm">${title}</h3>` +
+      `<article class="log-entry ad-small${frameAccent(e)}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${adCut(e, page, used)}${figure}<h3 class="sz-sm">${title}</h3>` +
       `<p>${cut}${link}</p>` +
       `</div></article>`
     );
@@ -179,9 +226,20 @@ function slotHtml(slot: AdSlot, t: Dict): string {
 }
 
 /** One page grid: entry ads with coupon ads interleaved after the `after`-th
- *  slot, consecutive one-line notices grouped into dense runs of small type. */
-function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, lang: LabPageLang): string {
-  const parts: string[] = slots.map((s) => slotHtml(s, t));
+ *  slot, consecutive one-line notices grouped into dense runs of small type.
+ *  Display treatments rotate across the ads so no two adjacent ads share
+ *  one; the offset is fixed per page, so the rotation never reshuffles. On
+ *  page 1 the display ad reads as the lead story in the middle of the
+ *  page, closed by a rule; page 2 opens under a ribbon. */
+function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, lang: LabPageLang, page: number): string {
+  const used = new Set<string>();
+  // The rotation offset is fixed for a given edition (same entries) and page,
+  // so one edition never reshuffles on reload while editions vary.
+  const editionSeed = slots.map((s) => `${s.entry.date}|${s.entry.id}`).join(';');
+  const offset = hashSeed(`variants|${page}|${editionSeed}`) % 6;
+  let n = 0;
+  const lead = page === 1 && slots.length > 0 && slots[0].size === 'display';
+  const parts: string[] = slots.map((s, i) => slotHtml(s, t, offset + n++, page, used, lead && i === 0));
   const kinds: string[] = slots.map((s) => s.size);
   const cards = coupons.map((c) => couponAdHtml(lang, c));
   if (cards.length) {
@@ -189,7 +247,7 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     parts.splice(at, 0, ...cards);
     kinds.splice(at, 0, ...cards.map(() => 'coupon'));
   }
-  let out = '';
+  let out = page === 2 ? `<div class="classifieds-ribbon">${ornamentImg('ribbon')}</div>` : '';
   let run: string[] = [];
   const flush = (): void => {
     if (run.length) {
@@ -198,11 +256,16 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     }
     run = [];
   };
+  let leadClosed = !lead;
   parts.forEach((html, i) => {
     if (kinds[i] === 'line') run.push(html);
     else {
       flush();
       out += html;
+      if (lead && !leadClosed && i === 0) {
+        out += `<div class="classifieds-rule">${ornamentImg('rule')}</div>`;
+        leadClosed = true;
+      }
     }
   });
   flush();
@@ -277,14 +340,14 @@ export function classifiedsHtml(
   if (!pages.length) return empty;
   const rest = ads.slice(half);
   const page1 =
-    `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang)}` +
-    `${pages[1] ? '' : gridHtml([], rest, 8, t, lang)}${couponNoteHtml(lang)}` +
+    `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang, 1)}` +
+    `${pages[1] ? '' : gridHtml([], rest, 8, t, lang, 1)}${couponNoteHtml(lang)}` +
     `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template></div>`;
   let page2 = '';
   if (pages[1]) {
     page2 =
       headHtml(t, true) +
-      `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang)}</div>` +
+      `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang, 2)}</div>` +
       `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>`;
   }
   if (truncated) {

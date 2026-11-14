@@ -734,6 +734,7 @@ export const es: Dict = {
       view: 'Ver →',
       unavailable: 'No llegó el correo del laboratorio; inténtelo más tarde.',
       logbookPointer: 'El registro completo continúa en el Cuaderno →',
+      leadKicker: 'Último lanzamiento',
       coupons: { cut: 'recorta aquí' },
     },
     logbook: {

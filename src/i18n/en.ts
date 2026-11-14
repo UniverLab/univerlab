@@ -740,6 +740,7 @@ export const en = {
       view: 'View →',
       unavailable: 'The lab mail did not arrive — try again later.',
       logbookPointer: 'The complete record continues in the Logbook →',
+      leadKicker: 'Latest launch',
       coupons: { cut: 'cut here' },
     },
     logbook: {

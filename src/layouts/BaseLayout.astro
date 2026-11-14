@@ -53,6 +53,9 @@ interface Props {
   /** Surface-specific circadian palette endpoints (day/night), serialized as
    *  a JSON data attribute so the circadian script can pick them up. */
   circadianPalette?: { day: Record<string, string>; night: Record<string, string> };
+  /** The newspaper's classifieds display faces (Oswald, Alfa Slab One,
+   *  Pirata One): loaded only by the newspaper pages, never elsewhere. */
+  paperDisplayFonts?: boolean;
 }
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -72,6 +75,7 @@ const {
   expId,
   fondo,
   langCorner = true,
+  paperDisplayFonts = false,
 } = Astro.props;
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
@@ -147,6 +151,16 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
          `display=swap` shows fallback text immediately. -->
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
+    {/* The newspaper's classifieds display faces: a condensed grotesque, a
+         fat face and a period ornamental, all OFL. Same non-render-blocking
+         pattern; `display=swap` with metric-matched local fallbacks in the
+         paper's CSS keeps the sheet from shifting when they arrive. */}
+    {paperDisplayFonts && (
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Alfa+Slab+One&family=Pirata+One&display=swap" media="print" onload="this.media='all'" />
+    )}
+    {paperDisplayFonts && (
+      <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Alfa+Slab+One&family=Pirata+One&display=swap" /></noscript>
+    )}
     {/* Pre-paint the hero's typefaces: the latin cuts of the three families,
          so the first frame sets headings in their final metrics (no FOUT
          shift on h1, koan, lede, seal and actions). Preloads are fetched, not
