@@ -1084,12 +1084,17 @@ describe('deploy-site.yml checkout depth', () => {
     .filter((s) => s.includes('actions/checkout@v4') && s.includes('repository:'));
 
   it('checks out every sibling repo with full history', () => {
-    expect(checkouts.length).toBe(9); // 6 docs repos + canopy-registry + texforge-templates + ghscaff-boilerplate
+    expect(checkouts.length).toBe(10); // 6 docs repos + canopy-registry + texforge-templates + ghscaff-boilerplate + facetmedia-registry
     for (const block of checkouts) {
       const repo = /repository:\s*(\S+)/.exec(block)?.[1];
       expect(repo).toBeDefined();
-      if (repo === 'UniverLab/texforge-templates' || repo === 'UniverLab/ghscaff-boilerplate') {
-        // Sparse catalog checkouts: no full history needed.
+      if (
+        repo === 'UniverLab/texforge-templates' ||
+        repo === 'UniverLab/ghscaff-boilerplate' ||
+        block.includes('facetmedia-registry')
+      ) {
+        // Sparse catalog checkouts — and the registry, pinned at a ref and
+        // read at build time but never a date source: no full history needed.
         expect(block).not.toContain('fetch-depth: 0');
       } else {
         expect(block).toContain('fetch-depth: 0');

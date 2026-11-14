@@ -8,6 +8,13 @@ import {
   readBoilerplates,
   parseFacetIndex,
   parseFacetPackage,
+  parseFacetLabels,
+  facetLabelsFor,
+  capabilitySummary,
+  facetTryCommand,
+  facetPullCommand,
+  facetPackagePullCommand,
+  readFacetCatalog,
   readFacetCapabilities,
   groupFacetCapabilities,
 } from '../lib/catalogs';
@@ -206,6 +213,115 @@ kind = "audio"
   });
 });
 
+describe('catalogs — parseFacetPackage i18n summaries', () => {
+  it('reads a Spanish summary from a capabilities i18n section', () => {
+    const toml = `tool_name = "T"
+facet = "voice"
+
+[capabilities.speak]
+summary = "Narration from text"
+kind = "audio"
+
+[capabilities.speak.i18n.es]
+summary = "Narración desde texto"
+`;
+    expect(parseFacetPackage(toml, 'kokoro')).toEqual([
+      {
+        id: 'kokoro.speak',
+        tool: 'T',
+        kind: 'audio',
+        summary: 'Narration from text',
+        facet: 'voice',
+        i18n: { es: 'Narración desde texto' },
+      },
+    ]);
+  });
+
+  it('leaves i18n off when the package carries no i18n section', () => {
+    const toml = `tool_name = "T"
+facet = "voice"
+
+[capabilities.speak]
+summary = "Narration"
+kind = "audio"
+`;
+    const out = parseFacetPackage(toml, 'kokomo');
+    expect(out).toHaveLength(1);
+    expect(out[0].i18n).toBeUndefined();
+    expect('i18n' in out[0]).toBe(false);
+  });
+
+  it('capabilitySummary prefers the registry translation, else the English summary', () => {
+    const withEs = {
+      id: 'kokoro.speak',
+      tool: 'T',
+      kind: 'audio',
+      summary: 'Narration from text',
+      facet: 'voice',
+      i18n: { es: 'Narración desde texto' },
+    };
+    expect(capabilitySummary(withEs, 'es')).toBe('Narración desde texto');
+    expect(capabilitySummary(withEs, 'en')).toBe('Narration from text');
+    const bare = { id: 'x.y', tool: 'T', kind: 'k', summary: 'English', facet: 'f' };
+    expect(capabilitySummary(bare, 'es')).toBe('English');
+  });
+});
+
+describe('catalogs — facet labels from the registry', () => {
+  it('parseFacetLabels reads labels and per-language labels', () => {
+    const toml = `version = 1
+
+[facets.voice]
+label = "Voice"
+
+[facets.voice.i18n.es]
+label = "Voz"
+
+[facets.image]
+label = "Image"
+`;
+    expect(parseFacetLabels(toml)).toEqual({
+      voice: { label: 'Voice', i18n: { es: 'Voz' } },
+      image: { label: 'Image', i18n: {} },
+    });
+  });
+
+  it('parseFacetLabels ignores non-facet sections', () => {
+    const toml = `version = 1
+
+[[packages]]
+name = "kokoro"
+
+[facets.voice]
+label = "Voice"
+`;
+    expect(parseFacetLabels(toml)).toEqual({ voice: { label: 'Voice', i18n: {} } });
+  });
+
+  it('facetLabelsFor prefers translation, then label, then the facet id', () => {
+    const facets = {
+      voice: { label: 'Voice', i18n: { es: 'Voz' } },
+      image: { label: 'Image', i18n: {} },
+      cad: { label: '', i18n: {} },
+    };
+    expect(facetLabelsFor(facets, 'es')).toEqual({ voice: 'Voz', image: 'Image', cad: 'cad' });
+    expect(facetLabelsFor(facets, 'en')).toEqual({ voice: 'Voice', image: 'Image', cad: 'cad' });
+  });
+});
+
+describe('catalogs — facet commands', () => {
+  it('derives the try, facet-install and package-install commands', () => {
+    expect(facetTryCommand('deck.slides')).toBe('facet example deck.slides --run');
+    expect(facetPullCommand('image')).toBe('facet pull image');
+    expect(facetPackagePullCommand('deck')).toBe('facet pull --package deck');
+  });
+
+  it('the package is the prefix of the capability id', () => {
+    const id = 'deck.slides';
+    expect(facetPackagePullCommand(id.split('.')[0])).toBe('facet pull --package deck');
+  });
+});
+
 describe('catalogs — parseFacetPackage verify and seed', () => {
   it('reads thresholds from a verify section, numbers as numbers', () => {
     const toml = `tool_name = "T"
@@ -333,12 +449,39 @@ describe('catalogs — readers', () => {
     expect(total).toBe(caps.length);
   });
 
-  it('every registry capability resolves to a non-empty page summary', async () => {
-    const { es } = await import('../i18n/es');
-    const summaries = es.experiments.facetmedia.capabilities.summaries;
+  it('every registry capability resolves to a non-empty page summary', () => {
+    // Until the registry carries i18n keys, the page shows the English
+    // summary in both languages — expected, not a defect.
     for (const cap of readFacetCapabilities()) {
-      expect(summaries[cap.id] ?? cap.summary).not.toBe('');
+      expect(capabilitySummary(cap, 'es')).not.toBe('');
+      expect(capabilitySummary(cap, 'en')).not.toBe('');
     }
+  });
+
+  it('readFacetCatalog reads facets and capabilities from a fixture root', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cat-'));
+    try {
+      writeFileSync(
+        resolve(dir, 'index.toml'),
+        `version = 1\n\n[[packages]]\nname = "kokoro"\n\n[facets.voice]\nlabel = "Voice"\n\n[facets.voice.i18n.es]\nlabel = "Voz"\n`,
+      );
+      mkdirSync(resolve(dir, 'packages', 'kokoro'), { recursive: true });
+      writeFileSync(
+        resolve(dir, 'packages', 'kokoro', 'package.toml'),
+        `tool_name = "T"\nfacet = "voice"\n\n[capabilities.speak]\nsummary = "Narration"\nkind = "audio"\n\n[capabilities.speak.i18n.es]\nsummary = "Narración"\n`,
+      );
+      const catalog = readFacetCatalog(dir);
+      expect(catalog.caps.map((c) => c.id)).toEqual(['kokoro.speak']);
+      expect(catalog.facets).toEqual({ voice: { label: 'Voice', i18n: { es: 'Voz' } } });
+      expect(capabilitySummary(catalog.caps[0], 'es')).toBe('Narración');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('readFacetCatalog returns an empty catalog for a non-existent root', () => {
+    const root = resolve(tmpdir(), 'no-such-root-' + Math.random());
+    expect(readFacetCatalog(root)).toEqual({ caps: [], facets: {} });
   });
 
   it('readTemplates reads from a temp root', () => {

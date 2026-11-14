@@ -2,17 +2,25 @@
 import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
-import { readFacetCapabilities, groupFacetCapabilities } from '../../lib/catalogs';
+import {
+  readFacetCatalog,
+  groupFacetCapabilities,
+  facetLabelsFor,
+  capabilitySummary,
+  facetTryCommand,
+  facetPullCommand,
+} from '../../lib/catalogs';
 import { dialArcs, demoCap, demoText } from '../../lib/facet-dial';
+import { iconSvg } from '../../lib/icon-svg';
+import { copy } from '../../lib/icons';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments['facetmedia'];
 const exp = byId('facetmedia');
-const caps = readFacetCapabilities();
-const facets = groupFacetCapabilities(caps, e.capabilities.facetLabels);
+const { caps, facets: regFacets } = readFacetCatalog();
+const facets = groupFacetCapabilities(caps, facetLabelsFor(regFacets, lang));
+const groups = [{ facet: 'all', label: e.capabilities.all, caps }, ...facets];
 const arcs = dialArcs(facets, caps.length);
-const summaryFor = (id: string, fallback: string) =>
-  lang === 'es' ? (e.capabilities.summaries[id] ?? fallback) : fallback;
 
 // The record beside every asset, laid out over 10 lines as in the mockup.
 // Yellow (span.ok) marks only what was verified: the status and the metrics.
@@ -36,7 +44,7 @@ const recordHtml = [
     <div class="fm-hero">
       <div class="fm-hero-text">
         <p class="fm-headline">{e.headline}</p>
-        <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{e.facets}</span></p>
+        <p class="fm-meta"><span>{exp.number} · {e.release}</span><span>{facets.map((f) => f.label).join(' / ')}</span></p>
       </div>
       <figure class="fm-dial" data-fm-dial>
         <svg viewBox="0 0 240 240" role="img" aria-label={e.capabilities.dial.aria}>
@@ -61,37 +69,63 @@ const recordHtml = [
     {caps.length > 0 ? (
       <>
         <div class="thumbs" role="tablist" aria-label={e.capabilities.tabsAria}>
-          {facets.map((f, j) => (
+          {groups.map((g, j) => (
             <button
               type="button"
               role="tab"
-              id={`fm-tab-${f.facet}`}
-              aria-controls={`fm-panel-${f.facet}`}
+              id={`fm-tab-${g.facet}`}
+              aria-controls={`fm-panel-${g.facet}`}
               aria-selected={j === 0 ? 'true' : 'false'}
               tabindex={j === 0 ? 0 : -1}
-            >{f.label} ({f.caps.length})</button>
+            >{g.label} ({g.caps.length})</button>
           ))}
         </div>
         <div class="fm-panels">
-          {facets.map((f, j) => (
+          {groups.map((g) => (
             <div
               class="fm-panel"
               role="tabpanel"
-              id={`fm-panel-${f.facet}`}
-              aria-labelledby={`fm-tab-${f.facet}`}
+              id={`fm-panel-${g.facet}`}
+              aria-labelledby={`fm-tab-${g.facet}`}
               tabindex="0"
             >
-              <h2 class="fm-panel-head">{f.label} ({f.caps.length})</h2>
+              <h2 class="fm-panel-head">{g.label} ({g.caps.length})</h2>
+              {g.facet !== 'all' && (
+                <p class="fm-cmd">
+                  <code translate="no">{facetPullCommand(g.facet)}</code>
+                  <button
+                    type="button"
+                    class="copy-btn"
+                    data-cmd={facetPullCommand(g.facet)}
+                    data-copy={e.capabilities.copy}
+                    data-copied={e.capabilities.copied}
+                    aria-label={e.capabilities.copy}
+                    title={e.capabilities.copy}
+                  ><span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} /></button>
+                </p>
+              )}
               <div class="fm-row fm-head">
                 {e.capabilities.columns.map((c) => <span>{c}</span>)}
               </div>
-              {f.caps.map((cap, i) => (
+              {g.caps.map((cap, i) => (
                 <div class="fm-row">
                   <span class="fm-no">{String(i + 1).padStart(2, '0')}</span>
                   <span translate="no">{cap.id}</span>
                   <span>{cap.tool}</span>
                   <span>{cap.kind}</span>
-                  <span>{summaryFor(cap.id, cap.summary)}</span>
+                  <span>{capabilitySummary(cap, lang)}</span>
+                  <span class="fm-try">
+                    <code translate="no">{facetTryCommand(cap.id)}</code>
+                    <button
+                      type="button"
+                      class="copy-btn"
+                      data-cmd={facetTryCommand(cap.id)}
+                      data-copy={e.capabilities.copy}
+                      data-copied={e.capabilities.copied}
+                      aria-label={e.capabilities.copy}
+                      title={e.capabilities.copy}
+                    ><span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} /></button>
+                  </span>
                 </div>
               ))}
             </div>
@@ -142,7 +176,26 @@ const recordHtml = [
 </ExperimentLayout>
 
 <script>
+  import { COPY_DONE_MS, setCopyState } from '../../lib/copy-morph';
   (function () {
+    // Copy a facet install or capability try command. On success the icon
+    // morphs to a check and the accessible name reads "Copied"; when the
+    // Clipboard API is missing or the context is insecure, the write rejects
+    // and the button is left untouched.
+    document.querySelectorAll('[data-fm-tabs] .copy-btn').forEach(function (btn) {
+      var label = btn.getAttribute('aria-label') || '';
+      btn.addEventListener('click', async function () {
+        var cmd = btn.getAttribute('data-cmd') || '';
+        try { await navigator.clipboard.writeText(cmd); } catch { return; }
+        var copied = btn.getAttribute('data-copied') || '';
+        setCopyState(btn, true);
+        if (copied) btn.setAttribute('aria-label', copied);
+        setTimeout(function () {
+          setCopyState(btn, false);
+          if (label) btn.setAttribute('aria-label', label);
+        }, COPY_DONE_MS);
+      });
+    });
     var dial = document.querySelector('[data-fm-dial]');
     if (dial && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       var arcs = Array.prototype.slice.call(dial.querySelectorAll('.fm-dial-arc'));
@@ -282,13 +335,43 @@ const recordHtml = [
   }
   .fm-index .fm-row {
     display: grid;
-    grid-template-columns: 3rem 1.4fr 0.8fr 1.6fr 1fr;
+    grid-template-columns: 3rem 1.4fr 0.8fr 1.6fr 1fr 1.8fr;
     gap: 0 1rem;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--surface-line);
     color: var(--surface-ink);
     border-radius: 0;
   }
+  .fm-cmd {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--surface-ink-dim);
+  }
+  .fm-cmd code, .fm-try code {
+    background: color-mix(in srgb, var(--surface-ink) 7%, transparent);
+    padding: 2px 6px;
+    overflow-wrap: anywhere;
+  }
+  .fm-try {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  /* Same chip as the encyclopedia's copy button, in this page's palette: the
+     bench roles are the parchment ground's ink and vanish on the dark facet
+     surface (--bench-line is 1.01:1 here). */
+  .copy-btn { flex: none; }
+  .copy-btn { font-family: var(--font-mono); font-size: 11px; background: none; border: 1px solid var(--surface-line); color: var(--surface-ink-dim); padding: 2px 6px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; }
+  .copy-btn .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .copy-btn .copy-icon > svg, .copy-btn .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .copy-btn .copy-icon[data-icon='check'] { color: var(--surface-ink); }
   .fm-index .fm-head {
     font-family: var(--font-mono);
     color: var(--surface-ink-faint);

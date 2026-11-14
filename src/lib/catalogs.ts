@@ -100,8 +100,15 @@ export interface FacetCapability {
   kind: string;
   summary: string;
   facet: string;
+  /** Per-language summaries from `[capabilities.<cap>.i18n.<lang>] summary`. */
+  i18n?: Record<string, string>;
   verify?: Record<string, number | string>;
   seed?: boolean;
+}
+
+export interface FacetLabel {
+  label: string;
+  i18n: Record<string, string>;
 }
 
 export interface FacetGroup {
@@ -156,6 +163,7 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
   const caps: FacetCapability[] = [];
   const verifyByCap = new Map<string, Record<string, number | string>>();
   const seedCaps = new Set<string>();
+  const i18nByCap = new Map<string, Record<string, string>>();
   const flush = () => {
     if (!cap || !cap.id) {
       cap = null;
@@ -202,6 +210,19 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
         if (verifyMatch) verifyByCap.set(`${pkg}.${verifyMatch[1]}`, {});
         const seedMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.inputs\.seed$/);
         if (seedMatch) seedCaps.add(`${pkg}.${seedMatch[1]}`);
+        const i18nMatch = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.i18n\.([A-Za-z-]+)$/);
+        if (i18nMatch && !i18nByCap.has(`${pkg}.${i18nMatch[1]}`)) {
+          i18nByCap.set(`${pkg}.${i18nMatch[1]}`, {});
+        }
+      }
+      continue;
+    }
+    const i18nSection = section.match(/^capabilities\.([A-Za-z0-9_-]+)\.i18n\.([A-Za-z-]+)$/);
+    if (i18nSection) {
+      const sm = line.match(/^summary\s*=\s*(["'])(.*?)\1/);
+      if (sm) {
+        const entry = i18nByCap.get(`${pkg}.${i18nSection[1]}`);
+        if (entry) entry[i18nSection[2]] = sm[2];
       }
       continue;
     }
@@ -226,31 +247,99 @@ export function parseFacetPackage(toml: string, pkg: string): FacetCapability[] 
     const verify = verifyByCap.get(c.id);
     if (verify && Object.keys(verify).length > 0) c.verify = verify;
     if (seedCaps.has(c.id)) c.seed = true;
+    const i18n = i18nByCap.get(c.id);
+    if (i18n && Object.keys(i18n).length > 0) c.i18n = i18n;
   }
 
   return caps;
 }
 
-export function readFacetCapabilities(root = resolve(process.cwd(), '../facetmedia-registry')): FacetCapability[] {
-  const indexPath = resolve(root, 'index.toml');
-  if (!existsSync(indexPath)) return [];
-  let names: string[];
-  try {
-    names = parseFacetIndex(readFileSync(indexPath, 'utf-8'));
-  } catch {
-    return [];
+/** A capability's summary in `lang`, falling back to its English summary. */
+export function capabilitySummary(cap: FacetCapability, lang: string): string {
+  return cap.i18n?.[lang] ?? cap.summary;
+}
+
+/** Facet labels from an index.toml: `[facets.<f>] label` plus per-language
+ *  `[facets.<f>.i18n.<lang>] label`. Facets without a section stay absent. */
+export function parseFacetLabels(toml: string): Record<string, FacetLabel> {
+  const out: Record<string, FacetLabel> = {};
+  const ensure = (facet: string): FacetLabel => (out[facet] ??= { label: '', i18n: {} });
+  let section = '';
+  for (const raw of toml.split(/\r?\n/)) {
+    const line = raw.trim();
+    const sectionMatch = line.match(/^\[([^\]]+)\]$/);
+    if (sectionMatch) {
+      section = sectionMatch[1].trim();
+      continue;
+    }
+    const facetMatch = section.match(/^facets\.([A-Za-z0-9_-]+)(\.i18n\.([A-Za-z-]+))?$/);
+    if (!facetMatch) continue;
+    const m = line.match(/^label\s*=\s*(["'])(.*?)\1/);
+    if (!m) continue;
+    if (facetMatch[3]) ensure(facetMatch[1]).i18n[facetMatch[3]] = m[2];
+    else ensure(facetMatch[1]).label = m[2];
   }
-  const result: FacetCapability[] = [];
+  return out;
+}
+
+/** A facet's label in `lang`: registry translation, then the registry label,
+ *  then the facet id. */
+export function facetLabelsFor(facets: Record<string, FacetLabel>, lang: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [facet, entry] of Object.entries(facets)) {
+    out[facet] = entry.i18n[lang] || entry.label || facet;
+  }
+  return out;
+}
+
+/** The command that tries one capability: `facet example <capability> --run`. */
+export function facetTryCommand(id: string): string {
+  return `facet example ${id} --run`;
+}
+
+/** The command that installs one facet: `facet pull <facet>`. */
+export function facetPullCommand(facet: string): string {
+  return `facet pull ${facet}`;
+}
+
+/** The command that installs one package: `facet pull --package <package>`. */
+export function facetPackagePullCommand(pkg: string): string {
+  return `facet pull --package ${pkg}`;
+}
+
+export interface FacetCatalog {
+  caps: FacetCapability[];
+  facets: Record<string, FacetLabel>;
+}
+
+export function readFacetCatalog(
+  root = resolve(process.cwd(), '../facetmedia-registry'),
+): FacetCatalog {
+  const indexPath = resolve(root, 'index.toml');
+  if (!existsSync(indexPath)) return { caps: [], facets: {} };
+  let index: string;
+  try {
+    index = readFileSync(indexPath, 'utf-8');
+  } catch {
+    return { caps: [], facets: {} };
+  }
+  const names = parseFacetIndex(index);
+  const facets = parseFacetLabels(index);
+  const caps: FacetCapability[] = [];
   for (const name of names) {
     const file = resolve(root, 'packages', name, 'package.toml');
     if (!existsSync(file)) continue;
     try {
-      result.push(...parseFacetPackage(readFileSync(file, 'utf-8'), name));
+      caps.push(...parseFacetPackage(readFileSync(file, 'utf-8'), name));
     } catch {
       // skip unreadable packages
     }
   }
-  return result.sort((a, b) => a.id.localeCompare(b.id));
+  return { caps: caps.sort((a, b) => a.id.localeCompare(b.id)), facets };
+}
+
+export function readFacetCapabilities(root = resolve(process.cwd(), '../facetmedia-registry')): FacetCapability[] {
+  return readFacetCatalog(root).caps;
 }
 
 export function readBoilerplates(root = resolve(process.cwd(), '../ghscaff-boilerplate')): Boilerplate[] {

@@ -70,6 +70,21 @@ jobs:
           repository: UniverLab/canopy-registry
           path: canopy-registry
           sparse-checkout: platforms
+      # facetMedia's capability table — the full registry (packages/ plus
+      # index.toml), read at build time from ../facetmedia-registry. The ref
+      # lives in one place, scripts/facet-registry.json: feature/v0.1 until
+      # facet releases, main after.
+      - name: Read facetmedia-registry pin
+        id: facet-registry
+        working-directory: univerlab
+        run: |
+          echo "repository=$(node -p "require('./scripts/facet-registry.json').repository")" >> $GITHUB_OUTPUT
+          echo "ref=$(node -p "require('./scripts/facet-registry.json').ref")" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.facet-registry.outputs.repository }}
+          ref: ${{ steps.facet-registry.outputs.ref }}
+          path: facetmedia-registry
 
       - uses: actions/setup-node@v4
         with:

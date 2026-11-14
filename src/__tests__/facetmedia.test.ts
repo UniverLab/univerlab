@@ -13,6 +13,11 @@ const ENC = readFileSync(resolve(__dirname, '../components/Encyclopedia.astro'),
 const BASE = readFileSync(resolve(__dirname, '../layouts/BaseLayout.astro'), 'utf8');
 const ROUTE = readFileSync(resolve(__dirname, '../pages/facetmedia.astro'), 'utf8');
 const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/facetmedia.astro'), 'utf8');
+const CI = readFileSync(resolve(__dirname, '../../.github/workflows/ci.yml'), 'utf8');
+const DEPLOY = readFileSync(resolve(__dirname, '../../.github/workflows/deploy-site.yml'), 'utf8');
+const REGISTRY_PIN = JSON.parse(
+  readFileSync(resolve(__dirname, '../../scripts/facet-registry.json'), 'utf8'),
+) as { repository: string; ref: string };
 
 const enFm = en.experiments.facetmedia;
 const esFm = es.experiments.facetmedia;
@@ -29,21 +34,44 @@ describe('facetmedia EXP-009', () => {
   it('both dictionaries carry the same facetmedia keys', () => {
     expect(Object.keys(enFm).sort()).toEqual(Object.keys(esFm).sort());
     for (const dict of [enFm, esFm]) {
-      expect(dict.capabilities.columns).toHaveLength(5);
+      expect(dict.capabilities.columns).toHaveLength(6);
       expect(dict.verbs.items).toHaveLength(6);
       expect(dict.faq.items).toHaveLength(7);
     }
-    expect(Object.keys(enFm.capabilities.summaries)).toHaveLength(0);
-    expect(Object.keys(esFm.capabilities.summaries).length).toBeGreaterThan(0);
-    for (const id of Object.keys(esFm.capabilities.summaries)) {
-      expect(id).toContain('.');
+    // Summaries and facet labels live in the registry now, not in the site.
+    for (const dict of [enFm, esFm]) {
+      expect('summaries' in dict.capabilities).toBe(false);
+      expect('facetLabels' in dict.capabilities).toBe(false);
     }
+    expect(enFm.capabilities.all).toBe('All');
+    expect(esFm.capabilities.all).toBe('Todas');
+    expect(enFm.capabilities.copy).toBe('Copy command');
+    expect(esFm.capabilities.copy).toBe('Copiar comando');
+    expect(enFm.capabilities.copied).toBe('Copied');
+    expect(esFm.capabilities.copied).toBe('Copiado');
   });
 
-  it('falls back to the registry English summary without a Spanish text', () => {
-    expect(esFm.capabilities.summaries['kokoro.speak']).toContain('Narración');
-    // The page prefers the Spanish text and falls back to the registry summary.
-    expect(VIEW).toContain('summaries[id] ?? fallback');
+  it('takes each summary from the registry with its English fallback', () => {
+    // Until the registry carries i18n keys, both languages show the English
+    // summary — expected, not a defect.
+    expect(VIEW).toContain('capabilitySummary(cap, lang)');
+    expect(VIEW).not.toContain('e.capabilities.summaries');
+  });
+
+  it('takes the hero facet list from the registry, not a hardcoded list', () => {
+    // The registry has seven facets today; a hand-kept list in the
+    // dictionaries had five and drifted. FR3: labels come from the registry.
+    for (const dict of [enFm, esFm]) expect('facets' in dict).toBe(false);
+    expect(VIEW).not.toContain('e.facets');
+    expect(VIEW).toContain("facets.map((f) => f.label).join(' / ')");
+  });
+
+  it('styles the copy buttons in this page palette, not the parchment bench roles', () => {
+    // --bench-line is the parchment ground's ink (#1d1510): on the facet
+    // surface (#161616) it is a 1.01:1 icon, i.e. invisible. The chip takes
+    // the page's own surface tokens instead.
+    expect(VIEW).not.toContain('var(--bench-');
+    expect(VIEW).toContain('.copy-btn .copy-icon[data-icon=\'check\'] { color: var(--surface-ink); }');
   });
 
   it('titles and descriptions fit the SEO limits', () => {
@@ -69,9 +97,10 @@ describe('facetmedia EXP-009', () => {
   });
 
   it('reads the capability table from the registry and never ships it empty', () => {
-    expect(VIEW).toContain('readFacetCapabilities');
+    expect(VIEW).toContain('readFacetCatalog');
     expect(VIEW).toContain('groupFacetCapabilities');
-    expect(VIEW).toContain('f.caps.map((cap, i)');
+    expect(VIEW).toContain('facetLabelsFor');
+    expect(VIEW).toContain('g.caps.map((cap, i)');
     expect(VIEW).toContain('caps.length');
     expect(VIEW).toContain('dialArcs');
     expect(VIEW).toContain('demoCap');
@@ -120,25 +149,60 @@ describe('facetmedia EXP-009', () => {
     expect(es[6]).toContain('<code>facet license accept</code>');
   });
 
-  it('groups capabilities by facet in tabs', () => {
+  it('opens on an All tab listing every capability, then one tab per facet', () => {
     expect(VIEW).toContain('role="tablist"');
     expect(VIEW).toContain('role="tab"');
     expect(VIEW).toContain('role="tabpanel"');
     expect(VIEW).toContain('aria-selected');
-    expect(VIEW).toContain('facetLabels');
-    expect(VIEW).toContain('f.caps.length');
+    expect(VIEW).toContain("facet: 'all'");
+    expect(VIEW).toContain('e.capabilities.all');
+    // All is the FIRST group and carries the whole list; the facet groups follow.
+    expect(VIEW).toContain("const groups = [{ facet: 'all', label: e.capabilities.all, caps }, ...facets];");
+    expect(VIEW).toContain('fm-tab-${g.facet}');
+    expect(VIEW).toContain('fm-panel-${g.facet}');
+    expect(VIEW).toContain('g.caps.length');
+    // Labels come from the registry now, not from the site dictionaries.
+    expect(VIEW).not.toContain('e.capabilities.facetLabels');
+    // The first tab is selected by default (j === 0).
+    expect(VIEW).toMatch(/aria-selected=\{j === 0 \? 'true' : 'false'\}/);
     // No-JS shows every group: the tabpanel tags carry no hidden attribute.
     expect(VIEW).not.toMatch(/role="tabpanel"[^>]*hidden/);
   });
 
-  it('labels every facet in both languages', () => {
-    expect(enFm.capabilities.facetLabels.voice).toBe('Voice');
-    expect(esFm.capabilities.facetLabels.voice).toBe('Voz');
-    expect(Object.keys(enFm.capabilities.facetLabels).sort()).toEqual(
-      Object.keys(esFm.capabilities.facetLabels).sort(),
-    );
+  it('shows how to try each capability and install each facet, with copy buttons', () => {
+    expect(VIEW).toContain('copy-btn');
+    expect(VIEW).toContain('setCopyState');
+    expect(VIEW).toContain('fm-cmd');
+    // The try command carries the capability id and the --run flag.
+    expect(VIEW).toContain('facetTryCommand(cap.id)');
+    expect(VIEW).toContain('data-cmd={facetTryCommand(cap.id)}');
+    // Each facet panel names its install command; the All panel is not a
+    // facet, so it must not offer `facet pull all`.
+    expect(VIEW).toContain('facetPullCommand(g.facet)');
+    expect(VIEW).toContain('data-cmd={facetPullCommand(g.facet)}');
+    expect(VIEW).toContain("g.facet !== 'all'");
+  });
+
+  it('labels the tabs in both languages', () => {
+    expect(enFm.capabilities.all).toBe('All');
+    expect(esFm.capabilities.all).toBe('Todas');
     expect(enFm.capabilities.tabsAria).toBe('Capabilities by facet');
     expect(esFm.capabilities.tabsAria).toBe('Capacidades por faceta');
+  });
+
+  it('checks out the registry at one pinned ref in CI and on deploy', () => {
+    expect(REGISTRY_PIN.repository).toBe('UniverLab/facetmedia-registry');
+    expect(REGISTRY_PIN.ref).toBe('feature/v0.1');
+    for (const workflow of [CI, DEPLOY]) {
+      expect(workflow).toContain('scripts/facet-registry.json');
+      expect(workflow).toContain('steps.facet-registry.outputs.repository');
+      expect(workflow).toContain('steps.facet-registry.outputs.ref');
+      expect(workflow).toContain('path: facetmedia-registry');
+      // "At a ref set in one place": the workflows read it from the pin file,
+      // they never carry a literal ref of their own.
+      expect(workflow).not.toContain('ref: feature/v0.1');
+      expect(workflow).not.toContain('ref: main');
+    }
   });
 
   it('only verified values are yellow', () => {
