@@ -9,6 +9,8 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
 const VIEW = readFileSync(resolve(__dirname, '../views/experiments/FacetMedia.astro'), 'utf8');
+const BANNER = readFileSync(resolve(__dirname, '../components/Banner.astro'), 'utf8');
+const BANNERS = readFileSync(resolve(__dirname, '../lib/banners.ts'), 'utf8');
 const ENC = readFileSync(resolve(__dirname, '../components/Encyclopedia.astro'), 'utf8');
 const BASE = readFileSync(resolve(__dirname, '../layouts/BaseLayout.astro'), 'utf8');
 const ROUTE = readFileSync(resolve(__dirname, '../pages/facetmedia.astro'), 'utf8');
@@ -218,6 +220,71 @@ describe('facetmedia EXP-009', () => {
   it('beta entries show under the Active tab', () => {
     expect(ENC).toContain("beta: '‡'");
     expect(ENC).toContain("s === f || (f === 'active' && s === 'beta')");
+  });
+
+  it('stacks each capability as one entry on narrow screens, desktop table untouched', () => {
+    // Desktop keeps its six-column table.
+    expect(VIEW).toContain('grid-template-columns: 3rem 1.4fr 0.8fr 1.6fr 1fr 1.8fr');
+    // Everything below must live inside the narrow-screen query: assert
+    // against that slice so a desktop rule can never satisfy the test.
+    const narrow = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(narrow).toMatch(/\.fm-index \.fm-head \{\s*display: none;/);
+    // On phones each row becomes a stacked entry: number + name, tool +
+    // output, full-width summary, try command.
+    expect(narrow).toMatch(/\.fm-index \.fm-row \{[^}]*grid-template-areas:/);
+    for (const row of ['"no name"', '"tool out"', '"sum sum"', '"try try"']) {
+      expect(narrow).toContain(row);
+    }
+    for (const area of ['grid-area: no;', 'grid-area: name;', 'grid-area: tool;', 'grid-area: out;', 'grid-area: sum;']) {
+      expect(narrow).toContain(area);
+    }
+    expect(narrow).toMatch(/\.fm-index \.fm-try \{[^}]*grid-area: try;[^}]*flex-wrap: wrap;/);
+  });
+
+  it('lays the dial labels out in flow on narrow screens so they cannot overlap', () => {
+    const narrow = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(narrow).toMatch(/\.fm-dial \{[^}]*aspect-ratio: auto;/);
+    expect(narrow).toMatch(/\.fm-dial-center,\s*\.fm-more,\s*\.fm-dial-demos \{[^}]*position: static;/);
+    // display:block above beats the hidden attribute, so the demos caption
+    // needs its own guard or it flashes as an empty block before the script runs.
+    expect(narrow).toMatch(/\.fm-dial-demos\[hidden\] \{[^}]*display: none;/);
+  });
+
+  it('scales the install banner down so the facetmedia art fits a 360px phone', () => {
+    // The narrow rule must live inside the <=40rem query with a
+    // viewport-relative glyph size, parsed from the CSS, not hardcoded.
+    const query = BANNER.slice(BANNER.indexOf('@media (max-width: 40rem)'));
+    const vw = Number(query.match(/\.banner \{ font-size: clamp\([\d.]+px, ([\d.]+)vw, [\d.]+px\); \}/)?.[1]);
+    expect(vw).toBeGreaterThan(0);
+    // Widest facetmedia art line, measured from the real banner source.
+    const art = BANNERS.match(/facetmedia: `([\s\S]*?)`/)?.[1].replace(/^\r?\n/, '') ?? '';
+    const cols = Math.max(...art.split('\n').map((l) => [...l].length));
+    expect(cols).toBeGreaterThan(90);
+    // Columns x 0.6023em DejaVu advance must fit the content column (viewport
+    // minus the page gutter) minus the install plate padding (1rem a side).
+    for (const px of [360, 412]) {
+      expect(cols * 0.6023 * (px * (vw / 100))).toBeLessThan(px - 64);
+    }
+    // The structural guards stay: the banner can never force page scroll.
+    expect(BANNER).toContain('max-width: 100%;');
+    expect(BANNER).toContain('overflow: hidden;');
+  });
+
+  it('wraps the record figure instead of cutting its JSON lines', () => {
+    // Scope to .fm-pre rules: overflow-wrap/overflow-x also appear on other
+    // selectors, so a global contains() would pass without the fix.
+    const pre = VIEW.match(/\.fm-pre \{[^}]*\}/g) ?? [];
+    expect(pre.length).toBeGreaterThan(0);
+    expect(pre.some((r) => r.includes('white-space: pre-wrap;'))).toBe(true);
+    expect(pre.some((r) => r.includes('overflow-wrap: anywhere;') && r.includes('overflow-x: auto;') && r.includes('max-width: 100%;'))).toBe(true);
+    // The figure itself flexes instead of holding its content rigid.
+    expect(VIEW).toMatch(/\.fm-figure \{[^}]*min-width: 0;/);
+  });
+
+  it('keeps the headline and hero copy clear of the language corner on phones', () => {
+    const narrow = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
+    expect(narrow).toMatch(/\.fm-hero-text \{[^}]*min-width: 0;[^}]*max-width: 100%;/);
+    expect(narrow).toContain('font-size: clamp(34px, 11vw, 52px);');
   });
 
   it('the palette knows facetmedia', () => {
