@@ -4,8 +4,9 @@
 // controls: pinch and ctrl/mouse-wheel zoom, drag pans, double-tap toggles,
 // and one Fit button returns the sheet to fitted width.
 
+import { SHEET_WIDTH_REM } from './paper-sheet-size';
+
 const DESKTOP_QUERY = '(min-width: 64rem)';
-const SHEET_WIDTH_REM = 68.5;
 const MIN_VIEWPORT_HEIGHT = 260;
 const MAX_ZOOM = 4;
 const DOUBLE_TAP_ZOOM = 2.5;

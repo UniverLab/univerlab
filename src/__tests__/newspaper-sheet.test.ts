@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { initPaperSheet } from '../lib/paper-sheet';
+import { SHEET_HEIGHT_REM, SHEET_WIDTH_REM } from '../lib/paper-sheet-size';
 
 const paper = readFileSync(resolve(__dirname, '..', 'components', 'TodaysPaper.astro'), 'utf8');
 const css = paper.slice(paper.indexOf('<style is:global>'), paper.indexOf('</style>'));
@@ -40,10 +41,35 @@ describe('the sheet hooks wrap the paper', () => {
 });
 
 describe('the sheet keeps the desktop composition', () => {
-  it('draws the sheet at desktop width with the device gestures routed to it', () => {
-    expect(css).toContain('68.5rem');
+  it('draws the sheet at the single fixed size with the device gestures routed to it', () => {
+    // The sheet size lives in src/lib/paper-sheet-size.ts; the stylesheet
+    // only references its vars, so a second width literal breaks this.
+    expect(SHEET_WIDTH_REM).toBe(68.5);
+    expect(css).toContain('var(--paper-sheet-w)');
+    expect(css).not.toContain('68.5rem');
     expect(css).toContain('touch-action');
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper-sheet \{[^}]*width:\s*68\.5rem/);
+    expect(css).toMatch(/\.paper-viewport\.sheet \.paper-sheet \{[^}]*width:\s*var\(--paper-sheet-w\)/);
+    // Desktop widths below the sheet's 68.5rem (the wrap only reaches it at
+    // ~72rem) must shrink the sheet to the container, never overflow it;
+    // pan/zoom mode keeps the true fixed width via max-width: none.
+    expect(css).toMatch(/\.paper-viewport \.paper-sheet \{[^}]*width:\s*var\(--paper-sheet-w\)[^}]*max-width:\s*100%/);
+  });
+
+  it('gives every page the same fixed sheet: one min-height, flex-filled pages', () => {
+    // The .paper-sheet div carries both vars; every .paper-page flex-fills
+    // the sheet, so switching tabs never changes the sheet's size.
+    expect(paper).toContain('--paper-sheet-h:${SHEET_HEIGHT_REM}rem');
+    expect(SHEET_HEIGHT_REM).toBe(224);
+    expect(css).toContain('min-height: var(--paper-sheet-h)');
+    expect(css).toMatch(/\.paper \.paper-page \{[^}]*display:\s*flex/);
+    expect(css).toMatch(/\.paper \.paper-page \{[^}]*flex:\s*1 1 auto/);
+  });
+
+  it('defines the sheet size in exactly one place', () => {
+    const sheetSrc = readFileSync(resolve(__dirname, '..', 'lib', 'paper-sheet.ts'), 'utf8');
+    expect(sheetSrc).toContain("from './paper-sheet-size'");
+    expect(sheetSrc).not.toMatch(/const SHEET_WIDTH_REM/);
+    expect(sheetSrc).not.toMatch(/const SHEET_HEIGHT_REM/);
   });
 
   it('pins the three-column front with the lead spanning two and the rail beside it', () => {
