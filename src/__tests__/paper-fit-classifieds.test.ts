@@ -106,6 +106,38 @@ describe('fitClassifieds', () => {
     expect(document.querySelectorAll('#lab2-body > .lab-more')).toHaveLength(1);
   });
 
+  it('re-measures after adding the pointer and trims until page and pointer fit', () => {
+    // Seven cards reach 350 on a 300 sheet: the trim takes the foot coupon
+    // whole, the pointer lands, and the pointer's own 40px would run past
+    // the sheet — so one more card leaves and nothing is cut off.
+    document.body.innerHTML =
+      '<div class="paper">' +
+      page(
+        'lab-body',
+        '<div class="classifieds">' +
+          '<article></article>'.repeat(6) +
+          '<a class="coupon" href="#"></a>' +
+          '</div>' +
+          '<template data-fill="logbook-pointer"><p class="lab-more">More in the Logbook</p></template>',
+      ) +
+      '</div>';
+    const grid = document.querySelector('.classifieds') as HTMLElement;
+    const scope = document.querySelector('#lab-body') as HTMLElement;
+    liveGrid(grid);
+    setBottom(document.querySelector('.paper')!, 300);
+    (scope as HTMLElement).getBoundingClientRect = () =>
+      rect(
+        (grid as HTMLElement).getBoundingClientRect().bottom +
+          (scope.querySelector('.lab-more') ? 40 : 0),
+      );
+    const out = fitClassifieds(document);
+    expect(out.trimmedAds).toBe(2);
+    expect(out.pointers).toBe(1);
+    expect(grid.querySelector('.coupon')).toBeNull();
+    expect(document.querySelectorAll('#lab-body > .lab-more')).toHaveLength(1);
+    expect((scope as HTMLElement).getBoundingClientRect().bottom).toBeLessThanOrEqual(300);
+  });
+
   it('adds no pointer when the page has no pointer template, or an empty one', () => {
     for (const tpl of ['', '<template data-fill="logbook-pointer"></template>']) {
       document.body.innerHTML =

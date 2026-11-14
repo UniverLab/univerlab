@@ -46,7 +46,11 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('composes one classifieds page from twelve entries: releases on top', () => {
     const html = labPageHtml(entries, 'en');
-    const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)].map((m) => m[1]);
+    // Every ad shows its title in reading order: a heading, the repeated
+    // word, or the run-in lead — never an empty frame.
+    const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>|<span class="rep-word rep-0">(.*?)<\/span>|<p class="run-in"><b>(.*?)\.<\/b>/g)].map(
+      (m) => m[1] ?? m[2] ?? m[3],
+    );
     // Ranked by type then recency: the four launches, the incident, the
     // bugfix and update, then the notes newest first.
     expect(titles).toEqual([
@@ -70,10 +74,15 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // Only the top-ranked release reads largest; the rest read boxed.
     expect(html).toContain('<h3 class="sz-lg">Newest</h3>');
     expect(html).not.toContain('<h3 class="sz-lg">Mystery topic</h3>');
-    expect(html).toContain('<h3 class="sz-md">Mystery topic</h3>');
-    expect(html).toContain('<h3 class="sz-md">Incident</h3>');
-    expect(html).toContain('<h3 class="sz-md">Notes on TexForge</h3>');
-    expect(html).toContain('<h3 class="sz-md">General note</h3>');
+    // Every boxed ad shows its title: a medium heading, the repeated word
+    // in three sizes, or the run-in lead — never an empty frame.
+    const heads = [...html.matchAll(/<h3 class="sz-md">(.*?)<\/h3>|<span class="rep-word rep-0">(.*?)<\/span>|<p class="run-in"><b>(.*?)\.<\/b>/g)].map(
+      (m) => m[1] ?? m[2] ?? m[3],
+    );
+    expect(heads).toHaveLength(11);
+    for (const title of ['Mystery topic', 'Incident', 'Notes on TexForge', 'General note']) {
+      expect(heads).toContain(title);
+    }
     const metas = html.match(/<p class="entry-meta">.*?<\/p>/g) ?? [];
     // Display and boxed ads carry the meta line; small ads and notices do not.
     expect(metas).toHaveLength(12);
@@ -97,8 +106,11 @@ describe('lab page (newspaper pages 2 and 3)', () => {
       }) as Entry),
     ];
     const html = labPageHtml(rows, 'en');
-    expect(html).toContain('<h3 class="sz-sm">Cut note</h3>');
-    expect(html).toContain('<p>First. <a class="log-link"');
+    // The small ad keeps its title in whatever voice it takes; the body is
+    // cut to the first paragraph and ends in the link.
+    const small = html.match(/<article class="log-entry ad-small[\s\S]*?<\/article>/g) ?? [];
+    expect(small.some((a) => a.includes('Cut note'))).toBe(true);
+    expect(html).toContain('First. <a class="log-link"');
     expect(html).not.toContain('Second.');
   });
 
@@ -315,12 +327,19 @@ describe('lab page (newspaper pages 2 and 3)', () => {
       link: null,
     }) as Entry);
     const html1 = labPageHtml(live, 'en');
-    expect(html1).toContain('<header class="lab-head"><img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(html1).toContain('<h2 class="lab-heading">Lab news</h2>');
+    // The page's words ride inside the engraved cartouche, never beside an
+    // empty frame: the plate and the h2 share one head-cartouche.
+    const cartouche1 = html1.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
+    expect(cartouche1).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
+    expect(cartouche1).toContain('<h2 class="lab-heading">Lab news</h2>');
     const html2 = labPageHtml2(live, 'en');
-    expect(html2).toContain('<header class="lab-head"><img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(html2).toContain('<h2 class="lab-heading lab-heading--cont">Lab news · continued</h2>');
-    // The words are set in type, never inside the image.
+    const cartouche2 = html2.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
+    expect(cartouche2).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
+    expect(cartouche2).toContain('<h2 class="lab-heading lab-heading--cont">Lab news · continued</h2>');
+    // No empty ribbon frame on either page; the words are set in type,
+    // never inside the image.
+    expect(html1).not.toContain('classifieds-ribbon');
+    expect(html2).not.toContain('classifieds-ribbon');
     expect(html1).not.toMatch(/<img[^>]*Lab news/);
   });
 
@@ -377,7 +396,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(labPageHtml(entries, 'es')).toContain('Último lanzamiento');
   });
 
-  it('rotates six display treatments so adjacent ads never share one', () => {
+  it('rotates eight display treatments so adjacent ads never share one', () => {
     // A two-page section: the live mix overflows onto page 3.
     const kinds: Array<Entry['type']> = [
       ...Array<Entry['type']>(14).fill('launch'),
@@ -394,17 +413,49 @@ describe('lab page (newspaper pages 2 and 3)', () => {
       topic: 'canopy',
       link: null,
     }) as Entry);
+    // One-line notices share their run's plain dress; every other ad takes
+    // one of the eight voices plus its width and frame.
+    const spanOf = (cls: string): number => {
+      if (cls.includes('ad-lead')) return 3;
+      if (cls.includes('ad-display')) return 5;
+      if (cls.includes('span3')) return 3;
+      if (cls.includes('ad-small')) return cls.includes('span2') ? 2 : 1;
+      return 2;
+    };
+    const frameOf = (cls: string): string => {
+      if (cls.includes('frame-double')) return 'double';
+      if (cls.includes('frame-accent')) return 'single';
+      return '';
+    };
     const seen = new Set<string>();
+    let neighbours = 0;
     for (const html of [labPageHtml(entries, 'en'), labPageHtml(live, 'en'), labPageHtml2(live, 'en')]) {
-      const variants = [...html.matchAll(/<article class="[^"]*type-v(\d)/g)].map((m) => m[1]);
-      expect(variants.length).toBeGreaterThan(1);
-      for (let i = 1; i < variants.length; i += 1) {
-        expect(variants[i]).not.toBe(variants[i - 1]);
+      const opens = [...html.matchAll(/<article class="([^"]*)"/g)];
+      const cards = opens.map((m) => {
+        const start = m.index ?? 0;
+        return { cls: m[1], start, end: html.indexOf('</article>', start) + '</article>'.length };
+      }).filter((a) => !a.cls.includes('notice'));
+      expect(cards.length).toBeGreaterThan(1);
+      cards.forEach((a) => seen.add(a.cls.match(/type-v(\d)/)?.[1] ?? ''));
+      for (let i = 1; i < cards.length; i += 1) {
+        // Only true neighbours count: a coupon, a notice run or the lead
+        // rule between two cards breaks the adjacency.
+        if (html.slice(cards[i - 1].end, cards[i].start) !== '') continue;
+        neighbours += 1;
+        const tv = (c: string): string => c.match(/type-v(\d)/)?.[1] ?? '';
+        expect(tv(cards[i].cls)).not.toBe(tv(cards[i - 1].cls));
+        expect(spanOf(cards[i].cls)).not.toBe(spanOf(cards[i - 1].cls));
+        const f = frameOf(cards[i].cls);
+        if (f) expect(f).not.toBe(frameOf(cards[i - 1].cls));
       }
-      variants.forEach((v) => seen.add(v));
+      // Coupons ride as the eighth treatment: present, unvoiced, unframed.
+      for (const coupon of [...html.matchAll(/<a class="([^"]*coupon[^"]*)"/g)].map((m) => m[1])) {
+        expect(coupon).not.toMatch(/type-v/);
+      }
     }
-    // All six voices occur across the section.
-    for (const v of ['0', '1', '2', '3', '4', '5']) {
+    expect(neighbours).toBeGreaterThan(1);
+    // All eight voices occur across the section.
+    for (const v of ['0', '1', '2', '3', '4', '5', '6', '7']) {
       expect(seen.has(v)).toBe(true);
     }
     // The rotation is stable: the same entries print the same page.
@@ -870,9 +921,10 @@ describe('bindLabPage', () => {
     bindLabPage(document);
     setLabEntries(document, { entries, lang: 'en' });
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
-    const titles = Array.from(document.querySelectorAll('#lab-log .log-entry h3')).map(
-      (h) => h.textContent,
-    );
+    // Titles read from headings, repeated words and run-in leads alike.
+    const titles = Array.from(
+      document.querySelectorAll('#lab-log .log-entry h3, #lab-log .log-entry .rep-word.rep-0, #lab-log .log-entry .run-in b'),
+    ).map((h) => (h.textContent || '').replace(/\.$/, ''));
     expect(titles).toEqual(['Newest', 'Update']);
   });
 

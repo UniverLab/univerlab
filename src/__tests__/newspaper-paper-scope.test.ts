@@ -95,12 +95,13 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('sets pages 2 and 3 as one packed grid: lead centered, boxed half, small quarter, ruled', () => {
+  it('sets pages 2 and 3 as one packed grid of five columns: lead centered, mixed spans, ruled', () => {
     expect(css).toMatch(/\.paper \.classifieds \{[^}]*display:\s*grid/);
+    expect(css).toMatch(/\.paper \.classifieds \{[^}]*repeat\(5, minmax\(0, 1fr\)\)/);
     expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-column:\s*1 \/ -1/);
-    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column:\s*2 \/ span 2/);
-    expect(css).toMatch(/\.paper \.ad-boxed,[^}]*grid-column:\s*span 2/);
-    expect(css).toMatch(/\.paper \.ad-small \{[^}]*grid-column:\s*span 1/);
+    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column:\s*2 \/ span 3/);
+    expect(css).toMatch(/\.paper \.ad-boxed \{[^}]*grid-column:\s*span 2/);
+    expect(css).toMatch(/\.paper \.ad-small[^{]*\{[^}]*grid-column:\s*span 1/);
     expect(css).toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border-top:\s*1px solid/);
     expect(css).not.toMatch(/\.paper \.classifieds > \.log-entry \{[^}]*border:\s*3px double/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
@@ -118,7 +119,7 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toContain('.paper .lab-head-ornament');
     expect(css).toMatch(/\.paper \.ad-cut\.cut-sm img[^}]*width:\s*1\.8rem/);
     expect(css).toMatch(/\.paper \.ad-cut\.cut-md img[^}]*width:\s*2\.6rem/);
-    expect(css).toMatch(/\.paper \.ad-cut\.cut-lg img[^}]*width:\s*3\.6rem/);
+    expect(css).toMatch(/\.paper \.ad-cut\.cut-lg img[^}]*width:\s*100%/);
     expect(css).toMatch(/\.paper \.notice-fleuron[^}]*grid-column:\s*1 \/ -1/);
     expect(css).toMatch(/\.paper \.manicule \{[^}]*width:\s*1\.7rem/);
     expect(css).toContain('grayscale(1) sepia(.22) contrast(1.12)');
@@ -126,8 +127,8 @@ describe("today's paper styles stay on the paper", () => {
   });
 
   it('lets the section head wrap instead of pushing a narrow sheet sideways', () => {
-    // The ornament is capped at 16rem and the words sit beside it; on a phone
-    // the pair does not fit on one line, so the row must wrap. Without this
+    // The words ride centred inside the head cartouche; on a phone the head
+    // must still wrap instead of pushing the sheet sideways. Without this
     // the head is 33px wider than a 320px sheet and the paper scrolls.
     expect(css).toMatch(/\.paper \.lab-head \{[^}]*flex-wrap:\s*wrap/);
     expect(css).toMatch(/\.paper \.lab-head \.lab-heading \{[^}]*min-width:\s*0/);

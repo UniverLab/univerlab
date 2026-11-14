@@ -390,15 +390,22 @@ export function trimClassifieds(grid: Element, limit: number, slackPx = 1): numb
   let removed = 0;
   for (let guard = 0; guard < 1000; guard++) {
     if ((grid as HTMLElement).getBoundingClientRect().bottom - limit <= slackPx) break;
-    const last = lastRemovable(grid);
-    if (!last) break;
-    if (last.classList.contains('notice-run') && last.previousElementSibling?.classList.contains('notice-fleuron')) {
-      last.previousElementSibling.remove();
-    }
-    last.remove();
+    if (!removeLastCard(grid)) break;
     removed++;
   }
   return removed;
+}
+
+/** Drop the grid's last ad-like child: whole cards only, a one-line run
+ *  with its fleuron as one unit. False when only unremovable lines remain. */
+function removeLastCard(grid: Element): boolean {
+  const last = lastRemovable(grid);
+  if (!last) return false;
+  if (last.classList.contains('notice-run') && last.previousElementSibling?.classList.contains('notice-fleuron')) {
+    last.previousElementSibling.remove();
+  }
+  last.remove();
+  return true;
 }
 
 export interface ClassifiedsFit {
@@ -436,6 +443,20 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
           if (node) {
             scope.appendChild(node);
             out.pointers++;
+            // The pointer itself takes room at the foot: re-measure the
+            // whole scope with it in place and keep trimming whole cards
+            // until page and pointer both end above the limit, so the
+            // pointer never overlaps an ad and nothing is cut off.
+            for (let guard = 0; guard < 1000; guard++) {
+              if ((scope as HTMLElement).getBoundingClientRect().bottom - limit <= 1) break;
+              node.remove();
+              if (!removeLastCard(grid)) {
+                out.pointers--;
+                break;
+              }
+              out.trimmedAds++;
+              scope.appendChild(node);
+            }
           }
         }
       }

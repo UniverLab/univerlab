@@ -19,6 +19,7 @@
 // so the last page can point at the Logbook.
 
 import type { Entry } from './lab-feed';
+import { hashSeed } from './classifieds-ornaments';
 
 /** The four classifieds sizes, largest first. */
 export type AdSize = 'display' | 'boxed' | 'small' | 'line';
@@ -55,6 +56,18 @@ export const CLASSIFIEDS_SIZE_COST: Record<AdSize, number> = {
 
 /** The classifieds never run past paper page 3. */
 export const CLASSIFIEDS_MAX_PAGES = 2;
+
+/** The grid columns one ad spans on the five-column classifieds grid: the
+ *  display (lead) ad takes three, every third boxed ad takes three and the
+ *  rest take two, small ads alternate between one and two, one-line notices
+ *  flow full-width in their run. Deterministic per entry and position, so
+ *  the phone sheet prints the same composition scaled. */
+export function spanFor(entry: Pick<Entry, 'id'>, size: AdSize, i: number): 1 | 2 | 3 {
+  if (size === 'display') return 3;
+  if (size === 'boxed') return i % 3 === 2 ? 3 : 2;
+  if (size === 'small') return (hashSeed(entry.id || '') + i) % 2 === 0 ? 1 : 2;
+  return 1;
+}
 
 /** Type weight: newer and more important entries take the larger formats. */
 export function typeWeight(type: unknown): number {

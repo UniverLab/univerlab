@@ -6,6 +6,7 @@ import {
   CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
   rankEntries,
+  spanFor,
   typeWeight,
 } from '../lib/lab-classifieds';
 import type { Entry } from '../lib/lab-feed';
@@ -175,5 +176,31 @@ describe('layoutClassifieds', () => {
     // The head ornament costs space without reflowing the entries: the net
     // sheet is what it always was.
     expect(CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST).toBe(146);
+  });
+});
+
+describe('spanFor', () => {
+  const entry = { id: 'e1' };
+
+  it('spans the display ad across three columns', () => {
+    expect(spanFor(entry, 'display', 0)).toBe(3);
+    expect(spanFor(entry, 'display', 5)).toBe(3);
+  });
+
+  it('spans every third boxed ad across three columns, the rest across two', () => {
+    expect([0, 1, 2, 3, 4, 5].map((i) => spanFor(entry, 'boxed', i))).toEqual([2, 2, 3, 2, 2, 3]);
+  });
+
+  it('alternates small ads between one and two columns, deterministically', () => {
+    const first = [0, 1, 2, 3].map((i) => spanFor(entry, 'small', i));
+    expect(new Set(first).size).toBeGreaterThan(1);
+    expect(first.every((s) => s === 1 || s === 2)).toBe(true);
+    // Same entry and position always give the same width, so the phone
+    // sheet prints the same composition scaled.
+    expect([0, 1, 2, 3].map((i) => spanFor(entry, 'small', i))).toEqual(first);
+  });
+
+  it('flows one-line notices full width', () => {
+    expect(spanFor(entry, 'line', 0)).toBe(1);
   });
 });

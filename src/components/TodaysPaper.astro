@@ -210,14 +210,19 @@ const t = useTranslations(lang);
      set in type beside it. Every ornament is printed like the paper's own
      halftones — sepia, multiplied into the sheet — so it reads in both
      themes and stays decorative to assistive technology (alt=""). */
-  .paper .lab-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
+  .paper .lab-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
   .paper .lab-head .lab-heading { border-bottom: 0; padding-bottom: 0; min-width: 0; }
   .paper .lab-head-ornament { width: min(16rem, 100%); height: auto; flex: 0 1 auto; }
+  /* The section cartouche carries the page's words inside the engraving,
+     centred over the plate like a caption in a frame. */
+  .paper .head-cartouche { position: relative; display: inline-block; max-width: 100%; }
+  .paper .head-cartouche img { display: block; width: min(26rem, 100%); height: auto; }
+  .paper .head-cartouche .lab-heading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; margin: 0; border-bottom: 0; padding-bottom: 0; }
   .paper .ad-cut { display: block; }
   .paper .ad-cut img { height: auto; }
   .paper .ad-cut.cut-sm img { width: 1.8rem; }
   .paper .ad-cut.cut-md img { width: 2.6rem; }
-  .paper .ad-cut.cut-lg img { width: 3.6rem; }
+  .paper .ad-cut.cut-lg img { width: 100%; }
   .paper .notice-fleuron { text-align: center; border-top: 0; padding: 8px 0 2px; }
   .paper .notice-fleuron img { width: 4.5rem; height: auto; }
   .paper .classifieds-rule, .paper .classifieds-ribbon { text-align: center; border-top: 0; padding: 8px 0; }
@@ -228,12 +233,12 @@ const t = useTranslations(lang);
     filter: grayscale(1) sepia(.22) contrast(1.12); mix-blend-mode: multiply; opacity: .9;
   }
   .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
-  .paper .lab-filters { display: grid; gap: 6px; }
-  .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .paper .lab-filter-row { border-top: 1px solid var(--p-ink); padding-top: 6px; }
-  .paper .lab-filter { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 3px 10px; cursor: pointer; }
+  .paper .lab-filters { display: grid; gap: 3px; }
+  .paper .lab-filter-row { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+  .paper .lab-filter-row { border-top: 1px solid var(--p-ink); padding-top: 3px; }
+  .paper .lab-filter { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-soft); background: transparent; border: 1px solid var(--p-rule); border-radius: 0; padding: 1px 5px; cursor: pointer; }
   .paper .lab-filter.is-active { color: var(--p-ink); border-color: var(--p-ink); }
-  .paper .lab-filter-count { opacity: 0.7; margin-left: 6px; font-size: 10.5px; }
+  .paper .lab-filter-count { opacity: 0.7; margin-left: 3px; font-size: 9.5px; }
   /* The classifieds: a packed period page. Narrow columns divided by thin
      vertical rules; ads stacked flush, each as tall as its content, divided
      by thin horizontal rules — no boxes, no fixed heights and no blank
@@ -242,16 +247,18 @@ const t = useTranslations(lang);
      flow packs the small ads instead of leaving blank paper under short
      ones. Spanning ads mask the column rules they cross with the paper's
      own ground; single-column ads leave them standing in the gutters. */
-  .paper .classifieds { display: grid; gap: 0 26px; grid-template-columns: minmax(0, 1fr); grid-auto-flow: dense; flex: 1 1 auto; min-height: 0; }
+  .paper .classifieds { display: grid; gap: 0 26px; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-flow: dense; flex: 1 1 auto; min-height: 0; background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 5) 100%; }
   .paper .classifieds > * { min-width: 0; }
+  .paper .ad-display { grid-column: 1 / -1; }
+  .paper .ad-lead { grid-column: 2 / span 3; grid-row: span 2; }
+  .paper .ad-boxed { grid-column: span 2; }
+  .paper .classifieds > .span2 { grid-column: span 2; }
+  .paper .classifieds > .span3 { grid-column: span 3; }
+  .paper .ad-small, .paper .classifieds > .coupon { grid-column: span 1; }
+  .paper .notice-run, .paper .notice-fleuron, .paper .classifieds-rule, .paper .classifieds-ribbon { grid-column: 1 / -1; }
+  .paper .classifieds > .ad-lead, .paper .classifieds > .ad-boxed, .paper .classifieds > .span2, .paper .classifieds > .span3, .paper .classifieds > .coupon, .paper .classifieds > .notice-run, .paper .classifieds > .notice-fleuron, .paper .classifieds > .classifieds-rule, .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
   @media (min-width: 48rem) {
-    .paper .classifieds { grid-template-columns: repeat(4, minmax(0, 1fr)); background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 4) 100%; }
-    .paper .ad-display { grid-column: 1 / -1; }
-    .paper .ad-lead { grid-column: 2 / span 2; grid-row: span 2; }
-    .paper .ad-boxed, .paper .classifieds > .coupon { grid-column: span 2; }
-    .paper .ad-small { grid-column: span 1; }
-    .paper .notice-run, .paper .notice-fleuron, .paper .classifieds-rule, .paper .classifieds-ribbon { grid-column: 1 / -1; }
-    .paper .classifieds > .ad-lead, .paper .classifieds > .ad-boxed, .paper .classifieds > .coupon, .paper .classifieds > .notice-run, .paper .classifieds > .notice-fleuron, .paper .classifieds > .classifieds-rule, .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
+    .paper .notice-run { column-count: 3; }
   }
   .paper .ad-display { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: center; }
   @media (min-width: 48rem) {
@@ -277,15 +284,22 @@ const t = useTranslations(lang);
   .paper .lead-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-emphasis); margin: 0; border-block: 1px solid var(--p-ink); padding-block: 4px; }
   .paper .ad-lead .ad-art { max-height: 15rem; overflow: hidden; }
   .paper .ad-lead .ad-art img { width: 100%; height: 100%; object-fit: cover; }
-  .paper .ad-lead h3.sz-lg { font-size: clamp(30px, 4vw, 44px); }
-  /* Six display voices, rotated across the ads so neighbours never match:
+  .paper .ad-lead h3.sz-lg { font-size: clamp(32px, 4.6vw, 54px); }
+  /* Eight display voices, rotated across the ads so neighbours never match:
      oversized condensed capitals, a fat-face slab line, an inverted bar,
-     a period ornamental line, small caps, and a big figure. */
+     a period ornamental line, small caps, a big figure, a run-in notice
+     with a bold lead, and a repeated word stacked in three sizes. */
   .paper .type-v0 h3 { font-family: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .paper .type-v1 h3 { font-family: 'Alfa Slab One', 'Rockwell', 'Courier New', serif; font-weight: 400; }
-  .paper .type-v2 h3 { background: var(--p-ink); color: var(--p-ground); padding: 4px 10px; }
+  /* Reversed ads are painted below: this line must never set the h3 colours. */
   .paper .type-v3 h3 { font-family: 'Pirata One', 'Old Standard TT', serif; font-weight: 400; letter-spacing: 0.02em; }
   .paper .type-v4 h3 { font-variant: small-caps; letter-spacing: 0.06em; }
+  .paper .type-v6 .run-in b { font-weight: 700; }
+  .paper .type-v7 { text-align: center; }
+  .paper .type-v7 .rep-word { display: block; font-family: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 600; text-transform: uppercase; text-align: center; line-height: 1.05; margin: 0; color: var(--p-ink); }
+  .paper .type-v7 .rep-word.rep-0 { font-size: clamp(26px, 3vw, 38px); letter-spacing: 0.04em; }
+  .paper .type-v7 .rep-word.rep-1 { font-size: clamp(20px, 2.4vw, 30px); letter-spacing: 0.1em; }
+  .paper .type-v7 .rep-word.rep-2 { font-size: clamp(15px, 1.8vw, 22px); letter-spacing: 0.22em; }
   .paper .type-v5 .ad-figure { display: block; font-family: 'Alfa Slab One', 'Rockwell', 'Courier New', serif; font-weight: 400; font-size: clamp(28px, 3.4vw, 44px); line-height: 1; color: var(--p-emphasis); margin: 0 0 2px; }
   /* A spare single or double rule frame on a few ads, as in the references. */
   .paper .frame-accent { outline: 1px solid var(--p-ink); outline-offset: 3px; }
@@ -298,6 +312,16 @@ const t = useTranslations(lang);
   .paper .log-entry h3.sz-md { font-weight: 700; font-size: 20px; }
   .paper .log-entry h3.sz-sm { font-weight: 400; font-size: 18px; font-style: italic; }
   .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 15.5px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
+  /* Reversed ads: light letters on ink. Hung off .classifieds so it beats the
+     later generic .log-entry h3 rule at every width, in both themes, whose
+     variables both define. */
+  .paper .classifieds .type-v2 { background: var(--p-ink); }
+  .paper .classifieds .type-v2 h3 { background: var(--p-ink); color: var(--p-ground); padding: 4px 10px; }
+  .paper .classifieds .type-v2 p, .paper .classifieds .type-v2 time { color: var(--p-ground); }
+  .paper .classifieds .type-v2 .type-badge, .paper .classifieds .type-v2 .log-link { color: var(--p-ground); border-color: var(--p-ground); }
+  .paper .classifieds .type-v2 p a { color: var(--p-ground); }
+  /* The classifieds set small and tight against the Logbook's body type. */
+  .paper .classifieds .log-entry p { font-size: 13.5px; line-height: 1.45; }
   .paper .log-entry .entry-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; border-top: 1px solid var(--p-rule); padding-top: 6px; }
   .paper .log-entry p a, .paper .log-entry .log-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper.js .log-entry.is-hidden { display: none; }
@@ -526,13 +550,15 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .masthead-name { grid-column: 2; grid-row: 1; font-size: 86px; }
   .paper-viewport.sheet .paper .masthead .ear--right { grid-column: 3; grid-row: 1; }
   .paper-viewport.sheet .paper .masthead .motto { font-size: 19px; }
-  .paper-viewport.sheet .paper .classifieds { grid-template-columns: repeat(4, minmax(0, 1fr)); background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 4) 100%; }
+  .paper-viewport.sheet .paper .classifieds { grid-template-columns: repeat(5, minmax(0, 1fr)); background-image: linear-gradient(to right, var(--p-rule) 1px, transparent 1px); background-size: calc(100% / 5) 100%; }
   .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-  .paper-viewport.sheet .paper .ad-lead { grid-column: 2 / span 2; grid-row: span 2; }
-  .paper-viewport.sheet .paper .ad-boxed, .paper-viewport.sheet .paper .classifieds > .coupon { grid-column: span 2; }
-  .paper-viewport.sheet .paper .ad-small { grid-column: span 1; }
+  .paper-viewport.sheet .paper .ad-lead { grid-column: 2 / span 3; grid-row: span 2; }
+  .paper-viewport.sheet .paper .ad-boxed { grid-column: span 2; }
+  .paper-viewport.sheet .paper .classifieds > .span2 { grid-column: span 2; }
+  .paper-viewport.sheet .paper .classifieds > .span3 { grid-column: span 3; }
+  .paper-viewport.sheet .paper .ad-small, .paper-viewport.sheet .paper .classifieds > .coupon { grid-column: span 1; }
   .paper-viewport.sheet .paper .notice-run, .paper-viewport.sheet .paper .notice-fleuron, .paper-viewport.sheet .paper .classifieds-rule, .paper-viewport.sheet .paper .classifieds-ribbon { grid-column: 1 / -1; }
-  .paper-viewport.sheet .paper .classifieds > .ad-lead, .paper-viewport.sheet .paper .classifieds > .ad-boxed, .paper-viewport.sheet .paper .classifieds > .coupon, .paper-viewport.sheet .paper .classifieds > .notice-run, .paper-viewport.sheet .paper .classifieds > .notice-fleuron, .paper-viewport.sheet .paper .classifieds > .classifieds-rule, .paper-viewport.sheet .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
+  .paper-viewport.sheet .paper .classifieds > .ad-lead, .paper-viewport.sheet .paper .classifieds > .ad-boxed, .paper-viewport.sheet .paper .classifieds > .span2, .paper-viewport.sheet .paper .classifieds > .span3, .paper-viewport.sheet .paper .classifieds > .coupon, .paper-viewport.sheet .paper .classifieds > .notice-run, .paper-viewport.sheet .paper .classifieds > .notice-fleuron, .paper-viewport.sheet .paper .classifieds > .classifieds-rule, .paper-viewport.sheet .paper .classifieds > .classifieds-ribbon { background: var(--p-ground); }
   .paper-viewport.sheet .paper .notice-run { column-count: 3; }
   .paper-viewport.sheet .paper .lab-heading--cont { font-size: 30px; }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }

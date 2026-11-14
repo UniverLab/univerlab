@@ -30,7 +30,49 @@ const mixed: Entry[] = [
 ];
 
 describe('the packed classifieds page', () => {
-  it('rotates the six display voices so adjacent ads never share one', () => {
+  it('packs five narrow columns with mixed spans under a central lead', () => {
+    // Five columns at every width, including the zoomed phone sheet: no
+    // four-column fallback may remain.
+    expect(css).toContain('repeat(5, minmax(0, 1fr))');
+    expect(css).toContain('calc(100% / 5)');
+    expect(css).not.toContain('repeat(4');
+    // The lead sits central and largest; the small type runs tight.
+    expect(css).toMatch(/\.paper \.ad-lead \{[^}]*grid-column: 2 \/ span 3/);
+    expect(css).toContain('clamp(32px, 4.6vw, 54px)');
+    expect(css).toContain('.paper .ad-cut.cut-lg img { width: 100%; }');
+    expect(css).toContain('.paper .classifieds .log-entry p { font-size: 13.5px; line-height: 1.45; }');
+    const html = labPageHtml(mixed, 'en') + labPageHtml2(mixed, 'en');
+    // The latest launch leads central; one-, two- and three-column ads mix.
+    expect(html).toContain('<article class="log-entry ad-display ad-lead type-v');
+    expect(html).toContain('span3');
+    expect(html).toContain('ad-boxed');
+    expect(html).toContain('class="coupon"');
+    // No ad is an empty frame: every entry card shows its title as a
+    // heading, the repeated word, or the run-in lead.
+    const cards = [...html.matchAll(/<article class="([^"]*)"([\s\S]*?)<\/article>/g)]
+      .filter((m) => !m[1].includes('notice'));
+    expect(cards.length).toBeGreaterThan(1);
+    for (const card of cards) {
+      expect(card[2]).toMatch(/<h3|<span class="rep-word|<p class="run-in"><b>/);
+    }
+    // No empty ribbon frame rides either page.
+    expect(html).not.toContain('classifieds-ribbon');
+  });
+
+  it('paints reversed ads light-on-ink after the generic heading rule', () => {
+    // The later equal-specificity .log-entry h3 rule once won and painted
+    // reversed headings ink on ink; the classifieds-scoped rule must come
+    // after it and read ground on ink in both themes.
+    const generic = css.indexOf('.paper .log-entry h3 {');
+    const reversed = css.indexOf('.paper .classifieds .type-v2 h3');
+    expect(generic).toBeGreaterThan(-1);
+    expect(reversed).toBeGreaterThan(generic);
+    const rule = css.slice(reversed, css.indexOf('}', reversed));
+    expect(rule).toContain('background: var(--p-ink)');
+    expect(rule).toContain('color: var(--p-ground)');
+  });
+
+  it('rotates the display voices so adjacent ads never share one', () => {
     for (const html of [labPageHtml(mixed, 'en'), labPageHtml2(mixed, 'en')]) {
       if (!html.includes('type-v')) continue;
       const variants = [...html.matchAll(/<article class="[^"]*type-v(\d)/g)].map((m) => m[1]);

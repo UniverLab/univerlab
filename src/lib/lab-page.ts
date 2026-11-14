@@ -8,7 +8,7 @@
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { entriesMarkdown, firstParagraph, sortEntries, type Entry } from './lab-feed';
-import { layoutClassifieds, type AdSlot } from './lab-classifieds';
+import { layoutClassifieds, spanFor, type AdSlot } from './lab-classifieds';
 import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
 import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
@@ -178,11 +178,17 @@ function frameAccent(e: Entry): string {
   return '';
 }
 
-function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Set<string>, lead: boolean): string {
+function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Set<string>, lead: boolean, spanCls: string, frame: string): string {
   const e = slot.entry;
   const title = esc(e.title || '');
-  const v = ` type-v${((variant % 6) + 6) % 6}`;
-  const figure = variant % 6 === 5 ? `<span class="ad-figure">${esc(figureFor(e))}</span>` : '';
+  const v = ` type-v${variant}`;
+  const figure = variant === 5 ? `<span class="ad-figure">${esc(figureFor(e))}</span>` : '';
+  // The two extra voices: a small run-in notice with a bold lead word and
+  // no h3, and the title repeated in three stacked sizes over the body.
+  const repWords =
+    `<span class="rep-word rep-0">${title}</span>` +
+    `<span class="rep-word rep-1">${title}</span>` +
+    `<span class="rep-word rep-2">${title}</span>`;
   if (slot.size === 'display') {
     const cls = lead ? 'log-entry ad-display ad-lead' : 'log-entry ad-display';
     const kicker = lead ? `<p class="lead-kicker">${esc(t.labPage.leadKicker)}</p>` : '';
@@ -199,10 +205,15 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     );
   }
   if (slot.size === 'boxed') {
+    const head =
+      variant === 6
+        ? `<p class="run-in"><b>${title}.</b> ${linkify(e.body || '')}</p>`
+        : variant === 7
+          ? `${repWords}<p>${linkify(e.body || '')}</p>`
+          : `${figure}<h3 class="sz-md">${title}</h3><p>${linkify(e.body || '')}</p>`;
     return (
-      `<article class="log-entry ad-boxed${frameAccent(e)}${v}" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e, page, used)}${figure}<h3 class="sz-md">${title}</h3>` +
-      `<p>${linkify(e.body || '')}</p>` +
+      `<article class="log-entry ad-boxed${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${adCut(e, page, used)}${head}` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
     );
@@ -212,10 +223,15 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     const link = e.link
       ? ` <a class="log-link" href="${esc(finalEntryHref(e.link || ''))}" target="_blank" rel="noopener noreferrer">${esc(t.labPage.view)}</a>`
       : '';
+    const head =
+      variant === 6
+        ? `<p class="run-in"><b>${title}.</b> ${cut}${link}</p>`
+        : variant === 7
+          ? `${repWords}<p>${cut}${link}</p>`
+          : `${figure}<h3 class="sz-sm">${title}</h3><p>${cut}${link}</p>`;
     return (
-      `<article class="log-entry ad-small${frameAccent(e)}${v}" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e, page, used)}${figure}<h3 class="sz-sm">${title}</h3>` +
-      `<p>${cut}${link}</p>` +
+      `<article class="log-entry ad-small${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${adCut(e, page, used)}${head}` +
       `</div></article>`
     );
   }
@@ -227,27 +243,22 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
 
 /** One page grid: entry ads with coupon ads interleaved after the `after`-th
  *  slot, consecutive one-line notices grouped into dense runs of small type.
- *  Display treatments rotate across the ads so no two adjacent ads share
- *  one; the offset is fixed per page, so the rotation never reshuffles. On
- *  page 1 the display ad reads as the lead story in the middle of the
- *  page, closed by a rule; page 2 opens under a ribbon. */
+ *  Every entry ad takes one of eight treatments, (hashSeed(id) + n) % 8,
+ *  bumped past the previous ad's treatment, width and frame, so neighbours
+ *  never share one; coupons ride as the eighth treatment. The sequence is
+ *  fixed per edition, so one edition never reshuffles on reload. On page 1
+ *  the display ad reads as the lead story in the middle of the page, closed
+ *  by a rule. */
 function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, lang: LabPageLang, page: number): string {
   const used = new Set<string>();
-  // The rotation offset is fixed for a given edition (same entries) and page,
-  // so one edition never reshuffles on reload while editions vary.
-  const editionSeed = slots.map((s) => `${s.entry.date}|${s.entry.id}`).join(';');
-  const offset = hashSeed(`variants|${page}|${editionSeed}`) % 6;
-  let n = 0;
-  const lead = page === 1 && slots.length > 0 && slots[0].size === 'display';
-  const parts: string[] = slots.map((s, i) => slotHtml(s, t, offset + n++, page, used, lead && i === 0));
-  const kinds: string[] = slots.map((s) => s.size);
-  const cards = coupons.map((c) => couponAdHtml(lang, c));
-  if (cards.length) {
-    const at = Math.min(after + 1, parts.length);
-    parts.splice(at, 0, ...cards);
-    kinds.splice(at, 0, ...cards.map(() => 'coupon'));
+  type Item = { kind: 'slot'; slot: AdSlot } | { kind: 'coupon'; html: string };
+  const items: Item[] = slots.map((slot) => ({ kind: 'slot' as const, slot }));
+  if (coupons.length) {
+    const at = Math.min(after + 1, items.length);
+    items.splice(at, 0, ...coupons.map((c) => ({ kind: 'coupon' as const, html: couponAdHtml(lang, c) })));
   }
-  let out = page === 2 ? `<div class="classifieds-ribbon">${ornamentImg('ribbon')}</div>` : '';
+  const lead = page === 1 && slots.length > 0 && slots[0].size === 'display';
+  let out = '';
   let run: string[] = [];
   const flush = (): void => {
     if (run.length) {
@@ -257,17 +268,49 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     run = [];
   };
   let leadClosed = !lead;
-  parts.forEach((html, i) => {
-    if (kinds[i] === 'line') run.push(html);
-    else {
+  let n = 0;
+  let si = 0;
+  let prevTv = -1;
+  let prevSpan = -1;
+  let prevFrame = '';
+  for (const item of items) {
+    if (item.kind === 'coupon') {
       flush();
-      out += html;
-      if (lead && !leadClosed && i === 0) {
-        out += `<div class="classifieds-rule">${ornamentImg('rule')}</div>`;
-        leadClosed = true;
-      }
+      out += item.html;
+      prevTv = -2;
+      prevSpan = 1;
+      prevFrame = 'coupon';
+      continue;
     }
-  });
+    const s = item.slot;
+    if (s.size === 'line') {
+      run.push(slotHtml(s, t, 0, page, used, false, '', ''));
+      prevTv = -3;
+      prevSpan = 5;
+      prevFrame = 'run';
+      continue;
+    }
+    flush();
+    const voices = s.size === 'display' ? 6 : 8;
+    let tv = (hashSeed(s.entry.id || '') + n) % voices;
+    n += 1;
+    while (tv === prevTv) tv = (tv + 1) % voices;
+    let span = spanFor(s.entry, s.size, si);
+    si += 1;
+    if (span === prevSpan) span = span === 1 ? 2 : span === 2 ? (s.size === 'small' ? 1 : 3) : 2;
+    const spanCls = s.size === 'display' ? '' : span === 3 ? ' span3' : span === 2 && s.size === 'small' ? ' span2' : '';
+    let frame = frameAccent(s.entry);
+    if (frame && frame === prevFrame) frame = '';
+    prevFrame = frame;
+    const isLead = lead && s === slots[0];
+    out += slotHtml(s, t, tv, page, used, isLead, spanCls, frame ? ` ${frame}` : '');
+    prevTv = tv;
+    prevSpan = span;
+    if (isLead && !leadClosed) {
+      out += `<div class="classifieds-rule">${ornamentImg('rule')}</div>`;
+      leadClosed = true;
+    }
+  }
   flush();
   return out;
 }
@@ -314,13 +357,13 @@ function logbookPointerHtml(t: Dict, lang: LabPageLang): string {
   return `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
 }
 
-/** A classifieds section head: the engraved head ornament with the words
- *  set in type beside it, never inside the image. `cont` marks the page-3
+/** A classifieds section head: the page's words set inside the engraved
+ *  head cartouche, centred over the plate. `cont` marks the page-3
  *  continuation head. */
 function headHtml(t: Dict, cont: boolean): string {
   const words = cont ? `${esc(t.labPage.heading)} · ${esc(t.continued)}` : esc(t.labPage.heading);
   const cls = cont ? 'lab-heading lab-heading--cont' : 'lab-heading';
-  return `<header class="lab-head">${ornamentImg('head', 'lab-head-ornament')}<h2 class="${cls}">${words}</h2></header>`;
+  return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="${cls}">${words}</h2></div></header>`;
 }
 
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
