@@ -4,6 +4,7 @@ import { getLang, useTranslations, localizePath } from '../i18n';
 import { byId, type ExperimentId } from '../lib/experiments';
 import { BRAILLE_SENTENCE, toBraille } from '../lib/braille';
 import { legalNav } from '../data/legal-nav';
+import { bookTarget } from '../lib/book-target';
 import { iconSvg } from '../lib/icon-svg';
 import { codeXml, github, heart } from '../lib/icons';
 
@@ -97,7 +98,7 @@ const legalLinks = [{ href: localizePath('/privacy', lang), label: legal.privacy
         ))}</div>
       ))}
     </nav>
-    <a class="cta" href={localizePath('/workbench', lang)}>{t.footer.cta}</a>
+    <a class="cta" href={bookTarget(lang)}>{t.footer.cta}</a>
     <p class="word-rule"><span class="word" translate="no">UNIVERLAB</span></p>
     <!-- Braille easter egg (user, 2026-10-21): one faint line of real grade-1
          cells, the same sentence in every language, never translated and

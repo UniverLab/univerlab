@@ -490,7 +490,7 @@ describe('the lab advertisements', () => {
     expect(html).toContain('Banco de trabajo');
     expect(html).toContain('inteligencia artificial');
     expect(html).not.toMatch(/[a-zñ] banco/);
-    expect(html).toContain('<a class="ad-cta" href="/es/workbench/">Abrir el Banco de trabajo</a>');
+    expect(html).toContain('<a class="ad-cta" href="/es/workbench/#primera-llamada">Abrir el Banco de trabajo</a>');
     expect(html).toContain('<a class="ad-cta" href="/es/workbench/audits/">');
     expect(html).toContain('<a href="/es/canopy/">Canopy</a>');
     expect(html).toContain('<a href="/es/facetmedia/">');
@@ -516,7 +516,7 @@ describe('the lab advertisements', () => {
     const lines = md.match(/^\*Notice — /gm) ?? [];
     expect(lines.length).toBeGreaterThanOrEqual(2);
     expect(lines.length).toBeLessThanOrEqual(3);
-    expect(md).toContain('[The Workbench](https://univerlab.org/workbench/)');
+    expect(md).toContain('[The Workbench](https://univerlab.org/workbench/#first-call)');
     expect(md).toContain('https://univerlab.org/workbench/audits/');
     expect(md).toContain('https://univerlab.org/canopy/');
     expect(md).toContain('https://univerlab.org/facetmedia/');
@@ -525,7 +525,7 @@ describe('the lab advertisements', () => {
     const esLines = es.match(/^\*Aviso — /gm) ?? [];
     expect(esLines.length).toBeGreaterThanOrEqual(2);
     expect(esLines.length).toBeLessThanOrEqual(3);
-    expect(es).toContain('[Banco de trabajo](https://univerlab.org/es/workbench/)');
+    expect(es).toContain('[Banco de trabajo](https://univerlab.org/es/workbench/#primera-llamada)');
     expect(es).toContain('https://univerlab.org/es/workbench/audits/');
   });
 });

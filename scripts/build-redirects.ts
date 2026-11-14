@@ -91,6 +91,14 @@ export const STATIC_RULES: readonly string[] = [
   // never serves it directly, so it has no /es twin either.
   '/es/audit-shell /audit-shell/ 301',
   '/es/audit-shell/ /audit-shell/ 301',
+  // /workbench/book/ moved into a section of the Workbench page: old links
+  // land on the form through its anchor, like /status above.
+  '/workbench/book /workbench/#first-call 301',
+  '/workbench/book/ /workbench/#first-call 301',
+  '/workbench/book/index.md /workbench/index.md 301',
+  '/es/workbench/book /es/workbench/#primera-llamada 301',
+  '/es/workbench/book/ /es/workbench/#primera-llamada 301',
+  '/es/workbench/book/index.md /es/workbench/index.md 301',
   // Docs are English-only, so the Spanish spellings Google crawled are a
   // whole-segment mistake: send them to the English page rather than 404.
   '/es/:id/docs/* /:id/docs/:splat 301',

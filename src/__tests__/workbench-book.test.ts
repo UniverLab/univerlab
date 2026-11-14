@@ -1,7 +1,8 @@
 /**
- * The free-first-call booking page (/workbench/book/): a form that lists
- * the service's free slots and books one, in both languages, with the
- * WhatsApp line and the lab email as the no-JS fallback.
+ * The free-first-call booking section of the Workbench page (#first-call /
+ * #primera-llamada): a form that lists the service's free slots and books
+ * one, in both languages, with the WhatsApp line and the lab email as the
+ * no-JS fallback.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -20,11 +21,10 @@ import { privacyEs } from '../data/legal-es';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
-const VIEW = readFileSync(resolve(__dirname, '../views/WorkbenchBook.astro'), 'utf8');
-const ROUTE = readFileSync(resolve(__dirname, '../pages/workbench/book.astro'), 'utf8');
-const ROUTE_ES = readFileSync(resolve(__dirname, '../pages/es/workbench/book.astro'), 'utf8');
+const VIEW = readFileSync(resolve(__dirname, '../views/Workbench.astro'), 'utf8');
 const CARD = readFileSync(resolve(__dirname, '../views/Workbench.astro'), 'utf8');
 const AUDITS = readFileSync(resolve(__dirname, '../views/WorkbenchAudits.astro'), 'utf8');
+const SOLUTIONS = readFileSync(resolve(__dirname, '../views/WorkbenchSolutions.astro'), 'utf8');
 
 const ERRORS: BookErrors = {
   slotTaken: 'taken',
@@ -34,18 +34,14 @@ const ERRORS: BookErrors = {
   invalid: 'bad',
 };
 
-describe('workbench-book routes', () => {
-  it('both language routes render the booking view', () => {
-    expect(ROUTE).toContain('WorkbenchBook');
-    expect(ROUTE_ES).toContain('WorkbenchBook');
-    expect(ROUTE_ES).toContain('../../../views/WorkbenchBook.astro');
-  });
-
-  it('the view carries the page title and description from the dictionary', () => {
-    expect(VIEW).toContain('title={b.title}');
-    expect(VIEW).toContain('description={b.description}');
+describe('workbench-book section', () => {
+  it('the Workbench page carries the booking form in its own anchored section', () => {
+    expect(VIEW).toContain("id={lang === 'es' ? 'primera-llamada' : 'first-call'}");
+    expect(VIEW).toContain('<section class="book"');
     expect(VIEW).toContain('<BaseLayout');
     expect(VIEW).toContain('<Watermark kind="blueprint" />');
+    expect(VIEW).toContain('bindBookForm(document)');
+    expect(VIEW).toContain("import { bindBookForm } from '../lib/book-client'");
   });
 });
 
@@ -55,15 +51,6 @@ describe('workbench-book copy', () => {
     expect(Object.keys(en.book.form).sort()).toEqual(Object.keys(es.book.form).sort());
     expect(Object.keys(en.book.errors).sort()).toEqual(Object.keys(es.book.errors).sort());
     expect(Object.keys(en.book.success).sort()).toEqual(Object.keys(es.book.success).sort());
-  });
-
-  it('titles and descriptions fit the SEO limits', () => {
-    for (const b of [en.book, es.book]) {
-      expect(b.title.length).toBeGreaterThanOrEqual(30);
-      expect(b.title.length).toBeLessThanOrEqual(60);
-      expect(b.description.length).toBeGreaterThanOrEqual(120);
-      expect(b.description.length).toBeLessThanOrEqual(160);
-    }
   });
 
   it('no law is named on the booking page', () => {
@@ -423,9 +410,9 @@ describe('workbench-book privacy', () => {
 });
 
 describe('workbench-book entry points', () => {
-  it('the Workbench and audits pages lead the first call to the booking page', () => {
-    for (const view of [CARD, AUDITS]) {
-      expect(view).toContain("localizePath('/workbench/book', lang)");
+  it('the Workbench, audits and solutions pages lead the free call to the booking section', () => {
+    for (const view of [CARD, AUDITS, SOLUTIONS]) {
+      expect(view).toContain('bookTarget(lang)');
       expect(view).toContain('{w.altCta}');
       // WhatsApp stays as the secondary way to write.
       expect(view).toContain('https://wa.me/573053892323');

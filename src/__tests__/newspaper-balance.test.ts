@@ -106,7 +106,7 @@ describe('a long edition balances its columns', () => {
     expect(html).not.toContain('ad--tall');
     const duos = [...html.matchAll(/<aside class="ad ad--feature"[^>]*>(.*?)<\/aside>/gs)];
     expect(duos).toHaveLength(1);
-    expect(duos[0][1]).toContain('href="/workbench/"');
+    expect(duos[0][1]).toContain('href="/workbench/#first-call"');
     expect(duos[0][1]).toContain('href="/workbench/audits/"');
     const railStart = html.indexOf('<div class="rail">');
     const railEnd = html.indexOf('</div>', html.indexOf('</aside>', railStart));
@@ -133,11 +133,11 @@ describe('a long edition balances its columns', () => {
     const es = todayEditionHtml({ facts: FACTS, lab: [] }, 'es', DATE);
     expect(es).not.toContain('ad-pair');
     expect(es).not.toContain('ad--tall');
-    expect(es).toContain('href="/es/workbench/"');
+    expect(es).toContain('href="/es/workbench/#primera-llamada"');
     expect(es).toContain('href="/es/workbench/audits/"');
     expect(es).toContain('href="/es/contributors/"');
     const esMd = todayEditionMarkdown({ facts: FACTS, lab: [] }, 'es', DATE);
-    expect(esMd).toContain('https://univerlab.org/es/workbench/');
+    expect(esMd).toContain('https://univerlab.org/es/workbench/#primera-llamada');
     expect(esMd).toContain('https://univerlab.org/es/workbench/audits/');
   });
 

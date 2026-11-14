@@ -1056,13 +1056,10 @@ export const es: Dict = {
     },
   },
   book: {
-    title: 'Agenda la primera llamada gratis · 15 min — UniverLab',
-    description:
-      'Elige un espacio gratis de 15 minutos para tu primera llamada con el Banco de trabajo y recibe una invitación de calendario con enlace para cancelar.',
     label: 'AGENDA LA LLAMADA GRATIS',
     h1: 'Agenda tu primera llamada gratis',
     intro:
-      'Elige abajo un espacio libre del Banco de trabajo para una llamada de 15 minutos sobre lo que necesitas en inteligencia artificial y agentes. Recibes una invitación de calendario por correo; las sesiones pagadas siguen su camino de hoy — esta página solo agenda la primera llamada gratis.',
+      'Elige abajo un espacio libre del Banco de trabajo para una llamada de 15 minutos sobre lo que necesitas en inteligencia artificial y agentes. Recibes una invitación de calendario por correo; las sesiones pagadas siguen su camino de hoy — esta sección solo agenda la primera llamada gratis.',
     fallbackTitle: '¿Prefieres escribir?',
     fallbackText: 'Si el formulario no carga, escríbenos y una persona la agenda a mano:',
     whatsapp: 'Escríbenos por WhatsApp →',

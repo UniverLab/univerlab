@@ -7,6 +7,7 @@
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { BOOK_ANCHOR } from './book-target';
 import { ornamentImg } from './classifieds-ornaments';
 
 export type PaperCouponLang = 'en' | 'es';
@@ -53,7 +54,7 @@ function coupons(lang: PaperCouponLang, foundingLeft?: number | null): Coupon[] 
   const call: Coupon = {
     figure: wb.freeCall.figure,
     cond: wb.freeCall.cond,
-    href: `${p}/workbench/`,
+    href: `${p}/workbench/${BOOK_ANCHOR[lang]}`,
     link: t.ads.workbench.link,
   };
   const auditsHref = `${p}/workbench/audits/`;

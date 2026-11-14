@@ -130,7 +130,7 @@ describe('workbench-solutions', () => {
     expect(ROUTE_ES).toContain('WorkbenchSolutions');
     expect(VIEW).toContain('<Machine id="workbench"');
     expect(VIEW).toContain('<Watermark kind="blueprint" />');
-    expect(VIEW).toContain("localizePath('/workbench/book', lang)");
+    expect(VIEW).toContain('bookTarget(lang)');
     expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');

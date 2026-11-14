@@ -1062,13 +1062,10 @@ export const en = {
     },
   },
   book: {
-    title: 'Book the free first call · 15 min — UniverLab',
-    description:
-      'Choose a free 15-minute slot for your first call with the Workbench, and get a calendar invitation with a link to cancel.',
     label: 'BOOK THE FREE CALL',
     h1: 'Book your free first call',
     intro:
-      'Pick a free slot below for a 15-minute call about what you need in artificial intelligence and agents. You get a calendar invitation by email; the paid sessions keep their path of today — this page only books the free first call.',
+      'Pick a free slot below for a 15-minute call about what you need in artificial intelligence and agents. You get a calendar invitation by email; the paid sessions keep their path of today — this section only books the free first call.',
     fallbackTitle: 'Prefer to write instead?',
     fallbackText: 'When the form cannot load, write to the lab and a person books it by hand:',
     whatsapp: 'Write on WhatsApp →',

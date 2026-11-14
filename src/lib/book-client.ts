@@ -1,5 +1,5 @@
 /**
- * Booking form client for `/workbench/book/`.
+ * Booking form client for the Workbench booking section (`#first-call`).
  *
  * The page ships with the form hidden and a visible contact fallback, so
  * visitors without JavaScript (or when the service is down) never see a

@@ -52,14 +52,19 @@ describe('workbench', () => {
     expect(en.workbench.ctaShort.length).toBeLessThan(en.workbench.cta.length);
     expect(VIEW).toContain('{w.ctaShort}');
     expect(VIEW).toContain('{w.ctaNote}');
-    expect(VIEW).toContain("localizePath('/workbench/book', lang)");
+    expect(VIEW).toContain('bookTarget(lang)');
     expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('https://wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');
   });
 
   it('no booking path by email survives on the page or in the copy', () => {
-    expect(VIEW).not.toContain('mailto:');
+    // The moved booking section keeps its own no-JS email fallback, so the
+    // guard scopes to the rest of the view.
+    const bookStart = VIEW.indexOf('<section class="book"');
+    expect(bookStart).toBeGreaterThan(-1);
+    const rest = VIEW.slice(0, bookStart) + VIEW.slice(VIEW.indexOf('</section>', bookStart));
+    expect(rest).not.toContain('mailto:');
     expect(VIEW).not.toContain('hola@univerlab.org');
     // The audits copy names the reader emails of the private delivery page,
     // which is not a booking path: scope the correo/email guard to the rest.

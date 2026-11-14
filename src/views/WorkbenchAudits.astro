@@ -3,13 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Watermark from '../components/Watermark.astro';
 import Machine from '../components/Machine.astro';
 import { getLang, localizePath, useTranslations } from '../i18n';
+import { bookTarget } from '../lib/book-target';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const w = t.workbench;
 const a = w.audits;
 const WHATSAPP = 'https://wa.me/573053892323';
 const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
-const bookHref = localizePath('/workbench/book', lang);
+const bookHref = bookTarget(lang);
 ---
 <BaseLayout title={a.title} description={a.description} circadian>
   <Watermark kind="blueprint" />

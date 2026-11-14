@@ -130,10 +130,10 @@ describe('Footer — the centred colophon order', () => {
     expect(markup).toContain('{!isManifesto && <p class="quote">{t.footer.quote}</p>}');
   });
 
-  it('invites to the workbench with the dictionary CTA', () => {
+  it('leads the free call to the booking section with the dictionary CTA', () => {
     expect(markup).toContain("{t.footer.cta}");
-    expect(src).toContain("localizePath('/workbench', lang)");
-    expect(markup).toMatch(/<a class="cta" href=\{localizePath\('\/workbench', lang\)\}>/);
+    expect(src).toContain("bookTarget(lang)");
+    expect(markup).toMatch(/<a class="cta" href=\{bookTarget\(lang\)\}>/);
   });
 
   it('rules the UNIVERLAB word across the colophon', () => {

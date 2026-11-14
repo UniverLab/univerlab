@@ -252,7 +252,7 @@ describe('workbench-audits', () => {
   });
 
   it('the view leads the free call to the booking page and links the privacy page', () => {
-    expect(VIEW).toContain("localizePath('/workbench/book', lang)");
+    expect(VIEW).toContain('bookTarget(lang)');
     expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');

@@ -6,6 +6,7 @@
 
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
+import { BOOK_ANCHOR, bookTarget } from './book-target';
 import { experiments } from './experiments';
 
 export type PaperAdLang = 'en' | 'es';
@@ -75,7 +76,7 @@ export function paperAdHtml(lang: PaperAdLang, id: PaperAdId): string {
       id,
       a.head,
       linesHtml(a.lines),
-      closeHtml(a.tail, `${p}/workbench/`, a.link),
+      closeHtml(a.tail, bookTarget(lang), a.link),
     );
   }
   if (id === 'audits') {
@@ -130,7 +131,7 @@ export function paperWorkbenchDuoHtml(lang: PaperAdLang): string {
     'audits',
     wb.head,
     linesHtml([...wb.lines, ...au.lines]),
-    closeHtml(wb.tail, `${p}/workbench/`, wb.link) +
+    closeHtml(wb.tail, bookTarget(lang), wb.link) +
       closeHtml(au.tail, `${p}/workbench/audits/`, au.link),
   );
 }
@@ -170,7 +171,7 @@ export function paperAdsMarkdown(lang: PaperAdLang, house: 'split' | 'merged' = 
   const co = t.ads.collab;
   const inst = t.ads.install;
   const lines = [
-    `*${t.ads.label} — [${wb.head}](${b}/workbench/): ${wb.lines[0]} · [${au.head}](${b}/workbench/audits/): ${au.lines[0]}*`,
+    `*${t.ads.label} — [${wb.head}](${b}/workbench/${BOOK_ANCHOR[lang]}): ${wb.lines[0]} · [${au.head}](${b}/workbench/audits/): ${au.lines[0]}*`,
   ];
   if (house === 'split') {
     lines.push(

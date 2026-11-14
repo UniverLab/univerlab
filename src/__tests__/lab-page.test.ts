@@ -231,10 +231,10 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('links the call to the Workbench and the audits to the audits page', () => {
     const html = labPageHtml(entries, 'en');
-    expect(html).toContain('href="/workbench/"');
+    expect(html).toContain('href="/workbench/#first-call"');
     expect(html.match(/href="\/workbench\/audits\/"/g)).toHaveLength(3);
     const esHtml = labPageHtml(entries, 'es');
-    expect(esHtml).toContain('href="/es/workbench/"');
+    expect(esHtml).toContain('href="/es/workbench/#primera-llamada"');
     expect(esHtml.match(/href="\/es\/workbench\/audits\/"/g)).toHaveLength(3);
     expect(esHtml).toContain('<span class="coupon-figure">Gratis</span>');
     expect(esHtml).toContain('✂ recorta aquí');
@@ -441,12 +441,12 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   it('twins the coupons as plain markdown lines with links', () => {
     const md = labPageMarkdown(entries, 'en');
     expect(md).toContain('*✂ Free — ');
-    expect(md).toContain('[Open the Workbench](https://univerlab.org/workbench/)');
+    expect(md).toContain('[Open the Workbench](https://univerlab.org/workbench/#first-call)');
     expect(md.match(/\(https:\/\/univerlab\.org\/workbench\/audits\/\)/g)).toHaveLength(3);
     expect(md).toContain('Discounts do not stack');
     expect(md.indexOf('*✂')).toBeLessThan(md.indexOf('**Newest**'));
     const esMd = labPageMarkdown(entries, 'es');
-    expect(esMd).toContain('[Abrir el Banco de trabajo](https://univerlab.org/es/workbench/)');
+    expect(esMd).toContain('[Abrir el Banco de trabajo](https://univerlab.org/es/workbench/#primera-llamada)');
     expect(esMd).toContain('no se acumulan');
   });
 });
