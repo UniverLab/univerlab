@@ -481,8 +481,8 @@ export const experiments: Dict['experiments'] = {
       lede: 'facet instala cada herramienta de creación en su propio entorno fijado, la ejecuta por un solo contrato <strong>--json</strong> y deja junto a cada archivo su <strong>registro</strong>: qué lo hizo, bajo qué licencia y si <strong>pasó</strong>.',
       genesis: {
         kicker: 'Génesis',
-        title: 'De los scripts del laboratorio a un contrato.',
-        body: 'facet nació el 22 de octubre de 2026 en el laboratorio de gráficos de UniverLab, donde cada herramienta (una voz, un CAD, un banner) vivía en su propio script y había que rehacer su entorno en cada máquina. La pregunta era la de siempre: ¿cómo sabe un agente que lo que hizo sirve? La respuesta de facet es que cada capacidad trae su propia verificación, y cada activo, su registro.',
+        title: 'Un laboratorio que cabe en un comando.',
+        body: 'facet nació de una GPU de 8 GB comprada con la idea ingenua de correr modelos de lenguaje. Para eso se queda corta de memoria, pero para imagen, voz, audio y CAD rinde muy bien. Para escoger las herramientas hicimos una evaluación cualitativa: revisamos las herramientas gratuitas disponibles y les preguntamos a muchos modelos cuáles daban menos fricción. Quedaron las que entregan calidad decente con poca fricción, y con ellas un laboratorio de más de 100 GB entre modelos y herramientas. Replicarlo en otra máquina era difícil: había que saber qué herramienta servía para qué, y no todos los días hacen falta todas. facet empaqueta esa selección: cada herramienta se instala en su propio entorno uv, con sus dependencias contenidas, y se borra o se reinstala con un comando. Y para no llenar el contexto del agente con decenas de skills que no usa a diario, el mismo binario sirve el skill de cada paquete cuando hace falta, siempre alineado con la versión instalada. Es media as code: las herramientas de creación audiovisual se vuelven portables.',
       },
       headline: '— Herramientas de creación para agentes, cada una con su resultado verificado',
       release: 'En desarrollo · llega con la 0.1.0b1',

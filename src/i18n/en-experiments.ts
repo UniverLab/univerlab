@@ -479,8 +479,8 @@ export const experiments = {
       lede: 'facet installs each creation tool in its own pinned environment, runs it through one <strong>--json</strong> contract and leaves beside every file its <strong>record</strong>: what made it, under which licence and whether it <strong>passed</strong>.',
       genesis: {
         kicker: 'Genesis',
-        title: 'From the lab’s scripts to one contract.',
-        body: 'facet began on 22 October 2026 in UniverLab’s graphics lab, where every tool (a voice, a CAD part, a banner) lived in its own script and its environment had to be rebuilt on every machine. The question was the usual one: how does an agent know that what it made is any good? facet’s answer is that every capability brings its own check, and every asset its record.',
+        title: 'A lab that fits in one command.',
+        body: 'facet was born from an 8 GB GPU bought with the naive idea of running language models. It is far too short of memory for that, but it does very well at images, voice, audio and CAD. To choose the tools we ran a qualitative evaluation: we surveyed the free tools available and asked many models which ones caused the least friction. What remained were the tools that deliver decent quality with little friction, and with them a lab of more than 100 GB of models and toolchain. Replicating it on another machine was hard: you had to know which tool did what, and not every day needs all of them. facet packages that selection: each tool installs into its own uv environment, its dependencies contained, and is removed or reinstalled with one command. And so as not to fill an agent\'s context with dozens of skills it does not use every day, the same binary serves each package\'s skill when it is needed, always matched to the installed version. It is media as code: audiovisual creation tools made portable.',
       },
       headline: '— Creation tools for agents, each with its result verified',
       release: 'In development · arrives with 0.1.0b1',
