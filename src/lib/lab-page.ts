@@ -242,8 +242,8 @@ export function classifiedsHtml(
   opts?: ClassifiedsOpts,
 ): { page1: string; page2: string; truncated: boolean } {
   const t = dict(lang);
-  const { pages, truncated } = layoutClassifieds(entries || []);
   const ads = couponAds(lang, opts?.foundingLeft);
+  const { pages, truncated } = layoutClassifieds(entries || [], ads.length);
   const half = Math.ceil(ads.length / 2);
   const empty = { page1: '', page2: '', truncated };
   if (!pages.length) return empty;

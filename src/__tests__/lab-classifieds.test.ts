@@ -1,10 +1,10 @@
 import {
-  CLASSIFIEDS_DISPLAY_COUNT,
+  CLASSIFIEDS_COUPON_COST,
   CLASSIFIEDS_MAX_PAGES,
-  CLASSIFIEDS_PAGE_SLOTS,
+  CLASSIFIEDS_PAGE_BUDGET,
+  CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
   rankEntries,
-  sizeForRank,
   typeWeight,
 } from '../lib/lab-classifieds';
 import type { Entry } from '../lib/lab-feed';
@@ -19,11 +19,34 @@ const at = (id: string, date: string, type: string, topic = 'canopy'): Entry => 
   link: null,
 });
 
-/** Twelve newest-first notes: the small case of one page, no lines. */
-const notes12: Entry[] = Array.from({ length: 12 }, (_, i) => {
-  const day = String(20 - i).padStart(2, '0');
-  return at(`n${i}`, `2026-10-${day}T10:00:00.000Z`, 'note');
-});
+/** N newest-first notes with distinct dates. */
+const notes = (n: number): Entry[] =>
+  Array.from({ length: n }, (_, i) => at(`n${i}`, new Date(Date.UTC(2026, 9, 20) - i * 86400000).toISOString(), 'note'));
+
+/** The live mix: 14 launch, 13 note, 5 update, 1 incident, newest first. */
+const liveMix = (): Entry[] => {
+  const kinds: Array<Entry['type']> = [
+    ...Array<Entry['type']>(14).fill('launch'),
+    ...Array<Entry['type']>(13).fill('note'),
+    ...Array<Entry['type']>(5).fill('update'),
+    'incident',
+  ];
+  return kinds.map(
+    (type, i) =>
+      ({
+        id: `l${i}`,
+        date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+        title: `Live ${i}`,
+        body: 'Body.',
+        type,
+        topic: 'canopy',
+        link: null,
+      }) as Entry,
+  );
+};
+
+const cost = (sizes: string[]): number =>
+  sizes.reduce((sum, s) => sum + CLASSIFIEDS_SIZE_COST[s as keyof typeof CLASSIFIEDS_SIZE_COST], 0);
 
 describe('type weights', () => {
   it('ranks launch and deploy first, then incident, then update and bugfix, then note', () => {
@@ -53,16 +76,6 @@ describe('type weights', () => {
   });
 });
 
-describe('sizeForRank', () => {
-  it('takes two display, six boxed, ten small, then lines', () => {
-    const sizes = Array.from({ length: 20 }, (_, i) => sizeForRank(i));
-    expect(sizes.slice(0, 2)).toEqual(['display', 'display']);
-    expect(sizes.slice(2, 8)).toEqual(Array(6).fill('boxed'));
-    expect(sizes.slice(8, 18)).toEqual(Array(10).fill('small'));
-    expect(sizes.slice(18)).toEqual(['line', 'line']);
-  });
-});
-
 describe('layoutClassifieds', () => {
   it('is deterministic: shuffling the input never changes the layout', () => {
     const rows: Entry[] = [
@@ -76,12 +89,12 @@ describe('layoutClassifieds', () => {
       at('e8', '2026-09-29T10:00:00.000Z', 'launch', 'ghscaff'),
       at('e9', '2026-09-28T10:00:00.000Z', 'note', 'demostage'),
     ];
-    const first = layoutClassifieds(rows);
-    const shuffled = layoutClassifieds([...rows].reverse());
+    const first = layoutClassifieds(rows, 4);
+    const shuffled = layoutClassifieds([...rows].reverse(), 4);
     expect(shuffled).toEqual(first);
   });
 
-  it('gives the newest releases the display ads', () => {
+  it('gives the newest release the single display ad', () => {
     const rows: Entry[] = [
       at('note-new', '2026-10-06T10:00:00.000Z', 'note'),
       at('launch-old', '2026-09-01T10:00:00.000Z', 'launch'),
@@ -90,115 +103,67 @@ describe('layoutClassifieds', () => {
     const { pages } = layoutClassifieds(rows);
     expect(pages).toHaveLength(1);
     expect(pages[0].map((s) => s.entry.id)).toEqual(['launch-new', 'launch-old', 'note-new']);
-    expect(pages[0].map((s) => s.size)).toEqual(['display', 'display', 'boxed']);
+    expect(pages[0].map((s) => s.size)).toEqual(['display', 'boxed', 'boxed']);
   });
 
-  it('fits twelve entries on one page and never leaves an empty one', () => {
-    const { pages, truncated } = layoutClassifieds(notes12);
-    expect(pages).toHaveLength(1);
-    expect(pages[0]).toHaveLength(12);
-    expect(truncated).toBe(false);
-  });
-
-  it('caps each page at fourteen slots', () => {
-    const rows: Entry[] = Array.from({ length: 20 }, (_, i) => {
-      const day = String(28 - i).padStart(2, '0');
-      return at(`e${i}`, `2026-09-${day}T10:00:00.000Z`, i < 3 ? 'launch' : 'note');
-    });
+  it('fills two pages from the live mix with one display ad and reports truncated', () => {
+    const rows = liveMix();
+    const ranked = rankEntries(rows);
     const { pages, truncated } = layoutClassifieds(rows);
     expect(pages).toHaveLength(2);
-    expect(pages[0]).toHaveLength(CLASSIFIEDS_PAGE_SLOTS);
-    expect(pages[1]).toHaveLength(6);
-    expect(truncated).toBe(false);
-  });
-
-  it('leaves the oldest out past two pages and reports truncated', () => {
-    const rows: Entry[] = Array.from({ length: 40 }, (_, i) => {
-      const day = String(30 - (i % 30)).padStart(2, '0');
-      const month = i < 30 ? '10' : '09';
-      return at(`e${i}`, `2026-${month}-${day}T10:00:00.000Z`, i % 5 === 0 ? 'launch' : 'note');
-    });
-    const { pages, truncated } = layoutClassifieds(rows);
-    expect(pages).toHaveLength(CLASSIFIEDS_MAX_PAGES);
-    expect(pages[0]).toHaveLength(CLASSIFIEDS_PAGE_SLOTS);
-    expect(pages[1]).toHaveLength(CLASSIFIEDS_PAGE_SLOTS);
     expect(truncated).toBe(true);
-    const kept = new Set(pages.flat().map((s) => s.entry.id));
-    expect(kept.size).toBe(CLASSIFIEDS_PAGE_SLOTS * CLASSIFIEDS_MAX_PAGES);
-    // The kept entries outrank the dropped ones: the eight launches read first.
-    const firstPageIds = pages[0].map((s) => s.entry.id);
-    expect(firstPageIds.slice(0, CLASSIFIEDS_DISPLAY_COUNT).every((id) => rows.find((e) => e.id === id)?.type === 'launch')).toBe(true);
-  });
-
-  it('steps the oldest boxed and small ads down to lines, oldest first', () => {
-    // Thirty notes run two past the 28 slots: the two oldest small ads
-    // (ranks 16 and 17) read as one-line notices, and the two oldest-ranked
-    // entries are left out — two pages of fourteen, truncated. All notes,
-    // so ranks 2-7 read boxed and ranks 8-17 small.
-    const rows: Entry[] = Array.from({ length: 30 }, (_, i) => {
-      const day = String(30 - i).padStart(2, '0');
-      return at(`e${i}`, `2026-08-${day}T10:00:00.000Z`, 'note');
-    });
-    const { pages, truncated } = layoutClassifieds(rows);
-    expect(truncated).toBe(true);
-    expect(pages).toHaveLength(2);
-    expect(pages[0]).toHaveLength(14);
-    expect(pages[1]).toHaveLength(14);
     const kept = pages.flat();
-    expect(kept).toHaveLength(28);
-    expect(kept.map((s) => s.entry.id)).not.toContain('e28');
-    expect(kept.map((s) => s.entry.id)).not.toContain('e29');
-    const count = (size: string): number => kept.filter((s) => s.size === size).length;
-    // The two oldest small ads (e16, e17) read as lines; the boxed six stay.
-    expect(count('display')).toBe(2);
-    expect(count('boxed')).toBe(6);
-    expect(count('small')).toBe(8);
-    expect(count('line')).toBe(12);
-    const byId = new Map(kept.map((s) => [s.entry.id, s.size] as const));
-    expect(byId.get('e16')).toBe('line');
-    expect(byId.get('e17')).toBe('line');
-    expect(byId.get('e15')).toBe('small');
+    // Exactly one display ad: the highest-ranked entry, first on page 1.
+    expect(kept.filter((s) => s.size === 'display')).toHaveLength(1);
+    expect(pages[0][0].size).toBe('display');
+    expect(pages[0][0].entry.id).toBe(ranked[0].id);
+    // Whatever does not fit is left out from the tail, oldest-ranked first.
+    const keptIds = new Set(kept.map((s) => s.entry.id));
+    const dropped = ranked.filter((e) => !keptIds.has(e.id));
+    expect(dropped.length).toBeGreaterThan(0);
+    expect(ranked.slice(0, kept.length).map((e) => e.id)).toEqual(kept.map((s) => s.entry.id));
+    expect(dropped.map((e) => e.id)).toEqual(ranked.slice(kept.length).map((e) => e.id));
   });
 
-  it('demotes only as many as the overflow needs, newest boxed ads keep theirs', () => {
-    // Forty notes run twelve past the 28 slots: every small ad and the two
-    // oldest boxed ads step down, while the four newest boxed ads (e2-e5)
-    // keep their boxes.
-    const mk = (n: number): Entry[] =>
-      Array.from({ length: n }, (_, i) => ({
-        ...at(`e${i}`, new Date(Date.UTC(2026, 7, 30) - i * 86400000).toISOString(), 'note'),
-      }));
-    const { pages, truncated } = layoutClassifieds(mk(40));
-    expect(truncated).toBe(true);
-    expect(pages).toHaveLength(2);
-    expect(pages[0]).toHaveLength(14);
-    expect(pages[1]).toHaveLength(14);
-    const kept = pages.flat();
-    expect(kept).toHaveLength(28);
-    expect(kept.map((s) => s.entry.id)).not.toContain('e39');
-    const count = (size: string): number => kept.filter((s) => s.size === size).length;
-    expect(count('display')).toBe(2);
-    expect(count('boxed')).toBe(4);
-    expect(count('small')).toBe(0);
-    expect(count('line')).toBe(22);
-    const byId = new Map(kept.map((s) => [s.entry.id, s.size] as const));
-    for (const id of ['e2', 'e3', 'e4', 'e5']) expect(byId.get(id)).toBe('boxed');
-    for (const id of ['e6', 'e7', 'e8']) expect(byId.get(id)).toBe('line');
-  });
-
-  it('leaves the oldest out past twenty-eight entries', () => {
-    // Twenty-eight entries fill two pages of fourteen; the 29th has nowhere
-    // to go: the two pages keep their 28 and report truncated.
-    const mk = (n: number): Entry[] =>
-      Array.from({ length: n }, (_, i) => {
-        const day = String(31 - i).padStart(2, '0');
-        return at(`e${i}`, `2026-08-${day}T10:00:00.000Z`, 'note');
+  it('fills each page by space, never past the budget, with no room for a line left over', () => {
+    for (const coupons of [0, 4]) {
+      const rows = liveMix();
+      const { pages, truncated } = layoutClassifieds(rows, coupons);
+      expect(truncated).toBe(true);
+      const half = Math.ceil(coupons / 2);
+      const reserved = [half * CLASSIFIEDS_COUPON_COST, (coupons - half) * CLASSIFIEDS_COUPON_COST];
+      pages.forEach((page, p) => {
+        const sizes = page.map((s) => s.size);
+        expect(cost(sizes) + reserved[p]).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+        // Entries remain after this page, yet not even a line fits: no blank band.
+        const leftover = CLASSIFIEDS_PAGE_BUDGET - reserved[p] - cost(sizes);
+        expect(leftover).toBeLessThan(CLASSIFIEDS_SIZE_COST.line);
       });
-    const over = layoutClassifieds(mk(29));
-    expect(over.truncated).toBe(true);
-    expect(over.pages).toHaveLength(2);
-    expect(over.pages.flat()).toHaveLength(28);
-    expect(over.pages.flat().map((s) => s.entry.id)).not.toContain('e28');
+    }
+  });
+
+  it('fits fourteen notes on one page, and two pages once coupons take space', () => {
+    const one = layoutClassifieds(notes(14));
+    expect(one.pages).toHaveLength(1);
+    expect(one.truncated).toBe(false);
+    const two = layoutClassifieds(notes(14), 4);
+    expect(two.pages).toHaveLength(2);
+    expect(two.truncated).toBe(false);
+  });
+
+  it('steps the twelfth note down to small when coupons take space', () => {
+    const rows = notes(14);
+    const { pages } = layoutClassifieds(rows, 4);
+    const twelfthId = rankEntries(rows)[12].id;
+    const twelfth = pages.flat().find((s) => s.entry.id === twelfthId);
+    expect(twelfth?.size).toBe('small');
+  });
+
+  it('ends the second page with one line on the live mix', () => {
+    const { pages } = layoutClassifieds(liveMix());
+    expect(pages).toHaveLength(CLASSIFIEDS_MAX_PAGES);
+    const last = pages[1][pages[1].length - 1];
+    expect(last.size).toBe('line');
   });
 
   it('returns no pages for no entries', () => {

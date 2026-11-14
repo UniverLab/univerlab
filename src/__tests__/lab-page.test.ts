@@ -10,7 +10,12 @@ import {
   logbookPageHtml,
   sortEntries,
 } from '../lib/lab-page';
-import { layoutClassifieds } from '../lib/lab-classifieds';
+import {
+  CLASSIFIEDS_COUPON_COST,
+  CLASSIFIEDS_PAGE_BUDGET,
+  CLASSIFIEDS_SIZE_COST,
+  layoutClassifieds,
+} from '../lib/lab-classifieds';
 import { bindLabPage, bindLogbook, setLabEntries, setLogbookEntries } from '../lib/lab-page-client';
 import type { Entry } from '../lib/lab-feed';
 
@@ -60,32 +65,33 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('sizes the display line by rank and closes full ads with the meta line', () => {
     const html = labPageHtml(entries, 'en');
-    // The two newest releases read largest, then boxed, then small.
+    // Only the top-ranked release reads largest; the rest read boxed.
     expect(html).toContain('<h3 class="sz-lg">Newest</h3>');
-    expect(html).toContain('<h3 class="sz-lg">Mystery topic</h3>');
+    expect(html).not.toContain('<h3 class="sz-lg">Mystery topic</h3>');
+    expect(html).toContain('<h3 class="sz-md">Mystery topic</h3>');
     expect(html).toContain('<h3 class="sz-md">Incident</h3>');
     expect(html).toContain('<h3 class="sz-md">Notes on TexForge</h3>');
-    expect(html).toContain('<h3 class="sz-sm">General note</h3>');
+    expect(html).toContain('<h3 class="sz-md">General note</h3>');
     const metas = html.match(/<p class="entry-meta">.*?<\/p>/g) ?? [];
     // Display and boxed ads carry the meta line; small ads and notices do not.
-    expect(metas).toHaveLength(8);
+    expect(metas).toHaveLength(12);
     expect(metas[0]).toContain('type-badge');
     expect(metas[0]).toContain('<time datetime="2026-10-06T01:09:26.735Z" data-mission="">');
   });
 
   it('cuts small ads short, ending in the link', () => {
-    // Two launches then nine notes: the ninth note lands in a small slot.
+    // Two launches then twelve notes: rank 12 lands in a small slot.
     const rows: Entry[] = [
       { id: 'l1', date: '2026-10-06T10:00:00.000Z', title: 'L1', body: 'B.', type: 'launch', topic: 'canopy', link: null },
       { id: 'l2', date: '2026-10-05T10:00:00.000Z', title: 'L2', body: 'B.', type: 'launch', topic: 'canopy', link: null },
-      ...Array.from({ length: 9 }, (_, i) => ({
+      ...Array.from({ length: 12 }, (_, i) => ({
         id: `s${i}`,
         date: new Date(Date.UTC(2026, 9, 4) - i * 86400000).toISOString(),
-        title: i === 8 ? 'Cut note' : `Note ${i}`,
-        body: i === 8 ? 'First.\n\nSecond.' : 'Body.',
+        title: i === 10 ? 'Cut note' : `Note ${i}`,
+        body: i === 10 ? 'First.\n\nSecond.' : 'Body.',
         type: 'note',
         topic: 'texforge',
-        link: i === 8 ? 'https://example.com/o' : null,
+        link: i === 10 ? 'https://example.com/o' : null,
       }) as Entry),
     ];
     const html = labPageHtml(rows, 'en');
@@ -95,6 +101,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   });
 
   it('runs overflow entries as one-line notices of title and link only', () => {
+    // Twenty notes fit the two pages by space: no entry reads as a line.
     const rows: Entry[] = Array.from({ length: 20 }, (_, i) => {
       const day = String(28 - i).padStart(2, '0');
       return {
@@ -102,13 +109,32 @@ describe('lab page (newspaper pages 2 and 3)', () => {
         body: 'Body.', type: 'note', topic: 'canopy', link: i % 2 ? 'https://example.com/o' : null,
       } as Entry;
     });
-    // Ranks 18 and 19 read as lines on the second page, grouped in a run.
     expect(labPageHtml(rows, 'en')).not.toContain('notice-run');
-    const html2 = labPageHtml2(rows, 'en');
+    expect(labPageHtml2(rows, 'en')).not.toContain('notice-run');
+    // The live mix overflows by space: the tail steps down to lines grouped
+    // in a run on page 3 only.
+    const kinds: Array<Entry['type']> = [
+      ...Array<Entry['type']>(14).fill('launch'),
+      ...Array<Entry['type']>(13).fill('note'),
+      ...Array<Entry['type']>(5).fill('update'),
+      'incident',
+    ];
+    const live: Entry[] = kinds.map((type, i) => ({
+      id: `m${i}`,
+      date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+      title: `Live ${i}`,
+      body: 'Body.',
+      type,
+      topic: 'canopy',
+      link: null,
+    }) as Entry);
+    expect(labPageHtml(live, 'en')).not.toContain('notice-run');
+    const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
     expect(html2).toContain('notice-run');
     expect(html2).toContain('<p class="notice-line">');
-    expect(html2.match(/<article class="log-entry notice"/g)).toHaveLength(2);
+    // Exactly one entry overflows into a line on page 3: the rest are boxed.
+    expect(html2.match(/<article class="log-entry notice"/g)).toHaveLength(1);
   });
 
   it('counts every entry on the All filters and per topic/type', () => {
@@ -246,13 +272,16 @@ describe('lab page (newspaper pages 2 and 3)', () => {
       topic: 'canopy',
       link: null,
     }) as Entry);
-    const { pages, truncated } = layoutClassifieds(live);
+    const { pages, truncated } = layoutClassifieds(live, 4);
     expect(pages).toHaveLength(2);
-    // Five entries run past the 28 slots: the five oldest boxed/small ads
-    // step down to lines first, and each page holds fourteen slots, hard cap.
-    expect(pages[0]).toHaveLength(14);
-    expect(pages[1]).toHaveLength(14);
+    // Space decides the fit: each page holds ads plus its half of the
+    // coupons within the budget, and the tail is left out.
     expect(truncated).toBe(true);
+    const reserved = [2 * CLASSIFIEDS_COUPON_COST, 2 * CLASSIFIEDS_COUPON_COST];
+    pages.forEach((page, p) => {
+      const used = page.reduce((sum, s) => sum + CLASSIFIEDS_SIZE_COST[s.size], 0);
+      expect(used + reserved[p]).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+    });
     const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
     expect(html2).toContain('Lab news · continued');
