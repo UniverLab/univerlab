@@ -1,13 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Postcard from '../components/Postcard.astro';
+import { en } from '../i18n/en';
 ---
 <!-- Published-audit shell: the built HTML holds only the container — the edge
      fills #audit at request time from the R2 document (functions/_middleware.ts),
      and the client script hydrates the interactive blocks. Never served
      directly (the middleware answers 404) and never indexed as a shell. -->
-<BaseLayout title="Published audit — UniverLab" description="A published UniverLab audit." circadian noindex>
+<BaseLayout title="Published audit — UniverLab" description="A published UniverLab audit." circadian noindex langCorner={false}>
   <link rel="stylesheet" href="/audits/audit.css" />
   <div class="wrap audit-page">
+    <figure class="audit-page-pc"><Postcard page="audit" alt={en.postcards.audit} /></figure>
     <div id="audit"></div>
   </div>
 
@@ -16,3 +19,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     initAuditPage();
   </script>
 </BaseLayout>
+
+<style>
+  .audit-page-pc { margin: 0 0 1.4rem; }
+</style>

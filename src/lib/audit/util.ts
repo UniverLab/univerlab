@@ -109,48 +109,50 @@ export function proseRefs(markdown: string, ctx: ProseCtx): string {
   const glossary = new Map(doc.glossary.map((g) => [g.term, g.definition]));
   const assets = new Map(doc.assets.map((a) => [a.id, a]));
   const annexes = new Map((doc.annexes ?? []).map((a) => [a.id, a]));
-  const parts: string[] = [];
+  const slots: string[] = [];
+  let out = '';
   let last = 0;
   PROSE_REF.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = PROSE_REF.exec(markdown)) !== null) {
-    parts.push(md(markdown.slice(last, m.index)));
+    out += markdown.slice(last, m.index);
     const kind = m[1];
     const id = m[2].trim();
     if (kind === 'finding' && findings.has(id)) {
       const f = findings.get(id)!;
-      parts.push(
+      slots.push(
         `<a class="audit-ref" href="#audit-finding-${esc(id)}">${esc(f.title)}</a>`,
       );
     } else if (kind === 'source' && sources.has(id)) {
       const s = sources.get(id)!;
-      parts.push(
+      slots.push(
         `<a class="audit-ref" href="#audit-source-${esc(id)}">${esc(s.title)}</a>`,
       );
     } else if (kind === 'term' && glossary.has(id)) {
-      parts.push(
+      slots.push(
         `<span class="audit-term" tabindex="0">${esc(id)}` +
           `<span class="audit-term-def" hidden>${esc(glossary.get(id)!)}</span></span>`,
       );
     } else if (kind === 'asset' && assets.has(id)) {
       const a = assets.get(id)!;
-      parts.push(
+      slots.push(
         `<a class="audit-ref" href="${esc(assetUrl(slug, a.path, assetBase))}">${esc(a.title)}</a>`,
       );
     } else if (kind === 'annex' && annexes.has(id)) {
       const a = annexes.get(id)!;
       if (ctx.published && a.visibility !== 'public') {
-        parts.push(esc(m[0]));
+        slots.push(esc(m[0]));
       } else {
-        parts.push(
+        slots.push(
           `<a class="audit-ref" href="#audit-annex-${esc(id)}">${esc(a.title)}</a>`,
         );
       }
     } else {
-      parts.push(esc(m[0]));
+      slots.push(esc(m[0]));
     }
+    out += `\u0000${slots.length - 1}\u0000`;
     last = m.index + m[0].length;
   }
-  parts.push(md(markdown.slice(last)));
-  return parts.join('');
+  out += markdown.slice(last);
+  return md(out).replace(/\u0000(\d+)\u0000/g, (_, n) => slots[+n] ?? '');
 }

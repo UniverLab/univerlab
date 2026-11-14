@@ -22,6 +22,8 @@ interface Props {
   ogImage?: string;
   /** Core pages: shift the palette progressively with the time of day. */
   circadian?: boolean;
+  /** Single-language pages (audits) set this false to hide the language corner. */
+  langCorner?: boolean;
   /** Experiment pages: a fixed visual surface (paper, tui, blueprint, …). */
   surface?: string;
   /** Extra JSON-LD for this page (e.g. SoftwareApplication, WebSite), emitted
@@ -69,6 +71,7 @@ const {
   markdownTwin = true,
   expId,
   fondo,
+  langCorner = true,
 } = Astro.props;
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
 
@@ -427,7 +430,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
   <body>
     <a href="#main" class="skip-link">{t.common.skipToContent}</a>
     {fondo && <LiveBackground id={fondo} />}
-    <Header circadian={circadian} />
+    <Header circadian={circadian} langCorner={langCorner} />
     <main id="main">
       <slot />
     </main>

@@ -17,8 +17,10 @@ import { heart, menu, xIcon } from '../lib/icons';
 interface Props {
   /** Only circadian pages honour the celestial disc; the rest never paint it. */
   circadian?: boolean;
+  /** Single-language pages (audits) set this false to hide the corner. */
+  langCorner?: boolean;
 }
-const { circadian = true } = Astro.props;
+const { circadian = true, langCorner = true } = Astro.props;
 
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -124,6 +126,7 @@ const signals = [
     </button>
   )}
   <Mailbox />
+  {langCorner && (
   <a
     class="peel"
     href={toggleHref}
@@ -132,6 +135,7 @@ const signals = [
     aria-label={`${t.header.switchTo} ${t.header.langLabel[other]} (${languages[other]})`}
     id="lang-corner"
   ><span class="under"><span class="label"><span class="long">{t.header.langLabel[other]}</span>{' '}<span class="short">{languages[other]}</span></span></span><span class="flap"></span></a>
+  )}
 </header>
 
 <script>

@@ -572,6 +572,7 @@ export const es: Dict = {
     },
   },
   postcards: {
+    audit: 'Un libro mayor de auditoría grabado entre pesas de latón, una lupa sobre un informe sellado y una bandeja de sellos de cera',
     api: 'Un conjunto grabado de tubos acústicos con boquillas de latón sobre un escritorio de madera, unidos por una red de tuberías acodadas',
     archive: 'Una vitrina de cristal grabada con fundas de tela sobre instrumentos de latón en sus baldas y un zócalo tallado debajo',
     contributors: 'Una sala de reuniones grabada con una mesa larga que sostiene un libro abierto, sillas a ambos lados y tres marcos vacíos',

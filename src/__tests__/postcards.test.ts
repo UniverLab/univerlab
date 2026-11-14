@@ -34,6 +34,8 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/es/sign/owner.astro', 'sign', 't.postcards.sign'],
   ['src/pages/logbook.astro', 'logbook', 'en.postcards.logbook'],
   ['src/pages/es/logbook.astro', 'logbook', 'es.postcards.logbook'],
+  ['src/pages/audits/index.astro', 'audit', 'en.postcards.audit'],
+  ['src/pages/audit-shell.astro', 'audit', 'en.postcards.audit'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -85,8 +87,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 15 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(15);
+  it('all 17 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(17);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -159,7 +161,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(12);
+    expect(others).toHaveLength(14);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }
@@ -172,9 +174,9 @@ describe('Watermark component', () => {
 });
 
 describe('postcards dictionary', () => {
-  const keys = ['api', 'archive', 'contributors', 'experiments', 'feed', 'logbook', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
+  const keys = ['api', 'archive', 'audit', 'contributors', 'experiments', 'feed', 'logbook', 'manifesto', 'not-found', 'roadmap', 'sign', 'status', 'today'];
 
-  it('has the same 12 keys in both languages', () => {
+  it('has the same 13 keys in both languages', () => {
     expect(Object.keys(en.postcards).sort()).toEqual([...keys].sort());
     expect(Object.keys(es.postcards).sort()).toEqual([...keys].sort());
   });
@@ -232,6 +234,57 @@ describe('sign postcard assets', () => {
     const listed = new Set(manifest.assets.map((a) => a.file));
     for (const f of files) {
       expect(listed.has(`postcards/${f}`)).toBe(true);
+    }
+  });
+});
+
+describe('audit postcard assets', () => {
+  // FR2: the audit opening renders /bench/postcards/audit-{day,night}-{1600,800,mobile}.{avif,webp}.
+  // A missing file renders a broken image on /audits/<slug>/ and /workbench/audits/<slug>/, so pin all 12 on disk and in the manifest.
+  const files = [
+    'audit-day-1600.avif',
+    'audit-day-1600.webp',
+    'audit-day-800.avif',
+    'audit-day-800.webp',
+    'audit-day-mobile.avif',
+    'audit-day-mobile.webp',
+    'audit-night-1600.avif',
+    'audit-night-1600.webp',
+    'audit-night-800.avif',
+    'audit-night-800.webp',
+    'audit-night-mobile.avif',
+    'audit-night-mobile.webp',
+  ];
+
+  it('ships all 12 audit variants on disk, non-empty', () => {
+    expect(files).toHaveLength(12);
+    for (const f of files) {
+      const p = join(root, 'public', 'bench', 'postcards', f);
+      expect(existsSync(p)).toBe(true);
+      expect(statSync(p).size).toBeGreaterThan(0);
+    }
+  });
+
+  it('lists all 12 audit variants in the bench manifest', () => {
+    const manifest = JSON.parse(read('public/bench/manifest.json')) as {
+      assets: Array<{ file: string }>;
+    };
+    const listed = new Set(manifest.assets.map((a) => a.file));
+    for (const f of files) {
+      expect(listed.has(`postcards/${f}`)).toBe(true);
+    }
+  });
+
+  it('sits before #audit in both shells so the edge rewrite keeps it', () => {
+    // The middleware fills only #audit at request time
+    // (functions/_middleware.ts); a postcard inside that div would be wiped
+    // on every route, so pin its position ahead of the container.
+    for (const f of ['src/pages/audits/index.astro', 'src/pages/audit-shell.astro']) {
+      const src = read(f);
+      const figureAt = src.indexOf('audit-page-pc');
+      const auditAt = src.indexOf('<div id="audit">');
+      expect(figureAt).toBeGreaterThanOrEqual(0);
+      expect(auditAt).toBeGreaterThan(figureAt);
     }
   });
 });

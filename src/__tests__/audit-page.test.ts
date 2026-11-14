@@ -161,6 +161,13 @@ describe('middleware — audit page', () => {
     expect(body).toContain('href="#audit-finding-F-01"');
     expect(body).toContain('href="#audit-source-owasp"');
     expect(body).toContain('class="audit-term"');
+    // References stay inside their sentence: one <p>, never a column of
+    // blocks. The tempered span never crosses a closing </p>, so a fragment
+    // split anywhere mid-sentence fails the match.
+    expect(body).toMatch(/<p>This fixture cites <a class="audit-ref" href="#audit-finding-F-01">/);
+    expect(body).toMatch(/<p>This fixture cites(?:(?!<\/p>)[\s\S])*to prove inline references resolve\.<\/p>/);
+    expect(body).toMatch(/<p>Read the <span class="audit-term"/);
+    expect(body).toMatch(/<p>Read the(?:(?!<\/p>)[\s\S])*summary first\.<\/p>/);
     expect(body).toContain('Fixture definition: one client journey');
     expect(body).toContain(`href="/audits/${SLUG}/assets/figure.svg"`);
     expect(body).toContain(`href="/audits/${SLUG}/assets/report.pdf"`);

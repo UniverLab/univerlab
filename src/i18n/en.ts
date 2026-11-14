@@ -576,6 +576,7 @@ export const en = {
     },
   },
   postcards: {
+    audit: 'An engraved audit ledger open between brass reading weights, a magnifier over a stamped report and a tray of wax seals',
     api: 'An engraved set of speaking tubes with brass mouthpieces above a wooden desk, joined by a network of bent pipes',
     archive: 'An engraved glass-front cabinet with dust sheets draped over brass instruments on its shelves and a carved plinth below',
     contributors: 'An engraved meeting room with a long table holding an open ledger, chairs along both sides and three empty picture frames',

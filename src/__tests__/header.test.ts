@@ -291,7 +291,8 @@ describe('celestial button is circadian-only', () => {
 
   it('declares a circadian prop defaulting to true and gates the button on it', () => {
     expect(src).toMatch(/interface Props \{[^}]*circadian\?: boolean/);
-    expect(src).toMatch(/const \{ circadian = true \} = Astro\.props;/);
+    expect(src).toMatch(/interface Props \{[^}]*langCorner\?: boolean/);
+    expect(src).toMatch(/const \{ circadian = true, langCorner = true \} = Astro\.props;/);
     // The gate wraps ONLY the button: ruler, guard, then the mailbox outside it.
     expect(src).toMatch(/\{circadian && \(\s*<button class="celestial-btn"/);
     const rulerIdx = src.indexOf('<span class="sky-ruler"');
@@ -313,7 +314,7 @@ describe('celestial button is circadian-only', () => {
   });
 
   it('forwards BaseLayout’s own circadian value to the header', () => {
-    expect(BASE).toMatch(/<Header circadian=\{circadian\} \/>/);
+    expect(BASE).toMatch(/<Header circadian=\{circadian\} langCorner=\{langCorner\} \/>/);
   });
 
   it('keeps the disc on quorum: ExperimentLayout forwards the registry flag', () => {
