@@ -17,11 +17,37 @@ const news = readFileSync(resolve(__dirname, '..', 'pages', 'newspaper.astro'), 
 const newsEs = readFileSync(resolve(__dirname, '..', 'pages', 'es', 'newspaper.astro'), 'utf8');
 
 describe('the sheet hooks wrap the paper', () => {
-  it('wraps .paper in a viewport and a fixed-width sheet with one hidden Fit button', () => {
+  it('wraps .paper in a viewport and a fixed-width sheet, with Fit hidden in the control bar', () => {
     expect(paper).toContain('data-paper-viewport');
     expect(paper).toContain('data-paper-sheet');
-    expect(paper).toContain('data-paper-fit');
+    expect(paper).toContain('data-paper-bar');
+    // Fit moved out of the sheet into the bar, still hidden until activate.
     expect(paper).toMatch(/<button class="paper-fit" data-paper-fit[^>]*hidden[^>]*>\{t\.today\.fit\}<\/button>/);
+    expect(paper.indexOf('data-paper-bar')).toBeLessThan(paper.indexOf('data-paper-fit'));
+  });
+
+  it('holds the page tabs, the date picker and Fit in a bar outside the sheet', () => {
+    // The bar mirrors the masthead controls at touch size, outside the sheet.
+    expect(paper).toContain('data-paper-bar');
+    expect(paper).toContain('paper-bar-tabs');
+    expect(paper).toContain('t.today.controls');
+    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(6);
+    expect(paper.match(/class="edition-pick[^"]*"/g)).toHaveLength(2);
+    expect(paper).toContain('edition-pick--bar');
+    // Only the masthead keeps the Print submit; the bar is tabs plus date.
+    expect(paper.match(/iconSvg\(printer/g)).toHaveLength(1);
+    expect(paper.match(/type="submit"/g)).toHaveLength(1);
+  });
+
+  it('pins the bar below the sheet on narrow screens and turns pages briefly', () => {
+    expect(css).toContain('.paper-bar { display: none; }');
+    expect(css).toContain('max-width: 63.99rem');
+    expect(css).toContain('position: sticky');
+    // Every bar control reaches a comfortable touch target.
+    expect(css).toContain('2.75rem');
+    expect(css).toContain('paper-turn-next');
+    expect(css).toContain('paper-turn-prev');
+    expect(css).toContain('prefers-reduced-motion');
   });
 
   it('names the only control Fit / Ajustar, with no zoom-in or zoom-out buttons', () => {

@@ -768,6 +768,7 @@ export const es: Dict = {
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
     fit: 'Ajustar',
+    controls: 'Controles de página y fecha',
     plate: 'El reloj de sol, el grabado del periódico',
     labPlate: 'El teletipo, el grabado del periódico',
     ads: {

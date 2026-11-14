@@ -30,8 +30,8 @@ export function initPaperSheet(root: ParentNode = document): void {
   const sheet = viewport
     ? (viewport.querySelector('[data-paper-sheet]') as HTMLElement | null)
     : null;
-  const fitButton = viewport
-    ? (viewport.querySelector('[data-paper-fit]') as HTMLButtonElement | null)
+  const fitButton = root.querySelector
+    ? (root.querySelector('[data-paper-fit]') as HTMLButtonElement | null)
     : null;
   if (!viewport || !sheet || !fitButton) return;
   if (viewport.dataset.paperSheetInit === '1') return;

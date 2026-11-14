@@ -38,14 +38,43 @@ function langOf(root: ParentNode, fallback: LabSource | undefined): LabPageLang 
   return el && el.lang === 'es' ? 'es' : 'en';
 }
 
+const PAGE_ORDER = ['page-1', 'lab', 'lab2'] as const;
+
+/** Which page reads now: the one section not hidden, page 1 when unsure. */
+function currentPage(scope: ParentNode): PageId {
+  for (const page of PAGE_ORDER) {
+    const section = scope.querySelector?.(`#${page}`) as HTMLElement | null;
+    if (section && !section.hidden) return page;
+  }
+  return 'page-1';
+}
+
 function tabShow(paper: HTMLElement, id: PageId): void {
-  for (const page of ['page-1', 'lab', 'lab2'] as const) {
-    const section = paper.querySelector(`#${page}`) as HTMLElement | null;
+  // The tabs live twice: the masthead inside the sheet and the control bar
+  // outside it. Sync every tab in the document, never just the sheet's.
+  const scope: ParentNode = paper.ownerDocument ?? paper;
+  const prev = currentPage(scope);
+  for (const page of PAGE_ORDER) {
+    const section = scope.querySelector?.(`#${page}`) as HTMLElement | null;
     if (section) section.hidden = page !== id;
   }
-  for (const tab of Array.from(paper.querySelectorAll('.paper-tab')) as HTMLElement[]) {
+  const tabs = scope.querySelectorAll
+    ? (Array.from(scope.querySelectorAll('.paper-tab')) as HTMLElement[])
+    : [];
+  for (const tab of tabs) {
     tab.classList.toggle('is-active', tab.getAttribute('data-page') === id);
   }
+  if (prev === id) return;
+  // The page-turn: the incoming page slides in from the side it comes from.
+  // The sheet keeps its fitted scale throughout; only the page animates.
+  const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
+  if (!section) return;
+  const cls = PAGE_ORDER.indexOf(id) > PAGE_ORDER.indexOf(prev) ? 'turn-next' : 'turn-prev';
+  section.classList.remove('turn-next', 'turn-prev');
+  section.classList.add(cls);
+  window.setTimeout(() => {
+    section.classList.remove('turn-next', 'turn-prev');
+  }, 320);
 }
 
 function matchState(el: HTMLElement, topic: string, type: string, roadmap: string | null): boolean {
@@ -126,8 +155,12 @@ function paintLab(root: ParentNode): void {
       lab2Body.innerHTML = page2;
       const hasPage = page2.trim().length > 0;
       lab2.hidden = !hasPage;
-      const tab3 = paper.querySelector('.paper-tab[data-page="lab2"]') as HTMLElement | null;
-      if (tab3) tab3.hidden = !hasPage;
+      const scope: ParentNode = paper.ownerDocument ?? paper;
+      for (const tab3 of Array.from(
+        scope.querySelectorAll?.('.paper-tab[data-page="lab2"]') ?? [],
+      ) as HTMLElement[]) {
+        tab3.hidden = !hasPage;
+      }
       if (!hasPage && !lab.hidden) tabShow(paper, 'lab');
     }
     pressFresh(root, '#lab', st);
@@ -224,7 +257,22 @@ export function bindLabPage(root: ParentNode = document): void {
     tabShow(paper, h === '#lab2' ? 'lab2' : h === '#lab' ? 'lab' : 'page-1');
   };
 
-  // Tabs stay plain anchors: the hash drives the page, with or without JS.
+  // Tabs read as plain anchors without JS. With JS the click never leaves
+  // through the anchor: preventDefault keeps the window from scrolling to
+  // the fragment, pushState keeps the hash in the URL without the native
+  // jump, and the sheet stays fitted where it was.
+  doc.addEventListener('click', (event) => {
+    const anchor = (event.target as HTMLElement).closest?.('a.paper-tab') as HTMLAnchorElement | null;
+    if (!anchor) return;
+    // Modified clicks keep the anchor's own meaning: new tab, new window.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const id = anchor.getAttribute('data-page');
+    if (id !== 'page-1' && id !== 'lab' && id !== 'lab2') return;
+    event.preventDefault();
+    history.pushState({}, '', `#${id}`);
+    tabShow(paper, id);
+  });
+
   paper.addEventListener('click', (event) => {
     const btn = (event.target as HTMLElement).closest?.('button.lab-filter');
     if (!btn) return;

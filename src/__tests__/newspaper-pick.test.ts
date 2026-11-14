@@ -58,6 +58,13 @@ describe('today pick form', () => {
     expect(paper).toContain('showPicker');
   });
 
+  it('prints the date controls twice: the masthead pair and the bar pair', () => {
+    expect(paper.match(/<a[^>]*data-prev[^>]*>/g)).toHaveLength(2);
+    expect(paper.match(/<a[^>]*data-next[^>]*>/g)).toHaveLength(2);
+    expect(paper.match(/type="date"/g)).toHaveLength(2);
+    expect(paper.match(/type="submit"/g)).toHaveLength(1);
+  });
+
   it('both pages use the picked day in the fallback', () => {
     for (const page of [todayEn, todayEs]) {
       expect(page).toContain('editionDateFor(window.location.search)');

@@ -589,6 +589,49 @@ describe('bindLabPage', () => {
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
   });
 
+  it('turns pages from the bar without a jump: pushState, synced tabs, brief turn', () => {
+    jest.useFakeTimers();
+    try {
+      document.body.innerHTML =
+        `<div class="paper">` +
+        `<nav class="paper-tabs">` +
+        `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+        `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
+        `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
+        `</nav>` +
+        `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+        `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
+        `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
+        `</div>` +
+        `<div class="paper-bar" data-paper-bar>` +
+        `<nav class="paper-bar-tabs">` +
+        `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+        `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
+        `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
+        `</nav></div>`;
+      bindLabPage(document);
+      // The anchor's own jump never runs: the URL updates by history instead.
+      const push = jest.spyOn(window.history, 'pushState').mockImplementation(() => {});
+      const barLab = document.querySelector('.paper-bar .paper-tab[data-page="lab"]') as HTMLAnchorElement;
+      barLab.click();
+      expect(push).toHaveBeenCalledWith({}, '', '#lab');
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
+      // Masthead and bar agree: six tabs, the two lab ones active.
+      const tabs = Array.from(document.querySelectorAll('.paper-tab'));
+      expect(tabs).toHaveLength(6);
+      const active = tabs.filter((t) => (t as HTMLElement).classList.contains('is-active'));
+      expect(active).toHaveLength(2);
+      expect(active.every((t) => (t as HTMLElement).getAttribute('data-page') === 'lab')).toBe(true);
+      // Forward travel turns next; the class clears after the ~300 ms turn.
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(true);
+      jest.advanceTimersByTime(400);
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('recomposes both pages from the filters once entries arrive', () => {
     scaffold('en', entries);
     bindLabPage(document);
