@@ -223,8 +223,13 @@ describe('workbench', () => {
     expect(VIEW).toContain('<Machine id="workbench" ink="theme" height="112px" eager />');
   });
 
+  it('four tags go four across on wide screens, two by two below, never three plus one', () => {
+    expect(VIEW).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(VIEW).toContain('@media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(4, minmax(0, 1fr)); } }');
+    expect(VIEW).not.toMatch(/repeat\(3,/);
+  });
+
   it('the phone price tags drop the desktop columns before scrolling sideways', () => {
-    expect(VIEW).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
     expect(VIEW).toMatch(/\.wb-tags \{[^}]*grid-template-columns: none;[^}]*grid-auto-flow: column/);
     expect(VIEW).toContain('overflow-x: auto');
   });
