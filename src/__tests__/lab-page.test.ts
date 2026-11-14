@@ -670,7 +670,7 @@ describe('bindLabPage', () => {
     expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
   });
 
-  it('turns pages from the bar without a jump: pushState, synced tabs, brief turn', () => {
+  it('turns pages from the strip without a jump: pushState, count, brief turn', () => {
     jest.useFakeTimers();
     try {
       document.body.innerHTML =
@@ -680,34 +680,57 @@ describe('bindLabPage', () => {
         `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
         `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
         `</nav>` +
-        `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
-        `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
-        `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
+        `<section id="page-1" class="paper-page" aria-label="Page 1"><div id="edition">edition</div></section>` +
+        `<section id="lab" class="paper-page" aria-label="Page 2"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
+        `<section id="lab2" class="paper-page" aria-label="Page 3"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
         `</div>` +
         `<div class="paper-bar" data-paper-bar>` +
-        `<nav class="paper-bar-tabs">` +
-        `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
-        `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
-        `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
+        `<nav class="paper-strip-pages" aria-label="Page and date controls">` +
+        `<button type="button" data-page-prev aria-label="Previous page">prev</button>` +
+        `<span data-page-indicator aria-live="polite"><span data-page-num>1 / 3</span><span class="sr-only" data-page-name></span></span>` +
+        `<button type="button" data-page-next aria-label="Next page">next</button>` +
         `</nav></div>`;
       bindLabPage(document);
-      // The anchor's own jump never runs: the URL updates by history instead.
+      const num = () => (document.querySelector('[data-page-num]') as HTMLElement).textContent;
+      const name = () => (document.querySelector('[data-page-name]') as HTMLElement).textContent;
+      const prevBtn = document.querySelector('[data-page-prev]') as HTMLElement;
+      const nextBtn = document.querySelector('[data-page-next]') as HTMLElement;
+      // The strip opens on page 1: the back arrow rests, the name announces.
+      expect(num()).toBe('1 / 3');
+      expect(name()).toBe('Page 1');
+      expect(prevBtn.classList.contains('disabled')).toBe(true);
+      expect(nextBtn.classList.contains('disabled')).toBe(false);
+      // The resting arrow stays focusable but reads inert to assistive tech.
+      expect(prevBtn.getAttribute('aria-disabled')).toBe('true');
+      expect(nextBtn.getAttribute('aria-disabled')).toBe('false');
+      // The buttons never leave through an anchor: the URL updates by history.
       const push = jest.spyOn(window.history, 'pushState').mockImplementation(() => {});
-      const barLab = document.querySelector('.paper-bar .paper-tab[data-page="lab"]') as HTMLAnchorElement;
-      barLab.click();
+      nextBtn.click();
       expect(push).toHaveBeenCalledWith({}, '', '#lab');
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
       expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
-      // Masthead and bar agree: six tabs, the two lab ones active.
-      const tabs = Array.from(document.querySelectorAll('.paper-tab'));
-      expect(tabs).toHaveLength(6);
-      const active = tabs.filter((t) => (t as HTMLElement).classList.contains('is-active'));
-      expect(active).toHaveLength(2);
-      expect(active.every((t) => (t as HTMLElement).getAttribute('data-page') === 'lab')).toBe(true);
-      // Forward travel turns next; the class clears after the ~300 ms turn.
+      expect(num()).toBe('2 / 3');
+      expect(name()).toBe('Page 2');
+      expect(prevBtn.classList.contains('disabled')).toBe(false);
+      expect(nextBtn.classList.contains('disabled')).toBe(false);
+      // Forward travel turns next; the class clears after the ~0.55 s turn.
       expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(true);
-      jest.advanceTimersByTime(400);
+      jest.advanceTimersByTime(700);
       expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-next')).toBe(false);
+      // The last page disables its forward arrow; stepping back re-enables.
+      nextBtn.click();
+      expect(num()).toBe('3 / 3');
+      expect(name()).toBe('Page 3');
+      expect(nextBtn.classList.contains('disabled')).toBe(true);
+      expect(nextBtn.getAttribute('aria-disabled')).toBe('true');
+      prevBtn.click();
+      expect(push).toHaveBeenCalledWith({}, '', '#lab');
+      expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
+      expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(true);
+      expect(num()).toBe('2 / 3');
+      expect(nextBtn.classList.contains('disabled')).toBe(false);
+      // Back travel turns prev.
+      expect((document.getElementById('lab') as HTMLElement).classList.contains('turn-prev')).toBe(true);
     } finally {
       jest.useRealTimers();
     }

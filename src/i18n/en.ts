@@ -776,6 +776,7 @@ export const en = {
     pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
     fit: 'Fit',
     controls: 'Page and date controls',
+    pages: { prev: 'Previous page', next: 'Next page' },
     plate: "The sundial, the paper's engraving",
     labPlate: "The ticker, the paper's engraving",
     ads: {

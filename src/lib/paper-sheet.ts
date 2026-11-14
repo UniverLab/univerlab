@@ -113,11 +113,15 @@ export function initPaperSheet(root: ParentNode = document): void {
     }
   };
 
-  const viewportHeight = (): number =>
-    Math.max(
-      MIN_VIEWPORT_HEIGHT,
-      Math.min(sheetHeight() * fit, window.innerHeight * 0.8),
-    );
+  const viewportHeight = (): number => {
+    // The sheet fills the viewport above the slim strip: the full window
+    // height minus the bar's own height, never below the minimum.
+    const bar =
+      root.querySelector != null
+        ? (root.querySelector('[data-paper-bar]') as HTMLElement | null)
+        : null;
+    return Math.max(MIN_VIEWPORT_HEIGHT, window.innerHeight - (bar?.offsetHeight || 0));
+  };
 
   const activate = (): void => {
     active = true;

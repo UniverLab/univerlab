@@ -47,12 +47,12 @@ const t = useTranslations(lang);
   </div>
 </div>
 <div class="paper-bar" data-paper-bar>
-  <nav class="paper-bar-tabs" aria-label={t.today.controls}>
-    <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
-    <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
-    <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
+  <nav class="paper-strip-pages" aria-label={t.today.controls}>
+    <button type="button" data-page-prev aria-label={t.today.pages.prev} title={t.today.pages.prev} set:html={iconSvg(chevronLeft, { size: 15 })} />
+    <span data-page-indicator aria-live="polite"><span data-page-num>1 / 3</span><span class="sr-only" data-page-name></span></span>
+    <button type="button" data-page-next aria-label={t.today.pages.next} title={t.today.pages.next} set:html={iconSvg(chevronRight, { size: 15 })} />
   </nav>
-  <form class="edition-pick edition-pick--bar" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /></form>
+  <form class="edition-pick edition-pick--bar" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words words--strip"><span data-words-short>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /></form>
   <button class="paper-fit" data-paper-fit type="button" hidden>{t.today.fit}</button>
 </div>
 
@@ -76,6 +76,13 @@ const t = useTranslations(lang);
       if (input) {
         input.setAttribute('max', today);
         input.setAttribute('value', ymd);
+        // Choosing a date in either picker loads that edition at once.
+        // The max attribute blocks future dates; the guard repeats it so a
+        // hand-typed future date never navigates.
+        input.addEventListener('change', function () {
+          var value = input.value;
+          if (value && value <= today) window.location.search = '?d=' + value;
+        });
         // Touch: tapping the words label only focuses the 1px input, which
         // does not reliably open the picker, so open it explicitly.
         var wordsLabel = form.querySelector('label.words');
@@ -92,6 +99,15 @@ const t = useTranslations(lang);
       var words = form.querySelector('[data-words]');
       if (words) {
         words.textContent = editionDateWords(d, lang);
+      }
+      // The slim strip's date reads compact: weekday, day and month.
+      var brief = form.querySelector('[data-words-short]');
+      if (brief) {
+        brief.textContent = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        }).format(d);
       }
       var prev = form.querySelector('[data-prev]');
       if (prev) prev.setAttribute('href', '?d=' + editionYmd(new Date(d.getTime() - 86400000)));
@@ -416,42 +432,77 @@ const t = useTranslations(lang);
       --bar-soft: var(--bench-c-sepia);
       --bar-rule: var(--bench-c-graphite);
       --bar-emphasis: var(--bench-c-garnet);
-      display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: center;
+      display: flex; flex-wrap: nowrap; gap: 4px 10px; align-items: center; justify-content: space-between;
       position: sticky; bottom: 0; z-index: 3;
+      height: 3rem;
       background: var(--bar-ground); border-top: 1px solid var(--bar-rule);
-      padding: 8px 12px;
+      padding: 0 8px;
     }
-    .paper-bar-tabs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
-    .paper-bar .paper-tab {
-      font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--bar-soft); text-decoration: none; padding: 4px 14px;
-      border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center;
-      min-height: 2.75rem; min-width: 2.75rem;
+    /* One slim strip: page arrows around the count, the edition date, Fit. */
+    .paper-bar .paper-strip-pages { display: inline-flex; gap: 2px; align-items: center; }
+    .paper-bar .paper-strip-pages [data-page-prev],
+    .paper-bar .paper-strip-pages [data-page-next] {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 2.75rem; min-height: 2.75rem; padding: 0;
+      color: var(--bar-ink); background: transparent;
+      border: 0; border-radius: 0; cursor: pointer;
+      font-family: var(--font-mono);
     }
-    .paper-bar .paper-tab.is-active { color: var(--bar-ink); border-color: var(--bar-rule); }
-    .paper-bar .edition-pick { display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+    .paper-bar .paper-strip-pages [data-page-prev].disabled,
+    .paper-bar .paper-strip-pages [data-page-next].disabled { opacity: 0.35; }
+    .paper-bar .paper-strip-pages [data-page-prev]:focus-visible,
+    .paper-bar .paper-strip-pages [data-page-next]:focus-visible { outline: 1px solid var(--bar-emphasis); outline-offset: 2px; }
+    .paper-bar [data-page-indicator] {
+      display: inline-flex; align-items: baseline; gap: 4px;
+      font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em;
+      color: var(--bar-ink); white-space: nowrap; padding-inline: 2px;
+    }
+    .paper-bar .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .paper-bar .edition-pick { display: inline-flex; gap: 4px; align-items: center; justify-content: center; min-width: 0; }
     .paper-bar .edition-pick .step {
       display: inline-flex; align-items: center; justify-content: center;
       min-width: 2.75rem; min-height: 2.75rem; padding: 0;
       color: var(--bar-ink); background: transparent;
-      border: 1px solid var(--bar-rule); border-radius: 0; cursor: pointer; text-decoration: none;
+      border: 0; border-radius: 0; cursor: pointer; text-decoration: none;
+      font-family: var(--font-mono);
     }
     .paper-bar .edition-pick .words {
       position: relative; cursor: pointer; border-bottom: 1px dotted var(--bar-soft); text-align: center;
       display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--bar-ink);
       font-family: var(--font-mono); font-size: 12px;
     }
-    .paper-bar .edition-pick .words input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .paper-bar .edition-pick .words--strip { font-variant: small-caps; letter-spacing: 0.06em; min-width: 0; }
+    /* The compact date yields space before any control leaves the strip:
+       on narrow phones the short date ellipsises, Fit stays in reach. */
+    .paper-bar .edition-pick .words--strip [data-words-short] {
+      min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* The strip's date input covers its words so the device's own picker
+       opens on tap; the masthead's clipped input stays untouched. */
+    .paper-bar .edition-pick .words input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
     .paper-bar .edition-pick .words:focus-within { outline: 1px solid var(--bar-emphasis); outline-offset: 3px; }
     .paper-bar .edition-pick .step:focus-visible { outline: 1px solid var(--bar-emphasis); outline-offset: 2px; }
-    .paper-bar .paper-fit { position: static; min-height: 2.75rem; padding: 6px 14px; }
+    .paper-bar .paper-fit {
+      position: static; min-height: 2.75rem; min-width: 2.75rem; padding: 6px 10px;
+      color: var(--bar-ink); background: transparent; border: 0; border-radius: 0; cursor: pointer;
+      font-family: var(--font-mono); font-size: 12px; font-variant: small-caps; letter-spacing: 0.06em;
+    }
+    .paper-bar .paper-fit:focus-visible { outline: 1px solid var(--bar-emphasis); outline-offset: 2px; }
   }
-  /* The page-turn: the incoming page slides in from the side it comes from.
-     Forward (page-1 < lab < lab2) enters from the right, back from the left. */
-  @keyframes paper-turn-next { from { transform: translateX(14%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
-  @keyframes paper-turn-prev { from { transform: translateX(-14%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
-  .paper .paper-page.turn-next { animation: paper-turn-next 0.3s ease-out; }
-  .paper .paper-page.turn-prev { animation: paper-turn-prev 0.3s ease-out; }
+  /* The page-turn: the incoming leaf swings over its edge with perspective,
+     like a real page — forward turns over the left edge, back over the
+     right — with printed shading and a soft shadow. Transform and opacity
+     only, so the turn never shifts layout. */
+  @keyframes paper-turn-next {
+    from { transform: perspective(1400px) rotateY(-86deg); transform-origin: 0 50%; opacity: 0.5; box-shadow: inset 90px 0 130px -60px rgba(22, 25, 28, 0.5), 18px 0 34px -18px rgba(22, 25, 28, 0.35); }
+    to { transform: perspective(1400px) rotateY(0deg); transform-origin: 0 50%; opacity: 1; box-shadow: none; }
+  }
+  @keyframes paper-turn-prev {
+    from { transform: perspective(1400px) rotateY(86deg); transform-origin: 100% 50%; opacity: 0.5; box-shadow: inset -90px 0 130px -60px rgba(22, 25, 28, 0.5), -18px 0 34px -18px rgba(22, 25, 28, 0.35); }
+    to { transform: perspective(1400px) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; box-shadow: none; }
+  }
+  .paper .paper-page.turn-next { transform-origin: 0 50%; animation: paper-turn-next 0.55s ease-in-out; }
+  .paper .paper-page.turn-prev { transform-origin: 100% 50%; animation: paper-turn-prev 0.55s ease-in-out; }
   @media (prefers-reduced-motion: reduce) {
     .paper .paper-page.turn-next, .paper .paper-page.turn-prev { animation: none; }
   }

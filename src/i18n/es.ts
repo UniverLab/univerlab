@@ -770,6 +770,7 @@ export const es: Dict = {
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
     fit: 'Ajustar',
     controls: 'Controles de página y fecha',
+    pages: { prev: 'Página anterior', next: 'Página siguiente' },
     plate: 'El reloj de sol, el grabado del periódico',
     labPlate: 'El teletipo, el grabado del periódico',
     ads: {

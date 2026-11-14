@@ -26,33 +26,57 @@ describe('the sheet hooks wrap the paper', () => {
     expect(paper.indexOf('data-paper-bar')).toBeLessThan(paper.indexOf('data-paper-fit'));
   });
 
-  it('holds the page tabs, the date picker and Fit in a bar outside the sheet', () => {
-    // The bar mirrors the masthead controls at touch size, outside the sheet.
+  it('holds one slim strip outside the sheet: page arrows, the date and Fit', () => {
+    // The strip never carries full-text tabs; the masthead keeps its three.
     expect(paper).toContain('data-paper-bar');
-    expect(paper).toContain('paper-bar-tabs');
+    expect(paper).toContain('paper-strip-pages');
     expect(paper).toContain('t.today.controls');
-    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(6);
+    expect(paper).not.toContain('paper-bar-tabs');
+    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(3);
+    // Page arrows around a live count, every control named for assistive tech.
+    expect(paper).toContain('data-page-prev');
+    expect(paper).toContain('data-page-next');
+    expect(paper).toContain('t.today.pages.prev');
+    expect(paper).toContain('t.today.pages.next');
+    expect(paper).toContain('data-page-indicator');
+    expect(paper).toContain('aria-live="polite"');
+    expect(paper).toContain('data-page-num');
+    expect(paper).toContain('data-page-name');
+    // The date picker and Fit stay in the strip, compact.
     expect(paper.match(/class="edition-pick[^"]*"/g)).toHaveLength(2);
     expect(paper).toContain('edition-pick--bar');
-    // Only the masthead keeps the Print submit; the bar is tabs plus date.
+    expect(paper).toContain('words--strip');
+    expect(paper).toContain('data-words-short');
+    // Only the masthead keeps the Print submit; the strip date loads on change.
     expect(paper.match(/iconSvg\(printer/g)).toHaveLength(1);
     expect(paper.match(/type="submit"/g)).toHaveLength(1);
   });
 
-  it('pins the bar below the sheet on narrow screens and turns pages briefly', () => {
+  it('pins the strip below the sheet on narrow screens and turns pages like paper', () => {
     expect(css).toContain('.paper-bar { display: none; }');
     expect(css).toContain('max-width: 63.99rem');
     expect(css).toContain('position: sticky');
-    // Every bar control reaches a comfortable touch target.
+    expect(css).toContain('height: 3rem');
+    // Every strip control reaches a comfortable touch target.
     expect(css).toContain('2.75rem');
+    // The compact date yields before any control leaves the strip.
+    expect(css).toMatch(/\.words--strip \[data-words-short\] \{[^}]*text-overflow: ellipsis/);
+    // The turn swings the leaf over its edge, never slides it sideways.
     expect(css).toContain('paper-turn-next');
     expect(css).toContain('paper-turn-prev');
+    expect(css).toContain('rotateY');
+    expect(css).toContain('0.55s');
+    expect(css).not.toContain('translateX(14%)');
     expect(css).toContain('prefers-reduced-motion');
   });
 
   it('names the only control Fit / Ajustar, with no zoom-in or zoom-out buttons', () => {
     expect(en.today.fit).toBe('Fit');
     expect(es.today.fit).toBe('Ajustar');
+    expect(en.today.pages.prev).toBe('Previous page');
+    expect(en.today.pages.next).toBe('Next page');
+    expect(es.today.pages.prev).toBe('Página anterior');
+    expect(es.today.pages.next).toBe('Página siguiente');
     expect(paper).not.toContain('zoom-in');
     expect(paper).not.toContain('zoom-out');
     expect(paper).not.toContain('data-zoom');

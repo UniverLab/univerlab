@@ -66,8 +66,19 @@ describe('today pick form', () => {
   });
 
   it('the words span reserves its height before the script fills it', () => {
+    // The masthead keeps the full words; the strip reads a compact short date.
     expect(paper).toContain('<span data-words>&nbsp;</span>');
-    expect(paper.match(/<span data-words>&nbsp;<\/span>/g)).toHaveLength(2);
+    expect(paper.match(/<span data-words>&nbsp;<\/span>/g)).toHaveLength(1);
+    expect(paper).toContain('<span data-words-short>&nbsp;</span>');
+    expect(paper.match(/<span data-words-short>&nbsp;<\/span>/g)).toHaveLength(1);
+  });
+
+  it('choosing a date loads that edition, in the compact strip wording', () => {
+    // Either picker's change navigates at once; the max attribute and the
+    // guard together keep future dates unreachable.
+    expect(paper).toContain("window.location.search = '?d=' + value");
+    expect(paper).toContain('data-words-short');
+    expect(paper).toContain("weekday: 'short'");
   });
 
   it('both pages use the picked day in the fallback', () => {

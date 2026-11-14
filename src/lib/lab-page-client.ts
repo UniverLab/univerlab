@@ -50,9 +50,46 @@ function currentPage(scope: ParentNode): PageId {
   return 'page-1';
 }
 
+/** The pages that read: the order minus the pages with no content (paintLab
+ *  hides their tabs and their section), so a missing page 3 leaves two. */
+function readablePages(scope: ParentNode): PageId[] {
+  const tabs = scope.querySelectorAll
+    ? (Array.from(scope.querySelectorAll('.paper-tab')) as HTMLElement[])
+    : [];
+  const tabbed = PAGE_ORDER.filter((page) =>
+    tabs.some((tab) => tab.getAttribute('data-page') === page && !tab.hidden),
+  );
+  return tabbed.length > 0 ? tabbed : [...PAGE_ORDER];
+}
+
+/** The slim strip's page count: "n / total" over the pages that read, so a
+ *  missing page 3 reads "2 / 2". Ends disable their arrow; the name
+ *  announces the page. */
+function paintStrip(scope: ParentNode, id: PageId): void {
+  const list = readablePages(scope);
+  const at = Math.max(0, list.indexOf(id));
+  const num = scope.querySelector?.('[data-page-num]');
+  if (num) num.textContent = `${at + 1} / ${list.length}`;
+  const name = scope.querySelector?.('[data-page-name]') as HTMLElement | null;
+  const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
+  if (name && section) name.textContent = section.getAttribute('aria-label') || '';
+  const prevBtn = scope.querySelector?.('[data-page-prev]') as HTMLElement | null;
+  const nextBtn = scope.querySelector?.('[data-page-next]') as HTMLElement | null;
+  // The ends rest rather than hard-disable: the arrow stays focused (the
+  // reader's place in the strip) but assistive tech hears it is inert.
+  if (prevBtn) {
+    prevBtn.classList.toggle('disabled', at <= 0);
+    prevBtn.setAttribute('aria-disabled', at <= 0 ? 'true' : 'false');
+  }
+  if (nextBtn) {
+    nextBtn.classList.toggle('disabled', at >= list.length - 1);
+    nextBtn.setAttribute('aria-disabled', at >= list.length - 1 ? 'true' : 'false');
+  }
+}
+
 function tabShow(paper: HTMLElement, id: PageId): void {
-  // The tabs live twice: the masthead inside the sheet and the control bar
-  // outside it. Sync every tab in the document, never just the sheet's.
+  // The masthead tabs live inside the sheet; the slim strip outside it
+  // carries arrows and a count. Sync every tab in the document.
   const scope: ParentNode = paper.ownerDocument ?? paper;
   const prev = currentPage(scope);
   for (const page of PAGE_ORDER) {
@@ -65,9 +102,11 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   for (const tab of tabs) {
     tab.classList.toggle('is-active', tab.getAttribute('data-page') === id);
   }
+  paintStrip(scope, id);
   if (prev === id) return;
-  // The page-turn: the incoming page slides in from the side it comes from.
-  // The sheet keeps its fitted scale throughout; only the page animates.
+  // The page-turn: the incoming leaf swings over its edge, forward one way
+  // and back the other. The sheet keeps its fitted scale throughout; only
+  // the page animates, with transform and opacity, never layout.
   const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
   if (!section) return;
   const cls = PAGE_ORDER.indexOf(id) > PAGE_ORDER.indexOf(prev) ? 'turn-next' : 'turn-prev';
@@ -75,7 +114,7 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   section.classList.add(cls);
   window.setTimeout(() => {
     section.classList.remove('turn-next', 'turn-prev');
-  }, 320);
+  }, 620);
   // The newly shown page was hidden (nothing measured there): fit it now that
   // it reads. Already-fitted pages measure clean and stay untouched.
   fitPaper(scope);
@@ -272,6 +311,29 @@ export function bindLabPage(root: ParentNode = document): void {
   // the fragment, pushState keeps the hash in the URL without the native
   // jump, and the sheet stays fitted where it was.
   doc.addEventListener('click', (event) => {
+    // The slim strip's arrows step one readable page either way, like the
+    // tabs but without leaving through an anchor: pushState keeps the hash
+    // without the native jump, and the sheet stays fitted where it was.
+    const stepBtn = (event.target as HTMLElement).closest?.(
+      'button[data-page-prev], button[data-page-next]',
+    ) as HTMLButtonElement | null;
+    if (stepBtn) {
+      // One step per click even when the binder ran twice (the document
+      // listener would otherwise step once per binding): the first handler
+      // to reach the click owns it.
+      const claimed = event as unknown as Record<string, unknown>;
+      if (claimed.__labStripStep === true) return;
+      claimed.__labStripStep = true;
+      const back = stepBtn.hasAttribute('data-page-prev');
+      const list = readablePages(root);
+      const at = Math.max(0, list.indexOf(currentPage(root)));
+      const next = list[Math.min(list.length - 1, Math.max(0, at + (back ? -1 : 1)))];
+      if (next === undefined || next === currentPage(root)) return;
+      event.preventDefault();
+      history.pushState({}, '', `#${next}`);
+      tabShow(paper, next);
+      return;
+    }
     const anchor = (event.target as HTMLElement).closest?.('a.paper-tab') as HTMLAnchorElement | null;
     if (!anchor) return;
     // Modified clicks keep the anchor's own meaning: new tab, new window.
