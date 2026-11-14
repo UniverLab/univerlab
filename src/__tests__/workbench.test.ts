@@ -253,13 +253,27 @@ describe('workbench', () => {
 
   it('three tags go three across on wide screens, one column below, never four plus none', () => {
     expect(VIEW).toContain('grid-template-columns: 1fr;');
-    expect(VIEW).toContain('@media (min-width: 72rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
+    expect(VIEW).toContain('@media (min-width: 48rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
     expect(VIEW).not.toMatch(/repeat\(4,/);
   });
 
-  it('the phone price tags drop the desktop columns before scrolling sideways', () => {
-    expect(VIEW).toMatch(/\.wb-tags \{[^}]*grid-template-columns: none;[^}]*grid-auto-flow: column/);
-    expect(VIEW).toContain('overflow-x: auto');
+  it('phones stack the tags, never scroll', () => {
+    expect(VIEW).not.toContain('overflow-x: auto');
+    expect(VIEW).not.toMatch(/scroll-snap|grid-auto-columns|grid-auto-flow/);
+  });
+
+  it('the founding counter keeps its reserve and the narrow three-column cards keep their fit', () => {
+    expect(VIEW).not.toMatch(/\.wb-left:empty/);
+    expect(VIEW).toContain('@media (min-width: 48rem) { .wb-tag { padding-inline: 0.9rem; } .wb-tag .wb-price { font-size: 1.5rem; white-space: nowrap; } .wb-price-cop { font-size: 0.65rem; } .wb-left { min-height: 3.2em; } }');
+  });
+
+  it('the fit rules come after the base rules they tighten, or the cascade drops them', () => {
+    const fit = VIEW.indexOf('@media (min-width: 48rem) { .wb-tag { padding-inline: 0.9rem; }');
+    expect(fit).toBeGreaterThan(-1);
+    for (const base of ['.wb-tag { background: var(--bg-raise)', '.wb-tag .wb-price { font-family', '.wb-price-cop { font-family', '.wb-left { display: block']) {
+      expect(VIEW.indexOf(base)).toBeGreaterThan(-1);
+      expect(fit).toBeGreaterThan(VIEW.indexOf(base));
+    }
   });
 
   it('no bare Spanish "banco" survives in the workbench copy', () => {
