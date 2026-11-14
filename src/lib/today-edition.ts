@@ -8,7 +8,7 @@ import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { dailyFact } from './mail';
-import { paperAdHtml, paperAdsMarkdown } from './paper-ads';
+import { paperAdHtml, paperAdsMarkdown, paperHouseDuoHtml, paperWorkbenchDuoHtml } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
@@ -350,6 +350,20 @@ export function splitColumns(entries: ColEntry[]): ColEntry[][] {
   ].filter((c) => c.length > 0);
 }
 
+/** Which footing the house ads take at the foot of the columns: a column
+ *  ending well short of the page's foot (`<= 0.85` of the longest column)
+ *  has room for a notice of its own. Two or more short columns split the two
+ *  notices; otherwise the notices merge into one in the lightest column, so
+ *  no column on page 1 ends in blank paper. The weight math is the same
+ *  estimate the splitter balances by, so the edge renderer and the client
+ *  fallback agree. */
+export function chooseHouseSlots(weights: number[]): 'split' | 'merged' {
+  if (!weights.length) return 'merged';
+  const max = Math.max(...weights);
+  const short = weights.filter((w) => w <= 0.85 * max).length;
+  return short >= 2 ? 'split' : 'merged';
+}
+
 /** One balanced column: a heading per kind change, marked as a continuation
  *  when the kind runs on from the previous column. */
 function balancedColumnHtml(
@@ -359,6 +373,7 @@ function balancedColumnHtml(
   date: Date,
   lang: TodayLang,
   plate: boolean,
+  footHtml = '',
 ): { html: string; endKind: Fact['kind'] | null } {
   const head = col.slice(0, COLUMN_FOLD);
   const extra = col.slice(COLUMN_FOLD);
@@ -388,6 +403,7 @@ function balancedColumnHtml(
       `</details>`;
   }
   if (plate) html += paperPlateHtml(lang);
+  if (footHtml) html += footHtml;
   return { html: html + `</section>`, endKind: cur };
 }
 
@@ -443,9 +459,9 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `</div></article>`;
   }
 
-  // The rail beside the lead: the events the lead pushed aside read first,
-  // then the Workbench notice. Nothing else shares it, so a long side column
-  // can no longer stretch past the lead and leave a hole under it.
+  // The rail beside the lead: only the events the lead pushed aside read
+  // here. Nothing else shares it, so a long side column can no longer
+  // stretch past the lead and leave a hole under it.
   const side = aside.length
     ? `<aside class="also">` +
       aside
@@ -464,12 +480,13 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `</aside>`
     : '';
   if (side) {
-    out += `<div class="rail">${side}${paperAdHtml(lang, 'workbench')}</div>`;
+    out += `<div class="rail">${side}</div>`;
   }
 
-  // The audits display advertisement spans the front under the lead and,
-  // when the day has one, the rail — never the lead slot itself.
-  out += paperAdHtml(lang, 'audits');
+  // The single Workbench display spans the front under the lead and, when
+  // the day has one, the rail — never the lead slot itself. It carries both
+  // offers, the free first call and the audits, each with its own link.
+  out += paperWorkbenchDuoHtml(lang);
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
@@ -481,35 +498,35 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   const cols = splitColumns(entries);
   if (cols.length) {
     // The engraving absorbs the slack the day's content leaves: it is
-    // appended in the lightest column (ties to the first).
-    let plateAt = 0;
-    let lightest = Infinity;
-    cols.forEach((col, i) => {
-      const weight = col.reduce((n, e) => n + estimate(e.fact), 0);
-      if (weight < lightest) {
-        lightest = weight;
-        plateAt = i;
-      }
-    });
+    // appended in the lightest column (ties to the first), and the house
+    // notices foot the columns that end short of the page's foot — split
+    // across two short columns, or merged into one in the lightest column.
+    const weights = cols.map((col) => col.reduce((n, e) => n + estimate(e.fact), 0));
+    const slot = chooseHouseSlots(weights);
+    const byWeight = weights
+      .map((w, i) => i)
+      .sort((a, b) => weights[a] - weights[b]);
+    const plateAt = byWeight[0];
+    const feet: string[] = cols.map(() => '');
+    if (slot === 'split') {
+      feet[byWeight[0]] = paperAdHtml(lang, 'install');
+      feet[byWeight[1]] = paperAdHtml(lang, 'collab');
+    } else {
+      feet[byWeight[0]] = paperHouseDuoHtml(lang);
+    }
     let openKind: Fact['kind'] | null = null;
     out += `<div class="cols">`;
     cols.forEach((col, i) => {
-      const rendered = balancedColumnHtml(col, openKind, t, date, lang, i === plateAt);
+      const rendered = balancedColumnHtml(col, openKind, t, date, lang, i === plateAt, feet[i]);
       out += rendered.html;
       openKind = rendered.endKind;
     });
     out += `</div>`;
+  } else {
+    // No columns: no foot to fill, so the merged house notice closes the
+    // front on its own and both offers stay on the page.
+    out += paperHouseDuoHtml(lang);
   }
-
-  // The small notices close the front, each sized to its own content. On a
-  // day without a side column the Workbench notice joins them instead of
-  // leaving the rail's column empty.
-  out +=
-    `<div class="ad-pair">` +
-    (side ? '' : paperAdHtml(lang, 'workbench')) +
-    paperAdHtml(lang, 'install') +
-    paperAdHtml(lang, 'collab') +
-    `</div>`;
 
   out += `</div><p class="colophon-note">${esc(t.colophon)}</p>`;
   return out;
@@ -596,7 +613,14 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     }
     lines.push('');
   }
-  // The lab's advertisements ride the twin as one short line each.
-  lines.push(paperAdsMarkdown(lang), '');
+  // The lab's advertisements ride the twin on the same lines the page
+  // prints: the Workbench duo, then the house footing the columns take.
+  const twinEntries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
+    rest(kind).map((fact) => ({ kind, fact })),
+  );
+  const twinWeights = splitColumns(twinEntries).map((c) =>
+    c.reduce((n, e) => n + estimate(e.fact), 0),
+  );
+  lines.push(paperAdsMarkdown(lang, chooseHouseSlots(twinWeights)), '');
   return lines.join('\n');
 }

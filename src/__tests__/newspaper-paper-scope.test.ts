@@ -42,8 +42,9 @@ describe("today's paper styles stay on the paper", () => {
 
   it('lays the front out as three columns with the lead spanning two', () => {
     // The lead takes two of the three columns with the rail beside it; the
-    // lab mail, the feature ad, the columns and the pair span them all. No
-    // rail is ever sized by the renderer, so no band is left empty.
+    // lab mail, the feature ad and the columns span them all, and the house
+    // notices foot the short columns instead of a row below them. No rail
+    // is ever sized by the renderer, so no band is left empty.
     expect(css).toMatch(/\.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
     expect(css).toMatch(/\.paper \.front \.lead \{[^}]*grid-column:\s*1 \/ span 2/);
     expect(css).toMatch(/\.paper \.front \.rail \{[^}]*grid-column:\s*3/);

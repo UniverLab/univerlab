@@ -9,11 +9,13 @@ import { resolve } from 'node:path';
 import { buildPool, collectFacts, letterPool } from '../lib/science-filter';
 import { dailyFact } from '../lib/mail';
 import {
+  chooseHouseSlots,
   estimate,
   firstSentence,
   splitColumns,
   todayAside,
   todayEditionHtml,
+  todayEditionMarkdown,
   todayLead,
   type ColEntry,
   type TodayFeed,
@@ -87,13 +89,56 @@ describe('a long edition balances its columns', () => {
 
   it('keeps the rail content-sized beside a lead within a few lines', () => {
     expect(html).not.toContain('rail" style=');
-    // Lines of ~70 characters: the lead story and the rail (two events and
-    // one notice) end within three lines of each other, so no hole opens
-    // under either of them.
+    // Lines of ~70 characters: the lead story and the rail (the two events
+    // only — the Workbench notice left the rail) end within three lines of
+    // each other, so no hole opens under either of them.
     const lines = (s: string): number => Math.ceil(s.length / 70);
     const leadLen = blockOf(html, '<article class="lead', '</article>');
-    const railLen = blockOf(html, '<div class="rail">', '<aside class="ad ad--feature"');
+    const railStart = html.indexOf('<div class="rail">');
+    const alsoEnd = html.indexOf('</aside>', railStart);
+    const railLen = textOf(html.slice(railStart, html.indexOf('</div>', alsoEnd)));
     expect(Math.abs(lines(leadLen) - lines(railLen))).toBeLessThanOrEqual(3);
+  });
+
+  it('carries a single Workbench ad with both offers under the lead', () => {
+    // One duo, in the audits display's full-bleed place, with a link per
+    // offer — and no second Workbench printing anywhere (no tall rail ad).
+    expect(html).not.toContain('ad--tall');
+    const duos = [...html.matchAll(/<aside class="ad ad--feature"[^>]*>(.*?)<\/aside>/gs)];
+    expect(duos).toHaveLength(1);
+    expect(duos[0][1]).toContain('href="/workbench/"');
+    expect(duos[0][1]).toContain('href="/workbench/audits/"');
+    const railStart = html.indexOf('<div class="rail">');
+    const railEnd = html.indexOf('</div>', html.indexOf('</aside>', railStart));
+    expect(html.slice(railStart, railEnd)).not.toContain('class="ad');
+  });
+
+  it('foots the short columns with the house ads and leaves no ad-pair', () => {
+    expect(html).not.toContain('ad-pair');
+    const colsHtml = html.slice(html.indexOf('<div class="cols">'));
+    const colBodies = [...colsHtml.matchAll(/<section class="col">(.*?)<\/section>/gs)].map(
+      (m) => m[1],
+    );
+    expect(colBodies.length).toBeGreaterThan(0);
+    const houseInCols =
+      colBodies.reduce((n, b) => n + (b.match(/<aside class="ad ad--small"/g) ?? []).length, 0);
+    const houseEverywhere = (html.match(/<aside class="ad ad--small"/g) ?? []).length;
+    // One merged dual-offer notice or the two notices apart — and every
+    // house notice sits inside a column foot, none below the columns.
+    expect([1, 2]).toContain(houseEverywhere);
+    expect(houseInCols).toBe(houseEverywhere);
+  });
+
+  it('prints the same composition in Spanish, twin included', () => {
+    const es = todayEditionHtml({ facts: FACTS, lab: [] }, 'es', DATE);
+    expect(es).not.toContain('ad-pair');
+    expect(es).not.toContain('ad--tall');
+    expect(es).toContain('href="/es/workbench/"');
+    expect(es).toContain('href="/es/workbench/audits/"');
+    expect(es).toContain('href="/es/contributors/"');
+    const esMd = todayEditionMarkdown({ facts: FACTS, lab: [] }, 'es', DATE);
+    expect(esMd).toContain('https://univerlab.org/es/workbench/');
+    expect(esMd).toContain('https://univerlab.org/es/workbench/audits/');
   });
 
   it('runs a kind that overflows its column on under a continuation mark', () => {
@@ -106,7 +151,10 @@ describe('a long edition balances its columns', () => {
 
   it('prints every ad as a display ad sized to its content', () => {
     const ads = [...html.matchAll(/<aside class="ad ad--\w+"[^>]*>(.*?)<\/aside>/gs)];
-    expect(ads).toHaveLength(4);
+    // The single Workbench duo plus the house footing: one merged notice
+    // or the two notices apart.
+    expect(ads.length).toBeGreaterThanOrEqual(2);
+    expect(ads.length).toBeLessThanOrEqual(3);
     for (const [, body] of ads) {
       expect(body).toContain('class="ad-display"');
       expect(body).toContain('class="ad-copy"');
@@ -116,6 +164,16 @@ describe('a long edition balances its columns', () => {
       // No inner blank: the copy holds the lines, nothing else.
       expect(body).not.toContain('class="tail"');
     }
+  });
+
+  it('chooses the house footing from the column weights', () => {
+    // Two columns ending well short split the notices; one short column
+    // merges them into the lightest one; level columns merge too.
+    expect(chooseHouseSlots([10, 5, 5])).toBe('split');
+    expect(chooseHouseSlots([10, 10, 5])).toBe('merged');
+    expect(chooseHouseSlots([10, 10, 10])).toBe('merged');
+    expect(chooseHouseSlots([10])).toBe('merged');
+    expect(chooseHouseSlots([])).toBe('merged');
   });
 
   it('prints column bodies as one sentence, never a wall', () => {
@@ -165,6 +223,18 @@ describe('a short edition keeps one column per kind', () => {
   it('prints a long summary as its first sentence only', () => {
     expect(html).toContain('<p class="body">She mapped the southern sky.</p>');
     expect(html).not.toContain('Then she taught for decades.');
+  });
+
+  it('merges the house ads into one when a single column leaves one foot', () => {
+    // One foot of space: a single merged notice carrying both offers, and
+    // it stands inside the columns — never in a row below them.
+    const asides = [...html.matchAll(/<aside class="ad[^>]*>(.*?)<\/aside>/gs)].map((m) => m[1]);
+    const merged = asides.filter((b) => b.includes('/canopy/') && b.includes('/contributors/'));
+    expect(merged).toHaveLength(1);
+    expect(html).not.toContain('ad-pair');
+    const colsStart = html.indexOf('<div class="cols">');
+    expect(colsStart).toBeGreaterThan(-1);
+    expect(html.indexOf('/contributors/', colsStart)).toBeGreaterThan(colsStart);
   });
 });
 

@@ -253,6 +253,7 @@ const t = useTranslations(lang);
   .paper .more { display: grid; gap: 14px; }
   .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
+  .paper .col .ad { margin-top: 16px; align-self: end; }
   .paper .col + .col { border-left: 1px solid var(--p-rule); }
   .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
   .paper .col h3 { border-bottom: 1px solid var(--p-ink); padding-bottom: 4px; }
@@ -303,8 +304,6 @@ const t = useTranslations(lang);
   .paper .ad .cmd { display: grid; gap: 2px; margin: 0; }
   .paper .ad .cmd a { font-family: var(--font-mono); font-size: 11px; color: var(--p-emphasis); }
   .paper .ad .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
-  .paper .ad-pair { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-  .paper .ad-pair > * { min-width: 0; }
   /* The standing coupons ride the classifieds as ads of their own, set in
     the same type. Each coupon cuts out along its dashed border. */
   .paper .coupon { border: 1px dashed var(--p-ink); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; text-decoration: none; break-inside: avoid; }
@@ -314,7 +313,6 @@ const t = useTranslations(lang);
   .paper .coupon-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); }
   .paper .coupon-note { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
   @media (min-width: 48rem) {
-    .paper .ad-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
     .paper .ad--feature .kicker { grid-column: 1 / -1; }
@@ -323,14 +321,14 @@ const t = useTranslations(lang);
     .paper .front { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .paper .front .lead { grid-column: 1 / -1; }
     .paper .front .rail { grid-column: 1 / -1; }
-    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols, .paper .front .ad-pair { grid-column: 1 / -1; }
+    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols { grid-column: 1 / -1; }
   }
   @media (min-width: 64rem) {
     .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .paper .front .lead { grid-column: 1 / span 2; }
     .paper .front .lead.solo { grid-column: 1 / -1; }
     .paper .front .rail { grid-column: 3; }
-    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols, .paper .front .ad-pair { grid-column: 1 / -1; }
+    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols { grid-column: 1 / -1; }
   }
   @media print {
     .paper .front, .paper .cols { display: block; }
@@ -365,7 +363,6 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
   .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }
   .paper-viewport.sheet .paper .coupon-figure { font-size: 40px; }
-  .paper-viewport.sheet .paper .ad-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .paper-viewport.sheet .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .paper-viewport.sheet .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
   .paper-viewport.sheet .paper .ad--feature .kicker { grid-column: 1 / -1; }
@@ -373,7 +370,7 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .front .lead { grid-column: 1 / span 2; }
   .paper-viewport.sheet .paper .front .lead.solo { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .front .rail { grid-column: 3; }
-  .paper-viewport.sheet .paper .front .labmail, .paper-viewport.sheet .paper .front .ad--feature, .paper-viewport.sheet .paper .front .cols, .paper-viewport.sheet .paper .front .ad-pair { grid-column: 1 / -1; }
+  .paper-viewport.sheet .paper .front .labmail, .paper-viewport.sheet .paper .front .ad--feature, .paper-viewport.sheet .paper .front .cols { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .col, .paper-viewport.sheet .paper .col:first-child, .paper-viewport.sheet .paper .col:last-child { padding-inline: 18px; }
   .paper-viewport.sheet .paper .col + .col { border-left: 1px solid var(--p-rule); border-top: 0; padding-top: 0; margin-top: 0; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }

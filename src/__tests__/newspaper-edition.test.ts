@@ -257,16 +257,15 @@ describe('todayEditionHtml (en)', () => {
     expect(bare).not.toContain('Letter of the day');
     expect(bare).not.toContain('<aside>');
     // With no side column there is no rail to leave a hole beside: the
-    // feature ad, the columns and the closing notices run full width, and
-    // the Workbench notice joins the pair instead of standing alone.
+    // single Workbench display runs full width and the house notices foot
+    // the columns — no closing row, no second Workbench anywhere.
     const front = bare.slice(bare.indexOf('<div class="front">'));
     expect(front).not.toContain('<div class="rail">');
-    const order = ['ad--feature', '<div class="cols">', '<div class="ad-pair">'].map((m) =>
-      front.indexOf(m),
-    );
+    const order = ['ad--feature', '<div class="cols">'].map((m) => front.indexOf(m));
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    expect(front.indexOf('class="ad ad--tall"')).toBeGreaterThan(front.indexOf('<div class="cols">'));
+    expect(front).not.toContain('class="ad ad--tall"');
+    expect(front).not.toContain('ad-pair');
     expect(bare).not.toContain('rail" style=');
     // And the columns still list every birth and death.
     expect(bare).toContain('<h3>Births</h3>');
@@ -431,15 +430,17 @@ describe('the sundial engraving sits inside the grid', () => {
 });
 
 describe('the lab advertisements', () => {
-  it('prints four shaped ads on every edition, honestly labelled, never the lead', () => {
+  it('prints the duo and the house footing on every edition, honestly labelled, never the lead', () => {
     for (const lang of ['en', 'es'] as const) {
       const html = todayEditionHtml({ facts: [], lab: [] }, lang, DATE);
+      // No columns on an empty edition: the single Workbench duo plus the
+      // merged house notice closing the front on its own.
       const asides = html.match(/<aside class="ad ad--[a-z]+" aria-label="[^"]*">/g) ?? [];
-      expect(asides).toHaveLength(4);
+      expect(asides).toHaveLength(2);
       const label = lang === 'es' ? 'Aviso' : 'Notice';
       for (const a of asides) expect(a).toContain(`aria-label="${label}"`);
       // The label is printed, not only spoken to a screen reader.
-      expect(html.match(new RegExp(`<p class="kicker">${label}</p>`, 'g')) ?? []).toHaveLength(4);
+      expect(html.match(new RegExp(`<p class="kicker">${label}</p>`, 'g')) ?? []).toHaveLength(2);
       expect(html).toContain('<div class="banner">');
     }
     // With a full edition the lead carries no advertisement.
@@ -447,23 +448,21 @@ describe('the lab advertisements', () => {
     const leadStart = full.indexOf('<article class="lead');
     expect(leadStart).toBeGreaterThan(-1);
     expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="ad');
-    // The front runs rail, feature, columns, pair: the Workbench notice
-    // beside the lead, the audits display under them, the small pair last.
+    // The front runs rail, feature, columns: the side column beside the
+    // lead, the single Workbench display under them, the house notices
+    // footing the short columns — never a row below them.
     const front = full.slice(full.indexOf('<div class="front">'));
-    const order = [
-      '<div class="rail">',
-      'class="ad ad--feature"',
-      '<div class="cols">',
-      '<div class="ad-pair">',
-    ].map((m) => front.indexOf(m));
+    const order = ['<div class="rail">', 'class="ad ad--feature"', '<div class="cols">'].map((m) =>
+      front.indexOf(m),
+    );
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    // The rail holds the side column and one notice, never a sized band:
-    // no rail carries an inline row count.
+    expect(full).not.toContain('<div class="ad-pair">');
+    expect(full).not.toContain('class="ad ad--tall"');
+    // The rail holds only the side column, never a sized band and never an
+    // ad: no rail carries an inline row count.
     expect(full).toContain('<div class="rail">');
     expect(full.indexOf('<aside class="also">')).toBeGreaterThan(full.indexOf('<div class="rail"'));
-    expect(full.indexOf('class="ad ad--tall"')).toBeGreaterThan(full.indexOf('<div class="rail"'));
-    expect(full.indexOf('class="ad ad--tall"')).toBeLessThan(full.indexOf('class="ad ad--feature"'));
     expect(full).not.toContain('rail" style=');
     // Every ad is a display ad: a large display line, copy and a boxed
     // call to action that closes the notice.
@@ -510,17 +509,24 @@ describe('the lab advertisements', () => {
     expect(html).toContain('uv tool install facetmedia');
   });
 
-  it('rides the markdown twin as one short line per ad', () => {
+  it('rides the markdown twin on the duo line and the house footing', () => {
     const md = todayEditionMarkdown(feed(), 'en', DATE);
-    expect(md.match(/^\*Notice — /gm)).toHaveLength(4);
+    // One Workbench-duo line with both links, then the house footing the
+    // columns take: one merged line or the two notices apart.
+    const lines = md.match(/^\*Notice — /gm) ?? [];
+    expect(lines.length).toBeGreaterThanOrEqual(2);
+    expect(lines.length).toBeLessThanOrEqual(3);
     expect(md).toContain('[The Workbench](https://univerlab.org/workbench/)');
     expect(md).toContain('https://univerlab.org/workbench/audits/');
     expect(md).toContain('https://univerlab.org/canopy/');
     expect(md).toContain('https://univerlab.org/facetmedia/');
     expect(md).toContain('https://univerlab.org/contributors/');
     const es = todayEditionMarkdown(feed('es'), 'es', DATE);
-    expect(es.match(/^\*Aviso — /gm)).toHaveLength(4);
+    const esLines = es.match(/^\*Aviso — /gm) ?? [];
+    expect(esLines.length).toBeGreaterThanOrEqual(2);
+    expect(esLines.length).toBeLessThanOrEqual(3);
     expect(es).toContain('[Banco de trabajo](https://univerlab.org/es/workbench/)');
+    expect(es).toContain('https://univerlab.org/es/workbench/audits/');
   });
 });
 
