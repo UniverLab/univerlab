@@ -171,7 +171,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('renders the heading and the filters in Spanish', () => {
     const html = labPageHtml(entries, 'es');
-    expect(html).toContain('<h2 class="lab-heading">Noticias del laboratorio</h2>');
+    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
     expect(html).toContain('>Todas<span class="lab-filter-count">12</span>');
     expect(html).toContain('>lanzamiento<span class="lab-filter-count">3</span>');
   });
@@ -184,7 +184,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the lab mail did not arrive instead of empty filter rows', () => {
     const html = labPageHtml([], 'en', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading">Lab news</h2>');
+    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
     expect(html).toContain('<p class="lab-empty">The lab mail did not arrive — try again later.</p>');
     expect(html).not.toContain('lab-filter');
     expect(html).not.toContain('lab-log');
@@ -194,7 +194,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the same in Spanish', () => {
     const html = labPageHtml([], 'es', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading">Noticias del laboratorio</h2>');
+    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
     expect(html).toContain('<p class="lab-empty">No llegó el correo del laboratorio; inténtelo más tarde.</p>');
     expect(html).not.toContain('lab-filter');
   });
@@ -302,7 +302,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     });
     const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
-    expect(html2).toContain('Lab news · continued');
+    expect(html2).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
     expect(html2).toContain('<p class="lab-more"><a href="/logbook/"><img src="/bench/classifieds/manicule.webp"');
     expect(html2).toContain('The complete record continues in the Logbook →</a></p>');
     const es2 = labPageHtml2(live, 'es');
@@ -331,11 +331,13 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // empty frame: the plate and the h2 share one head-cartouche.
     const cartouche1 = html1.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(cartouche1).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(cartouche1).toContain('<h2 class="lab-heading">Lab news</h2>');
+    expect(cartouche1).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
     const html2 = labPageHtml2(live, 'en');
     const cartouche2 = html2.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(cartouche2).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(cartouche2).toContain('<h2 class="lab-heading lab-heading--cont">Lab news · continued</h2>');
+    // Both pages carry the same English head: the news run in English only.
+    expect(cartouche2).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html2).not.toContain('continued');
     // No empty ribbon frame on either page; the words are set in type,
     // never inside the image.
     expect(html1).not.toContain('classifieds-ribbon');

@@ -368,13 +368,14 @@ function logbookPointerHtml(t: Dict, lang: LabPageLang): string {
   return `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
 }
 
-/** A classifieds section head: the page's words set inside the engraved
- *  head cartouche, centred over the plate. `cont` marks the page-3
- *  continuation head. */
-function headHtml(t: Dict, cont: boolean): string {
-  const words = cont ? `${esc(t.labPage.heading)} · ${esc(t.continued)}` : esc(t.labPage.heading);
-  const cls = cont ? 'lab-heading lab-heading--cont' : 'lab-heading';
-  return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="${cls}">${words}</h2></div></header>`;
+/** A classifieds section head: "Lab news" set inside the engraved head
+ *  cartouche, centred over the plate, on both pages. The lab's news run in
+ *  English only, so the head stays English in every edition and never
+ *  outgrows the frame. */
+const LAB_HEAD_WORDS = 'Lab news';
+
+function headHtml(): string {
+  return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="lab-heading" translate="no">${LAB_HEAD_WORDS}</h2></div></header>`;
 }
 
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
@@ -400,7 +401,7 @@ export function classifiedsHtml(
   let page2 = '';
   if (pages[1]) {
     page2 =
-      headHtml(t, true) +
+      headHtml() +
       `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang, 2)}</div>` +
       `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>`;
   }
@@ -421,11 +422,11 @@ export function labPageHtml(
   const t = dict(lang);
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
-    return headHtml(t, false) +
+    return headHtml() +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
   const { page1 } = classifiedsHtml(rows, lang, opts);
-  return headHtml(t, false) +
+  return headHtml() +
     filtersHtml(rows, t) +
     page1;
 }

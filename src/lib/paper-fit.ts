@@ -414,6 +414,11 @@ export interface ClassifiedsFit {
 }
 
 const TURN_CLASSES = ['turn-leave-next', 'turn-return-prev', 'turn-under'];
+const LEAF_CLASSES = ['turn-leave-next', 'turn-return-prev'];
+
+function isTurningLeaf(page: Element): boolean {
+  return LEAF_CLASSES.some((c) => page.classList.contains(c));
+}
 
 /** True when another paper page of the same sheet is shown and stacked
  *  after this one. A page mid-turn overlaps the sheet instead of stacking,
@@ -441,6 +446,9 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
   for (const grid of grids) {
     const page = (grid as Element).closest?.('.paper-page');
     if (page && (page as HTMLElement).hidden) continue;
+    // A leaf mid-turn is drawn in perspective: its box says nothing about
+    // the sheet. The page is fitted again once the turn lands.
+    if (page && isTurningLeaf(page)) continue;
     // Before the tabs hide the other pages they all stack in one sheet and a
     // later page sits below the sheet's foot: measuring then would trim it
     // bare. The page turn fits it again once it is the only page shown.
@@ -502,7 +510,7 @@ export function fitPaper(root: ParentNode): PaperFit {
   const edition = (root as Element).querySelector?.('#edition');
   if (edition) {
     const page = (edition as Element).closest?.('#page-1');
-    if (!page || !(page as HTMLElement).hidden) {
+    if (!page || (!(page as HTMLElement).hidden && !isTurningLeaf(page))) {
       const front = fitFrontPage(edition as Element);
       out.trimmedLetters = front.trimmedLetters;
       out.movedLetters = front.movedLetters;

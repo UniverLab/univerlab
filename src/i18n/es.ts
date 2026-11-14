@@ -728,7 +728,7 @@ export const es: Dict = {
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
     labLink: 'Leer el anuncio completo →',
-    tabs: { p1: 'Página 1', p2: 'Página 2 · Noticias del laboratorio', p3: 'Página 3 · Noticias del laboratorio' },
+    tabs: { p1: 'Página 1', p2: 'Página 2 · Lab news', p3: 'Página 3 · Lab news' },
     labPage: {
       heading: 'Noticias del laboratorio',
       all: 'Todas',

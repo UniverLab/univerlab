@@ -73,7 +73,10 @@ describe('the sheet hooks wrap the paper', () => {
     expect(css).not.toContain('paper-turn-next');
     expect(css).not.toContain('paper-turn-prev');
     expect(css).toContain('rotateY');
-    expect(css).toContain('0.55s');
+    expect(css).toContain('0.6s');
+    // Both directions hinge on the spine (the left edge): back is the
+    // forward turn played in reverse, and the leaf is opaque paper.
+    expect(css).toMatch(/\.turn-leave-next, \.paper \.paper-page\.turn-return-prev \{[^}]*background: var\(--p-ground\);[^}]*transform-origin: 0 50%/);
     expect(css).not.toContain('translateX(14%)');
     expect(css).toContain('prefers-reduced-motion');
   });

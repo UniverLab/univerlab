@@ -57,7 +57,34 @@ function clearTurns(scope: ParentNode): void {
   for (const page of PAGE_ORDER) {
     const el = scope.querySelector?.(`#${page}`) as HTMLElement | null;
     el?.classList.remove(...TURN_CLASSES);
+    unpinLeaf(el);
   }
+}
+
+/** The page's own slot on the sheet, in the paper's layout pixels: where
+ *  every page prints. Read from the page that reads now, before any flag
+ *  changes. */
+function slotOf(el: HTMLElement | null): { top: number; left: number; width: number; height: number } | null {
+  if (!el || el.hidden) return null;
+  return { top: el.offsetTop, left: el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight };
+}
+
+/** Pin the turning leaf over the page's slot, so it turns in place instead
+ *  of jumping to the paper's top or stacking under the other page. */
+function pinLeaf(el: HTMLElement, slot: { top: number; left: number; width: number; height: number } | null): void {
+  if (!slot) return;
+  el.style.top = `${slot.top}px`;
+  el.style.left = `${slot.left}px`;
+  el.style.width = `${slot.width}px`;
+  el.style.height = `${slot.height}px`;
+}
+
+function unpinLeaf(el: HTMLElement | null): void {
+  if (!el) return;
+  el.style.removeProperty('top');
+  el.style.removeProperty('left');
+  el.style.removeProperty('width');
+  el.style.removeProperty('height');
 }
 
 /** Which page reads now: the active tab first — both sections stay visible
@@ -117,6 +144,7 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   const scope: ParentNode = paper.ownerDocument ?? paper;
   if (turnPending.get(scope) === id) return;
   const prev = currentPage(scope);
+  const slot = slotOf(scope.querySelector?.(`#${prev}`) as HTMLElement | null);
   // Both pages stay readable through the turn: only pages outside the
   // leaving/incoming pair hide, so the leaf and the sheet beneath overlap.
   for (const page of PAGE_ORDER) {
@@ -159,6 +187,7 @@ function tabShow(paper: HTMLElement, id: PageId): void {
   const fwd = PAGE_ORDER.indexOf(id) > PAGE_ORDER.indexOf(prev);
   const leaf = fwd ? prevEl : section;
   const under = fwd ? section : prevEl;
+  pinLeaf(leaf, slot);
   leaf.classList.add(fwd ? 'turn-leave-next' : 'turn-return-prev');
   under.classList.add('turn-under');
   turnPending.set(scope, id);
@@ -167,9 +196,10 @@ function tabShow(paper: HTMLElement, id: PageId): void {
     turnPending.delete(scope);
     leaf.classList.remove('turn-leave-next', 'turn-return-prev');
     under.classList.remove('turn-under');
+    unpinLeaf(leaf);
     prevEl.hidden = true;
     fitPaper(scope);
-  }, 620);
+  }, 640);
   // The newly shown page was hidden (nothing measured there): fit it now that
   // it reads. Already-fitted pages measure clean and stay untouched.
   fitPaper(scope);

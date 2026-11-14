@@ -147,6 +147,7 @@ const t = useTranslations(lang);
     --p-soft: var(--bench-c-sepia);
     --p-rule: var(--bench-c-graphite);
     --p-emphasis: var(--bench-c-garnet);
+    position: relative;
     display: flex; flex-direction: column; gap: 18px;
     background: var(--p-ground);
     padding: clamp(16px, 3vw, 28px);
@@ -205,7 +206,6 @@ const t = useTranslations(lang);
      in the paper's own type. Filtered rows hide only when JS manages them,
      so no-JS readers get every entry. */
   .paper .lab-heading { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
-  .paper .lab-heading--cont { border-bottom: 1px solid var(--p-rule); }
   /* The classifieds section head: the engraved head ornament with the words
      set in type beside it. Every ornament is printed like the paper's own
      halftones — sepia, multiplied into the sheet — so it reads in both
@@ -381,7 +381,6 @@ const t = useTranslations(lang);
   .paper .lab-head .head-cartouche { display: grid; justify-items: center; align-items: center; width: 100%; max-width: 100%; }
   .paper .lab-head .head-cartouche > img, .paper .lab-head .head-cartouche > .lab-heading { grid-area: 1 / 1; }
   .paper .lab-head .head-cartouche > .lab-heading { position: static; place-self: center; max-width: 62%; font-size: 30px; line-height: 1.05; }
-  .paper .lab-head .head-cartouche > .lab-heading--cont { font-size: 22px; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
   .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
@@ -580,23 +579,27 @@ const t = useTranslations(lang);
      current one the same way in reverse. Printed shading on the curling
      leaf, a soft shadow on the page beneath. Transform and opacity only. */
   @keyframes paper-leave-next {
-    from { transform: perspective(1400px) rotateY(0deg); transform-origin: 0 50%; opacity: 1; box-shadow: none; }
-    to { transform: perspective(1400px) rotateY(-86deg); transform-origin: 0 50%; opacity: 0.4; box-shadow: inset -90px 0 130px -60px rgba(22, 25, 28, 0.5), -18px 0 34px -18px rgba(22, 25, 28, 0.35); }
+    from { transform: perspective(2400px) rotateY(0deg); box-shadow: inset 0 0 0 0 rgba(22, 25, 28, 0); }
+    to { transform: perspective(2400px) rotateY(-90deg); box-shadow: inset -160px 0 140px -80px rgba(22, 25, 28, 0.55); }
   }
   @keyframes paper-return-prev {
-    from { transform: perspective(1400px) rotateY(86deg); transform-origin: 100% 50%; opacity: 0.5; box-shadow: inset -90px 0 130px -60px rgba(22, 25, 28, 0.5), -18px 0 34px -18px rgba(22, 25, 28, 0.35); }
-    to { transform: perspective(1400px) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; box-shadow: none; }
+    from { transform: perspective(2400px) rotateY(-90deg); box-shadow: inset -160px 0 140px -80px rgba(22, 25, 28, 0.55); }
+    to { transform: perspective(2400px) rotateY(0deg); box-shadow: inset 0 0 0 0 rgba(22, 25, 28, 0); }
   }
   @keyframes paper-turn-under {
-    from { opacity: 0; }
-    50% { opacity: 1; }
+    from { opacity: 0.9; }
     to { opacity: 0; }
   }
-  .paper .paper-page.turn-leave-next, .paper .paper-page.turn-return-prev { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-  .paper .paper-page.turn-leave-next { transform-origin: 0 50%; animation: paper-leave-next 0.55s ease-in-out; }
-  .paper .paper-page.turn-return-prev { transform-origin: 100% 50%; animation: paper-return-prev 0.55s ease-in-out; }
+  /* The turning leaf is an opaque sheet of paper pinned over the page's own
+     slot (the script sets its box), hinged on the spine at its left edge:
+     forward it lifts by the right edge and turns away to the left; back,
+     it turns in from the left and lays down. The page beneath never shows
+     through it. */
+  .paper .paper-page.turn-leave-next, .paper .paper-page.turn-return-prev { position: absolute; z-index: 2; pointer-events: none; background: var(--p-ground); transform-origin: 0 50%; backface-visibility: hidden; will-change: transform; }
+  .paper .paper-page.turn-leave-next { animation: paper-leave-next 0.6s cubic-bezier(.45, .05, .55, .95) both; }
+  .paper .paper-page.turn-return-prev { animation: paper-return-prev 0.6s cubic-bezier(.45, .05, .55, .95) both; }
   .paper .paper-page.turn-under { position: relative; }
-  .paper .paper-page.turn-under::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; box-shadow: inset 0 0 120px -30px rgba(22, 25, 28, 0.3); animation: paper-turn-under 0.55s ease-in-out; }
+  .paper .paper-page.turn-under::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 60px 0 90px -40px rgba(22, 25, 28, 0.35); animation: paper-turn-under 0.6s ease-out both; }
   @media (prefers-reduced-motion: reduce) {
     .paper .paper-page.turn-leave-next, .paper .paper-page.turn-return-prev, .paper .paper-page.turn-under::after { animation: none; }
   }
@@ -607,10 +610,8 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .masthead .ear--right { grid-column: 3; grid-row: 1; }
   .paper-viewport.sheet .paper .masthead .motto { font-size: 19px; }
   .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-  .paper-viewport.sheet .paper .lab-heading--cont { font-size: 30px; }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }
   .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading { font-size: 30px; }
-  .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading--cont { font-size: 22px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
   .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }
