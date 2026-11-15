@@ -510,6 +510,46 @@ describe('front page fits its sheet, masthead included', () => {
     expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(2);
     expect(edition.querySelector('.cols')).toBeNull();
   });
+
+  it('reads the rail foot live, so a rail that fits keeps every item', () => {
+    const edition = frontScaffold(
+      [
+        [ev(), ev()],
+        [br(), br()],
+      ],
+      { railItems: 2, paperBottom: 1200 },
+    );
+    // The rail's own box breathes with its items, which is what the row
+    // really holds; the box inside it still reports the stale, taller size
+    // a stretched inner block shows. Reading the rail live ends it at 1100,
+    // inside the sheet: both items stay and no letter is trimmed. Believing
+    // the stale height put the foot at 1300 and gutted the rail for nothing.
+    const rail = edition.querySelector('.rail') as HTMLElement;
+    const also = edition.querySelector('.rail .also') as HTMLElement;
+    const asideCount = () => also.querySelectorAll('.aside-item').length;
+    rail.getBoundingClientRect = () => rect(900 + asideCount() * 100, asideCount() * 100);
+    also.getBoundingClientRect = () => rect(1300, 400);
+    mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
+    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1300, 200);
+    const out = fitFrontPage(edition);
+    // The display ran past the sheet and goes; the rail never did, so
+    // nothing else leaves the page.
+    expect(edition.querySelector('aside.ad--feature')).toBeNull();
+    expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(2);
+    expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
+    expect(out.trimmedLetters).toBe(0);
+  });
+
+  it('drops the section a trim emptied', () => {
+    // A 100px sheet leaves each one-letter section no room: the trim takes
+    // the only letter whole, so the emptied section leaves the page and
+    // the band left with no section goes with it.
+    const edition = frontScaffold([[ev()], [br()]], { duo: false, paperBottom: 100 });
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBe(2);
+    expect(edition.querySelectorAll('.col')).toHaveLength(0);
+    expect(edition.querySelector('.cols')).toBeNull();
+  });
 });
 
 describe('fitPaper', () => {

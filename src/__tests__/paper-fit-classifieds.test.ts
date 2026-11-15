@@ -360,4 +360,37 @@ describe('the last classifieds page fills to the foot', () => {
     expect(img?.getAttribute('width')).toBe('81');
     expect(grid.querySelector('figure.classifieds-plate')).not.toBeNull();
   });
+
+  it('keeps setting ornaments while room remains, each to the fresh space', () => {
+    document.body.innerHTML =
+      '<div class="paper"><div id="lab-body"><div id="lab-log" class="classifieds">' +
+      '<article></article>' +
+      ['tree', 'gem', 'press']
+        .map(
+          (kind) =>
+            `<template data-fill="orn-${kind}"><figure class="classifieds-plate">` +
+            `<img src="/bench/classifieds/${kind}.webp" alt="" width="200" height="200" loading="lazy" decoding="async">` +
+            '</figure></template>',
+        )
+        .join('') +
+      '</div></div></div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    const scope = document.querySelector('#lab-body') as HTMLElement;
+    const plates = (): number => grid.querySelectorAll('figure.classifieds-plate').length;
+    // Each plate takes 100px of the scope: the foot is 500 plus what is
+    // already on the page, so every ornament is sized to what is left when
+    // it goes in — 500, then 400, then 300.
+    scope.getBoundingClientRect = () => rect(500 + plates() * 100);
+    expect(fillClassifiedsFoot(grid, scope, 1000)).toBe(3);
+    expect(plates()).toBe(3);
+    const widths = Array.from(grid.querySelectorAll('figure.classifieds-plate img')).map((img) =>
+      Number.parseFloat((img as HTMLImageElement).getAttribute('width') || ''),
+    );
+    // Square plates, so each width is its own remaining space less the
+    // grid's 24px margins: a single ornament would leave the last two out.
+    expect(widths).toEqual([476, 376, 276]);
+    expect(widths[0]).toBeGreaterThan(widths[1]);
+    expect(widths[1]).toBeGreaterThan(widths[2]);
+    expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(1000);
+  });
 });
