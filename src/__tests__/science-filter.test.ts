@@ -275,8 +275,7 @@ describe('the newspaper pages ask for the whole day', () => {
   const read = (p: string) => readFileSync(resolve(__dirname, '..', p), 'utf8');
 
   it.each([
-    ['pages/newspaper.astro'],
-    ['pages/es/newspaper.astro'],
+    ['components/NewspaperPage.astro'],
   ])('%s fetches with FULL_POOL, never a limited pool', (p) => {
     const src = read(p);
     expect(src).toMatch(/fetchPool\(fetch, lang, day, FULL_POOL\)/);
@@ -288,8 +287,7 @@ describe('the newspaper pages ask for the whole day', () => {
   });
 
   it.each([
-    ['pages/newspaper.astro'],
-    ['pages/es/newspaper.astro'],
+    ['components/NewspaperPage.astro'],
   ])('%s marks a failed lab read unavailable, never an empty list', (p) => {
     const src = read(p);
     // A failed announcements read resolves null (not []), so page 2 prints

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const paper = readFileSync(resolve(__dirname, '../components/TodaysPaper.astro'), 'utf8');
+const todayBody = readFileSync(resolve(__dirname, '../components/NewspaperPage.astro'), 'utf8');
 const todayEn = readFileSync(resolve(__dirname, '../pages/newspaper.astro'), 'utf8');
 const todayEs = readFileSync(resolve(__dirname, '../pages/es/newspaper.astro'), 'utf8');
 
@@ -81,10 +82,11 @@ describe('today pick form', () => {
     expect(paper).toContain("weekday: 'short'");
   });
 
-  it('both pages use the picked day in the fallback', () => {
+  it('the shared body uses the picked day in the fallback, and both pages render it', () => {
+    expect(todayBody).toContain('editionDateFor(window.location.search)');
+    expect(todayBody).not.toContain('editionDate()');
     for (const page of [todayEn, todayEs]) {
-      expect(page).toContain('editionDateFor(window.location.search)');
-      expect(page).not.toContain('editionDate()');
+      expect(page).toContain('<NewspaperPage');
     }
   });
 });

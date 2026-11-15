@@ -15,6 +15,7 @@ const paper = readFileSync(resolve(__dirname, '..', 'components', 'TodaysPaper.a
 const css = paper.slice(paper.indexOf('<style is:global>'), paper.indexOf('</style>'));
 const news = readFileSync(resolve(__dirname, '..', 'pages', 'newspaper.astro'), 'utf8');
 const newsEs = readFileSync(resolve(__dirname, '..', 'pages', 'es', 'newspaper.astro'), 'utf8');
+const newsBody = readFileSync(resolve(__dirname, '..', 'components', 'NewspaperPage.astro'), 'utf8');
 
 describe('the sheet hooks wrap the paper', () => {
   it('wraps .paper in a viewport and a fixed-width sheet, with Fit hidden in the control bar', () => {
@@ -98,10 +99,11 @@ describe('the sheet hooks wrap the paper', () => {
     expect(paper).not.toContain('data-zoom');
   });
 
-  it('both newspaper pages initialise the sheet beside the lab page bindings', () => {
+  it('both newspaper pages render the shared body, which initialises the sheet beside the lab page bindings', () => {
+    expect(newsBody).toContain('initPaperSheet');
+    expect(newsBody).toContain('initPaperSheet(document);');
     for (const page of [news, newsEs]) {
-      expect(page).toContain('initPaperSheet');
-      expect(page).toContain('initPaperSheet(document);');
+      expect(page).toContain('<NewspaperPage');
     }
   });
 });
