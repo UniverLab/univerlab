@@ -16,6 +16,8 @@ import TodaysPaper from '../components/TodaysPaper.astro';
     /* The newspaper needs the full wrap: three columns from 48rem, as in the
        mockup. The old list layout capped the page at 42rem. */
     .today-page { max-width: 72rem; padding-block: 4rem 5rem; }
+    /* On a phone the sheet sits right under the site header: no blank band. */
+    @media (max-width: 63.99rem) { .today-page { padding-block: 0.75rem 1rem; } }
   </style>
 
   <script>
@@ -25,6 +27,7 @@ import TodaysPaper from '../components/TodaysPaper.astro';
     import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
     import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
     import { labPageHtml, labPageHtml2 } from '../lib/lab-page';
+    import { entriesUpTo } from '../lib/lab-feed';
     import { bindLabPage, setLabEntries } from '../lib/lab-page-client';
     import { initPaperSheet } from '../lib/paper-sheet';
     import { fitPaper } from '../lib/paper-fit';
@@ -82,12 +85,14 @@ import TodaysPaper from '../components/TodaysPaper.astro';
         function (parts) {
           // Pages 2 and 3 do not depend on the day's facts: fill them even
           // when the Wikipedia read failed and page 1 reports the error.
-          if (needLab) labBody.innerHTML = labPageHtml(parts[1] || [], lang, { unavailable: parts[1] === null });
-          if (needLab2) lab2Body.innerHTML = labPageHtml2(parts[1] || [], lang, { unavailable: parts[1] === null });
-          setLabEntries(document, { entries: parts[1] || [], lang: lang });
+          // An old edition prints only the news it could have carried.
+          var labRows = entriesUpTo(parts[1] || [], day);
+          if (needLab) labBody.innerHTML = labPageHtml(labRows, lang, { unavailable: parts[1] === null });
+          if (needLab2) lab2Body.innerHTML = labPageHtml2(labRows, lang, { unavailable: parts[1] === null });
+          setLabEntries(document, { entries: labRows, lang: lang });
           if (needEdition) {
             if (!parts[0] || !parts[0].length) { failed(); return; }
-            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: parts[1] || [] }, lang, day);
+            ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: labRows }, lang, day);
           }
           // Fit before the sheet is shown: the fill above ran in the same
           // task, so nothing paints half-fitted.

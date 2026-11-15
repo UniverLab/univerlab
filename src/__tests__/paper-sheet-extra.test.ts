@@ -93,7 +93,8 @@ describe('paper sheet reduced motion and breakpoints', () => {
     desktop = false;
     changes.forEach((fn) => fn());
     expect(viewport.classList.contains('sheet')).toBe(true);
-    expect(button.hidden).toBe(false);
+    // Back at the fitted scale: Fit has nothing to undo and stays hidden.
+    expect(button.hidden).toBe(true);
   });
 
   it('refits on breakpoint re-entry while already active', () => {

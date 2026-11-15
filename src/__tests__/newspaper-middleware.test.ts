@@ -233,7 +233,8 @@ describe('middleware — the classifieds third page', () => {
     expect(res.status).toBe(200);
     const page2 = FakeHTMLRewriter.last?.writes['#lab2-body'] || '';
     expect(page2).toContain('id="lab-log2"');
-    expect(page2).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    // Page 3 has no head of its own: the folio line, then ads.
+    expect(page2).not.toContain('lab-heading');
     expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('id="lab-log"');
   });
 

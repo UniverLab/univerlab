@@ -16,20 +16,20 @@ const t = useTranslations(lang);
 <div class="paper-viewport" data-paper-viewport>
   <div class="paper-sheet" data-paper-sheet style={`--paper-sheet-w:${SHEET_WIDTH_REM}rem;--paper-sheet-h:${SHEET_HEIGHT_REM}rem`}>
 <div class="paper">
-  <header class="masthead">
-    <div class="ear ear--left"><span>{t.today.path}</span><span class="edition-label" data-today={t.today.edition} data-past={t.today.editionPast}>{t.today.edition}</span><span data-sol data-sol-label={t.today.sol}></span></div>
-    <h1 class="masthead-name">{t.today.name}</h1>
-    <div class="ear ear--right"><span>{t.today.price}</span></div>
-    <p class="motto">{t.today.motto}</p>
-    <form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form>
-    <nav class="paper-tabs">
-      <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
-      <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
-      <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
-    </nav>
-  </header>
   <div class="paper-pages">
   <section id="page-1" class="paper-page" aria-label={t.today.tabs.p1}>
+    <header class="masthead">
+      <div class="ear ear--left"><span>{t.today.path}</span><span class="edition-label" data-today={t.today.edition} data-past={t.today.editionPast}>{t.today.edition}</span><span data-sol data-sol-label={t.today.sol}></span></div>
+      <h1 class="masthead-name">{t.today.name}</h1>
+      <div class="ear ear--right"><span>{t.today.price}</span></div>
+      <p class="motto">{t.today.motto}</p>
+      <form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form>
+      <nav class="paper-tabs">
+        <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
+        <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
+        <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
+      </nav>
+    </header>
     <div id="edition"></div>
     <div id="today-loading" class="today-loading" role="status" aria-label={t.today.loading}>
       <div class="skeleton-line" style="width:60%"></div>
@@ -39,9 +39,19 @@ const t = useTranslations(lang);
     <div id="today-error" class="today-error" style="display:none" role="alert" data-msg={t.today.error}></div>
   </section>
   <section id="lab" class="paper-page" aria-label={t.today.tabs.p2}>
+    <header class="folio">
+      <span class="folio-page">{t.today.folio.p2}</span>
+      <span class="folio-date" data-folio-date>&nbsp;</span>
+      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>
+    </header>
     <div id="lab-body"></div>
   </section>
   <section id="lab2" class="paper-page" aria-label={t.today.tabs.p3}>
+    <header class="folio">
+      <span class="folio-page">{t.today.folio.p3}</span>
+      <span class="folio-date" data-folio-date>&nbsp;</span>
+      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>
+    </header>
     <div id="lab2-body"></div>
   </section>
   </div>
@@ -118,6 +128,10 @@ const t = useTranslations(lang);
         if (ymd === today) next.style.display = 'none';
         else next.setAttribute('href', '?d=' + editionYmd(new Date(d.getTime() + 86400000)));
       }
+    });
+    // Pages 2 and 3 carry only a folio line: the page and the edition's date.
+    document.querySelectorAll('[data-folio-date]').forEach(function (el) {
+      el.textContent = editionDateWords(d, lang);
     });
     var label = document.querySelector('.edition-label');
     if (label) {
@@ -381,6 +395,15 @@ const t = useTranslations(lang);
   .paper .lab-head .head-cartouche { display: grid; justify-items: center; align-items: center; width: 100%; max-width: 100%; }
   .paper .lab-head .head-cartouche > img, .paper .lab-head .head-cartouche > .lab-heading { grid-area: 1 / 1; }
   .paper .lab-head .head-cartouche > .lab-heading { position: static; place-self: center; max-width: 62%; font-size: 30px; line-height: 1.05; }
+  /* Pages 2 and 3 open on a folio line, as a newspaper's inside pages do:
+     the page, the edition's date and the page links. Only page 1 carries
+     the masthead, so a turn takes the whole page, masthead and all. */
+  .paper .folio { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; border-bottom: 3px double var(--p-ink); padding-bottom: 6px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-ink); }
+  .paper .folio-date { font-family: var(--font-serif); font-size: 17px; letter-spacing: 0; text-transform: none; text-align: center; min-height: 1.3em; }
+  .paper .folio-tabs { display: flex; justify-content: flex-end; gap: 2px; }
+  .paper .folio-tabs .paper-tab { padding: 2px 8px; }
+  .paper #lab .lab-head img { width: min(17rem, 100%); }
+  .paper #lab .lab-head .head-cartouche > .lab-heading { font-size: 24px; }
   /* The edge-filled edition hides the skeletons without waiting for JS. */
   .paper #edition:not(:empty) + #today-loading { display: none; }
   .paper .dateline { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-block: 1px solid var(--p-ink); padding-block: 5px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--p-ink); }
@@ -498,6 +521,7 @@ const t = useTranslations(lang);
      non-scaling type maxima. */
   .paper-viewport { position: relative; }
   .paper-viewport .paper-sheet { margin-top: 2.5rem; width: var(--paper-sheet-w); max-width: 100%; margin-inline: auto; }
+  .paper-viewport.sheet .paper-sheet { margin-top: 0; }
   .paper-viewport.sheet { overflow: hidden; touch-action: none; }
   .paper-viewport.sheet .paper-sheet { width: var(--paper-sheet-w); max-width: none; transform-origin: 0 0; }
   .paper-fit { position: absolute; top: 10px; right: 10px; z-index: 2; padding: 6px 12px; border: 1px solid var(--line); background: var(--bg-raise); }
@@ -518,6 +542,8 @@ const t = useTranslations(lang);
       height: 3rem;
       background: var(--bar-ground); border-top: 1px solid var(--bar-rule);
       padding: 0 8px;
+      /* The language flap sits in the bottom-right corner: Fit stays clear of it. */
+      padding-right: 52px; gap: 4px 6px;
     }
     /* One slim strip: page arrows around the count, the edition date, Fit. */
     .paper-bar .paper-strip-pages { display: inline-flex; gap: 2px; align-items: center; }
@@ -612,6 +638,7 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }
   .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading { font-size: 30px; }
+  .paper-viewport.sheet .paper #lab .lab-head .head-cartouche > .lab-heading { font-size: 24px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
   .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }

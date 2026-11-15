@@ -400,8 +400,8 @@ export function classifiedsHtml(
     `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template></div>`;
   let page2 = '';
   if (pages[1]) {
+    // Page 3 carries no head of its own: the folio line, then ads.
     page2 =
-      headHtml() +
       `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang, 2)}</div>` +
       `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>`;
   }

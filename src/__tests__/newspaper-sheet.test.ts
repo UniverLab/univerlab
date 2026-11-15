@@ -27,12 +27,17 @@ describe('the sheet hooks wrap the paper', () => {
   });
 
   it('holds one slim strip outside the sheet: page arrows, the date and Fit', () => {
-    // The strip never carries full-text tabs; the masthead keeps its three.
+    // The strip never carries full-text tabs; the masthead keeps its three,
+    // and each inside page's folio line carries three short page links.
     expect(paper).toContain('data-paper-bar');
     expect(paper).toContain('paper-strip-pages');
     expect(paper).toContain('t.today.controls');
     expect(paper).not.toContain('paper-bar-tabs');
-    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(3);
+    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(9);
+    expect(paper.match(/<header class="folio">/g)).toHaveLength(2);
+    // Only page 1 carries the masthead, so a turn takes the whole page.
+    const p1 = paper.slice(paper.indexOf('<section id="page-1"'), paper.indexOf('<section id="lab"'));
+    expect(p1).toContain('<header class="masthead">');
     // Page arrows around a live count, every control named for assistive tech.
     expect(paper).toContain('data-page-prev');
     expect(paper).toContain('data-page-next');
@@ -233,7 +238,8 @@ describe('the sheet pan/zoom behaviour', () => {
     const { viewport, sheet, button } = mount();
     initPaperSheet(document);
     expect(viewport.classList.contains('sheet')).toBe(true);
-    expect(button.hidden).toBe(false);
+    // Fitted already: Fit shows only once the reader zooms.
+    expect(button.hidden).toBe(true);
     const fit = VIEW_W / SHEET_W;
     expect(scaleOf(sheet.style.transform)).toBeCloseTo(fit, 4);
   });
@@ -254,6 +260,8 @@ describe('the sheet pan/zoom behaviour', () => {
     );
     const zoomed = scaleOf(sheet.style.transform);
     expect(zoomed).toBeGreaterThan(fit);
+    // Zoomed in: Fit appears, ready to return.
+    expect(button.hidden).toBe(false);
 
     viewport.dispatchEvent(pointer('pointerdown', 1, 100, 100));
     viewport.dispatchEvent(pointer('pointermove', 1, 50, 80));

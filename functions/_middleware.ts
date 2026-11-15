@@ -2,7 +2,7 @@ import { renderRoadmapTwin, roadmapTwinRoute } from './roadmap-twin';
 import { foundingRoute, rewriteFoundingSpots } from './founding-spots';
 import { fetchFoundingLeft } from '../src/lib/founding-spots';
 import { labPageHtml, labPageHtml2, labPageMarkdown } from '../src/lib/lab-page';
-import { loadEntries, loadRoadmap } from '../src/lib/lab-feed';
+import { entriesUpTo, loadEntries, loadRoadmap } from '../src/lib/lab-feed';
 import { liveLogbook, logbookRoute, rewriteSelector } from './logbook-edge';
 import { buildPool } from '../src/lib/science-filter';
 import {
@@ -122,7 +122,8 @@ async function liveTodayEdition(
   const entries = loadEntries({ fetchImpl, init: apiInit(), signal }).catch(() => null);
   const founding = fetchFoundingLeft(fetchImpl).catch(() => null);
   const [data, labEntries, foundingLeft] = await Promise.all([otd, entries, founding]);
-  const lab = labEntries ?? [];
+  // An old edition prints only the news it could have carried.
+  const lab = entriesUpTo(labEntries ?? [], date);
   const unavailable = labEntries === null;
   const feed = { facts: buildPool(data, lang), lab };
   return {

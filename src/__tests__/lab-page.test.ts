@@ -302,7 +302,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     });
     const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
-    expect(html2).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html2).not.toContain('lab-heading');
     expect(html2).toContain('<p class="lab-more"><a href="/logbook/"><img src="/bench/classifieds/manicule.webp"');
     expect(html2).toContain('The complete record continues in the Logbook →</a></p>');
     const es2 = labPageHtml2(live, 'es');
@@ -332,11 +332,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const cartouche1 = html1.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(cartouche1).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
     expect(cartouche1).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    // Page 3 opens straight on its ads: the folio line above is its only head.
     const html2 = labPageHtml2(live, 'en');
-    const cartouche2 = html2.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
-    expect(cartouche2).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    // Both pages carry the same English head: the news run in English only.
-    expect(cartouche2).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html2).not.toContain('head-cartouche');
     expect(html2).not.toContain('continued');
     // No empty ribbon frame on either page; the words are set in type,
     // never inside the image.
@@ -1085,5 +1083,21 @@ describe('bindLogbook', () => {
       (h) => h.textContent,
     );
     expect(titles).toEqual(['Newest', 'Bugfix', 'Update', 'Eleventh']);
+  });
+});
+
+describe('entriesUpTo (an old edition prints only the news it could carry)', () => {
+  it('keeps entries published by the end of the edition day in Bogotá', () => {
+    const { entriesUpTo } = jest.requireActual('../lib/lab-feed') as typeof import('../lib/lab-feed');
+    const rows = [
+      { id: 'a', date: '2026-10-01T10:00:00.000Z' },
+      { id: 'b', date: '2026-10-02T04:59:00.000Z' }, // 23:59 on Oct 1 in Bogotá
+      { id: 'c', date: '2026-10-02T05:00:00.000Z' }, // Oct 2 in Bogotá
+      { id: 'd', date: 'not a date' },
+    ];
+    const kept = entriesUpTo(rows, new Date(2026, 9, 1, 12, 0, 0)).map((r) => r.id);
+    expect(kept).toEqual(['a', 'b', 'd']);
+    expect(entriesUpTo(rows, new Date(2026, 9, 2, 12, 0, 0)).map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(entriesUpTo(undefined as unknown as typeof rows, new Date())).toEqual([]);
   });
 });

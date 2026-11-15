@@ -248,3 +248,18 @@ export async function loadEntries(o: LoadOpts = {}): Promise<Entry[]> {
   const json = await apiJson<{ entries?: Entry[] }>(`${ENTRIES_URL}?limit=${o.limit ?? FETCH_LIMIT}`, o);
   return Array.isArray(json?.entries) ? json.entries : [];
 }
+
+/** The entries an edition could have carried: published by the end of the
+ *  edition's day in the lab's time (Bogotá, UTC−5). `edition` is the
+ *  edition's local-noon Date (editionDateFor); entries with an unreadable
+ *  date stay. Today's edition keeps everything. */
+export function entriesUpTo<T extends { date: string }>(entries: T[], edition: Date): T[] {
+  const ymd =
+    `${edition.getFullYear()}-${String(edition.getMonth() + 1).padStart(2, '0')}-` +
+    String(edition.getDate()).padStart(2, '0');
+  const cutoff = Date.parse(`${ymd}T23:59:59.999-05:00`);
+  return (entries || []).filter((e) => {
+    const t = Date.parse(e?.date || '');
+    return !Number.isFinite(t) || t <= cutoff;
+  });
+}

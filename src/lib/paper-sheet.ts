@@ -72,6 +72,9 @@ export function initPaperSheet(root: ParentNode = document): void {
 
   const paint = (): void => {
     sheet.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    // Fit only shows when there is something to undo: at the fitted scale
+    // the strip gives its room to the date.
+    if (active) fitButton.hidden = Math.abs(scale - fit) <= fit * 0.01;
   };
 
   const animateTo = (nextScale: number, nextTx: number, nextTy: number): void => {
@@ -126,7 +129,6 @@ export function initPaperSheet(root: ParentNode = document): void {
   const activate = (): void => {
     active = true;
     viewport.classList.add('sheet');
-    fitButton.hidden = false;
     const vw = viewport.clientWidth || 1;
     lastWidth = vw;
     fit = vw / sheetWidth();

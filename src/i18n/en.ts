@@ -776,6 +776,7 @@ export const en = {
     error: 'Failed to load the day’s letters.',
     pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
     fit: 'Fit',
+    folio: { p2: 'Page 2', p3: 'Page 3' },
     controls: 'Page and date controls',
     pages: { prev: 'Previous page', next: 'Next page' },
     plate: "The sundial, the paper's engraving",

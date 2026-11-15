@@ -770,6 +770,7 @@ export const es: Dict = {
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
     fit: 'Ajustar',
+    folio: { p2: 'Página 2', p3: 'Página 3' },
     controls: 'Controles de página y fecha',
     pages: { prev: 'Página anterior', next: 'Página siguiente' },
     plate: 'El reloj de sol, el grabado del periódico',
