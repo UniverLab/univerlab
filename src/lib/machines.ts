@@ -61,11 +61,32 @@ export function srcsetFor(id: string, ink: MachineInk, ext: 'avif' | 'webp'): st
   );
 }
 
+/** Silhouette of a plate: the filled shape the page ground paints through. */
+export function plateMask(id: string, ink: MachineInk): string {
+  const file = `machines/${id}-${ink}-mask-450.webp`;
+  const asset = loadManifest().assets.find((a) => a.kind === 'machine-mask' && a.file === file);
+  if (!asset) throw new Error(`Unknown machine mask: ${file}`);
+  return `/bench/${file}`;
+}
+
+/** Large plate variant for the hero engraving. */
+export function plateLarge(id: string, ink: MachineInk): string {
+  return `/bench/${machineFile(id, ink, 900, 'webp').file}`;
+}
+
 /** Sizes derived from the plate's aspect ratio: 240 px tall from 40rem up. */
 export function plateSizes(p: Plate): string {
   const wide = Math.round((240 * p.w) / p.h);
   const narrow = Math.round((150 * p.w) / p.h);
   return `(min-width: 40rem) ${wide}px, ${narrow}px`;
+}
+
+/** Per-experiment plate placement: vertical nudge and base strength.
+ *  astro-denoise sits a little lower and less transparent than the default;
+ *  every other experiment takes the shared defaults. */
+export function plateTuning(exp: Pick<Experiment, 'id'>): { offset?: string; alpha?: string } {
+  if (exp.id === 'astro-denoise') return { offset: '1.25rem', alpha: '0.55' };
+  return {};
 }
 
 /** Which ink an experiment's hero plate takes. Circadian surfaces follow the

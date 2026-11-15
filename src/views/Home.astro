@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { liveExperiments } from '../lib/experiments';
+import Encyclopedia from '../components/Encyclopedia.astro';
 import { getLang, useTranslations, localizePath } from '../i18n';
 import { formatSolLabel } from '../lib/mission-time';
 // The engraved mark is inlined so it takes `currentColor` (and therefore the
@@ -20,38 +20,9 @@ const webSite = {
   publisher: { '@type': 'Organization', name: 'UniverLab', url: site.href },
 };
 
-// The imprint is engraved at build time and refreshed on load by lantern.ts.
+// The imprint is engraved at build time and refreshed on load by home-chrome.ts.
 const builtAt = new Date();
 const imprint = `${builtAt.getFullYear()} · ${formatSolLabel(builtAt.toISOString())} · univerlab.org`;
-
-// Intrinsic widths of the 450 px day plates (public/bench/manifest.json) — the
-// row gives every machine the same HEIGHT, so only the ratio needs reserving.
-const plateWidths: Record<string, number> = {
-  canopy: 306,
-  texforge: 421,
-  gitkit: 453,
-  ghscaff: 353,
-  'astro-denoise': 344,
-  demostage: 476,
-  quorum: 392,
-};
-
-// The lantern engraving's sources, day and night: the frame behind the screen
-// and its front copy over it share them (lantern.ts flips the media per phase).
-// /bench/ is cached for 30 days: bump a phase's `v` whenever its engraving is
-// redrawn, or returning visitors keep the old one.
-const lanternVersion = { day: '?v=3', night: '' } as const;
-const lanternDaySrc = `/bench/live/lantern-day-900.webp${lanternVersion.day}`;
-const lanternSources = (['day', 'night'] as const).flatMap((phase) =>
-  (['avif', 'webp'] as const).map((type) => {
-    const v = lanternVersion[phase];
-    return {
-      phase,
-      type: `image/${type}`,
-      srcset: `/bench/live/lantern-${phase}-450.${type}${v} 450w, /bench/live/lantern-${phase}-900.${type}${v} 900w`,
-    };
-  }),
-);
 
 // Engraved sea lines for the horizon separator (drawHorizon in the mockup):
 // sixteen closing in on the waterline, five fading above it.
@@ -79,151 +50,16 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
         <p class="fr-imprint" id="imprint">{imprint}</p>
       </header>
 
-      <p class="plate-label">{t.home.plate.lead} · <i>{t.home.plate.title}</i></p>
+      <p class="plate-label">{t.encyclopedia.tome}</p>
+      <p class="enc-intro">{t.encyclopedia.intro}</p>
+      <Encyclopedia />
+      <p class="lantern-link"><a href={localizePath('/experiments/', lang)}>{t.home.lanternLink}</a></p>
+    </section>
 
-      <!-- Plate I: the magic lantern and its screen. -->
-      <div class="lantern">
-        <div
-          class="screen"
-          id="screen"
-          data-viewer-day="0.155 0.078 0.707 0.694"
-          data-viewer-night="0.163 0.068 0.678 0.70"
-          style="left: 15.5%; top: 7.8%; width: 70.7%; height: 69.4%"
-          aria-hidden="true"
-        >
-          <div class="slide title-slide is-on">
-            <span class="title-mark" set:html={logo} />
-            <span class="title-name">UniverLab</span>
-            <p class="title-sub">{t.home.hero.subtitle}</p>
-          </div>
-          {liveExperiments.map((exp) => {
-            const e = t.experiments[exp.id];
-            const bench =
-              'bench' in e && typeof (e as { bench?: unknown }).bench === 'string'
-                ? (e as unknown as { bench: string }).bench
-                : '';
-            return (
-              <div
-                class="slide"
-                data-exp={exp.id}
-                data-tagline={e.tagline}
-                data-bench={bench}
-                data-surface={exp.surface}
-                data-world-hint={t.home.lantern.worldHint[exp.id]}
-              >
-                <video
-                  src={`/bench/clips/${exp.id}.mp4`}
-                  poster={`/bench/clips/${exp.id}.webp`}
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"></video>
-                <p class="caption"><b>{exp.name}</b> — {e.tagline}</p>
-              </div>
-            );
-          })}
-          <div class="world-host" id="world-host" aria-hidden="true"></div>
-          <canvas class="film" id="film" aria-hidden="true"></canvas>
-          <div class="typed" id="typed" aria-hidden="true"><span class="k" data-typed="k"></span><span class="cmd" data-typed="cmd"></span><span class="line" data-typed="line"></span></div>
-          <div class="catch" id="catch" aria-hidden="true"></div>
-        </div>
-
-        <!-- The projector is the pause control itself (id kept for lantern.ts);
-             the screen keeps its own click-to-open on #catch (FEAT-30). -->
-        <picture
-          class="lantern-pic"
-          id="lantern-pause"
-          role="button"
-          tabindex="0"
-          aria-pressed="false"
-          aria-label={t.home.lantern.pause}
-          data-pause-label={t.home.lantern.pause}
-          data-resume-label={t.home.lantern.resume}
-        >
-          {lanternSources.map((src) => (
-            <source
-              data-phase={src.phase}
-              type={src.type}
-              media={src.phase === 'night' ? 'not all' : undefined}
-              srcset={src.srcset}
-              sizes="(min-width: 50rem) 760px, 100vw"
-            />
-          ))}
-          <img
-            id="lantern-img"
-            src={lanternDaySrc}
-            width="1178"
-            height="900"
-            alt={t.home.lantern.alt}
-            fetchpriority="high"
-            data-day-src={lanternDaySrc}
-            data-night-src="/bench/live/lantern-night-900.webp"
-          />
-        </picture>
-        <!-- The same engraving again, over the screen: its cloth is transparent,
-             so the projection shows whole behind the frame and the cap, as in
-             the profile banner. Decorative and click-through. -->
-        <picture class="lantern-front" aria-hidden="true">
-          {lanternSources.map((src) => (
-            <source
-              data-phase={src.phase}
-              type={src.type}
-              media={src.phase === 'night' ? 'not all' : undefined}
-              srcset={src.srcset}
-              sizes="(min-width: 50rem) 760px, 100vw"
-            />
-          ))}
-          <img
-            src={lanternDaySrc}
-            width="1178"
-            height="900"
-            alt=""
-            data-day-src={lanternDaySrc}
-            data-night-src="/bench/live/lantern-night-900.webp"
-          />
-        </picture>
-        <p class="lantern-paused" id="lantern-paused" hidden>{t.home.lantern.paused}</p>
-      </div>
-
-      <!-- The bench: the seven machines, all the same height. -->
-      <div class="row-wrap">
-        <div class="row" role="group" aria-label={t.home.lantern.benchLabel}>
-          {liveExperiments.map((exp) => {
-            const e = t.experiments[exp.id];
-            return (
-              <button
-                type="button"
-                class="plate"
-                data-exp={exp.id}
-                data-href={localizePath(`/${exp.id}`, lang)}
-                aria-current="false"
-              >
-                <picture>
-                  <source data-phase="day" type="image/avif" srcset={`/bench/machines/${exp.id}-day-450.avif`} />
-                  <source data-phase="day" type="image/webp" srcset={`/bench/machines/${exp.id}-day-450.webp`} />
-                  <source data-phase="night" type="image/avif" media="not all" srcset={`/bench/machines/${exp.id}-night-450.avif`} />
-                  <source data-phase="night" type="image/webp" media="not all" srcset={`/bench/machines/${exp.id}-night-450.webp`} />
-                  <img
-                    src={`/bench/machines/${exp.id}-day-450.webp`}
-                    width={plateWidths[exp.id] ?? 450}
-                    height="450"
-                    alt=""
-                    fetchpriority="low"
-                    data-day-src={`/bench/machines/${exp.id}-day-450.webp`}
-                    data-night-src={`/bench/machines/${exp.id}-night-450.webp`}
-                  />
-                </picture>
-                <span>{exp.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div class="bench-foot">
-        <p class="hint" data-open-hint={t.home.lantern.open}>{t.home.lantern.benchLabel}</p>
-      </div>
+    <section class="wrap section home-bench" aria-labelledby="t-bench">
+      <span class="label">{t.home.workbench.kicker}</span>
+      <p id="t-bench" class="home-bench-text">{t.home.workbench.text}</p>
+      <a class="btn" href={localizePath('/workbench', lang)}>{t.home.workbench.link}</a>
     </section>
 
     <!-- About the lab: the former hero, now below the plate. -->
@@ -365,149 +201,10 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
   .plate-label { margin: 18px 0 0; text-align: center; font-family: var(--font-mono);
                  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
                  color: var(--bench-line-soft); }
-  .plate-label i { font-family: var(--font-serif); font-style: italic;
-                   text-transform: none; letter-spacing: 0; font-size: 15px;
-                   color: var(--bench-line); }
-
-  /* ── The lantern and its screen ───────────────────────────────────────── */
-  .lantern { position: relative; width: min(100%, 780px); }
-  .lantern-pic { position: relative; z-index: 2; display: block; cursor: pointer; }
-  .lantern-pic img { display: block; width: 100%; height: auto; }
-  .lantern-front { position: absolute; inset: 0 auto auto 0; z-index: 4; width: 100%;
-                   pointer-events: none; }
-  .lantern-front img { display: block; width: 100%; height: auto; }
-  .lantern-pic:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
-  .screen { position: absolute; z-index: 3; overflow: hidden;
-            background: var(--bench-c-parchment); }
-  :global(html[data-bench-theme='night']) .screen { background: #15110c; }
-  /* Each slide fills the screen; the clip is letterboxed inside it (`contain`)
-     and the caption rides along the bottom edge, over the clip, as in the
-     mockup — never a band that shrinks the projection. */
-  .slide { position: absolute; inset: 0; z-index: 2; opacity: 0;
-           transition: opacity 0.25s ease, transform 0.6s ease; }
-  .slide.is-on { opacity: 1; }
-  .slide video { position: absolute; inset: 0; display: block;
-                 width: 100%; height: 100%;
-                 object-fit: contain; filter: var(--bench-clip-filter); }
-
-  /* World mode: the screen becomes the experiment's live background. The
-     world host paints under the clip (z 1); the clip shrinks, paperless, to
-     the lower right under a soft mask; the film grain stays over it (z 3);
-     the freed corner types the experiment out (z 4); the catcher takes
-     the pointer on top (z 5). */
-  /* The world keeps the experiment's own ground (`data-surface` carries its
-     `--surface-bg`): its modules draw their marks over the page's surface,
-     so a parchment lantern behind them would wash them out. */
-  .world-host { position: absolute; inset: 0; z-index: 1; overflow: hidden;
-                background: var(--surface-bg, var(--bench-c-parchment)); }
-  /* Hidden outside world mode; inside it, the ground shows at once — even
-     before the module has painted — so a dark world never flashes the
-     lantern's parchment under its chalk text on first hover. */
-  .screen:not(.is-world) .world-host { display: none; }
-  .screen.is-world .slide.is-on { transform: translate(27%, 20%) scale(.48);
-    -webkit-mask-image: radial-gradient(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%);
-    mask-image: radial-gradient(ellipse 46% 46% at 50% 50%, #000 70%, transparent 100%);
-    transition: opacity 0.25s ease, transform 0.6s ease; }
-  .screen.is-world .slide.is-on video { filter: none; }
-  /* The slide shrinks with its caption, which would print as an illegible
-     smudge over the machine. Hide it visually in world mode; `opacity: 0`
-     keeps the caption — and its accessible text — in the tree. */
-  .screen.is-world .slide.is-on .caption { opacity: 0; }
-  .screen.is-world.on-light .slide.is-on { mix-blend-mode: multiply; }
-  .screen.is-world.on-dark .slide.is-on { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
-  .typed { position: absolute; left: 4%; top: 6%; z-index: 4; max-width: 74%;
-           display: grid; gap: 6px; margin: 0;
-           font-family: var(--font-mono); opacity: 0; pointer-events: none;
-           transition: opacity 0.4s ease; }
-  .screen.is-world .typed { opacity: 1; }
-  /* The sizes follow the mockup's clamps: the free corner is narrow on a
-     phone, and the command + tagline must stay inside the screen's height
-     (they are clipped by the screen otherwise). */
-  .typed .k { font-size: clamp(9px, 1.1vw, 11px); letter-spacing: 0.16em; text-transform: uppercase; }
-  .typed .cmd { font-size: clamp(9px, 1.3vw, 14px); line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .typed .cmd::after { content: "▌"; animation: typed-blink 1s steps(1) infinite; }
-  .typed .line { font-family: var(--font-serif); font-style: italic;
-                 font-size: clamp(12px, 1.9vw, 16px); line-height: 1.3; text-wrap: balance;
-                 opacity: 0; transition: opacity 0.6s ease; }
-  .typed .line.is-on { opacity: 1; }
-  @keyframes typed-blink { 50% { opacity: 0; } }
-  .screen.on-light .typed { color: #2a2118;
-    background: radial-gradient(ellipse at 35% 45%, rgba(244, 240, 234, .92) 45%, rgba(244, 240, 234, 0) 78%); }
-  .screen.on-dark .typed { color: #ece4d4;
-    background: radial-gradient(ellipse at 35% 45%, rgba(10, 10, 14, .78) 45%, rgba(10, 10, 14, 0) 78%); }
-  .catch { position: absolute; inset: 0; z-index: 5; cursor: crosshair; touch-action: manipulation; }
-  /* An experiment is projected → the screen opens it (its title slide keeps
-     the crosshair: there is nothing to open on it). */
-  .screen[data-current-exp]:not([data-current-exp='']) .catch { cursor: pointer; }
-  @media (prefers-reduced-motion: reduce) {
-    .slide { transition: none; }
-    .typed .cmd::after { animation: none; }
-  }
-
-  /* The title slide is a group, centred as a whole: the mark above the name,
-     the motto under it. (`place-content` alone would keep .slide's row
-     template and scatter the three children over the full height.) */
-  .title-slide { display: grid; align-content: center; justify-items: center;
-                 text-align: center; gap: 6px; padding: 6%; }
-  .title-mark { display: block; width: 44px; height: 44px; margin: 0 auto 4px;
-                color: var(--bench-line); }
-  .title-mark :global(svg) { display: block; width: 100%; height: 100%; }
-  .title-name { font-family: var(--font-serif); font-size: clamp(22px, 4.5vw, 44px);
-                letter-spacing: 0.12em; line-height: 1; color: var(--bench-line); }
-  .title-sub { margin: 0; font-family: var(--font-serif); font-style: italic;
-               font-size: clamp(11px, 1.8vw, 16px); color: var(--bench-line-soft); }
-
-  /* Absolute and above the film layer, so it stays crisp and centred: `main p`
-     caps paragraphs at 65ch, which would otherwise push it off the screen. */
-  .caption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
-             max-width: none; margin: 0; padding: 0 6% 3.2%;
-             font-family: var(--font-serif); font-style: italic;
-             font-size: clamp(11px, 1.7vw, 17px); line-height: 1.3;
-             color: var(--bench-line); text-align: center;
-             text-wrap: balance;
-             text-shadow: 0 0 6px rgba(244, 240, 234, 0.85); }
-  :global(html[data-bench-theme='night']) .caption {
-    text-shadow: 0 0 6px rgba(0, 0, 0, 0.75); }
-  .caption b { font-style: normal; font-weight: 400; letter-spacing: 0.05em; }
-
-  .film { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%;
-          pointer-events: none; }
-
-  /* ── The bench ────────────────────────────────────────────────────────── */
-  .row-wrap { overflow-x: auto; width: 100%; margin-top: 0.5rem;
-              -webkit-overflow-scrolling: touch; }
-  .row { display: flex; align-items: flex-end; justify-content: center;
-         gap: clamp(0.75rem, 2vw, 1.5rem); min-width: max-content;
-         padding: 6px 4px; margin-inline: auto; }
-  .plate { background: none; border: 0; padding: 0; cursor: pointer;
-           display: grid; justify-items: center; gap: 6px; font: inherit;
-           color: var(--bench-line); opacity: 0.55;
-           transition: opacity 0.3s ease; }
-  .plate picture { display: block; height: 120px; }
-  .plate img { display: block; height: 100%; width: auto; }
-  .plate span { font-family: var(--font-serif); font-style: italic; font-size: 13px; }
-  .plate[aria-current='true'] { opacity: 1; }
-  .plate:focus-visible { outline: 2px solid var(--bench-line); outline-offset: 3px; }
-  @media (max-width: 47.999rem) { .plate picture { height: 84px; } }
-
-  .bench-foot { display: flex; flex-wrap: wrap; align-items: center;
-                justify-content: center; gap: 0.5rem 1.25rem; margin-top: 0.25rem; }
-  .hint { margin: 0; font-size: 0.85rem; color: var(--bench-line-soft);
-          text-align: center; max-width: none; }
-  /* The pause plate: absolute under the projector, so the bench row never
-     shifts; it inherits the plate-label family's mono/ink-dim voice.
-     It sits in the engraving's clean bottom strip (the image's last ~5 %,
-     which scales with the picture) rather than over the tripod base — whose
-     pedestal post would cross the word at phone width — and it never
-     reaches the bench row below. The halo wears the ground's own colour, so
-     it masks speckle without washing the glyphs; a fixed parchment halo
-     would glow around chalk at night. */
-  .lantern-paused { position: absolute; z-index: 4; left: 50%; bottom: 0.15rem;
-                    transform: translateX(-50%); margin: 0; pointer-events: none;
-                    color: var(--bench-line-soft); line-height: 1;
-                    text-shadow: 0 0 6px var(--bench-ground);
-                    font-family: var(--font-mono); font-size: 11px;
-                    letter-spacing: 0.14em; text-transform: uppercase; }
+  .enc-intro { max-width: 42rem; margin: 0 auto 1.5rem; text-align: center; color: var(--ink-dim); }
+  .lantern-link { text-align: center; margin: 2rem 0 0; font-family: var(--font-mono); font-size: 0.85rem; }
+  .home-bench { display: grid; gap: 0.9rem; justify-items: start; border-block: 1px solid var(--line); padding-block: 2rem; }
+  .home-bench-text { margin: 0; max-width: 46rem; font-family: var(--font-serif); font-size: 1.25rem; line-height: 1.45; }
 
   /* ── Separators ───────────────────────────────────────────────────────── */
   .sep { color: var(--bench-line); margin-block: 2.25rem; }
@@ -577,76 +274,7 @@ const skyLines = Array.from({ length: 5 }, (_, i) => ({
 </style>
 
 <script>
-  import { startLantern } from '../scripts/lantern';
-  import { tuneNavigate, untune } from '../scripts/tune';
-  import { shouldScreenNavigate } from '../lib/lantern-navigate';
-
-  // A machine opens its experiment page by tuning the screen in (tune.ts):
-  // the screen zooms into the page's hero. Pointing at a machine
-  // already projects it, so the screen is the source while it is on view; a
-  // machine clicked with the screen scrolled away zooms from itself.
-  const screen = document.getElementById('screen');
-  const screenOnView = (): boolean => {
-    const r = screen?.getBoundingClientRect();
-    return !!r && r.bottom > 0 && r.top < window.innerHeight;
-  };
-  document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const href = btn.dataset.href;
-      const exp = btn.dataset.exp;
-      if (!href || !exp) return;
-      tuneNavigate(href, exp, screen && screenOnView() ? screen : btn);
-    });
-  });
-
-  // The screen opens the experiment it projects, through the same tuning.
-  // The gesture lives here, not in lantern.ts, which only publishes the
-  // projection (`#screen[data-current-exp]`, "" on the title slide) and opens
-  // worlds on hover/tap. These listeners register before the lantern starts, on
-  // purpose: lantern's own pointerdown opens the world on the first tap, so the
-  // world state must be read before that happens — otherwise the very tap that
-  // only opens the world would already look like "world open" and navigate.
-  const catcher = document.getElementById('catch');
-  let downX = 0;
-  let downY = 0;
-  let upX = 0;
-  let upY = 0;
-  let pointerKind = '';
-  let worldOpenAtDown = false;
-
-  catcher?.addEventListener('pointerdown', (ev) => {
-    const e = ev as PointerEvent;
-    downX = upX = e.clientX;
-    downY = upY = e.clientY;
-    pointerKind = e.pointerType;
-    worldOpenAtDown = screen?.classList.contains('is-world') ?? false;
-  });
-  catcher?.addEventListener('pointerup', (ev) => {
-    const e = ev as PointerEvent;
-    upX = e.clientX;
-    upY = e.clientY;
-  });
-
-  startLantern();
-
-  catcher?.addEventListener('click', () => {
-    const currentExp = screen?.dataset.currentExp ?? '';
-    const open = shouldScreenNavigate({
-      currentExp,
-      dx: upX - downX,
-      dy: upY - downY,
-      pointerType: pointerKind,
-      worldOpen: worldOpenAtDown,
-    });
-    // Nothing to open (title slide), or the gesture was a drag / the first
-    // touch tap that only opens the world: keep today's behaviour.
-    if (!open) return;
-    const href = document.querySelector<HTMLElement>(
-      `.plate[data-exp="${currentExp}"]`,
-    )?.dataset.href;
-    if (!href || !screen) return;
-    tuneNavigate(href, currentExp, screen);
-  });
-
-  addEventListener('pageshow', untune);
+  import { startHomeChrome } from '../scripts/home-chrome';
+  startHomeChrome();
 </script>
+

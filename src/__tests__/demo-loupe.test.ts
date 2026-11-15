@@ -4,7 +4,7 @@
  * as text (machine-plate.test.ts style). Each assertion breaks if the
  * plain white ring returns.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const DEMO = readFileSync(resolve(__dirname, '../components/DemoFigure.astro'), 'utf8');
@@ -120,5 +120,54 @@ describe('demo loupe: behaviour', () => {
   it('keeps the reduced-motion early return', () => {
     expect(DEMO).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
     expect(DEMO).toContain('video.controls = true');
+  });
+});
+
+describe('demo loading: poster first, clip on approach', () => {
+  it('never autoplays and never preloads: the clip is a poster until approached', () => {
+    // The markup video — not the click-to-open dialog's template string.
+    const videoTag = DEMO.match(/<video[^>]*class="demo-video"[^>]*>/)![0];
+    expect(videoTag).not.toContain('autoplay');
+    expect(videoTag).toContain('preload="none"');
+    expect(videoTag).toContain('poster={posterUrl}');
+    expect(DEMO).not.toContain('preload="metadata"');
+    // The dialog opens on a click — an interaction — so its autoplay stays.
+    expect(DEMO).toContain('openDemoDialog');
+    expect(DEMO).toContain('<video autoplay muted loop playsinline controls');
+  });
+
+  it('shows the recorded poster frame at the real mp4 pixels', () => {
+    // Posters are the first frame at 720 wide (ffmpeg -ss 0, scale=720:-2).
+    for (const id of ['canopy', 'demostage', 'ghscaff', 'gitkit', 'texforge']) {
+      const file = resolve(__dirname, `../../public/demos/${id}-poster.webp`);
+      expect(existsSync(file)).toBe(true);
+      expect(statSync(file).size).toBeGreaterThan(0);
+    }
+    expect(DEMO).toContain("src.replace(/\\.mp4$/, '-poster.webp')");
+    expect(DEMO).toContain('poster={posterUrl}');
+    // Real pixels (ffprobe) reserve the exact box: canopy 1440x1026,
+    // demostage 1200x720, ghscaff 1440x1080, gitkit 1440x1026, texforge 1440x1080.
+    expect(DEMO).toContain('canopy: { w: 1440, h: 1026 }');
+    expect(DEMO).toContain('demostage: { w: 1200, h: 720 }');
+    expect(DEMO).toContain('width={dims?.w}');
+    expect(DEMO).toContain('height={dims?.h}');
+  });
+
+  it('plays only when the visitor approaches, 200px out', () => {
+    expect(DEMO).toContain("rootMargin: '200px'");
+    expect(DEMO).toContain('seen.observe(box)');
+    expect(DEMO).toMatch(/video\.play\(\)\.catch/);
+  });
+
+  it('never preloads the loupe clone: the clip loads only on hover', () => {
+    // The lens is a second <video> for the same mp4; an eager preload on it
+    // would pull the whole clip during load beside the poster. It starts
+    // 'none' before the element is attached; 'auto' is only set by startLens.
+    const initPreload = DEMO.indexOf("lensVideo.preload = 'none'");
+    expect(initPreload).toBeGreaterThan(-1);
+    expect(initPreload).toBeLessThan(DEMO.indexOf('lensInner.appendChild(lensVideo)'));
+    expect(DEMO).toMatch(/startLens = function \(\) \{[\s\S]*?lensVideo\.preload = 'auto'/);
+    expect(DEMO).toContain("frame.addEventListener('mouseenter', startLens)");
+    expect(DEMO).toContain('if (lensReady) lensVideo.play()');
   });
 });

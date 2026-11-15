@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 import GraphMorph from '../../components/GraphMorph.astro';
 import CataloguePlate from '../../components/CataloguePlate.astro';
 import SiteNav from '../../components/SiteNav.astro';
+import { iconSvg } from '../../lib/icon-svg';
+import { copy } from '../../lib/icons';
 import { GEOM, PALETTE, TYPE, flowPath, markerFor, markerDefs, type Kind } from '../../lib/canopy-graph';
 
 const lang = getLang(Astro.url);
@@ -144,8 +146,6 @@ const morphColors: Record<string, string> = {
     <a class="btn btn-primary" href="#install">{t.common.install}</a>
     <a class="btn ghost" href="https://graphs.univerlab.org"
       target="_blank" rel="noopener noreferrer">{e.cta.catalogue}</a>
-    <a class="btn ghost" href="https://remote.univerlab.org"
-      target="_blank" rel="noopener noreferrer">{e.cta.remote}</a>
   </Fragment>
   <a slot="cta" class="tertiary-link" href={exp.github}
     target="_blank" rel="noopener noreferrer">{t.common.repo}</a>
@@ -155,6 +155,7 @@ const morphColors: Record<string, string> = {
   </div>
   <Fragment slot="before-genesis">
     <div class="wrap section">
+      <p class="how prose" set:html={e.how} />
       <p class="mono-kicker">
         <span class="kicker-badge">daemon</span>
         <span class="kicker-sep" aria-hidden="true">·</span>
@@ -198,7 +199,7 @@ const morphColors: Record<string, string> = {
       <code class="pair-command" translate="no">canopy remote pair</code>
       <button type="button" class="pair-copy" data-remote-copy
         title={t.common.copy} aria-label={t.common.copy}>
-        <span class="copy-idle">⧉</span><span class="copy-done">✓</span>
+        <span class="copy-icon" set:html={iconSvg(copy, { size: 16 })} />
       </button>
     </div>
     <a class="remote-cta" href="https://remote.univerlab.org"
@@ -315,8 +316,9 @@ const morphColors: Record<string, string> = {
 </ExperimentLayout>
 
 <script>
-  // Remote pairing: copy the command, same feedback as the install bar's copy.
+  // Remote pairing: copy the command, same morph as the install bar's copy.
   // Query only the pair row so the layout's install handler stays untouched.
+  import { COPY_DONE_MS, setCopyState } from '../../lib/copy-morph';
   document.querySelectorAll<HTMLElement>('[data-remote-pair]').forEach((row) => {
     const code = row.querySelector<HTMLElement>('.pair-command');
     const copy = row.querySelector<HTMLButtonElement>('[data-remote-copy]');
@@ -325,7 +327,11 @@ const morphColors: Record<string, string> = {
       try {
         await navigator.clipboard.writeText(code.textContent || '');
         copy.classList.add('done');
-        setTimeout(() => copy.classList.remove('done'), 1600);
+        setCopyState(copy, true);
+        setTimeout(() => {
+          copy.classList.remove('done');
+          setCopyState(copy, false);
+        }, COPY_DONE_MS);
       } catch {
         // Clipboard API unavailable or denied — leave the button untouched.
       }
@@ -334,6 +340,8 @@ const morphColors: Record<string, string> = {
 </script>
 
 <style>
+  .how { max-width: 42rem; margin: 0 auto 1.6rem; text-align: center; color: var(--ink-dim); }
+  .how :global(strong) { color: var(--ink); font-weight: 500; }
   .section { padding-block: 2rem; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 2.2rem; margin-top: 1.4rem; }
   .col { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 1.5rem 1.5rem 1.4rem; }
@@ -381,9 +389,10 @@ const morphColors: Record<string, string> = {
     transition: color 0.15s ease;
   }
   .pair-copy:hover { color: var(--canopy); }
-  .pair-copy .copy-done { display: none; color: var(--canopy); }
-  .pair-copy.done .copy-idle { display: none; }
-  .pair-copy.done .copy-done { display: inline; }
+  /* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+  .pair-copy .copy-icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
+  .pair-copy .copy-icon > svg, .pair-copy .copy-icon morph-icon { width: 16px; height: 16px; display: block; }
+  .pair-copy .copy-icon[data-icon='check'] { color: var(--canopy); }
 
   /* The feature primary is Remote's own solid teal (#3fb8b0 / #011d1c). */
   .remote-cta,
@@ -406,6 +415,7 @@ const morphColors: Record<string, string> = {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
+    justify-content: center;
     gap: 1.4rem;
     margin: 1.6rem 0 0;
   }
@@ -420,6 +430,10 @@ const morphColors: Record<string, string> = {
     color: var(--canopy);
     text-decoration: underline;
   }
+  .catalogue-section { text-align: center; }
+  .catalogue-section :global(.cp) { margin-inline: auto; }
+  /* Canopy only: the install banner is centred as a block, its lines stay left-aligned inside it (Banner.astro keeps the shared left-flow rule). */
+  :global(.exp .install .banner) { width: fit-content; margin: 0 auto; }
 
   /* The recorded-demo frame in the genesis row is a card here too, but
      DemoFigure ships it at 12px with a 22/60px drop shadow — 12px is outside

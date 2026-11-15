@@ -1,12 +1,13 @@
 /**
  * The visible "Last updated …" line under a docs page's `<h1>`.
  *
- * The date has one source — the doc file's last commit (see
- * `src/lib/doc-last-modified.ts`) — and two renderings: this line for a human
- * reading the page, and `dateModified` / `article:modified_time` for machines
- * reading the metadata. Both go through the same helper on the same resolved
- * path, so they cannot disagree; `scripts/check-seo.ts` fails the build if they
- * ever do.
+ * The date has one source — the prebuild snapshot
+ * (`scripts/snapshot-docs-dates.ts`, read via `src/lib/doc-last-modified.ts`)
+ * — and two renderings: this line for a human reading the page, and
+ * `dateModified` / `article:modified_time` for machines reading the metadata.
+ * The snapshot is written once before Astro starts, so both renderings agree
+ * even when a sibling repo commits mid-build; `scripts/check-seo.ts` fails the
+ * build if they ever do not.
  *
  * A Sätteri hast plugin rather than a layout prop or CSS trick: the line has to
  * sit *inside* the rendered markdown, between the `<h1>` and the first

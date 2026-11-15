@@ -85,10 +85,11 @@ describe('checkMarkdownTwins', () => {
     }
   });
 
-  it('requires no link on noindex pages and on 404.html', () => {
+  it('passes the live-twin link and requires no link on other noindex pages and on 404.html', () => {
     const dist = distFixture({
       'index.html': twinPage('https://univerlab.org/'),
-      'today/index.html': page(NOINDEX),
+      'newspaper/index.html': twinPage('https://univerlab.org/newspaper/', NOINDEX),
+      'logbook/index.html': page(NOINDEX),
       '404.html': page(),
       'index.md': '# home',
     });
@@ -133,15 +134,45 @@ describe('checkMarkdownTwins', () => {
     const failures = withDist(
       {
         'index.html': twinPage('https://univerlab.org/'),
-        'today/index.html': twinPage('https://univerlab.org/today/', NOINDEX),
+        'logbook/index.html': twinPage('https://univerlab.org/logbook/', NOINDEX),
         '404.html': twinPage('https://univerlab.org/404/'),
         'index.md': '# home',
-        'today/index.md': '# today',
       },
       checkMarkdownTwins,
     );
-    expect(failures.join('\n')).toMatch(/\/today\/: noindex page must not advertise/);
+    expect(failures.join('\n')).toMatch(/\/logbook\/: noindex page must not advertise/);
     expect(failures.join('\n')).toMatch(/\/404\.html: must not advertise/);
+  });
+
+  it('passes a noindex live-twin page with exactly its own link, outside the built-twin count', () => {
+    const failures = withDist(
+      {
+        'index.html': twinPage('https://univerlab.org/'),
+        'newspaper/index.html': twinPage('https://univerlab.org/newspaper/', NOINDEX),
+        'es/newspaper/index.html': twinPage('https://univerlab.org/es/newspaper/', NOINDEX),
+        'index.md': '# home',
+      },
+      checkMarkdownTwins,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it('flags a live-twin page whose link is not its own twin, or missing', () => {
+    const wrong = withDist(
+      {
+        'newspaper/index.html': twinPage('https://univerlab.org/newspaper/', NOINDEX).replace(
+          'https://univerlab.org/newspaper/index.md',
+          'https://univerlab.org/wrong/index.md',
+        ),
+      },
+      checkMarkdownTwins,
+    );
+    expect(wrong.join('\n')).toMatch(/\/newspaper\/: markdown twin link .* is not "https:\/\/univerlab\.org\/newspaper\/index\.md"/);
+    const missing = withDist(
+      { 'newspaper/index.html': page(NOINDEX) },
+      checkMarkdownTwins,
+    );
+    expect(missing.join('\n')).toMatch(/\/newspaper\/: expected one text\/markdown alternate link, found 0/);
   });
 
   it('flags twins nobody advertises', () => {
@@ -150,6 +181,14 @@ describe('checkMarkdownTwins', () => {
       checkMarkdownTwins,
     );
     expect(failures.join('\n')).toMatch(/0 pages advertise a twin but 1 twins were built/);
+  });
+});
+
+describe('public llms.txt newspaper twin', () => {
+  it('names the live markdown twin the way it names the roadmap twin', () => {
+    const text = readFileSync(resolve(__dirname, '../../public/llms.txt'), 'utf-8');
+    expect(text).toContain('https://univerlab.org/newspaper/index.md');
+    expect(text).toContain('rendered live from the announcements API on every request');
   });
 });
 
@@ -175,6 +214,18 @@ describe('checkLlmsLinks', () => {
         'canopy/docs/hooks/index.html': page(),
         'canopy/docs/hooks/index.md': '# Hooks',
         'llms.txt': '- [H](https://univerlab.org/)\n- [K](https://univerlab.org/canopy/docs/hooks/index.md): d\n',
+      },
+      checkLlmsLinks,
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it('passes a live-twin URL with no built file', () => {
+    const failures = withDist(
+      {
+        'index.html': page(),
+        'newspaper/index.html': page(NOINDEX),
+        'llms.txt': '- Newspaper: https://univerlab.org/newspaper/index.md — the twin.\n',
       },
       checkLlmsLinks,
     );

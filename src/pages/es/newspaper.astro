@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NewspaperPage from '../../components/NewspaperPage.astro';
+---
+<!-- `noindex` porque el HTML construido solo trae el cabezal: la edición la
+     compone el edge (functions/_middleware.ts), y el script de abajo llena
+     #edition con el mismo renderer cuando el edge no lo hizo. El filtro del
+     sitemap en astro.config.mjs la excluye por lo mismo — una URL noindex en
+     el sitemap es un error reportado. -->
+<BaseLayout title="El Observable — UniverLab" description="Todos los eventos científicos que ocurrieron este día en la historia." circadian noindex liveTwin paperDisplayFonts>
+  <NewspaperPage />
+</BaseLayout>

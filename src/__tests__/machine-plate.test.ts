@@ -65,11 +65,32 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain('type="image/avif"');
     expect(MACHINE).toContain('type="image/webp"');
     expect(MACHINE).toContain('decoding="async"');
-    expect(MACHINE).toContain('alt=""');
-    expect(MACHINE).toContain('fetchpriority');
-    expect(MACHINE).toMatch(/loading=\{eager \? undefined : 'lazy'\}/);
-    // A lone plate is the hero art: eager even when its ink is night.
-    expect(MACHINE).toMatch(/inks\.length === 1 \|\|/);
+    expect(MACHINE).toContain('machineAlt');
+    // A lone plate always exposes the description; a theme pair ships it on
+    // the day plate with the night plate empty and hidden.
+    expect(MACHINE).toMatch(/alt=\{exposed \? alt : ''\}/);
+    expect(MACHINE).toContain("aria-hidden={exposed ? undefined : 'true'}");
+    expect(MACHINE).toContain('data-alt={alt}');
+    // A theme pair ships every URL in data-*: only the live phase populates.
+    expect(MACHINE).toContain('data-srcset={avif}');
+    expect(MACHINE).toContain('data-src={fallback}');
+    // A lone plate is the page's hero art: its URLs ship inline and eager.
+    expect(MACHINE).toContain('const single = inks.length === 1;');
+    expect(MACHINE).toContain('src={fallback}');
+    expect(MACHINE).toContain('fetchpriority="high"');
+    // Below-fold pairs stay lazy unless the caller passes eager.
+    expect(MACHINE).toContain('eager?: boolean');
+    expect(MACHINE).toContain('eager = false');
+    expect(MACHINE).toContain("fetchpriority={pairEager ? 'high' : undefined}");
+    expect(MACHINE).toMatch(/loading=\{pairEager \? undefined : 'lazy'\}/);
+  });
+
+  it('populates only the live phase at parse time, the other on a flip', () => {
+    expect(MACHINE).toContain('<script is:inline data-machine-swap>');
+    expect(MACHINE).toContain("dataset.benchTheme === 'night'");
+    expect(MACHINE).toContain('populate(show)');
+    expect(MACHINE).toContain("span[data-machine=\"theme\"]");
+    expect(MACHINE).toContain('univerlab:themechange');
   });
 
   it('swaps the inks on the bench theme like Postcard does', () => {
@@ -79,6 +100,12 @@ describe('machine plates: Machine.astro', () => {
     expect(MACHINE).toContain("html[data-bench-theme='night'] .machine[data-machine='theme'] .machine-day");
     expect(MACHINE).toContain("html:not([data-bench-theme='night']) .machine[data-machine='theme'] .machine-night");
     expect(MACHINE).toContain('univerlab:themechange');
+  });
+
+  it('announces the description once: the swap moves alt with the live plate', () => {
+    expect(MACHINE).toContain('expose(simg, himg)');
+    expect(MACHINE).toContain("img.setAttribute('alt', img.getAttribute('data-alt') || '')");
+    expect(MACHINE).toContain("hide.setAttribute('aria-hidden', 'true')");
   });
 
   it('ships no recolouring: the plates are already inked for their ground', () => {

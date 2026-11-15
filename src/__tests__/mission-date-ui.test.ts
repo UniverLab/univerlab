@@ -153,6 +153,22 @@ describe('openDateTranslator', () => {
     );
   });
 
+  it('copy buttons ship the Lucide icon slot next to the label, like every copy button', () => {
+    openDateTranslator(jest.fn(), 'en');
+    const inp = input();
+    inp.value = 'TERRA 2026 · Sol 282 · 14:00 UTC';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    const buttons = [...document.querySelectorAll('.date-t-copy')];
+    expect(buttons).toHaveLength(3);
+    for (const btn of buttons) {
+      // The static Lucide drawing travels with the page (no-JS readable).
+      const svg = btn.querySelector('.copy-icon svg');
+      expect(svg).not.toBeNull();
+      expect(svg!.getAttribute('stroke-width')).toBe('2');
+      expect(btn.querySelector('.copy-text')?.textContent).toBe('Copy');
+    }
+  });
+
   it('is bilingual: Spanish labels, copy buttons and errors', () => {
     openDateTranslator(jest.fn(), 'es');
     const inp = input();

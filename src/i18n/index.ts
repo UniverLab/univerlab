@@ -99,7 +99,7 @@ function matchRoute(pattern: string[], segs: string[]): boolean {
 
 /** Whether `path` exists as a page in the target language. Spanish lives
  *  under `src/pages/es/`, English everywhere else; dynamic routes (`[id]`)
- *  count as localized only when both trees carry them. `/status/` answers
+ *  count as localized only when both trees carry them. `/roadmap/` answers
  *  false for `es`, `/gitkit/` true, `/es/gitkit/` true for `en`. */
 export function hasCounterpart(path: string, target: Lang): boolean {
   const clean = path.split('?')[0].split('#')[0];

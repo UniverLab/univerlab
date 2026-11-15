@@ -14,7 +14,12 @@ module.exports = {
     // that the root tsconfig types do not know; typechecking of workers/**
     // belongs to `workers/announcements` (npm run typecheck), not to ts-jest.
     '^.+\.(ts|tsx)$': ['ts-jest', { diagnostics: { exclude: ['**/workers/**'] } }],
+    // `marked` ships ESM-only (a `.js` file with no `"type": "module"`), so
+    // jest's CJS runtime cannot require it: transpile that one file down to
+    // CJS. Everything else under node_modules stays untransformed.
+    'node_modules/marked/lib/marked\.esm\.js$': ['ts-jest', { diagnostics: false, tsconfig: { allowJs: true } }],
   },
+  transformIgnorePatterns: ['/node_modules/(?!marked/)'],
   testMatch: ['**/?(*.)+(spec|test).+(ts|tsx|js)'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

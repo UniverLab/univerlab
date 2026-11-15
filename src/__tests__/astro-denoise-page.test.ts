@@ -1,6 +1,6 @@
 /**
  * Tests for the Astro Denoise page copy after the 2026-10-19 committee rework:
- * the approved title, the general and five specific objectives with their
+ * the approved title, the general and four specific objectives with their
  * states, the three public repositories, and the section order in the view.
  */
 import { readFileSync } from 'fs';
@@ -88,26 +88,38 @@ describe('Astro Denoise page copy', () => {
 
   describe('objectives', () => {
     const states = {
-      en: ['complete', 'in progress', 'in progress', 'in progress', 'pending'],
-      es: ['completo', 'en curso', 'en curso', 'en curso', 'pendiente'],
+      en: ['complete', 'in progress', 'in progress', 'pending'],
+      es: ['completo', 'en curso', 'en curso', 'pendiente'],
     };
 
-    it('should carry the general objective and five specific objectives in order, in English', () => {
+    it('should carry the general objective and four specific objectives in order, in English', () => {
       // Given: the English objectives block
       // When: we read it
-      // Then: it has the approved general text and five items with their states
+      // Then: it has the approved general text and four items with their states
       expect(enEntry.objectives.kicker).toBe('Objectives');
       expect(enEntry.objectives.general).toBe('Develop a reproducible benchmarking platform that compares noise-reduction methods on simulated DC2 images of the Vera Rubin Observatory, evaluating for each method the recovery of faint sources, the resulting image quality and its computational cost.');
+      expect(enEntry.objectives.items).toHaveLength(4);
       expect(enEntry.objectives.items.map((o) => o.state)).toEqual(states.en);
     });
 
-    it('should carry the general objective and five specific objectives in order, in Spanish', () => {
+    it('should carry the general objective and four specific objectives in order, in Spanish', () => {
       // Given: the Spanish objectives block
       // When: we read it
-      // Then: it has the approved general text and five items with their states
+      // Then: it has the approved general text and four items with their states
       expect(esEntry.objectives.kicker).toBe('Objetivos');
       expect(esEntry.objectives.general).toBe('Desarrollar una plataforma de benchmarking reproducible que compare métodos de reducción de ruido en imágenes simuladas DC2 del Vera Rubin Observatory, evaluando en cada método la recuperación de fuentes débiles, la calidad de imagen resultante y su coste computacional.');
+      expect(esEntry.objectives.items).toHaveLength(4);
       expect(esEntry.objectives.items.map((o) => o.state)).toEqual(states.es);
+    });
+
+    it('the four objectives match the tutor-reviewed wording', () => {
+      // Given: the English objective texts
+      // When: we read the first words of each item
+      // Then: they match the tutor-reviewed wording
+      expect(enEntry.objectives.items[0].text).toMatch(/^Design a modular, reproducible platform/);
+      expect(enEntry.objectives.items[1].text).toMatch(/^Define a set of evaluation metrics/);
+      expect(enEntry.objectives.items[2].text).toMatch(/^Integrate into the platform two representative/);
+      expect(enEntry.objectives.items[3].text).toMatch(/^Evaluate the integrated methods/);
     });
 
     it('should keep the first objective as the only complete one, matching the view accent', () => {

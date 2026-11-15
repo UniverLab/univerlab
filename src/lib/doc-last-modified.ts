@@ -26,6 +26,7 @@
  * root and the in-repo path once, and everything downstream uses that pair.
  */
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { DOCS_BASES } from '../data/docs-bases';
 
@@ -89,15 +90,50 @@ function lastModified(absPath: string, exec: GitExec): string | null {
 }
 
 /**
+ * Where the prebuild snapshot lives. `scripts/snapshot-docs-dates.ts` writes it
+ * before Astro starts; `UNIVERLAB_DOCS_DATES_SNAPSHOT` overrides it for tests.
+ */
+function snapshotPath(): string {
+  return process.env.UNIVERLAB_DOCS_DATES_SNAPSHOT ?? resolve(ROOT, '.astro/docs-last-modified.json');
+}
+
+/**
+ * The prebuild snapshot table (`absolute path -> %cI date or null`), or `null`
+ * when there is no usable snapshot and git is the source. A present snapshot
+ * is a closed world: it was taken in one instant before the build, so every
+ * call site that reads it agrees even when a sibling repo commits mid-build.
+ */
+function readSnapshotTable(): Record<string, unknown> | null {
+  let raw: string;
+  try {
+    raw = readFileSync(snapshotPath(), 'utf8');
+  } catch {
+    return null; // no snapshot (dev, tests) — fall back to git
+  }
+  try {
+    const data: unknown = JSON.parse(raw);
+    return typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : null;
+  } catch {
+    return null; // corrupt snapshot — fail open to git, never to a fake date
+  }
+}
+
+/**
  * The commit date of a docs source file as `git log --format=%cI` reports it
  * (`2026-09-19T01:10:27-05:00`), or `null` when there is no trustworthy date.
+ *
+ * During a build the answer comes from the prebuild snapshot, not from git:
+ * the content sync (the visible line) and the page render (`dateModified`)
+ * run minutes apart, and a sibling commit between them used to give the two
+ * renderings two different dates and fail `check-seo`.
  */
 export function docLastModified(absPath: string, exec?: GitExec): string | null {
   const key = resolve(ROOT, absPath);
   if (exec) return lastModified(key, exec);
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
-  const value = lastModified(key, runGit);
+  const table = readSnapshotTable();
+  const value = table ? (typeof table[key] === 'string' ? (table[key] as string) : null) : lastModified(key, runGit);
   cache.set(key, value);
   return value;
 }

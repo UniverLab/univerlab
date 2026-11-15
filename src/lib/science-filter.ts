@@ -1,5 +1,5 @@
 // The science filter for Wikipedia's "On this day" feed — one source of truth
-// for the header's letter from the past and the /today newspaper. Stems are
+// for the header's letter from the past and the /newspaper. Stems are
 // matched with indexOf against the lowercased text, so 'physic' catches
 // physics/physicist and 'descubr' caught descubrió/descubrimiento. We keep an
 // event only when it mentions science AND mentions no war/politics/religion/
@@ -14,7 +14,7 @@ export const SCIENCE_EN = [
   'cosmonaut', 'galaxy', 'supernova', 'eclipse', 'nasa', 'space station',
   'mathematic', 'theorem', 'invent', 'patent', 'discover', 'experiment',
   'laborator', 'vaccine', 'antibiotic', 'medicine', 'surgery', 'genome',
-  'dna', 'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
+  'atom', 'nuclear reactor', 'electron', 'quantum', 'relativity',
   'evolution', 'fossil', 'dinosaur', 'geolog', 'microscope', 'electricity',
   'transistor', 'computer', 'internet', 'engineer', 'particle', 'x-ray',
   'periodic table', 'nobel prize in physics', 'nobel prize in chemistry',
@@ -28,13 +28,17 @@ export const SCIENCE_ES = [
   'astronauta', 'cosmonauta', 'galaxia', 'supernova', 'eclipse',
   'estación espacial', 'matemátic', 'teorema', 'invent', 'patente',
   'descubr', 'experimento', 'laboratorio', 'vacuna', 'antibiótic',
-  'medicina', 'cirugía', 'genoma', 'adn', 'átomo', 'reactor nuclear',
+  'medicina', 'cirugía', 'genoma', 'átomo', 'reactor nuclear',
   'electrón', 'cuántic', 'relatividad', 'evolución', 'fósil',
   'dinosaurio', 'geolog', 'microscopio', 'electricidad', 'transistor',
   'computador', 'ordenador', 'internet', 'ingenier', 'partícula',
   'rayos x', 'tabla periódica', 'naturalista', 'premio nobel de física',
   'premio nobel de química', 'premio nobel de medicina',
 ];
+
+/** Stems short enough to hide inside a name ("Edna"): matched as whole words only. */
+export const SCIENCE_WORDS_EN = ['dna'];
+export const SCIENCE_WORDS_ES = ['adn'];
 
 // War, politics, religion and sport terms that veto an event even if it also
 // trips a science word (e.g. "nuclear weapon" in a war, a royal coronation).
@@ -44,7 +48,7 @@ export const POLITICS_EN = [
   'troops', 'invasion', 'coup', 'revolution', 'independence', 'empire',
   'dynasty', 'siege', 'rebellion', 'riot', 'massacre', 'genocide',
   'dictator', 'assassinat', 'weapon', 'bombing', 'pope', 'bishop',
-  'saint', 'church', 'politician', 'senator', 'governor', 'minister',
+  'saint', 'church', 'politician', 'political', 'senator', 'governor', 'minister',
   // Sport & entertainment (substrings chosen to avoid collisions like
   // 'cup'→occupied, 'league'→colleague, 'sport'→transport).
   'championship', 'tournament', 'olympic', 'football', 'soccer',
@@ -60,7 +64,7 @@ export const POLITICS_ES = [
   'revolución', 'independencia', 'imperio', 'dinastía', 'asedio',
   'rebelión', 'disturbio', 'masacre', 'genocidio', 'dictador',
   'asesinat', 'arma', 'bombardeo', 'papa', 'obispo', 'santo', 'iglesia',
-  'político', 'política', 'senador', 'gobernador', 'ministro',
+  'político', 'politólog', 'política', 'senador', 'gobernador', 'ministro',
   // Deporte y espectáculo. 'deportiv' cubre deportivo/deportiva; evito
   // 'liga' (obliga), 'gol' (golfo) y 'copa' suelto por colisiones.
   'campeonato', 'torneo', 'olímpic', 'deportiv', 'fútbol', 'futbol',
@@ -86,10 +90,13 @@ export interface Fact {
   summary?: string;
   /** True when the extract held more than `summary` shows. */
   summaryCut?: boolean;
+  /** The lead story's longer body, at most LEAD_SENTENCES and LEAD_MAX chars. */
+  long?: string;
+  /** True when the extract held more than `long` shows. */
+  longCut?: boolean;
   /** The entry's photo, kept only when it is a real Commons image (a
-   *  `/wikipedia/commons/` URL that is not an `.svg`): events never print
-   *  photos — theirs are generic or wrong — so the newspaper only reads this
-   *  for the lead story and for people. */
+   *  `/wikipedia/commons/` URL that is not an `.svg`). The newspaper prints
+   *  it for people, for the lead and for every event that carries one. */
   thumb?: { src: string; w?: number; h?: number };
 }
 
@@ -101,11 +108,15 @@ function politicsFor(lang: FilterLang): string[] {
   return lang === 'es' ? POLITICS_ES : POLITICS_EN;
 }
 
+function wordsFor(lang: FilterLang): string[] {
+  return lang === 'es' ? SCIENCE_WORDS_ES : SCIENCE_WORDS_EN;
+}
+
 /** True when the entry's text is science and not war/politics/sport. */
 export function passesScience(text: string, lang: FilterLang): boolean {
   if (!text || text.length > MAX_LEN) return false;
   const low = text.toLowerCase();
-  const hasScience = keywordsFor(lang).some((k) => low.includes(k));
+  const hasScience = keywordsFor(lang).some((k) => low.includes(k)) || wordsFor(lang).some((w) => new RegExp('(^|[^\\p{L}])' + w + '([^\\p{L}]|$)', 'u').test(low));
   const hasPolitics = politicsFor(lang).some((k) => low.includes(k));
   return hasScience && !hasPolitics;
 }
@@ -126,6 +137,10 @@ export interface FeedEntry {
 /** The summary budget: whole sentences, at most two, at most this long. */
 export const SUMMARY_MAX = 260;
 
+/** The newspaper lead's own budget. */
+export const LEAD_SENTENCES = 5;
+export const LEAD_MAX = 700;
+
 function stripTags(s: string): string {
   return (s || '').replace(/<[^>]*>/g, '');
 }
@@ -135,51 +150,123 @@ function pageTitle(p: FeedPage): string {
   return (raw || '').replace(/_/g, ' ').trim();
 }
 
-/** Lowercased, whitespace-collapsed: the live feed writes a non-breaking
- *  space inside some titles ("Chang\u00a01"), so a raw substring compare
- *  would miss the page the event is about. */
+/** Lowercased, whitespace-collapsed, Roman numerals as digits: the live
+ *  feed writes a non-breaking space inside some titles ("Chang\u00a01"), so
+ *  a raw substring compare would miss the page the event is about — and it
+ *  writes "Voyager I" where the page says "Voyager 1". Only whole words from
+ *  the fixed I–XXX table map, so "ill" or "civil" never match. */
+const ROMAN_TO_DIGITS: Record<string, string> = {
+  i: '1', ii: '2', iii: '3', iv: '4', v: '5', vi: '6', vii: '7', viii: '8',
+  ix: '9', x: '10', xi: '11', xii: '12', xiii: '13', xiv: '14', xv: '15',
+  xvi: '16', xvii: '17', xviii: '18', xix: '19', xx: '20', xxi: '21',
+  xxii: '22', xxiii: '23', xxiv: '24', xxv: '25', xxvi: '26', xxvii: '27',
+  xxviii: '28', xxix: '29', xxx: '30',
+};
+
 function comparable(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+  return s
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\b[ivxl]+\b/g, (w) => ROMAN_TO_DIGITS[w] ?? w);
 }
 
-/** The entry's own page (events only): among the pages, the one whose
- *  title occurs in the entry's text — the object's match starts last —
- *  else the first page whose extract holds the year, else pages[0].
- *  Returns undefined when the entry carries no pages. */
+/** How specific a title match is: more words first, then more characters.
+ *  "Deep Space 1" beats "United States", "Zond 6" beats "the Moon" and
+ *  "Phoenix" beats "Mars": the event is about the craft, not the place the
+ *  sentence mentions on its way there. */
+function specificity(form: string): number {
+  const words = form.split(/\s+/).filter(Boolean).length;
+  return words * 1000 + form.length;
+}
+
+/** The entry's own page (events only): the page whose extract mentions the
+ *  entry's year is the subject — the craft, the person, the discovery — and
+ *  wins outright when exactly one page does ("Robert Falcon Scott" need not
+ *  appear in "Robert Scott" for its 1912 extract to name it). Several
+ *  year-hits narrow to the ones the text also names, most specific first;
+ *  none naming it means no page, never the setting. With no year-hit at all
+ *  the title match decides as before ("Voyager I" meets "Voyager 1" through
+ *  the numeral table), most specific first, earliest on a tie. Otherwise
+ *  undefined: an unrelated paragraph is worse than none on a page that
+ *  sells rigour, so the pages[0] fallback is gone. Returns undefined when
+ *  the entry carries no pages. */
 export function mainPage(entry: FeedEntry): FeedPage | undefined {
   const pages = entry?.pages || [];
   if (!pages.length) return undefined;
+  const year = entry?.year;
+  const yearRe =
+    typeof year === 'number' && Number.isFinite(year)
+      ? new RegExp(`(^|\\D)${year}(\\D|$)`)
+      : null;
   const text = comparable(entry.text || '');
-  let best: FeedPage | undefined;
-  let bestIdx = -1;
+  // Case kept, so a stripped title only counts where the text prints it as
+  // the page does: "Phoenix (spacecraft)" meets "Phoenix", never "the lander".
+  const rawText = (entry.text || '').replace(/\s+/g, ' ').trim();
+  const scored: Array<{ page: FeedPage; form: string; at: number; hasYear: boolean }> = [];
   for (const p of pages) {
-    const t = comparable(pageTitle(p));
+    const title = pageTitle(p);
+    const t = comparable(title);
     if (!t) continue;
-    const idx = text.lastIndexOf(t);
-    if (idx >= 0 && idx > bestIdx) {
-      best = p;
-      bestIdx = idx;
+    // The forms this page can match: its full title, and — for a
+    // parenthetical title — the bare name.
+    const forms: Array<{ form: string; at: number }> = [];
+    const idx = text.indexOf(t);
+    if (idx >= 0) forms.push({ form: t, at: idx });
+    const collapsed = title.replace(/\s+/g, ' ').trim();
+    if (/\s*\([^)]*\)\s*$/.test(collapsed)) {
+      const bare = collapsed.replace(/\s*\([^)]*\)\s*$/, '');
+      const bareIdx = bare ? rawText.indexOf(bare) : -1;
+      if (bareIdx >= 0) forms.push({ form: comparable(bare), at: bareIdx });
+    }
+    // The page's own best form: the most specific, earlier on a tie.
+    let mine: { form: string; at: number } | undefined;
+    for (const f of forms) {
+      const better =
+        !mine ||
+        specificity(f.form) > specificity(mine.form) ||
+        (specificity(f.form) === specificity(mine.form) && f.at < mine.at);
+      if (better) mine = f;
+    }
+    scored.push({
+      page: p,
+      form: mine?.form || '',
+      at: mine?.at ?? -1,
+      hasYear: !!yearRe && yearRe.test(p.extract || ''),
+    });
+  }
+  const hits = scored.filter((s) => s.hasYear);
+  // Exactly one page carries the event's year: that is the subject, whether
+  // or not the sentence prints its name.
+  if (hits.length === 1) return hits[0].page;
+  const pool = hits.length > 1 ? hits.filter((s) => s.at >= 0) : scored.filter((s) => s.at >= 0);
+  // Several year-hits and none of them named: the setting is not the story.
+  if (hits.length > 1 && !pool.length) return undefined;
+  let best: FeedPage | undefined;
+  let bestScore = -1;
+  let bestAt = -1;
+  for (const s of pool) {
+    const score = specificity(s.form);
+    if (score > bestScore || (score === bestScore && s.at < bestAt)) {
+      best = s.page;
+      bestScore = score;
+      bestAt = s.at;
     }
   }
-  if (best) return best;
-  const year = String(entry.year ?? '');
-  if (year && year !== '?') {
-    const re = new RegExp(`(^|\\D)${year}(\\D|$)`);
-    for (const p of pages) {
-      if (p.extract && re.test(p.extract)) return p;
-    }
-  }
-  return pages[0];
+  return best;
 }
 
-/** Shorten an extract to a letter body: whole sentences from the start, at
- *  most 2 and at most SUMMARY_MAX chars. A sentence ends at `.`, `!` or `?`
- *  followed by a space or the end — never inside a number, never after a
- *  single capital initial. Returns null when there is nothing to carry
- *  (empty, or only repeating the headline). */
+/** Shorten an extract to a body: whole sentences from the start, at most
+ *  `maxSentences` and at most `maxChars` chars — the letter's defaults are 2
+ *  and SUMMARY_MAX, the newspaper lead's are LEAD_SENTENCES and LEAD_MAX.
+ *  A sentence ends at `.`, `!` or `?` followed by a space or the end — never
+ *  inside a number, never after a single capital initial. Returns null when
+ *  there is nothing to carry (empty, or only repeating the headline). */
 export function shortSummary(
   extract: string | undefined,
   headline: string,
+  maxSentences = 2,
+  maxChars = SUMMARY_MAX,
 ): { summary: string; cut: boolean } | null {
   const flat = (extract || '').replace(/\s+/g, ' ').trim();
   if (!flat) return null;
@@ -201,9 +288,9 @@ export function shortSummary(
     ends.push(i);
   }
   if (!ends.length) {
-    if (flat.length <= SUMMARY_MAX) return { summary: flat, cut: false };
-    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
-    const summary = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    if (flat.length <= maxChars) return { summary: flat, cut: false };
+    const cutAt = flat.slice(0, maxChars).lastIndexOf(' ');
+    const summary = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, maxChars);
     return { summary, cut: true };
   }
   const sentences: string[] = [];
@@ -213,14 +300,14 @@ export function shortSummary(
     start = e + 1;
   }
   let summary = '';
-  for (let k = 0; k < Math.min(2, sentences.length); k++) {
+  for (let k = 0; k < Math.min(maxSentences, sentences.length); k++) {
     const cand = summary ? summary + ' ' + sentences[k] : sentences[k];
-    if (cand.length <= SUMMARY_MAX) summary = cand;
+    if (cand.length <= maxChars) summary = cand;
     else break;
   }
   if (!summary) {
-    const cutAt = flat.slice(0, SUMMARY_MAX).lastIndexOf(' ');
-    const s = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, SUMMARY_MAX);
+    const cutAt = flat.slice(0, maxChars).lastIndexOf(' ');
+    const s = cutAt > 0 ? flat.slice(0, cutAt) : flat.slice(0, maxChars);
     return { summary: s, cut: true };
   }
   const rest = flat.slice(summary.length).trim();
@@ -274,11 +361,18 @@ export function collectFacts(
       } catch (x) {}
       let summary: string | undefined;
       let summaryCut: boolean | undefined;
+      let long: string | undefined;
+      let longCut: boolean | undefined;
       if (kind === 'event' && chosen?.extract) {
         const short = shortSummary(chosen.extract, e.text || '');
         if (short) {
           summary = short.summary;
           summaryCut = short.cut;
+        }
+        const lead = shortSummary(chosen.extract, e.text || '', LEAD_SENTENCES, LEAD_MAX);
+        if (lead) {
+          long = lead.summary;
+          longCut = lead.cut;
         }
       }
       return {
@@ -289,6 +383,8 @@ export function collectFacts(
         page: title,
         ...(summary !== undefined ? { summary } : {}),
         ...(summaryCut !== undefined ? { summaryCut } : {}),
+        ...(long !== undefined ? { long } : {}),
+        ...(longCut !== undefined ? { longCut } : {}),
         ...(thumb ? { thumb } : {}),
       };
     });
@@ -305,7 +401,7 @@ export interface PoolLimits {
 /** The newspaper's pool: everything the day's feed kept. A missing kind
  *  means "all" (and 0 means "all" for events too), so this is also
  *  fetchPool's default and what the cache always stores — a header warm
- *  can never shrink what /today renders. */
+ *  can never shrink what /newspaper renders. */
 export const FULL_POOL: PoolLimits = { events: 0 };
 
 /** The whole filtered day: every science event plus every filtered birth
@@ -360,7 +456,7 @@ export function readOtdCache(lang: FilterLang): Fact[] | null {
 
 /** Fetch the day's feed, filter it to science and cache the whole day for
  *  today. `limits` only slices what this caller gets back (via letterPool);
- *  the cache always keeps everything, so /today renders the full newspaper
+ *  the cache always keeps everything, so /newspaper renders the full newspaper
  *  even when the header warmed the cache first. */
 export function fetchPool(
   fetchImpl: typeof fetch,

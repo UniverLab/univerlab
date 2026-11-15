@@ -143,7 +143,7 @@ describe('Docs on the lab ground', () => {
 describe('Docs link contrast — every experiment, both phases', () => {
   it('has docs to check', () => {
     expect(DOCS.length).toBeGreaterThanOrEqual(5);
-    expect(DOCS).toEqual(['canopy', 'texforge', 'gitkit', 'ghscaff', 'demostage']);
+    expect(DOCS).toEqual(['canopy', 'texforge', 'gitkit', 'ghscaff', 'demostage', 'facetmedia']);
   });
 
   it('clears 4.5:1 on the day ground and on the night ground', () => {

@@ -1,12 +1,12 @@
 /**
  * The lab's public feed — one data layer for every reader of it.
  *
- * AGR1's markdown twin (`functions/status-twin.ts`) and AGR2's WebMCP tools
- * (`src/lib/webmcp.ts`) both read the same two public endpoints of the
- * announcements API, and both must say the same thing: the agent that asks a
- * tool and the reader that fetches `/status/index.md` get one format, one
- * filter rule, one ordering. So the fetch, the filtering and the markdown live
- * here, and both callers only decide *how much* to ask for.
+ * The newspaper's live markdown twin (`functions/_middleware.ts`) and AGR2's
+ * WebMCP tools (`src/lib/webmcp.ts`) both read the same two public endpoints
+ * of the announcements API, and both must say the same thing: the agent that
+ * asks a tool and the reader that fetches `/newspaper/index.md` get one
+ * format, one filter rule, one ordering. So the fetch, the filtering and the
+ * markdown live here, and both callers only decide *how much* to ask for.
  *
  * Pure by design: no i18n import (that is what keeps this safe to ship to the
  * browser — the only `src/` types it reuses are the API's own row shapes), no
@@ -19,6 +19,7 @@
  * sends a token or asks for `state=all`.
  */
 import type { Entry as FieldNotesEntry, RoadmapItem as FieldNotesRoadmapItem } from './field-notes';
+import { entryTexts } from './field-notes';
 
 /** The announcements API — the lab's own public data host. */
 export const ANNOUNCEMENTS_API = 'https://announcements.univerlab.org';
@@ -35,6 +36,11 @@ export const FEED_URL = `${ANNOUNCEMENTS_API}/feed.atom`;
 /** Lane order as the board renders it: work in flight first, shipped last. */
 export const LANE_ORDER = ['now', 'next', 'later', 'idea', 'done'] as const;
 export type Lane = (typeof LANE_ORDER)[number];
+
+/** The four lanes the roadmap board shows. `idea` keeps rendering in the
+ *  markdown twin but has no board column (nothing is filed there today). */
+export const BOARD_LANES = ['now', 'next', 'later', 'done'] as const;
+export type BoardLane = (typeof BOARD_LANES)[number];
 
 /** The `done` lane lists at most this many of the most recently shipped items. */
 export const DONE_CAP = 10;
@@ -78,6 +84,8 @@ export interface FeedOpts {
   type?: string;
   /** Render at most this many rows, after filtering (entries only). */
   limit?: number;
+  /** The wording an entry prints in: Spanish when translated, else English. */
+  lang?: 'en' | 'es';
   labels?: FeedLabels;
 }
 
@@ -156,7 +164,7 @@ export function roadmapLine(item: RoadmapItem, hold: string = DEFAULT_LABELS.hol
 /** One logbook entry — one line, first paragraph, optional link.
  *  The mission-date label carries its ISO in parentheses so an agent reading
  *  the twin never has to convert. */
-export function entryLine(e: Entry): string {
+export function entryLine(e: Entry, lang: 'en' | 'es' = 'en'): string {
   const d = new Date(e.date);
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
@@ -166,7 +174,8 @@ export function entryLine(e: Entry): string {
   const bits = [head];
   if (e.type) bits.push(e.type);
   bits.push(topicOf(e.topic));
-  let line = `- ${bits.join(' · ')} — **${e.title}**: ${firstParagraph(e.body)}`;
+  const texts = lang === 'es' ? entryTexts(e, lang) : { title: e.title, body: e.body };
+  let line = `- ${bits.join(' · ')} — **${texts.title}**: ${firstParagraph(texts.body)}`;
   if (e.link) line += ` [link](${e.link})`;
   return line;
 }
@@ -218,7 +227,8 @@ export function roadmapMarkdown(items: RoadmapItem[], opts: FeedOpts = {}): stri
 export function entriesMarkdown(entries: Entry[], opts: FeedOpts = {}): string {
   const rows = filterEntries(entries, opts);
   if (!rows.length) return opts.labels?.empty ?? 'Nothing in the logbook.';
-  return rows.map(entryLine).join('\n');
+  const lang = opts.lang ?? 'en';
+  return rows.map((e) => entryLine(e, lang)).join('\n');
 }
 
 /** One public GET. Throws on a non-OK body — every caller has its own fallback
@@ -242,4 +252,19 @@ export async function loadRoadmap(o: LoadOpts = {}): Promise<RoadmapItem[]> {
 export async function loadEntries(o: LoadOpts = {}): Promise<Entry[]> {
   const json = await apiJson<{ entries?: Entry[] }>(`${ENTRIES_URL}?limit=${o.limit ?? FETCH_LIMIT}`, o);
   return Array.isArray(json?.entries) ? json.entries : [];
+}
+
+/** The entries an edition could have carried: published by the end of the
+ *  edition's day in the lab's time (Bogotá, UTC−5). `edition` is the
+ *  edition's local-noon Date (editionDateFor); entries with an unreadable
+ *  date stay. Today's edition keeps everything. */
+export function entriesUpTo<T extends { date: string }>(entries: T[], edition: Date): T[] {
+  const ymd =
+    `${edition.getFullYear()}-${String(edition.getMonth() + 1).padStart(2, '0')}-` +
+    String(edition.getDate()).padStart(2, '0');
+  const cutoff = Date.parse(`${ymd}T23:59:59.999-05:00`);
+  return (entries || []).filter((e) => {
+    const t = Date.parse(e?.date || '');
+    return !Number.isFinite(t) || t <= cutoff;
+  });
 }

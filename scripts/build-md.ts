@@ -2,12 +2,6 @@ import TurndownService from 'turndown';
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { globSync } from 'node:fs';
-// The `.ts` extension is required — this script is run by `node` with type
-// stripping, and lab-feed's own relative import is type-only, so it never
-// needs resolving at runtime. (functions/status-twin.ts must NOT be imported
-// from here for the same reason: its i18n imports are extensionless value
-// imports that node cannot resolve — its title/source are duplicated below.)
-import { FEED_URL, loadEntries, entriesMarkdown, type Entry } from '../src/lib/lab-feed.ts';
 
 /**
  * Remove every element marked `aria-hidden="true"`, including its children.
@@ -141,6 +135,32 @@ export function htmlToMarkdown(html: string): string {
   cleaned = injectLatestRelease(cleaned);
 
   const td = new TurndownService({ headingStyle: 'atx' });
+  // Seal badges: each `a.seal-part` holds a key span and a value span
+  // (`License` + `MIT`). The default link rule concatenates them
+  // (`[LicenseMIT](…)`) and drops the whitespace between adjacent badges
+  // (`…](…)[License…](…)`). Render every badge explicitly and join the
+  // row with spaces, so the twin always carries a separated license line.
+  const sealLabel = (anchor: Element): string => {
+    const key = anchor.querySelector('.seal-key')?.textContent?.trim() ?? '';
+    const val = anchor.querySelector('.seal-val')?.textContent?.trim() ?? '';
+    const href = anchor.getAttribute('href') ?? '';
+    const label = [key, val].filter(Boolean).join(' ');
+    return href ? `[${label}](${href})` : label;
+  };
+  td.addRule('seal', {
+    filter: (node) =>
+      node.nodeName === 'P' && (node as HTMLElement).classList?.contains('seal'),
+    replacement: (_content, node) => {
+      const parts = Array.from((node as HTMLElement).querySelectorAll('a.seal-part')).map(sealLabel);
+      if (parts.length === 0) return '';
+      return `\n\n${parts.join(' ')}\n\n`;
+    },
+  });
+  td.addRule('sealPart', {
+    filter: (node) =>
+      node.nodeName === 'A' && (node as HTMLElement).classList?.contains('seal-part'),
+    replacement: (_content, node) => sealLabel(node as unknown as Element),
+  });
   // Mission-date <time> labels: append the ISO in parentheses so an agent
   // reading the twin never has to convert. Every renderer marks its label
   // with data-mission (Astro keeps the attribute in the built HTML); the
@@ -186,81 +206,6 @@ export function htmlToMarkdown(html: string): string {
   return frontMatter + markdown;
 }
 
-// ------------------------------------------------- the /status/ snapshot twin
-
-/** The roadmap twin an offline snapshot points a reader at. The status page's
- *  twin carries a pointer line, not a Roadmap section, so the offline body
- *  must point at the board too. */
-const ROADMAP_TWIN = 'https://univerlab.org/roadmap/index.md';
-
-/** How long the build waits for the announcements API before falling back to
- *  the offline pointers — a build must never hang on an unreachable host. */
-const STATUS_BUILD_TIMEOUT_MS = 5000;
-
-/** The line FR3 pins: when this file was made, and that this same address
- *  serves the live version. */
-export function snapshotLine(nowIso: string): string {
-  return `Snapshot taken at build time (${nowIso}); the live version is served at this same address.`;
-}
-
-/**
- * The built `/status/index.md` body when the API answered at build time: the
- * logbook in the shared entry format, newest first, plus the snapshot marker.
- *
- * Never empty: an empty body is the outage this replaces. The live page no
- * longer carries the logbook in its static HTML, so the generic conversion
- * alone would keep shipping the bare front matter; this is the body that
- * replaces it. An empty log renders the snapshot marker under the heading
- * rather than nothing at all.
- */
-export function statusSnapshotBody(entries: Entry[], nowIso: string): string {
-  const log = entriesMarkdown(entries, { labels: { empty: '' } });
-  return `## Logbook\n\n${log || 'Nothing in the logbook at build time.'}\n\n${snapshotLine(nowIso)}`;
-}
-
-/**
- * The body when the API was unreachable at build time: the pointers a reader
- * needs instead of a stale snapshot — the Atom feed for the entries, the live
- * roadmap twin for the board, and the promise that this same address serves
- * the live logbook.
- */
-export function statusOfflineBody(): string {
-  return (
-    '## Logbook\n\n' +
-    `The announcements API was unreachable at build time, so this build carries no logbook snapshot. ` +
-    `The same entries are published as an Atom feed at ${FEED_URL}, the roadmap is at ${ROADMAP_TWIN}, ` +
-    `and the live logbook is served at this same address.`
-  );
-}
-
-/**
- * The status page's built twin: its own front matter — title and canonical,
- * exactly as the generic converter writes them — over the snapshot body. The
- * logbook is no longer in the page's static HTML, so converting the page body
- * would ship the empty shell again; only the front matter is kept.
- */
-export function withStatusSnapshot(html: string, body: string): string {
-  const frontMatter = htmlToMarkdown(html).match(/^---\n[\s\S]*?\n---\n/)?.[0] ?? '';
-  return `${frontMatter}\n${body}\n`;
-}
-
-/**
- * The status snapshot body for this build: the live logbook when the API
- * answers within the deadline, the offline pointers when it does not. A build
- * on a machine without network must still produce the twin, never fail.
- */
-async function statusBuildBody(): Promise<string> {
-  try {
-    const entries = await loadEntries({
-      signal: AbortSignal.timeout(STATUS_BUILD_TIMEOUT_MS),
-      limit: 20,
-    });
-    return statusSnapshotBody(entries, new Date().toISOString());
-  } catch {
-    return statusOfflineBody();
-  }
-}
-
 export async function main(distDir = resolve(process.cwd(), 'dist')): Promise<void> {
   if (!existsSync(distDir)) {
     console.log('build-md: dist/ not found, skipping markdown generation.');
@@ -281,13 +226,7 @@ export async function main(distDir = resolve(process.cwd(), 'dist')): Promise<vo
       skipped++;
       continue;
     }
-    // The status page's logbook lives only in the API now, so its twin is the
-    // page's front matter over a build-time snapshot of the log (offline
-    // pointers when the API cannot be reached — either way, never empty).
-    const md =
-      file === 'status/index.html'
-        ? withStatusSnapshot(html, await statusBuildBody())
-        : htmlToMarkdown(html);
+    const md = htmlToMarkdown(html);
     const mdPath = fullPath.replace(/index\.html$/, 'index.md');
     writeFileSync(mdPath, md, 'utf-8');
   }

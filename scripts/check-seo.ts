@@ -270,6 +270,8 @@ export function checkLlmsLinks(dist = DIST): Failure[] {
     // A prose URL followed by sentence punctuation still names the page.
     const path = (m[1] ?? '/').replace(/[.,;:!?'"’”)\]]+$/, '') || '/';
     if (ENDPOINTS.has(path)) continue;
+    // Live twins are served at the edge, never built to dist/.
+    if (LIVE_TWIN_URLS.has(path)) continue;
     if (!existsSync(distFileForLlmsUrl(path, dist))) {
       failures.push(`llms.txt: "${m[0]}" has no built file`);
     }
@@ -299,6 +301,14 @@ export function checkLlmsFull(dist = DIST): Failure[] {
 const MD_LINK = /<link[^>]*\btype="text\/markdown"[^>]*>/gi;
 const MD_LINK_HREF = /href="([^"]*)"/i;
 
+/** Pages whose markdown twin is rendered live at the edge, never built to
+ *  `dist/`: a noindex page here with exactly its own twin link passes, and
+ *  `llms.txt` may name the twin without a built file. */
+const LIVE_TWINS = new Set(['/newspaper/', '/es/newspaper/']);
+
+/** The twin URLs served live for `LIVE_TWINS` — no `dist/` file backs them. */
+const LIVE_TWIN_URLS = new Set(['/newspaper/index.md', '/es/newspaper/index.md']);
+
 /** Counts for the success line: indexable pages, built twins, emitted links. */
 export interface MarkdownTwinStats {
   indexable: number;
@@ -322,7 +332,8 @@ export function markdownTwinStats(dist = DIST): MarkdownTwinStats {
  * Every indexable page advertises exactly its own markdown twin, and the
  * advertised set is exactly the built set: one `<link … type="text/markdown"
  * href="<canonical>index.md">` per indexable `index.html`, no link on
- * noindex pages or on `404.html` (which builds no `index.md`).
+ * noindex pages or on `404.html` (which builds no `index.md`) — except the
+ * `LIVE_TWINS` pages, whose twin is rendered live and advertised the same way.
  */
 export function checkMarkdownTwins(dist = DIST): Failure[] {
   const failures: Failure[] = [];
@@ -333,7 +344,23 @@ export function checkMarkdownTwins(dist = DIST): Failure[] {
     const tags = [...html.matchAll(MD_LINK)];
     const url = file === 'index.html' ? '/' : `/${file.replace(/index\.html$/, '')}`;
     if (NOINDEX.test(html)) {
-      if (tags.length > 0) failures.push(`${url}: noindex page must not advertise a markdown twin`);
+      if (LIVE_TWINS.has(url)) {
+        // The live twin is not a dist file, so it never increments `links`.
+        if (tags.length !== 1) {
+          failures.push(`${url}: expected one text/markdown alternate link, found ${tags.length}`);
+        } else {
+          const href = MD_LINK_HREF.exec(tags[0][0])?.[1] ?? '';
+          const canonical = html.match(CANONICAL)?.[1] ?? '';
+          if (href !== `${canonical}index.md`) {
+            failures.push(`${url}: markdown twin link ${JSON.stringify(href)} is not ${JSON.stringify(`${canonical}index.md`)}`);
+          }
+          if (!href.startsWith('https://univerlab.org/')) {
+            failures.push(`${url}: markdown twin link ${JSON.stringify(href)} is not absolute`);
+          }
+        }
+      } else if (tags.length > 0) {
+        failures.push(`${url}: noindex page must not advertise a markdown twin`);
+      }
       continue;
     }
     if (tags.length !== 1) {

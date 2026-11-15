@@ -28,6 +28,17 @@ const TOOLS: Record<string, { repo: string; win: boolean }> = {
   demostage: { repo: 'demostage', win: true },
 };
 
+const TOOL_RE = /^[a-z0-9-]+$/;
+const BLOCKED = new Set([
+  'wp',
+  'wordpress',
+  'blog',
+  'admin',
+  'login',
+  'wp-admin',
+  'xmlrpc',
+]);
+
 const raw = (repo: string, file: string) =>
   `https://raw.githubusercontent.com/UniverLab/${repo}/${REF}/scripts/${file}`;
 
@@ -99,6 +110,12 @@ export default {
     const win = slug.endsWith('.ps1');
     const tool = win ? slug.slice(0, -4) : slug;
     const platform = win ? 'ps1' : 'sh';
+
+    // Scanner probes are not plausible tool names and leave no trace.
+    if (!TOOL_RE.test(tool) || BLOCKED.has(tool)) {
+      return new Response(`Unknown tool: ${tool}\n`, { status: 404 });
+    }
+
     const entry = TOOLS[tool];
 
     if (!entry) {

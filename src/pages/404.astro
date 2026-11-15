@@ -29,7 +29,9 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
       <source srcset={srcset('night', 'webp')} sizes={sizes} type="image/webp" />
       <img
         src="/bench/mapa/kraken-night-800.webp"
-        alt={t.notFound.alt}
+        alt=""
+        aria-hidden="true"
+        data-alt={t.notFound.alt}
         width="1600"
         height="914"
         decoding="async"
@@ -53,13 +55,22 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
           img.setAttribute('loading', 'lazy');
           img.removeAttribute('fetchpriority');
         }
+        // Only the visible chart carries the description: the live plate
+        // exposes its data-alt, the parked one goes empty and hidden, so the
+        // screen reader hears the edge of the world once in either theme.
+        function expose(img, hide) {
+          img.setAttribute('alt', img.getAttribute('data-alt') || '');
+          img.removeAttribute('aria-hidden');
+          hide.setAttribute('alt', '');
+          hide.setAttribute('aria-hidden', 'true');
+        }
         function sync() {
           var night = document.documentElement.dataset.benchTheme === 'night';
           var day = document.querySelector('picture.kraken-day > img');
           var dark = document.querySelector('picture.kraken-night > img');
           if (day && dark) {
-            if (night) { lazy(day); eager(dark); }
-            else { lazy(dark); eager(day); }
+            if (night) { lazy(day); eager(dark); expose(dark, day); }
+            else { lazy(dark); eager(day); expose(day, dark); }
           }
         }
         sync();
@@ -70,7 +81,7 @@ const sizes = '(max-width: 64rem) 100vw, 64rem';
     <p class="lede">{t.notFound.line}</p>
     <p class="links">
       <a href={localizePath('/', lang)}>{t.notFound.back}</a>
-      <a href={localizePath('/experiments', lang)}>{t.notFound.encyclopedia}</a>
+      <a href={localizePath('/experiments', lang)}>{t.notFound.lantern}</a>
     </p>
   </section>
 </BaseLayout>

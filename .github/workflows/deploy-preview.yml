@@ -1,0 +1,61 @@
+name: Preview site (Cloudflare Pages)
+
+# A front-end preview of a pull request, for looking at it from a phone before
+# it reaches main. Builds exactly what the release builds (the shared
+# build-site action) and publishes it as a Pages *preview* deployment on its
+# own <branch>.univerlab.pages.dev alias: production is never touched and no
+# worker is deployed. Runs only while the PR carries the `preview` label.
+# The preview calls the real booking API, so a booking made there is real.
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: contains(github.event.pull_request.labels.*.name, 'preview') && github.event.pull_request.head.repo.full_name == github.repository
+    # Holds a Pages-only token; production secrets live in `production`.
+    environment: preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout landing
+        uses: actions/checkout@v4
+        with:
+          path: univerlab
+
+      - name: Build
+        uses: ./univerlab/.github/actions/build-site
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
+
+      - name: Branch alias
+        id: alias
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: echo "branch=$(printf '%s' "$HEAD_REF" | tr -c 'A-Za-z0-9-' '-' | tr 'A-Z' 'a-z')" >> "$GITHUB_OUTPUT"
+
+      # Same working directory as the release so Pages Functions ship too.
+      - name: Publish preview to Cloudflare Pages
+        id: pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.111.0'
+          workingDirectory: univerlab
+          command: pages deploy dist --project-name=univerlab --branch=${{ steps.alias.outputs.branch }}
+
+      - name: Report the preview URL
+        env:
+          URL: ${{ steps.pages.outputs.deployment-url }}
+          ALIAS: https://${{ steps.alias.outputs.branch }}.univerlab.pages.dev
+        run: |
+          echo "Preview: $ALIAS (this deployment: $URL)" | tee -a "$GITHUB_STEP_SUMMARY"

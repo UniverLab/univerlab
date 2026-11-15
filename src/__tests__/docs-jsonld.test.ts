@@ -167,6 +167,7 @@ describe('structured-data', () => {
     status: 'active',
     essenceHex: '#e06fc0',
     github: 'https://github.com/UniverLab/gitkit',
+    license: 'MIT',
     motif: 'x',
     thread: '@i18n',
     builtWith: ['canopy', 'ghscaff', 'demostage', 'gitkit'],
@@ -189,7 +190,7 @@ describe('structured-data', () => {
       url: 'https://univerlab.org/',
       logo: 'https://univerlab.org/favicon.svg',
       description: 'A description',
-      sameAs: ['https://github.com/UniverLab'],
+      sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social'],
     });
   });
 

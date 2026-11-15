@@ -80,20 +80,26 @@ describe('TeXForge template rows copy the start command', () => {
 
     rows.forEach((row, i) => {
       const name = names[i];
-      const btn = row.match(/<button[^>]*copy-btn[^>]*>([^<]*)</);
+      const btn = row.match(/<button[^>]*copy-btn[^>]*>([\s\S]*?)<\/button>/);
       expect(btn).not.toBeNull();
 
       const cmd = row.match(/data-cmd="([^"]*)"/)?.[1];
       const label = row.match(/aria-label="([^"]*)"/)?.[1];
+      const title = row.match(/ title="([^"]*)"/)?.[1];
       const copy = row.match(/data-copy="([^"]*)"/)?.[1];
       const copied = row.match(/data-copied="([^"]*)"/)?.[1];
 
       expect(cmd).toBe(expected[i]);
       expect(cmd).toBe(`texforge new my-doc -t ${name}`);
       expect(label).toBe(dict.experiments.texforge.templates.copyLabel.replace('{name}', name));
+      expect(title).toBe(dict.experiments.texforge.templates.copy);
       expect(copy).toBe(dict.experiments.texforge.templates.copy);
       expect(copied).toBe(dict.experiments.texforge.templates.copied);
-      expect(btn![1]).toBe(dict.experiments.texforge.templates.copy);
+      // Icon-only since the Lucide pass: a fixed copy-icon slot with the
+      // static copy svg, no text to swap — the morph handles the feedback.
+      expect(btn![1]).toContain('copy-icon');
+      expect(btn![1]).toContain('<svg');
+      expect(btn![1]).not.toContain(dict.experiments.texforge.templates.copy);
     });
   });
 
@@ -110,12 +116,16 @@ describe('TeXForge template rows copy the start command', () => {
     }
   });
 
-  it('should copy on click, swap the label for 1.5s, and leave the button alone on failure', () => {
+  it('should copy on click, morph the icon for 1.5s, and leave the button alone on failure', () => {
     const src = readFileSync(VIEW, 'utf8');
     expect(src).toContain('navigator.clipboard.writeText');
     expect(src).toMatch(/data-cmd=\{`texforge new my-doc -t \$\{tpl\.name\}`\}/);
-    expect(src).toContain('}, 1500)');
+    expect(src).toMatch(/setCopyState\(btn, true\)/);
+    expect(src).toMatch(/setCopyState\(btn, false\)/);
+    expect(src).toContain('COPY_DONE_MS');
     expect(src).toMatch(/catch \{ return; \}/);
     expect(src).toContain("querySelectorAll('.catalog .copy-btn')");
+    // No text swap anymore: the icon morphs and the accessible name follows.
+    expect(src).not.toMatch(/btn\.textContent = copied/);
   });
 });

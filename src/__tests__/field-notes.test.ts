@@ -9,6 +9,7 @@ import { formatSolLabel } from '../lib/mission-time';
 import { startSolLabel } from '../lib/mission-time';
 import {
   KNOWN_TOPICS,
+  entryTexts,
   excerpt,
   firstNonDone,
   matchesExperiment,
@@ -83,6 +84,28 @@ describe('way out', () => {
       ],
       'quorum',
     )).toBe('later');
+  });
+});
+
+describe('entryTexts', () => {
+  it('reads English on the English page, whatever Spanish is stored', () => {
+    const e: Entry = { id: 'e', date: 'd', title: 'Hello', body: 'World.', title_es: 'Hola', body_es: 'Mundo.' };
+    expect(entryTexts(e)).toEqual({ title: 'Hello', body: 'World.' });
+    expect(entryTexts(e, 'en')).toEqual({ title: 'Hello', body: 'World.' });
+  });
+
+  it('reads the Spanish text on the Spanish page', () => {
+    const e: Entry = { id: 'e', date: 'd', title: 'Hello', body: 'World.', title_es: 'Hola', body_es: 'Mundo.' };
+    expect(entryTexts(e, 'es')).toEqual({ title: 'Hola', body: 'Mundo.' });
+  });
+
+  it('falls back to English when Spanish is missing, null or blank', () => {
+    const missing: Entry = { id: 'e', date: 'd', title: 'Hello', body: 'World.' };
+    expect(entryTexts(missing, 'es')).toEqual({ title: 'Hello', body: 'World.' });
+    const nulled: Entry = { id: 'e', date: 'd', title: 'Hello', body: 'World.', title_es: null, body_es: null };
+    expect(entryTexts(nulled, 'es')).toEqual({ title: 'Hello', body: 'World.' });
+    const blank: Entry = { id: 'e', date: 'd', title: 'Hello', body: 'World.', title_es: '  ', body_es: '' };
+    expect(entryTexts(blank, 'es')).toEqual({ title: 'Hello', body: 'World.' });
   });
 });
 
@@ -175,13 +198,14 @@ describe('source guards', () => {
     expect(plate).toContain('lp-doi');
   });
 
-  it('notes use heading/statusLink strings, one status link, the shared loader, and never an empty section', () => {
+  it('notes use heading/statusLink strings, one logbook link, the shared loader, and never an empty section', () => {
     expect(notes).toContain('notes.heading');
     expect(notes).toContain('notes.statusLink');
     expect(notes).toContain('loadBoardData');
     expect(notes).not.toContain('notes.empty');
     expect(notes.match(/href=/g)?.length ?? 0).toBeLessThanOrEqual(1);
-    expect(notes).toContain('/status');
+    expect(notes).toContain('/logbook/?topic=');
+    expect(notes).not.toContain('#lab');
     expect(notes).toContain('section.remove()');
   });
 

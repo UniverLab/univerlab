@@ -5,11 +5,13 @@
 # calls an agent actually makes so nothing has to remember curl flags, field
 # names or the optimistic-version dance.
 #
-#   ./roadmap.sh list [--private]        GET /roadmap
+#   ./roadmap.sh list [--private]        GET /roadmap (every item, follows hasMore)
 #   ./roadmap.sh get <id> [--private]    GET /roadmap/<id>  (private: notes + refs)
 #   ./roadmap.sh add title=... [k=v...]  POST /roadmap          (auth)
 #   ./roadmap.sh set <id> k=v...         PATCH /roadmap/<id>    (auth)
 #   ./roadmap.sh order <id...>           PUT /roadmap/order     (auth)
+#     moves the given ids to the front in that order; every other active
+#     item keeps its relative order after them, and the full list is sent.
 #
 # Values are `key=value`; a value starting with `@` is read from that file
 # (use it for notes=@archivo.md — markdown in argv is miserable), `refs` takes
@@ -36,17 +38,20 @@ ALLOWED_SET="title state topic essence_hex blocked_reason summary notes refs arc
 ALLOWED_ADD="title state topic essence_hex blocked_reason summary notes refs"
 
 TMP_BODY="$(mktemp)"
-trap 'rm -f "${TMP_BODY}"' EXIT
+TMP_ITEMS="$(mktemp)"
+trap 'rm -f "${TMP_BODY}" "${TMP_ITEMS}"' EXIT
 
 usage() {
   cat >&2 <<'EOF'
 usage: roadmap.sh <command> [...]
 
-  list [--private]           list roadmap items (?private=1 adds notes/refs)
+  list [--private]           list every roadmap item, following hasMore
+                             (?private=1 adds notes/refs)
   get <id> [--private]       one item + its linked announcements
   add key=value...           create an item (needs title=)
   set <id> key=value...      partial update of an item
-  order <id...>              rewrite the order of every active item
+  order <id...>              move given ids to the front, rest keep their
+                             order; the full list is sent with the version
 
 keys: title state topic essence_hex blocked_reason summary notes refs archived
   summary  one public line, max 280 chars
@@ -208,12 +213,47 @@ parse_private() {
   done
 }
 
+# fetch_items [--private] — page through GET /roadmap (limit 100) until
+# hasMore ends, appending one JSON item per line to TMP_ITEMS. Prints the
+# last page's version. Fails if any page request fails.
+fetch_items() {
+  local flag=""
+  if [ "${1:-}" = "--private" ]; then flag="--private"; fi
+  : > "${TMP_ITEMS}"
+  local offset=0 page out more count version="0"
+  while :; do
+    if ! page="$(req GET "/roadmap?limit=100&offset=${offset}" ${flag:+"${flag}"})"; then
+      return 1
+    fi
+    out="$(printf '%s' "${page}" | TMP_ITEMS="${TMP_ITEMS}" python3 -c '
+import json
+import os
+import sys
+
+page = json.load(sys.stdin)
+items = page.get("items", [])
+with open(os.environ["TMP_ITEMS"], "a", encoding="utf-8") as handle:
+    for item in items:
+        handle.write(json.dumps(item) + "\n")
+more = 1 if page.get("hasMore") else 0
+print("%d %d %s" % (more, len(items), page.get("version", 0)))
+')"
+    more="${out%% *}"
+    count="${out#* }"; count="${count%% *}"
+    version="${out##* }"
+    if [ "${more}" = "0" ] || [ "${count}" = "0" ]; then break; fi
+    offset=$((offset + 100))
+  done
+  printf '%s\n' "${version}"
+}
+
 cmd="${1:-}"
 case "${cmd}" in
   list)
     shift
     parse_private "$@"
-    req GET /roadmap ${REPLY:+"${REPLY}"}
+    fetch_items ${REPLY:+"${REPLY}"} >/dev/null
+    python3 -c 'import json,sys; print(json.dumps([json.loads(l) for l in sys.stdin if l.strip()]))' < "${TMP_ITEMS}"
     ;;
 
   get)
@@ -262,16 +302,40 @@ case "${cmd}" in
     # then PUT. The private (authenticated) read bypasses the public cache,
     # which can lag one write behind and turn every reorder right after an
     # add into a 409. On 409 the body (current state) is already printed above.
-    version="$(req GET /roadmap --private | python3 -c 'import json, sys; print(json.load(sys.stdin).get("version", 0))')"
-    body="$(python3 - "${version}" "$@" <<'PY'
+    version="$(fetch_items --private)"
+    body="$(TMP_ITEMS="${TMP_ITEMS}" python3 - "${version}" "$@" <<'PY'
 import json
+import os
 import sys
 
-print(json.dumps({"version": int(sys.argv[1]), "items": sys.argv[2:]}))
+version = int(sys.argv[1])
+front = sys.argv[2:]
+placed = set(front)
+rest = []
+with open(os.environ["TMP_ITEMS"], encoding="utf-8") as handle:
+    for line in handle:
+        line = line.strip()
+        if not line:
+            continue
+        ident = json.loads(line).get("id")
+        if ident not in placed:
+            placed.add(ident)
+            rest.append(ident)
+print(json.dumps({"version": version, "items": front + rest}))
 PY
 )"
     if ! req PUT /roadmap/order --auth --body "${body}"; then
-      echo "roadmap.sh: order failed — the version moved; re-run with the ids above" >&2
+      err="$(python3 -c 'import json,sys
+try:
+    print(json.load(open(sys.argv[1], encoding="utf-8")).get("error", ""))
+except Exception:
+    print("")
+' "${TMP_BODY}")"
+      if [ "${err}" = "version_mismatch" ]; then
+        echo "roadmap.sh: order failed — the version moved; re-run with the ids above" >&2
+      else
+        echo "roadmap.sh: order failed — ${err:-unknown error}" >&2
+      fi
       exit 1
     fi
     ;;

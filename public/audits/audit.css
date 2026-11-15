@@ -1,0 +1,633 @@
+/* Audit pages: the site's tokens carry both themes, so every surface below
+   reuses --bg/--ink/--line/--accent and never names a fixed palette. */
+.audit {
+  --audit-accent: var(--accent);
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-block: 3rem 5rem;
+  overflow-x: clip;
+}
+
+.audit-accent--lab {
+  --audit-accent: var(--accent);
+}
+
+.audit-accent--experiment {
+  --audit-accent: var(--canopy);
+}
+
+.audit img,
+.audit video,
+.audit svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.audit table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.audit-cover {
+  position: relative;
+  overflow: hidden;
+  border-block-end: 2px solid var(--audit-accent);
+  padding-block-end: 2rem;
+  margin-block-end: 2rem;
+}
+
+.audit-cover > :not(.audit-cover-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+.audit-cover-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.32;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.audit-cover--bg-image {
+  background-size: cover;
+  background-position: center;
+}
+
+.audit-cover--bg-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: color-mix(in srgb, var(--bg) 74%, transparent);
+}
+
+.audit-cover-bg--lab {
+  background:
+    radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--audit-accent) 20%, transparent), transparent 42%),
+    linear-gradient(135deg, var(--bg-raise), var(--bg));
+}
+
+.audit-cover-bg--experiment {
+  background:
+    radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--canopy) 20%, transparent), transparent 42%),
+    linear-gradient(135deg, var(--bg-raise), var(--bg));
+}
+
+.audit-kicker {
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.audit-cover h1 {
+  margin-block: 0.35rem 0.75rem;
+}
+
+.audit-subtitle {
+  color: var(--ink-dim);
+  font-size: 1.15rem;
+}
+
+.audit-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem 2rem;
+  margin-block: 1.5rem;
+}
+
+.audit-meta dt {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+}
+
+.audit-meta dd {
+  margin: 0;
+}
+
+.audit-scope {
+  max-width: var(--measure);
+  color: var(--ink-dim);
+}
+
+.audit-deliverables {
+  display: grid;
+  gap: 1rem;
+  margin-block-end: 2rem;
+}
+
+.audit-deliverables h2,
+.audit-toc h2,
+.audit-sec-title,
+.audit-auto-findings > h2 {
+  font-family: var(--font-serif);
+}
+
+.audit-deliverable {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-deliverable p {
+  margin: 0 0 0.5rem;
+}
+
+.audit-toc {
+  margin-block-end: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-toc ol {
+  columns: 2;
+  column-gap: 2rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.audit-layout {
+  margin-block-end: 3rem;
+}
+
+.audit-sec-title {
+  margin-block-end: 1rem;
+}
+
+.audit-sec-body {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.audit-layout--single .audit-sec-body {
+  grid-template-columns: minmax(0, 44rem);
+  justify-content: center;
+}
+
+.audit-layout--wide .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.audit-layout--split .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.audit-layout--split.audit-layout--ratio-2-1 .audit-sec-body {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.audit-layout--split.audit-layout--ratio-1-2 .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.audit-layout--split.audit-layout--ratio-3-1 .audit-sec-body {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+}
+
+.audit-layout--split.audit-layout--ratio-1-3 .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+}
+
+.audit-layout--grid .audit-sec-body {
+  --audit-cols: 2;
+  grid-template-columns: repeat(var(--audit-cols), minmax(0, 1fr));
+}
+
+.audit-layout--grid.audit-layout--cols-3 .audit-sec-body {
+  --audit-cols: 3;
+}
+
+.audit-layout--grid.audit-layout--cols-4 .audit-sec-body {
+  --audit-cols: 4;
+}
+
+.audit-block {
+  min-width: 0;
+}
+
+.audit-layout--grid .audit-block {
+  grid-column: span min(var(--audit-span, 1), var(--audit-cols, 2));
+}
+
+.audit-layout--band {
+  background: var(--bg-raise);
+  border-block: 1px solid var(--line);
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+}
+
+.audit-layout--band .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.audit-layout--sidebar .audit-sec-body {
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem);
+  align-items: start;
+}
+
+.audit-aside {
+  position: sticky;
+  top: 1rem;
+  border-inline-start: 2px solid var(--line);
+  padding-inline-start: 1rem;
+}
+
+.audit-aside ol {
+  margin: 0;
+  padding-inline-start: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.audit-callout {
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--audit-accent);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-callout--success { border-inline-start-color: #3d9a50; }
+.audit-callout--warning { border-inline-start-color: #c99a2e; }
+.audit-callout--danger { border-inline-start-color: #b3261e; }
+
+.audit-callout-title {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.audit-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.audit-stats > div {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-raise);
+}
+
+.audit-stats dt {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+}
+
+.audit-stats dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+}
+
+.audit-stat-delta {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
+
+.audit-finding {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-finding-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.audit-sev,
+.audit-status {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.audit-sev--critical { color: #ff8a80; border-color: #b3261e; }
+.audit-sev--high { color: #ffc4a3; border-color: #9a5530; }
+.audit-sev--medium { color: #f0d48a; border-color: #8a6a2c; }
+.audit-sev--low,
+.audit-sev--info,
+.audit-status { color: var(--ink-dim); }
+
+.audit-finding h3 {
+  margin-block: 0 0.5rem;
+}
+
+.audit-finding-area {
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.audit-finding-evidence ul {
+  margin: 0.5rem 0;
+  padding-inline-start: 1.25rem;
+}
+
+.audit-finding > p:last-of-type,
+.audit-finding-evidence + p {
+  margin-block: 0.75rem;
+}
+
+.audit-back,
+.audit-filters button,
+.audit-code-copy,
+.audit-step-btn {
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.audit-back:hover,
+.audit-filters button:hover,
+.audit-code-copy:hover,
+.audit-step-btn:hover {
+  border-color: var(--audit-accent);
+}
+
+.audit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 0.75rem;
+}
+
+.audit-filters button[aria-pressed="true"] {
+  outline: 2px solid var(--audit-accent);
+}
+
+.audit-findingsTable table,
+.audit-riskMatrix table,
+.audit-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.audit-findingsTable th,
+.audit-findingsTable td,
+.audit-riskMatrix th,
+.audit-riskMatrix td,
+.audit-table th,
+.audit-table td {
+  border-block-end: 1px solid var(--line);
+  padding: 0.5rem 0.65rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+.audit-riskMatrix td {
+  min-width: 5rem;
+  text-align: center;
+}
+
+.audit-chart,
+.audit-diagram,
+.audit-figure,
+.audit-code,
+.audit-table {
+  margin: 0;
+}
+
+.audit-chart-mount,
+.audit-diagram-mount {
+  min-height: 8rem;
+}
+
+.audit-chart figcaption,
+.audit-diagram figcaption,
+.audit-figure figcaption,
+.audit-table figcaption,
+.audit-compare figcaption {
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+  margin-block-start: 0.5rem;
+}
+
+.audit-code {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--bg-raise);
+  padding: 0.75rem;
+  position: relative;
+}
+
+.audit-code-copy {
+  position: absolute;
+  top: 0.5rem;
+  inset-inline-end: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+/* The icon slot keeps a fixed 16px box so the morph never shifts layout. */
+.audit-code-copy .copy-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  line-height: 0;
+}
+
+.audit-code-copy .copy-icon > svg,
+.audit-code-copy .copy-icon morph-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.audit-code-copy .copy-icon[data-icon='check'] {
+  color: var(--audit-accent);
+}
+
+.audit-code pre {
+  margin: 0;
+  overflow-x: auto;
+}
+
+.audit-code code {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.audit-code .is-hl {
+  background: color-mix(in srgb, var(--audit-accent) 14%, transparent);
+  display: block;
+}
+
+blockquote {
+  margin: 0;
+  border-inline-start: 3px solid var(--audit-accent);
+  padding-inline-start: 1rem;
+}
+
+blockquote cite {
+  display: block;
+  color: var(--ink-dim);
+  font-style: normal;
+  margin-block-start: 0.5rem;
+}
+
+.audit-timeline {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.audit-timeline li {
+  border-inline-start: 2px solid var(--line);
+  padding-inline-start: 1rem;
+}
+
+.audit-timeline-title {
+  font-weight: 600;
+}
+
+.audit-stepper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.audit-step-btn {
+  width: 100%;
+  text-align: start;
+}
+
+.audit-step-body {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-step-body[hidden] {
+  display: none;
+}
+
+.audit-compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.audit-compare > div {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-raise);
+}
+
+.audit-assetCard {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-raise);
+}
+
+.audit-assetCard-title {
+  font-weight: 600;
+}
+
+.audit-sources ol {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.audit-sources li {
+  border-block-end: 1px solid var(--line);
+  padding-block-end: 0.75rem;
+}
+
+.audit-divider {
+  color: var(--ink-dim);
+  text-align: center;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.audit-auto-findings,
+.audit-auto-sources {
+  margin-block-end: 3rem;
+}
+
+.audit-auto-findings {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.audit-term {
+  position: relative;
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+.audit-term-def {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 100%;
+  z-index: 20;
+  display: none;
+  width: min(24rem, 80vw);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--bg-raise);
+  color: var(--ink);
+  padding: 0.75rem;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+}
+
+.audit-term-def[hidden] {
+  display: none;
+}
+
+.audit-term:hover .audit-term-def,
+.audit-term:focus-within .audit-term-def,
+.audit-term-def:not([hidden]) {
+  display: block;
+}
+
+@media (max-width: 48rem) {
+  .audit-toc ol {
+    columns: 1;
+  }
+
+  .audit-layout--split .audit-sec-body,
+  .audit-layout--grid .audit-sec-body,
+  .audit-layout--grid.audit-layout--cols-3 .audit-sec-body,
+  .audit-layout--grid.audit-layout--cols-4 .audit-sec-body,
+  .audit-layout--sidebar .audit-sec-body,
+  .audit-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .audit-block {
+    grid-column: auto;
+  }
+
+  .audit-aside {
+    position: static;
+  }
+}

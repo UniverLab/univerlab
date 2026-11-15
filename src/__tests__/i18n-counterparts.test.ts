@@ -8,7 +8,6 @@ import { hasCounterpart } from '../i18n';
 describe('hasCounterpart over the built page tree', () => {
   it('static routes', () => {
     expect(hasCounterpart('/experiments/', 'es')).toBe(true);
-    expect(hasCounterpart('/status/', 'es')).toBe(false);
     expect(hasCounterpart('/roadmap/', 'es')).toBe(false);
   });
   it('parameter routes match one segment', () => {

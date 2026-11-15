@@ -13,12 +13,18 @@ export function hostCanvas(host: HTMLElement): {
   canvas.style.width = '100%';
   canvas.style.height = '100%';
   canvas.style.pointerEvents = 'none';
+  // Sized from the host rect before the first paint: appending a default
+  // 300x150 canvas and resizing after would move the background (CLS).
+  const firstRect = host.getBoundingClientRect();
+  const firstDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  canvas.width = Math.max(1, Math.floor(Math.max(1, Math.floor(firstRect.width)) * firstDpr));
+  canvas.height = Math.max(1, Math.floor(Math.max(1, Math.floor(firstRect.height)) * firstDpr));
   host.appendChild(canvas);
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
-  let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  let w = 0;
-  let h = 0;
+  let dpr = firstDpr;
+  let w = Math.max(1, Math.floor(firstRect.width));
+  let h = Math.max(1, Math.floor(firstRect.height));
 
   const resize = () => {
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);

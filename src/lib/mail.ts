@@ -3,6 +3,7 @@
 // script runs these and paints the result.
 
 import { dayKey, summaryText } from './science-filter';
+import { entryTexts } from './field-notes';
 
 /** One announcement of the public feed (GET https://announcements.univerlab.org). */
 export interface Announcement {
@@ -11,6 +12,8 @@ export interface Announcement {
   date: string;
   title: string;
   body: string;
+  title_es?: string | null;
+  body_es?: string | null;
   type?: string | null;
   topic?: string | null;
   link?: string | null;
@@ -127,6 +130,7 @@ export function labLetters(
   opened: string[],
   now: Date,
   exps: ExperimentInfo[],
+  lang: 'en' | 'es' = 'en',
 ): LabLetter[] {
   const floor = now.getTime() - LAB_MAIL_MAX_AGE_MS;
   return (entries || [])
@@ -138,13 +142,14 @@ export function labLetters(
     .map((e) => {
       const topic = typeof e.topic === 'string' ? e.topic.toLowerCase() : '';
       const exp = exps.find((x) => x.id === topic);
+      const texts = entryTexts(e, lang);
       return {
         kind: 'lab' as const,
         id: e.id,
-        title: e.title || '',
-        body: firstParagraph(e.body),
+        title: texts.title,
+        body: firstParagraph(texts.body),
         type: e.type || '',
-        link: exp ? `/status/?topic=${exp.id}` : '/status/',
+        link: exp ? `/newspaper/?topic=${exp.id}#lab` : '/newspaper/#lab',
         date: e.date,
         exp,
       };

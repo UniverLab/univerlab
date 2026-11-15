@@ -6,7 +6,6 @@
  *  frame, the screen's viewer rectangle and the machine plates. The screen
  *  itself is decorative; every string it shows also exists in the page.
  */
-import { formatSolLabel } from '../lib/mission-time';
 import { liveExperiments, type Experiment } from '../lib/experiments';
 import { fondoLoaders } from './fondos/index';
 import type { Fondo } from './fondos/runtime';
@@ -33,7 +32,7 @@ export function startLantern(): void {
   const slides = Array.from(screen.querySelectorAll<HTMLElement>('.slide'));
   if (slides.length === 0) return;
   const plates = Array.from(document.querySelectorAll<HTMLButtonElement>('.plate[data-exp]'));
-  const pauseBtn = document.getElementById('lantern-pause') as HTMLElement | null;
+  const pauseBtn = document.getElementById('lantern-pause') as HTMLButtonElement | null;
   const pausedPlate = document.getElementById('lantern-paused');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -210,10 +209,14 @@ export function startLantern(): void {
     phase = next;
 
     // Every <source data-phase> pair (lantern frame + machine plates) flips
-    // together: the inactive phase is parked behind `media="not all"`.
+    // together: the newly shown phase's data-srcset populates into srcset so
+    // it downloads, the inactive phase parks behind `media="not all"`.
     document.querySelectorAll<HTMLSourceElement>('source[data-phase]').forEach((source) => {
-      if (source.dataset.phase === phase) source.removeAttribute('media');
-      else source.setAttribute('media', 'not all');
+      if (source.dataset.phase === phase) {
+        const ds = source.getAttribute('data-srcset');
+        if (ds && !source.hasAttribute('srcset')) source.setAttribute('srcset', ds);
+        source.removeAttribute('media');
+      } else source.setAttribute('media', 'not all');
     });
 
     // The <img> fallback follows too (and carries the intrinsic box).
@@ -244,30 +247,6 @@ export function startLantern(): void {
     attributeFilter: ['data-bench-theme'],
   });
   window.addEventListener('univerlab:themechange', applyPhase);
-
-  // ── Imprint: the build's Sol, refreshed on load ──────────────────────────
-  const imprint = document.getElementById('imprint');
-  if (imprint) {
-    const now = new Date();
-    imprint.textContent = `${now.getFullYear()} · ${formatSolLabel(now.toISOString())} · univerlab.org`;
-  }
-
-  // ── Horizon: cut the sea lines to the motto's measured width ─────────────
-  const measureHorizon = (): void => {
-    const text = document.getElementById('horizon-text') as SVGTextElement | null;
-    const gap = document.getElementById('horizon-gap');
-    if (!text || !gap) return;
-    try {
-      const box = text.getBBox();
-      gap.setAttribute('x', (box.x - 26).toFixed(1));
-      gap.setAttribute('width', (box.width + 52).toFixed(1));
-    } catch (_) {
-      /* not laid out yet */
-    }
-  };
-  requestAnimationFrame(measureHorizon);
-  if (document.fonts?.ready) void document.fonts.ready.then(measureHorizon);
-  window.addEventListener('resize', measureHorizon);
 
   // ── Slides ───────────────────────────────────────────────────────────────
   const videos = slides.map((slide) => slide.querySelector('video'));
@@ -350,9 +329,10 @@ export function startLantern(): void {
 
   // ── Pause toggle ─────────────────────────────────────────────────────────
   if (pauseBtn) {
-    // The projector (<picture id="lantern-pause">) carries the control: the
+    // The projector (<button id="lantern-pause">) carries the control: the
     // label moves through aria-label — textContent would destroy the sources
-    // and the <img> inside the picture (T3).
+    // and the <img> inside the picture (T3). Enter/Space come free with the
+    // native button, so there is no keydown handler.
     const togglePause = (): void => {
       paused = !paused;
       pauseBtn.setAttribute('aria-pressed', String(paused));
@@ -370,12 +350,6 @@ export function startLantern(): void {
       }
     };
     pauseBtn.addEventListener('click', togglePause);
-    pauseBtn.addEventListener('keydown', (ev) => {
-      if ((ev as KeyboardEvent).key === 'Enter' || (ev as KeyboardEvent).key === ' ') {
-        ev.preventDefault();
-        togglePause();
-      }
-    });
   }
 
   // A hidden tab stops cycle and clip; a bfcache restore fires no
@@ -442,7 +416,23 @@ export function startLantern(): void {
   };
   new ResizeObserver(sizeFilm).observe(film);
   new IntersectionObserver(([entry]) => {
-    onView = entry?.isIntersecting ?? true;
+    const vis = entry?.isIntersecting ?? true;
+    const was = onView;
+    onView = vis;
+    if (!vis) {
+      // Off-screen the rotation costs nothing: park every clip unloaded.
+      videos.forEach((video) => {
+        if (!video) return;
+        video.pause();
+        video.preload = 'none';
+      });
+    } else if (!was) {
+      // Back on view: the current clip resumes and the next one preloads,
+      // with a full cycle before the next cut (the rotation was parked).
+      lastTurn = performance.now();
+      syncPreload();
+      playCurrent();
+    }
   }).observe(screen);
 
   const drawFilm = (now: number): void => {
@@ -497,7 +487,7 @@ export function startLantern(): void {
       setWorld(false);
       lastTouch = 0;
     }
-    if (!reduce && !paused && held < 0 && !inWorld && !document.hidden && now - lastTurn > CYCLE_MS) {
+    if (!reduce && onView && !paused && held < 0 && !inWorld && !document.hidden && now - lastTurn > CYCLE_MS) {
       show((current + 1) % slides.length);
     }
     drawFilm(now);

@@ -3,6 +3,8 @@ import ExperimentLayout from '../../layouts/ExperimentLayout.astro';
 import { getLang, useTranslations } from '../../i18n';
 import { byId } from '../../lib/experiments';
 import { readBoilerplates } from '../../lib/catalogs';
+import { iconSvg } from '../../lib/icon-svg';
+import { arrowUpRight } from '../../lib/icons';
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
 const e = t.experiments.ghscaff;
@@ -58,12 +60,12 @@ const boilerplates = readBoilerplates();
           </tbody>
         </table>
         <p class="use">{e.boilerplates.use} <code>ghscaff new</code></p>
-        <p class="repo"><a href={e.subproject.link}>{e.subproject.name} ↗</a></p>
+        <p class="repo"><a href={e.subproject.link}>{e.subproject.name} <span class="ext-icon" set:html={iconSvg(arrowUpRight, { size: 12 })} /></a></p>
       </div>
     ) : (
       <div class="sub">
         <span class="label">{e.subproject.kicker}</span>
-        <h3><a href={e.subproject.link}>{e.subproject.name} ↗</a></h3>
+        <h3><a href={e.subproject.link}>{e.subproject.name} <span class="ext-icon" set:html={iconSvg(arrowUpRight, { size: 12 })} /></a></h3>
       </div>
     )}
   </section>
@@ -116,6 +118,9 @@ const boilerplates = readBoilerplates();
   .catalog td.name { font-family: var(--font-mono); color: var(--ink); }
   .catalog td.version { font-family: var(--font-mono); color: var(--ink-dim); font-size: 0.85em; }
   .sub h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+  /* External-link mark: a 12px Lucide arrow riding the baseline. */
+  .ext-icon { display: inline-flex; width: 12px; height: 12px; line-height: 0; vertical-align: baseline; }
+  .ext-icon > svg { width: 12px; height: 12px; display: block; }
   .sub .use { margin: 0.8rem 0 0; color: var(--ink-dim); font-size: 0.97rem; }
   .sub h3 a { color: var(--surface-essence); text-decoration: none; }
   .sub p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }

@@ -74,11 +74,31 @@ export const STATIC_RULES: readonly string[] = [
   '/es/demo-stage /es/demostage/ 301',
   '/research /astro-denoise/ 301',
   '/es/research /es/astro-denoise/ 301',
-  '/es/status /status/ 301',
-  '/es/status/ /status/ 301',
-  // /roadmap/ is English-only like /status/.
+  '/today /newspaper/ 301',
+  '/today/ /newspaper/ 301',
+  '/es/today /es/newspaper/ 301',
+  '/es/today/ /es/newspaper/ 301',
+  '/status /newspaper/#lab 301',
+  '/status/ /newspaper/#lab 301',
+  '/status/index.md /newspaper/index.md 301',
+  '/es/status /es/newspaper/#lab 301',
+  '/es/status/ /es/newspaper/#lab 301',
+  '/es/status/index.md /es/newspaper/index.md 301',
+  // /roadmap/ is English-only: the Spanish spelling redirects to it.
   '/es/roadmap /roadmap/ 301',
   '/es/roadmap/ /roadmap/ 301',
+  // /audit-shell/ is English-only too: the edge fills it at request time and
+  // never serves it directly, so it has no /es twin either.
+  '/es/audit-shell /audit-shell/ 301',
+  '/es/audit-shell/ /audit-shell/ 301',
+  // /workbench/book/ moved into a section of the Workbench page: old links
+  // land on the form through its anchor, like /status above.
+  '/workbench/book /workbench/#first-call 301',
+  '/workbench/book/ /workbench/#first-call 301',
+  '/workbench/book/index.md /workbench/index.md 301',
+  '/es/workbench/book /es/workbench/#primera-llamada 301',
+  '/es/workbench/book/ /es/workbench/#primera-llamada 301',
+  '/es/workbench/book/index.md /es/workbench/index.md 301',
   // Docs are English-only, so the Spanish spellings Google crawled are a
   // whole-segment mistake: send them to the English page rather than 404.
   '/es/:id/docs/* /:id/docs/:splat 301',

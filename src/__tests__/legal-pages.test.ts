@@ -10,6 +10,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { en } from '../i18n/en';
+import { es } from '../i18n/es';
 import { LEGAL_DATE, legalDoc, type LegalDoc } from '../data/legal';
 import { legalNav } from '../data/legal-nav';
 import { privacyEn, termsEn } from '../data/legal-en';
@@ -312,7 +313,16 @@ describe('one date constant, shared section ids, bounded metadata', () => {
     const hits = blobs.flatMap((b) => b.match(/\d{4}-\d{2}-\d{2}/g) ?? []);
     expect(hits.length).toBeGreaterThan(0);
     expect(hits).toEqual(hits.map(() => LEGAL_DATE));
-    expect(LEGAL_DATE).toBe('2026-11-11');
+    expect(LEGAL_DATE).toBe('2026-11-13');
+  });
+
+  it('the terms carry the workbench bookings section from the dictionaries', () => {
+    const enSection = termsEn.sections.find((s) => s.id === 'workbench-bookings');
+    const esSection = termsEs.sections.find((s) => s.id === 'workbench-bookings');
+    expect(enSection).toBeDefined();
+    expect(esSection).toBeDefined();
+    expect(enSection!.items).toEqual(en.workbench.policy.items);
+    expect(esSection!.items).toEqual(es.workbench.policy.items);
   });
 
   it('English and Spanish sections share ids in the same order', () => {
@@ -333,5 +343,32 @@ describe('one date constant, shared section ids, bounded metadata', () => {
       expect(doc.description.length).toBeGreaterThanOrEqual(120);
       expect(doc.description.length).toBeLessThanOrEqual(160);
     }
+  });
+});
+
+describe('paid services not denied', () => {
+  const enUsing = termsEn.sections.find((s) => s.id === 'using-the-services')!;
+  const esUsing = termsEs.sections.find((s) => s.id === 'using-the-services')!;
+
+  it('scoped to free tools', () => {
+    expect(enUsing.paras).toHaveLength(4);
+    expect(esUsing.paras).toHaveLength(4);
+    expect(enUsing.paras[1]).toMatch(/free and open-source/);
+    expect(enUsing.paras[1]).not.toContain('any service, or your access');
+    expect(esUsing.paras[1]).toMatch(/gratuito y de código abierto/);
+    expect(esUsing.paras[1]).not.toContain('cualquier servicio, o tu acceso');
+  });
+
+  it('paid scope in writing', () => {
+    expect(enUsing.paras[2]).toContain('Workbench pages');
+    expect(enUsing.paras[2]).toContain('written scope agreed before starting');
+    expect(enUsing.paras[2]).toContain('support period');
+    expect(enUsing.paras[2]).toContain('verification of fixes');
+    expect(enUsing.paras[2]).toContain('cannot change that scope on its own');
+    expect(esUsing.paras[2]).toContain('páginas del Banco de trabajo');
+    expect(esUsing.paras[2]).toContain('alcance escrito acordado');
+    expect(esUsing.paras[2]).toContain('periodo de soporte');
+    expect(esUsing.paras[2]).toContain('verificación de las correcciones');
+    expect(esUsing.paras[2]).toContain('no puede cambiar por su cuenta ese alcance');
   });
 });

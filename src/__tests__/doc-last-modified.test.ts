@@ -8,7 +8,10 @@
  * means "when the runner checked the repository out" and would report every
  * page as freshly rewritten on every deploy.
  */
-import { isAbsolute, relative, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 
 import { docLastModified, docsFileFor, type GitExec } from '../lib/doc-last-modified';
 
@@ -126,5 +129,69 @@ describe('docLastModified', () => {
     // the date must be one git could have produced — not build time.
     const value = docLastModified(ADR);
     if (value !== null) expect(Number.isNaN(Date.parse(value))).toBe(false);
+  });
+});
+
+describe('prebuild snapshot', () => {
+  // The build renders each docs page twice — once when the content collection
+  // syncs (the visible "Last updated" line) and once when the page renders
+  // (dateModified). A sibling repo that commits between those two moments used
+  // to give the two renderings two different git dates and fail check-seo, so
+  // `prebuild` snapshots every docs date to one file and both call sites read
+  // that file instead of shelling out. UNIVERLAB_DOCS_DATES_SNAPSHOT points the
+  // lookup at a fixture so these tests never touch the real snapshot.
+  const SNAP_KEY = 'UNIVERLAB_DOCS_DATES_SNAPSHOT';
+  const probe = resolve(ROOT, '../facetmedia/docs/__snapshot-probe.md');
+  // A real sibling file no other test queries, so the module memo cannot leak
+  // across tests: git would answer a date for it, the closed world answers
+  // null.
+  const realSibling = resolve(ROOT, '../facetmedia/docs/commands.md');
+
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'docs-dates-'));
+    process.env[SNAP_KEY] = join(dir, 'snapshot.json');
+  });
+  afterEach(() => {
+    delete process.env[SNAP_KEY];
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('answers from the snapshot — git could never produce this date', () => {
+    // `probe` exists in no checkout: git answers null for it, so a date here
+    // proves the snapshot, not a subprocess, is the source.
+    writeFileSync(process.env[SNAP_KEY]!, JSON.stringify({ [probe]: '2026-11-13T17:40:14-05:00' }));
+    expect(docLastModified(probe)).toBe('2026-11-13T17:40:14-05:00');
+  });
+
+  it('treats a present snapshot as a closed world: absent key means no date', () => {
+    // The snapshot names only `probe`, so `realSibling` is absent — and the
+    // file on disk really does have history, so null here proves the lookup
+    // never falls through to git while a snapshot is present.
+    writeFileSync(process.env[SNAP_KEY]!, JSON.stringify({ [probe]: '2026-11-13T17:40:14-05:00' }));
+    expect(docLastModified(realSibling)).toBeNull();
+  });
+
+  // Only where the sibling has real history: CI clones siblings shallow on
+  // purpose, and a shallow clone answers no date by design.
+  const failOpenFile = resolve(ROOT, '../facetmedia/docs/preview.md');
+  const hasHistory = ((): boolean => {
+    try {
+      return (
+        existsSync(failOpenFile) &&
+        execFileSync('git', ['-C', resolve(ROOT, '../facetmedia'), 'rev-parse', '--is-shallow-repository'], { encoding: 'utf8' }).trim() === 'false'
+      );
+    } catch {
+      return false;
+    }
+  })();
+  (hasHistory ? it : it.skip)('fails open to git when the snapshot is unparseable', () => {
+    // Garbage bytes are the same as no snapshot: the lookup shells out. A
+    // dedicated sibling file (no other test queries it, so the memo is cold)
+    // with real history proves git ran by answering a date.
+    writeFileSync(process.env[SNAP_KEY]!, 'not json{');
+    const value = docLastModified(failOpenFile);
+    expect(value).not.toBeNull();
+    expect(Number.isNaN(Date.parse(value!))).toBe(false);
   });
 });

@@ -1,0 +1,80 @@
+name: Deploy whatsapp worker
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI on main
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: workers/whatsapp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: workers/whatsapp
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: workers/whatsapp
+        run: npm run typecheck
+
+      # No wranglerVersion pin: the action reuses the wrangler from package-lock,
+      # so CI and local deploy the same version.
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/whatsapp
+          command: deploy
+          secrets: |
+            WA_APP_SECRET
+            WA_VERIFY_TOKEN
+            WA_ACCESS_TOKEN
+            WA_PHONE_NUMBER_ID
+            OPERATOR_PHONE
+            GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET
+            GOOGLE_REFRESH_TOKEN
+            TURNSTILE_SECRET
+          # The text model and the booking configuration are configuration,
+          # not code: change the environment variables and re-run this
+          # workflow, no commit or release needed.
+          vars: |
+            TEXT_MODEL
+            TEXT_MODEL_OPTIONS
+            WORKBENCH_CALENDAR_ID
+            BOOKING_CONFIG
+            GUARD_CONFIG
+            AGENDA_CONFIG
+        env:
+          WA_APP_SECRET: ${{ secrets.WA_APP_SECRET }}
+          WA_VERIFY_TOKEN: ${{ secrets.WA_VERIFY_TOKEN }}
+          WA_ACCESS_TOKEN: ${{ secrets.WA_ACCESS_TOKEN }}
+          WA_PHONE_NUMBER_ID: ${{ secrets.WA_PHONE_NUMBER_ID }}
+          OPERATOR_PHONE: ${{ secrets.OPERATOR_PHONE }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          TEXT_MODEL: ${{ vars.WA_TEXT_MODEL }}
+          TEXT_MODEL_OPTIONS: ${{ vars.WA_TEXT_MODEL_OPTIONS }}
+          WORKBENCH_CALENDAR_ID: ${{ vars.WA_WORKBENCH_CALENDAR_ID }}
+          BOOKING_CONFIG: ${{ vars.WA_BOOKING_CONFIG }}
+          GUARD_CONFIG: ${{ vars.WA_GUARD_CONFIG }}
+          AGENDA_CONFIG: ${{ vars.WA_AGENDA_CONFIG }}

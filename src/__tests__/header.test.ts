@@ -19,6 +19,16 @@ describe('Header experiments link', () => {
     expect(expIdx).toBeLessThan(manifestoIdx);
   });
 
+  it('links the Workbench nav entry after People and before The Observable', () => {
+    const p = src.indexOf('t.nav.people');
+    const w = src.indexOf('t.nav.workbench');
+    const g = src.indexOf('t.nav.observable');
+    expect(p).toBeGreaterThan(-1);
+    expect(w).toBeGreaterThan(p);
+    expect(g).toBeGreaterThan(w);
+    expect(src).toContain("href: localizePath('/workbench', lang)");
+  });
+
   it('renders <a href="/experiments/"> in English and <a href="/es/experiments/"> in Spanish', () => {
     // The one nav entry builds its href from localizePath('/experiments', lang)
     // (asserted above), so the anchor the shared header renders per language is…
@@ -44,11 +54,73 @@ describe('Header experiments link', () => {
     expect(src).toContain("aria-current={navActive(item as any) ? 'page' : undefined}");
   });
 
-  it('keeps the burger working: link close, Escape closes the menu, collapse at 1024px', () => {
+  it('keeps the burger working: link close, Escape closes the menu, JS fit-check fold', () => {
     expect(src).toContain("siteNav.querySelectorAll('a').forEach");
     expect(src).toContain("if (e.key === 'Escape') setOpen(false)");
-    expect(src).toContain('@media (max-width: 1024px)');
+    // The fold is a measured class, not a fixed breakpoint: no width query left.
+    expect(src).toContain('nav-burger');
+    expect(src).toContain("classList.toggle('nav-burger'");
+    // The fit-check reads the unfolded bar (fold off before measuring): the
+    // folded rule releases the brand reserve, so measuring while folded
+    // would under-read and flap between states on every observer tick.
+    expect(src).toContain("classList.remove('nav-burger')");
+    // The fit is measured against the content box, not the padding box:
+    // overflow into the bar's padding-right (the mailbox gutter) never grows
+    // scrollWidth, so a scrollWidth-vs-clientWidth check folds ~50px too low
+    // and leaves the last menu item under the fixed mailbox.
+    expect(src).toContain('paddingRight');
+    expect(src).toContain('getBoundingClientRect');
+    expect(src).not.toContain('bar.scrollWidth > bar.clientWidth');
+    expect(src).toContain('ResizeObserver');
+    expect(src).not.toContain('@media (max-width: 1024px)');
     expect(src).not.toMatch(/@media \(max-width: 900px\)/);
+    // The menu never wraps: the nav stays on one line and labels stay whole,
+    // folding into the burger instead. Breaks on a two-row regression or a
+    // fixed breakpoint returning.
+    expect(src).toMatch(/nav a \{[^}]*white-space: nowrap/);
+    expect(src).toMatch(/nav \{[^}]*flex-wrap: nowrap/);
+    // The single row must fit at 1180px in Spanish too (longest labels):
+    // the nav gap is 0.85rem per the design spec — the room comes from the
+    // brand reserve (NameGloss probes at the compact --ng-* sizes), not from
+    // squeezing the menu, so the fit never depends on hiding overflow.
+    expect(src).toMatch(/nav \{[^}]*gap: 0\.85rem/);
+  });
+
+  it('reserves the brand width up front and folds the mailbox with the burger', () => {
+    const NAMEGLOSS = readFileSync(resolve(__dirname, '..', 'components', 'NameGloss.astro'), 'utf8');
+    const MAIL = readFileSync(resolve(__dirname, '..', 'styles', 'mail.css'), 'utf8');
+    // NameGloss measures its widest suffix + gloss in a clone and pins .home.
+    expect(NAMEGLOSS).toContain("closest('.home')");
+    expect(NAMEGLOSS).toContain('dataset.brandW');
+    expect(NAMEGLOSS).toContain('cloneNode');
+    // The probe lives inside .home (still position:fixed, so out of layout)
+    // so it inherits the bar's compact --ng-* vars; on document.body it
+    // measured at default sizes and the reserve never narrowed.
+    expect(NAMEGLOSS).toContain('home.appendChild(probe)');
+    expect(NAMEGLOSS).not.toContain('document.body.appendChild(probe)');
+    // The measure runs inline while the document parses and exactly once: a
+    // deferred re-measure on fonts.ready would move the header after paint.
+    expect(NAMEGLOSS).toContain('<script is:inline>');
+    expect(NAMEGLOSS).not.toContain('document.fonts');
+    expect(NAMEGLOSS).not.toContain('fonts.ready');
+    // The mailbox no longer clears the burger on its own breakpoint: the
+    // header's nav-burger rule carries the small mailbox instead.
+    expect(MAIL).not.toContain('max-width: 1024px');
+    expect(src).toContain('.mailbox');
+  });
+
+  it('draws the burger and the sponsor heart from the shared Lucide lib', () => {
+    expect(src).toContain("import { iconSvg } from '../lib/icon-svg'");
+    expect(src).toMatch(/import \{ heart, menu, xIcon \} from '\.\.\/lib\/icons'/);
+    // Stacked marks: the menu shows collapsed, the X open — no hand-drawn bars.
+    expect(src).toMatch(/set:html=\{iconSvg\(menu, \{ size: 20 \}\)\}/);
+    expect(src).toMatch(/set:html=\{iconSvg\(xIcon, \{ size: 20 \}\)\}/);
+    expect(src).not.toContain('class="bars"');
+    expect(src).not.toMatch(/\.bars::before/);
+    expect(src).toMatch(/\.burger\[aria-expanded='true'\] \.burger-close/);
+    // The sponsor mark is the same heart at 12px, not a pasted path.
+    expect(src).toMatch(/set:html=\{iconSvg\(heart, \{ size: 12 \}\)\}/);
+    expect(src).not.toContain('M20.84 4.61');
   });
 });
 
@@ -219,7 +291,8 @@ describe('celestial button is circadian-only', () => {
 
   it('declares a circadian prop defaulting to true and gates the button on it', () => {
     expect(src).toMatch(/interface Props \{[^}]*circadian\?: boolean/);
-    expect(src).toMatch(/const \{ circadian = true \} = Astro\.props;/);
+    expect(src).toMatch(/interface Props \{[^}]*langCorner\?: boolean/);
+    expect(src).toMatch(/const \{ circadian = true, langCorner = true \} = Astro\.props;/);
     // The gate wraps ONLY the button: ruler, guard, then the mailbox outside it.
     expect(src).toMatch(/\{circadian && \(\s*<button class="celestial-btn"/);
     const rulerIdx = src.indexOf('<span class="sky-ruler"');
@@ -241,7 +314,7 @@ describe('celestial button is circadian-only', () => {
   });
 
   it('forwards BaseLayout’s own circadian value to the header', () => {
-    expect(BASE).toMatch(/<Header circadian=\{circadian\} \/>/);
+    expect(BASE).toMatch(/<Header circadian=\{circadian\} langCorner=\{langCorner\} \/>/);
   });
 
   it('keeps the disc on quorum: ExperimentLayout forwards the registry flag', () => {
@@ -255,5 +328,22 @@ describe('celestial button is circadian-only', () => {
     const quorumLine = registry.match(/\{ id: 'quorum'[^}]*\}/);
     expect(quorumLine).not.toBeNull();
     expect(quorumLine![0]).toMatch(/circadian: true/);
+  });
+});
+
+describe('Header accessible names', () => {
+  it('names the sponsor link in the page language', () => {
+    // The sponsor mark is a heart icon with its text visually hidden: without
+    // a name it fails link-name, so the link carries the localized name.
+    expect(src).toContain('aria-label={(item as any).sponsor ? t.nav.sponsors : undefined}');
+    expect(en.nav.sponsors).toBe('sponsor');
+    expect(es.nav.sponsors).toBe('sponsor');
+  });
+
+  it('leaves the home link unnamed so its name falls back to the visible wordmark', () => {
+    // label-content-name-mismatch: aria-label="UniverLab" did not contain the
+    // visible slogan, so the label is gone and the name comes from content.
+    expect(src).toContain('<a href={localizePath(\'/\', lang)} class="home">');
+    expect(src).not.toMatch(/class="home"[^>]*aria-label/);
   });
 });

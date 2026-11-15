@@ -3,7 +3,7 @@
  * rewrite, the redirect generator, and the check script that guards all three.
  *
  * The pure helpers are tested against fixtures so the suite needs no `dist/`;
- * the checked-in sources (`astro.config.mjs`, `public/_redirects`, the today
+ * the checked-in sources (`astro.config.mjs`, `public/_redirects`, the newspaper
  * pages, the removed stubs) are asserted directly, which is what catches a
  * regression at PR time rather than after the next deploy.
  */
@@ -323,20 +323,38 @@ describe('astro.config.mjs', () => {
     expect(config).not.toContain('rehypePlugins');
   });
 
-  it('filters today out of the sitemap', () => {
+  it('filters the newspaper out of the sitemap', () => {
     expect(config).toContain('SITEMAP_EXCLUDED');
-    for (const p of ['/today', '/es/today']) expect(config).toContain(`'${p}'`);
+    for (const p of ['/newspaper', '/es/newspaper']) expect(config).toContain(`'${p}'`);
+  });
+
+  it('filters the Logbook out of the sitemap like the newspaper', () => {
+    // The sitemap filter cannot know the build-time entries, so a build with
+    // no entries would list a noindex URL — the "Excluded by noindex" error
+    // checkSitemap reports. Like the newspaper, the Logbook stays out.
+    for (const p of ['/logbook', '/es/logbook']) expect(config).toContain(`'${p}'`);
   });
 });
 
 describe('noindex placement', () => {
-  it.each(['src/pages/today.astro', 'src/pages/es/today.astro'])('%s sets noindex', (p) => {
+  it.each(['src/pages/newspaper.astro', 'src/pages/es/newspaper.astro'])('%s sets noindex', (p) => {
     expect(read(p)).toMatch(/<BaseLayout[^>]*\bnoindex\b/);
   });
 
   it.each(['src/pages/archive.astro', 'src/pages/es/archive.astro'])('%s stays indexable', (p) => {
     expect(read(p)).not.toContain('noindex');
   });
+
+  it.each(['src/pages/logbook.astro', 'src/pages/es/logbook.astro'])(
+    '%s is noindex only when the built page holds no entries',
+    (p) => {
+      // A static noindex would drop a healthy Logbook from the index; an
+      // always-indexable shell would put an empty noindex page in the
+      // sitemap. The flag follows the build-time entries instead.
+      expect(read(p)).toContain('noindex={initialEntries.length === 0}');
+      expect(read(p)).not.toMatch(/<BaseLayout[^>]*\bnoindex[}\s]/);
+    },
+  );
 });
 
 describe('removed Astro.redirect stubs', () => {
@@ -399,12 +417,12 @@ describe('check-seo', () => {
   it('flags a sitemap URL that is noindex (the "Excluded by noindex" report)', () => {
     const dist = distFixture({
       'sitemap-index.xml': SITEMAP_INDEX,
-      'sitemap-0.xml': '<urlset><url><loc>https://univerlab.org/today/</loc></url></urlset>',
-      'today/index.html': page(NOINDEX),
+      'sitemap-0.xml': '<urlset><url><loc>https://univerlab.org/newspaper/</loc></url></urlset>',
+      'newspaper/index.html': page(NOINDEX),
     });
     try {
       expect(checkSitemap(dist)).toEqual([
-        'sitemap: https://univerlab.org/today/ is noindex — drop it from the sitemap filter instead',
+        'sitemap: https://univerlab.org/newspaper/ is noindex — drop it from the sitemap filter instead',
       ]);
     } finally {
       rmSync(dist, { recursive: true, force: true });
@@ -440,7 +458,7 @@ describe('check-seo', () => {
     const dist = distFixture({ '_redirects': '/sitemap.xml /sitemap-index.xml 301\n' });
     try {
       const failures = checkRedirects(dist);
-      expect(failures).toContain('_redirects: missing static rule "/es/status /status/ 301"');
+      expect(failures).toContain('_redirects: missing static rule "/status/ /newspaper/#lab 301"');
       expect(failures).toContain('_redirects: missing docs rename rule "/canopy/docs/loops/ /canopy/docs/graphs/ 301"');
       expect(failures).toContain('_redirects: /gitkit/docs/builds.md is crawled as a URL but has no rule');
     } finally {
@@ -530,7 +548,7 @@ describe('checkMetaDescriptions', () => {
   });
 
   it('skips noindex pages', () => {
-    const dist = distFixture({ 'today/index.html': page(NOINDEX + meta(desc(40, 't'))) });
+    const dist = distFixture({ 'newspaper/index.html': page(NOINDEX + meta(desc(40, 't'))) });
     try {
       expect(checkMetaDescriptions(dist)).toEqual([]);
     } finally {
@@ -598,7 +616,7 @@ describe('checkTitles', () => {
   });
 
   it('skips noindex pages', () => {
-    const dist = distFixture({ 'today/index.html': `<head>${NOINDEX}<title>${s(5, 't')}</title></head>` });
+    const dist = distFixture({ 'newspaper/index.html': `<head>${NOINDEX}<title>${s(5, 't')}</title></head>` });
     try {
       expect(checkTitles(dist)).toEqual([]);
     } finally {
@@ -1078,23 +1096,35 @@ describe('checkDocsPages', () => {
  * every page in production even though every assertion above still passes.
  */
 describe('deploy-site.yml checkout depth', () => {
+  // The release deploy builds through the shared build-site action (the
+  // preview deploy uses it too), so the sibling checkouts live there.
   const workflow = read('.github/workflows/deploy-site.yml');
-  const checkouts = workflow
+  const build = read('.github/actions/build-site/action.yml');
+  const checkouts = build
     .split(/\n(?=\s+- uses: actions\/checkout)/)
     .filter((s) => s.includes('actions/checkout@v4') && s.includes('repository:'));
 
   it('checks out every sibling repo with full history', () => {
-    expect(checkouts.length).toBe(8); // 5 docs repos + canopy-registry + texforge-templates + ghscaff-boilerplate
+    expect(checkouts.length).toBe(10); // 6 docs repos + canopy-registry + texforge-templates + ghscaff-boilerplate + facetmedia-registry
     for (const block of checkouts) {
       const repo = /repository:\s*(\S+)/.exec(block)?.[1];
       expect(repo).toBeDefined();
-      if (repo === 'UniverLab/texforge-templates' || repo === 'UniverLab/ghscaff-boilerplate') {
-        // Sparse catalog checkouts: no full history needed.
+      if (
+        repo === 'UniverLab/texforge-templates' ||
+        repo === 'UniverLab/ghscaff-boilerplate' ||
+        block.includes('facetmedia-registry')
+      ) {
+        // Sparse catalog checkouts — and the registry, pinned at a ref and
+        // read at build time but never a date source: no full history needed.
         expect(block).not.toContain('fetch-depth: 0');
       } else {
         expect(block).toContain('fetch-depth: 0');
       }
     }
+  });
+
+  it('builds the release through the shared build-site action', () => {
+    expect(workflow).toContain('uses: ./univerlab/.github/actions/build-site');
   });
 
   it('leaves the landing checkout itself alone (it is never a date source)', () => {
@@ -1108,7 +1138,7 @@ describe('deploy-site.yml checkout depth', () => {
     // `demo-stage` 302s to `demostage`, but the *path* is what breaks the
     // build: under `demo-stage` the collection resolves to nothing, and
     // getCollection warns and returns [] instead of failing.
-    for (const file of ['.github/workflows/deploy-site.yml', '.github/workflows/ci.yml']) {
+    for (const file of ['.github/actions/build-site/action.yml', '.github/workflows/ci.yml']) {
       const src = read(file);
       expect(src).toContain('repository: UniverLab/demostage');
       expect(src).toContain('path: demostage');

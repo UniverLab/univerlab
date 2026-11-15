@@ -1,5 +1,5 @@
 import { roadmapLanesHtml } from '../lib/roadmap-board';
-import { activeRoadmap, laneRows, LANE_ORDER, DONE_CAP } from '../lib/lab-feed';
+import { activeRoadmap, laneRows, BOARD_LANES, DONE_CAP } from '../lib/lab-feed';
 import { en } from '../i18n/en';
 
 function item(over: any) {
@@ -23,16 +23,38 @@ describe('roadmapLanesHtml', () => {
     expect(html).not.toContain('Archived');
   });
 
-  it('lanes follow LANE_ORDER', () => {
-    const html = roadmapLanesHtml(items, en.roadmap);
-    const idxNow = html.indexOf('data-lane="now"');
-    const idxLater = html.indexOf('data-lane="later"');
-    const idxDone = html.indexOf('data-lane="done"');
-    expect(idxNow).toBeLessThan(idxLater);
-    expect(idxLater).toBeLessThan(idxDone);
+  it('renders the four board lanes in order, with no idea lane', () => {
+    expect(BOARD_LANES).toEqual(['now', 'next', 'later', 'done']);
+    const html = roadmapLanesHtml(
+      [
+        item({ id: 'n', title: 'N', state: 'now' }),
+        item({ id: 'x', title: 'X', state: 'next' }),
+        item({ id: 'l', title: 'L', state: 'later' }),
+        item({ id: 'i', title: 'I', state: 'idea' }),
+        item({ id: 'd', title: 'D', state: 'done', shipped_at: '2026-09-01T00:00:00Z' }),
+      ],
+      en.roadmap,
+    );
+    const idx = (lane: string) => html.indexOf(`data-lane="${lane}"`);
+    expect(idx('now')).toBeGreaterThanOrEqual(0);
+    expect(idx('now')).toBeLessThan(idx('next'));
+    expect(idx('next')).toBeLessThan(idx('later'));
+    expect(idx('later')).toBeLessThan(idx('done'));
+    expect(idx('idea')).toBe(-1);
+    expect(html).not.toContain('>I<');
   });
 
-  it('done capped and newest first', () => {
+  it('renders every now/next/later row with no fold', () => {
+    const many = Array.from({ length: 5 }, (_, i) =>
+      item({ id: `l${i}`, title: `Later ${i}`, state: 'later', pos: i }),
+    );
+    const html = roadmapLanesHtml(many, en.roadmap);
+    for (let i = 0; i < 5; i += 1) expect(html).toContain(`Later ${i}`);
+    expect((html.match(/class="rm-card"/g) || []).length).toBe(5);
+    expect(html).not.toContain('data-lane-more');
+  });
+
+  it('done capped newest first, with a see-all control that expands in place', () => {
     const many = Array.from({ length: 12 }, (_, i) =>
       item({ id: `d${i}`, title: `Shipment ${i}`, state: 'done', pos: i, shipped_at: `2026-01-${String(1 + i).padStart(2, '0')}T00:00:00Z` }),
     );
@@ -41,5 +63,32 @@ describe('roadmapLanesHtml', () => {
     expect(html).toContain('Shipment 11');
     expect(html).not.toContain('Shipment 0<');
     expect(html.indexOf('Shipment 11')).toBeLessThan(html.indexOf('Shipment 10'));
+    expect(html).toContain('data-lane-more="done"');
+    expect(html).toContain(en.roadmap.showAll);
+
+    const open = roadmapLanesHtml(many, en.roadmap, { doneOpen: true });
+    expect((open.match(/class="rm-card"/g) || []).length).toBe(12);
+    expect(open).toContain('Shipment 0');
+    expect(open).toContain(en.roadmap.showLess);
+    expect(open).toContain('aria-expanded="true"');
+  });
+
+  it('paints the topic chip in the topic colour', () => {
+    const html = roadmapLanesHtml(
+      [item({ id: 'f', title: 'Facet', state: 'now', topic: 'facetmedia', essence_hex: '#e8c547' })],
+      en.roadmap,
+      { colors: { facetmedia: '#e8c547' } },
+    );
+    expect(html).toContain('facetmedia');
+    expect(html).toContain('--topic:#e8c547');
+  });
+
+  it('falls back to the palette colour when the row has no essence_hex', () => {
+    const html = roadmapLanesHtml(
+      [item({ id: 'c', title: 'Canopy work', state: 'now', topic: 'canopy' })],
+      en.roadmap,
+      { colors: { canopy: '#00a9a0' } },
+    );
+    expect(html).toContain('--topic:#00a9a0');
   });
 });

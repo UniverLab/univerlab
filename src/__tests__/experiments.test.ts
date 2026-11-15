@@ -2,7 +2,9 @@
  * Tests for experiments.ts - the core experiment registry
  * Using Given-When-Then (GWT) pattern for clear test documentation
  */
-import { experiments, byId, Status } from '../lib/experiments';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { experiments, byId, Status, licenseUrl } from '../lib/experiments';
 
 describe('experiments.ts', () => {
   describe('experiments array', () => {
@@ -113,16 +115,22 @@ describe('experiments.ts', () => {
     it('should have valid install commands for experiments that ship binaries', () => {
       // Given: Experiments that have install commands
       const experimentsWithInstall = experiments.filter(exp => exp.install);
-      
+
       // When: We validate each install command
       experimentsWithInstall.forEach(exp => {
         // Then: Install should be defined and have unix command
         expect(exp.install).toBeDefined();
-        expect(exp.install!.unix).toContain('install.univerlab.org');
+        if (exp.id === 'facetmedia') {
+          // facetMedia ships on PyPI, not through the install worker.
+          expect(exp.install!.unix).toBe('uv tool install facetmedia');
+          expect(exp.install!.windows).toBeUndefined();
+        } else {
+          expect(exp.install!.unix).toContain('install.univerlab.org');
 
-        // And: Windows command should also be valid if present
-        if (exp.install!.windows) {
-          expect(exp.install!.windows).toContain('install.univerlab.org');
+          // And: Windows command should also be valid if present
+          if (exp.install!.windows) {
+            expect(exp.install!.windows).toContain('install.univerlab.org');
+          }
         }
       });
     });
@@ -131,6 +139,65 @@ describe('experiments.ts', () => {
   describe('fondo opt-in', () => {
     it('demostage opts into the live fondo', () => {
       expect(byId('demostage').fondo).toBe(true);
+    });
+  });
+
+  describe('license — SPDX pin per repo (2026-11-12, breaks on relicense)', () => {
+    // Grounded in the live LICENSE files fetched 2026-11-12 (see the spec
+    // reviewer's notes): Rust crates are dual MIT OR Apache-2.0, everything
+    // else names its single license. A relicense must update this table and
+    // the registry value together — the badge follows the one registry value.
+    const EXPECTED_LICENSE: Record<string, 'MIT' | 'Apache-2.0' | 'MIT OR Apache-2.0'> = {
+      canopy: 'MIT OR Apache-2.0',
+      demostage: 'MIT OR Apache-2.0',
+      texforge: 'MIT',
+      gitkit: 'MIT',
+      ghscaff: 'MIT',
+      cadspec: 'MIT',
+      quorum: 'Apache-2.0',
+      'astro-denoise': 'Apache-2.0',
+      facetmedia: 'Apache-2.0',
+    };
+
+    it('pins every experiment to the table above', () => {
+      // Given: the nine experiments in the registry
+      // When: we compare each license to the table
+      // Then: every row matches, and no experiment is missing or extra
+      expect(Object.keys(EXPECTED_LICENSE).sort()).toEqual(experiments.map((e) => e.id).sort());
+      for (const exp of experiments) {
+        expect(exp.license).toBe(EXPECTED_LICENSE[exp.id]);
+      }
+    });
+
+    it('links the license file of each experiment repository', () => {
+      // Given: the licenseUrl helper and the nine experiments
+      // When: we build each license URL
+      // Then: dual-licensed repos link LICENSE-MIT, the rest link LICENSE
+      for (const exp of experiments) {
+        const url = licenseUrl(exp);
+        expect(url.startsWith(exp.github)).toBe(true);
+        expect(url).toBe(
+          exp.license === 'MIT OR Apache-2.0'
+            ? `${exp.github}/blob/main/LICENSE-MIT`
+            : `${exp.github}/blob/main/LICENSE`,
+        );
+      }
+    });
+  });
+
+  describe('citation', () => {
+    it('astro-denoise carries its Zenodo concept DOI', () => {
+      // Given: the astro-denoise registry entry and its badge file
+      const exp = byId('astro-denoise');
+      const badgePath = join(__dirname, '../../public/badges/doi-zenodo.23989629.svg');
+
+      // When: we read the citation and the badge file
+      // Then: the DOI, badge path and badge contents match the concept DOI
+      expect(exp.citation?.doi).toBe('10.5281/zenodo.23989629');
+      expect(exp.citation?.badge).toBe('/badges/doi-zenodo.23989629.svg');
+      const badge = readFileSync(badgePath, 'utf8');
+      expect(badge).toContain('10.5281/zenodo.23989629');
+      expect(badge).not.toContain('23607434');
     });
   });
 

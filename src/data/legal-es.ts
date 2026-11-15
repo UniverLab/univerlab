@@ -5,6 +5,7 @@
  * aquí. Sin marcadores mark de las plantillas.
  */
 import type { LegalDoc } from './legal';
+import { es } from '../i18n/es';
 
 export const privacyEs: LegalDoc = {
   title: 'Política de Privacidad — servicios de UniverLab',
@@ -13,7 +14,7 @@ export const privacyEs: LegalDoc = {
   kicker: 'Legal',
   heading: 'Política de Privacidad',
   intro:
-    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org, Quorum en quorum.univerlab.org y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, el relay guarda una cookie de sesión de 12 horas y nada más, y Quorum no guarda nada fuera de tu navegador.',
+    'UniverLab opera servicios públicos desde Colombia: este sitio y su canal de anuncios, el catálogo de grafos en graphs.univerlab.org, el relay remoto en remote.univerlab.org, Quorum en quorum.univerlab.org, el agente de WhatsApp del Banco de trabajo y la CLI y el daemon de canopy. Esta página dice qué registra cada uno, con qué fin, cuánto lo conserva y qué derechos tienes. En corto: el sitio no te pide nada, el catálogo solo lee datos públicos de GitHub, el relay guarda una cookie de sesión de 12 horas y nada más, Quorum no guarda nada fuera de tu navegador y el Banco de trabajo guarda tu conversación de WhatsApp hasta 6 meses, o hasta que pidas borrarla.',
   updatedLabel: 'Última actualización',
   effectiveLabel: 'Vigente desde',
   prevails:
@@ -46,7 +47,18 @@ export const privacyEs: LegalDoc = {
         // Cookie de 12 horas frente a SESSION_TTL_S en canopy-web apps/remote/worker/src/auth.ts.
         '<strong>quorum.univerlab.org.</strong> Planning poker de par a par: sin cuentas, sin cookies y sin analítica. Tu nombre visible, el tema y las historias de cada sala se guardan solo en tu navegador. Para que los navegadores de una sala se encuentren, Quorum usa trackers públicos de WebTorrent operados por terceros: ven tu dirección IP y un identificador derivado de la sala, nunca tus votos. Después, los datos viajan directo entre navegadores por WebRTC, así que quienes están en tu sala ven tu nombre, tus votos y tu dirección IP. UniverLab no recibe nada de eso: solo sirve los archivos de la app desde Cloudflare.',
         '<strong>CLI y daemon de canopy.</strong> Tus datos se quedan en local, en <code>~/.canopy</code> de tu propia máquina. Los servicios de UniverLab solo reciben contacto cuando los usas: al traer un grafo del catálogo o al emparejar por el relay. Los harnesses de agentes (Claude, Codex y demás) se rigen por los términos de sus propios proveedores.',
+        '<strong>Banco de trabajo por WhatsApp.</strong> Cuando escribes al WhatsApp del Banco de trabajo te responde un agente automático. Guardamos tu número de teléfono, el nombre de tu perfil de WhatsApp, los mensajes de la conversación, el servicio que te interesa y las notas que el agente prepara para la persona del laboratorio que confirma tu sesión. El texto de tus mensajes lo procesa un modelo de lenguaje en Cloudflare Workers AI, que no lo usa para entrenar modelos. Las notas de voz las transcribe un modelo de voz a texto en Cloudflare Workers AI, y solo se guarda la transcripción. Cuando el agente te pasa con una persona, esas notas llegan al WhatsApp del laboratorio. Los comprobantes de pago (imágenes o PDF) los lee un modelo de visión en Cloudflare Workers AI: el archivo se reenvía a la persona que revisa tu pago y no se conserva después, solo los datos extraídos (monto, fecha, medio, referencia y beneficiario). El primer mensaje de una conversación dice que responde un agente automático, que una persona del laboratorio interviene cuando hace falta y cómo se tratan tus datos; seguir la conversación es tu autorización para el tratamiento descrito aquí. Para pedir el borrado desde el chat, escribe BORRAR MIS DATOS.',
+        '<strong>Auditorías del Banco de trabajo.</strong> Lo que compartes para la auditoría (repositorios, configuraciones, flujos) y los correos autorizados para leerla. Vive en un bucket privado de Cloudflare R2, servido solo a esos correos tras Cloudflare Access. Una auditoría que decides publicar vive en una dirección pública, con su insignia, su fecha y su alcance.',
         '<strong>Reportes.</strong> Los reportes de errores y del catálogo son issues de GitHub en repositorios públicos: lo que escribas ahí es público bajo los términos de GitHub.',
+      ],
+    },
+    {
+      id: 'first-call-booking',
+      title: 'Agendar la primera llamada gratis',
+      paras: [
+        'Para agendar la primera llamada gratis en este sitio recogemos tu nombre, tu correo electrónico y la nota que escribes sobre de qué quieres hablar. Los usamos solo para agendar y sostener la llamada: tu reserva vive en el Google Calendar del laboratorio, y la invitación que te enviamos por correo trae un enlace para cancelar la llamada.',
+        'Antes de enviar el formulario, Cloudflare Turnstile verifica que quien escribe no es un robot.',
+        'Para pedir el borrado, escribe a <a href="mailto:{email}">{email}</a> con el asunto «Borrar mis datos». Confirmamos el borrado dentro de los 15 días hábiles siguientes (Ley 1581, artículo 15).',
       ],
     },
     {
@@ -59,6 +71,8 @@ export const privacyEs: LegalDoc = {
         'remote.univerlab.org: mantener tu sesión 12 horas para que tu navegador alcance tu propio host canopy.',
         'quorum.univerlab.org: servir la app; cada sala la sostienen los propios navegadores de sus participantes.',
         'CLI y daemon de canopy: correr tus grafos en tu máquina; contactar servicios de UniverLab solo para la descarga o el emparejamiento que pediste.',
+        'Banco de trabajo por WhatsApp: responder tus preguntas sobre los servicios, preparar y agendar tu sesión y pasarle tu caso a una persona del laboratorio.',
+        'Auditorías del Banco de trabajo: entregar la auditoría contratada.',
       ],
     },
     {
@@ -68,6 +82,8 @@ export const privacyEs: LegalDoc = {
         'Bajo la Ley 1581 de 2012, tratamos tus datos con estas bases. Para lectores bajo el RGPD, la base equivalente va entre corchetes.',
         'El inicio de sesión es tu autorización: entrar con GitHub autoriza la cookie de sesión de 12 horas [RGPD: consentimiento].',
         'Los datos del catálogo son datos de naturaleza pública publicados por su autor (Ley 1581, artículo 10): repositorios públicos que sus dueños eligieron etiquetar, tratados solo para el catálogo [RGPD: interés legítimo en operar un catálogo público de datos públicos].',
+        'Escribir al Banco de trabajo es tu autorización para que tratemos esa conversación con las finalidades de arriba; si reservas una sesión, el tratamiento es además necesario para prestarte el servicio [RGPD: consentimiento y ejecución de un contrato].',
+        'Los datos de una auditoría del Banco de trabajo se tratan para cumplir el contrato de la auditoría [RGPD: ejecución de un contrato].',
         'El contador de instalaciones es el interés legítimo del laboratorio en estadísticas agregadas y no identificables sobre qué documentos se instalan [RGPD: interés legítimo].',
       ],
     },
@@ -75,15 +91,17 @@ export const privacyEs: LegalDoc = {
       id: 'processors-transfer',
       title: 'Encargados y transferencia internacional',
       paras: [
-        'Dos proveedores tratan datos por nuestra cuenta, ambos en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios (los trackers públicos de WebTorrent que usa Quorum no son encargados nuestros: los operan terceros independientes y solo presentan entre sí a los navegadores de una sala):',
+        'Tres proveedores tratan datos por nuestra cuenta, los tres con sede en Estados Unidos, así que tus datos salen de Colombia cuando usas los servicios (los trackers públicos de WebTorrent que usa Quorum no son encargados nuestros: los operan terceros independientes y solo presentan entre sí a los navegadores de una sala):',
       ],
       items: [
         'Cloudflare: hosting, caché, conteos de Analytics Engine y retransmisión TURN.',
         'GitHub: identidad del inicio de sesión y los datos públicos de origen que lee el catálogo.',
+        'Meta (WhatsApp Business Platform): entrega los mensajes entre tú y el Banco de trabajo.',
       ],
       links: [
         { label: 'Política de privacidad de Cloudflare', href: 'https://www.cloudflare.com/privacypolicy/' },
         { label: 'Política de privacidad de GitHub', href: 'https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement' },
+        { label: 'Política de privacidad de WhatsApp', href: 'https://www.whatsapp.com/legal/privacy-policy' },
       ],
     },
     {
@@ -100,6 +118,9 @@ export const privacyEs: LegalDoc = {
         'Quorum: tu nombre, el tema y las historias quedan en tu navegador hasta que los borres; UniverLab no conserva nada.',
         'Cookie de sesión del relay: 12 horas y vence; el token de acceso se descarta de inmediato y el relay no almacena nada.',
         'CLI y daemon de canopy: tus datos se quedan en ~/.canopy hasta que los borres.',
+        'Banco de trabajo por WhatsApp: la conversación y las notas se borran solas 6 meses después de tu último mensaje, o antes si lo pides. Los datos extraídos de un comprobante y los soportes de un pago se conservan el tiempo que exige la ley contable y tributaria colombiana.',
+        'Auditorías del Banco de trabajo: el informe, las evidencias, los datos del cliente y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si lo pides. La única excepción es una auditoría privada con autorización de publicación firmada que aún no se publica: se conserva hasta que se publique o hasta que el proceso de publicación se cierre.',
+        'Contratos, encargos y autorizaciones firmados, con sus evidencias de firma, se conservan 10 años como prueba del acuerdo, aparte de la eliminación de los datos de auditoría descrita arriba.',
       ],
     },
     {
@@ -115,7 +136,18 @@ export const privacyEs: LegalDoc = {
       title: 'Cómo ejercerlos',
       paras: [
         'Escríbenos a <a href="mailto:{email}">{email}</a>. Las consultas se responden dentro de los 10 días hábiles siguientes, prorrogables una vez por 5; los reclamos dentro de los 15 días hábiles siguientes, prorrogables una vez por 8 (Ley 1581, artículos 14 y 15).',
+        'Las quejas y reclamos van por correo a <a href="mailto:{email}">{email}</a>: no existe un formulario de reclamos. Una solicitud de privacidad que llegue por otro canal se atiende señalando el agente de WhatsApp o el correo, y el laboratorio la tramita a mano.',
         'Los datos del catálogo tienen además un camino corto: el autor retira un documento quitando el tópico <code>canopy-graph</code> o el repositorio, y cualquiera puede reportar un documento abriendo un issue en UniverLab/canopy-web.',
+      ],
+    },
+    {
+      id: 'data-deletion',
+      title: 'Borrar tus datos',
+      paras: [
+        'Puedes pedir que borremos tus datos cuando quieras, sin dar razones.',
+        '<strong>En el Banco de trabajo por WhatsApp</strong>, escribe <strong>BORRAR MIS DATOS</strong> en la conversación. El agente borra en ese momento tus mensajes, el estado de tu conversación y las notas guardadas, y te lo confirma en el mismo chat.',
+        '<strong>Para cualquier otro servicio</strong>, o si prefieres que lo haga una persona, escribe a <a href="mailto:{email}">{email}</a> con el asunto «Borrar mis datos» y el número de teléfono o la cuenta a la que se refiere. Confirmamos el borrado dentro de los 15 días hábiles siguientes (Ley 1581, artículo 15).',
+        'Solo conservamos lo que la ley nos obliga a guardar, como los soportes contables de un pago, y en ese caso te decimos qué queda y por cuánto tiempo. Los mensajes que ya enviaste siguen en tu propio WhatsApp y en Meta según la política de WhatsApp.',
       ],
     },
     {
@@ -150,8 +182,28 @@ export const termsEs: LegalDoc = {
       title: 'Uso de los servicios',
       paras: [
         'UniverLab te concede una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar los servicios con tus propios fines lícitos.',
-        'UniverLab puede modificar, suspender o descontinuar cualquier servicio, o tu acceso a él, en cualquier momento, con o sin aviso. No hay obligación de soporte: los servicios se operan como un laboratorio abierto, no como un producto contratado.',
+        'UniverLab puede modificar, suspender o descontinuar cualquier herramienta o sitio gratuito y de código abierto que publique, o tu acceso a él, en cualquier momento, con o sin aviso, y sin obligación de soporte sobre ellos: se operan como un laboratorio abierto, no como un producto contratado.',
+        'Los servicios pagados del Banco de trabajo —consulta, soluciones agénticas y auditorías— se entregan como se describe en las páginas del Banco de trabajo y en el alcance escrito acordado antes de empezar, incluidos el periodo de soporte y la verificación de las correcciones, y el laboratorio no puede cambiar por su cuenta ese alcance una vez acordado. Las auditorías y las soluciones agénticas se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente. Una devolución por inconformidad es excepcional y se acuerda con el cliente.',
         'Tu uso también se rige por la <a href="/es/privacy/">Política de Privacidad</a>, que describe qué datos registra cada servicio. Si estos términos y la política difieren sobre datos, manda la política.',
+      ],
+    },
+    {
+      id: 'workbench-bookings',
+      title: es.workbench.policy.terms,
+      paras: [
+        'Estas condiciones aplican a las sesiones pagadas del Banco de trabajo reservadas por WhatsApp. La primera llamada gratis se puede cancelar en cualquier momento.',
+      ],
+      items: es.workbench.policy.items,
+    },
+    {
+      id: 'published-audits',
+      title: 'Auditorías publicadas',
+      paras: [
+        'Una auditoría solo se publica con tu autorización firmada de lo publicado, y cuando los hallazgos críticos y altos están verificados como corregidos. Nada de tu auditoría privada se publica sin tu firma.',
+        'El descuento por publicar es un porcentaje del precio, aplicado al pago de entrega y nunca pagado por separado: 50 % para las auditorías fundadoras, cuya autorización se firma con el encargo y reserva entonces el cupo fundador, y 20 % para las demás, cuya autorización se firma a la entrega. Los descuentos no se acumulan: aplica el mayor. Auditar de nuevo el mismo sistema, con fecha nueva, cuesta 30 % menos al cobrar.',
+        'Las correcciones a hallazgos críticos y altos tienen una verificación dentro de los 6 meses siguientes a la entrega. Si una auditoría con autorización de publicación firmada todavía tiene hallazgos críticos o altos sin corregir 6 meses después de la entrega, el laboratorio te escribe con dos opciones: pagar el descuento aplicado, o publicar ahora con los riesgos encontrados. Tienes 15 días calendario desde ese mensaje para pagar; si no pagas, la auditoría se publica de todos modos, y los hallazgos aún sin corregir se publican solo con su título, severidad y estado, sin pasos de reproducción, endpoints ni nada que permita explotarlos. Esos detalles se agregan cuando se verifique la corrección.',
+        'Lo que se muestra es la auditoría con su fecha, su vigencia y su alcance, además de la insignia para tu sitio. La insignia acredita que UniverLab auditó un alcance en una fecha: no acredita seguridad continua ni es una certificación. La fecha es cómo el lector juzga qué tan actual es la auditoría, y cada reauditoría emite una insignia nueva. Una auditoría publicada también se deposita de forma permanente en Zenodo, un repositorio público de investigación, y no se puede retirar de allí después. Los datos personales como los nombres de empleados nunca van en los archivos depositados.',
+        'El repositorio de una auditoría pertenece al laboratorio y nunca se transfiere: el laboratorio da acceso a las cuentas que el cliente indique, y el cliente guarda su propia copia antes de la fecha de eliminación. En una auditoría privada, el informe, las evidencias, los datos del cliente y el repositorio de la auditoría se eliminan 6 meses después de la entrega, o antes si el cliente lo pide. La única excepción es una auditoría con autorización de publicación firmada que aún no se publica: se conserva hasta que se publique o hasta que el proceso de publicación se cierre. Una auditoría publicada sigue pública: el laboratorio puede retirar su página en cualquier momento, pero el depósito permanente sigue publicado.',
       ],
     },
     {

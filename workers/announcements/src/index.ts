@@ -34,6 +34,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { buildFeedXml, etagForFeed } from './feed';
+import { FOUNDING_KV_KEY, FOUNDING_TOTAL, parseFoundingLeft } from '../../../src/lib/founding-spots.ts';
 
 export interface Env {
   ANNOUNCEMENTS: KVNamespace;
@@ -46,6 +47,8 @@ interface Entry {
   date: string;
   title: string;
   body: string;
+  title_es?: string | null;
+  body_es?: string | null;
   type: string;
   topic: string;
   link?: string;
@@ -74,6 +77,7 @@ const TOPICS = new Set([
   'cadspec',
   'demostage',
   'quorum',
+  'facetmedia',
 ]);
 
 /** Roadmap lifecycle: rough idea → in flight → shipped. Mirrors ROADMAP.md. */
@@ -183,7 +187,7 @@ export const ROADMAP_PUBLIC_COLS =
 /** Everything, for reads behind `?private=1` only. */
 export const ROADMAP_ALL_COLS = `${ROADMAP_PUBLIC_COLS}, notes, refs`;
 /** One definition so a new entry column cannot be forgotten in one of four reads. */
-export const ENTRY_COLS = 'id, date, title, body, type, topic, link, roadmap_id';
+export const ENTRY_COLS = 'id, date, title, body, title_es, body_es, type, topic, link, roadmap_id';
 /** Fields POST /roadmap accepts; anything else is a 400, not a silent no-op. */
 const ROADMAP_POST_FIELDS = new Set([
   'title',
@@ -504,6 +508,12 @@ export class LogHub extends DurableObject<Env> {
       if (!cols.some((c: any) => c.name === 'roadmap_id')) {
         this.ctx.storage.sql.exec('ALTER TABLE entries ADD COLUMN roadmap_id TEXT');
       }
+      if (!cols.some((c: any) => c.name === 'title_es')) {
+        this.ctx.storage.sql.exec('ALTER TABLE entries ADD COLUMN title_es TEXT');
+      }
+      if (!cols.some((c: any) => c.name === 'body_es')) {
+        this.ctx.storage.sql.exec('ALTER TABLE entries ADD COLUMN body_es TEXT');
+      }
 
       this.ctx.storage.sql.exec(`
         CREATE TABLE IF NOT EXISTS roadmap_items (
@@ -556,6 +566,8 @@ export class LogHub extends DurableObject<Env> {
   async addEntry(input: {
     title: string;
     body: string;
+    title_es?: string | null;
+    body_es?: string | null;
     type: string;
     topic: string;
     link?: string;
@@ -566,6 +578,8 @@ export class LogHub extends DurableObject<Env> {
       date: new Date().toISOString(),
       title: input.title,
       body: input.body,
+      title_es: input.title_es ?? null,
+      body_es: input.body_es ?? null,
       type: input.type,
       topic: input.topic,
       ...(input.link ? { link: input.link } : {}),
@@ -573,11 +587,13 @@ export class LogHub extends DurableObject<Env> {
     };
 
     this.ctx.storage.sql.exec(
-      'INSERT INTO entries (id, date, title, body, type, topic, link, roadmap_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO entries (id, date, title, body, title_es, body_es, type, topic, link, roadmap_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       entry.id,
       entry.date,
       entry.title,
       entry.body,
+      entry.title_es ?? null,
+      entry.body_es ?? null,
       entry.type,
       entry.topic,
       entry.link ?? null,
@@ -606,7 +622,7 @@ export class LogHub extends DurableObject<Env> {
    */
   async updateEntryMeta(
     id: string,
-    patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string }
+    patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string; title_es?: string; body_es?: string }
   ): Promise<Entry | null> {
     const set: string[] = [];
     const args: (string | null)[] = [];
@@ -617,6 +633,14 @@ export class LogHub extends DurableObject<Env> {
     if (patch.body !== undefined) {
       set.push('body = ?');
       args.push(patch.body);
+    }
+    if (patch.title_es !== undefined) {
+      set.push('title_es = ?');
+      args.push(patch.title_es);
+    }
+    if (patch.body_es !== undefined) {
+      set.push('body_es = ?');
+      args.push(patch.body_es);
     }
     if (patch.topic !== undefined) {
       set.push('topic = ?');
@@ -1016,6 +1040,19 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
 
+    // GET /founding-spots — how many founding audits are left (KV, edge-cheap).
+    if (req.method === 'GET' && url.pathname === '/founding-spots') {
+      let left: number | null = null;
+      try {
+        left = parseFoundingLeft(await env.ANNOUNCEMENTS.get(FOUNDING_KV_KEY));
+      } catch {
+        left = null;
+      }
+      return new Response(JSON.stringify({ left, total: FOUNDING_TOTAL }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60', ...CORS },
+      });
+    }
+
     // GET / — mirror read with pagination
     if (req.method === 'GET' && url.pathname === '/') {
       const raw = await env.ANNOUNCEMENTS.get('entries');
@@ -1023,7 +1060,12 @@ export default {
       try {
         const parsed = raw ? JSON.parse(raw) : [];
         entries = Array.isArray(parsed)
-          ? parsed.map((entry) => ({ ...entry, topic: normalizeTopic(entry.topic) }))
+          ? parsed.map((entry) => ({
+              ...entry,
+              topic: normalizeTopic(entry.topic),
+              title_es: (entry as Entry).title_es ?? null,
+              body_es: (entry as Entry).body_es ?? null,
+            }))
           : [];
       } catch {
         entries = [];
@@ -1322,6 +1364,8 @@ export default {
       let body: {
         title?: unknown;
         body?: unknown;
+        title_es?: unknown;
+        body_es?: unknown;
         type?: unknown;
         topic?: unknown;
         link?: unknown;
@@ -1335,6 +1379,8 @@ export default {
 
       const title = typeof body.title === 'string' ? body.title.trim() : '';
       const text = typeof body.body === 'string' ? body.body.trim() : '';
+      const titleEs = typeof body.title_es === 'string' ? body.title_es.trim() : '';
+      const bodyEs = typeof body.body_es === 'string' ? body.body_es.trim() : '';
       const type = typeof body.type === 'string' && body.type ? body.type : 'update';
       const topic = body.topic == null || (typeof body.topic === 'string' && !body.topic.trim())
         ? DEFAULT_TOPIC
@@ -1344,8 +1390,14 @@ export default {
       if (!title || !text) {
         return json({ error: 'title and body required' }, 400);
       }
+      if (!titleEs || !bodyEs) {
+        return json({ error: 'title_es and body_es required' }, 400);
+      }
       if (title.length > MAX_ANNOUNCEMENT_TITLE || text.length > MAX_BODY) {
         return json({ error: `title max ${MAX_ANNOUNCEMENT_TITLE} chars, body max ${MAX_BODY}` }, 413);
+      }
+      if (titleEs.length > MAX_ANNOUNCEMENT_TITLE || bodyEs.length > MAX_BODY) {
+        return json({ error: `title_es max ${MAX_ANNOUNCEMENT_TITLE} chars, body_es max ${MAX_BODY}` }, 413);
       }
       if (link && link.length > MAX_LINK) {
         return json({ error: `link max ${MAX_LINK} chars` }, 413);
@@ -1365,7 +1417,7 @@ export default {
         roadmapId = resolved.id;
       }
 
-      const entry = await hub.addEntry({ title, body: text, type, topic, link, roadmap_id: roadmapId });
+      const entry = await hub.addEntry({ title, body: text, title_es: titleEs, body_es: bodyEs, type, topic, link, roadmap_id: roadmapId });
       return json(entry, 201);
     }
 
@@ -1375,7 +1427,7 @@ export default {
         return json({ error: 'Unauthorized' }, 401);
       }
 
-      let body: { topic?: unknown; roadmap_id?: unknown; title?: unknown; body?: unknown };
+      let body: { topic?: unknown; roadmap_id?: unknown; title?: unknown; body?: unknown; title_es?: unknown; body_es?: unknown };
       try {
         body = await req.json();
       } catch {
@@ -1386,11 +1438,15 @@ export default {
       const hasRoadmapId = isPlainObject(body) && 'roadmap_id' in body;
       const hasTitle = isPlainObject(body) && 'title' in body;
       const hasBody = isPlainObject(body) && 'body' in body;
+      const hasTitleEs = isPlainObject(body) && 'title_es' in body;
+      const hasBodyEs = isPlainObject(body) && 'body_es' in body;
 
       // Rewording keeps the entry's date: title and body follow the same
       // limits as a new announcement.
       let title: string | undefined;
       let text: string | undefined;
+      let titleEs: string | undefined;
+      let bodyEs: string | undefined;
       if (hasTitle) {
         title = typeof body.title === 'string' ? body.title.trim() : '';
         if (!title) return json({ error: 'title must be a non-empty string' }, 400);
@@ -1400,6 +1456,16 @@ export default {
         text = typeof body.body === 'string' ? body.body.trim() : '';
         if (!text) return json({ error: 'body must be a non-empty string' }, 400);
         if (text.length > MAX_BODY) return json({ error: `body max ${MAX_BODY} chars` }, 413);
+      }
+      if (hasTitleEs) {
+        titleEs = typeof body.title_es === 'string' ? body.title_es.trim() : '';
+        if (!titleEs) return json({ error: 'title_es must be a non-empty string' }, 400);
+        if (titleEs.length > MAX_ANNOUNCEMENT_TITLE) return json({ error: `title_es max ${MAX_ANNOUNCEMENT_TITLE} chars` }, 413);
+      }
+      if (hasBodyEs) {
+        bodyEs = typeof body.body_es === 'string' ? body.body_es.trim() : '';
+        if (!bodyEs) return json({ error: 'body_es must be a non-empty string' }, 400);
+        if (bodyEs.length > MAX_BODY) return json({ error: `body_es max ${MAX_BODY} chars` }, 413);
       }
 
       // Neither key present → exactly today's behaviour: reclassify as general.
@@ -1414,7 +1480,7 @@ export default {
           return json({ error: `topic must be one of: ${[...TOPICS].join(', ')}` }, 400);
         }
         topic = value;
-      } else if (!hasRoadmapId && !hasTitle && !hasBody) {
+      } else if (!hasRoadmapId && !hasTitle && !hasBody && !hasTitleEs && !hasBodyEs) {
         topic = DEFAULT_TOPIC;
       }
 
@@ -1429,9 +1495,11 @@ export default {
       const id = url.pathname.slice(1);
       if (!id) return json({ error: 'id required' }, 400);
 
-      const patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string } = {};
+      const patch: { topic?: string; roadmap_id?: string | null; title?: string; body?: string; title_es?: string; body_es?: string } = {};
       if (title !== undefined) patch.title = title;
       if (text !== undefined) patch.body = text;
+      if (titleEs !== undefined) patch.title_es = titleEs;
+      if (bodyEs !== undefined) patch.body_es = bodyEs;
       if (topic !== undefined) patch.topic = topic;
       if (roadmapId !== undefined) patch.roadmap_id = roadmapId;
 

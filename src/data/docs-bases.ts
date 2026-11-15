@@ -19,6 +19,7 @@ export const DOCS_BASES: Readonly<Record<string, string>> = {
   gitkit: '../gitkit/docs',
   ghscaff: '../ghscaff/docs',
   demostage: '../demostage/docs',
+  facetmedia: '../facetmedia/docs',
 };
 
 /**

@@ -7,6 +7,7 @@
  * here. No template mark placeholders remain.
  */
 import type { LegalDoc } from './legal';
+import { en } from '../i18n/en';
 
 export const privacyEn: LegalDoc = {
   title: 'Privacy Policy — UniverLab services',
@@ -15,7 +16,7 @@ export const privacyEn: LegalDoc = {
   kicker: 'Legal',
   heading: 'Privacy Policy',
   intro:
-    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, Quorum at quorum.univerlab.org, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else, and Quorum keeps nothing outside your browser.',
+    'UniverLab runs public services from Colombia: this site and its announcements feed, the graphs catalogue at graphs.univerlab.org, the remote relay at remote.univerlab.org, Quorum at quorum.univerlab.org, the Workbench WhatsApp agent, and the canopy CLI and daemon. This page says what each one records, why, how long it keeps it, and the rights you have. Short version: the site asks nothing of you, the catalogue reads only public GitHub data, the relay keeps a 12-hour session cookie and nothing else, Quorum keeps nothing outside your browser, and the Workbench keeps your WhatsApp conversation for up to 6 months, or until you ask us to delete it.',
   updatedLabel: 'Last updated',
   effectiveLabel: 'Effective from',
   prevails:
@@ -48,7 +49,18 @@ export const privacyEn: LegalDoc = {
         // 12-hour cookie vs SESSION_TTL_S in canopy-web apps/remote/worker/src/auth.ts.
         '<strong>quorum.univerlab.org.</strong> Peer-to-peer planning poker: no accounts, no cookies and no analytics. Your display name, theme and each room\u2019s stories stay in your browser. To let the browsers of a room find each other, Quorum uses public WebTorrent trackers run by third parties: they see your IP address and an identifier derived from the room, never your votes. After that, data travels straight between browsers over WebRTC, so the people in your room see your name, your votes and your IP address. UniverLab receives none of it: it only serves the app\u2019s files from Cloudflare.',
         '<strong>canopy CLI and daemon.</strong> Your data stays local in <code>~/.canopy</code> on your own machine. UniverLab services are contacted only when you use them: fetching a graph from the catalogue, or pairing through the relay. Agent harnesses (Claude, Codex and the rest) are governed by their own providers\u2019 terms.',
+        '<strong>Workbench on WhatsApp.</strong> When you write to the Workbench WhatsApp number, an automated agent answers. We keep your phone number, your WhatsApp profile name, the messages of the conversation, the service you are interested in, and the notes the agent prepares for the person at the lab who confirms your session. The text of your messages is processed by a language model on Cloudflare Workers AI, which does not use it to train models. Voice notes are transcribed by a speech-to-text model on Cloudflare Workers AI, and only the transcript is kept. When the agent hands you over to a person, those notes reach the lab\u2019s WhatsApp. Payment receipts (images or PDFs) are read by a vision model on Cloudflare Workers AI: the file is forwarded to the person who checks your payment and is not kept afterwards, only the extracted details (amount, date, method, reference and payee). The first message of a conversation states that an automated agent answers, that a person at the lab steps in when needed, and how your data is handled; continuing the conversation is your authorisation for the processing described here. To ask for erasure from the chat, write DELETE MY DATA.',
+        '<strong>Workbench audits.</strong> What you share for the audit (repositories, configurations, flows) and the emails allowed to read it. It lives in a private Cloudflare R2 bucket, served only to those emails behind Cloudflare Access. An audit you choose to publish lives at a public address instead, with its badge, its date and its scope.',
         '<strong>Reports.</strong> Bug reports and catalogue reports are GitHub issues in public repositories: whatever you write there is public under GitHub\u2019s terms.',
+      ],
+    },
+    {
+      id: 'first-call-booking',
+      title: 'Booking the free first call',
+      paras: [
+        'To book the free first call on this site we collect your name, your email address and the note you write about what you want to talk about. We use them only to book and hold the call: your booking lives in the lab’s Google Calendar, and the invitation we email you carries a link to cancel the call.',
+        'Before the form is sent, Cloudflare Turnstile checks that the visitor is not a robot.',
+        'To ask for deletion, write to <a href="mailto:{email}">{email}</a> with the subject “Delete my data”. We confirm the deletion within 15 business days (Ley 1581, article 15).',
       ],
     },
     {
@@ -61,6 +73,8 @@ export const privacyEn: LegalDoc = {
         'remote.univerlab.org: keeping you signed in for 12 hours so your browser can reach your own canopy host.',
         'quorum.univerlab.org: serving the app; each room is held up by its participants\u2019 own browsers.',
         'canopy CLI and daemon: running your graphs on your machine; contacting UniverLab services only for the fetch or pairing you asked for.',
+        'Workbench on WhatsApp: answering your questions about the services, preparing and booking your session, and handing your case to a person at the lab.',
+        'Workbench audits: delivering the commissioned audit.',
       ],
     },
     {
@@ -70,6 +84,8 @@ export const privacyEn: LegalDoc = {
         'Under Ley 1581 de 2012, we process your data on these bases. For readers under the GDPR, the equivalent basis follows in brackets.',
         'The sign-in is your authorisation (<em>autorizaci\u00f3n</em>): signing in with GitHub authorises the 12-hour session cookie [GDPR: consent].',
         'Catalogue data is data of a public nature published by its author (Ley 1581, article 10): public repositories its owners chose to tag, processed for the catalogue only [GDPR: legitimate interest in running a public catalogue of public data].',
+        'Writing to the Workbench is your authorisation for us to process that conversation for the purposes above; if you book a session, processing is also necessary to provide the service [GDPR: consent and performance of a contract].',
+        'Workbench audit data is processed to perform the audit contract [GDPR: performance of a contract].',
         'The install counter is the lab\u2019s legitimate interest in aggregate, non-identifying statistics about which documents get installed [GDPR: legitimate interest].',
       ],
     },
@@ -77,15 +93,17 @@ export const privacyEn: LegalDoc = {
       id: 'processors-transfer',
       title: 'Processors and international transfer',
       paras: [
-        'Two providers process data on our behalf, both in the United States, so your data leaves Colombia when you use the services (the public WebTorrent trackers Quorum uses are not our processors: independent third parties run them, and they only introduce the browsers of a room to each other):',
+        'Three providers process data on our behalf, all three based in the United States, so your data leaves Colombia when you use the services (the public WebTorrent trackers Quorum uses are not our processors: independent third parties run them, and they only introduce the browsers of a room to each other):',
       ],
       items: [
         'Cloudflare: hosting, caching, Analytics Engine install counts and TURN relaying.',
         'GitHub: sign-in identity and the public source data the catalogue reads.',
+        'Meta (WhatsApp Business Platform): delivering the messages between you and the Workbench.',
       ],
       links: [
         { label: 'Cloudflare privacy statement', href: 'https://www.cloudflare.com/privacypolicy/' },
         { label: 'GitHub privacy statement', href: 'https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement' },
+        { label: 'WhatsApp privacy policy', href: 'https://www.whatsapp.com/legal/privacy-policy' },
       ],
     },
     {
@@ -102,6 +120,9 @@ export const privacyEn: LegalDoc = {
         'Quorum: your name, theme and stories stay in your browser until you clear them; UniverLab keeps nothing.',
         'Remote session cookie: 12 hours, then it expires; the sign-in token is discarded at once and the relay stores nothing.',
         'canopy CLI and daemon: your data stays in ~/.canopy until you remove it.',
+        'Workbench on WhatsApp: the conversation and the notes are deleted automatically 6 months after your last message, or sooner if you ask. The details extracted from a payment proof and the records of a payment are kept for as long as Colombian accounting and tax law requires.',
+        'Workbench audits: the report, the evidence, the client data and the audit repository are deleted 6 months after delivery, or sooner if you ask. The only exception is a private audit with a signed publication authorisation that is not yet published: it is kept until it is published or the publication process closes.',
+        'Signed contracts, orders and authorisations, with their signature evidence, are kept for 10 years as proof of the agreement, apart from the audit-data deletion described above.',
       ],
     },
     {
@@ -117,7 +138,18 @@ export const privacyEn: LegalDoc = {
       title: 'How to exercise them',
       paras: [
         'Write to <a href="mailto:{email}">{email}</a>. Queries (<em>consultas</em>) are answered within 10 business days, extendable once by 5; claims (<em>reclamos</em>) within 15 business days, extendable once by 8 (Ley 1581, articles 14 and 15).',
+        'Complaints and claims go by email to <a href="mailto:{email}">{email}</a>: there is no claims form. A privacy request that arrives through another channel is answered by pointing to the WhatsApp agent or the email, and the lab handles it by hand.',
         'Catalogue data has a shorter path too: the author removes a document by dropping the <code>canopy-graph</code> topic or the repository, or anyone may report a document by opening an issue in UniverLab/canopy-web.',
+      ],
+    },
+    {
+      id: 'data-deletion',
+      title: 'Deleting your data',
+      paras: [
+        'You can ask us to delete your data at any time, without giving a reason.',
+        '<strong>On the Workbench WhatsApp</strong>, write <strong>DELETE MY DATA</strong> in the conversation. The agent deletes your messages, your conversation state and the stored notes right away, and confirms in the same chat.',
+        '<strong>For any other service</strong>, or if you prefer a person to do it, write to <a href="mailto:{email}">{email}</a> with the subject \u201cDelete my data\u201d and the phone number or account it concerns. We confirm the deletion within 15 business days (Ley 1581, article 15).',
+        'We keep only what the law requires us to keep, such as the accounting records of a payment, and in that case we tell you what remains and for how long. Messages you already sent stay in your own WhatsApp and with Meta under WhatsApp\u2019s policy.',
       ],
     },
     {
@@ -152,8 +184,28 @@ export const termsEn: LegalDoc = {
       title: 'Using the services',
       paras: [
         'UniverLab grants you a limited, non-exclusive, non-transferable, revocable licence to access and use the services for your own lawful purposes.',
-        'UniverLab may modify, suspend or discontinue any service, or your access to it, at any time, with or without notice. There is no support obligation: the services are run as an open laboratory, not a contracted product.',
+        'UniverLab may modify, suspend or discontinue any free and open-source tool or site it publishes, or your access to it, at any time, with or without notice, with no support obligation for them: they run as an open laboratory, not a contracted product.',
+        'Paid Workbench services — consultation, agentic solutions and audits — are delivered as described on the Workbench pages and in the written scope agreed before starting, including the support period and the verification of fixes, and the lab cannot change that scope on its own. Audits and agentic solutions are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. A refund for dissatisfaction is exceptional and is arranged with the client.',
         'Your use of the services is also governed by the <a href="/privacy/">Privacy Policy</a>, which describes what data each service records. If these terms and the policy disagree about data, the policy controls.',
+      ],
+    },
+    {
+      id: 'workbench-bookings',
+      title: en.workbench.policy.terms,
+      paras: [
+        'These conditions apply to paid Workbench sessions booked through WhatsApp. The free first call can be cancelled at any time.',
+      ],
+      items: en.workbench.policy.items,
+    },
+    {
+      id: 'published-audits',
+      title: 'Published audits',
+      paras: [
+        'An audit is only published with your signed authorisation of what is shown, and once the critical and high findings are verified as fixed. Nothing from your private audit is published without your signature.',
+        'The publication discount is a percentage of the price, taken off the delivery payment and never paid out afterwards: 50 % for founding audits, whose authorisation is signed with the order and reserves the founding spot then, and 20 % for the rest, whose authorisation is signed at delivery. Discounts do not stack: the largest one applies. Auditing the same system again, with a new date, costs 30 % less when it is charged.',
+        'The fixes to critical and high findings get one verification within 6 months of delivery. If an audit with a signed publication authorisation still has unfixed critical or high findings 6 months after delivery, the lab writes to you with two options: pay the discount that was applied, or publish now with the risks found. You have 15 calendar days from that message to pay; if you do not pay, the audit is published anyway, and the findings still unfixed are shown with their title, severity and status only, without reproduction steps, endpoints or anything that would let someone exploit them. Those details are added when the fix is verified.',
+        'What is shown is the audit with its date, its validity and its scope, plus the badge for your site. The badge attests that UniverLab audited a scope on a date: it does not attest ongoing security and is not a certification. The date is how the reader judges how current the audit is, and each re-audit issues a new badge. A published audit is also deposited permanently in Zenodo, a public research repository, and cannot be removed from there afterwards. Personal data such as employee names never goes into the deposited files.',
+        'An audit repository belongs to the lab and is never transferred: the lab gives access to the accounts the client names, and the client keeps their own copy before the deletion date. For a private audit, the report, the evidence, the client data and the audit repository are deleted 6 months after delivery, or sooner if the client asks. The only exception is an audit with a signed publication authorisation that is not yet published: it is kept until it is published or the publication process closes. A published audit stays public: the lab may take its page down at any time, but the permanent deposit stays published.',
       ],
     },
     {

@@ -18,6 +18,19 @@ interface Props {
 }
 const { src, poster, essence, label, caption } = Astro.props;
 const isGif = src.endsWith('.gif');
+// The clip sits below the first screen: it shows its poster frame and loads
+// only on approach. Dimensions are the real mp4 pixels (ffprobe), so the
+// poster reserves the exact box and nothing shifts when the clip loads.
+const DEMO_DIMS: Record<string, { w: number; h: number }> = {
+  canopy: { w: 1440, h: 1026 },
+  demostage: { w: 1200, h: 720 },
+  ghscaff: { w: 1440, h: 1080 },
+  gitkit: { w: 1440, h: 1026 },
+  texforge: { w: 1440, h: 1080 },
+};
+const demoId = src.split('/').pop()?.replace(/\.mp4$/, '') ?? '';
+const dims = DEMO_DIMS[demoId];
+const posterUrl = poster ?? (src.endsWith('.mp4') ? src.replace(/\.mp4$/, '-poster.webp') : undefined);
 ---
 <figure class="demo-fig" style={`--essence: ${essence}`} data-demo-src={src} data-demo-caption={caption}>
   <div class="demo-frame">
@@ -27,13 +40,15 @@ const isGif = src.endsWith('.gif');
       <div class="demo-player">
         <video
           class="demo-video"
-          autoplay
           muted
           loop
           playsinline
-          preload="metadata"
-          poster={poster}
+          preload="none"
+          poster={posterUrl}
+          width={dims?.w}
+          height={dims?.h}
           aria-label={caption}
+          data-demo-video
         >
           <source src={src} type="video/mp4" />
         </video>
@@ -60,12 +75,25 @@ const isGif = src.endsWith('.gif');
     var fig = box.closest('.demo-fig');
 
     if (reduced) {
-      video.removeAttribute('autoplay');
       video.pause();
       video.controls = true;
       var b = box.querySelector('.demo-bar');
       if (b) b.style.display = 'none';
       return;
+    }
+
+    // The clip sits below the first screen: it plays only when the visitor
+    // approaches (200px out), so no demo bytes load with the page.
+    if ('IntersectionObserver' in window) {
+      var seen = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) {
+          seen.disconnect();
+          video.play().catch(function () {});
+        }
+      }, { rootMargin: '200px' });
+      seen.observe(box);
+    } else {
+      video.play().catch(function () {});
     }
 
     // Hold-to-pause: press and hold over the demo (with the lens) to freeze the
@@ -155,7 +183,9 @@ const isGif = src.endsWith('.gif');
       lensVideo.muted = true;
       lensVideo.loop = true;
       lensVideo.playsInline = true;
-      lensVideo.preload = 'auto';
+      // The loupe only exists on hover: it must never fetch the clip on its
+      // own, or the page would load the whole video beside its poster.
+      lensVideo.preload = 'none';
       lensVideo.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;';
       var srcEl = media.querySelector('source');
       if (srcEl) {
@@ -165,8 +195,19 @@ const isGif = src.endsWith('.gif');
         lensVideo.appendChild(s);
       }
       lensInner.appendChild(lensVideo);
+      // The clone starts loading only when the lens is first approached (a
+      // hover, i.e. an interaction), then follows the main clip.
+      var lensReady = false;
+      var startLens = function () {
+        if (lensReady) return;
+        lensReady = true;
+        lensVideo.preload = 'auto';
+        if (media.currentTime) lensVideo.currentTime = media.currentTime;
+        if (!media.paused) lensVideo.play().catch(function () {});
+      };
+      frame.addEventListener('mouseenter', startLens);
       // Keep lens video in sync
-      media.addEventListener('play', function () { lensVideo.play().catch(function(){}); });
+      media.addEventListener('play', function () { if (lensReady) lensVideo.play().catch(function(){}); });
       media.addEventListener('pause', function () { lensVideo.pause(); });
       media.addEventListener('timeupdate', function () {
         if (lensVideo.duration && Math.abs(lensVideo.currentTime - media.currentTime) > 0.3) {
@@ -204,6 +245,7 @@ const isGif = src.endsWith('.gif');
 
     frame.addEventListener('mouseleave', function () {
       lens.style.opacity = '0';
+      if (lensVideo) lensVideo.pause();
     });
   });
 

@@ -140,7 +140,7 @@ describe('sponsor heart follows the page accent', () => {
   it('keeps the heartbeat, its pause, the hidden label and its placement', () => {
     expect(rule![1]).toMatch(/animation:\s*heartbeat 2s ease-in-out infinite/);
     expect(rule![1]).toMatch(/display:\s*inline-flex/);
-    expect(rule![1]).toMatch(/margin-right:\s*0\.5rem/);
+    expect(rule![1]).toMatch(/margin-right:\s*0\.25rem/);
     expect(hover![1]).toMatch(/animation-play-state:\s*paused/);
     expect(HEADER).toMatch(/nav a\.sponsor \.heart-text \{ display: none; \}/);
     expect(HEADER).toMatch(/@keyframes heartbeat \{/);
@@ -165,11 +165,17 @@ describe('language corner markup', () => {
   it('holds the revealed page with its label and the folded flap', () => {
     const markup = anchor![0];
     expect(markup).toMatch(/<span class="under">[\s\S]*<\/span><span class="flap"><\/span>/);
-    expect(markup).toMatch(/<span class="label"><span class="short">\{languages\[other\]\}<\/span><span class="long">\{t\.header\.langLabel\[other\]\}<\/span><\/span>/);
+    expect(markup).toMatch(/<span class="label"><span class="long">\{t\.header\.langLabel\[other\]\}<\/span>\{' '\}<span class="short">\{languages\[other\]\}<\/span><\/span>/);
   });
 
   it('names the other language in its aria-label, localized', () => {
-    expect(anchor![0]).toMatch(/aria-label=\{`\$\{t\.header\.switchTo\} \$\{t\.header\.langLabel\[other\]\}`\}/);
+    expect(anchor![0]).toMatch(/aria-label=\{`\$\{t\.header\.switchTo\} \$\{t\.header\.langLabel\[other\]\} \(\$\{languages\[other\]\}\)`\}/);
+  });
+
+  it('carries the visible short code inside the accessible name', () => {
+    // label-content-name-mismatch: the corner shows ES/EN, so the name ends
+    // with the same code the eye sees.
+    expect(anchor![0]).toMatch(/\(\$\{languages\[other\]\}\)`\}/);
   });
 
   it('has dropped the old top-right triangle', () => {
@@ -276,7 +282,9 @@ describe('language corner styles', () => {
     expect(z).toBeLessThan(dialogZ); // palette, mail letter, paper slips
     // The footer is a later sibling: without a stacking context on the header the
     // fixed corner would be painted under the footer's ground.
-    expect(HEADER).toMatch(/header \{ position: relative; z-index: 1; \}/);
+    // Its z (10) also lifts it above every experiment hero (z 1, later in the
+    // page) and stays under the footer's popups (z 20).
+    expect(HEADER).toMatch(/header \{ position: relative; z-index: 10; \}/);
   });
 
   it('does not move under prefers-reduced-motion', () => {

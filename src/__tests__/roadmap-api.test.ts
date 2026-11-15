@@ -344,6 +344,33 @@ describe('roadmap writes', () => {
     expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { state: 'done' }]);
   });
 
+  it('accepts facetmedia as a roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    stub.on('createRoadmapItem', (input) => ({ ...publicItem(), ...(input as object) }));
+    stub.on('patchRoadmapItem', (_id, patch) => ({ ...publicItem(), ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const created = await call(send('/roadmap', 'POST', { title: 'Facet work', topic: 'facetmedia' }), env);
+    expect(created.status).toBe(201);
+    expect(created.body.topic).toBe('facetmedia');
+    expect(stub.calls.createRoadmapItem[0][0]).toMatchObject({ topic: 'facetmedia' });
+
+    const patched = await call(send('/roadmap/r1', 'PATCH', { topic: 'facetmedia' }), env);
+    expect(patched.status).toBe(200);
+    expect(patched.body.topic).toBe('facetmedia');
+    expect(stub.calls.patchRoadmapItem[0]).toEqual(['r1', { topic: 'facetmedia' }]);
+  });
+
+  it('rejects an unknown roadmap topic on POST and PATCH', async () => {
+    const stub = fakeHub();
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    expect((await call(send('/roadmap', 'POST', { title: 'x', topic: 'nope' }), env)).status).toBe(400);
+    expect((await call(send('/roadmap/r1', 'PATCH', { topic: 'nope' }), env)).status).toBe(400);
+    expect(stub.calls.createRoadmapItem).toBeUndefined();
+    expect(stub.calls.patchRoadmapItem).toBeUndefined();
+  });
+
   it('rejects unknown fields on POST, and shipped_at on both POST and PATCH', async () => {
     const stub = fakeHub();
     const env = fakeEnv(fakeKV({}), stub.hub);
@@ -389,13 +416,19 @@ describe('roadmap writes', () => {
     stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
     const env = fakeEnv(fakeKV({}), stub.hub);
 
-    const bad = await call(send('/', 'PUT', { title: 't', body: 'b', roadmap_id: 'missing' }), env);
+    const bad = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'missing' }),
+      env
+    );
     expect(bad.status).toBe(400);
     expect(bad.body).toEqual({ error: 'unknown roadmap_id' });
 
-    const good = await call(send('/', 'PUT', { title: 't', body: 'b', roadmap_id: 'r1' }), env);
+    const good = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'r1' }),
+      env
+    );
     expect(good.status).toBe(201);
-    expect(stub.calls.addEntry[0][0]).toMatchObject({ title: 't', body: 'b', roadmap_id: 'r1' });
+    expect(stub.calls.addEntry[0][0]).toMatchObject({ title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'r1' });
   });
 });
 
@@ -424,28 +457,6 @@ describe('announcement PATCH with roadmap_id', () => {
     expect(patch).not.toHaveProperty('topic');
   });
 
-  it('rewords title and body without touching topic or date', async () => {
-    const stub = fakeHub();
-    stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', type: 'note', topic: 'canopy', ...(patch as object) }));
-    const env = fakeEnv(fakeKV({}), stub.hub);
-
-    const res = await call(send('/e1', 'PATCH', { title: ' Short title ', body: ' Short body. ' }), env);
-    expect(res.status).toBe(200);
-    const [id, patch] = stub.calls.updateEntryMeta[0] as [string, Record<string, unknown>];
-    expect(id).toBe('e1');
-    expect(patch).toEqual({ title: 'Short title', body: 'Short body.' });
-    expect(res.body).toMatchObject({ date: '2026-09-19T00:00:00.000Z', topic: 'canopy' });
-  });
-
-  it('refuses a reworded title or body over the announcement limits, or an empty one', async () => {
-    const stub = fakeHub();
-    const env = fakeEnv(fakeKV({}), stub.hub);
-    expect((await call(send('/e1', 'PATCH', { title: 'x'.repeat(101) }), env)).status).toBe(413);
-    expect((await call(send('/e1', 'PATCH', { body: 'x'.repeat(281) }), env)).status).toBe(413);
-    expect((await call(send('/e1', 'PATCH', { body: '   ' }), env)).status).toBe(400);
-    expect(stub.calls.updateEntryMeta).toBeUndefined();
-  });
-
   it('still reclassifies as general when neither key is present', async () => {
     const stub = fakeHub();
     stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', type: 'note', ...(patch as object) }));
@@ -453,6 +464,88 @@ describe('announcement PATCH with roadmap_id', () => {
 
     expect(res.status).toBe(200);
     expect(stub.calls.updateEntryMeta[0][1]).toEqual({ topic: 'general' });
+  });
+});
+
+describe('announcement bilingual fields', () => {
+  it('refuses PUT without both Spanish texts, naming them, before reaching addEntry', async () => {
+    const stub = fakeHub();
+    stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const res = await call(send('/', 'PUT', { title: 't', body: 'b' }), env);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('title_es');
+    expect(res.body.error).toContain('body_es');
+    expect(stub.calls.addEntry).toBeUndefined();
+  });
+
+  it('carries both languages on PUT, and rejects oversize Spanish text', async () => {
+    const stub = fakeHub();
+    stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const good = await call(
+      send('/', 'PUT', { title: 'Hello', body: 'World', title_es: 'Hola', body_es: 'Mundo' }),
+      env
+    );
+    expect(good.status).toBe(201);
+    expect(good.body).toMatchObject({ title: 'Hello', body: 'World', title_es: 'Hola', body_es: 'Mundo' });
+    expect(stub.calls.addEntry[0][0]).toMatchObject({ title_es: 'Hola', body_es: 'Mundo' });
+
+    const longTitle = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 'x'.repeat(101), body_es: 'b-es' }),
+      env
+    );
+    expect(longTitle.status).toBe(413);
+
+    const longBody = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'x'.repeat(281) }),
+      env
+    );
+    expect(longBody.status).toBe(413);
+  });
+
+  it('PATCH adds Spanish to an existing entry, returning both languages', async () => {
+    const stub = fakeHub();
+    stub.on('updateEntryMeta', (_id, patch) => ({
+      id: 'e1',
+      date: '2026-09-19T00:00:00.000Z',
+      title: 't',
+      body: 'b',
+      title_es: null,
+      body_es: null,
+      type: 'note',
+      ...(patch as object),
+    }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const res = await call(send('/e1', 'PATCH', { title_es: 'Título', body_es: 'Cuerpo' }), env);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ title: 't', body: 'b', title_es: 'Título', body_es: 'Cuerpo' });
+    expect(stub.calls.updateEntryMeta[0][1]).toEqual({ title_es: 'Título', body_es: 'Cuerpo' });
+  });
+
+  it('GET / fills missing Spanish fields with null, so old rows keep working', async () => {
+    const old = { id: 'old', date: '2026-09-01T00:00:00.000Z', title: 'Old', body: 'News', type: 'note', topic: 'canopy' };
+    const kv = fakeKV({ entries: JSON.stringify([old]) });
+    const { status, body } = await call(get('/'), fakeEnv(kv, fakeHub().hub));
+    expect(status).toBe(200);
+    expect(body.entries[0]).toMatchObject({ title: 'Old', body: 'News', title_es: null, body_es: null });
+  });
+
+  it('PATCH rejects an empty Spanish text, and an es-only patch never reclassifies', async () => {
+    const stub = fakeHub();
+    stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const empty = await call(send('/e1', 'PATCH', { title_es: '  ' }), env);
+    expect(empty.status).toBe(400);
+    expect(stub.calls.updateEntryMeta).toBeUndefined();
+
+    const esOnly = await call(send('/e1', 'PATCH', { body_es: 'Cuerpo' }), env);
+    expect(esOnly.status).toBe(200);
+    expect(stub.calls.updateEntryMeta[0][1]).toEqual({ body_es: 'Cuerpo' });
   });
 });
 
@@ -561,5 +654,29 @@ describe('CORS on the public API', () => {
     expect(res.status).toBe(401);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
     expect(stub.calls.createRoadmapItem).toBeUndefined();
+  });
+});
+
+describe('GET /founding-spots', () => {
+  it('serves the live count with the total from KV', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '3' });
+    const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+    expect(status).toBe(200);
+    expect(found).toEqual({ left: 3, total: 5 });
+  });
+  it('answers null when the value is missing or out of range, never a wrong number', async () => {
+    const seeds: Record<string, string>[] = [{}, { 'founding-audits-left': '9' }, { 'founding-audits-left': 'x' }];
+    for (const seed of seeds) {
+      const kv = fakeKV(seed);
+      const { status, body: found } = await call(get('/founding-spots'), fakeEnv(kv, fakeHub().hub));
+      expect(status).toBe(200);
+      expect(found).toEqual({ left: null, total: 5 });
+    }
+  });
+  it('is edge-cached for a minute', async () => {
+    const kv = fakeKV({ 'founding-audits-left': '2' });
+    const res = await worker.fetch(get('/founding-spots'), fakeEnv(kv, fakeHub().hub) as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
   });
 });
