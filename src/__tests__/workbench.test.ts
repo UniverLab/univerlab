@@ -56,10 +56,10 @@ describe('workbench', () => {
     expect(VIEW).toContain('{w.intro}');
   });
 
-  it('the primary button invites the visitor to tell us what they need', () => {
+  it('the primary button uses one text everywhere, no short alternate', () => {
     expect(es.workbench.cta).toContain('Cuéntanos qué necesitas');
     expect(en.workbench.cta).toContain('Tell us what you need');
-    expect(es.workbench.ctaShort.length).toBeLessThan(es.workbench.cta.length);
+    expect(es.workbench.ctaShort).toBe(es.workbench.cta);
     expect(en.workbench.ctaShort.length).toBeLessThan(en.workbench.cta.length);
     expect(VIEW).toContain('{w.ctaShort}');
     expect(VIEW).toContain('{w.ctaNote}');
