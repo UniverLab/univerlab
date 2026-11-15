@@ -7,10 +7,30 @@ export interface Entry {
   date: string;
   title: string;
   body: string;
+  title_es?: string | null;
+  body_es?: string | null;
   type?: string;
   topic?: string | null;
   link?: string | null;
   roadmap_id?: string | null;
+}
+
+/** The entry's wording in `lang`: the Spanish text when it has any,
+ *  otherwise the English text. A blank or missing Spanish field is not a
+ *  translation, so it falls back. */
+export function entryTexts(
+  e: Pick<Entry, 'title' | 'body' | 'title_es' | 'body_es'>,
+  lang: 'en' | 'es' = 'en',
+): { title: string; body: string } {
+  if (lang === 'es') {
+    const titleEs = typeof e.title_es === 'string' ? e.title_es.trim() : '';
+    const bodyEs = typeof e.body_es === 'string' ? e.body_es.trim() : '';
+    return {
+      title: titleEs || e.title || '',
+      body: bodyEs || e.body || '',
+    };
+  }
+  return { title: e.title || '', body: e.body || '' };
 }
 
 export interface RoadmapItem {

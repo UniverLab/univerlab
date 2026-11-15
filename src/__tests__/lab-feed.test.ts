@@ -131,6 +131,40 @@ describe('row helpers', () => {
       `- ${entryHead('2026-10-06T01:09:26.735Z')} · note · general — **Note**: First paragraph.`,
     );
   });
+
+  it('prints the Spanish text when asked and translated, else English', () => {
+    const translated = entry({
+      id: 'e1',
+      title: 'Launched',
+      title_es: 'Lanzado',
+      body_es: 'Primer párrafo.\n\nSegundo párrafo.',
+    });
+    expect(entryLine(translated, 'es')).toBe(
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · general — **Lanzado**: Primer párrafo.`,
+    );
+    // English is unchanged, whatever Spanish is stored.
+    expect(entryLine(translated)).toBe(
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · launch · general — **Launched**: First paragraph.`,
+    );
+    // No translation, or a blank one, falls back to English even in Spanish.
+    const plain = entry({ id: 'e2', title: 'Note', type: 'note', topic: null, link: null });
+    expect(entryLine(plain, 'es')).toBe(
+      `- ${entryHead('2026-10-06T01:09:26.735Z')} · note · general — **Note**: First paragraph.`,
+    );
+    const blank = entry({ id: 'e3', title: 'Note', title_es: '  ', body_es: '', type: 'note', topic: null, link: null });
+    expect(entryLine(blank, 'es')).toContain('**Note**: First paragraph.');
+  });
+
+  it('entriesMarkdown follows the requested language', () => {
+    const log = [
+      entry({ id: 'e1', title: 'Launched', title_es: 'Lanzado', body_es: 'Primer párrafo.' }),
+      entry({ id: 'e2', title: 'Note', type: 'note', topic: null, link: null }),
+    ];
+    const es = entriesMarkdown(log, { lang: 'es' });
+    expect(es).toContain('**Lanzado**: Primer párrafo.');
+    expect(es).toContain('**Note**: First paragraph.');
+    expect(entriesMarkdown(log)).toContain('**Launched**: First paragraph.');
+  });
 });
 
 // --------------------------------------------------------------- lane ordering

@@ -8,6 +8,7 @@
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { entriesMarkdown, firstParagraph, sortEntries, type Entry } from './lab-feed';
+import { entryTexts } from './field-notes';
 import { layoutClassifieds, spanFor, typeWeight, type AdSlot } from './lab-classifieds';
 import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
@@ -188,11 +189,13 @@ function frameAccent(e: Entry): string {
   return '';
 }
 
-function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Set<string>, lead: boolean, spanCls: string, frame: string): string {
+function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Set<string>, lead: boolean, spanCls: string, frame: string, lang: LabPageLang): string {
   const e = slot.entry;
-  const title = esc(e.title || '');
+  const texts = entryTexts(e, lang);
+  const localized = { ...e, title: texts.title, body: texts.body };
+  const title = esc(texts.title);
   const v = ` type-v${variant}`;
-  const figure = variant === 5 ? `<span class="ad-figure">${esc(figureFor(e))}</span>` : '';
+  const figure = variant === 5 ? `<span class="ad-figure">${esc(figureFor(localized))}</span>` : '';
   // The two extra voices: a small run-in notice with a bold lead word and
   // no h3, and the title repeated in three stacked sizes over the body.
   const word = esc(repWordFor(e));
@@ -214,7 +217,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
       `<img src="${esc(displayArt(e.topic))}" alt="" width="${art.width}" height="${art.height}" loading="lazy" decoding="async">` +
       `</div></figure>` +
       `<div class="entry-body">${kicker}${figure}<h3 class="sz-lg">${title}</h3>` +
-      `<p>${linkify(e.body || '')}</p>` +
+      `<p>${linkify(texts.body)}</p>` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
     );
@@ -222,10 +225,10 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
   if (slot.size === 'boxed') {
     const head =
       variant === 6
-        ? `<p class="run-in"><b>${title}.</b> ${linkify(e.body || '')}</p>`
+        ? `<p class="run-in"><b>${title}.</b> ${linkify(texts.body)}</p>`
         : variant === 7
-          ? `${repWords}<h3 class="sz-md">${title}</h3><p>${linkify(e.body || '')}</p>`
-          : `${figure}<h3 class="sz-md">${title}</h3><p>${linkify(e.body || '')}</p>`;
+          ? `${repWords}<h3 class="sz-md">${title}</h3><p>${linkify(texts.body)}</p>`
+          : `${figure}<h3 class="sz-md">${title}</h3><p>${linkify(texts.body)}</p>`;
     return (
       `<article class="log-entry ad-boxed${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
       `<div class="entry-body">${adCut(e, page, used)}${head}` +
@@ -234,7 +237,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     );
   }
   if (slot.size === 'small') {
-    const cut = esc(firstParagraph(e.body || ''));
+    const cut = esc(firstParagraph(texts.body));
     const link = e.link
       ? ` <a class="log-link" href="${esc(finalEntryHref(e.link || ''))}" target="_blank" rel="noopener noreferrer">${esc(t.labPage.view)}</a>`
       : '';
@@ -300,7 +303,7 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     }
     const s = item.slot;
     if (s.size === 'line') {
-      run.push(slotHtml(s, t, 0, page, used, false, '', ''));
+      run.push(slotHtml(s, t, 0, page, used, false, '', '', lang));
       prevTv = -3;
       prevSpan = 5;
       prevFrame = 'run';
@@ -311,7 +314,9 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     let tv = (hashSeed(s.entry.id || '') + n) % voices;
     n += 1;
     // The repeated word is a shout: once per page at most.
-    while (tv === prevTv || (tv === 5 && !figureFor(s.entry)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
+    const sTexts = entryTexts(s.entry, lang);
+    const sLocalized = { ...s.entry, title: sTexts.title, body: sTexts.body };
+    while (tv === prevTv || (tv === 5 && !figureFor(sLocalized)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
     if (tv === 7) repUsed = true;
     let span = spanFor(s.entry, s.size, si);
     si += 1;
@@ -321,7 +326,7 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     if (frame && frame === prevFrame) frame = '';
     prevFrame = frame;
     const isLead = lead && s === slots[0];
-    out += slotHtml(s, t, tv, page, used, isLead, spanCls, frame ? ` ${frame}` : '');
+    out += slotHtml(s, t, tv, page, used, isLead, spanCls, frame ? ` ${frame}` : '', lang);
     prevTv = tv;
     prevSpan = span;
     if (isLead && !leadClosed) {
@@ -375,14 +380,11 @@ function logbookPointerHtml(t: Dict, lang: LabPageLang): string {
   return `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
 }
 
-/** A classifieds section head: "Lab news" set inside the engraved head
- *  cartouche, centred over the plate, on both pages. The lab's news run in
- *  English only, so the head stays English in every edition and never
- *  outgrows the frame. */
-const LAB_HEAD_WORDS = 'Lab news';
-
-function headHtml(): string {
-  return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="lab-heading" translate="no">${LAB_HEAD_WORDS}</h2></div></header>`;
+/** A classifieds section head set inside the engraved head cartouche,
+ *  centred over the plate, on both pages: the edition's own words, short
+ *  enough to stay inside the frame. */
+function headHtml(t: Dict): string {
+  return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="lab-heading">${esc(t.labPage.head)}</h2></div></header>`;
 }
 
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
@@ -427,14 +429,14 @@ export function labPageHtml(
   const t = dict(lang);
   const rows = sortEntries(entries || []);
   if (!rows.length && opts?.unavailable) {
-    return headHtml() +
+    return headHtml(t) +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
   // An edition from before the lab's first news has no classifieds: the
   // newspaper is page 1 alone.
   if (!rows.length) return '';
   const { page1 } = classifiedsHtml(rows, lang, opts);
-  return headHtml() +
+  return headHtml(t) +
     filtersHtml(rows, t) +
     page1;
 }
@@ -464,14 +466,16 @@ export function logbookFilteredHtml(
   const all = sortEntries(allEntries || []);
   const list = sortEntries(rows || []);
   const items = list
-    .map(
-      (e) =>
+    .map((e) => {
+      const texts = entryTexts(e, lang);
+      return (
         `<article class="log-entry log-full" ${slotAttrs(e)}>` +
-        `<div class="entry-body"><h3 class="sz-md">${esc(e.title || '')}</h3>` +
-        `<p>${linkify(e.body || '')}</p>` +
+        `<div class="entry-body"><h3 class="sz-md">${esc(texts.title)}</h3>` +
+        `<p>${linkify(texts.body)}</p>` +
         `<p class="entry-meta">${entryMeta(e, t)}</p>` +
-        `</div></article>`,
-    )
+        `</div></article>`
+      );
+    })
     .join('');
   const empty = list.length ? '' : `<p class="lab-empty">${esc(lt.empty)}</p>`;
   return `<h2 class="lab-heading">${esc(lt.heading)}</h2>` +
@@ -496,14 +500,16 @@ export function logbookPageHtml(
       `<p class="lab-empty">${esc(lt.unavailable)}</p>`;
   }
   const items = rows
-    .map(
-      (e) =>
+    .map((e) => {
+      const texts = entryTexts(e, lang);
+      return (
         `<article class="log-entry log-full" ${slotAttrs(e)}>` +
-        `<div class="entry-body"><h3 class="sz-md">${esc(e.title || '')}</h3>` +
-        `<p>${linkify(e.body || '')}</p>` +
+        `<div class="entry-body"><h3 class="sz-md">${esc(texts.title)}</h3>` +
+        `<p>${linkify(texts.body)}</p>` +
         `<p class="entry-meta">${entryMeta(e, t)}</p>` +
-        `</div></article>`,
-    )
+        `</div></article>`
+      );
+    })
     .join('');
   const empty = rows.length ? '' : `<p class="lab-empty">${esc(lt.empty)}</p>`;
   return `<h2 class="lab-heading">${esc(lt.heading)}</h2>` +
@@ -523,7 +529,7 @@ export function labPageMarkdown(
   if (!(entries || []).length && opts?.unavailable) {
     return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang, opts?.foundingLeft)}\n\n${t.labPage.unavailable}`;
   }
-  const body = entriesMarkdown(entries || [], { labels: { empty: '' } });
+  const body = entriesMarkdown(entries || [], { labels: { empty: '' }, lang });
   return `## ${t.labPage.heading}\n\n${paperCouponsMarkdown(lang, opts?.foundingLeft)}\n\n${body}`;
 }
 
@@ -533,6 +539,6 @@ export function logbookMarkdown(
   lang: LabPageLang,
 ): string {
   const t = dict(lang);
-  const body = entriesMarkdown(entries || [], { labels: { empty: t.logbook.empty } });
+  const body = entriesMarkdown(entries || [], { labels: { empty: t.logbook.empty }, lang });
   return `## ${t.logbook.heading}\n\n${body}`;
 }

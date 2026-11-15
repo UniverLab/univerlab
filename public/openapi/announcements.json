@@ -137,7 +137,7 @@
                 "examples": {
                   "entry": {
                     "summary": "A new announcement",
-                    "value": "event: entry\ndata: {\"id\":\"bcfe0207-ed19-4fde-9de1-1dc1c409aa36\",\"date\":\"2026-10-06T01:09:26.735Z\",\"title\":\"TeXForge 0.10.0: code that comes out highlighted\",\"type\":\"launch\",\"topic\":\"texforge\"}"
+                    "value": "event: entry\ndata: {\"id\":\"bcfe0207-ed19-4fde-9de1-1dc1c409aa36\",\"date\":\"2026-10-06T01:09:26.735Z\",\"title\":\"TeXForge 0.10.0: code that comes out highlighted\",\"title_es\":null,\"body_es\":null,\"type\":\"launch\",\"topic\":\"texforge\"}"
                   }
                 }
               }
@@ -330,6 +330,22 @@
             "type": "string",
             "maxLength": 2000,
             "description": "The announcement as markdown."
+          },
+          "title_es": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100,
+            "description": "The announcement's title in Spanish; falls back to title when absent."
+          },
+          "body_es": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 280,
+            "description": "The announcement in Spanish; falls back to body when absent."
           },
           "type": {
             "type": "string",

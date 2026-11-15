@@ -19,6 +19,7 @@
  * sends a token or asks for `state=all`.
  */
 import type { Entry as FieldNotesEntry, RoadmapItem as FieldNotesRoadmapItem } from './field-notes';
+import { entryTexts } from './field-notes';
 
 /** The announcements API — the lab's own public data host. */
 export const ANNOUNCEMENTS_API = 'https://announcements.univerlab.org';
@@ -83,6 +84,8 @@ export interface FeedOpts {
   type?: string;
   /** Render at most this many rows, after filtering (entries only). */
   limit?: number;
+  /** The wording an entry prints in: Spanish when translated, else English. */
+  lang?: 'en' | 'es';
   labels?: FeedLabels;
 }
 
@@ -161,7 +164,7 @@ export function roadmapLine(item: RoadmapItem, hold: string = DEFAULT_LABELS.hol
 /** One logbook entry — one line, first paragraph, optional link.
  *  The mission-date label carries its ISO in parentheses so an agent reading
  *  the twin never has to convert. */
-export function entryLine(e: Entry): string {
+export function entryLine(e: Entry, lang: 'en' | 'es' = 'en'): string {
   const d = new Date(e.date);
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
@@ -171,7 +174,8 @@ export function entryLine(e: Entry): string {
   const bits = [head];
   if (e.type) bits.push(e.type);
   bits.push(topicOf(e.topic));
-  let line = `- ${bits.join(' · ')} — **${e.title}**: ${firstParagraph(e.body)}`;
+  const texts = lang === 'es' ? entryTexts(e, lang) : { title: e.title, body: e.body };
+  let line = `- ${bits.join(' · ')} — **${texts.title}**: ${firstParagraph(texts.body)}`;
   if (e.link) line += ` [link](${e.link})`;
   return line;
 }
@@ -223,7 +227,8 @@ export function roadmapMarkdown(items: RoadmapItem[], opts: FeedOpts = {}): stri
 export function entriesMarkdown(entries: Entry[], opts: FeedOpts = {}): string {
   const rows = filterEntries(entries, opts);
   if (!rows.length) return opts.labels?.empty ?? 'Nothing in the logbook.';
-  return rows.map(entryLine).join('\n');
+  const lang = opts.lang ?? 'en';
+  return rows.map((e) => entryLine(e, lang)).join('\n');
 }
 
 /** One public GET. Throws on a non-OK body — every caller has its own fallback

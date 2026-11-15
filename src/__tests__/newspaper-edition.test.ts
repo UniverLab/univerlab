@@ -349,6 +349,42 @@ describe('todayEditionHtml (es)', () => {
     );
     expect(odd).toContain('· release');
   });
+
+  it('prints the lab mail in Spanish when translated, English otherwise', () => {
+    const translated = todayEditionHtml(
+      {
+        facts: [],
+        lab: [{ ...feed().lab[0], title_es: 'Quorum 1.0.0: una mesa dibujada como un grabado', body_es: 'La mesa ya parece del laboratorio.' }],
+      },
+      'es',
+      DATE,
+    );
+    expect(translated).toContain('<h2>Quorum 1.0.0: una mesa dibujada como un grabado</h2>');
+    expect(translated).toContain('La mesa ya parece del laboratorio.');
+    expect(translated).not.toContain('The table now looks like the rest of the lab.');
+    // Without a translation the Spanish page falls back to English.
+    const fallback = todayEditionHtml({ facts: [], lab: feed().lab }, 'es', DATE);
+    expect(fallback).toContain('Quorum 1.0.0: a planning-poker table drawn as an old plate');
+    expect(fallback).toContain('The table now looks like the rest of the lab.');
+    // English never prints the translation.
+    expect(todayEditionHtml(feed(), 'en', DATE)).not.toContain('una mesa dibujada');
+  });
+
+  it('twins the lab mail in the page language', () => {
+    const md = todayEditionMarkdown(
+      {
+        facts: [],
+        lab: [{ ...feed().lab[0], title_es: 'Quorum 1.0.0: una mesa dibujada como un grabado', body_es: 'La mesa ya parece del laboratorio.' }],
+      },
+      'es',
+      DATE,
+    );
+    expect(md).toContain('**Quorum 1.0.0: una mesa dibujada como un grabado**');
+    expect(md).toContain('La mesa ya parece del laboratorio.');
+    expect(todayEditionMarkdown({ facts: [], lab: feed().lab }, 'es', DATE)).toContain(
+      '**Quorum 1.0.0: a planning-poker table drawn as an old plate**',
+    );
+  });
 });
 
 describe('todayEditionMarkdown', () => {

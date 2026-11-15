@@ -7,6 +7,7 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
+import { entryTexts } from './field-notes';
 import { dailyFact } from './mail';
 import { balanceHeads } from './paper-fit';
 import { paperAdHtml, paperAdsMarkdown, paperHouseDuoHtml, paperWorkbenchDuoHtml } from './paper-ads';
@@ -21,6 +22,8 @@ export interface TodayLab {
   date: string;
   title: string;
   body: string;
+  title_es?: string | null;
+  body_es?: string | null;
   type?: string | null;
   topic?: string | null;
   link?: string | null;
@@ -438,11 +441,12 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)
       .join(' · ');
+    const texts = entryTexts(box, lang);
     out +=
       `<article class="labmail">` +
       `<p class="kicker">${esc(kicker)}</p>` +
-      `<h2>${esc(box.title || '')}</h2>` +
-      `<p>${esc(firstParagraph(box.body || ''))}</p>` +
+      `<h2>${esc(texts.title)}</h2>` +
+      `<p>${esc(firstParagraph(texts.body))}</p>` +
       `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
   }
 
@@ -570,7 +574,8 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   for (const box of boxes) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)].filter((s) => s).join(' · ');
-    lines.push(`## ${kicker}`, '', `**${box.title || ''}**`, '', firstParagraph(box.body || ''));
+    const texts = entryTexts(box, lang);
+    lines.push(`## ${kicker}`, '', `**${texts.title}**`, '', firstParagraph(texts.body));
     lines.push('', `[${t.labLink}](${path}#lab)`, '');
   }
 

@@ -172,7 +172,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('renders the heading and the filters in Spanish', () => {
     const html = labPageHtml(entries, 'es');
-    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Noticias</h2>');
+    expect(html).not.toContain('translate="no"');
+    expect(html).not.toContain('Lab news');
     expect(html).toContain('>Todas<span class="lab-filter-count">12</span>');
     expect(html).toContain('>lanzamiento<span class="lab-filter-count">3</span>');
   });
@@ -185,7 +187,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the lab mail did not arrive instead of empty filter rows', () => {
     const html = labPageHtml([], 'en', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Lab news</h2>');
     expect(html).toContain('<p class="lab-empty">The lab mail did not arrive — try again later.</p>');
     expect(html).not.toContain('lab-filter');
     expect(html).not.toContain('lab-log');
@@ -195,7 +197,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the same in Spanish', () => {
     const html = labPageHtml([], 'es', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Noticias</h2>');
     expect(html).toContain('<p class="lab-empty">No llegó el correo del laboratorio; inténtelo más tarde.</p>');
     expect(html).not.toContain('lab-filter');
   });
@@ -333,7 +335,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // empty frame: the plate and the h2 share one head-cartouche.
     const cartouche1 = html1.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(cartouche1).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(cartouche1).toContain('<h2 class="lab-heading" translate="no">Lab news</h2>');
+    expect(cartouche1).toContain('<h2 class="lab-heading">Lab news</h2>');
     // Page 3 opens straight on its ads: the folio line above is its only head.
     const html2 = labPageHtml2(live, 'en');
     expect(html2).not.toContain('head-cartouche');
@@ -582,6 +584,46 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const esMd = labPageMarkdown(entries, 'es');
     expect(esMd).toContain('[Abrir el Banco de trabajo](https://univerlab.org/es/workbench/#primera-llamada)');
     expect(esMd).toContain('no se acumulan');
+  });
+
+  it('prints the Spanish text on Spanish pages, English otherwise', () => {
+    const rows: Entry[] = [
+      { id: 't1', date: '2026-10-06T01:09:26.735Z', title: 'Hello', body: 'World.', title_es: 'Hola', body_es: 'Mundo.', type: 'note', topic: 'canopy', link: null },
+      { id: 't2', date: '2026-10-05T10:00:00.000Z', title: 'Only English', body: 'Fallback body.', type: 'note', topic: 'canopy', link: null },
+    ];
+    const esHtml = labPageHtml(rows, 'es');
+    expect(esHtml).toContain('Hola');
+    expect(esHtml).toContain('Mundo.');
+    expect(esHtml).not.toContain('>Hello<');
+    // An entry without a translation falls back to English, even in Spanish.
+    expect(esHtml).toContain('Only English');
+    expect(esHtml).toContain('Fallback body.');
+    const enHtml = labPageHtml(rows, 'en');
+    expect(enHtml).toContain('Hello');
+    expect(enHtml).toContain('World.');
+    expect(enHtml).not.toContain('Hola');
+  });
+
+  it('prints the Spanish text in the Spanish logbook and its twin', () => {
+    const rows: Entry[] = [
+      { id: 't1', date: '2026-10-06T01:09:26.735Z', title: 'Hello', body: 'World.', title_es: 'Hola', body_es: 'Mundo.', type: 'note', topic: 'canopy', link: null },
+      { id: 't2', date: '2026-10-05T10:00:00.000Z', title: 'Only English', body: 'Fallback body.', type: 'note', topic: 'canopy', link: null },
+    ];
+    const esHtml = logbookPageHtml(rows, 'es');
+    expect(esHtml).toContain('Hola');
+    expect(esHtml).toContain('Mundo.');
+    expect(esHtml).toContain('Only English');
+    const enHtml = logbookPageHtml(rows, 'en');
+    expect(enHtml).toContain('Hello');
+    expect(enHtml).not.toContain('Hola');
+    const esMd = logbookMarkdown(rows, 'es');
+    expect(esMd).toContain('**Hola**');
+    expect(esMd).toContain('Mundo.');
+    expect(esMd).toContain('**Only English**');
+    const twinEs = labPageMarkdown(rows, 'es');
+    expect(twinEs).toContain('**Hola**');
+    expect(twinEs).not.toContain('**Hello**');
+    expect(labPageMarkdown(rows, 'en')).toContain('**Hello**');
   });
 });
 

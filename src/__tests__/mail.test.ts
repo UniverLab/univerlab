@@ -173,6 +173,25 @@ describe('labLetters', () => {
     const [canopy] = labLetters([ann('g2', 1, 'canopy')], [], NOW, [EXP_CANOPY]);
     expect(canopy.link).toBe('/newspaper/?topic=canopy#lab');
   });
+
+  it('reads the Spanish text when asked and translated, else English', () => {
+    const translated: Announcement = {
+      ...ann('t-1d', 1),
+      title_es: 'Titular',
+      body_es: 'Primer párrafo.\n\nSegundo párrafo.',
+    };
+    const [es] = labLetters([translated], [], NOW, [EXP_CANOPY], 'es');
+    expect(es.title).toBe('Titular');
+    expect(es.body).toBe('Primer párrafo.');
+    // English is unchanged by the translation.
+    const [en] = labLetters([translated], [], NOW, [EXP_CANOPY]);
+    expect(en.title).toBe('Entry t-1d');
+    expect(en.body).toBe('First paragraph of t-1d.');
+    // No translation falls back to English, even in Spanish.
+    const [fallback] = labLetters([ann('u-1d', 1)], [], NOW, [EXP_CANOPY], 'es');
+    expect(fallback.title).toBe('Entry u-1d');
+    expect(fallback.body).toBe('First paragraph of u-1d.');
+  });
 });
 
 describe('the letter from the past', () => {

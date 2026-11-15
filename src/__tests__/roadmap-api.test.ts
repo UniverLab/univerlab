@@ -416,13 +416,19 @@ describe('roadmap writes', () => {
     stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
     const env = fakeEnv(fakeKV({}), stub.hub);
 
-    const bad = await call(send('/', 'PUT', { title: 't', body: 'b', roadmap_id: 'missing' }), env);
+    const bad = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'missing' }),
+      env
+    );
     expect(bad.status).toBe(400);
     expect(bad.body).toEqual({ error: 'unknown roadmap_id' });
 
-    const good = await call(send('/', 'PUT', { title: 't', body: 'b', roadmap_id: 'r1' }), env);
+    const good = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'r1' }),
+      env
+    );
     expect(good.status).toBe(201);
-    expect(stub.calls.addEntry[0][0]).toMatchObject({ title: 't', body: 'b', roadmap_id: 'r1' });
+    expect(stub.calls.addEntry[0][0]).toMatchObject({ title: 't', body: 'b', title_es: 't-es', body_es: 'b-es', roadmap_id: 'r1' });
   });
 });
 
@@ -458,6 +464,88 @@ describe('announcement PATCH with roadmap_id', () => {
 
     expect(res.status).toBe(200);
     expect(stub.calls.updateEntryMeta[0][1]).toEqual({ topic: 'general' });
+  });
+});
+
+describe('announcement bilingual fields', () => {
+  it('refuses PUT without both Spanish texts, naming them, before reaching addEntry', async () => {
+    const stub = fakeHub();
+    stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const res = await call(send('/', 'PUT', { title: 't', body: 'b' }), env);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('title_es');
+    expect(res.body.error).toContain('body_es');
+    expect(stub.calls.addEntry).toBeUndefined();
+  });
+
+  it('carries both languages on PUT, and rejects oversize Spanish text', async () => {
+    const stub = fakeHub();
+    stub.on('addEntry', (input) => ({ id: 'e1', date: '2026-09-29T00:00:00.000Z', ...(input as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const good = await call(
+      send('/', 'PUT', { title: 'Hello', body: 'World', title_es: 'Hola', body_es: 'Mundo' }),
+      env
+    );
+    expect(good.status).toBe(201);
+    expect(good.body).toMatchObject({ title: 'Hello', body: 'World', title_es: 'Hola', body_es: 'Mundo' });
+    expect(stub.calls.addEntry[0][0]).toMatchObject({ title_es: 'Hola', body_es: 'Mundo' });
+
+    const longTitle = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 'x'.repeat(101), body_es: 'b-es' }),
+      env
+    );
+    expect(longTitle.status).toBe(413);
+
+    const longBody = await call(
+      send('/', 'PUT', { title: 't', body: 'b', title_es: 't-es', body_es: 'x'.repeat(281) }),
+      env
+    );
+    expect(longBody.status).toBe(413);
+  });
+
+  it('PATCH adds Spanish to an existing entry, returning both languages', async () => {
+    const stub = fakeHub();
+    stub.on('updateEntryMeta', (_id, patch) => ({
+      id: 'e1',
+      date: '2026-09-19T00:00:00.000Z',
+      title: 't',
+      body: 'b',
+      title_es: null,
+      body_es: null,
+      type: 'note',
+      ...(patch as object),
+    }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const res = await call(send('/e1', 'PATCH', { title_es: 'Título', body_es: 'Cuerpo' }), env);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ title: 't', body: 'b', title_es: 'Título', body_es: 'Cuerpo' });
+    expect(stub.calls.updateEntryMeta[0][1]).toEqual({ title_es: 'Título', body_es: 'Cuerpo' });
+  });
+
+  it('GET / fills missing Spanish fields with null, so old rows keep working', async () => {
+    const old = { id: 'old', date: '2026-09-01T00:00:00.000Z', title: 'Old', body: 'News', type: 'note', topic: 'canopy' };
+    const kv = fakeKV({ entries: JSON.stringify([old]) });
+    const { status, body } = await call(get('/'), fakeEnv(kv, fakeHub().hub));
+    expect(status).toBe(200);
+    expect(body.entries[0]).toMatchObject({ title: 'Old', body: 'News', title_es: null, body_es: null });
+  });
+
+  it('PATCH rejects an empty Spanish text, and an es-only patch never reclassifies', async () => {
+    const stub = fakeHub();
+    stub.on('updateEntryMeta', (_id, patch) => ({ id: 'e1', date: '2026-09-19T00:00:00.000Z', title: 't', body: 'b', ...(patch as object) }));
+    const env = fakeEnv(fakeKV({}), stub.hub);
+
+    const empty = await call(send('/e1', 'PATCH', { title_es: '  ' }), env);
+    expect(empty.status).toBe(400);
+    expect(stub.calls.updateEntryMeta).toBeUndefined();
+
+    const esOnly = await call(send('/e1', 'PATCH', { body_es: 'Cuerpo' }), env);
+    expect(esOnly.status).toBe(200);
+    expect(stub.calls.updateEntryMeta[0][1]).toEqual({ body_es: 'Cuerpo' });
   });
 });
 

@@ -609,7 +609,7 @@ function startMailbox(): void {
       if (!res.ok) return;
       const data = await res.json();
       const entries: Announcement[] = Array.isArray(data?.entries) ? data.entries : [];
-      const fresh = labLetters(entries, opened, new Date(), exps);
+      const fresh = labLetters(entries, opened, new Date(), exps, lang);
       // The newest unopened entry of the last 7 days is today's lab mail; it
       // waited in the API already, so it joins the queue without the drop.
       if (fresh.length) {
@@ -650,7 +650,7 @@ function startMailbox(): void {
       try {
         const entry = JSON.parse(e.data) as Announcement;
         if (!entry || !entry.id || isSeen(entry.id, opened)) return;
-        const letter = labLetters([entry], opened, new Date(), exps)[0];
+        const letter = labLetters([entry], opened, new Date(), exps, lang)[0];
         if (letter) arrive(letter);
       } catch (err) {}
     });

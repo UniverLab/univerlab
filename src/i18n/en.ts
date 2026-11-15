@@ -737,6 +737,7 @@ export const en = {
     tabs: { p1: 'Page 1', p2: 'Page 2 · Lab news', p3: 'Page 3 · Lab news' },
     labPage: {
       heading: 'Lab news',
+      head: 'Lab news',
       all: 'All',
       view: 'View →',
       unavailable: 'The lab mail did not arrive — try again later.',
