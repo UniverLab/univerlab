@@ -58,16 +58,29 @@ describe("today's paper styles stay on the paper", () => {
     );
   });
 
-  it('fills the lead and the rail instead of leaving blank paper', () => {
-    // The story is a full-height flex column and the lead engraving grows
-    // into the slack; the rail matches the lead's height the same way. The
-    // pictures scale down to make room — never cropped out of the sheet.
-    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*100%/);
+  it('keeps the lead story at content height', () => {
+    // The story wraps its own words: no stretched box pulls a band of
+    // blank paper between the banner and the letters. The rail still
+    // matches the lead's height, and the pictures scale down to make
+    // room — never cropped out of the sheet.
+    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*auto/);
     expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
     expect(css).toMatch(/\.paper \.photo--lead img,[^}]*object-fit:\s*contain/);
     expect(css).toMatch(/\.paper \.photo--lead img,[^}]*max-height:\s*100%/);
     expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
     expect(css).toContain('.paper .photo--medium');
+  });
+
+  it('never spreads free space into bands', () => {
+    // Free space belongs to content, not to the gaps between the masthead
+    // blocks: the edition and the front pack their blocks at the start,
+    // columns sit at their own height, and the classifieds bodies wrap
+    // their ads instead of stretching past them.
+    expect(css).toMatch(/\.paper #edition \{[^}]*align-content:\s*start/);
+    expect(css).toMatch(/\.paper \.front \{[^}]*align-content:\s*start/);
+    expect(css).toMatch(/\.paper \.col \{[^}]*align-self:\s*start/);
+    expect(css).toMatch(/\.paper #lab-body, \.paper #lab2-body \{[^}]*flex:\s*0 0 auto/);
+    expect(css).not.toContain('fit-natural');
   });
 
   it('sets bodies upright with hyphenation, never long italic blocks', () => {

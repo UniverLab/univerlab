@@ -352,18 +352,10 @@ export function fitFrontPage(edition: Element): FrontFit {
   const alsoEl = edition.querySelector('.rail .also');
   let duoEl = edition.querySelector('aside.ad--feature');
 
-  // Measure the row at its natural size: the story, the rail and the photo
-  // growth stretch to the row foot once laid out, which would hide how much
-  // content the sheet really holds. Read, then drop the class again.
-  edition.classList.add('fit-natural');
+  // The sheet never stretches a block past its content now: the row's
+  // foot is its content's own foot, so the read below is content, not
+  // stretch. The stale rail height emptied the letter band; read live.
   const storyEl = edition.querySelector('.lead .story');
-  // Touch each stretched box at its natural size: the read settles the
-  // layout the loop below measures, after the class is dropped again.
-  const storyH = storyEl ? (storyEl as HTMLElement).getBoundingClientRect().height : 0;
-  const railH =
-    alsoEl && railEl ? rectBottom(alsoEl) - railEl.getBoundingClientRect().top : 0;
-  const duoH = duoEl ? (duoEl as HTMLElement).getBoundingClientRect().height : 0;
-  edition.classList.remove('fit-natural');
 
   // Whole column sections move under the lead story: half the band, rounded
   // up — all of it when the lead stands alone with no rail beside it. Whole
@@ -395,18 +387,12 @@ export function fitFrontPage(edition: Element): FrontFit {
     return Math.max(...lines, 1);
   })();
 
-  // The natural foot never sits below its content: flex growth only
-  // stretches past it, so the stretched box and the natural height agree.
-  // The story's own height is the row's floor when the letters are gone.
-  const storyFloor = storyEl ? (storyEl as HTMLElement).getBoundingClientRect().top + storyH : 0;
+  // The foot is the content's own foot: the story's foot floors the row
+  // when the letters are gone, and the rail never ends above it.
+  const storyFloor = storyEl ? rectBottom(storyEl) : 0;
   const railFoot = (): number =>
-    railEl
-      ? Math.max(rectBottom(railEl), railEl.getBoundingClientRect().top + railH, storyFloor)
-      : storyFloor;
-  const duoFoot = (): number =>
-    duoEl
-      ? Math.max(rectBottom(duoEl as Element), (duoEl as HTMLElement).getBoundingClientRect().top + duoH)
-      : 0;
+    railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
+  const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
 
   for (let guard = 0; guard < 50; guard++) {
     const cols = letterCols(edition);
@@ -439,8 +425,15 @@ export function fitFrontPage(edition: Element): FrontFit {
   if (!cols.length) return out;
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
   out.movedLetters = balanceColumns(cols);
+  // A trim may empty a column whole: it leaves the page, and a wrapper
+  // left with no column goes with it, so the band never holds blank paper.
+  const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
+  for (const wrap of Array.from(edition.querySelectorAll('.lead-cols, .cols'))) {
+    if (!wrap.querySelector('.col')) wrap.remove();
+  }
+  if (!live.length) return out;
   // The free foot of each column, roomiest first.
-  const order = cols
+  const order = live
     .map((col, i) => ({ col, i, free: limit - rectBottom(col) }))
     .sort((a, b) => b.free - a.free);
   if (!order.length || order[0].free <= 1) return out;
@@ -595,10 +588,11 @@ export function fillClassifiedsFoot(grid: Element, scope: Element, limit: number
   place('house-install');
   if (limit - rectBottom(scope) <= 3 * line) return added;
   place('house-collab');
-  // Then one engraved ornament, sized to the space left.
-  const remaining = limit - rectBottom(scope);
-  if (remaining <= 3 * line) return added;
+  // Then engraved ornaments while room remains: each plate sized to the
+  // fresh space left — full size, halved once — else the next kind.
   for (const kind of ['orn-tree', 'orn-gem', 'orn-press']) {
+    const remaining = limit - rectBottom(scope);
+    if (remaining <= 3 * line) break;
     const t = scope.querySelector(`template[data-fill="${kind}"]`) as HTMLTemplateElement | null;
     if (!t?.innerHTML) continue;
     const tmp = doc.createElement('div');
@@ -624,7 +618,6 @@ export function fillClassifiedsFoot(grid: Element, scope: Element, limit: number
       }
     }
     added++;
-    return added;
   }
   return added;
 }
