@@ -867,7 +867,7 @@ export const es: Dict = {
     headEm: 'Algo que quieres mejorar.',
     intro: 'Exploramos, diseñamos e implementamos soluciones de automatización e inteligencia artificial para problemas reales. Desde una primera conversación hasta una solución construida para tu caso.',
     cta: 'Cuéntanos qué necesitas →',
-    ctaShort: 'Cuéntanos →',
+    ctaShort: 'Cuéntanos qué necesitas →',
     ctaNote: 'por WhatsApp',
     ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
     altCta: 'Escríbenos →',
@@ -936,7 +936,7 @@ export const es: Dict = {
     money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al Banco de trabajo paga el laboratorio: modelos de inteligencia artificial, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
     principles: { kicker: 'Cómo trabajamos', items: ['Todo es un script y vive en control de versiones: nada de magia cerrada.', 'El código es tuyo: termina en tu repositorio.', 'Un trabajo pesado a la vez: trabajamos en foco, no en paralelo.'] },
     proof: { kicker: 'Lo que ya salió de este Banco de trabajo', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
-    close: { head: 'Lo que contratas en el Banco de trabajo ayuda a financiar el laboratorio: las herramientas y los experimentos de UniverLab permanecen abiertos.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
+    close: { head: 'Lo que contratas en Workbench ayuda a financiar el laboratorio. Sus herramientas y experimentos permanecen abiertos.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
       machineAlt: 'Mesa de ensayador grabada: un instrumento de ensayo de latón bajo campana de vidrio, una fila de pesas de latón, un libro mayor abierto con una lupa y un sello de mango granate',
       title: 'Auditorías: revisión independiente con evidencia — UniverLab',
@@ -1074,7 +1074,7 @@ export const es: Dict = {
     label: 'AGENDA TU PRIMERA CONVERSACIÓN',
     h1: 'Empieza por una conversación.',
     intro:
-      'Agenda una primera conversación gratuita de 15 minutos para contarnos qué necesitas, explorar tu situación y determinar si UniverLab puede ayudarte con automatización e inteligencia artificial. No necesitas conocimientos técnicos ni una solución definida para hablar con el Banco de trabajo: esta primera conversación sirve para entender el caso y decidir el siguiente paso; no es una consultoría técnica ni una implementación gratuita. Esta sección solo agenda la primera llamada gratis.',
+      'Agenda una primera conversación gratuita de 15 minutos para contarnos qué necesitas, explorar tu situación y determinar si UniverLab puede ayudarte con automatización e inteligencia artificial. No necesitas conocimientos técnicos ni una solución definida. Esta primera conversación nos permite entender tu situación y determinar si podemos ayudarte. Esta sección solo agenda la primera llamada gratis.',
     fallbackTitle: '¿Prefieres escribir?',
     fallbackText: 'Si el formulario no carga, escríbenos y una persona la agenda a mano:',
     whatsapp: 'Escríbenos por WhatsApp →',

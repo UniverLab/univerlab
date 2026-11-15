@@ -60,9 +60,9 @@ describe('workbench-book copy', () => {
     }
   });
 
-  it('Spanish keeps Banco de trabajo and spells out inteligencia artificial', () => {
+  it('Spanish spells out inteligencia artificial in the new first-call text', () => {
     const json = JSON.stringify(es.book);
-    expect(json).toContain('Banco de trabajo');
+    expect(es.book.intro).toContain('Esta primera conversación nos permite entender tu situación y determinar si podemos ayudarte.');
     expect(json).toContain('inteligencia artificial');
     expect(json).not.toMatch(/\bbanco\b(?!\s+de\s+trabajo)/i);
     expect(json).not.toMatch(/\bIA\b/);
