@@ -113,6 +113,41 @@ function readablePages(scope: ParentNode): PageId[] {
   return tabbed.length > 0 ? tabbed : [...PAGE_ORDER];
 }
 
+/** Which pages the newspaper prints, read from what they hold: page 2
+ *  when it has classifieds (or says the lab mail did not arrive), page 3
+ *  when its grid holds ads once the fit has carried page 2's overflow onto
+ *  it. A page with nothing hides with all its tabs and the strip counts
+ *  only the pages that read; a reader left on a page that went away lands
+ *  on the nearest one before it. */
+export function syncPages(scope: ParentNode): void {
+  const labBody = scope.querySelector?.('#lab-body') as HTMLElement | null;
+  const lab2Body = scope.querySelector?.('#lab2-body') as HTMLElement | null;
+  const hasLab = !!labBody?.querySelector('.classifieds, .lab-empty');
+  const grid2 = lab2Body?.querySelector('.classifieds');
+  const hasLab2 =
+    hasLab && !!grid2 && Array.from(grid2.children).some((k) => !k.matches('template, .coupon-note'));
+  const reads: Record<'lab' | 'lab2', boolean> = { lab: hasLab, lab2: hasLab2 };
+  for (const id of ['lab', 'lab2'] as const) {
+    for (const tab of Array.from(scope.querySelectorAll?.(`.paper-tab[data-page="${id}"]`) ?? []) as HTMLElement[]) {
+      tab.hidden = !reads[id];
+    }
+    const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
+    if (!reads[id] && section) section.hidden = true;
+  }
+  const cur = currentPage(scope);
+  if (cur !== 'page-1' && !reads[cur]) {
+    const back: PageId = cur === 'lab2' && reads.lab ? 'lab' : 'page-1';
+    const paper = scope.querySelector?.('.paper') as HTMLElement | null;
+    const target = scope.querySelector?.(`#${back}`) as HTMLElement | null;
+    if (target) target.hidden = false;
+    for (const tab of Array.from(scope.querySelectorAll?.('.paper-tab') ?? []) as HTMLElement[]) {
+      tab.classList.toggle('is-active', tab.getAttribute('data-page') === back);
+    }
+    if (paper) fitPaper(scope);
+  }
+  paintStrip(scope, currentPage(scope));
+}
+
 /** The slim strip's page count: "n / total" over the pages that read, so a
  *  missing page 3 reads "2 / 2". Ends disable their arrow; the name
  *  announces the page. */
@@ -199,6 +234,7 @@ function tabShow(paper: HTMLElement, id: PageId): void {
     unpinLeaf(leaf);
     prevEl.hidden = true;
     fitPaper(scope);
+    syncPages(scope);
   }, 640);
   // The newly shown page was hidden (nothing measured there): fit it now that
   // it reads. Already-fitted pages measure clean and stay untouched.
@@ -281,23 +317,16 @@ function paintLab(root: ParentNode): void {
     const lab2Body = lab2?.querySelector('#lab2-body') as HTMLElement | null;
     if (lab2 && lab2Body) {
       lab2Body.innerHTML = page2;
-      const hasPage = page2.trim().length > 0;
       // Page 3 shows only when it is the page being read: an inactive page
       // stays hidden, or it would stack under the active one.
       const active = paper.querySelector?.('.paper-tab.is-active')?.getAttribute('data-page');
-      lab2.hidden = !hasPage || (active != null && active !== 'lab2');
-      const scope: ParentNode = paper.ownerDocument ?? paper;
-      for (const tab3 of Array.from(
-        scope.querySelectorAll?.('.paper-tab[data-page="lab2"]') ?? [],
-      ) as HTMLElement[]) {
-        tab3.hidden = !hasPage;
-      }
-      if (!hasPage && !lab.hidden) tabShow(paper, 'lab');
+      lab2.hidden = active != null && active !== 'lab2';
     }
     pressFresh(root, '#lab', st);
     // Recomposed grids are full grids again: trim them to the sheet, as
     // after every fill. Hidden pages and zero measurements are safe no-ops.
     fitClassifieds(root);
+    syncPages(paper.ownerDocument ?? paper);
     return;
   }
   // No entries yet (the edge filled the pages): never hide in place —

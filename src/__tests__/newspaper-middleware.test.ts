@@ -132,7 +132,8 @@ describe('middleware — /newspaper/ HTML', () => {
 
     expect(res.status).toBe(200);
     expect(FakeHTMLRewriter.last?.selector).toBe('span[data-words]');
-    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('lab-heading');
+    // No lab news in the feed: no classifieds page, only page 1.
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toBe('');
     const inner = FakeHTMLRewriter.last?.writes['#edition'] || '';
     // The edition itself: dateline, columns, and the same count the pool has.
     const facts = buildPool(FIX, 'en');
@@ -141,8 +142,8 @@ describe('middleware — /newspaper/ HTML', () => {
       facts.length - 1 - todayAside(facts, todayLead(facts, editionDate())).length,
     );
     expect(inner).toContain('<h3>Births</h3>');
-    // Page 2 reads from the same fetch: the logbook heading is set too.
-    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('lab-heading');
+    // Page 2 reads from the same fetch: with no lab news it stays empty.
+    expect(FakeHTMLRewriter.last?.writes['#lab-body']).toBe('');
 
     // One read per source, the Wikipedia one carrying the project's UA and an
     // hour of edge cache, the date coming from the edition day (UTC−5).
@@ -244,7 +245,9 @@ describe('middleware — the classifieds third page', () => {
 
     await onRequest(context('/es/newspaper/', 'text/html'));
 
-    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toBe('');
+    // Page 3's grid is there for the fit to carry into, but holds no ad.
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toContain('<div id="lab-log2" class="classifieds"></div>');
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).not.toContain('<article');
     expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('id="lab-log"');
   });
 });

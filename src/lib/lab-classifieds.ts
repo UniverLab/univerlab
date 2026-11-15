@@ -103,8 +103,23 @@ export function rankEntries(entries: Entry[]): Entry[] {
  *  page, the rest the second. With fewer entries there is one page; with
  *  none, no pages. Only the highest-ranked entry may take the display ad;
  *  every later entry takes the largest size that fits what is left. */
+/** The newspaper's order: the lead first — the newest launch or deploy,
+ *  else the newest entry of any kind — then every other entry from the
+ *  edition's date backwards, newest first (id breaks ties, so shuffling the
+ *  input never changes the layout). */
+export function paperOrder(entries: Entry[]): Entry[] {
+  const byDate = [...(entries || [])].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return a.id < b.id ? 1 : a.id > b.id ? -1 : 0;
+  });
+  const leadAt = byDate.findIndex((e) => typeWeight(e.type) === 3);
+  if (leadAt <= 0) return byDate;
+  const lead = byDate[leadAt];
+  return [lead, ...byDate.slice(0, leadAt), ...byDate.slice(leadAt + 1)];
+}
+
 export function layoutClassifieds(entries: Entry[], couponCount = 0): ClassifiedLayout {
-  const ranked = rankEntries(entries || []);
+  const ranked = paperOrder(entries || []);
   if (!ranked.length) return { pages: [], truncated: false };
   const count = Math.max(0, Math.floor(couponCount) || 0);
   const half = Math.ceil(count / 2);

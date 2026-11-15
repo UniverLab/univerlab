@@ -8,7 +8,7 @@
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { entriesMarkdown, firstParagraph, sortEntries, type Entry } from './lab-feed';
-import { layoutClassifieds, spanFor, type AdSlot } from './lab-classifieds';
+import { layoutClassifieds, spanFor, typeWeight, type AdSlot } from './lab-classifieds';
 import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
 import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
@@ -202,7 +202,11 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     `<span class="rep-word rep-2" aria-hidden="true">${word}</span>`;
   if (slot.size === 'display') {
     const cls = lead ? 'log-entry ad-display ad-lead' : 'log-entry ad-display';
-    const kicker = lead ? `<p class="lead-kicker">${esc(t.labPage.leadKicker)}</p>` : '';
+    // The lead is the newest launch; with none it is the newest news.
+    const launch = typeWeight(e.type) === 3;
+    const kicker = lead
+      ? `<p class="lead-kicker">${esc(launch ? t.labPage.leadKicker : t.labPage.leadKickerNews)}</p>`
+      : '';
     const art = displayArtSize(e.topic);
     return (
       `<article class="${cls}${v}" ${slotAttrs(e)}>` +
@@ -401,16 +405,14 @@ export function classifiedsHtml(
     `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang, 1)}` +
     `${pages[1] ? '' : gridHtml([], rest, 8, t, lang, 1)}${couponNoteHtml(lang)}` +
     `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template></div>`;
-  let page2 = '';
-  if (pages[1]) {
-    // Page 3 carries no head of its own: the folio line, then ads.
-    page2 =
-      `<div id="lab-log2" class="classifieds">${gridHtml(pages[1], rest, 8, t, lang, 2)}</div>` +
-      `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>`;
-  }
-  if (truncated) {
-    page2 += logbookPointerHtml(t, lang);
-  }
+  // Page 3 carries no head of its own: the folio line, then ads. Its grid
+  // is always there, empty when everything fits page 2, so the client's fit
+  // can carry page 2's overflow onto it; an empty grid keeps page 3 out of
+  // the paper.
+  const page2 =
+    `<div id="lab-log2" class="classifieds">${pages[1] ? gridHtml(pages[1], rest, 8, t, lang, 2) : ''}</div>` +
+    `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>` +
+    (truncated ? logbookPointerHtml(t, lang) : '');
   return { page1, page2, truncated };
 }
 
@@ -428,6 +430,9 @@ export function labPageHtml(
     return headHtml() +
       `<p class="lab-empty">${esc(t.labPage.unavailable)}</p>`;
   }
+  // An edition from before the lab's first news has no classifieds: the
+  // newspaper is page 1 alone.
+  if (!rows.length) return '';
   const { page1 } = classifiedsHtml(rows, lang, opts);
   return headHtml() +
     filtersHtml(rows, t) +

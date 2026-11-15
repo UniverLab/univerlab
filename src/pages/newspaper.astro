@@ -28,7 +28,7 @@ import TodaysPaper from '../components/TodaysPaper.astro';
     import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
     import { labPageHtml, labPageHtml2 } from '../lib/lab-page';
     import { entriesUpTo } from '../lib/lab-feed';
-    import { bindLabPage, setLabEntries } from '../lib/lab-page-client';
+    import { bindLabPage, setLabEntries, syncPages } from '../lib/lab-page-client';
     import { initPaperSheet } from '../lib/paper-sheet';
     import { fitPaper } from '../lib/paper-fit';
 
@@ -46,7 +46,7 @@ import TodaysPaper from '../components/TodaysPaper.astro';
       var needLab2 = lab2Body && !(lab2Body.textContent || '').replace(/\s/g, '');
       // The sheet's fixed height reserves every page's space, so fitting
       // never shifts layout; fit again once images land, which moves feet.
-      var refit = function () { fitPaper(document); };
+      var refit = function () { fitPaper(document); syncPages(document); };
       window.addEventListener('load', refit);
       if (!needEdition && !needLab && !needLab2) { refit(); return; }
 

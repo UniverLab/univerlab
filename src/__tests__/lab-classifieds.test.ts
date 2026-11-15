@@ -9,6 +9,7 @@ import {
   rankEntries,
   spanFor,
   typeWeight,
+  paperOrder,
 } from '../lib/lab-classifieds';
 import type { Entry } from '../lib/lab-feed';
 
@@ -105,13 +106,15 @@ describe('layoutClassifieds', () => {
     ];
     const { pages } = layoutClassifieds(rows);
     expect(pages).toHaveLength(1);
-    expect(pages[0].map((s) => s.entry.id)).toEqual(['launch-new', 'launch-old', 'note-new']);
+    // The newest launch leads; the rest follow by date, newest first.
+    expect(pages[0].map((s) => s.entry.id)).toEqual(['launch-new', 'note-new', 'launch-old']);
     expect(pages[0].map((s) => s.size)).toEqual(['display', 'boxed', 'boxed']);
   });
 
   it('fills two pages from the live mix with one display ad and reports truncated', () => {
     const rows = liveMix();
-    const ranked = rankEntries(rows);
+    // The paper's order: newest launch first, then back from the date.
+    const ranked = paperOrder(rows);
     const { pages, truncated } = layoutClassifieds(rows);
     expect(pages).toHaveLength(2);
     expect(truncated).toBe(true);
@@ -120,7 +123,7 @@ describe('layoutClassifieds', () => {
     expect(kept.filter((s) => s.size === 'display')).toHaveLength(1);
     expect(pages[0][0].size).toBe('display');
     expect(pages[0][0].entry.id).toBe(ranked[0].id);
-    // Whatever does not fit is left out from the tail, oldest-ranked first.
+    // Whatever does not fit is left out from the tail, oldest first.
     const keptIds = new Set(kept.map((s) => s.entry.id));
     const dropped = ranked.filter((e) => !keptIds.has(e.id));
     expect(dropped.length).toBeGreaterThan(0);

@@ -19,7 +19,7 @@ import {
   CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
 } from '../lib/lab-classifieds';
-import { bindLabPage, bindLogbook, setLabEntries, setLogbookEntries } from '../lib/lab-page-client';
+import { bindLabPage, bindLogbook, setLabEntries, setLogbookEntries, syncPages } from '../lib/lab-page-client';
 import type { Entry } from '../lib/lab-feed';
 
 const entries: Entry[] = [
@@ -52,15 +52,15 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>|<span class="rep-word rep-0">(.*?)<\/span>|<p class="run-in"><b>(.*?)\.<\/b>/g)].map(
       (m) => m[1] ?? m[2] ?? m[3],
     );
-    // Ranked by type then recency: the four launches, the incident, the
-    // bugfix and update, then the notes newest first.
-    expect(titles).toEqual([
-      'Newest', 'Mystery topic', 'Old launch', 'Twelfth', 'Incident', 'Bugfix',
-      'Update', 'Notes on TexForge', 'General note', 'Older note', 'Tenth', 'Eleventh',
-    ]);
+    // The newest launch leads; every other entry follows from the edition's
+    // date backwards, newest first, whatever its kind.
+    const sorted = sortEntries(entries);
+    const lead = sorted.find((e) => e.type === 'launch' || e.type === 'deploy') ?? sorted[0];
+    expect(titles).toEqual([lead, ...sorted.filter((e) => e !== lead)].map((e) => e.title));
     expect(html).toContain('id="lab-log"');
     expect(html).not.toContain('id="lab-log2"');
-    expect(labPageHtml2(entries, 'en')).toBe('');
+    // Page 3's grid waits empty for the fit to carry overflow into it.
+    expect(labPageHtml2(entries, 'en')).not.toContain('<article');
   });
 
   it('has no older control and never folds', () => {
@@ -200,10 +200,10 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(html).not.toContain('lab-filter');
   });
 
-  it('keeps the filter rows when the feed simply has no entries', () => {
-    const html = labPageHtml([], 'en');
-    expect(html).toContain('lab-filter');
-    expect(html).not.toContain('lab-empty');
+  it('prints no classifieds page when the feed simply has no entries', () => {
+    // An edition from before the lab's first news is page 1 alone.
+    expect(labPageHtml([], 'en')).toBe('');
+    expect(labPageHtml2([], 'en')).toBe('');
   });
 
   it('escapes entry text', () => {
@@ -306,10 +306,10 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(html2).toContain('id="lab-log2"');
     expect(html2).not.toContain('lab-heading');
     expect(html2).toContain('<p class="lab-more"><a href="/logbook/"><img src="/bench/classifieds/manicule.webp"');
-    expect(html2).toContain('The complete record continues in the Logbook →</a></p>');
+    expect(html2).toContain('The full record is in the Logbook →</a></p>');
     const es2 = labPageHtml2(live, 'es');
     expect(es2).toContain('<p class="lab-more"><a href="/es/logbook/"><img src="/bench/classifieds/manicule.webp"');
-    expect(es2).toContain('El registro completo continúa en el Cuaderno →</a></p>');
+    expect(es2).toContain('El registro completo está en el Cuaderno →</a></p>');
   });
 
   it('opens each classifieds page with the engraved section head, words in type', () => {
@@ -671,6 +671,17 @@ describe('logbook page', () => {
 });
 
 describe('bindLabPage', () => {
+  // Enough lab news to run onto page 3 before any measuring.
+  const manyNotes: Entry[] = Array.from({ length: 60 }, (_, i) => ({
+    id: `m${i}`,
+    date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
+    title: `Note ${i}`,
+    body: 'Body.',
+    type: 'note',
+    topic: 'canopy',
+    link: null,
+  }) as Entry);
+
   const scaffold = (lang: 'en' | 'es', rows: Entry[]): void => {
     document.body.innerHTML =
       `<div class="paper">` +
@@ -702,7 +713,7 @@ describe('bindLabPage', () => {
   it('opens page 2 directly on #lab and page 3 on #lab2', () => {
     jest.useFakeTimers();
     try {
-      scaffold('en', entries);
+      scaffold('en', manyNotes);
       window.location.hash = '#lab';
       bindLabPage(document);
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
@@ -744,8 +755,8 @@ describe('bindLabPage', () => {
         `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
         `</nav>` +
         `<section id="page-1" class="paper-page" aria-label="Page 1"><div id="edition">edition</div></section>` +
-        `<section id="lab" class="paper-page" aria-label="Page 2"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
-        `<section id="lab2" class="paper-page" aria-label="Page 3"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
+        `<section id="lab" class="paper-page" aria-label="Page 2"><div id="lab-body">${labPageHtml(manyNotes, 'en')}</div></section>` +
+        `<section id="lab2" class="paper-page" aria-label="Page 3"><div id="lab2-body">${labPageHtml2(manyNotes, 'en')}</div></section>` +
         `</div>` +
         `<div class="paper-bar" data-paper-bar>` +
         `<nav class="paper-strip-pages" aria-label="Page and date controls">` +
@@ -913,8 +924,10 @@ describe('bindLabPage', () => {
       const grid = document.querySelector('#lab-log') as HTMLElement;
       expect(grid.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
       expect(grid.children.length).toBeLessThan(before);
-      // The trimmed grid points at the Logbook, exactly once.
-      expect(document.querySelectorAll('#lab-body .lab-more')).toHaveLength(1);
+      // Page 2's overflow carries on to page 3 instead of leaving the paper:
+      // page 2 never points at the Logbook.
+      expect(document.querySelectorAll('#lab-log2 > article').length).toBeGreaterThan(0);
+      expect(document.querySelectorAll('#lab-body .lab-more')).toHaveLength(0);
     } finally {
       Element.prototype.getBoundingClientRect = real;
     }
@@ -1101,5 +1114,27 @@ describe('entriesUpTo (an old edition prints only the news it could carry)', () 
     expect(kept).toEqual(['a', 'b', 'd']);
     expect(entriesUpTo(rows, new Date(2026, 9, 2, 12, 0, 0)).map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
     expect(entriesUpTo(undefined as unknown as typeof rows, new Date())).toEqual([]);
+  });
+});
+
+describe('syncPages (the paper prints only the pages it can fill)', () => {
+  it('leaves page 1 alone when the edition has no lab news', () => {
+    document.body.innerHTML =
+      `<div class="paper">` +
+      `<nav class="paper-tabs"><a class="paper-tab" data-page="page-1" href="#page-1">1</a>` +
+      `<a class="paper-tab is-active" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>` +
+      `<section id="page-1" class="paper-page" hidden><div id="edition">edition</div></section>` +
+      `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml([], 'en')}</div></section>` +
+      `<section id="lab2" class="paper-page" hidden><div id="lab2-body">${labPageHtml2([], 'en')}</div></section>` +
+      `</div><span data-page-num>2 / 3</span>`;
+    syncPages(document);
+    const tab = (id: string) => document.querySelector(`.paper-tab[data-page="${id}"]`) as HTMLElement;
+    expect(tab('lab').hidden).toBe(true);
+    expect(tab('lab2').hidden).toBe(true);
+    // The reader on a page that went away lands on page 1.
+    expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(false);
+    expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
+    expect(tab('page-1').classList.contains('is-active')).toBe(true);
+    expect(document.querySelector('[data-page-num]')?.textContent).toBe('1 / 1');
   });
 });
