@@ -199,7 +199,7 @@ describe('workbench-audits', () => {
     expect(en.workbench.audits.how.steps[6][0]).toMatch(/Delivery/);
   });
 
-  it('the audit card sits last with its price and names the independent review with evidence', () => {
+  it('the audit card sits last with its price and names the review of what exists', () => {
     for (const dict of [en.workbench.tags, es.workbench.tags]) {
       expect(dict.items).toHaveLength(3);
     }
@@ -211,21 +211,15 @@ describe('workbench-audits', () => {
     expect(en.workbench.tags.items[2][3]).not.toMatch(/design and install/);
     expect(es.workbench.tags.items[2][1]).not.toMatch(/150/);
     expect(en.workbench.tags.items[1][1]).not.toMatch(/400/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/revisión independiente/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/independent review/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/evidencia reproducible/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/reproducible evidence/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/página dedicada/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/dedicated page/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/PDF/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/PDF/);
-    expect(es.workbench.tags.items[2][3]).toMatch(/repositorio/);
-    expect(en.workbench.tags.items[2][3]).toMatch(/repository/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/Identificamos riesgos/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/We identify risks/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/oportunidades de mejora/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/verify their behavior/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/document findings/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/automation/);
   });
 
-  it('Agent Experience names the model, the harness and the architecture in the last scope item', () => {
-    expect(es.workbench.intro).toContain('Agent Experience (AX)');
-    expect(en.workbench.intro).toContain('Agent Experience (AX)');
+  it('the technical capability stays on the audits page scope, not in the hero', () => {
     expect(es.workbench.audits.scope.items[7][0]).toContain('Agent Experience');
     expect(en.workbench.audits.scope.items[7][0]).toContain('Agent Experience');
     expect(es.workbench.audits.scope.items[7][1]).toMatch(/harness/);

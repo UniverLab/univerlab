@@ -7,8 +7,8 @@ test('spanish knowledge quotes pesos for a Colombian number and dollars otherwis
     '150.000 COP',
     '550.000 COP',
     '1.500.000 COP',
-    'Reservas y pagas',
-    'Trabajamos tu caso',
+    'Cuéntanos',
+    'Proponemos',
     '30 días de soporte',
     '24 horas',
     'Ley 1480 de 2011',
@@ -76,8 +76,8 @@ test('english knowledge quotes pesos for a Colombian number and dollars otherwis
     'USD 45',
     'USD 150',
     'USD 400',
-    'You book and pay',
-    'We work your case',
+    'Tell us',
+    'Propose',
     '30 days of support',
     'Right of retraction',
     'stay open',
@@ -110,13 +110,13 @@ test('knowledge shows the live founding count, drops the offer at zero, keeps it
   }
 });
 
-test('knowledge calls the offer an agentic solution, never an agentic flow', () => {
+test('knowledge calls the offer by its card name, never an agentic flow', () => {
   const es = knowledge('es', '573001234567');
-  expect(es).toContain('Solución agéntica');
+  expect(es).toContain('Construyamos lo que necesitas');
   expect(es).not.toContain('flujo agéntico');
   expect(es).not.toContain('flujos agénticos');
   const en = knowledge('en', '14155552671');
-  expect(en).toContain('Agentic solution');
+  expect(en).toContain('Let’s build what you need');
   expect(en).not.toContain('agentic flow');
 });
 
