@@ -195,7 +195,7 @@ describe('facetmedia EXP-009', () => {
 
   it('checks out the registry at one pinned ref in CI and on deploy', () => {
     expect(REGISTRY_PIN.repository).toBe('UniverLab/facetmedia-registry');
-    expect(REGISTRY_PIN.ref).toBe('feature/v0.1');
+    expect(REGISTRY_PIN.ref).toBe('main');
     for (const workflow of [CI, DEPLOY]) {
       expect(workflow).toContain('scripts/facet-registry.json');
       expect(workflow).toContain('steps.facet-registry.outputs.repository');
