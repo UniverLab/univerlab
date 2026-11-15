@@ -72,6 +72,7 @@ const {
   circadianPalette,
   noindex = false,
   markdownTwin = true,
+  liveTwin = false,
   expId,
   fondo,
   langCorner = true,
@@ -136,7 +137,7 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
-    {!noindex && markdownTwin && (
+    {markdownTwin && (!noindex || liveTwin) && (
       <link rel="alternate" type="text/markdown" href={`${canonical}index.md`} />
     )}
     <link rel="alternate" type="application/atom+xml" title="UniverLab Logbook" href="https://announcements.univerlab.org/feed.atom" />

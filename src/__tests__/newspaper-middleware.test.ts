@@ -324,6 +324,91 @@ describe('middleware — the Logbook page', () => {
   });
 });
 
+describe('middleware — /newspaper/index.md without a markdown Accept (FR1)', () => {
+  // Production builds no twin for the noindex newspaper (build-md.ts skips
+  // noindex pages), so the static branch 404s — the failure the twin fixes.
+  const prodCtx = (pathname: string): Ctx => ({
+    request: new Request(`https://univerlab.org${pathname}`, { headers: { Accept: '*/*' } }),
+    env: {
+      ASSETS: {
+        fetch: jest.fn(async () => new Response('not found', { status: 404 })),
+      },
+    },
+    next: jest.fn(async () => new Response('not found', { status: 404 })),
+  });
+
+  const stubFetchLive = jest.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('wikipedia.org')) {
+      return new Response(JSON.stringify(FIX), { status: 200 });
+    }
+    return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+  }) as unknown as typeof fetch;
+
+  it.each([
+    ['/newspaper/index.md', '# The Observable', '## Lab news'],
+    ['/es/newspaper/index.md', '# El Observable', '## Noticias del laboratorio'],
+  ])('%s with Accept */* serves the live markdown twin as text/markdown', async (pathname, heading, lab) => {
+    global.fetch = stubFetchLive;
+    const ctx = prodCtx(pathname);
+
+    const res = await onRequest(ctx);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    const md = await res.text();
+    expect(md).toContain(heading);
+    expect(md).toContain(lab);
+    // The HTML branch must not run for the twin: no static fetch, no 404.
+    expect(asMock(ctx.next)).not.toHaveBeenCalled();
+  });
+
+  it('the plain-Accept twin honours the picked day', async () => {
+    const calls: string[] = [];
+    global.fetch = (jest.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('wikipedia.org')) {
+        return new Response(JSON.stringify(FIX), { status: 200 });
+      }
+      return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+    }) as unknown as typeof fetch);
+
+    const res = await onRequest(prodCtx('/newspaper/index.md?d=2024-07-20'));
+
+    expect(res.status).toBe(200);
+    const wp = calls.find((u) => u.includes('wikipedia.org'))!;
+    expect(wp.endsWith('/onthisday/all/07/20')).toBe(true);
+    expect(await res.text()).toContain('2024');
+  });
+});
+
+describe('middleware — /newspaper/ content negotiation unchanged (FR4)', () => {
+  const stubFetch = jest.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('wikipedia.org')) {
+      return new Response(JSON.stringify(FIX), { status: 200 });
+    }
+    return new Response(JSON.stringify({ entries: [] }), { status: 200 });
+  }) as unknown as typeof fetch;
+
+  it('text/markdown still serves the live markdown, html still injects #edition', async () => {
+    global.fetch = stubFetch;
+
+    const mdRes = await onRequest(context('/newspaper/', 'text/markdown'));
+    expect(mdRes.status).toBe(200);
+    expect(mdRes.headers.get('content-type')).toContain('text/markdown');
+    const md = await mdRes.text();
+    expect(md).toContain('# The Observable');
+    expect(md).toContain('## Lab news');
+
+    (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
+    const htmlRes = await onRequest(context('/newspaper/', 'text/html'));
+    expect(htmlRes.status).toBe(200);
+    expect(FakeHTMLRewriter.last?.writes['#edition']).toContain('class="dateline"');
+  });
+});
+
 describe('middleware — legacy /today/ addresses redirect permanently', () => {
   it.each([['/today', '/newspaper/'], ['/today/', '/newspaper/'], ['/es/today', '/es/newspaper/'], ['/es/today/', '/es/newspaper/']])(
     '%s 301s to %s',

@@ -1061,11 +1061,10 @@ export async function onRequest(context: {
     }
   }
 
-  // The newspaper: fetch the static page, then set #edition to the day's
-  // edition and #lab-body / #lab2-body to the classifieds' two pages. Any
-  // failure (timeout 3 s, non-OK) serves the static page, whose client
-  // script fills all three with the same renderers.
-  const todayLang = request.method === 'GET' && !wantsMarkdown(accept) ? todayRoute(pathname) : null;
+  // The newspaper: fetch the static page, then set #edition, #lab-body and
+  // #lab2-body live. Any failure (timeout 3 s, non-OK) serves the static page,
+  // whose client script fills all three with the same renderers.
+  const todayLang = request.method === 'GET' && !wantsMarkdown(accept) && !pathname.endsWith('/index.md') ? todayRoute(pathname) : null;
   if (todayLang) {
     const staticRes = await next();
     if (!staticRes.ok) return staticRes;
