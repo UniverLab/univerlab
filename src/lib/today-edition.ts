@@ -463,7 +463,10 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
         : '') +
-      `</div></article>`;
+      // The letters fill the space under the lead story in the lead's own
+      // columns, not only in a band below everything; the client fit moves
+      // whole column sections here.
+      `</div><div class="lead-cols"></div></article>`;
   }
 
   // The rail beside the lead: only the events the lead pushed aside read

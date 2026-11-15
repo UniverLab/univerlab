@@ -47,9 +47,11 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('composes one classifieds page from twelve entries: releases on top', () => {
     const html = labPageHtml(entries, 'en');
+    // Templates wait inert for the client fit: only printed markup reads.
+    const printed = html.replace(/<template[\s\S]*?<\/template>/g, '');
     // Every ad shows its title in reading order: a heading, the repeated
     // word, or the run-in lead — never an empty frame.
-    const titles = [...html.matchAll(/<h3[^>]*>(.*?)<\/h3>|<span class="rep-word rep-0">(.*?)<\/span>|<p class="run-in"><b>(.*?)\.<\/b>/g)].map(
+    const titles = [...printed.matchAll(/<h3[^>]*>(.*?)<\/h3>|<span class="rep-word rep-0">(.*?)<\/span>|<p class="run-in"><b>(.*?)\.<\/b>/g)].map(
       (m) => m[1] ?? m[2] ?? m[3],
     );
     // The newest launch leads; every other entry follows from the edition's
@@ -361,7 +363,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const html = labPageHtml(rows, 'en');
     // The canopy announcements share one tree cut: the first takes it, the
     // rest go without. The general note takes its subject's envelope cut.
-    expect(html.match(/<img src="\/bench\/classifieds\/tree.webp"/g)).toHaveLength(1);
+    // The foot-fill templates wait inert: only printed cuts count.
+    const printed = html.replace(/<template[\s\S]*?<\/template>/g, '');
+    expect(printed.match(/<img src="\/bench\/classifieds\/tree.webp"/g)).toHaveLength(1);
     expect(html).toContain('<img src="/bench/classifieds/envelope.webp"');
     // The cuts open the entry body, never the h3: every h3 still reads bare.
     expect(html).toContain('<div class="entry-body"><span class="ad-cut cut-');
@@ -948,9 +952,11 @@ describe('bindLabPage', () => {
     const real = Element.prototype.getBoundingClientRect;
     Element.prototype.getBoundingClientRect = function (this: Element) {
       if (this.classList?.contains('classifieds')) {
+        // Templates never lay out: the foot counts only rendered children.
+        const rendered = Array.from(this.children).filter((k) => k.tagName !== 'TEMPLATE').length;
         return {
           x: 0, y: 0, width: 100, height: 0, top: 100, left: 0,
-          bottom: 100 + this.children.length * 50, right: 100, toJSON: () => ({}),
+          bottom: 100 + rendered * 50, right: 100, toJSON: () => ({}),
         } as DOMRect;
       }
       if (this.classList?.contains('paper')) {

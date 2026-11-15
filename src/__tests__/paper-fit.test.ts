@@ -371,12 +371,19 @@ describe('pages two and three hold only the classifieds that fit', () => {
       labPageHtml(rows(20), 'en') +
       '</div></div></div>';
     const grid = document.querySelector('#lab-log') as HTMLElement;
+    const scope = document.querySelector('#lab-body') as HTMLElement;
     const before = grid.children.length;
     expect(before).toBeGreaterThan(4);
     // The grid runs well past the paper: whole cards fall off the foot.
+    // Templates never lay out, so the foot counts only rendered children.
+    const foot = (): number =>
+      100 +
+      Array.from(grid.children).filter((k) => k.tagName !== 'TEMPLATE').length * 50;
     const paperEl = document.querySelector('.paper') as HTMLElement;
     mockBottom(paperEl, 300);
-    grid.getBoundingClientRect = () => rect(100 + grid.children.length * 50);
+    grid.getBoundingClientRect = () => rect(foot());
+    scope.getBoundingClientRect = () =>
+      rect(grid.getBoundingClientRect().bottom + (scope.querySelector('.lab-more') ? 40 : 0));
     const out = fitClassifieds(document);
     expect(out.trimmedAds).toBeGreaterThan(0);
     expect(grid.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
@@ -385,22 +392,123 @@ describe('pages two and three hold only the classifieds that fit', () => {
     expect(out.pointers).toBe(1);
     // The coupon rule line is never trimmed away.
     expect(document.querySelector('#lab-body .coupon-note')).not.toBeNull();
+    // The trimmed page ends at the foot: nothing left to fill.
+    expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
+    expect(grid.querySelector('aside.ad')).toBeNull();
   });
 
-  it('leaves a fitting grid alone: no cards lost, no pointer added', () => {
+  it('fills a fitting grid to the foot: no cards lost, no pointer, house notices stay', () => {
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="lab"><div id="lab-body">' +
       labPageHtml(rows(1), 'en') +
       '</div></div></div>';
     const grid = document.querySelector('#lab-log') as HTMLElement;
+    const scope = document.querySelector('#lab-body') as HTMLElement;
     const before = grid.children.length;
     const paperEl = document.querySelector('.paper') as HTMLElement;
     mockBottom(paperEl, 5000);
-    grid.getBoundingClientRect = () => rect(200);
+    grid.getBoundingClientRect = () =>
+      rect(
+        100 +
+          Array.from(grid.children).filter((k) => k.tagName !== 'TEMPLATE').length * 50,
+      );
+    scope.getBoundingClientRect = () => rect(grid.getBoundingClientRect().bottom + 20);
     const out = fitClassifieds(document);
     expect(out.trimmedAds).toBe(0);
-    expect(grid.children.length).toBe(before);
     expect(out.pointers).toBe(0);
+    // The last page fills to the foot with the lab's own notices and plate.
+    expect(grid.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid.querySelector('figure.classifieds-plate')).not.toBeNull();
+    expect(grid.querySelectorAll('#lab-body .lab-more')).toHaveLength(0);
+    expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
+    expect(grid.children.length).toBeGreaterThan(before);
+  });
+});
+
+describe('front page fits its sheet, masthead included', () => {
+  const frontScaffold = (
+    cols: MockItem[][],
+    opts?: { railItems?: number; duo?: boolean; solo?: boolean; paperBottom?: number; colophonHeight?: number },
+  ): HTMLElement => {
+    const railItems = opts?.railItems ?? 0;
+    const rail = railItems
+      ? `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(railItems)}</aside></div>`
+      : '';
+    const duo = opts?.duo === false ? '' : '<aside class="ad ad--feature">duo</aside>';
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      `<article class="lead${opts?.solo ? ' solo' : ''}"><div class="story"></div><div class="lead-cols"></div></article>` +
+      rail +
+      duo +
+      '<div class="cols"></div>' +
+      '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
+      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Install</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both</h3></aside></template>' +
+      '<p class="colophon-note">colophon</p>' +
+      '</div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const wrap = edition.querySelector('.cols') as HTMLElement;
+    for (const items of cols) wrap.appendChild(liveColumn(document, items, 100));
+    mockBottom(document.querySelector('.paper') as HTMLElement, opts?.paperBottom ?? 1000);
+    if (opts?.colophonHeight) {
+      mockBottom(edition.querySelector('.colophon-note') as HTMLElement, opts.colophonHeight, opts.colophonHeight);
+    }
+    return edition;
+  };
+
+  it('drops the Workbench display and the rail extras before any letter', () => {
+    const edition = frontScaffold(
+      [
+        [ev(), ev()],
+        [br(), br()],
+      ],
+      { railItems: 2, paperBottom: 1000 },
+    );
+    mockBottom(edition.querySelector('.rail') as HTMLElement, 1050, 950);
+    mockBottom(edition.querySelector('.rail .also') as HTMLElement, 1030, 100);
+    mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
+    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1100, 200);
+    const out = fitFrontPage(edition);
+    // The display ran 100px past the sheet and the rail 50px: the display
+    // goes, then one rail extra, and the letters stay whole.
+    expect(edition.querySelector('aside.ad--feature')).toBeNull();
+    expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(1);
+    expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
+    expect(out.trimmedLetters).toBe(0);
+    // One band column moved under the lead story; the band keeps the other.
+    expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(1);
+    expect(edition.querySelectorAll('.cols .col')).toHaveLength(1);
+  });
+
+  it('moves whole sections under the lead and balances every letter column', () => {
+    const edition = frontScaffold(
+      [Array.from({ length: 20 }, () => ev()), [br()], [di()]],
+      { duo: false, paperBottom: 500, colophonHeight: 30 },
+    );
+    // The colophon reserves 30px: the sheet ends at 470, so the 500px column
+    // loses two whole letters and nothing is hidden behind the sheet's edge.
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBeGreaterThanOrEqual(2);
+    expect(edition.querySelector('.colophon-note')).not.toBeNull();
+    for (const col of Array.from(edition.querySelectorAll('.col'))) {
+      expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(471);
+    }
+    // Three band columns: two under the story, one left in the band, every
+    // column still headed by kind.
+    expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(2);
+    expect(edition.querySelectorAll('.cols .col')).toHaveLength(1);
+    expect(out.movedLetters).toBeGreaterThan(0);
+    for (const col of Array.from(edition.querySelectorAll('.col'))) {
+      expect(col.querySelectorAll('h3').length).toBeGreaterThan(0);
+    }
+  });
+
+  it('moves every section under a solo lead and empties the band', () => {
+    const edition = frontScaffold([[ev()], [br()]], { duo: false, solo: true });
+    fitFrontPage(edition);
+    expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(2);
+    expect(edition.querySelector('.cols')).toBeNull();
   });
 });
 

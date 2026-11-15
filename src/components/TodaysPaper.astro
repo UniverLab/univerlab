@@ -334,6 +334,10 @@ const t = useTranslations(lang);
   .paper .classifieds { display: block; column-count: 5; column-gap: 18px; column-rule: 1px solid var(--p-rule); flex: 0 0 auto; }
   .paper .classifieds > * { break-inside: avoid; margin: 0 0 12px; }
   .paper .classifieds > .ad-lead, .paper .classifieds > .classifieds-rule { column-span: all; }
+  /* The foot fill: house notices and one engraved plate span the page. */
+  .paper .classifieds > .ad, .paper .classifieds > .classifieds-plate { column-span: all; }
+  .paper .classifieds-plate { margin: 0 0 12px; text-align: center; }
+  .paper .classifieds-plate img { max-width: 100%; height: auto; }
   .paper .classifieds > .ad-lead { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 22px; align-items: center; border-block: 3px double var(--p-ink); padding: 12px 0; margin-bottom: 4px; }
   .paper .classifieds > .ad-lead .ad-art { max-height: 17rem; }
   .paper .classifieds > .ad-lead .ad-art img { object-fit: contain; }
@@ -426,7 +430,20 @@ const t = useTranslations(lang);
   .paper .rail .also b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
   .paper .rail .also .aside-body { font-size: 14.5px; line-height: 1.5; text-align: justify; hyphens: auto; }
   .paper .cols { display: grid; gap: 0 16px; grid-template-columns: minmax(0, 1fr); }
+  /* The lead's own columns: the letters fill the space under the lead story
+     here, not only in the band below everything. Same flow as .cols. */
+  .paper .lead-cols { display: grid; gap: 0 16px; grid-template-columns: minmax(0, 1fr); }
+  .paper .lead-cols > * { min-width: 0; }
   .paper .more { display: grid; gap: 14px; }
+  /* While the fit measures the row's natural size, the stretched boxes
+     relax: the story, the rail and the photo growth stop pulling to the row
+     foot, so the read is content, not stretch. Dropped right after. */
+  .paper #edition.fit-natural .lead .story { height: auto; }
+  .paper #edition.fit-natural .rail { height: auto; }
+  .paper #edition.fit-natural .rail .also { flex: 0 0 auto; }
+  .paper #edition.fit-natural .photo--lead, .paper #edition.fit-natural .photo--medium { flex: 0 0 auto; }
+  .paper #edition.fit-natural .photo--lead .print, .paper #edition.fit-natural .photo--medium .print { flex: 0 0 auto; }
+  .paper #edition.fit-natural .photo--lead img, .paper #edition.fit-natural .photo--medium img { flex: 0 0 auto; }
   .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; gap: 14px; min-width: 0; }
   .paper .col .ad { margin-top: 16px; align-self: end; }
@@ -492,6 +509,7 @@ const t = useTranslations(lang);
   .paper .coupon-note { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
   @media (min-width: 48rem) {
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+    .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
     .paper .ad--feature .kicker { grid-column: 1 / -1; }
   }
@@ -510,6 +528,7 @@ const t = useTranslations(lang);
   }
   @media print {
     .paper .front, .paper .cols { display: block; }
+    .paper .lead-cols { display: block; }
     .paper .ad { break-inside: avoid; }
     .paper .coupon { break-inside: avoid; }
   }
@@ -645,6 +664,7 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }
   .paper-viewport.sheet .paper .coupon-figure { font-size: 40px; }
   .paper-viewport.sheet .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .paper-viewport.sheet .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .paper-viewport.sheet .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
   .paper-viewport.sheet .paper .ad--feature .kicker { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }

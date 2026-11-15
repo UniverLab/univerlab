@@ -245,9 +245,12 @@ describe('middleware — the classifieds third page', () => {
 
     await onRequest(context('/es/newspaper/', 'text/html'));
 
-    // Page 3's grid is there for the fit to carry into, but holds no ad.
-    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toContain('<div id="lab-log2" class="classifieds"></div>');
+    // Page 3's grid is there for the fit to carry into and for the foot
+    // fill to draw on: foot-fill templates only, never a printed ad.
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toContain('<div id="lab-log2" class="classifieds">');
     expect(FakeHTMLRewriter.last?.writes['#lab2-body']).not.toContain('<article');
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toContain('data-fill="house-install"');
+    expect(FakeHTMLRewriter.last?.writes['#lab2-body']).toContain('data-fill="orn-tree"');
     expect(FakeHTMLRewriter.last?.writes['#lab-body']).toContain('id="lab-log"');
   });
 });

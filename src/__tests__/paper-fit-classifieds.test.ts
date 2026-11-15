@@ -4,7 +4,8 @@
  * line never goes, and a grid that already points at the Logbook gets no
  * second pointer.
  */
-import { fitClassifieds, fitPaper, trimClassifieds } from '../lib/paper-fit';
+import { fillClassifiedsFoot, fitClassifieds, fitPaper, trimClassifieds } from '../lib/paper-fit';
+import { labPageHtml, labPageHtml2, type Entry } from '../lib/lab-page';
 
 const rect = (bottom: number): DOMRect =>
   ({ x: 0, y: 0, width: 100, height: 0, top: bottom, left: 0, bottom, right: 100, toJSON: () => {} }) as DOMRect;
@@ -223,5 +224,140 @@ describe('fitClassifieds carries page two over to page three', () => {
     fitClassifieds(document);
     const next = document.querySelector('#lab-log2') as HTMLElement;
     expect(Array.from(next.children).map((k) => k.className || k.id)).toEqual(['notice-fleuron', 'notice-run']);
+  });
+});
+
+describe('the last classifieds page fills to the foot', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  const rows = (n: number): Entry[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `f${i}`,
+      date: `2026-09-${String(20 - (i % 10)).padStart(2, '0')}T10:00:00.000Z`,
+      title: `Notice ${i}`,
+      body: 'Body.',
+      type: 'note',
+      topic: 'canopy',
+      link: null,
+    })) as Entry[];
+
+  // Templates never lay out: the foot counts only rendered children, and the
+  // scope ends a little past the grid.
+  const mockFoot = (grid: HTMLElement, scope: HTMLElement): void => {
+    grid.getBoundingClientRect = () =>
+      rect(
+        100 +
+          Array.from(grid.children).filter((k) => k.tagName !== 'TEMPLATE').length * 50,
+      );
+    scope.getBoundingClientRect = () => rect(grid.getBoundingClientRect().bottom + 20);
+  };
+
+  it('page two fills when page three holds nothing', () => {
+    document.body.innerHTML =
+      '<div class="paper">' +
+      '<section class="paper-page"><div id="lab-body">' +
+      labPageHtml(rows(2), 'en') +
+      '</div></section>' +
+      '<section class="paper-page" hidden><div id="lab2-body">' +
+      labPageHtml2(rows(2), 'en') +
+      '</div></section>' +
+      '</div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    const grid2 = document.querySelector('#lab-log2') as HTMLElement;
+    expect(grid2.children.length).toBeGreaterThan(0);
+    expect(grid2.querySelector('article')).toBeNull();
+    const scope = document.querySelector('#lab-body') as HTMLElement;
+    mockFoot(grid, scope);
+    setBottom(document.querySelector('.paper')!, 5000);
+    fitClassifieds(document);
+    // The short last page takes house notices whole, then the plate sized to
+    // the space left, and ends above the foot.
+    expect(grid.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    const plate = grid.querySelector('figure.classifieds-plate img') as HTMLImageElement | null;
+    expect(plate).not.toBeNull();
+    expect(Number.parseFloat(plate?.getAttribute('width') || '')).toBeGreaterThan(0);
+    expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
+    // The empty page stays empty: nothing to fill, nothing shown.
+    expect(grid2.querySelector('article, aside.ad, figure')).toBeNull();
+  });
+
+  it('fills nothing on a page with more pages after it', () => {
+    document.body.innerHTML =
+      '<div class="paper">' +
+      '<section class="paper-page"><div id="lab-body">' +
+      labPageHtml(rows(2), 'en') +
+      '</div></section>' +
+      '<section class="paper-page" hidden><div id="lab2-body">' +
+      labPageHtml2(rows(2), 'en') +
+      '</div></section>' +
+      '</div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    const grid2 = document.querySelector('#lab-log2') as HTMLElement;
+    grid2.appendChild(document.createElement('article'));
+    const scope = document.querySelector('#lab-body') as HTMLElement;
+    mockFoot(grid, scope);
+    setBottom(document.querySelector('.paper')!, 5000);
+    fitClassifieds(document);
+    expect(grid.querySelector('aside.ad, figure.classifieds-plate')).toBeNull();
+  });
+
+  it('fills the last page when it reads', () => {
+    document.body.innerHTML =
+      '<div class="paper">' +
+      '<section class="paper-page" hidden><div id="lab-body">' +
+      labPageHtml(rows(2), 'en') +
+      '</div></section>' +
+      '<section class="paper-page"><div id="lab2-body">' +
+      labPageHtml2(rows(2), 'en') +
+      '</div></section>' +
+      '</div>';
+    const grid2 = document.querySelector('#lab-log2') as HTMLElement;
+    grid2.appendChild(document.createElement('article'));
+    const scope2 = document.querySelector('#lab2-body') as HTMLElement;
+    mockFoot(grid2, scope2);
+    setBottom(document.querySelector('.paper')!, 5000);
+    fitClassifieds(document);
+    expect(grid2.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid2.querySelector('figure.classifieds-plate')).not.toBeNull();
+    expect(scope2.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
+  });
+
+  it('fills nothing when the foot is within three lines', () => {
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page"><div id="lab-body">' +
+      labPageHtml(rows(1), 'en') +
+      '</div></div></div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    grid.getBoundingClientRect = () => rect(380);
+    (document.querySelector('#lab-body') as HTMLElement).getBoundingClientRect = () => rect(400);
+    setBottom(document.querySelector('.paper')!, 410);
+    fitClassifieds(document);
+    expect(grid.querySelector('aside.ad, figure.classifieds-plate')).toBeNull();
+  });
+
+  it('sizes the ornament to the space left, halving once when over', () => {
+    document.body.innerHTML =
+      '<div class="paper"><div id="lab-body"><div id="lab-log" class="classifieds">' +
+      '<article></article>' +
+      '<template data-fill="orn-tree"><figure class="classifieds-plate">' +
+      '<img src="/bench/classifieds/tree.webp" alt="" width="547" height="519" loading="lazy" decoding="async">' +
+      '</figure></template>' +
+      '</div></div></div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    const scope = document.querySelector('#lab-body') as HTMLElement;
+    const limit = 1000;
+    // One reading each for the first check, the house-notice recheck, the
+    // remaining measure, the full-size plate and the halved plate.
+    const bottoms = [800, 800, 800, 1010, 995];
+    let i = 0;
+    scope.getBoundingClientRect = () => rect(bottoms[Math.min(i++, bottoms.length - 1)]);
+    expect(fillClassifiedsFoot(grid, scope, limit)).toBe(1);
+    // Full height would run past the foot, so the plate halves once: half of
+    // 200px at the tree's ratio, less the grid's margins.
+    const img = grid.querySelector('figure.classifieds-plate img') as HTMLImageElement | null;
+    expect(img?.getAttribute('width')).toBe('81');
+    expect(grid.querySelector('figure.classifieds-plate')).not.toBeNull();
   });
 });

@@ -13,6 +13,7 @@ import { layoutClassifieds, spanFor, typeWeight, type AdSlot } from './lab-class
 import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
 import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
+import { paperAdHtml } from './paper-ads';
 import { normalizeTopic } from './field-notes';
 
 export { sortEntries };
@@ -387,6 +388,19 @@ function headHtml(t: Dict): string {
   return `<header class="lab-head"><div class="head-cartouche">${ornamentImg('head')}<h2 class="lab-heading">${esc(t.labPage.head)}</h2></div></header>`;
 }
 
+/** The last page's foot fillers wait in templates, like page one's: the
+ *  lab's own house notices and three engraved ornaments. The client fit
+ *  appends them into the last grid's measured free foot, whole only. */
+function footFillHtml(lang: LabPageLang): string {
+  return (
+    `<template data-fill="house-install">${paperAdHtml(lang, 'install')}</template>` +
+    `<template data-fill="house-collab">${paperAdHtml(lang, 'collab')}</template>` +
+    `<template data-fill="orn-tree"><figure class="classifieds-plate">${ornamentImg('tree')}</figure></template>` +
+    `<template data-fill="orn-gem"><figure class="classifieds-plate">${ornamentImg('gem')}</figure></template>` +
+    `<template data-fill="orn-press"><figure class="classifieds-plate">${ornamentImg('press')}</figure></template>`
+  );
+}
+
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
  *  empty when everything fits one page — never an empty page). Coupons ride
  *  as ads of their own: the first half after the third slot, the rest after
@@ -406,13 +420,13 @@ export function classifiedsHtml(
   const page1 =
     `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang, 1)}` +
     `${pages[1] ? '' : gridHtml([], rest, 8, t, lang, 1)}${couponNoteHtml(lang)}` +
-    `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template></div>`;
+    `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>${footFillHtml(lang)}</div>`;
   // Page 3 carries no head of its own: the folio line, then ads. Its grid
   // is always there, empty when everything fits page 2, so the client's fit
   // can carry page 2's overflow onto it; an empty grid keeps page 3 out of
   // the paper.
   const page2 =
-    `<div id="lab-log2" class="classifieds">${pages[1] ? gridHtml(pages[1], rest, 8, t, lang, 2) : ''}</div>` +
+    `<div id="lab-log2" class="classifieds">${pages[1] ? gridHtml(pages[1], rest, 8, t, lang, 2) : ''}${footFillHtml(lang)}</div>` +
     `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>` +
     (truncated ? logbookPointerHtml(t, lang) : '');
   return { page1, page2, truncated };

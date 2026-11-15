@@ -102,14 +102,26 @@ function bodyLinePx(col: Element): number {
 }
 
 /** The sheet edge the columns must end above: the paper's own bottom, less
- *  the colophon line when the edition prints one, so fitting never clips it. */
+ *  the colophon line when the edition prints one and the edition grid's own
+ *  row gap, so fitting never clips the colophon or hides it behind the
+ *  sheet's edge. */
 function sheetLimit(edition: Element): number {
   const paper = edition.closest('.paper') || edition;
   const bottom = rectBottom(paper);
   if (bottom <= 0) return 0;
   const colophon = edition.querySelector('.colophon-note');
   const reserve = colophon ? colophon.getBoundingClientRect().height : 0;
-  return bottom - (Number.isFinite(reserve) && reserve > 0 ? reserve : 0);
+  let gap = 0;
+  try {
+    const cs = globalThis.getComputedStyle?.(edition as Element);
+    const raw = cs ? cs.rowGap || (cs as CSSStyleDeclaration).gap : '';
+    const parsed = Number.parseFloat(raw || '');
+    if (Number.isFinite(parsed) && parsed > 0) gap = parsed;
+  } catch {
+    gap = 0;
+  }
+  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + gap;
+  return bottom - (total > 0 ? total : 0);
 }
 
 /** Trim whole letters off a column's foot until it ends above the limit. */
@@ -321,15 +333,110 @@ export interface FrontFit {
   plateColumn: number;
 }
 
-/** Fit page one's columns to the sheet: trim whole letters, balance the
- *  feet within one line, then foot the roomiest feet with the engraving and
- *  the house notices — never both in one column, only what fits whole. */
+/** Every letter column on page one, in reading order: the lead's own
+ *  columns first, then the band below everything. */
+function letterCols(edition: Element): Element[] {
+  return Array.from(edition.querySelectorAll('.lead-cols .col, .cols .col'));
+}
+
+/** Fit page one to the sheet: the letters fill the space under the lead
+ *  story in the lead's own columns, then the band below; whole letters, the
+ *  rail and the Workbench display print whole or not at all, and the feet
+ *  end within one line of each other. The house ad and the rail's extra
+ *  items go before letters do. */
 export function fitFrontPage(edition: Element): FrontFit {
   const out: FrontFit = { trimmedLetters: 0, movedLetters: 0, fillers: 0, plateColumn: -1 };
-  const cols = Array.from(edition.querySelectorAll('.cols .col'));
-  if (!cols.length) return out;
+  const lead = edition.querySelector('.lead');
+  const leadCols = edition.querySelector('.lead-cols');
+  const railEl = edition.querySelector('.rail');
+  const alsoEl = edition.querySelector('.rail .also');
+  let duoEl = edition.querySelector('aside.ad--feature');
+
+  // Measure the row at its natural size: the story, the rail and the photo
+  // growth stretch to the row foot once laid out, which would hide how much
+  // content the sheet really holds. Read, then drop the class again.
+  edition.classList.add('fit-natural');
+  const storyEl = edition.querySelector('.lead .story');
+  // Touch each stretched box at its natural size: the read settles the
+  // layout the loop below measures, after the class is dropped again.
+  const storyH = storyEl ? (storyEl as HTMLElement).getBoundingClientRect().height : 0;
+  const railH =
+    alsoEl && railEl ? rectBottom(alsoEl) - railEl.getBoundingClientRect().top : 0;
+  const duoH = duoEl ? (duoEl as HTMLElement).getBoundingClientRect().height : 0;
+  edition.classList.remove('fit-natural');
+
+  // Whole column sections move under the lead story: half the band, rounded
+  // up — all of it when the lead stands alone with no rail beside it. Whole
+  // sections only, never split; emptied nodes leave the page.
+  const band = edition.querySelector('.cols');
+  if (band && leadCols) {
+    const sections = Array.from(band.children).filter((k) => k.classList.contains('col'));
+    if (sections.length) {
+      const solo = !!lead?.classList.contains('solo');
+      const count = solo ? sections.length : Math.ceil(sections.length / 2);
+      for (const s of sections.slice(0, count)) leadCols.appendChild(s);
+      if (!band.querySelector('.col')) band.remove();
+      const all = letterCols(edition);
+      const labels = headingLabels(all);
+      let openKind: string | null = null;
+      for (const col of all) {
+        pruneOrphanHeadings(col);
+        openKind = rehead(col, labels, openKind);
+      }
+    }
+  }
+
   const limit = sheetLimit(edition);
   if (limit <= 0) return out;
+  const line = (() => {
+    const cols = letterCols(edition);
+    const lines = cols.map(bodyLinePx);
+    lines.push(bodyLinePx(edition));
+    return Math.max(...lines, 1);
+  })();
+
+  // The natural foot never sits below its content: flex growth only
+  // stretches past it, so the stretched box and the natural height agree.
+  // The story's own height is the row's floor when the letters are gone.
+  const storyFloor = storyEl ? (storyEl as HTMLElement).getBoundingClientRect().top + storyH : 0;
+  const railFoot = (): number =>
+    railEl
+      ? Math.max(rectBottom(railEl), railEl.getBoundingClientRect().top + railH, storyFloor)
+      : storyFloor;
+  const duoFoot = (): number =>
+    duoEl
+      ? Math.max(rectBottom(duoEl as Element), (duoEl as HTMLElement).getBoundingClientRect().top + duoH)
+      : 0;
+
+  for (let guard = 0; guard < 50; guard++) {
+    const cols = letterCols(edition);
+    const bottoms = cols.map(rectBottom);
+    if (railEl) bottoms.push(railFoot());
+    if (duoEl) bottoms.push(duoFoot());
+    if (!bottoms.length) break;
+    if (Math.max(...bottoms) - limit <= line) break;
+    if (duoEl) {
+      // FR3: the house display goes before letters do.
+      (duoEl as Element).remove();
+      duoEl = null;
+      continue;
+    }
+    const items = alsoEl
+      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item'))
+      : [];
+    if (items.length > 1) {
+      // FR3: the rail's extra items go before letters do; the rail keeps one.
+      items[items.length - 1].remove();
+      continue;
+    }
+    let removed = 0;
+    for (const col of cols) removed += trimColumn(col, limit);
+    out.trimmedLetters += removed;
+    if (!removed) break;
+  }
+
+  const cols = letterCols(edition);
+  if (!cols.length) return out;
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
   out.movedLetters = balanceColumns(cols);
   // The free foot of each column, roomiest first.
@@ -447,9 +554,86 @@ function siblingPageShown(page: Element): boolean {
   );
 }
 
+/** True when the grid holds printable ads — never only templates, the
+ *  coupon note, or an earlier fill. An empty grid's page stays hidden, so it
+ *  is never the page to fill. */
+function hasAds(grid: Element): boolean {
+  return Array.from(grid.children).some(
+    (k) =>
+      k.tagName === 'ARTICLE' ||
+      (k.tagName === 'A' && k.classList.contains('coupon')) ||
+      k.classList.contains('notice-run'),
+  );
+}
+
+/** Fill the last classifieds page to the foot: with the ads run out, the
+ *  remaining space takes the lab's own house notices and one engraved
+ *  ornament from the page's templates — sized to the space left, whole only,
+ *  so the page ends at the foot instead of a blank band. Returns how many
+ *  fillers stayed on the page. */
+export function fillClassifiedsFoot(grid: Element, scope: Element, limit: number): number {
+  let added = 0;
+  const line = bodyLinePx(scope);
+  if (limit - rectBottom(scope) <= 3 * line) return 0;
+  const doc = grid.ownerDocument;
+  const place = (kind: string): Element | null => {
+    const t = scope.querySelector(`template[data-fill="${kind}"]`) as HTMLTemplateElement | null;
+    if (!t?.innerHTML) return null;
+    const tmp = doc.createElement('div');
+    tmp.innerHTML = t.innerHTML;
+    const node = tmp.firstElementChild;
+    if (!node) return null;
+    grid.appendChild(node);
+    if ((scope as HTMLElement).getBoundingClientRect().bottom - limit > 1) {
+      node.remove();
+      return null;
+    }
+    added++;
+    return node as Element;
+  };
+  // The lab's own house notices first, whole or not at all.
+  place('house-install');
+  if (limit - rectBottom(scope) <= 3 * line) return added;
+  place('house-collab');
+  // Then one engraved ornament, sized to the space left.
+  const remaining = limit - rectBottom(scope);
+  if (remaining <= 3 * line) return added;
+  for (const kind of ['orn-tree', 'orn-gem', 'orn-press']) {
+    const t = scope.querySelector(`template[data-fill="${kind}"]`) as HTMLTemplateElement | null;
+    if (!t?.innerHTML) continue;
+    const tmp = doc.createElement('div');
+    tmp.innerHTML = t.innerHTML;
+    const fig = tmp.firstElementChild;
+    const img = fig?.querySelector('img');
+    if (!fig || !img) continue;
+    // The plate's own intrinsic size sets the ratio; the height it may take
+    // is the space left, less the grid's own margins.
+    const w = Number.parseFloat(img.getAttribute('width') || '');
+    const h = Number.parseFloat(img.getAttribute('height') || '');
+    const ratio = Number.isFinite(w) && Number.isFinite(h) && h > 0 ? w / h : 1;
+    grid.appendChild(fig);
+    const widthFor = (height: number): number => Math.max(1, Math.floor(height * ratio - 24));
+    img.setAttribute('width', String(widthFor(remaining)));
+    img.removeAttribute('height');
+    if ((scope as HTMLElement).getBoundingClientRect().bottom - limit > 1) {
+      // Halve once; keep only when the scope then ends above the limit.
+      img.setAttribute('width', String(widthFor(remaining / 2)));
+      if ((scope as HTMLElement).getBoundingClientRect().bottom - limit > 1) {
+        fig.remove();
+        continue;
+      }
+    }
+    added++;
+    return added;
+  }
+  return added;
+}
+
 /** Fit pages two and three to the sheet: each classifieds grid keeps only
  *  the ads that fit whole, and a grid that lost ads points at the Logbook —
- *  reusing the page's own pointer line, added only when trimming happened. */
+ *  reusing the page's own pointer line, added only when trimming happened.
+ *  The last page fills to the foot with the lab's house notices and an
+ *  engraved ornament once its ads run out. */
 export function fitClassifieds(root: ParentNode): ClassifiedsFit {
   const out: ClassifiedsFit = { trimmedAds: 0, pointers: 0 };
   const grids = Array.from(
@@ -475,13 +659,18 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
         ? ((root as Element).querySelector?.('#lab2-body .classifieds') as Element | null)
         : null;
     const removed = trimClassifieds(grid as Element, limit, 1, sink);
+    const scope = grid.parentElement;
     if (sink) {
       out.carriedAds = (out.carriedAds ?? 0) + removed;
+      // Page two is the last page only when page three holds no ads: then
+      // its own foot takes the house notices and the ornament.
+      if (scope && !hasAds(sink as Element) && hasAds(grid as Element)) {
+        fillClassifiedsFoot(grid as Element, scope, limit);
+      }
       continue;
     }
     out.trimmedAds += removed;
     if (removed > 0) {
-      const scope = grid.parentElement;
       const hasPointer = scope
         ? Array.from(scope.children).some((k) => k.classList.contains('lab-more'))
         : true;
@@ -511,6 +700,11 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
           }
         }
       }
+    }
+    // The last readable grid fills to the foot once its ads run out; a grid
+    // still carrying page two's overflow is never the last page.
+    if (scope && hasAds(grid as Element)) {
+      fillClassifiedsFoot(grid as Element, scope, limit);
     }
   }
   return out;
