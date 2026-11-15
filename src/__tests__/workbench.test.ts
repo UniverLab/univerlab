@@ -21,7 +21,7 @@ describe('workbench', () => {
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.tags.items).toHaveLength(3);
       for (const tag of dict.tags.items) expect(tag).toHaveLength(4);
-      expect(dict.how.steps).toHaveLength(3);
+      expect(dict.how.steps).toHaveLength(4);
       expect(dict.proof.items).toHaveLength(4);
       expect(dict.policy.items).toHaveLength(9);
       expect(dict.who.items).toHaveLength(2);
@@ -29,25 +29,36 @@ describe('workbench', () => {
     }
   });
 
-  it('the headline names the visitor problem with the silence emphasized', () => {
-    expect(es.workbench.head).toContain('en silencio');
-    expect(en.workbench.head).toContain('in silence');
-    expect(es.workbench.headEm).toBe('en silencio');
-    expect(en.workbench.headEm).toBe('in silence');
+  it('the headline names the visitor idea, problem or improvement', () => {
+    expect(es.workbench.head).toContain('Algo que quieres mejorar');
+    expect(en.workbench.head).toContain('Something you want to improve');
+    expect(es.workbench.headEm).toBe('Algo que quieres mejorar.');
+    expect(en.workbench.headEm).toBe('Something you want to improve.');
     expect(es.workbench.head).toContain(es.workbench.headEm);
     expect(en.workbench.head).toContain(en.workbench.headEm);
     expect(VIEW).toContain('<em>{w.headEm}</em>');
   });
 
-  it('the lede names the lab builders', () => {
-    expect(en.workbench.intro).toContain('this lab');
-    expect(es.workbench.intro).toContain('este laboratorio');
+  it('the headline no longer assumes the visitor already runs agents', () => {
+    for (const dict of [es.workbench, en.workbench]) {
+      const hero = `${dict.head} ${dict.intro}`;
+      expect(hero).not.toContain('failing in silence');
+      expect(hero).not.toContain('fallan en silencio');
+      expect(hero).not.toContain('fallar en silencio');
+    }
+  });
+
+  it('the lede names real-world problems and the path from conversation to solution', () => {
+    expect(en.workbench.intro).toContain('real-world problems');
+    expect(es.workbench.intro).toContain('problemas reales');
+    expect(en.workbench.intro).toContain('initial conversation');
+    expect(es.workbench.intro).toContain('primera conversación');
     expect(VIEW).toContain('{w.intro}');
   });
 
-  it('the primary button books the free call on the booking page, WhatsApp stays secondary', () => {
-    expect(es.workbench.cta).toContain('15 min');
-    expect(en.workbench.cta).toContain('15 min');
+  it('the primary button invites the visitor to tell us what they need', () => {
+    expect(es.workbench.cta).toContain('Cuéntanos qué necesitas');
+    expect(en.workbench.cta).toContain('Tell us what you need');
     expect(es.workbench.ctaShort.length).toBeLessThan(es.workbench.cta.length);
     expect(en.workbench.ctaShort.length).toBeLessThan(en.workbench.cta.length);
     expect(VIEW).toContain('{w.ctaShort}');
@@ -56,6 +67,19 @@ describe('workbench', () => {
     expect(VIEW).toContain('{w.altCta}');
     expect(VIEW).toContain('https://wa.me/573053892323');
     expect(VIEW).toContain('encodeURIComponent(w.ctaMessage)');
+  });
+
+  it('the needs section names concrete situations before the service cards', () => {
+    for (const dict of [en.workbench, es.workbench]) {
+      expect(dict.needs.title.length).toBeGreaterThan(0);
+      expect(dict.needs.intro.length).toBeGreaterThan(0);
+      expect(dict.needs.items).toHaveLength(4);
+      for (const item of dict.needs.items) expect(item).toHaveLength(2);
+    }
+    expect(es.workbench.needs.title).toContain('Qué te gustaría mejorar');
+    expect(en.workbench.needs.title).toContain('What would you like to improve');
+    expect(VIEW.indexOf('{w.needs.title}')).toBeLessThan(VIEW.indexOf('<section class="wb-tags"'));
+    expect(VIEW).toContain('{w.needs.intro}');
   });
 
   it('no booking path by email survives on the page or in the copy', () => {
@@ -97,14 +121,16 @@ describe('workbench', () => {
     expect(es.workbench.tags.items[2][2]).toContain('En Colombia');
     expect(es.workbench.tags.items[2][2]).toContain('1.500.000 COP');
     expect(en.workbench.tags.items[2][2]).toContain('COP 1,500,000');
-    expect(en.workbench.tags.items[0][3]).toContain('harness');
-    expect(es.workbench.tags.items[0][3]).toContain('laboratorio');
-    expect(en.workbench.tags.items[1][3]).toContain('30 days of support');
-    expect(es.workbench.tags.items[1][3]).toContain('30 días de soporte');
-    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['Consultation', 'Agentic solution', 'Audit']);
-    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Consulta', 'Solución agéntica', 'Auditoría']);
-    expect(en.workbench.tags.items[1][3]).toContain('design and install');
-    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e instalamos');
+    expect(en.workbench.tags.items[0][3]).toContain('technically viable');
+    expect(es.workbench.tags.items[0][3]).toContain('técnicamente viable');
+    expect(en.workbench.tags.items[1][3]).toContain('design and implement');
+    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e implementamos');
+    expect(en.workbench.tags.items[2][3]).toContain('opportunities for improvement');
+    expect(es.workbench.tags.items[2][3]).toContain('oportunidades de mejora');
+    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['Let’s work out how to solve it', 'Let’s build what you need', 'Let’s review what you already have']);
+    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Pensemos cómo resolverlo', 'Construyamos lo que necesitas', 'Revisemos lo que ya tienes']);
+    expect(en.workbench.tags.items[1][3]).toContain('design and implement');
+    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e implementamos');
     // The ownership terms left the card: no repository, subscription,
     // harness, token or cost word survives on the agentic card.
     expect(en.workbench.tags.items[1][3]).not.toMatch(/repositor|scripci|harness|token|cost/i);
@@ -133,14 +159,15 @@ describe('workbench', () => {
     expect(es.workbench.freeCall.cond).toContain('si el Banco de trabajo es el lugar indicado');
   });
 
-  it('the agentic card is short: two sentences, support counted from installation', () => {
+  it('the service cards name the visitor move and keep the support terms on their own page', () => {
     const bodies: Array<[string, string]> = [
-      [en.workbench.tags.items[1][3], '30 days of support counted from installation'],
-      [es.workbench.tags.items[1][3], '30 días de soporte contados desde la instalación'],
+      [en.workbench.tags.items[0][3], 'technically viable'],
+      [es.workbench.tags.items[0][3], 'técnicamente viable'],
+      [en.workbench.tags.items[1][3], 'for your specific needs'],
+      [es.workbench.tags.items[1][3], 'para tu caso'],
     ];
     for (const [body, support] of bodies) {
       expect(body).toContain(support);
-      expect(body.split(/(?<=[.!?])\s+/)).toHaveLength(2);
     }
   });
 
@@ -160,14 +187,17 @@ describe('workbench', () => {
     expect(VIEW).toContain('.wb-price-cop');
   });
 
-  it('a consultation is paid when booked and confirmed once checked', () => {
+  it('the process reads as understand first, then decide, in four steps', () => {
     for (const dict of [en.workbench, es.workbench]) {
-      expect(dict.how.steps[1][1]).toContain('Bre-B');
-      expect(dict.how.steps[1][1]).toContain('Bre-B');
-      expect(dict.how.steps[1][1]).toContain('PayPal');
+      expect(dict.how.steps).toHaveLength(4);
     }
-    expect(en.workbench.how.steps[1][1]).toContain('once the payment is checked');
-    expect(es.workbench.how.steps[1][1]).toContain('al verificar el pago');
+    expect(en.workbench.how.kicker).toContain('First, we understand. Then, we decide.');
+    expect(es.workbench.how.kicker).toContain('Primero entendemos. Después decidimos.');
+    expect(en.workbench.how.intro).toContain('technical specification');
+    expect(es.workbench.how.intro).toContain('especificación técnica');
+    expect(en.workbench.how.steps.map(([t]) => t)).toEqual(['Tell us', 'Explore', 'Propose', 'Build']);
+    expect(es.workbench.how.steps.map(([t]) => t)).toEqual(['Cuéntanos', 'Exploramos', 'Proponemos', 'Construimos']);
+    expect(VIEW).toContain('{w.how.intro}');
   });
 
   it('the proof section links the four experiments with their taglines', () => {
@@ -185,8 +215,8 @@ describe('workbench', () => {
   });
 
   it('the closing band funds the lab and names WhatsApp', () => {
-    expect(es.workbench.close.head).toContain('financia el laboratorio');
-    expect(en.workbench.close.head).toContain('funds the lab');
+    expect(es.workbench.close.head).toContain('financiar el laboratorio');
+    expect(en.workbench.close.head).toContain('fund the lab');
     expect(es.workbench.close.cta).toContain('WhatsApp');
     expect(en.workbench.close.cta).toContain('WhatsApp');
     expect(en.workbench.close.phone).toContain('+57 305 389 2323');
