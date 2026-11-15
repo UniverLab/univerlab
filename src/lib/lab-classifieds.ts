@@ -43,6 +43,12 @@ export interface ClassifiedLayout {
 export const CLASSIFIEDS_HEAD_COST = 7;
 export const CLASSIFIEDS_PAGE_BUDGET = 153;
 
+/** Space units of paper page 3: no masthead and no section head, only the
+ *  folio line, so it holds more. The client's fit carries page 2's overflow
+ *  to its head and trims its foot, so a generous budget only means fewer
+ *  entries are left out before the sheet is measured. */
+export const CLASSIFIEDS_PAGE2_BUDGET = 210;
+
 /** Space units one coupon ad reserves on its page. */
 export const CLASSIFIEDS_COUPON_COST = 9;
 
@@ -106,7 +112,8 @@ export function layoutClassifieds(entries: Entry[], couponCount = 0): Classified
   const pages: AdSlot[][] = [];
   let i = 0;
   for (let p = 0; p < CLASSIFIEDS_MAX_PAGES && i < ranked.length; p += 1) {
-    let remaining = CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST - reserved[p];
+    let remaining =
+      (p === 0 ? CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST : CLASSIFIEDS_PAGE2_BUDGET) - reserved[p];
     const page: AdSlot[] = [];
     while (i < ranked.length) {
       const allowed: AdSize[] =

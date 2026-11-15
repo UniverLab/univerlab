@@ -15,6 +15,7 @@ import {
   CLASSIFIEDS_COUPON_COST,
   CLASSIFIEDS_HEAD_COST,
   CLASSIFIEDS_PAGE_BUDGET,
+  CLASSIFIEDS_PAGE2_BUDGET,
   CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
 } from '../lib/lab-classifieds';
@@ -128,9 +129,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // The live mix overflows by space: the tail steps down to lines grouped
     // in a run on page 3 only.
     const kinds: Array<Entry['type']> = [
-      ...Array<Entry['type']>(14).fill('launch'),
-      ...Array<Entry['type']>(13).fill('note'),
-      ...Array<Entry['type']>(5).fill('update'),
+      ...Array<Entry['type']>(28).fill('launch'),
+      ...Array<Entry['type']>(26).fill('note'),
+      ...Array<Entry['type']>(10).fill('update'),
       'incident',
     ];
     const live: Entry[] = kinds.map((type, i) => ({
@@ -276,9 +277,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   it('caps the section at two pages and points the overflow at the Logbook', () => {
     // The live mix: 14 launch, 13 note, 5 update, 1 incident.
     const kinds: Array<Entry['type']> = [
-      ...Array<Entry['type']>(14).fill('launch'),
-      ...Array<Entry['type']>(13).fill('note'),
-      ...Array<Entry['type']>(5).fill('update'),
+      ...Array<Entry['type']>(28).fill('launch'),
+      ...Array<Entry['type']>(26).fill('note'),
+      ...Array<Entry['type']>(10).fill('update'),
       'incident',
     ];
     const live: Entry[] = kinds.map((type, i) => ({
@@ -298,7 +299,8 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     const reserved = [2 * CLASSIFIEDS_COUPON_COST, 2 * CLASSIFIEDS_COUPON_COST];
     pages.forEach((page, p) => {
       const used = page.reduce((sum, s) => sum + CLASSIFIEDS_SIZE_COST[s.size], 0);
-      expect(used + reserved[p] + CLASSIFIEDS_HEAD_COST).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+      const room = p === 0 ? CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST : CLASSIFIEDS_PAGE2_BUDGET;
+      expect(used + reserved[p]).toBeLessThanOrEqual(room);
     });
     const html2 = labPageHtml2(live, 'en');
     expect(html2).toContain('id="lab-log2"');
@@ -312,9 +314,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('opens each classifieds page with the engraved section head, words in type', () => {
     const kinds: Array<Entry['type']> = [
-      ...Array<Entry['type']>(14).fill('launch'),
-      ...Array<Entry['type']>(13).fill('note'),
-      ...Array<Entry['type']>(5).fill('update'),
+      ...Array<Entry['type']>(28).fill('launch'),
+      ...Array<Entry['type']>(26).fill('note'),
+      ...Array<Entry['type']>(10).fill('update'),
       'incident',
     ];
     const live: Entry[] = kinds.map((type, i) => ({
@@ -399,9 +401,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   it('rotates eight display treatments so adjacent ads never share one', () => {
     // A two-page section: the live mix overflows onto page 3.
     const kinds: Array<Entry['type']> = [
-      ...Array<Entry['type']>(14).fill('launch'),
-      ...Array<Entry['type']>(13).fill('note'),
-      ...Array<Entry['type']>(5).fill('update'),
+      ...Array<Entry['type']>(28).fill('launch'),
+      ...Array<Entry['type']>(26).fill('note'),
+      ...Array<Entry['type']>(10).fill('update'),
       'incident',
     ];
     const live: Entry[] = kinds.map((type, i) => ({
@@ -463,10 +465,10 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   });
 
   it('sets the cut on small ads and never on one-line notices', () => {
-    // Thirty notes by space: one highest entry takes display, the page-1 tail
-    // steps down to a small ad, and the last overflows to a one-line notice.
+    // Forty notes by space: one highest entry takes display, the page-1 tail
+    // steps down to a small ad, and page 3's tail to a one-line notice.
     // The fixture must reach both sizes or this test says nothing about them.
-    const rows: Entry[] = Array.from({ length: 30 }, (_, i) => ({
+    const rows: Entry[] = Array.from({ length: 40 }, (_, i) => ({
       id: `s${i}`,
       date: new Date(Date.UTC(2026, 9, 6) - i * 86400000).toISOString(),
       title: `Small ${i}`,
@@ -507,9 +509,9 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     expect(labPageHtml2(rows, 'en')).not.toContain('notice-fleuron');
     // The live mix overflows into one run on page 3: exactly one fleuron.
     const kinds: Array<Entry['type']> = [
-      ...Array<Entry['type']>(14).fill('launch'),
-      ...Array<Entry['type']>(13).fill('note'),
-      ...Array<Entry['type']>(5).fill('update'),
+      ...Array<Entry['type']>(28).fill('launch'),
+      ...Array<Entry['type']>(26).fill('note'),
+      ...Array<Entry['type']>(10).fill('update'),
       'incident',
     ];
     const live: Entry[] = kinds.map((type, i) => ({

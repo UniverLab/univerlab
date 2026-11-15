@@ -284,6 +284,7 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
   let prevTv = -1;
   let prevSpan = -1;
   let prevFrame = '';
+  let repUsed = false;
   for (const item of items) {
     if (item.kind === 'coupon') {
       flush();
@@ -305,7 +306,9 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     const voices = s.size === 'display' ? 6 : 8;
     let tv = (hashSeed(s.entry.id || '') + n) % voices;
     n += 1;
-    while (tv === prevTv || (tv === 5 && !figureFor(s.entry))) tv = (tv + 1) % voices;
+    // The repeated word is a shout: once per page at most.
+    while (tv === prevTv || (tv === 5 && !figureFor(s.entry)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
+    if (tv === 7) repUsed = true;
     let span = spanFor(s.entry, s.size, si);
     si += 1;
     if (span === prevSpan) span = span === 1 ? 2 : span === 2 ? (s.size === 'small' ? 1 : 3) : 2;

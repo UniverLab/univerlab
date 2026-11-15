@@ -180,3 +180,48 @@ describe('fitPaper', () => {
     });
   });
 });
+
+describe('fitClassifieds carries page two over to page three', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('moves page two’s overflow, in order, to the head of page three', () => {
+    document.body.innerHTML =
+      '<div class="paper">' +
+      '<section class="paper-page"><div id="lab-body"><div id="lab-log" class="classifieds">' +
+      '<article id="a1"></article><article id="a2"></article><article id="a3"></article><article id="a4"></article>' +
+      '</div><template data-fill="logbook-pointer"><p class="lab-more">x</p></template></div></section>' +
+      '<section class="paper-page" hidden><div id="lab2-body"><div id="lab-log2" class="classifieds">' +
+      '<article id="b1"></article></div></div></section>' +
+      '</div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    liveGrid(grid);
+    setBottom(document.querySelector('.paper')!, 100);
+    const out = fitClassifieds(document);
+    // Two cards fit page two; the other two lead page three, in order.
+    expect(Array.from(grid.children).map((k) => k.id)).toEqual(['a1', 'a2']);
+    const next = document.querySelector('#lab-log2') as HTMLElement;
+    expect(Array.from(next.children).map((k) => k.id)).toEqual(['a3', 'a4', 'b1']);
+    expect(out.carriedAds).toBe(2);
+    expect(out.trimmedAds).toBe(0);
+    // Nothing left the paper, so page two never points at the Logbook.
+    expect(document.querySelectorAll('#lab-body .lab-more')).toHaveLength(0);
+  });
+
+  it('carries a one-line run with its fleuron as one unit', () => {
+    document.body.innerHTML =
+      '<div class="paper">' +
+      '<section class="paper-page"><div id="lab-body"><div id="lab-log" class="classifieds">' +
+      '<article id="a1"></article><div class="notice-fleuron"></div><div class="notice-run" id="run"></div>' +
+      '</div></div></section>' +
+      '<section class="paper-page" hidden><div id="lab2-body"><div id="lab-log2" class="classifieds"></div></div></section>' +
+      '</div>';
+    const grid = document.querySelector('#lab-log') as HTMLElement;
+    liveGrid(grid);
+    setBottom(document.querySelector('.paper')!, 50);
+    fitClassifieds(document);
+    const next = document.querySelector('#lab-log2') as HTMLElement;
+    expect(Array.from(next.children).map((k) => k.className || k.id)).toEqual(['notice-fleuron', 'notice-run']);
+  });
+});

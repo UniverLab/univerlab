@@ -3,6 +3,7 @@ import {
   CLASSIFIEDS_HEAD_COST,
   CLASSIFIEDS_MAX_PAGES,
   CLASSIFIEDS_PAGE_BUDGET,
+  CLASSIFIEDS_PAGE2_BUDGET,
   CLASSIFIEDS_SIZE_COST,
   layoutClassifieds,
   rankEntries,
@@ -28,9 +29,9 @@ const notes = (n: number): Entry[] =>
 /** The live mix: 14 launch, 13 note, 5 update, 1 incident, newest first. */
 const liveMix = (): Entry[] => {
   const kinds: Array<Entry['type']> = [
-    ...Array<Entry['type']>(14).fill('launch'),
-    ...Array<Entry['type']>(13).fill('note'),
-    ...Array<Entry['type']>(5).fill('update'),
+    ...Array<Entry['type']>(28).fill('launch'),
+    ...Array<Entry['type']>(26).fill('note'),
+    ...Array<Entry['type']>(10).fill('update'),
     'incident',
   ];
   return kinds.map(
@@ -136,9 +137,11 @@ describe('layoutClassifieds', () => {
       const reserved = [half * CLASSIFIEDS_COUPON_COST, (coupons - half) * CLASSIFIEDS_COUPON_COST];
       pages.forEach((page, p) => {
         const sizes = page.map((s) => s.size);
-        expect(cost(sizes) + reserved[p] + CLASSIFIEDS_HEAD_COST).toBeLessThanOrEqual(CLASSIFIEDS_PAGE_BUDGET);
+        // Page 3 has no section head and a larger sheet of its own.
+        const room = p === 0 ? CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST : CLASSIFIEDS_PAGE2_BUDGET;
+        expect(cost(sizes) + reserved[p]).toBeLessThanOrEqual(room);
         // Entries remain after this page, yet not even a line fits: no blank band.
-        const leftover = CLASSIFIEDS_PAGE_BUDGET - CLASSIFIEDS_HEAD_COST - reserved[p] - cost(sizes);
+        const leftover = room - reserved[p] - cost(sizes);
         expect(leftover).toBeLessThan(CLASSIFIEDS_SIZE_COST.line);
       });
     }

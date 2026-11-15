@@ -385,25 +385,35 @@ function lastRemovable(grid: Element): Element | null {
 
 /** Trim a classifieds grid to the ads that fit whole, newest first from the
  *  foot: whole cards only, a one-line run with its fleuron as one unit. */
-export function trimClassifieds(grid: Element, limit: number, slackPx = 1): number {
+export function trimClassifieds(grid: Element, limit: number, slackPx = 1, sink?: Element | null): number {
   if (limit <= 0) return 0;
   let removed = 0;
   for (let guard = 0; guard < 1000; guard++) {
     if ((grid as HTMLElement).getBoundingClientRect().bottom - limit <= slackPx) break;
-    if (!removeLastCard(grid)) break;
+    if (!removeLastCard(grid, sink)) break;
     removed++;
   }
   return removed;
 }
 
-/** Drop the grid's last ad-like child: whole cards only, a one-line run
- *  with its fleuron as one unit. False when only unremovable lines remain. */
-function removeLastCard(grid: Element): boolean {
+/** Take the grid's last ad-like child off: whole cards only, a one-line run
+ *  with its fleuron as one unit. With a `sink` (the next page's grid) the
+ *  card moves to the head of that grid instead of leaving the paper, so the
+ *  classifieds flow on from page two to page three in order. False when
+ *  only unremovable lines remain. */
+function removeLastCard(grid: Element, sink?: Element | null): boolean {
   const last = lastRemovable(grid);
   if (!last) return false;
-  if (last.classList.contains('notice-run') && last.previousElementSibling?.classList.contains('notice-fleuron')) {
-    last.previousElementSibling.remove();
+  const fleuron =
+    last.classList.contains('notice-run') && last.previousElementSibling?.classList.contains('notice-fleuron')
+      ? last.previousElementSibling
+      : null;
+  if (sink) {
+    sink.insertBefore(last, sink.firstChild);
+    if (fleuron) sink.insertBefore(fleuron, sink.firstChild);
+    return true;
   }
+  fleuron?.remove();
   last.remove();
   return true;
 }
@@ -411,6 +421,8 @@ function removeLastCard(grid: Element): boolean {
 export interface ClassifiedsFit {
   trimmedAds: number;
   pointers: number;
+  /** Ads moved from page two to the head of page three. */
+  carriedAds?: number;
 }
 
 const TURN_CLASSES = ['turn-leave-next', 'turn-return-prev', 'turn-under'];
@@ -456,7 +468,17 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
     const paper = (grid as Element).closest?.('.paper') || grid;
     const limit = rectBottom(paper as Element);
     if (limit <= 0) continue;
-    const removed = trimClassifieds(grid as Element, limit);
+    // Page two's overflow carries on to page three (when there is one);
+    // only page three's overflow leaves the paper for the Logbook.
+    const sink =
+      (grid as Element).id === 'lab-log'
+        ? ((root as Element).querySelector?.('#lab2-body .classifieds') as Element | null)
+        : null;
+    const removed = trimClassifieds(grid as Element, limit, 1, sink);
+    if (sink) {
+      out.carriedAds = (out.carriedAds ?? 0) + removed;
+      continue;
+    }
     out.trimmedAds += removed;
     if (removed > 0) {
       const scope = grid.parentElement;
