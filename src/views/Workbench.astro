@@ -60,7 +60,8 @@ const proof = w.proof.items.map((id) => ({
   .wb-needs ul { list-style: none; margin: 1.4rem 0 0; padding: 0; display: grid; gap: 1.2rem; }
   @media (min-width: 48rem) { .wb-needs ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .wb-needs li b { display: block; font-family: var(--font-serif); font-weight: 400; font-size: 1.25rem; margin-bottom: 0.25rem; }
-  .wb-needs li span { color: var(--ink-dim); font-size: 1rem; line-height: 1.6; }  @media (min-width: 48rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .wb-needs li span { color: var(--ink-dim); font-size: 1rem; line-height: 1.6; }
+  @media (min-width: 48rem) { .wb-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .wb-tag { background: var(--bg-raise); border: 1px solid var(--line); padding: 1.4rem 1.2rem 1.1rem; display: flex; flex-direction: column; }
   .wb-kinds { list-style: none; margin: 0.7rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
   .wb-kinds li { font-size: 0.9rem; color: var(--ink-dim); line-height: 1.5; }
@@ -69,6 +70,7 @@ const proof = w.proof.items.map((id) => ({
   .wb-tag h2 { font-family: var(--font-mono); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; color: var(--accent); }
   .wb-tag .wb-price { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1; margin: 0.5rem 0 0.25rem; }
   .wb-price-cop { font-family: var(--font-mono); font-size: .75rem; color: var(--ink-dim); margin: .15rem 0 .25rem; }
+  .wb-tag .wb-sub { font-family: var(--font-mono); font-size: .75rem; color: var(--ink-dim); margin: .15rem 0 .25rem; }
   .wb-tag p { margin: 0.5rem 0 0; font-size: 1rem; color: var(--ink-dim); line-height: 1.6; }
   .wb-more { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wb-founding { display: grid; gap: 0.35rem; }
@@ -182,8 +184,8 @@ const proof = w.proof.items.map((id) => ({
       </ul>
     </section>
     <section class="wb-tags" aria-label={w.tags.kicker}>
-      {w.tags.items.map(([title, price, note, body], i) => (
-        <div class="wb-tag"><h2>{title}</h2><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 1 && <ul class="wb-kinds">{w.solutions.kinds.items.map(([kind]) => (<li>{kind}</li>))}</ul>}{i === 1 && <p class="wb-card-link"><a class="wb-more" href={localizePath('/workbench/solutions', lang)}>{w.solutions.cardLink}</a></p>}{i === 2 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
+      {w.tags.items.map(([title, price, note, body, sub], i) => (
+        <div class="wb-tag"><h2>{title}</h2><p class="wb-sub">{sub}</p><div class="wb-price">{price}</div>{lang === 'es' && note && <div class="wb-price-cop">{note}</div>}<p>{body}</p>{i === 1 && <ul class="wb-kinds">{w.solutions.kinds.items.map(([kind]) => (<li>{kind}</li>))}</ul>}{i === 1 && <p class="wb-card-link"><a class="wb-more" href={localizePath('/workbench/solutions', lang)}>{w.solutions.cardLink}</a></p>}{i === 2 && <p class="wb-founding"><a class="wb-more" href={localizePath('/workbench/audits', lang)}>{w.audits.cardLink}</a><span id="founding-left" class="wb-left"></span></p>}</div>
       ))}
     </section>
     <section class="wb-block">

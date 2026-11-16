@@ -17,7 +17,7 @@ export function knowledge(lang: Lang, phone = '', foundingLeft?: number | null):
   lines.push('### ' + w.who.kicker);
   for (const [title, body] of w.who.items) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.tags.kicker);
-  for (const [title, price, note, body] of w.tags.items) lines.push('- ' + title + ' · ' + (co && note ? note : price) + ': ' + body);
+  for (const [title, price, note, body, sub] of w.tags.items) lines.push('- ' + title + ' · ' + sub + ' · ' + (co && note ? note : price) + ': ' + body);
   lines.push('### ' + w.how.kicker);
   for (const [title, body] of w.how.steps) lines.push('- ' + title + ': ' + body);
   lines.push('### ' + w.policy.kicker);

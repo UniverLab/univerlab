@@ -20,20 +20,20 @@ describe('workbench', () => {
     expect(Object.keys(en.workbench).sort()).toEqual(Object.keys(es.workbench).sort());
     for (const dict of [en.workbench, es.workbench]) {
       expect(dict.tags.items).toHaveLength(3);
-      for (const tag of dict.tags.items) expect(tag).toHaveLength(4);
+      for (const tag of dict.tags.items) expect(tag).toHaveLength(5);
       expect(dict.how.steps).toHaveLength(4);
       expect(dict.proof.items).toHaveLength(4);
       expect(dict.policy.items).toHaveLength(9);
-      expect(dict.who.items).toHaveLength(2);
+      expect(dict.who.items).toHaveLength(3);
       expect(dict.principles.items).toHaveLength(3);
     }
   });
 
-  it('the headline names the visitor idea, problem or improvement', () => {
-    expect(es.workbench.head).toContain('Algo que quieres mejorar');
-    expect(en.workbench.head).toContain('Something you want to improve');
-    expect(es.workbench.headEm).toBe('Algo que quieres mejorar.');
-    expect(en.workbench.headEm).toBe('Something you want to improve.');
+  it('the headline names the visitor idea or repeating task turned into an agent', () => {
+    expect(es.workbench.head).toContain('un agente que funciona');
+    expect(en.workbench.head).toContain('an agent that works');
+    expect(es.workbench.headEm).toBe('un agente que funciona.');
+    expect(en.workbench.headEm).toBe('an agent that works.');
     expect(es.workbench.head).toContain(es.workbench.headEm);
     expect(en.workbench.head).toContain(en.workbench.headEm);
     expect(VIEW).toContain('<em>{w.headEm}</em>');
@@ -48,18 +48,21 @@ describe('workbench', () => {
     }
   });
 
-  it('the lede names real-world problems and the path from conversation to solution', () => {
-    expect(en.workbench.intro).toContain('real-world problems');
-    expect(es.workbench.intro).toContain('problemas reales');
-    expect(en.workbench.intro).toContain('initial conversation');
-    expect(es.workbench.intro).toContain('primera conversación');
+  it('the lede names the lab hands, the agent craft and the no-background-needed promise', () => {
+    expect(en.workbench.intro).toContain('The hands that built this lab');
+    expect(es.workbench.intro).toContain('Las manos que construyeron este laboratorio');
+    expect(en.workbench.intro).toContain('AI agents and automation');
+    expect(es.workbench.intro).toContain('agentes de inteligencia artificial y automatización');
+    expect(en.workbench.intro).toContain('written notes and a clear next step');
+    expect(es.workbench.intro).toContain('notas escritas y el siguiente paso claro');
     expect(VIEW).toContain('{w.intro}');
   });
 
-  it('the primary button uses one text everywhere, no short alternate', () => {
-    expect(es.workbench.cta).toContain('Cuéntanos qué necesitas');
-    expect(en.workbench.cta).toContain('Tell us what you need');
-    expect(es.workbench.ctaShort).toBe(es.workbench.cta);
+  it('the primary button books the free call, with a shorter phone label', () => {
+    expect(es.workbench.cta).toContain('Agenda la conversación gratis');
+    expect(en.workbench.cta).toContain('Book the free 15-minute call');
+    expect(es.workbench.ctaShort).toBe('Conversación gratis · 15 min →');
+    expect(en.workbench.ctaShort).toBe('Free call · 15 min →');
     expect(en.workbench.ctaShort.length).toBeLessThan(en.workbench.cta.length);
     expect(VIEW).toContain('{w.ctaShort}');
     expect(VIEW).toContain('{w.ctaNote}');
@@ -123,14 +126,24 @@ describe('workbench', () => {
     expect(en.workbench.tags.items[2][2]).toContain('COP 1,500,000');
     expect(en.workbench.tags.items[0][3]).toContain('technically viable');
     expect(es.workbench.tags.items[0][3]).toContain('técnicamente viable');
-    expect(en.workbench.tags.items[1][3]).toContain('design and implement');
-    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e implementamos');
+    expect(en.workbench.tags.items[0][3]).toContain('built, used and broke');
+    expect(es.workbench.tags.items[0][3]).toContain('construimos, usamos y rompimos');
+    expect(en.workbench.tags.items[1][3]).toContain('design and install');
+    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e instalamos');
+    expect(en.workbench.tags.items[1][3]).toContain('WhatsApp');
+    expect(es.workbench.tags.items[1][3]).toContain('WhatsApp');
+    expect(en.workbench.tags.items[1][3]).toContain('30 days of support counted from installation');
+    expect(es.workbench.tags.items[1][3]).toContain('30 días de soporte contados desde la instalación');
     expect(en.workbench.tags.items[2][3]).toContain('opportunities for improvement');
     expect(es.workbench.tags.items[2][3]).toContain('oportunidades de mejora');
-    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['Let’s work out how to solve it', 'Let’s build what you need', 'Let’s review what you already have']);
-    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Pensemos cómo resolverlo', 'Construyamos lo que necesitas', 'Revisemos lo que ya tienes']);
-    expect(en.workbench.tags.items[1][3]).toContain('design and implement');
-    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e implementamos');
+    expect(en.workbench.tags.items[2][3]).toContain('reproducible evidence');
+    expect(es.workbench.tags.items[2][3]).toContain('evidencia reproducible');
+    expect(en.workbench.tags.items.map(([t]) => t)).toEqual(['Consultation', 'Agent solution', 'Audit']);
+    expect(es.workbench.tags.items.map(([t]) => t)).toEqual(['Consulta', 'Solución con agentes', 'Auditoría']);
+    expect(en.workbench.tags.items.map(([, , , , s]) => s)).toEqual(['Let’s think it through', 'Let’s build what you need', 'Let’s review what you have']);
+    expect(es.workbench.tags.items.map(([, , , , s]) => s)).toEqual(['Pensemos cómo resolverlo', 'Construyamos lo que necesitas', 'Revisemos lo que ya tienes']);
+    expect(en.workbench.tags.items[1][3]).toContain('design and install');
+    expect(es.workbench.tags.items[1][3]).toContain('Diseñamos e instalamos');
     // The ownership terms left the card: no repository, subscription,
     // harness, token or cost word survives on the agentic card.
     expect(en.workbench.tags.items[1][3]).not.toMatch(/repositor|scripci|harness|token|cost/i);
@@ -163,12 +176,33 @@ describe('workbench', () => {
     const bodies: Array<[string, string]> = [
       [en.workbench.tags.items[0][3], 'technically viable'],
       [es.workbench.tags.items[0][3], 'técnicamente viable'],
-      [en.workbench.tags.items[1][3], 'for your specific needs'],
-      [es.workbench.tags.items[1][3], 'para tu caso'],
+      [en.workbench.tags.items[1][3], 'your case calls for'],
+      [es.workbench.tags.items[1][3], 'tu caso pide'],
     ];
     for (const [body, support] of bodies) {
       expect(body).toContain(support);
     }
+  });
+
+  it('the three audiences come in order: businesses, agent teams, open research', () => {
+    expect(en.workbench.who.items.map(([t]) => t)).toEqual([
+      'Businesses and entrepreneurs',
+      'Teams that already run agents',
+      'Research and open projects',
+    ]);
+    expect(es.workbench.who.items.map(([t]) => t)).toEqual([
+      'Negocios y emprendedores',
+      'Equipos que ya usan agentes',
+      'Investigación y proyectos abiertos',
+    ]);
+    expect(es.workbench.who.items[0][1]).toContain('WhatsApp');
+    expect(en.workbench.who.items[1][1]).toContain('stop failing in silence');
+    expect(es.workbench.who.items[1][1]).toContain('dejen de fallar en silencio');
+  });
+
+  it('the closing band names the Banco de trabajo in Spanish', () => {
+    expect(es.workbench.close.head).toContain('Banco de trabajo');
+    expect(es.workbench.close.head).not.toContain('en Workbench');
   });
 
   it('the agentic card lists the five kinds of solution and links its page', () => {
@@ -185,6 +219,11 @@ describe('workbench', () => {
     expect(VIEW).toContain("lang === 'es' && note");
     expect(VIEW).toContain('{note}');
     expect(VIEW).toContain('.wb-price-cop');
+  });
+
+  it('each card shows its friendly subtitle under the title', () => {
+    expect(VIEW).toContain('<p class="wb-sub">{sub}</p>');
+    expect(VIEW).toContain('.wb-tag .wb-sub');
   });
 
   it('the process reads as understand first, then decide, in four steps', () => {

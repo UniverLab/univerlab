@@ -869,11 +869,11 @@ export const en = {
     description: 'Book the bench of the people who built this lab: consulting on artificial intelligence agents, workflow automation and audits. The work funds the open lab.',
     label: 'THE WORKBENCH',
     machineAlt: 'An engraved workbench with a gauge, a rack of test tubes, a small press and chisels',
-    head: 'You have an idea. A problem. Something you want to improve.',
-    headEm: 'Something you want to improve.',
-    intro: 'We explore, design and implement automation and artificial intelligence solutions for real-world problems. From an initial conversation to a solution built around your needs.',
-    cta: 'Tell us what you need →',
-    ctaShort: 'Tell us →',
+    head: 'You have an idea, or a task that keeps repeating. We turn it into an agent that works.',
+    headEm: 'an agent that works.',
+    intro: 'The hands that built this lab, for your business or your project: we explore the case with you, design the solution with AI agents and automation, and leave it tested and documented. No technical background needed; every conversation ends with written notes and a clear next step.',
+    cta: 'Book the free 15-minute call →',
+    ctaShort: 'Free call · 15 min →',
     ctaNote: 'on WhatsApp',
     ctaMessage: 'Hi, I come from the Workbench page.',
     altCta: 'Write to us →',
@@ -884,10 +884,10 @@ export const en = {
       ['Existing systems', 'Evaluate AI and automation solutions, identify risks and find concrete opportunities for improvement.'],
     ] as [string, string][] },
     tags: { kicker: 'Services and prices', items: [
-      ['Let’s work out how to solve it', 'USD 45 / hour', 'COP 150,000 / hour', 'A session to examine your idea, problem or process. We explore alternatives and help you identify a technically viable automation or artificial intelligence solution.'],
-      ['Let’s build what you need', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and implement automation and artificial intelligence solutions for your specific needs: agents, conversational assistants, automated workflows, integrations and AI-powered systems.'],
-      ['Let’s review what you already have', 'From USD 400', 'In Colombia: from COP 1,500,000', 'We evaluate your automation and artificial intelligence systems and solutions. We identify risks, verify their behavior, and document findings and opportunities for improvement.'],
-    ] as [string, string, string, string][] },
+      ['Consultation', 'USD 45 / hour', 'COP 150,000 / hour', 'An hour with the people who build this lab, to examine your idea, problem or process. We explore alternatives and help you identify a technically viable automation or artificial intelligence solution. Every answer comes from something we already built, used and broke in the lab.', 'Let’s think it through'],
+      ['Agent solution', 'From USD 150', 'In Colombia: from COP 550,000', 'We design and install the solution your case calls for: agents, WhatsApp assistants, automated flows and integrations. It includes 30 days of support counted from installation.', 'Let’s build what you need'],
+      ['Audit', 'From USD 400', 'In Colombia: from COP 1,500,000', 'An independent review of your automation and artificial intelligence systems, with reproducible evidence for every finding. We identify risks, verify their behavior, and document findings and opportunities for improvement, with the roadmap in writing.', 'Let’s review what you have'],
+    ] as [string, string, string, string, string][] },
     freeCall: { figure: 'Free', cond: 'We look at what you need and whether the Workbench is the right place for it.' },
     solutions: {
       machineAlt: 'An engraved clockwork automaton of riveted brass seated at a small desk, writing with a quill, gears turning in its open chest',
@@ -924,9 +924,10 @@ export const en = {
       ['Propose', 'If a viable solution exists, we define the scope, deliverables, timeline and budget.'],
       ['Build', 'We implement the agreed solution and deliver documented work.'],
     ] as [string, string][] },
-    who: { kicker: 'Who comes to the bench', items: [
+    who: { kicker: 'Who comes to the Workbench', items: [
+      ['Businesses and entrepreneurs', 'You answer customers and book appointments over WhatsApp, follow up and repeat tasks every week: an assistant that answers, books and reads your documents, built around how your business already works.'],
       ['Teams that already run agents', 'Your agents write code, answer customers or move data, and you want them to stop failing in silence: graphs with real gates, failures that route back, quotas that do not stop the work.'],
-      ['Businesses that want an agent', 'An assistant that answers your customers on WhatsApp, books appointments or reads your documents, built around how your business already works.'],
+      ['Research and open projects', 'You are exploring an open idea or a research project: technical judgement, reproducible experiments and documentation others can follow.'],
     ] as [string, string][] },
     policy: { kicker: 'Cancellations and refunds', summary: 'Cancel or move a paid session up to 24 hours before it starts and get a new slot or your money back. If you book more than five days ahead you can also withdraw within five business days of booking. Audits and agentic solutions are paid 50 % when the order is signed and 50 % on delivery; payment fees (PayPal and transfer commissions) are paid by the client. The lab answers between 07:00 and 19:00 Colombia time on business days; anything arriving outside those hours is answered on the next business day.', link: 'Full cancellation and refund terms →', terms: 'Workbench bookings: cancellations and refunds', items: [
       'Cancel or move a paid session up to 24 hours before it starts and you choose: a new slot or your money back in full.',
@@ -1077,10 +1078,10 @@ export const en = {
     },
   },
   book: {
-    label: 'BOOK YOUR FIRST CONVERSATION',
-    h1: 'Start with a conversation.',
+    label: 'THE FREE CALL',
+    h1: 'Start with a free call.',
     intro:
-      'Book a free 15-minute introductory call to tell us what you need, explore your situation and determine whether UniverLab can help. You don’t need technical knowledge or a defined solution. This first conversation is meant to understand your case and decide on the next step; it is not a technical consultation or free implementation. This section only books the free first call.',
+      'Book a free 15-minute introductory call to tell us what you need, explore your situation and determine whether UniverLab can help with automation and artificial intelligence. You don’t need technical knowledge or a defined solution. This section only books the free first call.',
     fallbackTitle: 'Prefer to write instead?',
     fallbackText: 'When the form cannot load, write to the lab and a person books it by hand:',
     whatsapp: 'Write on WhatsApp →',
@@ -1100,7 +1101,7 @@ export const en = {
       slots: 'Choose a free slot',
       slotError: 'Choose one of the free slots.',
       check: 'Confirm you are not a robot',
-      submit: 'Book your first conversation',
+      submit: 'Book your free call',
       submitting: 'Booking…',
     },
     errors: {

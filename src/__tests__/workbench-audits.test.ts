@@ -213,7 +213,11 @@ describe('workbench-audits', () => {
     expect(en.workbench.tags.items[1][1]).not.toMatch(/400/);
     expect(es.workbench.tags.items[2][3]).toMatch(/Identificamos riesgos/);
     expect(en.workbench.tags.items[2][3]).toMatch(/We identify risks/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/evidencia reproducible/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/reproducible evidence/);
     expect(es.workbench.tags.items[2][3]).toMatch(/oportunidades de mejora/);
+    expect(es.workbench.tags.items[2][3]).toMatch(/hoja de ruta/);
+    expect(en.workbench.tags.items[2][3]).toMatch(/roadmap/);
     expect(en.workbench.tags.items[2][3]).toMatch(/verify their behavior/);
     expect(en.workbench.tags.items[2][3]).toMatch(/document findings/);
     expect(en.workbench.tags.items[2][3]).toMatch(/automation/);
