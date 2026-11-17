@@ -1,5 +1,5 @@
 ---
-import { getLang, useTranslations } from '../i18n';
+import { getLang, useTranslations, localizePath } from '../i18n';
 import { iconSvg } from '../lib/icon-svg';
 import { chevronLeft, chevronRight, printer } from '../lib/icons';
 import { SHEET_WIDTH_REM, SHEET_HEIGHT_REM } from '../lib/paper-sheet-size';
@@ -40,7 +40,7 @@ const t = useTranslations(lang);
   </section>
   <section id="lab" class="paper-page" aria-label={t.today.tabs.p2}>
     <header class="folio">
-      <span class="folio-page">{t.today.folio.p2}</span>
+      <span class="folio-page">{t.today.folio.p2} · <a class="folio-logbook" href={localizePath('/logbook', lang)}>{t.nav.logbook}</a></span>
       <span class="folio-date" data-folio-date>&nbsp;</span>
       <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>
     </header>
@@ -405,6 +405,7 @@ const t = useTranslations(lang);
      the masthead, so a turn takes the whole page, masthead and all. */
   .paper .folio { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; border-bottom: 3px double var(--p-ink); padding-bottom: 6px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-ink); }
   .paper .folio-date { font-family: var(--font-serif); font-size: 17px; letter-spacing: 0; text-transform: none; text-align: center; min-height: 1.3em; }
+  .paper .folio-logbook { color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper .folio-tabs { display: flex; justify-content: flex-end; gap: 2px; }
   .paper .folio-tabs .paper-tab { padding: 2px 8px; }
   .paper #lab .lab-head img { width: min(17rem, 100%); }

@@ -33,8 +33,7 @@ const footGroups = [
       { href: localizePath('/experiments', lang), label: t.nav.experiments },
       { href: localizePath('/archive', lang), label: t.nav.archive },
       { href: '/roadmap/', label: t.nav.roadmap },
-      // Four a side: the org's repos close the experiments column.
-      { href: 'https://github.com/UniverLab', label: t.nav.github, ext: true },
+      { href: localizePath('/logbook', lang), label: t.nav.logbook },
     ],
   },
   {
@@ -229,7 +228,7 @@ Date:   now
   /* Nav links in the colophon face (Quorum's rule: serif links, mono labels);
      every target keeps a 32px tap reach on touch screens. */
   .foot-nav { display: grid; gap: 0.875rem; justify-items: center; width: 100%; }
-  .foot-group { display: grid; gap: 0.375rem; justify-items: center; }
+  .foot-group { display: grid; gap: 0.25rem; justify-items: center; }
   .foot-head { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; margin-bottom: 0.35rem; }
   .foot-nav a {
     text-decoration: none; color: var(--f-ink-dim);

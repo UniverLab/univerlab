@@ -511,3 +511,30 @@ describe('Footer — the cosmic branch names the Orion Arm', () => {
     expect(es.cosmos.branchTooltip).toContain('Orión');
   });
 });
+
+describe('Footer — the logbook replaces GitHub in the work column', () => {
+  it('links the logbook in the work group and keeps GitHub to the icon row', () => {
+    const workAt = src.indexOf('t.footer.groups.work');
+    const labAt = src.indexOf('t.footer.groups.lab');
+    const workGroup = src.slice(workAt, labAt);
+    expect(workGroup).toContain("localizePath('/logbook', lang)");
+    expect(workGroup).toContain('label: t.nav.logbook');
+    expect(workGroup).not.toContain('https://github.com/UniverLab');
+    expect((src.match(/t\.nav\.github/g) || []).length).toBe(1);
+    expect(en.nav.logbook).toBe('Logbook');
+    expect(es.nav.logbook).toBe('Bitácora');
+  });
+
+  it('leaves four links in each column', () => {
+    const workAt = src.indexOf('t.footer.groups.work');
+    const labAt = src.indexOf('t.footer.groups.lab');
+    const groupsEnd = src.indexOf('];', labAt);
+    expect((src.slice(workAt, labAt).match(/\{ href:/g) || []).length).toBe(4);
+    expect((src.slice(labAt, groupsEnd).match(/\{ href:/g) || []).length).toBe(4);
+  });
+
+  it('sits the link lists tighter with tap reach intact', () => {
+    expect(src).toContain('.foot-group { display: grid; gap: 0.25rem;');
+    expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
+  });
+});

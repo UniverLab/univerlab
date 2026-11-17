@@ -146,7 +146,7 @@ Commands are auto-generated from experiment IDs in `experiments.ts`.
 - **Enter** — execute the selected command
 - **Esc** — close the palette
 
-Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`.
+Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`, `/logbook`.
 Theme submenu: `/theme` → Circadian, Papyrus, Slate.
 Each experiment also gets a `/<id>` command (e.g. `/canopy`, `/texforge`).
 

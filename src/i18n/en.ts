@@ -18,6 +18,7 @@ export const en = {
     manifesto: 'Manifesto',
     people: 'Collaborators',
     github: 'GitHub',
+    logbook: 'Logbook',
     sponsors: 'sponsor',
     log: 'Status',
     api: 'API',
