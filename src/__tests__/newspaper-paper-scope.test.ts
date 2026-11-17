@@ -42,7 +42,7 @@ describe("today's paper styles stay on the paper", () => {
 
   it('lays the front out as three columns with the lead spanning two', () => {
     // The lead takes two of the three columns with the rail beside it; the
-    // lab mail, the feature ad and the columns span them all, and the house
+    // lab mail, the feature notice and the columns span them all, and the house
     // notices foot the short columns instead of a row below them. No rail
     // is ever sized by the renderer, so no band is left empty.
     expect(css).toMatch(/\.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
@@ -96,41 +96,41 @@ describe("today's paper styles stay on the paper", () => {
     );
   });
 
-  it('sets the ads as period display ads, the feature across three', () => {
-    expect(css).toMatch(/\.paper \.ad \{[^}]*border:\s*3px double/);
+  it('sets the ads as period display notices, the feature across three', () => {
+    expect(css).toMatch(/\.paper aside\.notice \{[^}]*border:\s*3px double/);
     expect(css).toContain('clamp(26px, 3.4vw, 40px)');
-    expect(css).toMatch(/\.paper \.ad--feature \{[^}]*grid-template-columns:\s*1\.2fr 1\.5fr 1fr/);
-    expect(css).toMatch(/\.paper \.ad \.ad-close \{[^}]*border-top:\s*3px double/);
+    expect(css).toMatch(/\.paper \.notice--feature \{[^}]*grid-template-columns:\s*1\.2fr 1\.5fr 1fr/);
+    expect(css).toMatch(/\.paper aside\.notice \.notice-close \{[^}]*border-top:\s*3px double/);
   });
 
   it('prints without horizontal scroll: blocks, kept-together ads', () => {
     expect(css).toMatch(/@media print \{[^}]*\.paper \.front,\s*\.paper \.cols \{[^}]*display:\s*block/);
-    expect(css).toMatch(/\.paper \.ad \{[^}]*break-inside:\s*avoid/);
+    expect(css).toMatch(/\.paper aside\.notice \{[^}]*break-inside:\s*avoid/);
   });
 
   it('sets pages 2 and 3 as five ruled columns that fill top to bottom, the lead across them', () => {
     expect(css).toMatch(/\.paper \.classifieds \{[^}]*display: block;[^}]*column-count: 5/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
     expect(css).toMatch(/\.paper \.classifieds > \* \{[^}]*break-inside: avoid/);
-    expect(css).toMatch(/\.paper \.classifieds > \.ad-lead \{[^}]*grid-template-columns: minmax\(0, 2fr\) minmax\(0, 3fr\)/);
-    // Each ad ends on a rule; the framed treatments carry their own frames.
-    expect(css).toMatch(/\.paper \.classifieds > \.log-entry:not\(\.ad-lead\) \{[^}]*border-bottom: 1px solid var\(--p-ink\)/);
+    expect(css).toMatch(/\.paper \.classifieds > \.lead-story \{[^}]*grid-template-columns: minmax\(0, 2fr\) minmax\(0, 3fr\)/);
+    // Each notice ends on a rule; the framed treatments carry their own frames.
+    expect(css).toMatch(/\.paper \.classifieds > \.log-entry:not\(\.lead-story\) \{[^}]*border-bottom: 1px solid var\(--p-ink\)/);
     expect(css).toMatch(/\.paper \.classifieds > \.log-entry\.type-v3 \{[^}]*border: 4px double/);
     expect(css).toMatch(/\.paper \.notice-run \.notice \{[^}]*break-inside:\s*avoid/);
   });
 
-  it('keeps the display engraving inside its ad, never stretched by the entry', () => {
-    expect(css).toMatch(/\.paper \.ad-display \{[^}]*grid-template-columns:[^}]*minmax\(0, 2fr\) minmax\(0, 3fr\)/);
-    expect(css).toMatch(/\.paper \.ad-art \{[^}]*margin:\s*0/);
+  it('keeps the display engraving inside its notice, never stretched by the entry', () => {
+    expect(css).toMatch(/\.paper \.display-notice \{[^}]*grid-template-columns:[^}]*minmax\(0, 2fr\) minmax\(0, 3fr\)/);
+    expect(css).toMatch(/\.paper \.notice-art \{[^}]*margin:\s*0/);
   });
 
   it('prints the classifieds ornaments like the paper halftones, under .paper', () => {
     // The engraved head, cuts, fleurons and hands read on the sheet in both
     // themes: sepia, multiplied in, never dark.
     expect(css).toContain('.paper .lab-head-ornament');
-    expect(css).toMatch(/\.paper \.ad-cut\.cut-sm img[^}]*width:\s*1\.8rem/);
-    expect(css).toMatch(/\.paper \.ad-cut\.cut-md img[^}]*width:\s*2\.6rem/);
-    expect(css).toMatch(/\.paper \.ad-cut\.cut-lg img[^}]*width:\s*100%/);
+    expect(css).toMatch(/\.paper \.notice-cut\.cut-sm img[^}]*width:\s*1\.8rem/);
+    expect(css).toMatch(/\.paper \.notice-cut\.cut-md img[^}]*width:\s*2\.6rem/);
+    expect(css).toMatch(/\.paper \.notice-cut\.cut-lg img[^}]*width:\s*100%/);
     expect(css).toMatch(/\.paper \.classifieds \.notice-fleuron \{/);
     expect(css).toMatch(/\.paper \.manicule \{[^}]*width:\s*1\.7rem/);
     expect(css).toContain('grayscale(1) sepia(.22) contrast(1.12)');
@@ -144,6 +144,17 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.lab-head \{[^}]*flex-wrap:\s*wrap/);
     expect(css).toMatch(/\.paper \.lab-head \.lab-heading \{[^}]*min-width:\s*0/);
     expect(css).toMatch(/\.paper \.lab-head-ornament \{[^}]*flex:\s*0 1 auto/);
+  });
+
+  it('sets the cartouche words on the ornament inner panel, not the middle of the plate', () => {
+    // head.webp is 1200x451 and its glass opening runs from y≈168 to y≈308:
+    // centring on the whole image leaves the word riding high in the frame.
+    // The band must be absolute over the plate, and no later rule may reset
+    // the heading to static, which would centre it on the whole image again.
+    expect(css).toMatch(
+      /\.paper \.head-cartouche \.lab-heading \{[^}]*position:\s*absolute[^}]*top:\s*37\.5%[^}]*bottom:\s*32%/,
+    );
+    expect(css).not.toMatch(/\.lab-head \.head-cartouche > \.lab-heading \{[^}]*position:\s*static/);
   });
 
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {

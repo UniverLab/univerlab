@@ -274,13 +274,13 @@ describe('the last classifieds page fills to the foot', () => {
     fitClassifieds(document);
     // The short last page takes house notices whole, then the plate sized to
     // the space left, and ends above the foot.
-    expect(grid.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid.querySelectorAll('aside.notice').length).toBeGreaterThan(0);
     const plate = grid.querySelector('figure.classifieds-plate img') as HTMLImageElement | null;
     expect(plate).not.toBeNull();
     expect(Number.parseFloat(plate?.getAttribute('width') || '')).toBeGreaterThan(0);
     expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
     // The empty page stays empty: nothing to fill, nothing shown.
-    expect(grid2.querySelector('article, aside.ad, figure')).toBeNull();
+    expect(grid2.querySelector('article, aside.notice, figure')).toBeNull();
   });
 
   it('fills nothing on a page with more pages after it', () => {
@@ -300,7 +300,7 @@ describe('the last classifieds page fills to the foot', () => {
     mockFoot(grid, scope);
     setBottom(document.querySelector('.paper')!, 5000);
     fitClassifieds(document);
-    expect(grid.querySelector('aside.ad, figure.classifieds-plate')).toBeNull();
+    expect(grid.querySelector('aside.notice, figure.classifieds-plate')).toBeNull();
   });
 
   it('fills the last page when it reads', () => {
@@ -319,7 +319,7 @@ describe('the last classifieds page fills to the foot', () => {
     mockFoot(grid2, scope2);
     setBottom(document.querySelector('.paper')!, 5000);
     fitClassifieds(document);
-    expect(grid2.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid2.querySelectorAll('aside.notice').length).toBeGreaterThan(0);
     expect(grid2.querySelector('figure.classifieds-plate')).not.toBeNull();
     expect(scope2.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
   });
@@ -334,7 +334,7 @@ describe('the last classifieds page fills to the foot', () => {
     (document.querySelector('#lab-body') as HTMLElement).getBoundingClientRect = () => rect(400);
     setBottom(document.querySelector('.paper')!, 410);
     fitClassifieds(document);
-    expect(grid.querySelector('aside.ad, figure.classifieds-plate')).toBeNull();
+    expect(grid.querySelector('aside.notice, figure.classifieds-plate')).toBeNull();
   });
 
   it('sizes the ornament to the space left, halving once when over', () => {

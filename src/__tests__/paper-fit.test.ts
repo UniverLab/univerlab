@@ -76,6 +76,8 @@ function liveColumn(doc: Document, items: MockItem[], top: number, rowPx = 20): 
     for (const k of Array.from(col.children)) {
       if (k.tagName === 'ARTICLE') bottom += rowPx;
       else if (k.tagName === 'FIGURE' || k.tagName === 'ASIDE') bottom += rowPx * 3;
+      // A letter moved over from the rail keeps its own markup and its row.
+      else if (k.tagName === 'DIV' && k.classList.contains('aside-item')) bottom += rowPx;
     }
     return rect(bottom);
   };
@@ -212,9 +214,9 @@ describe('fitFrontPage', () => {
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Install</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Install</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -235,15 +237,18 @@ describe('fitFrontPage', () => {
       [di()],
     ]);
     const paperEl = document.querySelector('.paper') as HTMLElement;
-    mockBottom(paperEl, 220);
+    // The sheet reserves a body line above the limit now (the colophon's
+    // own air): the paper sits 24px taller so the eight letters still run
+    // the same 40px past the trimmed sheet.
+    mockBottom(paperEl, 244);
     const out = fitFrontPage(edition);
     expect(out.trimmedLetters).toBe(2);
     const footed = Array.from(edition.querySelectorAll('.col'));
     for (const c of footed) {
-      expect(c.querySelector('figure.paper-plate') && c.querySelector('aside.ad')).toBeFalsy();
+      expect(c.querySelector('figure.paper-plate') && c.querySelector('aside.notice')).toBeFalsy();
     }
     expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(1);
-    expect(edition.querySelectorAll('.col aside.ad')).toHaveLength(2);
+    expect(edition.querySelectorAll('.col aside.notice')).toHaveLength(2);
     expect(out.fillers).toBe(3);
   });
 
@@ -258,7 +263,7 @@ describe('fitFrontPage', () => {
     const out = fitFrontPage(edition);
     expect(out.fillers).toBe(0);
     expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(0);
-    expect(edition.querySelectorAll('.col aside.ad')).toHaveLength(0);
+    expect(edition.querySelectorAll('.col aside.notice')).toHaveLength(0);
   });
 
   it('never prints a one-word-per-line headline', () => {
@@ -282,7 +287,7 @@ describe('fitFrontPage', () => {
     try {
       const edition = scaffold([[ev()], [br()], [di()]]);
       const out = fitFrontPage(edition);
-      const notices = Array.from(edition.querySelectorAll('.col aside.ad .ad-display')).map((h) => h.textContent);
+      const notices = Array.from(edition.querySelectorAll('.col aside.notice .display-notice')).map((h) => h.textContent);
       expect(notices).not.toContain('Install');
       expect(notices).toContain('Both');
       expect(out.fillers).toBe(2);
@@ -303,9 +308,9 @@ describe('fitFrontPage', () => {
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Machines for every desk</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write to the lab</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both notices together</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Machines for every desk</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write to the lab</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both notices together</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -327,7 +332,7 @@ describe('fitFrontPage', () => {
     };
     try {
       const out = fitFrontPage(edition);
-      const notices = Array.from(edition.querySelectorAll('.col aside.ad .ad-display')).map((h) => h.textContent);
+      const notices = Array.from(edition.querySelectorAll('.col aside.notice .display-notice')).map((h) => h.textContent);
       expect(notices).not.toContain('Machines for every desk');
       expect(notices).toContain('Both notices together');
       expect(out.fillers).toBe(2);
@@ -340,7 +345,7 @@ describe('fitFrontPage', () => {
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<article class="lead">lead</article><div class="rail">rail</div>' +
-      '<aside class="ad ad--feature">duo</aside><div class="cols"></div>' +
+      '<aside class="notice notice--feature">duo</aside><div class="cols"></div>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
     const paperEl = document.querySelector('.paper') as HTMLElement;
@@ -349,7 +354,7 @@ describe('fitFrontPage', () => {
     expect(out.trimmedLetters).toBe(0);
     expect(edition.querySelector('.lead')).not.toBeNull();
     expect(edition.querySelector('.rail')).not.toBeNull();
-    expect(edition.querySelector('.ad--feature')).not.toBeNull();
+    expect(edition.querySelector('.notice--feature')).not.toBeNull();
   });
 });
 
@@ -394,7 +399,7 @@ describe('pages two and three hold only the classifieds that fit', () => {
     expect(document.querySelector('#lab-body .coupon-note')).not.toBeNull();
     // The trimmed page ends at the foot: nothing left to fill.
     expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
-    expect(grid.querySelector('aside.ad')).toBeNull();
+    expect(grid.querySelector('aside.notice')).toBeNull();
   });
 
   it('fills a fitting grid to the foot: no cards lost, no pointer, house notices stay', () => {
@@ -417,7 +422,7 @@ describe('pages two and three hold only the classifieds that fit', () => {
     expect(out.trimmedAds).toBe(0);
     expect(out.pointers).toBe(0);
     // The last page fills to the foot with the lab's own notices and plate.
-    expect(grid.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid.querySelectorAll('aside.notice').length).toBeGreaterThan(0);
     expect(grid.querySelector('figure.classifieds-plate')).not.toBeNull();
     expect(grid.querySelectorAll('#lab-body .lab-more')).toHaveLength(0);
     expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
@@ -434,7 +439,7 @@ describe('front page fits its sheet, masthead included', () => {
     const rail = railItems
       ? `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(railItems)}</aside></div>`
       : '';
-    const duo = opts?.duo === false ? '' : '<aside class="ad ad--feature">duo</aside>';
+    const duo = opts?.duo === false ? '' : '<aside class="notice notice--feature">duo</aside>';
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       `<article class="lead${opts?.solo ? ' solo' : ''}"><div class="story"></div><div class="lead-cols"></div></article>` +
@@ -442,9 +447,9 @@ describe('front page fits its sheet, masthead included', () => {
       duo +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Install</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Install</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -457,7 +462,7 @@ describe('front page fits its sheet, masthead included', () => {
     return edition;
   };
 
-  it('drops the Workbench display and the rail extras before any letter', () => {
+  it('drops the Workbench display and relocates an overhanging rail before any letter', () => {
     const edition = frontScaffold(
       [
         [ev(), ev()],
@@ -465,16 +470,21 @@ describe('front page fits its sheet, masthead included', () => {
       ],
       { railItems: 2, paperBottom: 1000 },
     );
-    mockBottom(edition.querySelector('.rail') as HTMLElement, 1050, 950);
-    mockBottom(edition.querySelector('.rail .also') as HTMLElement, 1030, 100);
+    // The rail breathes with its items like the laid-out page: two tall
+    // letters beside a short story.
+    const rail = edition.querySelector('.rail') as HTMLElement;
+    const also = edition.querySelector('.rail .also') as HTMLElement;
+    const asideCount = () => also.querySelectorAll('.aside-item').length;
+    rail.getBoundingClientRect = () => rect(800 + asideCount() * 100, asideCount() * 100);
     mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
-    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1100, 200);
+    mockBottom(edition.querySelector('aside.notice--feature') as HTMLElement, 1100, 200);
     const out = fitFrontPage(edition);
     // The display ran 100px past the sheet and the rail 50px: the display
-    // goes, then one rail extra, and the letters stay whole.
-    expect(edition.querySelector('aside.ad--feature')).toBeNull();
-    expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(1);
+    // goes, the rail's letters relocate whole into the lead column instead
+    // of dropping, and no column letter is trimmed.
+    expect(edition.querySelector('aside.notice--feature')).toBeNull();
     expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
+    expect(edition.querySelectorAll('.lead-cols .aside-item')).toHaveLength(2);
     expect(out.trimmedLetters).toBe(0);
     // One band column moved under the lead story; the band keeps the other.
     expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(1);
@@ -486,8 +496,9 @@ describe('front page fits its sheet, masthead included', () => {
       [Array.from({ length: 20 }, () => ev()), [br()], [di()]],
       { duo: false, paperBottom: 500, colophonHeight: 30 },
     );
-    // The colophon reserves 30px: the sheet ends at 470, so the 500px column
-    // loses two whole letters and nothing is hidden behind the sheet's edge.
+    // The colophon reserves 30px plus a body line: the sheet ends at 446,
+    // so the 500px column loses whole letters and nothing is hidden behind
+    // the sheet's edge.
     const out = fitFrontPage(edition);
     expect(out.trimmedLetters).toBeGreaterThanOrEqual(2);
     expect(edition.querySelector('.colophon-note')).not.toBeNull();
@@ -520,24 +531,43 @@ describe('front page fits its sheet, masthead included', () => {
       { railItems: 2, paperBottom: 1200 },
     );
     // The rail's own box breathes with its items, which is what the row
-    // really holds; the box inside it still reports the stale, taller size
-    // a stretched inner block shows. Reading the rail live ends it at 1100,
-    // inside the sheet: both items stay and no letter is trimmed. Believing
-    // the stale height put the foot at 1300 and gutted the rail for nothing.
+    // really holds. Reading the rail live ends it at the story's foot,
+    // inside the sheet: both items stay and no letter is trimmed.
     const rail = edition.querySelector('.rail') as HTMLElement;
     const also = edition.querySelector('.rail .also') as HTMLElement;
     const asideCount = () => also.querySelectorAll('.aside-item').length;
-    rail.getBoundingClientRect = () => rect(900 + asideCount() * 100, asideCount() * 100);
-    also.getBoundingClientRect = () => rect(1300, 400);
+    // The rail breathes with its items and ends at the story's foot: a rail
+    // that fits the balanced front row keeps every item.
+    rail.getBoundingClientRect = () => rect(300 + asideCount() * 50, asideCount() * 50);
+    also.getBoundingClientRect = () => rect(300 + asideCount() * 50, asideCount() * 50);
     mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
-    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1300, 200);
+    mockBottom(edition.querySelector('aside.notice--feature') as HTMLElement, 1300, 200);
     const out = fitFrontPage(edition);
     // The display ran past the sheet and goes; the rail never did, so
     // nothing else leaves the page.
-    expect(edition.querySelector('aside.ad--feature')).toBeNull();
+    expect(edition.querySelector('aside.notice--feature')).toBeNull();
     expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(2);
     expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
     expect(out.trimmedLetters).toBe(0);
+  });
+
+  it('keeps the colophon inside the sheet: the foot reserves its height and a body line', () => {
+    // Paper 500, colophon 30: the sheet ends at 446, so each 500px column
+    // loses three whole letters — the old 470 limit would only take two.
+    const edition = frontScaffold(
+      [[ev()], [br()]].map((items) => items.concat(Array.from({ length: 19 }, () => ev()))),
+      {
+        duo: false,
+        paperBottom: 500,
+        colophonHeight: 30,
+      },
+    );
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBe(6);
+    expect(edition.querySelector('.colophon-note')).not.toBeNull();
+    for (const col of Array.from(edition.querySelectorAll('.col'))) {
+      expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(447);
+    }
   });
 
   it('drops the section a trim emptied', () => {
@@ -549,6 +579,110 @@ describe('front page fits its sheet, masthead included', () => {
     expect(out.trimmedLetters).toBe(2);
     expect(edition.querySelectorAll('.col')).toHaveLength(0);
     expect(edition.querySelector('.cols')).toBeNull();
+  });
+});
+
+describe('the rail and the lead columns end together', () => {
+  // Like frontScaffold, but the lead's column starts below the story (as on
+  // the laid-out page) and the rail breathes with its children, so balance
+  // moves prove themselves against live feet.
+  const railScaffold = (opts: {
+    railCount: number;
+    colItems: MockItem[];
+    colTop: number;
+    storyBottom: number;
+    paperBottom?: number;
+  }): { edition: HTMLElement; also: HTMLElement } => {
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      '<article class="lead"><div class="story"></div><div class="lead-cols"></div></article>' +
+      `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(opts.railCount)}</aside></div>` +
+      '<div class="cols"></div>' +
+      // No filler templates: the feet below assert the balanced letters,
+      // before any footing would move them again.
+      '<p class="colophon-note">colophon</p>' +
+      '</div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const leadCols = edition.querySelector('.lead-cols') as HTMLElement;
+    leadCols.appendChild(liveColumn(document, opts.colItems, opts.colTop));
+    const rail = edition.querySelector('.rail') as HTMLElement;
+    const also = edition.querySelector('.rail .also') as HTMLElement;
+    rail.getBoundingClientRect = () => rect(100 + 20 * also.childElementCount, 20 * also.childElementCount);
+    mockBottom(edition.querySelector('.lead .story') as HTMLElement, opts.storyBottom, opts.storyBottom - 100);
+    mockBottom(document.querySelector('.paper') as HTMLElement, opts.paperBottom ?? 2000);
+    return { edition, also };
+  };
+  const footOf = (el: Element | null): number => (el ? el.getBoundingClientRect().bottom : 0);
+
+  it('moves an overhanging rail into the lead column until the feet meet', () => {
+    // A short story, a tall rail, a short column: two rail letters open the
+    // column and every foot ends within one body line (24px in jsdom).
+    const { edition, also } = railScaffold({
+      railCount: 6,
+      colItems: [ev()],
+      colTop: 100,
+      storyBottom: 120,
+    });
+    const out = fitFrontPage(edition);
+    expect(out.movedLetters).toBeGreaterThan(0);
+    expect(out.trimmedLetters).toBe(0);
+    expect(also.querySelectorAll('.aside-item')).toHaveLength(4);
+    const cols = Array.from(edition.querySelectorAll('.lead-cols .col'));
+    expect(cols).toHaveLength(1);
+    // The rail's foot is its content's foot floored by the story: the row
+    // it shares with the lead column ends within one body line.
+    const railFoot = Math.max(
+      footOf(edition.querySelector('.rail')),
+      footOf(edition.querySelector('.lead .story')),
+    );
+    expect(Math.abs(railFoot - footOf(cols[0]))).toBeLessThanOrEqual(24);
+  });
+
+  it('moves an overhanging column into the rail until the feet meet', () => {
+    // A tall lead column beside a short rail: the column's head letters
+    // close the rail, whole, until both feet end within one body line.
+    const { edition, also } = railScaffold({
+      railCount: 2,
+      colItems: [ev(), ev(), ev(), ev(), ev(), ev(), ev(), ev()],
+      colTop: 400,
+      storyBottom: 400,
+    });
+    const out = fitFrontPage(edition);
+    expect(out.movedLetters).toBeGreaterThan(0);
+    expect(out.trimmedLetters).toBe(0);
+    expect(also.querySelectorAll('.aside-item')).toHaveLength(2);
+    const cols = Array.from(edition.querySelectorAll('.lead-cols .col'));
+    expect(cols).toHaveLength(1);
+    const railFoot = Math.max(
+      footOf(edition.querySelector('.rail')),
+      footOf(edition.querySelector('.lead .story')),
+    );
+    expect(Math.abs(railFoot - footOf(cols[0]))).toBeLessThanOrEqual(24);
+  });
+
+  it('trims an overhanging rail to the sheet limit, never the story foot', () => {
+    // No column holds a letter: an emptied column bottoms out at its own
+    // top, so it is no foot to compare against. The rail gives extras until
+    // it ends above the sheet (paper 300 less the colophon's 24px reserve
+    // line = 276, plus one body line of slack = 300), not down to the lead
+    // story's foot at 120 — that would leave the whole lower page blank.
+    const { edition, also } = railScaffold({
+      railCount: 20,
+      colItems: [],
+      colTop: 140,
+      storyBottom: 120,
+      paperBottom: 300,
+    });
+    // No column letters anywhere: the balance has nothing to move into, so
+    // only the trim decides — against the sheet limit, not the story foot.
+    edition.querySelector('.lead-cols .col')?.remove();
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBe(0);
+    // The rail's foot starts 100px down and each row is 20px: ten rows end
+    // at 300 — the sheet limit (276) plus one body line of slack. Ten of
+    // the twenty stay; trimming to the story foot at 120 would keep three.
+    expect(also.querySelectorAll('.aside-item')).toHaveLength(10);
+    expect(footOf(edition.querySelector('.rail'))).toBe(300);
   });
 });
 

@@ -7,6 +7,6 @@ import NewspaperPage from '../components/NewspaperPage.astro';
      fills #edition with the same renderer when the edge did not. The sitemap
      filter in astro.config.mjs excludes it for the same reason — a noindex
      URL in the sitemap is a reported error. -->
-<BaseLayout title="The Observable — UniverLab" description="Every science event that happened on this day in history." circadian noindex liveTwin paperDisplayFonts>
+<BaseLayout title="The Observable — UniverLab" description="Every science event that happened on this day in history." ogImage="/og/newspaper.png" circadian noindex liveTwin paperDisplayFonts>
   <NewspaperPage />
 </BaseLayout>

@@ -66,14 +66,16 @@ function isLetter(el: Element): boolean {
 function isFiller(el: Element): boolean {
   return (
     (el.tagName === 'FIGURE' && el.classList.contains('paper-plate')) ||
-    (el.tagName === 'ASIDE' && el.classList.contains('ad'))
+    (el.tagName === 'ASIDE' && el.classList.contains('notice'))
   );
 }
 
 function lastLetter(col: Element): Element | null {
   const kids = Array.from(col.children);
   for (let i = kids.length - 1; i >= 0; i--) {
-    if (isLetter(kids[i])) return kids[i];
+    // A rail story the balance moved in is a letter too: it trims, balances
+    // and keeps its column alive exactly like an article.item does.
+    if (isLetter(kids[i]) || kids[i].classList.contains('aside-item')) return kids[i];
   }
   return null;
 }
@@ -120,7 +122,10 @@ function sheetLimit(edition: Element): number {
   } catch {
     gap = 0;
   }
-  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + gap;
+  // The colophon keeps its own line of air: reserve its height, one body
+  // line and the grid's row gap, so the foot never clips it past the sheet.
+  const line = bodyLinePx(edition);
+  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + line + gap;
   return bottom - (total > 0 ? total : 0);
 }
 
@@ -275,7 +280,7 @@ function hasPlate(col: Element): boolean {
 
 function hasHouse(col: Element): boolean {
   return Array.from(col.children).some(
-    (k) => k.tagName === 'ASIDE' && k.classList.contains('ad'),
+    (k) => k.tagName === 'ASIDE' && k.classList.contains('notice'),
   );
 }
 
@@ -315,7 +320,7 @@ function tryFiller(col: Element, html: string, limit: number, kind: 'plate' | 'h
   if (!node) return null;
   col.appendChild(node);
   const over = (col as HTMLElement).getBoundingClientRect().bottom - limit > 1;
-  const head = (node as Element).querySelector?.('.ad-display') as HTMLElement | null;
+  const head = (node as Element).querySelector?.('.display-notice') as HTMLElement | null;
   const broken = head
     ? head.scrollWidth - head.clientWidth > 1 || headlineStarved(head)
     : false;
@@ -342,7 +347,7 @@ function letterCols(edition: Element): Element[] {
 /** Fit page one to the sheet: the letters fill the space under the lead
  *  story in the lead's own columns, then the band below; whole letters, the
  *  rail and the Workbench display print whole or not at all, and the feet
- *  end within one line of each other. The house ad and the rail's extra
+ *  end within one line of each other. The house notice and the rail's extra
  *  items go before letters do. */
 export function fitFrontPage(edition: Element): FrontFit {
   const out: FrontFit = { trimmedLetters: 0, movedLetters: 0, fillers: 0, plateColumn: -1 };
@@ -350,7 +355,7 @@ export function fitFrontPage(edition: Element): FrontFit {
   const leadCols = edition.querySelector('.lead-cols');
   const railEl = edition.querySelector('.rail');
   const alsoEl = edition.querySelector('.rail .also');
-  let duoEl = edition.querySelector('aside.ad--feature');
+  let duoEl = edition.querySelector('aside.notice--feature');
 
   // The sheet never stretches a block past its content now: the row's
   // foot is its content's own foot, so the read below is content, not
@@ -394,6 +399,81 @@ export function fitFrontPage(edition: Element): FrontFit {
     railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
   const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
 
+  // The rail holds the queue's head beside the lead story; the lead's own
+  // columns continue it. Balance the two feet within one body line by
+  // moving whole letters either way: the rail's last letter prepends the
+  // first front-row column (it outranks everything there), and the first
+  // front-row column's first letter appends the rail (it continues the
+  // queue). Headings are re-issued once, after the last move. The rail is
+  // only ever balanced against the front row, never the band below it.
+  // Rail children are the aside items plus any column letter the balance
+  // moved in: both count for the balance and both yield to the trim, so a
+  // relocated letter never hides from either.
+  const railItems = (): Element[] =>
+    alsoEl
+      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item') || isLetter(k))
+      : [];
+  const frontCols = (): Element[] =>
+    Array.from(edition.querySelectorAll('.lead-cols .col'));
+  const firstLetter = (col: Element): Element | null => {
+    for (const k of Array.from(col.children)) if (isLetter(k)) return k;
+    return null;
+  };
+  if (lead && alsoEl) {
+    const labels = headingLabels(letterCols(edition));
+    const feetOf = (cols: Element[]): number => Math.max(...cols.map(rectBottom));
+    // A move counts only when the laid-out feet prove it narrows the gap:
+    // otherwise it is undone, so an unmeasurable layout degrades to the
+    // trim below instead of churning letters back and forth.
+    const tryRailToCol = (): boolean => {
+      const cols = frontCols();
+      const items = railItems();
+      if (!cols.length || !items.length) return false;
+      const before = Math.abs(railFoot() - feetOf(cols));
+      const node = items[items.length - 1];
+      cols[0].insertBefore(node, cols[0].firstChild);
+      const after = Math.abs(railFoot() - feetOf(frontCols()));
+      if (after < before) return true;
+      alsoEl.appendChild(node);
+      return false;
+    };
+    const tryColToRail = (): boolean => {
+      const cols = frontCols();
+      if (!cols.length || !railItems().length) return false;
+      const before = Math.abs(railFoot() - feetOf(cols));
+      const target = cols.find((c) => firstLetter(c));
+      if (!target) return false;
+      const node = firstLetter(target) as Element;
+      const next = node.nextSibling;
+      alsoEl.appendChild(node);
+      const after = Math.abs(railFoot() - feetOf(frontCols()));
+      if (after < before) return true;
+      target.insertBefore(node, next);
+      return false;
+    };
+    let balanced = 0;
+    for (let guard = 0; guard < 200; guard++) {
+      const cols = frontCols();
+      if (!cols.length || !railItems().length) break;
+      const top = feetOf(cols);
+      let moved = false;
+      if (railFoot() > Math.max(top, storyFloor) + line) moved = tryRailToCol();
+      else if (top > railFoot() + line) moved = tryColToRail();
+      else break;
+      if (!moved) break;
+      balanced++;
+    }
+    out.movedLetters += balanced;
+    if (balanced) {
+      const all = letterCols(edition);
+      let openKind: string | null = null;
+      for (const col of all) {
+        pruneOrphanHeadings(col);
+        openKind = rehead(col, labels, openKind);
+      }
+    }
+  }
+
   for (let guard = 0; guard < 50; guard++) {
     const cols = letterCols(edition);
     const bottoms = cols.map(rectBottom);
@@ -407,11 +487,19 @@ export function fitFrontPage(edition: Element): FrontFit {
       duoEl = null;
       continue;
     }
-    const items = alsoEl
-      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item'))
-      : [];
-    if (items.length > 1) {
-      // FR3: the rail's extra items go before letters do; the rail keeps one.
+    // The rail's extras go before column letters do, but only while the
+    // rail overhangs the columns: a balanced rail's letters outrank the
+    // columns' feet, so the feet trim first instead. Only columns that
+    // still hold letters have a foot worth comparing — an emptied column
+    // bottoms out at its own top, and with no letters at all the rail
+    // trims against the sheet limit, never the story's foot, or the page
+    // ends in a band of blank paper.
+    const frontFoot = Math.max(
+      0,
+      ...cols.filter((c) => lastLetter(c)).map(rectBottom),
+    );
+    const items = railItems();
+    if (items.length > 1 && railFoot() - frontFoot > line) {
       items[items.length - 1].remove();
       continue;
     }
@@ -424,13 +512,17 @@ export function fitFrontPage(edition: Element): FrontFit {
   const cols = letterCols(edition);
   if (!cols.length) return out;
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-  out.movedLetters = balanceColumns(cols);
+  out.movedLetters += balanceColumns(cols);
   // A trim may empty a column whole: it leaves the page, and a wrapper
   // left with no column goes with it, so the band never holds blank paper.
   const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
   for (const wrap of Array.from(edition.querySelectorAll('.lead-cols, .cols'))) {
     if (!wrap.querySelector('.col')) wrap.remove();
   }
+  // An emptied rail leaves the page like an emptied column does, so no
+  // bordered box ends the row beside the lead story. A rail that never
+  // carried items (no .also) is structural and stays.
+  if (railEl && alsoEl && !railItems().length) railEl.remove();
   if (!live.length) return out;
   // The free foot of each column, roomiest first.
   const order = live
@@ -470,7 +562,7 @@ export function fitFrontPage(edition: Element): FrontFit {
   return out;
 }
 
-/** The grid's last ad-like child: whole cards only — never the coupon rule
+/** The grid's last notice-like child: whole cards only — never the coupon rule
  *  line, never the pointer template. */
 function lastRemovable(grid: Element): Element | null {
   const kids = Array.from(grid.children);
@@ -483,7 +575,7 @@ function lastRemovable(grid: Element): Element | null {
   return null;
 }
 
-/** Trim a classifieds grid to the ads that fit whole, newest first from the
+/** Trim a classifieds grid to the notices that fit whole, newest first from the
  *  foot: whole cards only, a one-line run with its fleuron as one unit. */
 export function trimClassifieds(grid: Element, limit: number, slackPx = 1, sink?: Element | null): number {
   if (limit <= 0) return 0;
@@ -496,7 +588,7 @@ export function trimClassifieds(grid: Element, limit: number, slackPx = 1, sink?
   return removed;
 }
 
-/** Take the grid's last ad-like child off: whole cards only, a one-line run
+/** Take the grid's last notice-like child off: whole cards only, a one-line run
  *  with its fleuron as one unit. With a `sink` (the next page's grid) the
  *  card moves to the head of that grid instead of leaving the paper, so the
  *  classifieds flow on from page two to page three in order. False when
@@ -547,7 +639,7 @@ function siblingPageShown(page: Element): boolean {
   );
 }
 
-/** True when the grid holds printable ads — never only templates, the
+/** True when the grid holds printable notices — never only templates, the
  *  coupon note, or an earlier fill. An empty grid's page stays hidden, so it
  *  is never the page to fill. */
 function hasAds(grid: Element): boolean {
@@ -559,7 +651,7 @@ function hasAds(grid: Element): boolean {
   );
 }
 
-/** Fill the last classifieds page to the foot: with the ads run out, the
+/** Fill the last classifieds page to the foot: with the notices run out, the
  *  remaining space takes the lab's own house notices and one engraved
  *  ornament from the page's templates — sized to the space left, whole only,
  *  so the page ends at the foot instead of a blank band. Returns how many
@@ -623,10 +715,10 @@ export function fillClassifiedsFoot(grid: Element, scope: Element, limit: number
 }
 
 /** Fit pages two and three to the sheet: each classifieds grid keeps only
- *  the ads that fit whole, and a grid that lost ads points at the Logbook —
+ *  the notices that fit whole, and a grid that lost notices points at the Logbook —
  *  reusing the page's own pointer line, added only when trimming happened.
  *  The last page fills to the foot with the lab's house notices and an
- *  engraved ornament once its ads run out. */
+ *  engraved ornament once its notices run out. */
 export function fitClassifieds(root: ParentNode): ClassifiedsFit {
   const out: ClassifiedsFit = { trimmedAds: 0, pointers: 0 };
   const grids = Array.from(
@@ -655,7 +747,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
     const scope = grid.parentElement;
     if (sink) {
       out.carriedAds = (out.carriedAds ?? 0) + removed;
-      // Page two is the last page only when page three holds no ads: then
+      // Page two is the last page only when page three holds no notices: then
       // its own foot takes the house notices and the ornament.
       if (scope && !hasAds(sink as Element) && hasAds(grid as Element)) {
         fillClassifiedsFoot(grid as Element, scope, limit);
@@ -679,7 +771,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
             // The pointer itself takes room at the foot: re-measure the
             // whole scope with it in place and keep trimming whole cards
             // until page and pointer both end above the limit, so the
-            // pointer never overlaps an ad and nothing is cut off.
+            // pointer never overlaps a notice and nothing is cut off.
             for (let guard = 0; guard < 1000; guard++) {
               if ((scope as HTMLElement).getBoundingClientRect().bottom - limit <= 1) break;
               node.remove();
@@ -694,7 +786,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
         }
       }
     }
-    // The last readable grid fills to the foot once its ads run out; a grid
+    // The last readable grid fills to the foot once its notices run out; a grid
     // still carrying page two's overflow is never the last page.
     if (scope && hasAds(grid as Element)) {
       fillClassifiedsFoot(grid as Element, scope, limit);

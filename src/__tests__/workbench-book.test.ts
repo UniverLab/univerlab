@@ -60,12 +60,23 @@ describe('workbench-book copy', () => {
     }
   });
 
-  it('Spanish spells out inteligencia artificial in the new first-call text', () => {
+  it('Spanish spells out inteligencia artificial in the free-call text', () => {
     const json = JSON.stringify(es.book);
-    expect(es.book.intro).toContain('Esta primera conversación nos permite entender tu situación y determinar si podemos ayudarte.');
+    expect(es.book.intro).not.toContain('Esta primera conversación nos permite entender tu situación y determinar si podemos ayudarte.');
+    expect(es.book.intro).toContain('solo agenda la primera llamada gratis');
+    expect(en.book.intro).toContain('only books the free first call');
     expect(json).toContain('inteligencia artificial');
     expect(json).not.toMatch(/\bbanco\b(?!\s+de\s+trabajo)/i);
     expect(json).not.toMatch(/\bIA\b/);
+  });
+
+  it('the booking copy uses the free-call wording', () => {
+    expect(es.book.label).toBe('LA CONVERSACIÓN GRATIS');
+    expect(es.book.h1).toBe('Empieza por una conversación gratis.');
+    expect(es.book.form.submit).toBe('Agenda tu conversación gratis');
+    expect(en.book.label).toBe('THE FREE CALL');
+    expect(en.book.h1).toBe('Start with a free call.');
+    expect(en.book.form.submit).toBe('Book your free call');
   });
 
   it('the form only books the free call', () => {

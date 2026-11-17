@@ -115,7 +115,7 @@ function readablePages(scope: ParentNode): PageId[] {
 
 /** Which pages the newspaper prints, read from what they hold: page 2
  *  when it has classifieds (or says the lab mail did not arrive), page 3
- *  when its grid holds ads once the fit has carried page 2's overflow onto
+ *  when its grid holds notices once the fit has carried page 2's overflow onto
  *  it. A page with nothing hides with all its tabs and the strip counts
  *  only the pages that read; a reader left on a page that went away lands
  *  on the nearest one before it. */
@@ -281,7 +281,7 @@ function pressFresh(root: ParentNode, scope: string, st: FilterState): void {
 }
 
 /** Recompose both classifieds pages from the stored entries, or hide
- *  non-matching ads in the edge-rendered DOM when entries are unknown. The
+ *  non-matching notices in the edge-rendered DOM when entries are unknown. The
  *  in-place path is transient: the binders fetch once (see ensureEntries)
  *  and recompose from the matching entries when the read lands. */
 function paintLab(root: ParentNode): void {
@@ -340,7 +340,7 @@ function paintLab(root: ParentNode): void {
 
 /** One read of the announcements for a root that the edge filled: the
  *  filter then recomposes from the matching entries instead of hiding the
- *  edge-rendered ads in place. Shared by the newspaper and the Logbook.
+ *  edge-rendered notices in place. Shared by the newspaper and the Logbook.
  *  Null when the read fails, so a dead API never wipes the edge content. */
 function fetchLabEntries(): Promise<Entry[] | null> {
   return fetch('https://announcements.univerlab.org/?limit=100')
@@ -397,8 +397,8 @@ function paintLogbook(root: ParentNode): void {
     return;
   }
   const filtered = st.topic !== 'all' || st.type !== 'all' || st.roadmap !== null;
-  const ads = Array.from(body.querySelectorAll('.log-entry')) as HTMLElement[];
-  for (const el of ads) {
+  const entries = Array.from(body.querySelectorAll('.log-entry')) as HTMLElement[];
+  for (const el of entries) {
     el.classList.toggle('is-hidden', filtered && !matchState(el, st.topic, st.type, st.roadmap));
   }
   pressFresh(root, '#logbook', st);

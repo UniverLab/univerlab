@@ -12,7 +12,7 @@ export const es: Dict = {
     // noun goes and the topics stay, mirroring the English title's shape.
     title: 'CLI de código abierto para agentes de IA y LaTeX — UniverLab',
     description:
-      'Herramientas CLI de código abierto para agentes de IA, LaTeX y git — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
+      'Construimos sobre lo construido: herramientas CLI de código abierto para agentes de IA, LaTeX y git — instalables hoy, reproducibles, documentadas.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -122,10 +122,10 @@ export const es: Dict = {
   home: {
     hero: {
       title: 'Código abierto para la era de IA — construido para problemas reales',
-      subtitle: 'Somos el universo, observándose a sí mismo.',
+      subtitle: 'Construimos sobre lo construido. Toda tecnología fue alguna vez conocimiento de frontera.',
       lede:
-        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto/">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
-      pitch: 'Ciencia · CLI · LaTeX · CAD · Git',
+        'UniverLab es un laboratorio computacional abierto que trabaja bajo la filosofía del <a href="/es/manifesto/">Pensamiento Cósmico</a>: una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto sobre el que otros construyen — herramientas, datasets, artículos.',
+      pitch: 'Ciencia · CLI · LaTeX · Agentes · Git',
       pitchSub: 'Local-first. Asistido por IA. Tuyo para siempre.',
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
@@ -204,7 +204,7 @@ export const es: Dict = {
         'El eje: sistemas explícitos · trabajo reproducible · colaboración humano–IA. Los campos de abajo son donde se está poniendo a prueba.',
       now: 'Ahora',
       next: 'Después',
-      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],
+      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'Agentes de inteligencia artificial'],
       nextItems: [
         'Ciencia computacional',
         'Bioinformática',
@@ -728,10 +728,10 @@ export const es: Dict = {
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
     labLink: 'Leer el anuncio completo →',
-    tabs: { p1: 'Página 1', p2: 'Página 2 · Noticias', p3: 'Página 3 · Noticias' },
+    tabs: { p1: 'Página 1', p2: 'Página 2 · Clasificados', p3: 'Página 3 · Clasificados' },
     labPage: {
-      heading: 'Noticias del laboratorio',
-      head: 'Noticias',
+      heading: 'Clasificados del laboratorio',
+      head: 'Clasificados',
       all: 'Todas',
       view: 'Ver →',
       unavailable: 'No llegó el correo del laboratorio; inténtelo más tarde.',
@@ -863,11 +863,11 @@ export const es: Dict = {
     description: 'Reserva una sesión con quienes construyeron este laboratorio: consultoría en agentes de inteligencia artificial, automatización y auditorías.',
     label: 'EL BANCO DE TRABAJO',
     machineAlt: 'Banco de trabajo grabado con un manómetro, una gradilla de tubos, una prensa pequeña y formones',
-    head: 'Tienes una idea. Un problema. Algo que quieres mejorar.',
-    headEm: 'Algo que quieres mejorar.',
-    intro: 'Exploramos, diseñamos e implementamos soluciones de automatización e inteligencia artificial para problemas reales. Desde una primera conversación hasta una solución construida para tu caso.',
-    cta: 'Cuéntanos qué necesitas →',
-    ctaShort: 'Cuéntanos qué necesitas →',
+    head: 'Tienes una idea o un proceso que se repite. Lo llevamos a un agente que funciona.',
+    headEm: 'un agente que funciona.',
+    intro: 'Las manos que construyeron este laboratorio, para tu negocio o tu proyecto: exploramos el caso contigo, diseñamos la solución con agentes de inteligencia artificial y automatización, y la dejamos probada y documentada. No necesitas saber de tecnología; sales de cada conversación con notas escritas y el siguiente paso claro.',
+    cta: 'Agenda la conversación gratis · 15 min →',
+    ctaShort: 'Conversación gratis · 15 min →',
     ctaNote: 'por WhatsApp',
     ctaMessage: 'Hola, vengo de la página del Banco de trabajo.',
     altCta: 'Escríbenos →',
@@ -878,10 +878,10 @@ export const es: Dict = {
       ['Sistemas existentes', 'Evaluar soluciones de IA y automatización, identificar riesgos y encontrar oportunidades concretas de mejora.'],
     ] as [string, string][] },
     tags: { kicker: 'Servicios y precios', items: [
-      ['Pensemos cómo resolverlo', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una sesión para analizar tu idea, problema o proceso. Exploramos alternativas y te ayudamos a identificar una solución técnicamente viable en automatización e inteligencia artificial.'],
-      ['Construyamos lo que necesitas', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e implementamos soluciones de automatización e inteligencia artificial para tu caso: agentes, asistentes conversacionales, flujos automatizados, integraciones y sistemas basados en IA.'],
-      ['Revisemos lo que ya tienes', 'Desde USD 400', 'En Colombia: desde 1.500.000 COP', 'Evaluamos tus sistemas y soluciones de automatización e inteligencia artificial. Identificamos riesgos, verificamos su comportamiento y documentamos hallazgos y oportunidades de mejora.'],
-    ] as [string, string, string, string][] },
+      ['Consulta', 'USD 45 / hora', 'En Colombia: 150.000 COP / hora', 'Una hora con quienes construyen este laboratorio, para analizar tu idea, problema o proceso. Exploramos alternativas y te ayudamos a identificar una solución técnicamente viable en automatización e inteligencia artificial. Cada respuesta sale de algo que ya construimos, usamos y rompimos en el laboratorio.', 'Pensemos cómo resolverlo'],
+      ['Solución con agentes', 'Desde USD 150', 'En Colombia: desde 550.000 COP', 'Diseñamos e instalamos la solución que tu caso pide: agentes, asistentes de WhatsApp, flujos automatizados e integraciones. Incluye 30 días de soporte contados desde la instalación.', 'Construyamos lo que necesitas'],
+      ['Auditoría', 'Desde USD 400', 'En Colombia: desde 1.500.000 COP', 'Una revisión independiente de tus sistemas de inteligencia artificial y automatización, con evidencia reproducible para cada hallazgo. Identificamos riesgos, verificamos su comportamiento y documentamos hallazgos y oportunidades de mejora, con la hoja de ruta por escrito.', 'Revisemos lo que ya tienes'],
+    ] as [string, string, string, string, string][] },
     freeCall: { figure: 'Gratis', cond: 'Vemos qué necesitas y si el Banco de trabajo es el lugar indicado.' },
     solutions: {
       machineAlt: 'Autómata de relojería grabado, de latón remachado, sentado ante un pequeño escritorio escribiendo con pluma, con los engranajes a la vista en el pecho abierto',
@@ -919,8 +919,9 @@ export const es: Dict = {
       ['Construimos', 'Implementamos la solución acordada y entregamos el trabajo documentado.'],
     ] as [string, string][] },
     who: { kicker: 'Quién llega al Banco de trabajo', items: [
+      ['Negocios y emprendedores', 'Atiendes clientes y agendas citas por WhatsApp, haces seguimiento y repites tareas cada semana: un asistente que responde, agenda y lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
       ['Equipos que ya usan agentes', 'Tus agentes escriben código, atienden clientes o mueven datos, y quieres que dejen de fallar en silencio: grafos con compuertas reales, fallos que vuelven a su ruta, cuotas que no detienen el trabajo.'],
-      ['Negocios que quieren un agente', 'Un asistente que atiende a tus clientes por WhatsApp, agenda citas o lee tus documentos, construido alrededor de cómo ya funciona tu negocio.'],
+      ['Investigación y proyectos abiertos', 'Exploras una idea abierta o un proyecto de investigación: criterio técnico, experimentos reproducibles y documentación que otros pueden seguir.'],
     ] as [string, string][] },
     policy: { kicker: 'Cancelaciones y reembolsos', summary: 'Cancela o mueve una sesión pagada hasta 24 horas antes y eliges: un nuevo espacio o la devolución de tu dinero. Si reservas con más de cinco días de anticipación también puedes retractarte dentro de los cinco días hábiles siguientes a la reserva. Las auditorías y las soluciones agénticas se pagan 50 % a la firma del encargo y 50 % a la entrega; las comisiones de pago (PayPal y transferencias) las paga el cliente. El laboratorio responde entre las 07:00 y las 19:00, hora de Colombia, en días hábiles; lo que llegue fuera de ese horario se responde el siguiente día hábil.', link: 'Condiciones completas de cancelación y reembolso →', terms: 'Reservas del Banco de trabajo: cancelaciones y reembolsos', items: [
       'Cancela o mueve una sesión pagada hasta 24 horas antes de que empiece y tú eliges: un nuevo espacio o la devolución completa de tu dinero.',
@@ -936,7 +937,7 @@ export const es: Dict = {
     money: { kicker: 'A dónde va el dinero', text: 'Lo que entra al Banco de trabajo paga el laboratorio: modelos de inteligencia artificial, cómputo e infraestructura. Las herramientas, los experimentos y lo que aprendemos siguen abiertos.' },
     principles: { kicker: 'Cómo trabajamos', items: ['Todo es un script y vive en control de versiones: nada de magia cerrada.', 'El código es tuyo: termina en tu repositorio.', 'Un trabajo pesado a la vez: trabajamos en foco, no en paralelo.'] },
     proof: { kicker: 'Lo que ya salió de este Banco de trabajo', items: ['canopy', 'facetmedia', 'gitkit', 'texforge'] },
-    close: { head: 'Lo que contratas en Workbench ayuda a financiar el laboratorio. Sus herramientas y experimentos permanecen abiertos.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
+    close: { head: 'Lo que contratas en el Banco de trabajo ayuda a financiar el laboratorio. Sus herramientas y experimentos permanecen abiertos.', cta: 'Escribir al Banco de trabajo por WhatsApp →', phone: 'WhatsApp +57 305 389 2323' },
     audits: {
       machineAlt: 'Mesa de ensayador grabada: un instrumento de ensayo de latón bajo campana de vidrio, una fila de pesas de latón, un libro mayor abierto con una lupa y un sello de mango granate',
       title: 'Auditorías: revisión independiente con evidencia — UniverLab',
@@ -1071,10 +1072,10 @@ export const es: Dict = {
     },
   },
   book: {
-    label: 'AGENDA TU PRIMERA CONVERSACIÓN',
-    h1: 'Empieza por una conversación.',
+    label: 'LA CONVERSACIÓN GRATIS',
+    h1: 'Empieza por una conversación gratis.',
     intro:
-      'Agenda una primera conversación gratuita de 15 minutos para contarnos qué necesitas, explorar tu situación y determinar si UniverLab puede ayudarte con automatización e inteligencia artificial. No necesitas conocimientos técnicos ni una solución definida. Esta primera conversación nos permite entender tu situación y determinar si podemos ayudarte. Esta sección solo agenda la primera llamada gratis.',
+      'Agenda una conversación gratis de 15 minutos para contarnos qué necesitas, explorar tu situación y determinar si UniverLab puede ayudarte con automatización e inteligencia artificial. No necesitas conocimientos técnicos ni una solución definida. Esta sección solo agenda la primera llamada gratis.',
     fallbackTitle: '¿Prefieres escribir?',
     fallbackText: 'Si el formulario no carga, escríbenos y una persona la agenda a mano:',
     whatsapp: 'Escríbenos por WhatsApp →',
@@ -1094,7 +1095,7 @@ export const es: Dict = {
       slots: 'Elige un espacio libre',
       slotError: 'Elige uno de los espacios libres.',
       check: 'Confirma que no eres un robot',
-      submit: 'Agenda tu primera conversación',
+      submit: 'Agenda tu conversación gratis',
       submitting: 'Agendando…',
     },
     errors: {

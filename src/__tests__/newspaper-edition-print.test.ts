@@ -74,11 +74,11 @@ describe('helpers', () => {
     expect(todayLead([event], DATE)).toBe(event);
     expect(todayAside([], null)).toEqual([]);
   });
-  it('the aside takes the two oldest events, newer first', () => {
+  it('the aside takes every non-lead event, oldest first', () => {
     const e1 = fact({ kind: 'event', year: '1901', page: 'One' });
     const e2 = fact({ kind: 'event', year: '1999', page: 'Two' });
     const e3 = fact({ kind: 'event', year: '1955', page: 'Three' });
-    expect(todayAside([e1, e2, e3, born], null).map((f) => f.year)).toEqual(['1955', '1901']);
+    expect(todayAside([e1, e2, e3, born], null).map((f) => f.year)).toEqual(['1901', '1955', '1999']);
   });
   it('the lab box takes the newest entry on the edition day only', () => {
     expect(todayLabBox(feed.lab, DATE)?.id).toBe('l1');
@@ -172,31 +172,32 @@ describe('event photos print beside every event that has one', () => {
     expect(threeHtml).toContain('<article class="lead">');
     expect(threeHtml).not.toContain('lead solo');
   });
-  it('every column event with a thumb prints its photo, the lead included', () => {
+  it('every rail event with a thumb prints its photo, the lead included', () => {
     const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
-    // Six letters: one leads, two stand aside, three fill the column.
-    // Column photos print at the column size, side-column photos medium.
-    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(3);
-    expect((html.match(/photo--medium/g) ?? []).length).toBe(2);
-    // The lead, the two side photos, the three column photos and the
-    // engraving: no cap.
-    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(7);
+    // Six letters: one leads, five stand aside in the rail — no event
+    // reaches the columns, so every side photo prints medium.
+    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(0);
+    expect((html.match(/photo--medium/g) ?? []).length).toBe(5);
+    // The lead and the five side photos: no columns, so no engraving
+    // template waits in one — and no cap.
+    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(6);
   });
-  it('an event without a thumb prints no figure while the rest print theirs', () => {
+  it('a rail event without a thumb prints no figure while the rest print theirs', () => {
     const noThumb = fact({ kind: 'event', year: '1800', page: 'Old event', text: 'something old happened' });
     const facts = [noThumb, ...['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent)];
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
     const lead = todayLead(facts, DATE)!;
     const aside = todayAside(facts, lead);
-    const cols = facts.filter((f) => f !== lead && !aside.includes(f));
-    // Every column event carrying a photo prints it, thumb or none.
-    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(
-      cols.filter((f) => f.thumb).length,
-    );
-    for (const f of cols) {
+    // The rail took every non-lead event: each thumbed one prints its photo
+    // at the side size, thumb or none, and none prints at column size.
+    expect(aside).toHaveLength(6);
+    const withThumb = aside.filter((f) => f.thumb);
+    expect((html.match(/photo--medium/g) ?? []).length).toBe(withThumb.length);
+    for (const f of withThumb) {
       if (f.thumb) expect(html).toContain(f.thumb.src);
     }
+    expect(html).not.toContain('photo--event');
   });
 });
 

@@ -1,6 +1,6 @@
 /**
  * The packed classifieds page (paper pages 2 and 3): varied display type
- * rotating across the ads, each engraved cut used at most once per page,
+ * rotating across the notices, each engraved cut used at most once per page,
  * the night sheet keeping its light paper, and every cut lazy with its
  * dimensions reserved.
  */
@@ -31,26 +31,26 @@ const mixed: Entry[] = [
 
 describe('the packed classifieds page', () => {
   it('packs five narrow columns with mixed spans under a central lead', () => {
-    // Five narrow columns filled top to bottom, like the 1886 ad pages: the
+    // Five narrow columns filled top to bottom, like the 1886 notice pages: the
     // column flow leaves no half-empty column, and the phone sheet scales
     // the same composition.
     expect(css).toMatch(/\.paper \.classifieds \{[^}]*column-count: 5/);
     expect(css).toContain('column-rule: 1px solid var(--p-rule)');
     expect(css).not.toMatch(/\.paper \.classifieds \{[^}]*display: grid/);
     // The lead spans the page above the columns, largest of all.
-    expect(css).toMatch(/\.paper \.classifieds > \.ad-lead, \.paper \.classifieds > \.classifieds-rule \{ column-span: all; \}/);
-    expect(css).toContain('.paper .ad-cut.cut-lg img { width: 100%; }');
+    expect(css).toMatch(/\.paper \.classifieds > \.lead-story, \.paper \.classifieds > \.classifieds-rule \{ column-span: all; \}/);
+    expect(css).toContain('.paper .notice-cut.cut-lg img { width: 100%; }');
     // The small type runs tight and justified, with no prose measure.
     expect(css).toContain('.paper .classifieds .log-entry p { font-size: 12.5px; line-height: 1.38; max-width: none;');
     const html = labPageHtml(mixed, 'en') + labPageHtml2(mixed, 'en');
     // The latest launch leads central; one-, two- and three-column ads mix.
-    expect(html).toContain('<article class="log-entry ad-display ad-lead type-v');
-    expect(html).toContain('ad-boxed');
+    expect(html).toContain('<article class="log-entry display-notice lead-story type-v');
+    expect(html).toContain('notice-boxed');
     expect(html).toContain('class="coupon"');
-    // No ad is an empty frame: every entry card shows its title as a
+    // No notice is an empty frame: every entry card shows its title as a
     // heading, the repeated word, or the run-in lead.
     const cards = [...html.matchAll(/<article class="([^"]*)"([\s\S]*?)<\/article>/g)]
-      .filter((m) => !m[1].includes('notice'));
+      .filter((m) => !m[1].split(/\s+/).includes('notice'));
     expect(cards.length).toBeGreaterThan(1);
     for (const card of cards) {
       expect(card[2]).toMatch(/<h3|<span class="rep-word|<p class="run-in"><b>/);
@@ -72,6 +72,38 @@ describe('the packed classifieds page', () => {
     expect(rule).toContain('color: var(--p-ground)');
   });
 
+  it('always paints the lead reversed, whatever its id', () => {
+    // The lead is the newest launch (or the newest news): ink ground,
+    // paper-coloured type, never the entry-id hash. A new launch keeps the
+    // look, and the rotation starts after it — so the second notice never
+    // repeats the reversed voice.
+    const leadOf = (html: string): string | null =>
+      html.match(/<article class="log-entry display-notice lead-story (type-v\d)/)?.[1] ?? null;
+    expect(leadOf(labPageHtml(mixed, 'en'))).toBe('type-v2');
+    expect(leadOf(labPageHtml(mixed, 'es'))).toBe('type-v2');
+    const facet = entry({
+      id: 'facetmedia-launch',
+      type: 'launch',
+      topic: 'facetmedia',
+      title: 'FacetMedia launches',
+      date: new Date(Date.UTC(2026, 9, 7)).toISOString(),
+    });
+    const unknown = entry({
+      id: 'some-unknown-id-xyz',
+      type: 'launch',
+      topic: 'general',
+      title: 'Unknown launches',
+      date: new Date(Date.UTC(2026, 9, 6)).toISOString(),
+    });
+    expect(leadOf(labPageHtml([facet, ...mixed.slice(1)], 'en'))).toBe('type-v2');
+    expect(leadOf(labPageHtml([unknown], 'en'))).toBe('type-v2');
+    const variants = [...labPageHtml(mixed, 'en').matchAll(/<article class="[^"]*type-v(\d)/g)].map(
+      (m) => m[1],
+    );
+    expect(variants[0]).toBe('2');
+    expect(variants[1]).not.toBe('2');
+  });
+
   it('rotates the display voices so adjacent ads never share one', () => {
     for (const html of [labPageHtml(mixed, 'en'), labPageHtml2(mixed, 'en')]) {
       if (!html.includes('type-v')) continue;
@@ -86,10 +118,10 @@ describe('the packed classifieds page', () => {
     ).size).toBeGreaterThan(1);
   });
 
-  it('uses no entry-ad cut twice on one page', () => {
+  it('uses no entry-notice cut twice on one page', () => {
     let seen = 0;
     for (const html of [labPageHtml(mixed, 'en'), labPageHtml2(mixed, 'en')]) {
-      const cuts = [...html.matchAll(/<span class="ad-cut[^"]*"><img src="([^"]+)"/g)].map((m) => m[1]);
+      const cuts = [...html.matchAll(/<span class="notice-cut[^"]*"><img src="([^"]+)"/g)].map((m) => m[1]);
       seen += cuts.length;
       expect(new Set(cuts).size).toBe(cuts.length);
     }

@@ -1,5 +1,5 @@
 // Pages 2 and 3 of the newspaper — the lab's announcements as a classifieds
-// section in four ad sizes, across at most two pages. One server renderer
+// section in four notice sizes, across at most two pages. One server renderer
 // for the edge (functions/_middleware.ts fills #lab-body and #lab2-body
 // through HTMLRewriter), the client (pages/newspaper.astro fills both when
 // the edge did not) and the markdown twin (/newspaper/index.md).
@@ -12,8 +12,8 @@ import { entryTexts } from './field-notes';
 import { layoutClassifieds, spanFor, typeWeight, type AdSlot } from './lab-classifieds';
 import { cutFor, hashSeed, ornamentImg } from './classifieds-ornaments';
 import { liveExperiments } from './experiments';
-import { couponAdHtml, couponAds, couponNoteHtml, paperCouponsMarkdown, type CouponAd } from './paper-coupons';
-import { paperAdHtml } from './paper-ads';
+import { couponNoticeHtml, couponNotices, couponNoteHtml, paperCouponsMarkdown, type CouponNotice } from './paper-coupons';
+import { paperNoticeHtml } from './paper-ads';
 import { normalizeTopic } from './field-notes';
 
 export { sortEntries };
@@ -109,7 +109,7 @@ function slotAttrs(e: Entry): string {
   return `data-topic="${esc(topic)}" data-type="${esc(type)}" data-roadmap="${esc(e.roadmap_id || '')}"`;
 }
 
-/** Display-ad art from the lab's own assets: the experiment's machine plate
+/** Display-notice art from the lab's own assets: the experiment's machine plate
  *  when the entry belongs to an experiment, otherwise a postcard crop.
  *  Whole or cropped by the frame's CSS; nothing generated. */
 export function displayArt(topic: unknown): string {
@@ -149,19 +149,19 @@ function entryMeta(e: Entry, t: Dict): string {
   );
 }
 
-/** The engraved cut for an entry: display, boxed and small ads open with
+/** The engraved cut for an entry: display, boxed and small notices open with
  *  the cut cutFor chose for this entry on this page, first inside
  *  .entry-body and never inside the h3. One-line notices and entries the
  *  chooser left cut-less go without one. */
-function adCut(e: Entry, page: number, used: Set<string>): string {
+function noticeCut(e: Entry, page: number, used: Set<string>): string {
   const cut = cutFor(e, page, used);
   if (!cut) return '';
-  return `<span class="ad-cut cut-${cut.size}">${ornamentImg(cut.name, `cut-${cut.size}`)}</span>`;
+  return `<span class="notice-cut cut-${cut.size}">${ornamentImg(cut.name, `cut-${cut.size}`)}</span>`;
 }
 
-/** The big figure of a figure-set ad (type-v5): a version number from the
+/** The big figure of a figure-set notice (type-v5): a version number from the
  *  entry's own words, else a count from its headline or first sentence;
- *  empty when the entry has neither, and the ad then takes another voice. */
+ *  empty when the entry has neither, and the notice then takes another voice. */
 function figureFor(e: Entry): string {
   const m = /v?\d+\.\d+(?:\.\d+)?/.exec(`${e.title || ''} ${e.body || ''}`);
   if (m) return m[0];
@@ -172,8 +172,8 @@ function figureFor(e: Entry): string {
   return '';
 }
 
-/** The word a repeated-word ad (type-v7) stacks in falling sizes, as the
- *  period soap ads repeated their brand: the experiment's name, else the
+/** The word a repeated-word notice (type-v7) stacks in falling sizes, as the
+ *  period soap notices repeated their brand: the experiment's name, else the
  *  lab's. The title follows it in full. */
 function repWordFor(e: Entry): string {
   const id = typeof e.topic === 'string' ? e.topic.trim().toLowerCase() : '';
@@ -181,8 +181,8 @@ function repWordFor(e: Entry): string {
   return exp ? exp.name : 'UniverLab';
 }
 
-/** A spare frame accent for a few ads: a light single or double rule, as
- *  in the references. Deterministic per entry; most ads take none. */
+/** A spare frame accent for a few notices: a light single or double rule, as
+ *  in the references. Deterministic per entry; most notices take none. */
 function frameAccent(e: Entry): string {
   const h = hashSeed(`frame|${e.id || ''}`);
   if (h % 9 === 0) return ' frame-accent frame-double';
@@ -196,7 +196,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
   const localized = { ...e, title: texts.title, body: texts.body };
   const title = esc(texts.title);
   const v = ` type-v${variant}`;
-  const figure = variant === 5 ? `<span class="ad-figure">${esc(figureFor(localized))}</span>` : '';
+  const figure = variant === 5 ? `<span class="notice-figure">${esc(figureFor(localized))}</span>` : '';
   // The two extra voices: a small run-in notice with a bold lead word and
   // no h3, and the title repeated in three stacked sizes over the body.
   const word = esc(repWordFor(e));
@@ -205,7 +205,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     `<span class="rep-word rep-1" aria-hidden="true">${word}</span>` +
     `<span class="rep-word rep-2" aria-hidden="true">${word}</span>`;
   if (slot.size === 'display') {
-    const cls = lead ? 'log-entry ad-display ad-lead' : 'log-entry ad-display';
+    const cls = lead ? 'log-entry display-notice lead-story' : 'log-entry display-notice';
     // The lead is the newest launch; with none it is the newest news.
     const launch = typeWeight(e.type) === 3;
     const kicker = lead
@@ -214,7 +214,7 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
     const art = displayArtSize(e.topic);
     return (
       `<article class="${cls}${v}" ${slotAttrs(e)}>` +
-      `<figure class="photo ad-art"><div class="print">` +
+      `<figure class="photo notice-art"><div class="print">` +
       `<img src="${esc(displayArt(e.topic))}" alt="" width="${art.width}" height="${art.height}" loading="lazy" decoding="async">` +
       `</div></figure>` +
       `<div class="entry-body">${kicker}${figure}<h3 class="sz-lg">${title}</h3>` +
@@ -231,8 +231,8 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
           ? `${repWords}<h3 class="sz-md">${title}</h3><p>${linkify(texts.body)}</p>`
           : `${figure}<h3 class="sz-md">${title}</h3><p>${linkify(texts.body)}</p>`;
     return (
-      `<article class="log-entry ad-boxed${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e, page, used)}${head}` +
+      `<article class="log-entry notice-boxed${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${noticeCut(e, page, used)}${head}` +
       `<p class="entry-meta">${entryMeta(e, t)}</p>` +
       `</div></article>`
     );
@@ -249,8 +249,8 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
           ? `${repWords}<h3 class="sz-sm">${title}</h3><p>${cut}${link}</p>`
           : `${figure}<h3 class="sz-sm">${title}</h3><p>${cut}${link}</p>`;
     return (
-      `<article class="log-entry ad-small${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
-      `<div class="entry-body">${adCut(e, page, used)}${head}` +
+      `<article class="log-entry notice-small${spanCls}${frame}${v}" ${slotAttrs(e)}>` +
+      `<div class="entry-body">${noticeCut(e, page, used)}${head}` +
       `</div></article>`
     );
   }
@@ -260,21 +260,21 @@ function slotHtml(slot: AdSlot, t: Dict, variant: number, page: number, used: Se
   return `<article class="log-entry notice" ${slotAttrs(e)}><p class="notice-line">${link}</p></article>`;
 }
 
-/** One page grid: entry ads with coupon ads interleaved after the `after`-th
+/** One page grid: entry notices with coupon notices interleaved after the `after`-th
  *  slot, consecutive one-line notices grouped into dense runs of small type.
- *  Every entry ad takes one of eight treatments, (hashSeed(id) + n) % 8,
- *  bumped past the previous ad's treatment, width and frame, so neighbours
+ *  Every entry notice takes one of eight treatments, (hashSeed(id) + n) % 8,
+ *  bumped past the previous notice's treatment, width and frame, so neighbours
  *  never share one; coupons ride as the eighth treatment. The sequence is
  *  fixed per edition, so one edition never reshuffles on reload. On page 1
- *  the display ad reads as the lead story in the middle of the page, closed
+ *  the display notice reads as the lead story in the middle of the page, closed
  *  by a rule. */
-function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, lang: LabPageLang, page: number): string {
+function gridHtml(slots: AdSlot[], coupons: CouponNotice[], after: number, t: Dict, lang: LabPageLang, page: number): string {
   const used = new Set<string>();
   type Item = { kind: 'slot'; slot: AdSlot } | { kind: 'coupon'; html: string };
   const items: Item[] = slots.map((slot) => ({ kind: 'slot' as const, slot }));
   if (coupons.length) {
     const at = Math.min(after + 1, items.length);
-    items.splice(at, 0, ...coupons.map((c) => ({ kind: 'coupon' as const, html: couponAdHtml(lang, c) })));
+    items.splice(at, 0, ...coupons.map((c) => ({ kind: 'coupon' as const, html: couponNoticeHtml(lang, c) })));
   }
   const lead = page === 1 && slots.length > 0 && slots[0].size === 'display';
   let out = '';
@@ -312,13 +312,22 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     }
     flush();
     const voices = s.size === 'display' ? 6 : 8;
-    let tv = (hashSeed(s.entry.id || '') + n) % voices;
-    n += 1;
-    // The repeated word is a shout: once per page at most.
-    const sTexts = entryTexts(s.entry, lang);
-    const sLocalized = { ...s.entry, title: sTexts.title, body: sTexts.body };
-    while (tv === prevTv || (tv === 5 && !figureFor(sLocalized)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
-    if (tv === 7) repUsed = true;
+    const isLead = lead && s === slots[0];
+    // The lead always wears the reversed voice: ink ground, paper-coloured
+    // type. Never the entry-id hash, so a new launch keeps the look; the
+    // lead takes no turn of the rotation, which starts after it.
+    let tv: number;
+    if (isLead) {
+      tv = 2;
+    } else {
+      tv = (hashSeed(s.entry.id || '') + n) % voices;
+      n += 1;
+      // The repeated word is a shout: once per page at most.
+      const sTexts = entryTexts(s.entry, lang);
+      const sLocalized = { ...s.entry, title: sTexts.title, body: sTexts.body };
+      while (tv === prevTv || (tv === 5 && !figureFor(sLocalized)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
+      if (tv === 7) repUsed = true;
+    }
     let span = spanFor(s.entry, s.size, si);
     si += 1;
     if (span === prevSpan) span = span === 1 ? 2 : span === 2 ? (s.size === 'small' ? 1 : 3) : 2;
@@ -326,7 +335,6 @@ function gridHtml(slots: AdSlot[], coupons: CouponAd[], after: number, t: Dict, 
     let frame = frameAccent(s.entry);
     if (frame && frame === prevFrame) frame = '';
     prevFrame = frame;
-    const isLead = lead && s === slots[0];
     out += slotHtml(s, t, tv, page, used, isLead, spanCls, frame ? ` ${frame}` : '', lang);
     prevTv = tv;
     prevSpan = span;
@@ -376,7 +384,7 @@ export interface ClassifiedsOpts {
 }
 
 /** The Logbook pointer line: the overflow's way on. The client materializes
- *  it from the template when its own measure-trim drops ads the server kept. */
+ *  it from the template when its own measure-trim drops notices the server kept. */
 function logbookPointerHtml(t: Dict, lang: LabPageLang): string {
   return `<p class="lab-more"><a href="${prefix(lang)}/logbook/">${ornamentImg('manicule', 'manicule')}${esc(t.labPage.logbookPointer)}</a></p>`;
 }
@@ -393,8 +401,8 @@ function headHtml(t: Dict): string {
  *  appends them into the last grid's measured free foot, whole only. */
 function footFillHtml(lang: LabPageLang): string {
   return (
-    `<template data-fill="house-install">${paperAdHtml(lang, 'install')}</template>` +
-    `<template data-fill="house-collab">${paperAdHtml(lang, 'collab')}</template>` +
+    `<template data-fill="house-install">${paperNoticeHtml(lang, 'install')}</template>` +
+    `<template data-fill="house-collab">${paperNoticeHtml(lang, 'collab')}</template>` +
     `<template data-fill="orn-tree"><figure class="classifieds-plate">${ornamentImg('tree')}</figure></template>` +
     `<template data-fill="orn-gem"><figure class="classifieds-plate">${ornamentImg('gem')}</figure></template>` +
     `<template data-fill="orn-press"><figure class="classifieds-plate">${ornamentImg('press')}</figure></template>`
@@ -403,7 +411,7 @@ function footFillHtml(lang: LabPageLang): string {
 
 /** Both classifieds grids: page 1 (paper page 2) and page 2 (paper page 3,
  *  empty when everything fits one page — never an empty page). Coupons ride
- *  as ads of their own: the first half after the third slot, the rest after
+ *  as notices of their own: the first half after the third slot, the rest after
  *  the ninth. A truncated section closes with the line to the Logbook. */
 export function classifiedsHtml(
   entries: Entry[],
@@ -411,17 +419,17 @@ export function classifiedsHtml(
   opts?: ClassifiedsOpts,
 ): { page1: string; page2: string; truncated: boolean } {
   const t = dict(lang);
-  const ads = couponAds(lang, opts?.foundingLeft);
-  const { pages, truncated } = layoutClassifieds(entries || [], ads.length);
-  const half = Math.ceil(ads.length / 2);
+  const notices = couponNotices(lang, opts?.foundingLeft);
+  const { pages, truncated } = layoutClassifieds(entries || [], notices.length);
+  const half = Math.ceil(notices.length / 2);
   const empty = { page1: '', page2: '', truncated };
   if (!pages.length) return empty;
-  const rest = ads.slice(half);
+  const rest = notices.slice(half);
   const page1 =
-    `<div id="lab-log" class="classifieds">${gridHtml(pages[0], ads.slice(0, half), 2, t, lang, 1)}` +
+    `<div id="lab-log" class="classifieds">${gridHtml(pages[0], notices.slice(0, half), 2, t, lang, 1)}` +
     `${pages[1] ? '' : gridHtml([], rest, 8, t, lang, 1)}${couponNoteHtml(lang)}` +
     `<template data-fill="logbook-pointer">${logbookPointerHtml(t, lang)}</template>${footFillHtml(lang)}</div>`;
-  // Page 3 carries no head of its own: the folio line, then ads. Its grid
+  // Page 3 carries no head of its own: the folio line, then notices. Its grid
   // is always there, empty when everything fits page 2, so the client's fit
   // can carry page 2's overflow onto it; an empty grid keeps page 3 out of
   // the paper.

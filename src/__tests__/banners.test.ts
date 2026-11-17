@@ -48,17 +48,17 @@ describe('banners.ts', () => {
 
 describe('banner font: subset woff2, never blocking first paint', () => {
   it('serves the banner face as a tiny woff2 with swap display', () => {
-    expect(BANNER).toContain("url('/fonts/DejaVuSansMono-banner.woff2') format('woff2')");
+    expect(BANNER).toContain("url('/fonts/DejaVuSansMono-display.woff2') format('woff2')");
     expect(BANNER).not.toContain('DejaVuSansMono.ttf');
     expect(BANNER).toContain('font-display: swap');
-    const file = resolve(__dirname, '../../public/fonts/DejaVuSansMono-banner.woff2');
+    const file = resolve(__dirname, '../../public/fonts/DejaVuSansMono-display.woff2');
     expect(existsSync(file)).toBe(true);
     // The full TrueType is 335 KB; the three-glyph subset must stay tiny.
     expect(statSync(file).size).toBeLessThan(10 * 1024);
   });
 
   it('preloads the subset — never the full font — on surface pages', () => {
-    expect(BASELAYOUT).toContain('href="/fonts/DejaVuSansMono-banner.woff2"');
+    expect(BASELAYOUT).toContain('href="/fonts/DejaVuSansMono-display.woff2"');
     expect(BASELAYOUT).toContain('type="font/woff2"');
     expect(BASELAYOUT).not.toContain('DejaVuSansMono.ttf');
   });

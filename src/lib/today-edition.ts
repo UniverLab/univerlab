@@ -10,7 +10,7 @@ import { firstParagraph } from './lab-feed';
 import { entryTexts } from './field-notes';
 import { dailyFact } from './mail';
 import { balanceHeads } from './paper-fit';
-import { paperAdHtml, paperAdsMarkdown, paperHouseDuoHtml, paperWorkbenchDuoHtml } from './paper-ads';
+import { paperNoticeHtml, paperNoticesMarkdown, paperHouseNoticeDuoHtml, paperWorkbenchNoticeDuoHtml } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
 
@@ -200,13 +200,12 @@ export function todayLead(facts: Fact[], date: Date): Fact | null {
   return dailyFact<Fact>(letterPool(facts), date);
 }
 
-/** The side column: the two oldest non-lead events, newer first. */
+/** The side column: every non-lead event in the priority queue's order,
+ *  oldest first. The rail takes the queue's head beside the lead and the
+ *  client fit moves what does not fit there into the columns, so no cap
+ *  here would only starve the rail. */
 export function todayAside(facts: Fact[], lead: Fact | null): Fact[] {
-  return facts
-    .filter((f) => f.kind === 'event' && f !== lead)
-    .sort(byYearAsc)
-    .slice(0, 2)
-    .reverse();
+  return facts.filter((f) => f.kind === 'event' && f !== lead).sort(byYearAsc);
 }
 
 /** Every lab announcement published on the edition's day, newest first. */
@@ -368,7 +367,7 @@ export function splitColumns(entries: ColEntry[]): ColEntry[][] {
   ].filter((c) => c.length > 0);
 }
 
-/** Which footing the house ads take at the foot of the columns: a column
+/** Which footing the house notices take at the foot of the columns: a column
  *  ending well short of the page's foot (`<= 0.85` of the longest column)
  *  has room for a notice of its own. Two or more short columns split the two
  *  notices; otherwise the notices merge into one in the lightest column, so
@@ -436,7 +435,9 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   out += `<div class="banner">${esc(t.banner)}</div><div class="front">`;
 
-  for (const box of boxes) {
+  // At most one lab announcement prints: the day's first box. The twin
+  // below still lists every box.
+  for (const box of boxes.slice(0, 1)) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)
@@ -496,7 +497,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   // The single Workbench display spans the front under the lead and, when
   // the day has one, the rail — never the lead slot itself. It carries both
   // offers, the free first call and the audits, each with its own link.
-  out += paperWorkbenchDuoHtml(lang);
+  out += paperWorkbenchNoticeDuoHtml(lang);
 
   const rest = (kind: Fact['kind']) =>
     facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
@@ -528,13 +529,13 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     // above plus at most these two house notices.
     out +=
       `<template data-filler="plate">${paperPlateHtml(lang)}</template>` +
-      `<template data-filler="install">${paperAdHtml(lang, 'install')}</template>` +
-      `<template data-filler="collab">${paperAdHtml(lang, 'collab')}</template>` +
-      `<template data-filler="house-duo">${paperHouseDuoHtml(lang)}</template>`;
+      `<template data-filler="install">${paperNoticeHtml(lang, 'install')}</template>` +
+      `<template data-filler="collab">${paperNoticeHtml(lang, 'collab')}</template>` +
+      `<template data-filler="house-duo">${paperHouseNoticeDuoHtml(lang)}</template>`;
   } else {
     // No columns: no foot to fill, so the merged house notice closes the
     // front on its own and both offers stay on the page.
-    out += paperHouseDuoHtml(lang);
+    out += paperHouseNoticeDuoHtml(lang);
   }
 
   out += `</div><p class="colophon-note">${esc(t.colophon)}</p>`;
@@ -623,7 +624,7 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
     }
     lines.push('');
   }
-  // The lab's advertisements ride the twin on the same lines the page
+  // The lab's notices ride the twin on the same lines the page
   // prints: the Workbench duo, then the house footing the columns take.
   const twinEntries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
     rest(kind).map((fact) => ({ kind, fact })),
@@ -631,6 +632,6 @@ export function todayEditionMarkdown(feed: TodayFeed, lang: TodayLang, date: Dat
   const twinWeights = splitColumns(twinEntries).map((c) =>
     c.reduce((n, e) => n + estimate(e.fact), 0),
   );
-  lines.push(paperAdsMarkdown(lang, chooseHouseSlots(twinWeights)), '');
+  lines.push(paperNoticesMarkdown(lang, chooseHouseSlots(twinWeights)), '');
   return lines.join('\n');
 }
