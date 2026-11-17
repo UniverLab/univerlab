@@ -39,7 +39,15 @@ const Y = leadYear();
 const DATE = new Date(Y, 9, 21, 12);
 const FACTS = buildPool(FIX, 'en');
 
-const textOf = (html: string): string => html.replace(/<[^>]+>/g, '');
+const textOf = (html: string): string => {
+  let out = html;
+  let prev = '';
+  while (prev !== out) {
+    prev = out;
+    out = out.replace(/<[^>]+>/g, '');
+  }
+  return out;
+};
 const colTexts = (html: string): string[] => {
   const cols = html.slice(html.indexOf('<div class="cols">'));
   return [...cols.matchAll(/<section class="col">(.*?)<\/section>/gs)].map((m) => textOf(m[1]));

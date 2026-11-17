@@ -1,6 +1,6 @@
 {
   "name": "univerlab-web",
-  "version": "1.23.1",
+  "version": "1.24.0",
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
@@ -10,6 +10,8 @@
     "preview": "astro preview",
     "check:i18n": "node scripts/check-i18n.ts",
     "check:seo": "node scripts/check-seo.ts",
+    "check:paper": "node scripts/check-paper.ts",
+    "record:paper": "node scripts/record-paper-fixtures.ts",
     "build:llms": "node scripts/build-llms.ts",
     "build:redirects": "node scripts/build-redirects.ts",
     "check:github": "node scripts/check-github.ts",
@@ -35,9 +37,10 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
     "@types/turndown": "^5.0.6",
-    "astro": "^7.1.6",
+    "astro": "^7.4.7",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "playwright": "^1.65.1",
     "ts-jest": "^29.4.11",
     "turndown": "^7.2.4",
     "typescript": "^6.0.3"

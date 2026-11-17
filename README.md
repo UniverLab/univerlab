@@ -33,6 +33,30 @@ Docs are globbed at build time from the **sibling repos'** `docs/` folders
 (`../texforge/docs`, …), so a full build expects those repos checked out next to
 this one.
 
+### Page-one layout check (`check:paper`)
+
+Renders the real built page in Chromium on fixed recorded editions and
+measures what a reader sees (no story past the sheet, no tall blank column
+band while letters remain unprinted, lead-photo gaps within one gutter, the
+lab story and the colophon inside the sheet, no centred lead photo):
+
+```sh
+npm run check:paper    # ~1 min; exits non-zero, printing FAIL lines + numbers
+npm run record:paper   # re-capture the fixtures from the live sources
+```
+
+Editions live in `src/__tests__/fixtures/paper/` (`manifest.json` lists the
+dates plus the three coverage editions: a landscape lead photo, a lead without
+photo, a day with a lab story and many letters). The page's web fonts are
+recorded there too (`fonts.json` + `fonts/`), so the browser sets the sheet in
+its real typefaces offline: fallback metrics change line breaks and would make
+every measurement lie. `record:paper` reads the built pages for the font URLs,
+so it needs a `npm run build` first and network access; `check:paper` needs
+that same `dist/` but runs offline.
+
+The check only measures: it is expected to FAIL on some recorded dates, and
+fixing the layout is a separate change — never in the same change as the check.
+
 ---
 
 ## How it fits together

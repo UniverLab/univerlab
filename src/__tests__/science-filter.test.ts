@@ -13,6 +13,7 @@ import {
   mainPage,
   shortSummary,
   summaryText,
+  stripTags,
   collectFacts,
   buildPool,
   letterPool,
@@ -347,6 +348,16 @@ describe('mainPage picks the event\u2019s own page', () => {
     // Two-word titles: the longer "Thomas Edison" outranks "Menlo Park".
     expect(mainPage(entry)?.titles?.normalized).toBe('Thomas Edison');
   });
+
+describe('stripTags repeats until stable', () => {
+  it('strips tags and keeps the rest', () => {
+    expect(stripTags('<b>Deep</b>_Space_1')).toBe('Deep_Space_1');
+  });
+
+  it('removes a nested fake so no angle bracket survives', () => {
+    expect(stripTags('<<b>>x')).not.toContain('<');
+  });
+});
 
   it('reads display titles with tags stripped and underscores as spaces', () => {
     // The mission's three-word title beats the country's two words even

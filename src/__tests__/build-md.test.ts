@@ -24,6 +24,24 @@ describe('htmlToMarkdown', () => {
     expect(md).not.toContain('Nav');
   });
 
+  it('strips scripts with a spaced close tag or a nested fake', () => {
+    const html = `<!DOCTYPE html><html><head><title>T</title></head><body><main><p>Keep</p><script>const s = 1;</script ><p>Mid</p><scr<script></script>ipt><p>Tail</p></main></body></html>`;
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('Keep');
+    expect(md).not.toContain('const s');
+    expect(md).not.toContain('<script');
+  });
+
+  it('escapes backslashes and pipes in table cells', () => {
+    const html = `<!DOCTYPE html><html><head><title>T</title></head><body><main><table><tr><td>c\\d|e</td></tr></table></main></body></html>`;
+    expect(htmlToMarkdown(html)).toContain('c\\\\d\\|e');
+  });
+
+  it('escapes backslashes and quotes in the front-matter title', () => {
+    const html = `<!DOCTYPE html><html><head><title>Say "hi" C:\\tmp</title></head><body><main><p>Hi</p></main></body></html>`;
+    expect(htmlToMarkdown(html)).toContain('title: "Say \\"hi\\" C:\\\\tmp"');
+  });
+
   it('keeps the content after a comment that mentions a stripped tag', () => {
     // The manifesto's index comment says "<nav> is deliberate": the nav strip
     // used to start inside the comment, eat its `-->`, and hide every section

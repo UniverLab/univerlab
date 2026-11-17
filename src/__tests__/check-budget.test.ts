@@ -103,6 +103,13 @@ describe('firstViewItems', () => {
   it('ignores fake tags inside inline script bodies', () => {
     expect(items).not.toContain('/bench/fake-in-script.webp');
   });
+
+  it('ignores fake tags in a script with a spaced close tag', () => {
+    const html =
+      '<script>const s="<img src=\\"/fake-spaced.webp\\">";</script >' +
+      '<img src="/real.webp" alt="">';
+    expect(firstViewItems(html)).toEqual(['/real.webp']);
+  });
 });
 
 /** The byte sum, taken from real files on disk in a throwaway dist. */

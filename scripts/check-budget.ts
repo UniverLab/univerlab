@@ -46,9 +46,18 @@ export function firstViewItems(html: string): string[] {
   // Inline script bodies and style blocks can hold fake tags in strings;
   // strip the bodies before parsing tags. Script *opening* tags survive so
   // their `src` is still counted below.
-  const cleaned = html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (m) => m.slice(0, m.indexOf('>') + 1))
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
+  // Repeated until stable: removing one element can expose another
+  // (`<scr<script></script>ipt>` first yields `<script>…`), and a close tag
+  // with trailing space (`</script >`) is still a close tag.
+  let cleaned = html;
+  for (let prev = ''; prev !== cleaned; ) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, (m) => m.slice(0, m.indexOf('>') + 1));
+  }
+  for (let prev = ''; prev !== cleaned; ) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '');
+  }
 
   const items: string[] = [];
   const isLocal = (u: string) => u && !/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(u);

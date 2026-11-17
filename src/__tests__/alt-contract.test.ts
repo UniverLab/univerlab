@@ -43,10 +43,14 @@ const VOID = new Set([
  *  its own aria-hidden) hides it. Runtime <script> and <style> bodies are
  *  stripped first: they can hold <img> strings that never reach the page. */
 function imgsOf(html: string, file: string): SeenImg[] {
-  const clean = html
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
-    .replace(/<style[\s\S]*?<\/style\s*>/gi, '');
+  let clean = html.replace(/<!--[\s\S]*?-->/g, '');
+  let prev = '';
+  while (prev !== clean) {
+    prev = clean;
+    clean = clean
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '');
+  }
   const out: SeenImg[] = [];
   const stack: boolean[] = [];
   const tagRe = /<\/?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;

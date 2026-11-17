@@ -306,6 +306,16 @@ describe('build-llms helpers', () => {
     ]);
   });
 
+  it('strips tags from sidebar titles', () => {
+    const html =
+      '<aside><nav>' +
+      '<a href="/canopy/docs/nested/" class="item"><b>Deep</b> <i>Space</i></a>' +
+      '</nav></aside>';
+    expect(sidebarOrder('canopy', html)).toEqual([
+      { slugPath: '/canopy/docs/nested/', title: 'Deep Space' },
+    ]);
+  });
+
   it('escapes markdown link text', () => {
     expect(escapeLinkText('A] (b)')).toBe('A\\] \\(b\\)');
     expect(decodeEntities('Intelligence &amp; Sync')).toBe('Intelligence & Sync');
