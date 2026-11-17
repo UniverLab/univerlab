@@ -91,6 +91,48 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toContain('margin-inline: 0');
   });
 
+  it('floats a portrait or square lead photo on the scaled sheet', () => {
+    // Phones draw the same scaled sheet as desktop, so the sheet carries
+    // its own copy of the float rules outside the 48rem query — never a
+    // centred photo with blank margins on both sides.
+    const sheetBlock = css.slice(
+      css.indexOf('.paper-viewport.sheet .paper { padding'),
+      css.indexOf('.paper .today-loading'),
+    );
+    expect(sheetBlock).toMatch(
+      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait, \.paper-viewport\.sheet \.paper \.photo--lead--square \{[^}]*float:\s*right[^}]*max-width:\s*min\(16rem, 40%\)[^}]*width:\s*fit-content[^}]*min-height:\s*0/,
+    );
+    expect(sheetBlock).toMatch(
+      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait img, \.paper-viewport\.sheet \.paper \.photo--lead--square img \{[^}]*margin-inline:\s*0/,
+    );
+    expect(sheetBlock).toMatch(
+      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait figcaption, \.paper-viewport\.sheet \.paper \.photo--lead--square figcaption \{[^}]*width:\s*0[^}]*min-width:\s*100%/,
+    );
+    // It has to reach the phone: nested in any @media block the rule is keyed
+    // to viewport width again, which is the defect this fixes. Depth counts
+    // the braces opened before the rule, so 0 is the stylesheet's own level.
+    const at = css.indexOf('.paper-viewport.sheet .paper .photo--lead--portrait,');
+    expect(at).toBeGreaterThan(0);
+    let depth = 0;
+    for (const ch of css.slice(0, at)) {
+      if (ch === '{') depth += 1;
+      else if (ch === '}') depth -= 1;
+    }
+    expect(depth).toBe(0);
+  });
+
+  it('stacks a lead photo across a reflowed column', () => {
+    // Without the sheet (pre-JS reflow) a stacked lead photo spans the
+    // column width instead of centring with side margins.
+    const narrow = css.slice(css.lastIndexOf('@media (max-width: 47.99rem)'));
+    expect(narrow).toMatch(
+      /\.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--portrait \.print, \.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--square \.print \{[^}]*align-self:\s*stretch/,
+    );
+    expect(narrow).toMatch(
+      /\.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--portrait img, \.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--square img \{[^}]*width:\s*100%/,
+    );
+  });
+
   it('never spreads free space into bands', () => {
     // Free space belongs to content, not to the gaps between the masthead
     // blocks: the edition and the front pack their blocks at the start,
