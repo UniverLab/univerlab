@@ -14,6 +14,7 @@
  * `@id` that makes it referenceable; the rest of the fields are unchanged.
  */
 import type { Experiment } from './experiments';
+import { TIKTOK_URL, YOUTUBE_URL } from './social';
 
 /** Canonical URLs are trailing-slash (`trailingSlash` in astro.config.mjs), so
  *  an id minted from a page URL is normalized before anything hashes against
@@ -55,7 +56,7 @@ export function organizationNode(site: URL, description: string): Record<string,
     url: site.href,
     logo: new URL('/favicon.svg', site).href,
     description,
-    sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social'],
+    sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social', TIKTOK_URL, YOUTUBE_URL],
   };
 }
 

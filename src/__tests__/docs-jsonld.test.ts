@@ -190,7 +190,7 @@ describe('structured-data', () => {
       url: 'https://univerlab.org/',
       logo: 'https://univerlab.org/favicon.svg',
       description: 'A description',
-      sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social'],
+      sameAs: ['https://github.com/UniverLab', 'https://x.com/UniverLab', 'https://bsky.app/profile/univerlab.bsky.social', 'https://www.tiktok.com/@univerlab', 'https://www.youtube.com/@UniverLabOrg'],
     });
   });
 

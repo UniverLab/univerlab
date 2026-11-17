@@ -13,6 +13,7 @@ import { toBraille, fromBraille, BRAILLE_SENTENCE } from '../lib/braille';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { byId } from '../lib/experiments';
+import { TIKTOK_URL, YOUTUBE_URL } from '../lib/social';
 
 const FOOTER = resolve(__dirname, '..', 'components', 'Footer.astro');
 const src = readFileSync(FOOTER, 'utf8');
@@ -314,6 +315,19 @@ describe('Footer — two grouped link headings', () => {
     expect(src).toContain('https://bsky.app/profile/univerlab.bsky.social');
     expect(src.indexOf('https://x.com/UniverLab')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
     expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
+  });
+
+  it('the footer links the lab on TikTok and YouTube', () => {
+    expect(TIKTOK_URL).toBe('https://www.tiktok.com/@univerlab');
+    expect(YOUTUBE_URL).toBe('https://www.youtube.com/@UniverLabOrg');
+    expect(src).toMatch(/href: TIKTOK_URL,\s+label: 'TikTok',\s+ext: true/);
+    expect(src).toMatch(/href: YOUTUBE_URL,\s+label: 'YouTube',\s+ext: true/);
+    expect(src).toMatch(/brandSvg\(TIKTOK_PATH\)/);
+    expect(src).toMatch(/brandSvg\(YOUTUBE_PATH\)/);
+    // After Bluesky, before the API entry — the social row order.
+    expect(src.indexOf('href: TIKTOK_URL')).toBeGreaterThan(src.indexOf("label: 'Bluesky'"));
+    expect(src.indexOf('href: YOUTUBE_URL')).toBeGreaterThan(src.indexOf('href: TIKTOK_URL'));
+    expect(src.indexOf("localizePath('/api'")).toBeGreaterThan(src.indexOf('href: YOUTUBE_URL'));
   });
 
   it('the social and API links read as icons in one centred row', () => {
