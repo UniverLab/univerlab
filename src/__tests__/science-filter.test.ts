@@ -293,7 +293,7 @@ describe('the newspaper pages ask for the whole day', () => {
     // A failed announcements read resolves null (not []), so page 2 prints
     // the one unavailable line; a readable-but-empty feed still prints filters.
     expect(src).toContain('.catch(function () { return null; })');
-    expect(src).toContain('{ unavailable: parts[1] === null }');
+    expect(src).toContain('unavailable: parts[1] === null');
   });
 });
 

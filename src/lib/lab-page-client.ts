@@ -4,6 +4,8 @@
 
 import {
   classifiedsHtml,
+  labPageHtml,
+  labPageHtml2,
   logbookFilteredHtml,
   type Entry,
   type LabPageLang,
@@ -31,6 +33,44 @@ export function setLabEntries(root: ParentNode, source: LabSource): void {
 export function setLogbookEntries(root: ParentNode, source: LabSource): void {
   store.set(root, source);
   paintLogbook(root);
+}
+
+function blank(el: Element | null): boolean {
+  return !!el && !(el.textContent || '').replace(/\s/g, '');
+}
+
+/** Which pages the edge left empty: a one-page edition ships #lab2-body as a
+ *  .classifieds of inert <template>s (textContent ''), so blank reads true
+ *  even though the body holds markup. */
+export function labPageNeeds(doc: Document): { edition: boolean; lab: boolean; lab2: boolean; read: boolean } {
+  const needs = {
+    edition: blank(doc.getElementById('edition')),
+    lab: blank(doc.getElementById('lab-body')),
+    lab2: blank(doc.getElementById('lab2-body')),
+  };
+  return { ...needs, read: needs.edition || needs.lab || needs.lab2 };
+}
+
+/** Fill the pages the edge left empty with the edition's rows, using the
+ *  same renderers the edge uses. The EDITION's rows (not the full feed) are
+ *  stored, so filter clicks stay in the edition; a failed read keeps the
+ *  edge grid instead of recomposing from nothing. */
+export function paintLabEdition(
+  doc: Document,
+  rows: Entry[],
+  lang: LabPageLang,
+  opts?: { unavailable?: boolean; foundingLeft?: number | null },
+): void {
+  const needs = labPageNeeds(doc);
+  if (needs.lab) {
+    const labBody = doc.getElementById('lab-body');
+    if (labBody) labBody.innerHTML = labPageHtml(rows, lang, opts);
+  }
+  if (needs.lab2) {
+    const lab2Body = doc.getElementById('lab2-body');
+    if (lab2Body) lab2Body.innerHTML = labPageHtml2(rows, lang, opts);
+  }
+  if (!opts?.unavailable) setLabEntries(doc, { entries: rows, lang, foundingLeft: opts?.foundingLeft });
 }
 
 function langOf(root: ParentNode, fallback: LabSource | undefined): LabPageLang {

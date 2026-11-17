@@ -19,9 +19,9 @@ import TodaysPaper from './TodaysPaper.astro';
   // with the same renderer the edge uses. The tabs bind either way.
   import { readOtdCache, fetchPool, FULL_POOL } from '../lib/science-filter';
   import { todayEditionHtml, editionDateFor } from '../lib/today-edition';
-  import { labPageHtml, labPageHtml2 } from '../lib/lab-page';
   import { entriesUpTo } from '../lib/lab-feed';
-  import { bindLabPage, setLabEntries, syncPages } from '../lib/lab-page-client';
+  import { fetchFoundingLeft } from '../lib/founding-spots';
+  import { bindLabPage, labPageNeeds, paintLabEdition, syncPages } from '../lib/lab-page-client';
   import { initPaperSheet } from '../lib/paper-sheet';
   import { fitPaper } from '../lib/paper-fit';
 
@@ -32,16 +32,13 @@ import TodaysPaper from './TodaysPaper.astro';
     var day = editionDateFor(window.location.search);
     var picked = /[?&]d=/.test(window.location.search);
     var ed = document.getElementById('edition');
-    var labBody = document.getElementById('lab-body');
-    var lab2Body = document.getElementById('lab2-body');
-    var needEdition = ed && !(ed.textContent || '').replace(/\s/g, '');
-    var needLab = labBody && !(labBody.textContent || '').replace(/\s/g, '');
-    var needLab2 = lab2Body && !(lab2Body.textContent || '').replace(/\s/g, '');
+    var needs = labPageNeeds(document);
+    var needEdition = needs.edition;
     // The sheet's fixed height reserves every page's space, so fitting
     // never shifts layout; fit again once images land, which moves feet.
     var refit = function () { fitPaper(document); syncPages(document); };
     window.addEventListener('load', refit);
-    if (!needEdition && !needLab && !needLab2) { refit(); return; }
+    if (!needs.read) { refit(); return; }
 
     var loading = document.getElementById('today-loading');
     var failed = function () {
@@ -59,30 +56,29 @@ import TodaysPaper from './TodaysPaper.astro';
       ? Promise.resolve(facts)
       // The same day the edge asks for: the lab's date (UTC−5), not the
       // visitor's, so a reader abroad never prints another day's letters.
-      : fetchPool(fetch, lang, day, FULL_POOL);
+      : fetchPool(fetch, lang, day, FULL_POOL).catch(function () { return null; });
     // The lab mailbox is optional: a failed announcements read (CORS, an
     // outage) still prints the day's letters, just without that box.
-    var labP = needLab || needEdition
-      ? fetch('https://announcements.univerlab.org/?limit=100')
-        .then(function (res) {
-          if (!res.ok) throw new Error('API ' + res.status);
-          return res.json();
-        })
-        .then(function (data) {
-          return Array.isArray(data?.entries) ? data.entries : [];
-        })
-        .catch(function () { return null; })
-      : Promise.resolve([]);
+    var labP = fetch('https://announcements.univerlab.org/?limit=100')
+      .then(function (res) {
+        if (!res.ok) throw new Error('API ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        return Array.isArray(data?.entries) ? data.entries : [];
+      })
+      .catch(function () { return null; });
+    // The edge reads the founding count for page 2's coupons; the client
+    // recompose needs the same count or a taken offer would come back.
+    var foundingP = fetchFoundingLeft(fetch);
 
-    Promise.all([factsP, labP]).then(
+    Promise.all([factsP, labP, foundingP]).then(
       function (parts) {
         // Pages 2 and 3 do not depend on the day's facts: fill them even
         // when the Wikipedia read failed and page 1 reports the error.
         // An old edition prints only the news it could have carried.
         var labRows = entriesUpTo(parts[1] || [], day);
-        if (needLab) labBody.innerHTML = labPageHtml(labRows, lang, { unavailable: parts[1] === null });
-        if (needLab2) lab2Body.innerHTML = labPageHtml2(labRows, lang, { unavailable: parts[1] === null });
-        setLabEntries(document, { entries: labRows, lang: lang });
+        paintLabEdition(document, labRows, lang, { unavailable: parts[1] === null, foundingLeft: parts[2] });
         if (needEdition) {
           if (!parts[0] || !parts[0].length) { failed(); return; }
           ed.innerHTML = todayEditionHtml({ facts: parts[0], lab: labRows }, lang, day);
