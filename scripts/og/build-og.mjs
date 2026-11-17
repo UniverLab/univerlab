@@ -1,47 +1,68 @@
-// Open Graph images for UniverLab (1200×630 each).
+// Open Graph images for UniverLab (1200×630 each), vintage laboratory style.
 //
 // Generates:
-//   • public/og.png          — site-wide default (home, docs, experiments without a card)
-//   • public/og/<id>.png     — one per experiment: number, status, name, tagline,
-//                              motif line, in the palette of the experiment's own
-//                              page (its surface group in src/styles/global.css)
+//   • public/og.png               — site-wide default (home, docs, experiments
+//                                  without a card): the UniverLab mark, the home
+//                                  line, and the workbench machine plate.
+//   • public/og/<id>.png         — one per experiment: number, name, status,
+//                                  tagline, the day plate of its engraved
+//                                  machine, and its canonical URL.
+//   • public/og/workbench[.es].png, public/og/newspaper[.es].png — the pages
+//                                  people share most, in each locale.
+//
+// Every card is drawn on the site's paper ground (paper #f4f0ea with the
+// pergamino texture), ink #1d1510 type, sepia #6b5a43 secondary type, graphite
+// #5d5852 cartouches, and the garnet #87222c accent. Display type is Old
+// Standard TT Bold, body type EB Garamond, kickers and URLs IBM Plex Mono.
 //
 // Every glyph is outlined to an SVG path (fonts in ./fonts, see FONTS.md), so
-// headless Chrome rasterises the cards without any installed font. The SVGs and
-// HTML wrappers are intermediate files (see .gitignore); the PNGs are committed.
+// headless Chrome rasterises the cards without any installed font. Plates and
+// texture are embedded as base64 data URIs, so the generator stays fully
+// offline and reproducible. The SVGs and HTML wrappers are intermediate files
+// (see .gitignore); the PNGs are committed.
 //
 // Usage (Node ≥ 24):
 //   cd scripts/og && npm install && node --experimental-strip-types build-og.mjs
 //   google-chrome --headless=new --hide-scrollbars --window-size=1200,630 \
 //     --screenshot=../../public/og.png "file://$PWD/render.html"
 //   for f in render-*.html; do
+//     case "$f" in render.html) continue;; esac
 //     id="${f#render-}"; id="${id%.html}"
 //     google-chrome --headless=new --hide-scrollbars --window-size=1200,630 \
 //       --screenshot=../../public/og/${id}.png "file://$PWD/${f}"
 //   done
 
 import opentype from 'opentype.js';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { BANNERS } from './banners.mjs';
+import { en } from '../../src/i18n/en.ts';
+import { es } from '../../src/i18n/es.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+const PUBLIC = join(HERE, '..', '..', 'public');
 
-// The lab's own palette: the home card. Experiment cards bring their surface's.
-const LAB = { bg: '#0a0b0e', ink: '#e8e6e1', inkDim: '#8b8a86', inkFaint: '#55544f', accent: '#e6c84a' };
+// The vintage laboratory sheet: paper ground, dark ink, engraved plates.
+const V = {
+  paper: '#f4f0ea',
+  ink: '#1d1510',
+  sepia: '#6b5a43',
+  graphite: '#5d5852',
+  garnet: '#87222c',
+};
 
 const W = 1200;
 const H = 630;
 const MARGIN = 88;
+const RIGHT = 1112;
+const FOOTER = 568;
 
-// IBM Plex Mono is the UniverLab signature (wordmark, kickers, motif); Space
-// Grotesk carries names and prose. The DejaVu faces only fill glyphs Plex lacks
-// in a motif line (box drawing, braille).
-const plex = opentype.loadSync(join(HERE, 'fonts', 'IBMPlexMono-500.ttf'));
-const grotesk = opentype.loadSync(join(HERE, 'fonts', 'SpaceGrotesk-500.ttf'));
-const dejaMono = opentype.loadSync(join(HERE, '..', '..', 'public', 'fonts', 'DejaVuSansMono.ttf'));
-const dejaSans = opentype.loadSync(join(HERE, 'fonts', 'DejaVuSans.ttf'));
+// sB is Old Standard TT Bold (display), G is EB Garamond (body),
+// P is IBM Plex Mono (kickers, pills, URLs).
+const sB = opentype.loadSync(join(HERE, 'fonts', 'OldStandardTT-Bold.ttf'));
+const G = opentype.loadSync(join(HERE, 'fonts', 'EBGaramond-Regular.ttf'));
+const P = opentype.loadSync(join(HERE, 'fonts', 'IBMPlexMono-500.ttf'));
 
 // The frozen mark — three splayed cube faces, viewBox 0 0 500 500 (Mark.astro).
 const MARK_FACES = [
@@ -50,39 +71,28 @@ const MARK_FACES = [
   'M 15.46545,382.52546 C 6.3911449,367.64675 0.81490318,350.92318 0.85336934,335.82998 L 1.2320814,187.12405 C 1.309014,156.93767 23.82154,145.04612 51.70906,160.46431 l 137.13943,75.82292 c 9.19373,5.08296 17.78984,12.47976 25.18046,21.19488 -0.49849,0.21302 -0.98908,0.44681 -1.47528,0.70396 l -93.81469,49.66496 c -8.99901,4.76402 -12.12182,15.33945 -7.0025,23.71378 5.11933,8.37436 16.48354,11.28048 25.48248,6.51648 l 93.81471,-49.66496 c 0.47454,-0.25121 0.9293,-0.51657 1.37133,-0.79807 4.25014,10.37372 6.66582,21.03404 6.64051,30.98573 l -0.37656,148.70958 c -0.077,30.18636 -22.59161,42.07428 -50.47907,26.65617 L 51.05267,418.15045 C 37.10892,410.44135 24.539015,397.40451 15.46545,382.52546 Z',
 ];
 
-/** The glyph for `ch` in `font`, or in the first fallback face that has it. */
-function glyphFor(font, ch, fallback) {
-  const g = font.charToGlyph(ch);
-  if (g.index !== 0 || !fallback) return [font, g];
-  for (const f of [dejaMono, dejaSans]) {
-    const fg = f.charToGlyph(ch);
-    if (fg.index !== 0) return [f, fg];
-  }
-  return [font, g];
-}
-
 /** Outline `text` with letter-spacing (em); returns the path and its width. */
-function spacedPath(font, text, x, baselineY, size, trackEm = 0, fallback = false) {
+function spacedPath(font, text, x, baselineY, size, trackEm = 0) {
   const track = size * trackEm;
   let cursor = x;
   const parts = [];
   for (const ch of text) {
-    const [f, g] = glyphFor(font, ch, fallback);
+    const g = font.charToGlyph(ch);
     parts.push(g.getPath(cursor, baselineY, size).toPathData(2));
-    cursor += (g.advanceWidth / f.unitsPerEm) * size + track;
+    cursor += (g.advanceWidth / font.unitsPerEm) * size + track;
   }
   return { d: parts.join(' '), width: cursor - x - (text.length ? track : 0) };
 }
 
-const measure = (font, text, size, trackEm = 0, fallback = false) =>
-  spacedPath(font, text, 0, 0, size, trackEm, fallback).width;
+const measure = (font, text, size, trackEm = 0) =>
+  spacedPath(font, text, 0, 0, size, trackEm).width;
 
 /** One outlined text run; `anchor` is start | middle | end. */
-function text(font, str, x, y, size, fill, { track = 0, anchor = 'start', opacity = 1, fallback = false } = {}) {
-  const w = measure(font, str, size, track, fallback);
+function text(font, str, x, y, size, fill, { track = 0, anchor = 'start', opacity = 1 } = {}) {
+  const w = measure(font, str, size, track);
   const x0 = anchor === 'end' ? x - w : anchor === 'middle' ? x - w / 2 : x;
   const op = opacity < 1 ? ` fill-opacity="${opacity}"` : '';
-  return `<path d="${spacedPath(font, str, x0, y, size, track, fallback).d}" fill="${fill}"${op}/>`;
+  return `<path d="${spacedPath(font, str, x0, y, size, track).d}" fill="${fill}"${op}/>`;
 }
 
 /** Greedy word wrap to `maxWidth`. */
@@ -108,7 +118,7 @@ function greedyWrap(font, str, size, maxWidth) {
  */
 function wrapText(font, str, size, maxWidth) {
   // A dash belongs to the clause it closes: never let it open a line.
-  str = str.replace(/ (—|–) /g, '\u00a0$1 ');
+  str = str.replace(/ (—|–) /g, ' $1 ');
   const target = greedyWrap(font, str, size, maxWidth).length;
   let lo = 0;
   let hi = maxWidth;
@@ -117,117 +127,122 @@ function wrapText(font, str, size, maxWidth) {
     if (greedyWrap(font, str, size, mid).length <= target) hi = mid;
     else lo = mid;
   }
-  return greedyWrap(font, str, size, hi).map((l) => l.replace(/\u00a0/g, ' '));
-}
-
-/** Relative luminance of a #rrggbb colour (WCAG). */
-function luminance(hex) {
-  const [r, g, b] = [1, 3, 5].map((i) => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function wavePath(yMid, amp, wl, xEnd) {
-  const step = wl / 24;
-  let d = `M 0 ${yMid.toFixed(1)}`;
-  for (let x = step; x <= xEnd; x += step) {
-    d += ` L ${x.toFixed(1)} ${(yMid + amp * Math.sin((x / wl) * Math.PI * 2)).toFixed(2)}`;
-  }
-  return d;
+  return greedyWrap(font, str, size, hi).map((l) => l.replace(/ /g, ' '));
 }
 
 const mark = (x, y, size, fill) =>
   `<g transform="translate(${x} ${y}) scale(${size / 500})" fill="${fill}">${MARK_FACES.map((d) => `<path d="${d}"/>`).join('')}</g>`;
 
-/** Background, accent glow and the wave band shared by every card. */
-function frame({ bg, accent }, body, glow) {
-  // On a light sheet the accent glow reads as a smudge; keep it a whisper there.
-  const glowOpacity = luminance(bg) > 0.5 ? 0.06 : 0.13;
-  const waves = [
-    { amp: 18, wl: 380, sw: 2.4, op: 0.55 },
-    { amp: 28, wl: 560, sw: 1.4, op: 0.22 },
-  ]
-    .map(({ amp, wl, sw, op }) =>
-      `<path d="${wavePath(H - 78, amp, wl, W + wl)}" fill="none" stroke="${accent}" stroke-width="${sw}" stroke-opacity="${op}" stroke-linecap="round"/>`)
-    .join('\n    ');
+// ── Vintage paper ground ────────────────────────────────────────────────────
+// The pergamino texture, embedded once as base64, tiles the sheet at 20% over
+// the paper colour; a double graphite cartouche frames every card.
+const TEXTURE_B64 = readFileSync(join(PUBLIC, 'bench', 'textures', 'pergamino.webp')).toString('base64');
+
+function paper(body) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
-    <radialGradient id="glow" cx="${glow.cx}" cy="${glow.cy}" r="75%">
-      <stop offset="0%" stop-color="${accent}" stop-opacity="${glowOpacity}"/>
-      <stop offset="60%" stop-color="${bg}" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="waveFadeGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#000"/>
-      <stop offset="0.12" stop-color="#fff"/>
-      <stop offset="0.88" stop-color="#fff"/>
-      <stop offset="1" stop-color="#000"/>
-    </linearGradient>
-    <mask id="waveFade"><rect width="${W}" height="${H}" fill="url(#waveFadeGrad)"/></mask>
+    <pattern id="grain" width="1024" height="1024" patternUnits="userSpaceOnUse">
+      <image href="data:image/webp;base64,${TEXTURE_B64}" x="0" y="0" width="1024" height="1024"/>
+    </pattern>
   </defs>
-  <rect width="${W}" height="${H}" fill="${bg}"/>
-  <rect width="${W}" height="${H}" fill="url(#glow)"/>
-  <g mask="url(#waveFade)">
-    ${waves}
-  </g>
+  <rect width="${W}" height="${H}" fill="${V.paper}"/>
+  <rect width="${W}" height="${H}" fill="url(#grain)" opacity="0.2"/>
   ${body}
+  <rect x="24.5" y="24.5" width="1151" height="581" fill="none" stroke="${V.graphite}" stroke-width="1.5" stroke-opacity="0.45"/>
+  <rect x="31.5" y="31.5" width="1137" height="567" fill="none" stroke="${V.graphite}" stroke-width="1" stroke-opacity="0.3"/>
 </svg>
 `;
 }
 
-/** Site-wide card: the mark and the full wordmark lockup. */
+// ── Engraved machine plates ─────────────────────────────────────────────────
+// The day plate of public/bench/machines, embedded as a base64 data URI at
+// 280 px tall, right-aligned to x=1112, from y=175. Dimensions come from the
+// manifest entry machines/<id>-day-450.webp.
+const MANIFEST = JSON.parse(readFileSync(join(PUBLIC, 'bench', 'manifest.json'), 'utf8'));
+
+function plate(id) {
+  const file = `machines/${id}-day-450.webp`;
+  const asset = MANIFEST.assets.find((a) => a.kind === 'machine' && a.file === file);
+  if (!asset) throw new Error(`og: no manifest entry for ${file}`);
+  const w = (280 * asset.width) / asset.height;
+  const b64 = readFileSync(join(PUBLIC, 'bench', file)).toString('base64');
+  return `<image x="${(RIGHT - w).toFixed(1)}" y="175" width="${w.toFixed(1)}" height="280" href="data:image/webp;base64,${b64}"/>`;
+}
+
+/** Per-experiment card: kicker, number, name, garnet rule, status, tagline, plate. */
+function experimentSvg({ id, name, number, tagline, statusLabel }) {
+  const nameSize = measure(sB, name, 88) > 640 ? 74 : 88;
+  const lines = wrapText(G, tagline ?? '', 34, 640).slice(0, 3);
+  const body = `${text(P, 'UNIVERLAB', MARGIN, 104, 17, V.ink, { track: 0.2 })}
+  ${text(P, number, RIGHT, 104, 17, V.sepia, { track: 0.1, anchor: 'end' })}
+  ${text(sB, name, MARGIN, 268, nameSize, V.ink)}
+  <rect x="90" y="292" width="96" height="3" fill="${V.garnet}"/>
+  ${text(P, statusLabel.toUpperCase(), 90, 338, 16, V.garnet, { track: 0.18 })}
+  ${lines.map((l, i) => text(G, l, MARGIN, 394 + i * 46, 34, V.sepia)).join('\n  ')}
+  ${plate(id)}
+  ${text(P, `univerlab.org/${id}`, MARGIN, FOOTER, 15, V.graphite, { track: 0.08 })}`;
+  return paper(body);
+}
+
+/** Site-wide card: the mark, the home line, and the workbench machine plate. */
 function homeSvg() {
-  const markSize = 176;
-  const textX = MARGIN + markSize + 52;
-  const { ink, inkDim, inkFaint, accent } = LAB;
-  const body = `${mark(MARGIN, 150, markSize, ink)}
-  ${text(plex, 'UNIVERLAB', textX, 232, 76, ink, { track: 0.2 })}
-  <rect x="${textX}" y="254" width="64" height="4" rx="2" fill="${accent}"/>
-  ${text(plex, 'SCI · CLI · BIO', textX, 300, 24, accent, { track: 0.2 })}
-  ${text(grotesk, 'An independent computational laboratory', textX, 350, 30, inkDim)}
-  ${text(grotesk, 'of open experiments.', textX, 390, 30, inkDim)}
-  ${text(plex, 'univerlab.org', W - MARGIN, 56, 18, inkFaint, { track: 0.08, anchor: 'end' })}`;
-  return frame(LAB, body, { cx: '22%', cy: '30%' });
+  const line = en.home.hero.subtitle.split('. ')[0] + '.';
+  const lines = wrapText(sB, line, 68, 640).slice(0, 2);
+  const body = `${mark(MARGIN, 148, 104, V.ink)}
+  ${text(P, en.home.hero.tagline, MARGIN, 300, 17, V.garnet, { track: 0.2 })}
+  ${lines.map((l, i) => text(sB, l, MARGIN, 400 + i * 72, 68, V.ink)).join('\n  ')}
+  ${plate('workbench')}
+  ${text(P, 'univerlab.org', MARGIN, FOOTER, 15, V.graphite, { track: 0.08 })}`;
+  return paper(body);
 }
 
-/** Per-experiment card: lab header, name, tagline, motif, canonical URL. */
-function experimentSvg({ id, name, number, palette, tagline, status, motif }) {
-  const { ink, inkFaint, accent } = palette;
-  const statusLabel = status.toUpperCase();
-  const pillW = measure(plex, statusLabel, 14, 0.18) + 28;
-  const pillX = W - MARGIN - pillW;
-  const nameSize = name.length > 11 ? 84 : 96;
-  const lines = wrapText(grotesk, tagline ?? '', 32, W - 2 * MARGIN).slice(0, 3);
-  const motifY = 336 + lines.length * 44 + 26;
-  const body = `${mark(MARGIN, 38, 34, ink)}
-  ${text(plex, 'UNIVERLAB', MARGIN + 48, 63, 19, ink, { track: 0.26 })}
-  ${text(plex, number, pillX - 18, 63, 17, accent, { track: 0.16, anchor: 'end' })}
-  <rect x="${pillX}" y="43" width="${pillW}" height="28" rx="14" fill="none" stroke="${accent}" stroke-opacity="0.55"/>
-  ${text(plex, statusLabel, pillX + pillW / 2, 62, 14, accent, { track: 0.18, anchor: 'middle' })}
-  ${text(grotesk, name, MARGIN, 250, nameSize, ink)}
-  <rect x="${MARGIN + 2}" y="276" width="64" height="4" rx="2" fill="${accent}"/>
-  ${lines.map((l, i) => text(grotesk, l, MARGIN, 336 + i * 44, 32, ink, { opacity: 0.72 })).join('\n  ')}
-  ${motif ? text(plex, motif, MARGIN, motifY, 20, accent, { track: 0.04, opacity: 0.75, fallback: true }) : ''}
-  ${text(plex, `univerlab.org/${id}`, W - MARGIN, H - 26, 16, inkFaint, { track: 0.08, anchor: 'end' })}`;
-  return frame(palette, body, { cx: '78%', cy: '22%' });
+/** Workbench and newspaper cards, in each locale. */
+function pageSvg(lang, kind) {
+  const t = lang === 'es' ? es : en;
+  if (kind === 'workbench') {
+    const ad = t.today.ads.workbench;
+    const sub = wrapText(G, ad.lines[0], 34, 640).slice(0, 2);
+    const url = lang === 'es' ? 'univerlab.org/es/workbench' : 'univerlab.org/workbench';
+    const body = `${text(sB, ad.head, MARGIN, 268, 88, V.ink)}
+  ${sub.map((l, i) => text(G, l, MARGIN, 394 + i * 46, 34, V.sepia)).join('\n  ')}
+  ${text(P, ad.lines[1], MARGIN, 500, 16, V.graphite, { track: 0.08 })}
+  ${plate('workbench')}
+  ${text(P, url, MARGIN, FOOTER, 15, V.graphite, { track: 0.08 })}`;
+    return paper(body);
+  }
+  const nameSize = measure(sB, t.today.name, 128) > 1000 ? 108 : 128;
+  const motto = wrapText(G, t.today.motto, 30, 720).slice(0, 2);
+  const url = lang === 'es' ? 'univerlab.org/es/newspaper' : 'univerlab.org/newspaper';
+  const body = `${text(P, t.today.edition, RIGHT, 104, 17, V.sepia, { track: 0.1, anchor: 'end' })}
+  <rect x="88" y="176" width="1024" height="2" fill="${V.ink}"/>
+  <rect x="88" y="182" width="1024" height="1" fill="${V.ink}"/>
+  ${text(sB, t.today.name, 600, 300, nameSize, V.ink, { anchor: 'middle' })}
+  <rect x="88" y="330" width="1024" height="1" fill="${V.ink}"/>
+  ${motto.map((l, i) => text(G, l, 600, 436 + i * 42, 30, V.sepia, { anchor: 'middle' })).join('\n  ')}
+  ${text(P, url, 600, FOOTER, 15, V.graphite, { track: 0.08, anchor: 'middle' })}`;
+  return paper(body);
 }
 
-const page = (svg, bg) =>
-  `<!doctype html><html><head><style>*{margin:0;padding:0}html,body{width:${W}px;height:${H}px;background:${bg}}</style></head><body>${svg}</body></html>\n`;
+const page = (svg) =>
+  `<!doctype html><html><head><style>*{margin:0;padding:0}html,body{width:${W}px;height:${H}px;background:${V.paper}}</style></head><body>${svg}</body></html>\n`;
 
-// ── Default home card ───────────────────────────────────────────────────────
-const defaultSvg = homeSvg();
-writeFileSync(join(HERE, 'og.svg'), defaultSvg);
-writeFileSync(join(HERE, 'render.html'), page(defaultSvg, LAB.bg));
-console.log('✓ og.svg + render.html  (home card)');
+// ── Emit every card ─────────────────────────────────────────────────────────
+// `name` is the PNG basename: og.svg/render.html feed public/og.png,
+// og-<name>.svg/render-<name>.html feed public/og/<name>.png.
+const CARDS = [
+  { svg: homeSvg(), name: 'og' },
+  ...BANNERS.map((b) => ({ svg: experimentSvg(b), name: `og-${b.id}` })),
+  { svg: pageSvg('en', 'workbench'), name: 'og-workbench' },
+  { svg: pageSvg('es', 'workbench'), name: 'og-workbench-es' },
+  { svg: pageSvg('en', 'newspaper'), name: 'og-newspaper' },
+  { svg: pageSvg('es', 'newspaper'), name: 'og-newspaper-es' },
+];
 
-// ── Per-experiment cards ────────────────────────────────────────────────────
 mkdirSync(join(HERE, '..', '..', 'public', 'og'), { recursive: true });
 
-for (const banner of BANNERS) {
-  const svg = experimentSvg(banner);
-  writeFileSync(join(HERE, `og-${banner.id}.svg`), svg);
-  writeFileSync(join(HERE, `render-${banner.id}.html`), page(svg, banner.palette.bg));
-  console.log(`✓ og-${banner.id}.svg + render-${banner.id}.html  (${banner.name})`);
+for (const { svg, name } of CARDS) {
+  const stem = name === 'og' ? 'og' : name;
+  writeFileSync(join(HERE, `${stem}.svg`), svg);
+  writeFileSync(join(HERE, name === 'og' ? 'render.html' : `render-${name.slice(3)}.html`), page(svg));
+  console.log(`✓ ${stem}.svg + render wrapper`);
 }

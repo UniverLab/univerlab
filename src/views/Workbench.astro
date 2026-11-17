@@ -34,7 +34,7 @@ const proof = w.proof.items.map((id) => ({
   tagline: (t.experiments as Record<string, { tagline: string }>)[id].tagline,
 }));
 ---
-<BaseLayout title={w.title} description={w.description} circadian>
+<BaseLayout title={w.title} description={w.description} ogImage={lang === 'es' ? '/og/workbench-es.png' : '/og/workbench.png'} circadian>
 {/* Inlined so the page ships no CSS chunk: every chunk is linked site-wide
     and counted on the budgeted pages, and this design must not move them. */}
 <style is:inline>
