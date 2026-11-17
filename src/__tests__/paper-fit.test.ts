@@ -382,6 +382,86 @@ describe('fitFrontPage', () => {
     expect(edition.querySelector('.rail')).not.toBeNull();
     expect(edition.querySelector('.notice--feature')).toBeNull();
   });
+
+  describe('the lab story prints whole inside the sheet', () => {
+    // Paper 500, colophon 0 in jsdom: the sheet ends at 476 — one 24px
+    // body line of reserve, no gap, scale one, as sheetLimit computes it.
+    const PAPER_BOTTOM = 500;
+    const LIMIT = PAPER_BOTTOM - 24;
+    const LAB_H = 40;
+    const GAP = 18;
+
+    const labScaffold = (cols: MockItem[][]): HTMLElement => {
+      document.body.innerHTML =
+        '<div class="paper"><div class="paper-page" id="page-1"><div id="edition"><div class="front">' +
+        '<article class="lead"><div class="story"></div><div class="lead-cols"></div></article>' +
+        '<article class="labmail">lab</article>' +
+        '<div class="cols"></div>' +
+        '</div>' +
+        '<p class="colophon-note">colophon</p>' +
+        '</div></div></div>';
+      const edition = document.getElementById('edition') as HTMLElement;
+      const band = edition.querySelector('.cols') as HTMLElement;
+      for (const items of cols) band.appendChild(liveColumn(document, items, 100));
+      const lab = edition.querySelector('.labmail') as HTMLElement;
+      // The lab is its own grid row under the lead and the rail, and the
+      // band sits below it — like the laid-out page. Only the letters in
+      // that row (the lead's columns, the rail's) raise it; the band does
+      // not push it down. Its foot is the row's foot plus the grid gap and
+      // its own height.
+      lab.getBoundingClientRect = () => {
+        const feet = Array.from(
+          edition.querySelectorAll('.lead-cols .col, .rail > .col'),
+        ).map((c) => c.getBoundingClientRect().bottom);
+        const story = edition.querySelector('.lead .story') as HTMLElement;
+        return rect(
+          Math.max(100, story.getBoundingClientRect().bottom, ...feet) + GAP + LAB_H,
+        );
+      };
+      mockBottom(document.querySelector('.paper') as HTMLElement, PAPER_BOTTOM);
+      return edition;
+    };
+
+    it('keeps the lab story while letters go, ending the lab inside the sheet', () => {
+      // A column of whole letters against a 476px sheet, the lab one grid
+      // row of 18px gap and 40px of its own below it. Letters go from the
+      // lead's columns until the lab lands in the sheet — never the lab.
+      // Heights just past the sheet (18/19 letters) are the ones a trim that
+      // stops on its body-line slack would leave hanging, so all are tried.
+      for (const n of [18, 19, 20, 24]) {
+        const edition = labScaffold([Array.from({ length: n }, () => ev())]);
+        const out = fitFrontPage(edition);
+        expect(out.trimmedLetters).toBeGreaterThan(0);
+        const lab = edition.querySelector('.labmail') as HTMLElement;
+        expect(lab).not.toBeNull();
+        expect(lab.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT);
+      }
+    });
+
+    it('ends no letter or story past the sheet on a tall edition', () => {
+      const edition = labScaffold([
+        Array.from({ length: 20 }, () => ev()),
+        Array.from({ length: 20 }, () => br()),
+      ]);
+      // Every letter tracks its own column's foot like the laid-out page,
+      // so the check below reads letters and the lab alike.
+      for (const col of Array.from(edition.querySelectorAll('.col'))) {
+        const c = col as HTMLElement;
+        for (const item of Array.from(col.querySelectorAll('article.item'))) {
+          (item as HTMLElement).getBoundingClientRect = () =>
+            rect(c.getBoundingClientRect().bottom);
+        }
+      }
+      fitFrontPage(edition);
+      // Two 500px columns and a lab past the sheet: the fit measures the
+      // lab's foot and trims the letters above it, so every foot ends in.
+      for (const item of Array.from(
+        edition.querySelectorAll('article.item, article.labmail'),
+      )) {
+        expect(item.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 1);
+      }
+    });
+  });
 });
 
 describe('pages two and three hold only the classifieds that fit', () => {
@@ -767,6 +847,29 @@ describe('front page fits its sheet, masthead included', () => {
       expect(written * scale).toBeGreaterThanOrEqual(visualCap - 1);
       expect(written * scale).toBeLessThanOrEqual(visualCap + 1);
       expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(visualEdge + 24);
+    });
+
+    it('sets the side photo in a mat that hugs the image, one gutter from the text', () => {
+      // The portrait float once held a fixed 16rem/40% box while the image
+      // inside stayed narrow, leaving a blank band between the lead's text
+      // and its photo. The mat hugs the image instead, so the gap collapses
+      // to the one 16px column gutter.
+      const src = readFileSync(resolve(__dirname, '..', 'components', 'TodaysPaper.astro'), 'utf8');
+      const m = src.match(/\.paper \.photo--lead--portrait,[^{]*\{([^}]*)\}/);
+      expect(m).not.toBeNull();
+      const decls = m![1].split(';').map((d) => d.trim());
+      expect(decls).toContain('width: fit-content');
+      expect(decls).toContain('max-width: min(16rem, 40%)');
+      expect(decls).toContain('margin: 2px 0 12px 16px');
+      expect(decls).not.toContain('width: min(16rem, 40%)');
+      // A caption line wider than a height-capped portrait would widen the
+      // mat again and open the band between the text and the picture, so
+      // the caption takes the picture's width instead.
+      const cap = src.match(/\.paper \.photo--lead--portrait figcaption,[^{]*\{([^}]*)\}/);
+      expect(cap).not.toBeNull();
+      const capDecls = cap![1].split(';').map((d) => d.trim());
+      expect(capDecls).toContain('width: 0');
+      expect(capDecls).toContain('min-width: 100%');
     });
   });
 

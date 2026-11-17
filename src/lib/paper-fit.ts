@@ -372,6 +372,7 @@ export function fitFrontPage(edition: Element): FrontFit {
   const leadCols = edition.querySelector('.lead-cols');
   const railEl = edition.querySelector('.rail');
   const alsoEl = edition.querySelector('.rail .also');
+  const labEl = edition.querySelector('.front .labmail');
   let duoEl = edition.querySelector('aside.notice--feature');
 
   // The sheet never stretches a block past its content now: the row's
@@ -429,6 +430,34 @@ export function fitFrontPage(edition: Element): FrontFit {
   const railFoot = (): number =>
     railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
   const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
+  // The lab story is never cut: its foot joins the trim loop below, so the
+  // letters above it keep trimming until the lab itself ends in the sheet.
+  const labFoot = (): number => (labEl ? rectBottom(labEl) : 0);
+  // The lab is a row of its own under the lead and the rail, never under the
+  // band. Only the letters that share that row move it: the lead's columns
+  // and any column the balance moved into the rail. The band below the lab
+  // ends at the sheet on its own and does not push the lab down.
+  const labCols = (): Element[] =>
+    Array.from(edition.querySelectorAll('.lead-cols .col, .rail > .col'));
+  // Raise the lab into the sheet by trimming whole letters from the tallest
+  // column above it, re-measuring after each removal: a side-by-side lead
+  // column and a stacked rail both lose exactly the removed height from the
+  // row, so the loop converges on the lab's foot. The lab itself is never
+  // removed; when no letter above it is left the loop stops.
+  const fitLab = (): number => {
+    if (!labEl) return 0;
+    let removed = 0;
+    for (let guard = 0; guard < 500; guard++) {
+      if (!labEl || labFoot() - limit <= 1) break;
+      const cols = labCols().filter((c) => lastLetter(c));
+      if (!cols.length) break;
+      cols.sort((a, b) => rectBottom(b) - rectBottom(a));
+      (lastLetter(cols[0]) as Element).remove();
+      pruneOrphanHeadings(cols[0]);
+      removed++;
+    }
+    return removed;
+  };
 
   // The space under the rail fills with whole letters like the space under
   // the lead story: move the band's last column under the rail while the
@@ -533,6 +562,7 @@ export function fitFrontPage(edition: Element): FrontFit {
     const bottoms = cols.map(rectBottom);
     if (railEl) bottoms.push(railFoot());
     if (duoEl) bottoms.push(duoFoot());
+    if (labEl) bottoms.push(labFoot());
     if (!bottoms.length) break;
     if (Math.max(...bottoms) - limit <= line) break;
     if (duoEl) {
@@ -557,6 +587,9 @@ export function fitFrontPage(edition: Element): FrontFit {
       items[items.length - 1].remove();
       continue;
     }
+    // Trim every column to the sheet, the lab's own overhang included in
+    // the check above. The lab itself is never removed: `fitLab` raises it
+    // afterwards by trimming the letters that share its row.
     let removed = 0;
     for (const col of cols) removed += trimColumn(col, limit);
     out.trimmedLetters += removed;
@@ -570,6 +603,9 @@ export function fitFrontPage(edition: Element): FrontFit {
   // A balance move can push a column's foot past the sheet again: trim
   // whole letters after balancing, so nothing ends past the sheet's edge.
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
+  // The lab story's foot was never a band column's foot: raise it into the
+  // sheet by trimming the letters that share its row, never the lab itself.
+  out.trimmedLetters += fitLab();
   // A trim may empty a column whole: it leaves the page, and a wrapper
   // left with no column goes with it, so the band never holds blank paper.
   const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
