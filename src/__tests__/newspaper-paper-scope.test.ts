@@ -146,6 +146,17 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.lab-head-ornament \{[^}]*flex:\s*0 1 auto/);
   });
 
+  it('sets the cartouche words on the ornament inner panel, not the middle of the plate', () => {
+    // head.webp is 1200x451 and its glass opening runs from y≈168 to y≈308:
+    // centring on the whole image leaves the word riding high in the frame.
+    // The band must be absolute over the plate, and no later rule may reset
+    // the heading to static, which would centre it on the whole image again.
+    expect(css).toMatch(
+      /\.paper \.head-cartouche \.lab-heading \{[^}]*position:\s*absolute[^}]*top:\s*37\.5%[^}]*bottom:\s*32%/,
+    );
+    expect(css).not.toMatch(/\.lab-head \.head-cartouche > \.lab-heading \{[^}]*position:\s*static/);
+  });
+
   it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
     // A long event body must not pull a tall grey mat below the photo: the
     // figure sits at the start of its grid area, so the halftone frame wraps

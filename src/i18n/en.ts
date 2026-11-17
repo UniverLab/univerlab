@@ -734,10 +734,10 @@ export const en = {
     counts: '{n} letters from the past · {m} from the lab',
     labKicker: 'Lab mail · today',
     labLink: 'Read the full announcement →',
-    tabs: { p1: 'Page 1', p2: 'Page 2 · Lab news', p3: 'Page 3 · Lab news' },
+    tabs: { p1: 'Page 1', p2: 'Page 2 · Classifieds', p3: 'Page 3 · Classifieds' },
     labPage: {
-      heading: 'Lab news',
-      head: 'Lab news',
+      heading: 'Lab classifieds',
+      head: 'Classifieds',
       all: 'All',
       view: 'View →',
       unavailable: 'The lab mail did not arrive — try again later.',

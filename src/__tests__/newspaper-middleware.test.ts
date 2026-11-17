@@ -197,7 +197,7 @@ describe('middleware — page 2 when the lab feed cannot be read', () => {
 
     expect(res.status).toBe(200);
     const md = await res.text();
-    expect(md).toContain('## Lab news');
+    expect(md).toContain('## Lab classifieds');
     expect(md).toContain('The lab mail did not arrive');
   });
 });
@@ -349,8 +349,8 @@ describe('middleware — /newspaper/index.md without a markdown Accept (FR1)', (
   }) as unknown as typeof fetch;
 
   it.each([
-    ['/newspaper/index.md', '# The Observable', '## Lab news'],
-    ['/es/newspaper/index.md', '# El Observable', '## Noticias del laboratorio'],
+    ['/newspaper/index.md', '# The Observable', '## Lab classifieds'],
+    ['/es/newspaper/index.md', '# El Observable', '## Clasificados del laboratorio'],
   ])('%s with Accept */* serves the live markdown twin as text/markdown', async (pathname, heading, lab) => {
     global.fetch = stubFetchLive;
     const ctx = prodCtx(pathname);
@@ -403,7 +403,7 @@ describe('middleware — /newspaper/ content negotiation unchanged (FR4)', () =>
     expect(mdRes.headers.get('content-type')).toContain('text/markdown');
     const md = await mdRes.text();
     expect(md).toContain('# The Observable');
-    expect(md).toContain('## Lab news');
+    expect(md).toContain('## Lab classifieds');
 
     (globalThis as { HTMLRewriter?: unknown }).HTMLRewriter = FakeHTMLRewriter;
     const htmlRes = await onRequest(context('/newspaper/', 'text/html'));
@@ -475,7 +475,7 @@ describe('middleware — retired /status/ addresses redirect permanently', () =>
     expect(res.status).toBe(200);
     const md = await res.text();
     expect(md).toContain('# The Observable');
-    expect(md).toContain('## Lab news');
+    expect(md).toContain('## Lab classifieds');
   });
 });
 

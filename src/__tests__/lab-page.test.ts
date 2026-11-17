@@ -174,7 +174,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('renders the heading and the filters in Spanish', () => {
     const html = labPageHtml(entries, 'es');
-    expect(html).toContain('<h2 class="lab-heading">Noticias</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Clasificados</h2>');
     expect(html).not.toContain('translate="no"');
     expect(html).not.toContain('Lab news');
     expect(html).toContain('>Todas<span class="lab-filter-count">12</span>');
@@ -189,7 +189,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the lab mail did not arrive instead of empty filter rows', () => {
     const html = labPageHtml([], 'en', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading">Lab news</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Classifieds</h2>');
     expect(html).toContain('<p class="lab-empty">The lab mail did not arrive — try again later.</p>');
     expect(html).not.toContain('lab-filter');
     expect(html).not.toContain('lab-log');
@@ -199,7 +199,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('says the same in Spanish', () => {
     const html = labPageHtml([], 'es', { unavailable: true });
-    expect(html).toContain('<h2 class="lab-heading">Noticias</h2>');
+    expect(html).toContain('<h2 class="lab-heading">Clasificados</h2>');
     expect(html).toContain('<p class="lab-empty">No llegó el correo del laboratorio; inténtelo más tarde.</p>');
     expect(html).not.toContain('lab-filter');
   });
@@ -337,7 +337,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // empty frame: the plate and the h2 share one head-cartouche.
     const cartouche1 = html1.match(/<div class="head-cartouche">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(cartouche1).toContain('<img src="/bench/classifieds/head.webp" alt="" width="1200" height="451"');
-    expect(cartouche1).toContain('<h2 class="lab-heading">Lab news</h2>');
+    expect(cartouche1).toContain('<h2 class="lab-heading">Classifieds</h2>');
     // Page 3 opens straight on its ads: the folio line above is its only head.
     const html2 = labPageHtml2(live, 'en');
     expect(html2).not.toContain('head-cartouche');
@@ -346,7 +346,7 @@ describe('lab page (newspaper pages 2 and 3)', () => {
     // never inside the image.
     expect(html1).not.toContain('classifieds-ribbon');
     expect(html2).not.toContain('classifieds-ribbon');
-    expect(html1).not.toMatch(/<img[^>]*Lab news/);
+    expect(html1).not.toMatch(/<img[^>]*Classifieds/);
   });
 
   it('sets the experiment cut on entry notices, never twice on a page', () => {
@@ -558,11 +558,11 @@ describe('lab page (newspaper pages 2 and 3)', () => {
 
   it('the markdown twin carries the unavailable line under the coupons', () => {
     const enMd = labPageMarkdown([], 'en', { unavailable: true });
-    expect(enMd.split('\n')[0]).toBe('## Lab news');
+    expect(enMd.split('\n')[0]).toBe('## Lab classifieds');
     expect(enMd).toContain('The lab mail did not arrive — try again later.');
     expect(enMd).toContain('*✂ Free — ');
     const esMd = labPageMarkdown([], 'es', { unavailable: true });
-    expect(esMd.split('\n')[0]).toBe('## Noticias del laboratorio');
+    expect(esMd.split('\n')[0]).toBe('## Clasificados del laboratorio');
     expect(esMd).toContain('No llegó el correo del laboratorio; inténtelo más tarde.');
     expect(esMd).toContain('*✂ Gratis — ');
   });
@@ -570,12 +570,12 @@ describe('lab page (newspaper pages 2 and 3)', () => {
   it('twins page 2 as markdown under its heading', () => {
     const md = labPageMarkdown(entries, 'en');
     const lines = md.split('\n');
-    expect(lines[0]).toBe('## Lab news');
+    expect(lines[0]).toBe('## Lab classifieds');
     expect(md).toContain('**Newest**');
     expect(md).toContain('**Twelfth**');
     // Newest first, like the page.
     expect(md.indexOf('**Newest**')).toBeLessThan(md.indexOf('**Twelfth**'));
-    expect(labPageMarkdown(entries, 'es').split('\n')[0]).toBe('## Noticias del laboratorio');
+    expect(labPageMarkdown(entries, 'es').split('\n')[0]).toBe('## Clasificados del laboratorio');
   });
 
   it('twins the coupons as plain markdown lines with links', () => {
