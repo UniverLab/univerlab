@@ -781,6 +781,7 @@ export const en = {
     fit: 'Fit',
     folio: { p2: 'Page 2', p3: 'Page 3' },
     controls: 'Page and date controls',
+    logbookLink: 'Lab logbook →',
     pages: { prev: 'Previous page', next: 'Next page' },
     plate: "The sundial, the paper's engraving",
     labPlate: "The ticker, the paper's engraving",

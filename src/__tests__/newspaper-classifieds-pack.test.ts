@@ -150,9 +150,10 @@ describe('the packed classifieds page', () => {
     }
   });
 
-  it('links page two to the full logbook from its folio', () => {
+  it('keeps page two free of any logbook link: the single link lives outside the sheet', () => {
     const page2 = src.slice(src.indexOf('<section id="lab"'), src.indexOf('<section id="lab2"'));
-    expect(page2).toContain("localizePath('/logbook', lang)");
-    expect(page2).toContain('{t.nav.logbook}');
+    expect(page2).not.toContain('folio-logbook');
+    expect(page2).not.toContain('/logbook');
+    expect(src).not.toContain('folio-logbook');
   });
 });

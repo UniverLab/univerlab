@@ -775,6 +775,7 @@ export const es: Dict = {
     fit: 'Ajustar',
     folio: { p2: 'Página 2', p3: 'Página 3' },
     controls: 'Controles de página y fecha',
+    logbookLink: 'Bitácora del laboratorio →',
     pages: { prev: 'Página anterior', next: 'Página siguiente' },
     plate: 'El reloj de sol, el grabado del periódico',
     labPlate: 'El teletipo, el grabado del periódico',
