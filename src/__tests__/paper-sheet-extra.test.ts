@@ -312,3 +312,24 @@ describe('paper sheet page-scroll handoff', () => {
     }
   });
 });
+
+describe('paper sheet viewport hugs the scaled sheet', () => {
+  it('sizes the viewport to the scaled sheet, not the window', () => {
+    // Below the desktop breakpoint the sheet is a scaled transform, so its
+    // layout height never shrinks: the viewport takes the sheet's scaled
+    // height and no empty band sits between the sheet and the bar.
+    const { viewport } = mount();
+    initPaperSheet(document);
+    const fit = VIEW_W / SHEET_W;
+    expect(viewport.style.height).toBe(`${Math.round(SHEET_H * fit)}px`);
+  });
+
+  it('tracks the scaled sheet while zooming', () => {
+    const { viewport, sheet } = mount();
+    initPaperSheet(document);
+    viewport.dispatchEvent(wheel(true));
+    const scale = scaleOf(sheet.style.transform);
+    expect(scale).toBeGreaterThan(VIEW_W / SHEET_W);
+    expect(viewport.style.height).toBe(`${Math.round(SHEET_H * scale)}px`);
+  });
+});

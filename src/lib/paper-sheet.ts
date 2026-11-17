@@ -72,6 +72,9 @@ export function initPaperSheet(root: ParentNode = document): void {
 
   const paint = (): void => {
     sheet.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    // The viewport hugs the scaled sheet on every paint, so zooming and
+    // fitting never leave a band under it.
+    if (active) viewport.style.height = `${viewportHeight()}px`;
     // Fit only shows when there is something to undo: at the fitted scale
     // the strip gives its room to the date.
     if (active) fitButton.hidden = Math.abs(scale - fit) <= fit * 0.01;
@@ -117,13 +120,10 @@ export function initPaperSheet(root: ParentNode = document): void {
   };
 
   const viewportHeight = (): number => {
-    // The sheet fills the viewport above the slim strip: the full window
-    // height minus the bar's own height, never below the minimum.
-    const bar =
-      root.querySelector != null
-        ? (root.querySelector('[data-paper-bar]') as HTMLElement | null)
-        : null;
-    return Math.max(MIN_VIEWPORT_HEIGHT, window.innerHeight - (bar?.offsetHeight || 0));
+    // The sheet is a scaled transform, so its layout height never shrinks:
+    // the viewport hugs the scaled sheet instead of the window, or a tall
+    // empty band sits between the sheet's foot and the control bar.
+    return Math.max(MIN_VIEWPORT_HEIGHT, Math.round(sheetHeight() * scale));
   };
 
   const activate = (): void => {

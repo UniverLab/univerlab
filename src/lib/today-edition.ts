@@ -200,13 +200,12 @@ export function todayLead(facts: Fact[], date: Date): Fact | null {
   return dailyFact<Fact>(letterPool(facts), date);
 }
 
-/** The side column: the two oldest non-lead events, newer first. */
+/** The side column: every non-lead event in the priority queue's order,
+ *  oldest first. The rail takes the queue's head beside the lead and the
+ *  client fit moves what does not fit there into the columns, so no cap
+ *  here would only starve the rail. */
 export function todayAside(facts: Fact[], lead: Fact | null): Fact[] {
-  return facts
-    .filter((f) => f.kind === 'event' && f !== lead)
-    .sort(byYearAsc)
-    .slice(0, 2)
-    .reverse();
+  return facts.filter((f) => f.kind === 'event' && f !== lead).sort(byYearAsc);
 }
 
 /** Every lab announcement published on the edition's day, newest first. */
@@ -436,7 +435,9 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   out += `<div class="banner">${esc(t.banner)}</div><div class="front">`;
 
-  for (const box of boxes) {
+  // At most one lab announcement prints: the day's first box. The twin
+  // below still lists every box.
+  for (const box of boxes.slice(0, 1)) {
     const exp = expNameOf(box.topic);
     const kicker = [t.labKicker, exp, typeOf(box, t)]
       .filter((s) => s)

@@ -73,7 +73,9 @@ function isFiller(el: Element): boolean {
 function lastLetter(col: Element): Element | null {
   const kids = Array.from(col.children);
   for (let i = kids.length - 1; i >= 0; i--) {
-    if (isLetter(kids[i])) return kids[i];
+    // A rail story the balance moved in is a letter too: it trims, balances
+    // and keeps its column alive exactly like an article.item does.
+    if (isLetter(kids[i]) || kids[i].classList.contains('aside-item')) return kids[i];
   }
   return null;
 }
@@ -120,7 +122,10 @@ function sheetLimit(edition: Element): number {
   } catch {
     gap = 0;
   }
-  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + gap;
+  // The colophon keeps its own line of air: reserve its height, one body
+  // line and the grid's row gap, so the foot never clips it past the sheet.
+  const line = bodyLinePx(edition);
+  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + line + gap;
   return bottom - (total > 0 ? total : 0);
 }
 
@@ -394,6 +399,81 @@ export function fitFrontPage(edition: Element): FrontFit {
     railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
   const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
 
+  // The rail holds the queue's head beside the lead story; the lead's own
+  // columns continue it. Balance the two feet within one body line by
+  // moving whole letters either way: the rail's last letter prepends the
+  // first front-row column (it outranks everything there), and the first
+  // front-row column's first letter appends the rail (it continues the
+  // queue). Headings are re-issued once, after the last move. The rail is
+  // only ever balanced against the front row, never the band below it.
+  // Rail children are the aside items plus any column letter the balance
+  // moved in: both count for the balance and both yield to the trim, so a
+  // relocated letter never hides from either.
+  const railItems = (): Element[] =>
+    alsoEl
+      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item') || isLetter(k))
+      : [];
+  const frontCols = (): Element[] =>
+    Array.from(edition.querySelectorAll('.lead-cols .col'));
+  const firstLetter = (col: Element): Element | null => {
+    for (const k of Array.from(col.children)) if (isLetter(k)) return k;
+    return null;
+  };
+  if (lead && alsoEl) {
+    const labels = headingLabels(letterCols(edition));
+    const feetOf = (cols: Element[]): number => Math.max(...cols.map(rectBottom));
+    // A move counts only when the laid-out feet prove it narrows the gap:
+    // otherwise it is undone, so an unmeasurable layout degrades to the
+    // trim below instead of churning letters back and forth.
+    const tryRailToCol = (): boolean => {
+      const cols = frontCols();
+      const items = railItems();
+      if (!cols.length || !items.length) return false;
+      const before = Math.abs(railFoot() - feetOf(cols));
+      const node = items[items.length - 1];
+      cols[0].insertBefore(node, cols[0].firstChild);
+      const after = Math.abs(railFoot() - feetOf(frontCols()));
+      if (after < before) return true;
+      alsoEl.appendChild(node);
+      return false;
+    };
+    const tryColToRail = (): boolean => {
+      const cols = frontCols();
+      if (!cols.length || !railItems().length) return false;
+      const before = Math.abs(railFoot() - feetOf(cols));
+      const target = cols.find((c) => firstLetter(c));
+      if (!target) return false;
+      const node = firstLetter(target) as Element;
+      const next = node.nextSibling;
+      alsoEl.appendChild(node);
+      const after = Math.abs(railFoot() - feetOf(frontCols()));
+      if (after < before) return true;
+      target.insertBefore(node, next);
+      return false;
+    };
+    let balanced = 0;
+    for (let guard = 0; guard < 200; guard++) {
+      const cols = frontCols();
+      if (!cols.length || !railItems().length) break;
+      const top = feetOf(cols);
+      let moved = false;
+      if (railFoot() > Math.max(top, storyFloor) + line) moved = tryRailToCol();
+      else if (top > railFoot() + line) moved = tryColToRail();
+      else break;
+      if (!moved) break;
+      balanced++;
+    }
+    out.movedLetters += balanced;
+    if (balanced) {
+      const all = letterCols(edition);
+      let openKind: string | null = null;
+      for (const col of all) {
+        pruneOrphanHeadings(col);
+        openKind = rehead(col, labels, openKind);
+      }
+    }
+  }
+
   for (let guard = 0; guard < 50; guard++) {
     const cols = letterCols(edition);
     const bottoms = cols.map(rectBottom);
@@ -407,11 +487,19 @@ export function fitFrontPage(edition: Element): FrontFit {
       duoEl = null;
       continue;
     }
-    const items = alsoEl
-      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item'))
-      : [];
-    if (items.length > 1) {
-      // FR3: the rail's extra items go before letters do; the rail keeps one.
+    // The rail's extras go before column letters do, but only while the
+    // rail overhangs the columns: a balanced rail's letters outrank the
+    // columns' feet, so the feet trim first instead. Only columns that
+    // still hold letters have a foot worth comparing — an emptied column
+    // bottoms out at its own top, and with no letters at all the rail
+    // trims against the sheet limit, never the story's foot, or the page
+    // ends in a band of blank paper.
+    const frontFoot = Math.max(
+      0,
+      ...cols.filter((c) => lastLetter(c)).map(rectBottom),
+    );
+    const items = railItems();
+    if (items.length > 1 && railFoot() - frontFoot > line) {
       items[items.length - 1].remove();
       continue;
     }
@@ -424,13 +512,17 @@ export function fitFrontPage(edition: Element): FrontFit {
   const cols = letterCols(edition);
   if (!cols.length) return out;
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-  out.movedLetters = balanceColumns(cols);
+  out.movedLetters += balanceColumns(cols);
   // A trim may empty a column whole: it leaves the page, and a wrapper
   // left with no column goes with it, so the band never holds blank paper.
   const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
   for (const wrap of Array.from(edition.querySelectorAll('.lead-cols, .cols'))) {
     if (!wrap.querySelector('.col')) wrap.remove();
   }
+  // An emptied rail leaves the page like an emptied column does, so no
+  // bordered box ends the row beside the lead story. A rail that never
+  // carried items (no .also) is structural and stays.
+  if (railEl && alsoEl && !railItems().length) railEl.remove();
   if (!live.length) return out;
   // The free foot of each column, roomiest first.
   const order = live

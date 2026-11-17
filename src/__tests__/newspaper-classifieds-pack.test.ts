@@ -72,6 +72,38 @@ describe('the packed classifieds page', () => {
     expect(rule).toContain('color: var(--p-ground)');
   });
 
+  it('always paints the lead reversed, whatever its id', () => {
+    // The lead is the newest launch (or the newest news): ink ground,
+    // paper-coloured type, never the entry-id hash. A new launch keeps the
+    // look, and the rotation starts after it — so the second notice never
+    // repeats the reversed voice.
+    const leadOf = (html: string): string | null =>
+      html.match(/<article class="log-entry display-notice lead-story (type-v\d)/)?.[1] ?? null;
+    expect(leadOf(labPageHtml(mixed, 'en'))).toBe('type-v2');
+    expect(leadOf(labPageHtml(mixed, 'es'))).toBe('type-v2');
+    const facet = entry({
+      id: 'facetmedia-launch',
+      type: 'launch',
+      topic: 'facetmedia',
+      title: 'FacetMedia launches',
+      date: new Date(Date.UTC(2026, 9, 7)).toISOString(),
+    });
+    const unknown = entry({
+      id: 'some-unknown-id-xyz',
+      type: 'launch',
+      topic: 'general',
+      title: 'Unknown launches',
+      date: new Date(Date.UTC(2026, 9, 6)).toISOString(),
+    });
+    expect(leadOf(labPageHtml([facet, ...mixed.slice(1)], 'en'))).toBe('type-v2');
+    expect(leadOf(labPageHtml([unknown], 'en'))).toBe('type-v2');
+    const variants = [...labPageHtml(mixed, 'en').matchAll(/<article class="[^"]*type-v(\d)/g)].map(
+      (m) => m[1],
+    );
+    expect(variants[0]).toBe('2');
+    expect(variants[1]).not.toBe('2');
+  });
+
   it('rotates the display voices so adjacent ads never share one', () => {
     for (const html of [labPageHtml(mixed, 'en'), labPageHtml2(mixed, 'en')]) {
       if (!html.includes('type-v')) continue;

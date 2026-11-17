@@ -57,9 +57,22 @@ describe('a long edition balances its columns', () => {
   const html = todayEditionHtml({ facts: FACTS, lab: [] }, 'en', DATE);
 
   it('prints three columns ending within a few lines of each other', () => {
+    // The rail took the events, so the columns carry births and deaths: the
+    // design's own weights end within one estimate line, and the text
+    // within a few lines.
+    const lead = todayLead(FACTS, DATE);
+    const aside = todayAside(FACTS, lead);
+    const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
+      FACTS.filter((f) => f.kind === kind && f !== lead && !aside.includes(f))
+        .sort((a, b) => parseInt(a.year, 10) - parseInt(b.year, 10))
+        .map((fact) => ({ kind, fact })),
+    );
+    const weights = splitColumns(entries).map((c) => c.reduce((n, e) => n + estimate(e.fact), 0));
+    expect(Math.max(...weights) - Math.min(...weights)).toBeLessThanOrEqual(1);
     const lens = colTexts(html).map((s) => s.length);
     expect(lens).toHaveLength(3);
-    expect(ratioOk(lens)).toBe(true);
+    const lines = lens.map((n) => Math.ceil(n / 70));
+    expect(Math.max(...lines) - Math.min(...lines)).toBeLessThanOrEqual(3);
   });
 
   it('splits contiguous kinds at the cuts nearest each third', () => {
@@ -89,9 +102,9 @@ describe('a long edition balances its columns', () => {
 
   it('keeps the rail content-sized beside a lead within a few lines', () => {
     expect(html).not.toContain('rail" style=');
-    // Lines of ~70 characters: the lead story and the rail (the two events
-    // only — the Workbench notice left the rail) end within three lines of
-    // each other, so no hole opens under either of them.
+    // Lines of ~70 characters: the lead story and the rail (the three
+    // non-lead events only — the Workbench notice left the rail) end within
+    // three lines of each other, so no hole opens under either of them.
     const lines = (s: string): number => Math.ceil(s.length / 70);
     const leadLen = blockOf(html, '<article class="lead', '</article>');
     const railStart = html.indexOf('<div class="rail">');

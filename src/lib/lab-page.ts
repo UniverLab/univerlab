@@ -312,13 +312,22 @@ function gridHtml(slots: AdSlot[], coupons: CouponNotice[], after: number, t: Di
     }
     flush();
     const voices = s.size === 'display' ? 6 : 8;
-    let tv = (hashSeed(s.entry.id || '') + n) % voices;
-    n += 1;
-    // The repeated word is a shout: once per page at most.
-    const sTexts = entryTexts(s.entry, lang);
-    const sLocalized = { ...s.entry, title: sTexts.title, body: sTexts.body };
-    while (tv === prevTv || (tv === 5 && !figureFor(sLocalized)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
-    if (tv === 7) repUsed = true;
+    const isLead = lead && s === slots[0];
+    // The lead always wears the reversed voice: ink ground, paper-coloured
+    // type. Never the entry-id hash, so a new launch keeps the look; the
+    // lead takes no turn of the rotation, which starts after it.
+    let tv: number;
+    if (isLead) {
+      tv = 2;
+    } else {
+      tv = (hashSeed(s.entry.id || '') + n) % voices;
+      n += 1;
+      // The repeated word is a shout: once per page at most.
+      const sTexts = entryTexts(s.entry, lang);
+      const sLocalized = { ...s.entry, title: sTexts.title, body: sTexts.body };
+      while (tv === prevTv || (tv === 5 && !figureFor(sLocalized)) || (tv === 7 && repUsed)) tv = (tv + 1) % voices;
+      if (tv === 7) repUsed = true;
+    }
     let span = spanFor(s.entry, s.size, si);
     si += 1;
     if (span === prevSpan) span = span === 1 ? 2 : span === 2 ? (s.size === 'small' ? 1 : 3) : 2;
@@ -326,7 +335,6 @@ function gridHtml(slots: AdSlot[], coupons: CouponNotice[], after: number, t: Di
     let frame = frameAccent(s.entry);
     if (frame && frame === prevFrame) frame = '';
     prevFrame = frame;
-    const isLead = lead && s === slots[0];
     out += slotHtml(s, t, tv, page, used, isLead, spanCls, frame ? ` ${frame}` : '', lang);
     prevTv = tv;
     prevSpan = span;

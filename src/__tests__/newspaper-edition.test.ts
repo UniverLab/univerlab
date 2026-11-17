@@ -96,9 +96,9 @@ describe('today edition helpers', () => {
     expect(todayLead(noEvents, DATE)).toBeNull();
   });
 
-  it('sides the two oldest non-lead events, newer first', () => {
+  it('sides every non-lead event, oldest first', () => {
     const aside = todayAside(FACTS, todayLead(FACTS, DATE));
-    expect(aside.map((f) => f.year)).toEqual(['1879', '1638']);
+    expect(aside.map((f) => f.year)).toEqual(['1638', '1879', '1907']);
   });
 
   it('boxes the newest lab entry of the edition day only', () => {
@@ -162,12 +162,14 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('Alfred Nobel · Wikimedia Commons');
   });
 
-  it('keeps the side column to two events, their pictures next in weight', () => {
+  it('fills the side column with every non-lead event, oldest first', () => {
     const at = html.indexOf('<aside class="also">');
     const aside = html.slice(at, html.indexOf('</aside>', at));
-    expect(aside).toContain('1879');
     expect(aside).toContain('1638');
-    expect(aside.indexOf('1879')).toBeLessThan(aside.indexOf('1638'));
+    expect(aside).toContain('1879');
+    expect(aside).toContain('1907');
+    expect(aside.indexOf('1638')).toBeLessThan(aside.indexOf('1879'));
+    expect(aside.indexOf('1879')).toBeLessThan(aside.indexOf('1907'));
     // The 1879 portrait prints at the side column's own size; nothing in the
     // side column outranks the lead's engraving or shrinks to a stamp.
     expect(aside).toContain('photo--medium');
@@ -180,13 +182,20 @@ describe('todayEditionHtml (en)', () => {
     }
   });
 
-  it('lists every other fact once across the three columns', () => {
+  it('lists every other fact once: events in the rail, births and deaths in the columns', () => {
     expect(countItems(html)).toBe(FACTS.length - 1 - todayAside(FACTS, todayLead(FACTS, DATE)).length);
-    expect(html).toContain('<h3>Events</h3>');
+    // The rail took every non-lead event, so the columns open on births:
+    // no event prints twice and no birth prints before an event.
+    expect(html).not.toContain('<h3>Events</h3>');
     expect(html).toContain('<h3>Births</h3>');
     expect(html).toContain('<h3>Deaths</h3>');
+    const railAt = html.indexOf('<div class="rail">');
+    const colsAt = html.indexOf('<div class="cols">');
+    expect(railAt).toBeGreaterThan(-1);
+    expect(colsAt).toBeGreaterThan(railAt);
     // Capitalized text and a Wikipedia link per item.
     expect(html).toContain('Thomas Edison invents a practical incandescent lamp');
+    expect(html.indexOf('Thomas Edison invents a practical incandescent lamp')).toBeLessThan(colsAt);
   });
 
   it('a letter beside the lead is not printed again in the columns', () => {
@@ -209,7 +218,7 @@ describe('todayEditionHtml (en)', () => {
     }
   });
 
-  it('a kind with no letters prints no column', () => {
+  it('an events-only day fills the rail and prints no column', () => {
     const events: Fact[] = ['1901', '1912', '1923', '1934'].map((year) => ({
       year,
       text: `event of ${year} happened here`,
@@ -217,8 +226,12 @@ describe('todayEditionHtml (en)', () => {
       kind: 'event',
       page: '',
     }));
+    // One leads, the other three stand aside in the rail: nothing lower
+    // stays to fill a column, so the page carries no columns at all.
     const four = todayEditionHtml({ facts: events, lab: [] }, 'en', DATE);
-    expect(four.match(/<section class="col">/g)).toHaveLength(1);
+    expect(four).toContain('<div class="rail">');
+    expect((four.match(/<div class="aside-item/g) ?? [])).toHaveLength(3);
+    expect(four).not.toContain('<div class="cols">');
     const one = todayEditionHtml({ facts: events.slice(0, 1), lab: [] }, 'en', DATE);
     expect(one).not.toContain('<div class="cols">');
   });
@@ -284,7 +297,7 @@ describe('todayEditionHtml (en)', () => {
     expect(countItems(bare)).toBe(noEvents.length);
   });
 
-  it('prints an event photo beside the event, like births and deaths', () => {
+  it('prints every rail event photo at the side column size, lazily', () => {
     // 1879 carries a Commons portrait but sits sidelined, so the column
     // proof uses letters of its own: one event per column slot.
     const ev = (year: string): Fact => ({
@@ -300,10 +313,13 @@ describe('todayEditionHtml (en)', () => {
       'en',
       DATE,
     );
-    // Six letters: one leads, two stand aside, three fill the column —
-    // every column event prints its photo at the column size, lazily.
-    expect(col.match(/class="item has-photo item--event"/g)).toHaveLength(3);
-    expect(col).toContain('photo--event');
+    // Six letters: one leads, five stand aside in the rail — every rail
+    // event prints its photo at the side column's size, lazily, and no
+    // event reaches the columns.
+    expect((col.match(/<div class="aside-item has-photo"/g) ?? [])).toHaveLength(5);
+    expect(col).toContain('photo--medium');
+    expect(col).not.toContain('photo--event');
+    expect(col).not.toContain('<div class="cols">');
     expect(col).toContain('loading="lazy"');
   });
 
@@ -334,7 +350,9 @@ describe('todayEditionHtml (es)', () => {
   it('speaks Spanish: masthead copy lives in the component, edition copy here', () => {
     expect(html).toContain('Carta del día');
     expect(html).toContain('Carta del día · hace ');
-    expect(html).toContain('<h3>Acontecimientos</h3>');
+    // The rail took every event, so the columns open on births: the events
+    // read beside the lead, not under their own heading.
+    expect(html).not.toContain('<h3>Acontecimientos</h3>');
     expect(html).toContain('<h3>Nacimientos</h3>');
     expect(html).toContain('<h3>Defunciones</h3>');
     expect(html).toContain('Correo del laboratorio · hoy · Quorum · lanzamiento');
@@ -568,7 +586,9 @@ describe('the lab notices', () => {
     expect(md).toContain('[The Workbench](https://univerlab.org/workbench/#first-call)');
     expect(md).toContain('https://univerlab.org/workbench/audits/');
     expect(md).toContain('https://univerlab.org/canopy/');
-    expect(md).toContain('https://univerlab.org/facetmedia/');
+    // The events left the columns for the rail, so the column weights foot
+    // merged: the install one-liner stays in the page's templates, while the
+    // twin closes on the merged house line.
     expect(md).toContain('https://univerlab.org/contributors/');
     const es = todayEditionMarkdown(feed('es'), 'es', DATE);
     const esLines = es.match(/^\*Aviso — /gm) ?? [];

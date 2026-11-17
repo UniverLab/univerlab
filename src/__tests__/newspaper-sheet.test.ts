@@ -152,6 +152,24 @@ describe('the sheet keeps the desktop composition', () => {
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \.lead \{[^}]*grid-column:\s*1 \/ span 2/);
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \.rail \{[^}]*grid-column:\s*3/);
+    // The rail is content-sized, never stretched: no boxed blank column runs
+    // down page one beside the lead.
+    expect(css).toMatch(/\.paper \.rail \.also \{[^}]*flex:\s*0 1 auto/);
+    // The aside look travels with the item: the fit moves rail stories into
+    // the lead's columns, so nothing may hang off .rail .also.
+    expect(css).toMatch(/\.paper \.aside-item \{[^}]*display:\s*flex/);
+    expect(css).not.toContain('.rail .also .aside-item');
+    expect(css).not.toContain('.rail .also b');
+    expect(css).not.toContain('.rail .also .aside-body');
+  });
+
+  it('holds the lead link off the section label below it', () => {
+    // The read-on link lays out as a block with a line of air after it, so
+    // it never touches the events heading on the next line.
+    const rule = css.match(/\.paper \.lead a \{[^}]*\}/)?.[0] ?? '';
+    expect(rule).toContain('display: inline-block');
+    const margin = /margin-bottom:\s*(\d+)px/.exec(rule)?.[1];
+    expect(Number(margin)).toBeGreaterThanOrEqual(8);
   });
 
   it('pins the three-column masthead instead of the stacked phone ears', () => {
