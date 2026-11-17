@@ -268,8 +268,20 @@ function photoFigure(
     (typeof fact.thumb?.h === 'number' ? ` height="${fact.thumb.h}"` : '');
   const loading = opts.eager ? '' : ' loading="lazy"';
   const cap = opts.caption && name ? `<figcaption>${esc(fmt(t.caption, { name }))}</figcaption>` : '';
+  // A portrait or square lead photo sets to one side with the text beside
+  // it; a landscape photo spans the lead's width. No orientation class for
+  // other sizes or missing dims.
+  let orient = '';
+  if (opts.size === 'lead') {
+    const w = fact.thumb?.w;
+    const h = fact.thumb?.h;
+    if (typeof w === 'number' && typeof h === 'number' && Number.isFinite(w) && Number.isFinite(h)) {
+      if (h > w) orient = ' photo--lead--portrait';
+      else if (w === h) orient = ' photo--lead--square';
+    }
+  }
   return (
-    `<figure class="photo photo--${opts.size}"><div class="print">` +
+    `<figure class="photo photo--${opts.size}${orient}"><div class="print">` +
     `<img src="${esc(src)}" alt="${alt}"${dims}${loading}></div>${cap}</figure>`
   );
 }

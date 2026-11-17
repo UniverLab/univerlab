@@ -136,8 +136,11 @@ function sheetLimit(edition: Element): number {
   }
   // The colophon keeps its own line of air: reserve its height, one body
   // line and the grid's row gap, so the foot never clips it past the sheet.
+  // Rects are visual pixels while a style length is a layout one: on a
+  // transform-scaled sheet the line and the gap scale with the display.
   const line = bodyLinePx(edition);
-  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + line + gap;
+  const scale = sheetScale(edition);
+  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + line * scale + gap * scale;
   return bottom - (total > 0 ? total : 0);
 }
 
@@ -242,7 +245,8 @@ export function balanceColumns(cols: Element[]): number {
   })();
   if (limit <= 0) return 0;
   const labels = headingLabels(cols);
-  const line = Math.max(...cols.map(bodyLinePx), 1);
+  // Layout pixels against visual rects: scale the body line with the sheet.
+  const line = Math.max(...cols.map(bodyLinePx), 1) * sheetScale(cols[0]);
   let moves = 0;
   for (let guard = 0; guard < 500; guard++) {
     const bottoms = cols.map(rectBottom);
@@ -351,9 +355,10 @@ export interface FrontFit {
 }
 
 /** Every letter column on page one, in reading order: the lead's own
- *  columns first, then the band below everything. */
+ *  columns first, then the band below everything, then the rail's own
+ *  columns once the fill below has moved band sections under the rail. */
 function letterCols(edition: Element): Element[] {
-  return Array.from(edition.querySelectorAll('.lead-cols .col, .cols .col'));
+  return Array.from(edition.querySelectorAll('.lead-cols .col, .cols .col, .rail > .col'));
 }
 
 /** Fit page one to the sheet: the letters fill the space under the lead
@@ -397,13 +402,14 @@ export function fitFrontPage(edition: Element): FrontFit {
 
   const limit = sheetLimit(edition);
   if (limit <= 0) return out;
+  // One display scale for the whole fit: rects are visual pixels, style
+  // lengths layout ones.
+  const scale = sheetScale(edition);
   const leadImg = edition.querySelector('.photo--lead img');
   if (leadImg && storyEl) {
-    // The sheet's rects are visual pixels; a style length is a layout pixel.
     // Below the desktop breakpoint the sheet is transform-scaled, so the
     // bound is measured against the rects around it and then converted, or a
     // phone would shrink the lead photo by the fitted scale twice over.
-    const scale = sheetScale(edition);
     const h = leadImg.getBoundingClientRect().height;
     const over = rectBottom(storyEl) - limit;
     const cap = Math.min(h, Math.floor(limit * 0.36), h - Math.max(0, over));
@@ -414,7 +420,7 @@ export function fitFrontPage(edition: Element): FrontFit {
     const cols = letterCols(edition);
     const lines = cols.map(bodyLinePx);
     lines.push(bodyLinePx(edition));
-    return Math.max(...lines, 1);
+    return Math.max(...lines, 1) * scale;
   })();
 
   // The foot is the content's own foot: the story's foot floors the row
@@ -423,6 +429,29 @@ export function fitFrontPage(edition: Element): FrontFit {
   const railFoot = (): number =>
     railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
   const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
+
+  // The space under the rail fills with whole letters like the space under
+  // the lead story: move the band's last column under the rail while the
+  // rail still ends inside the sheet. One column past the sheet restores at
+  // the band's end and stops; an emptied band leaves the page.
+  if (railEl) {
+    const bandEl = edition.querySelector('.cols');
+    if (bandEl && bandEl.querySelector('.col')) {
+      for (let guard = 0; guard < 50; guard++) {
+        const last = Array.from(bandEl.children).filter((k) => k.classList.contains('col')).pop();
+        if (!last) break;
+        railEl.appendChild(last);
+        if (rectBottom(railEl) - limit > 1) {
+          bandEl.appendChild(last);
+          break;
+        }
+        if (!bandEl.querySelector('.col')) {
+          bandEl.remove();
+          break;
+        }
+      }
+    }
+  }
 
   // The rail holds the queue's head beside the lead story; the lead's own
   // columns continue it. Balance the two feet within one body line by
@@ -538,6 +567,9 @@ export function fitFrontPage(edition: Element): FrontFit {
   if (!cols.length) return out;
   for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
   out.movedLetters += balanceColumns(cols);
+  // A balance move can push a column's foot past the sheet again: trim
+  // whole letters after balancing, so nothing ends past the sheet's edge.
+  for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
   // A trim may empty a column whole: it leaves the page, and a wrapper
   // left with no column goes with it, so the band never holds blank paper.
   const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
@@ -546,8 +578,9 @@ export function fitFrontPage(edition: Element): FrontFit {
   }
   // An emptied rail leaves the page like an emptied column does, so no
   // bordered box ends the row beside the lead story. A rail that never
-  // carried items (no .also) is structural and stays.
-  if (railEl && alsoEl && !railItems().length) railEl.remove();
+  // carried items (no .also) is structural and stays, as does a rail still
+  // holding a moved-in column of whole letters.
+  if (railEl && alsoEl && !railItems().length && !railEl.querySelector('.col')) railEl.remove();
   if (!live.length) return out;
   // The free foot of each column, roomiest first.
   const order = live

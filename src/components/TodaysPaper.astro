@@ -416,7 +416,7 @@ const t = useTranslations(lang);
   .paper .front { display: grid; gap: 18px; align-content: start; grid-template-columns: minmax(0, 1fr); }
   .paper .front > * { min-width: 0; }
   .paper .lead { border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; }
-  .paper .lead .story { display: flex; flex-direction: column; height: auto; }
+  .paper .lead .story { display: block; height: auto; }
   .paper .lead .kicker, .paper .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; font-weight: 400; }
   .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05; margin: 6px 0 10px; text-wrap: balance; color: var(--p-ink); }
   .paper .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--p-ink); text-align: justify; hyphens: auto; }
@@ -433,6 +433,12 @@ const t = useTranslations(lang);
      may hang off .rail .also or a moved story loses its year and body. */
   .paper .aside-item { display: flex; flex-direction: column; gap: 8px; min-height: 0; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); }
   .paper .aside-item.has-photo { flex: 1 1 auto; }
+  /* Letters the fit moves under the rail end: no column side padding inside
+     the rail's box, and a rule above on phones where the rail stacks. */
+  .paper .rail > .col { padding-inline: 0; }
+  @media (max-width: 47.99rem) {
+    .paper .rail > .col { border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }
+  }
   .paper .aside-item b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
   .paper .aside-body { font-size: 14.5px; line-height: 1.5; text-align: justify; hyphens: auto; }
   .paper .cols { display: grid; gap: 0 16px; grid-template-columns: minmax(0, 1fr); }
@@ -512,6 +518,11 @@ const t = useTranslations(lang);
   .paper .coupon-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); }
   .paper .coupon-note { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
   @media (min-width: 48rem) {
+    /* A portrait or square lead photo sets to one side with the lead's
+       text flowing beside it, like a newspaper lead — never centred with
+       empty margins on both sides. Landscape photos keep the centred span. */
+    .paper .photo--lead--portrait, .paper .photo--lead--square { float: right; width: min(16rem, 40%); margin: 2px 0 12px 16px; min-height: 0; }
+    .paper .photo--lead--portrait img, .paper .photo--lead--square img { margin-inline: 0; }
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .paper .notice--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
