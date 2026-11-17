@@ -429,11 +429,12 @@ describe('audit renderer — safety', () => {
     expect(renderBlock({ type: 'teleport' }, { slug: SLUG, doc, t: strings, sec: 0, i: 0 })).toBe('');
   });
 
-  it('loads the chart, diagram and code libraries only on audits that use them', () => {
+  it('loads the chart and diagram libraries only on audits that use them', () => {
     const client = readFileSync(resolve(__dirname, '..', 'lib', 'audit', 'client.ts'), 'utf8');
     expect(client).toMatch(/import\(['"]vega-embed['"]\)/);
     expect(client).toMatch(/import\(['"]mermaid['"]\)/);
-    expect(client).toMatch(/import\(['"]highlight\.js['"]\)/);
-    expect(client).not.toMatch(/^import .* from ['"](vega-embed|mermaid|highlight\.js)['"]/m);
+    // Code blocks render as plain-text spans, so no syntax library ships.
+    expect(client).not.toMatch(/highlight\.js/);
+    expect(client).not.toMatch(/^import .* from ['"](vega-embed|mermaid)['"]/m);
   });
 });

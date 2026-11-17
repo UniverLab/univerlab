@@ -3,6 +3,9 @@ name: Deploy announcements worker
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 # Hotfix path only: releases deploy this worker from deploy-site.yml when
 # workers/announcements changed since the last release tag.
 jobs:

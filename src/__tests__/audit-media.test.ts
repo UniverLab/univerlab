@@ -5,21 +5,18 @@
 jest.mock('../lib/copy-morph', () => ({ COPY_DONE_MS: 50, setCopyState: jest.fn() }));
 jest.mock('vega-embed', () => ({ __esModule: true, default: jest.fn() }), { virtual: true });
 jest.mock('vega-lite', () => ({ __esModule: true, compile: jest.fn() }), { virtual: true });
-jest.mock('mermaid', () => ({ __esModule: true, default: { initialize: jest.fn(), render: jest.fn() } }), { virtual: true });
-jest.mock('highlight.js', () => ({ __esModule: true, default: { highlight: jest.fn() } }), { virtual: true });
+jest.mock('mermaid', () => ({ __esModule: true, default: { initialize: jest.fn(), run: jest.fn() } }), { virtual: true });
 
 import vegaEmbed from 'vega-embed';
 import { compile } from 'vega-lite';
 import mermaid from 'mermaid';
-import hljs from 'highlight.js';
 import { setCopyState } from '../lib/copy-morph';
 import { initAuditPage } from '../lib/audit/client';
 
 const vegaEmbedMock = vegaEmbed as unknown as jest.Mock;
 const compileMock = compile as unknown as jest.Mock;
-const renderMock = (mermaid as unknown as { render: jest.Mock }).render;
+const runMock = (mermaid as unknown as { run: jest.Mock }).run;
 const initMock = (mermaid as unknown as { initialize: jest.Mock }).initialize;
-const highlightMock = (hljs as unknown as { highlight: jest.Mock }).highlight;
 
 function mount(inner: string): HTMLElement {
   document.body.innerHTML =
@@ -40,8 +37,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   compileMock.mockReturnValue({ spec: { compiled: true } });
   vegaEmbedMock.mockResolvedValue(undefined);
-  renderMock.mockResolvedValue({ svg: '<svg></svg>' });
-  highlightMock.mockImplementation((src: string) => ({ value: `HL:${src}` }));
+  runMock.mockResolvedValue(undefined);
 });
 
 describe('charts', () => {
@@ -88,21 +84,31 @@ describe('diagrams', () => {
   const DIAGRAM = '<figure class="audit-diagram" data-mermaid="graph TD;A-->B">' +
     '<div class="audit-diagram-mount"></div><figcaption>caption</figcaption></figure>';
 
-  it('renders the mermaid source into the mount', async () => {
+  it('hands the mount with the source as text to mermaid.run', async () => {
     initAuditPage(mount(DIAGRAM));
     await flush();
     expect(initMock).toHaveBeenCalledWith(expect.objectContaining({ theme: 'default' }));
-    expect(renderMock).toHaveBeenCalledWith(expect.stringMatching(/^audit-mermaid-/), 'graph TD;A-->B');
-    expect(document.querySelector('.audit-diagram-mount')?.innerHTML).toBe('<svg></svg>');
+    const mountEl = document.querySelector('.audit-diagram-mount') as HTMLElement;
+    expect(mountEl.textContent).toBe('graph TD;A-->B');
+    expect(runMock).toHaveBeenCalledWith({ nodes: [mountEl], suppressErrors: true });
   });
 
-  it('uses the dark theme on a night bench and survives render failure', async () => {
+  it('keeps a hostile diagram source as text, never markup', async () => {
+    initAuditPage(mount(DIAGRAM.replace('graph TD;A-->B', '&lt;img src=x onerror=alert(1)&gt;')));
+    await flush();
+    const mountEl = document.querySelector('.audit-diagram-mount') as HTMLElement;
+    expect(mountEl.querySelector('img')).toBeNull();
+    expect(mountEl.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(runMock).toHaveBeenCalledWith({ nodes: [mountEl], suppressErrors: true });
+  });
+
+  it('uses the dark theme on a night bench and survives run failure', async () => {
     document.documentElement.dataset['benchTheme'] = 'night';
-    renderMock.mockRejectedValueOnce(new Error('bad diagram'));
+    runMock.mockRejectedValueOnce(new Error('bad diagram'));
     initAuditPage(mount(DIAGRAM));
     await flush();
     expect(initMock).toHaveBeenCalledWith(expect.objectContaining({ theme: 'dark' }));
-    expect(document.querySelector('.audit-diagram-mount')?.innerHTML).toBe('');
+    expect((document.querySelector('.audit-diagram-mount') as HTMLElement).textContent).toBe('graph TD;A-->B');
   });
 });
 
@@ -110,32 +116,41 @@ describe('code', () => {
   const CODE = (code: string): string =>
     `<pre class="audit-code">${code}</pre>`;
 
-  it('highlights inline source and marks highlighted lines', async () => {
+  it('renders plain-text lines and marks highlighted lines', async () => {
     initAuditPage(mount(CODE('<code data-inline="a\nb" data-lang="ts" data-highlight="2">a\nb</code>')));
     await flush();
-    expect(highlightMock).toHaveBeenCalledWith('a\nb', { language: 'ts' });
     const el = document.querySelector('.audit-code code') as HTMLElement;
-    expect(el.innerHTML).toContain('class="is-hl"');
+    expect(el.textContent).toBe('a\nb');
+    expect(el.querySelectorAll('.is-hl')).toHaveLength(1);
+    expect(el.querySelector('.is-hl')?.textContent).toBe('b');
     expect(el.classList.contains('language-ts')).toBe(true);
   });
 
-  it('fetches a data-src and falls back to escaped text on unknown languages', async () => {
+  it('keeps a hostile inline payload as literal text', async () => {
+    initAuditPage(mount(CODE('<code data-inline="&lt;img src=x onerror=alert(1)&gt;" data-lang="ts">x</code>')));
+    await flush();
+    const el = document.querySelector('.audit-code code') as HTMLElement;
+    expect(el.querySelector('img')).toBeNull();
+    expect(el.textContent).toBe('<img src=x onerror=alert(1)>');
+  });
+
+  it('keeps fetched source as text, never markup', async () => {
     (globalThis as Record<string, unknown>)['fetch'] = jest.fn().mockResolvedValue({
       ok: true,
       text: async () => '<b>fetched</b>',
     });
-    highlightMock.mockImplementationOnce(() => { throw new Error('no such lang'); });
-    initAuditPage(mount(CODE('<code data-src="/s.ts" data-lang="madeup">inline</code>')));
+    initAuditPage(mount(CODE('<code data-src="/s.ts" data-lang="ts">inline</code>')));
     await flush();
-    expect(highlightMock).toHaveBeenCalledWith('<b>fetched</b>', { language: 'madeup' });
-    expect((document.querySelector('.audit-code code') as HTMLElement).innerHTML).toContain('&lt;b&gt;');
+    const el = document.querySelector('.audit-code code') as HTMLElement;
+    expect(el.querySelector('b')).toBeNull();
+    expect(el.textContent).toBe('<b>fetched</b>');
   });
 
   it('keeps the inline source when the data-src fetch fails', async () => {
     (globalThis as Record<string, unknown>)['fetch'] = jest.fn().mockResolvedValue({ ok: false });
     initAuditPage(mount(CODE('<code data-src="/s.ts" data-lang="ts">inline</code>')));
     await flush();
-    expect(highlightMock).not.toHaveBeenCalled();
+    expect((document.querySelector('.audit-code code') as HTMLElement).textContent).toBe('inline');
   });
 
   it('copies the row code and ignores a bad highlight list', async () => {

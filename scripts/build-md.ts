@@ -126,8 +126,18 @@ export function htmlToMarkdown(html: string): string {
     prev = cleaned;
     cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
   }
-  cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, '');
-  cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, '');
+  // Repeated until stable: removing one element can expose another
+  // (`<scr<script></script>ipt>` first yields `<script>`), and a close tag
+  // with trailing space (`</script >`) is still a close tag. A single pass
+  // leaves either behind.
+  for (let prev = ''; prev !== cleaned; ) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '');
+  }
+  for (let prev = ''; prev !== cleaned; ) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '');
+  }
   cleaned = cleaned.replace(/<nav[\s\S]*?<\/nav>/gi, '');
   cleaned = cleaned.replace(/<header[\s\S]*?<\/header>/gi, '');
   cleaned = cleaned.replace(/<footer[\s\S]*?<\/footer>/gi, '');
@@ -185,7 +195,7 @@ export function htmlToMarkdown(html: string): string {
     replacement: (_content, node) => {
       const rows = Array.from((node as HTMLElement).querySelectorAll('tr')).map((tr) =>
         Array.from(tr.children).map((cell) =>
-          (cell.textContent ?? '').replace(/\s+/g, ' ').trim().replace(/\|/g, '\\|'),
+          (cell.textContent ?? '').replace(/\s+/g, ' ').trim().replace(/[\\|]/g, (c) => '\\' + c),
         ),
       );
       if (rows.length === 0) return '';
@@ -199,7 +209,7 @@ export function htmlToMarkdown(html: string): string {
   const markdown = td.turndown(cleaned);
 
   let frontMatter = '---\n';
-  if (title) frontMatter += `title: "${title.replace(/"/g, '\\"')}"\n`;
+  if (title) frontMatter += `title: "${title.replace(/[\\"]/g, (c) => '\\' + c)}"\n`;
   if (canonical) frontMatter += `source: "${canonical}"\n`;
   frontMatter += '---\n\n';
 

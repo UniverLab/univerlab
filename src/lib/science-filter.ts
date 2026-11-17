@@ -141,8 +141,16 @@ export const SUMMARY_MAX = 260;
 export const LEAD_SENTENCES = 5;
 export const LEAD_MAX = 700;
 
-function stripTags(s: string): string {
-  return (s || '').replace(/<[^>]*>/g, '');
+/** Strip every `<…>` tag, repeating until stable: removing one tag can join
+ *  the halves of another (`<<b>>x` first yields `<b>x`), so a single pass
+ *  leaves markup behind. */
+export function stripTags(s: string): string {
+  let out = s || '';
+  for (let prev = ''; prev !== out; ) {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, '');
+  }
+  return out;
 }
 
 function pageTitle(p: FeedPage): string {

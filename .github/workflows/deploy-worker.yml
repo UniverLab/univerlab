@@ -5,6 +5,9 @@ name: Deploy get worker
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 # Hotfix path only: releases deploy this worker from deploy-site.yml when
 # workers/get changed since the last release tag.
 jobs:

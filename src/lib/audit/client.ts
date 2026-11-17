@@ -2,7 +2,6 @@
 // links, the findings-table filters, the stepper, charts (Vega-Lite),
 // diagrams (Mermaid), code highlighting and animation videos. The heavy
 // libraries load only when the page actually uses them.
-import { esc } from './escape';
 import { COPY_DONE_MS, setCopyState } from '../copy-morph';
 
 function readData(): { slug: string; lang: string } | null {
@@ -142,19 +141,21 @@ async function wireDiagrams(root: ParentNode): Promise<void> {
   const night = document.documentElement.dataset['benchTheme'] === 'night';
   const { default: mermaid } = await import('mermaid');
   mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: night ? 'dark' : 'default' });
-  await Promise.all(
-    figs.map(async (fig, i) => {
-      try {
-        const src = fig.getAttribute('data-mermaid') || '';
-        const mount = fig.querySelector('.audit-diagram-mount');
-        if (!mount) return;
-        const { svg } = await mermaid.render(`audit-mermaid-${i}`, src);
-        mount.innerHTML = svg;
-      } catch {
-        /* the empty mount stays; the caption still describes the figure */
-      }
-    }),
-  );
+  const nodes: HTMLElement[] = [];
+  for (const fig of figs) {
+    const mount = fig.querySelector('.audit-diagram-mount');
+    if (!mount) continue;
+    // Text only: the source never parses as HTML, so a hostile
+    // `data-mermaid` value cannot inject markup through the mount.
+    mount.textContent = fig.getAttribute('data-mermaid') || '';
+    nodes.push(mount as HTMLElement);
+  }
+  if (!nodes.length) return;
+  try {
+    await mermaid.run({ nodes, suppressErrors: true });
+  } catch {
+    /* the source text stays; the caption still describes the figure */
+  }
 }
 
 async function wireCode(root: ParentNode): Promise<void> {
@@ -162,7 +163,6 @@ async function wireCode(root: ParentNode): Promise<void> {
   // Annex file rows reuse the copy button for their SHA-256; the button
   // copies the `code` in its own row, so it works with no code block.
   if (!blocks.length && !root.querySelector('.audit-code-copy')) return;
-  const { default: hljs } = await import('highlight.js');
   const timers = new WeakMap<Element, ReturnType<typeof globalThis.setTimeout>>();
   root.addEventListener('click', (ev) => {
     const btn = (ev.target as Element).closest?.('.audit-code-copy');
@@ -198,20 +198,23 @@ async function wireCode(root: ParentNode): Promise<void> {
           src = await res.text();
         }
         const lang = code.getAttribute('data-lang') || 'text';
-        let html: string;
-        try {
-          html = hljs.highlight(src, { language: lang }).value;
-        } catch {
-          html = esc(src);
-        }
         const hl = (code.getAttribute('data-highlight') || '')
           .split(',')
           .map((n) => parseInt(n, 10))
           .filter((n) => Number.isInteger(n) && n >= 1);
-        const lines = html.split('\n');
-        code.innerHTML = lines
-          .map((line, i) => (hl.includes(i + 1) ? `<span class="is-hl">${line || ' '}</span>` : `<span>${line || ' '}</span>`))
-          .join('\n');
+        // Text nodes only: the source (inline or fetched) never parses as
+        // HTML, so a hostile payload cannot inject markup through the block.
+        // Newlines stay real text nodes between the line spans, which is what
+        // the copy button reads back through `textContent`.
+        const frag = document.createDocumentFragment();
+        src.split('\n').forEach((line, i) => {
+          if (i > 0) frag.appendChild(document.createTextNode('\n'));
+          const span = document.createElement('span');
+          if (hl.includes(i + 1)) span.className = 'is-hl';
+          span.textContent = line || ' ';
+          frag.appendChild(span);
+        });
+        code.replaceChildren(frag);
         code.classList.add(`language-${lang}`);
       } catch {
         /* the escaped inline source stays in place */

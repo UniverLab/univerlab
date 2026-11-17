@@ -46,10 +46,15 @@ expect(pages.length).toBeGreaterThan(4);
 
 /** Strip scripts, styles and comments: they can hold markup strings that never reach the page. */
 function clean(html: string): string {
-  return html
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
-    .replace(/<style[\s\S]*?<\/style\s*>/gi, '');
+  let out = html.replace(/<!--[\s\S]*?-->/g, '');
+  let prev = '';
+  while (prev !== out) {
+    prev = out;
+    out = out
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '');
+  }
+  return out;
 }
 
 /** Axe's label-content-name-mismatch compares alphanumeric-folded: punctuation
@@ -61,9 +66,15 @@ function folded(s: string): string {
 /** Visible text the way the audit reads it: hidden spans contribute nothing,
  *  everything else concatenates. */
 function visibleText(inner: string): string {
-  return inner
-    .replace(/<span[^>]*aria-hidden\s*=\s*"true"[^>]*>[\s\S]*?<\/span\s*>/gi, '')
-    .replace(/<[^>]*>/g, '');
+  let out = inner;
+  let prev = '';
+  while (prev !== out) {
+    prev = out;
+    out = out
+      .replace(/<span\b[^>]*aria-hidden\s*=\s*"true"[^>]*>[\s\S]*?<\/span\b[^>]*>/gi, '')
+      .replace(/<[^>]*>/g, '');
+  }
+  return out;
 }
 
 function langCorner(html: string): { label: string; inner: string } {

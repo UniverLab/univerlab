@@ -57,6 +57,20 @@ const META_DESC = /<meta\s+name="description"\s+content="([^"]*)"/i;
 const CANONICAL = /<link\s+rel="canonical"\s+href="([^"]+)"/i;
 
 /**
+ * Strip every `<…>` tag, repeating until stable: removing one tag can join
+ * the halves of another (`<<b>>x` first yields `<b>x`), so a single pass
+ * leaves markup behind.
+ */
+function stripTags(s: string): string {
+  let out = s || '';
+  for (let prev = ''; prev !== out; ) {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, '');
+  }
+  return out;
+}
+
+/**
  * Entities a built attribute or nav label can carry, back to the characters
  * they name. `&amp;` is replaced last so a literal `&amp;lt;` decodes to
  * `&lt;` and not to `<`.
@@ -88,7 +102,7 @@ export function sidebarOrder(id: string, indexHtml: string): { slugPath: string;
     const cls = /class="([^"]*)"/i.exec(tag)?.[1] ?? '';
     if (!href.startsWith(`/${id}/docs/`)) continue;
     if (!cls.split(/\s+/).includes('item')) continue;
-    const text = decodeEntities(m[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim());
+    const text = decodeEntities(stripTags(m[1]).replace(/\s+/g, ' ').trim());
     if (text) out.push({ slugPath: href, title: text });
   }
   return out;
