@@ -471,8 +471,13 @@ const t = useTranslations(lang);
   .paper .photo figcaption { font-family: var(--font-mono); font-size: 10.5px; color: var(--p-soft); letter-spacing: 0.03em; }
   .paper .photo--lead, .paper .photo--medium { flex: 1 0 auto; display: flex; flex-direction: column; }
   .paper .photo--lead .print, .paper .photo--medium .print { flex: 1 0 auto; display: flex; }
-  .paper .photo--lead img, .paper .photo--medium img { flex: 1 1 auto; width: 100%; object-fit: contain; max-height: 100%; min-height: 0; }
-  .paper .photo--lead { min-height: 14rem; margin: 4px 0 10px; }
+  .paper .photo--medium img { flex: 1 1 auto; width: 100%; object-fit: contain; max-height: 100%; min-height: 0; }
+  /* The lead portrait stands in its own mat, never in a column-wide empty
+     frame: the mat hugs the image it frames, so a portrait narrower than the
+     column reads as a picture set in the page, not as a blank box. */
+  .paper .photo--lead { min-height: 14rem; max-height: 36rem; margin: 4px 0 10px; align-self: center; }
+  .paper .photo--lead .print { align-self: center; flex: 0 0 auto; }
+  .paper .photo--lead img { flex: none; width: auto; max-width: 100%; height: auto; max-height: 34rem; margin-inline: auto; object-fit: contain; }
   .paper .item.has-photo { grid-template-columns: 38% minmax(0, 1fr); column-gap: 12px; }
   .paper .item.has-photo .photo { grid-row: span 3; align-self: start; }
   .paper .item.has-photo.item--stamp { grid-template-columns: 56px minmax(0, 1fr); column-gap: 10px; }

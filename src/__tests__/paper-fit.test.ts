@@ -580,6 +580,168 @@ describe('front page fits its sheet, masthead included', () => {
     expect(edition.querySelectorAll('.col')).toHaveLength(0);
     expect(edition.querySelector('.cols')).toBeNull();
   });
+
+  describe('the lead photo keeps its share of the sheet', () => {
+    // The lead photo once spanned the whole sheet width with no height
+    // bound, so a portrait lead pushed its own text and every letter of the
+    // day past the sheet. The fitter shrinks only the photo, never the
+    // text, and the letters print as on photo-free days.
+    const photoScaffold = (
+      cols: MockItem[][],
+      opts: { solo: boolean; natural: number; railItems?: number; scale?: number },
+    ): { edition: HTMLElement; img: HTMLImageElement; story: HTMLElement } => {
+      const railCount = opts.railItems ?? 0;
+      const rail = railCount
+        ? `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(railCount)}</aside></div>`
+        : '';
+      document.body.innerHTML =
+        '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+        `<article class="lead${opts.solo ? ' solo' : ''}"><div class="story">` +
+        '<p class="kicker">Lead</p><h2>Headline</h2>' +
+        '<figure class="photo photo--lead"><div class="print"><img alt="lead photo"></div></figure>' +
+        '<p>Body text of the lead story.</p><a href="https://example.com">Read more</a>' +
+        '</div><div class="lead-cols"></div></article>' +
+        rail +
+        '<div class="cols"></div>' +
+        '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
+        '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Install</h3></aside></template>' +
+        '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write</h3></aside></template>' +
+        '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both</h3></aside></template>' +
+        '<p class="colophon-note">colophon</p>' +
+        '</div></div></div>';
+      const edition = document.getElementById('edition') as HTMLElement;
+      const band = edition.querySelector('.cols') as HTMLElement;
+      // The lead's own columns begin BELOW the story on the laid-out page,
+      // so a photo that grows pushes them further down the sheet.
+      const storyTop = 100;
+      const textH = 300;
+      const rowPx = 60;
+      const columns = cols.map((items) => liveColumn(document, items, 0, rowPx));
+      for (const col of columns) band.appendChild(col);
+      const img = edition.querySelector('.photo--lead img') as HTMLImageElement;
+      const story = edition.querySelector('.lead .story') as HTMLElement;
+      // Paper 1000, colophon 30: the sheet ends at 946 (one 24px body line
+      // of reserve, as in the colophon test above). The photo's laid-out
+      // height follows its clamp, and the story's foot follows the photo;
+      // the columns below shift down with it, like the laid-out page.
+      const NATURAL = opts.natural;
+      const scale = opts.scale ?? 1;
+      // A transform-scaled sheet reports scaled rects while a style length
+      // stays a layout pixel: model both spaces, so a clamp that mixes them
+      // cannot pass unnoticed.
+      const visual = (bottom: number, height = 0): DOMRect => rect(bottom * scale, height * scale);
+      const photoH = (): number => {
+        const cap = Number.parseFloat(img.style.maxHeight || '');
+        return Math.min(NATURAL, Number.isFinite(cap) && cap > 0 ? cap : NATURAL);
+      };
+      const storyFoot = (): number => storyTop + textH + photoH();
+      img.getBoundingClientRect = () => visual(storyFoot(), photoH());
+      story.getBoundingClientRect = () => visual(storyFoot(), textH + photoH());
+      for (const col of columns) {
+        const live = col.getBoundingClientRect.bind(col);
+        // live() measures the column's own rows from zero; place that stack
+        // under the story's foot.
+        col.getBoundingClientRect = () => {
+          const rows = live().bottom;
+          return visual(storyFoot() + rows, rows);
+        };
+      }
+      const paper = document.querySelector('.paper') as HTMLElement;
+      paper.getBoundingClientRect = () => visual(1000, 1000);
+      // jsdom lays nothing out, so offsetHeight is always 0: give the sheet
+      // its layout height, or the display scale cannot be read at all.
+      Object.defineProperty(paper, 'offsetHeight', { value: 1000, configurable: true });
+      edition.querySelector('.colophon-note')!.getBoundingClientRect = () => visual(1000, 30);
+      return { edition, img, story };
+    };
+
+    // The sheet edge the scaffold above fits against.
+    const LIMIT = 1000 - 30 - 24;
+
+    const expectSheetKept = (
+      edition: HTMLElement,
+      img: HTMLImageElement,
+      story: HTMLElement,
+    ): void => {
+      // The photo is shrunk, never the text: capped at about a third of
+      // the sheet, keeping its proportions via max-height alone. The bound
+      // is written in layout pixels, so it never exceeds the cap.
+      expect(img.style.maxHeight).not.toBe('');
+      expect(Number.parseFloat(img.style.maxHeight)).toBeLessThanOrEqual(Math.floor(LIMIT * 0.36));
+      expect(story.querySelector('p')).not.toBeNull();
+      expect(story.querySelector('a')).not.toBeNull();
+      // The lead's text and its link end inside the sheet, not clipped below.
+      expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 24);
+      // The day's letters print: at least one letter survives in the lead's
+      // own columns, and every surviving column ends inside the sheet.
+      expect(
+        edition.querySelectorAll('.lead-cols .col article.item, .cols .col article.item').length,
+      ).toBeGreaterThanOrEqual(1);
+      for (const col of Array.from(edition.querySelectorAll('.col'))) {
+        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 24);
+      }
+      expect(edition.querySelector('.colophon-note')).not.toBeNull();
+    };
+
+    it('prints the text and letters under a solo portrait lead', () => {
+      // A 1357px portrait with no rail beside it: uncapped, the story runs
+      // past the sheet and the letters under it are pushed off.
+      const letters = [
+        [ev(), ev(), ev(), ev()],
+        [br(), br(), br(), br()],
+        [di(), di(), di(), di()],
+      ];
+      const { edition, img, story } = photoScaffold(letters, { solo: true, natural: 1357 });
+      fitFrontPage(edition);
+      expectSheetKept(edition, img, story);
+      expect(edition.querySelectorAll('.lead-cols .col article.item').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('prints the text and letters beside a square lead photo with a rail', () => {
+      const letters = [
+        [ev(), ev(), ev(), ev()],
+        [br(), br(), br(), br()],
+        [di(), di(), di(), di()],
+      ];
+      const { edition, img, story } = photoScaffold(letters, {
+        solo: false,
+        natural: 600,
+        railItems: 2,
+      });
+      fitFrontPage(edition);
+      expectSheetKept(edition, img, story);
+    });
+
+    it('writes the clamp in layout pixels on a transform-scaled sheet', () => {
+      // Below the desktop breakpoint the sheet is shown through a CSS
+      // transform: a rect is a visual pixel, a style length a layout one.
+      // Reading the rect and writing it back unconverted shrinks the photo
+      // to a stamp on every phone.
+      const letters = [[ev(), ev(), ev(), ev()]];
+      const scale = 0.36;
+      const { edition, img, story } = photoScaffold(letters, {
+        solo: true,
+        natural: 1357,
+        scale,
+      });
+      fitFrontPage(edition);
+      // The visual sheet edge: paper 1000, less the colophon's 30 and the
+      // 24px body line, all as seen through the scale.
+      const visualEdge = (1000 - 30) * scale - 24;
+      const visualCap = Math.floor(visualEdge * 0.36);
+      const written = Number.parseFloat(img.style.maxHeight);
+      expect(Number.isFinite(written)).toBe(true);
+      // The style length is the visual bound divided by the display scale:
+      // 117 visible pixels at 0.36 is 325 layout pixels, not 117. Writing
+      // the rect back unconverted would pin the photo at a fifth of its
+      // share.
+      expect(written).toBeGreaterThan(visualCap);
+      // What the reader sees is still the third-of-the-sheet bound.
+      expect(written * scale).toBeGreaterThanOrEqual(visualCap - 1);
+      expect(written * scale).toBeLessThanOrEqual(visualCap + 1);
+      expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(visualEdge + 24);
+    });
+  });
 });
 
 describe('the rail and the lead columns end together', () => {
