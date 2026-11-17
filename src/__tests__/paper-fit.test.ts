@@ -356,6 +356,32 @@ describe('fitFrontPage', () => {
     expect(edition.querySelector('.rail')).not.toBeNull();
     expect(edition.querySelector('.notice--feature')).not.toBeNull();
   });
+
+  it('never trims the lab story while letters go', () => {
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      '<article class="lead">lead</article><div class="rail">rail</div>' +
+      '<article class="labmail">lab</article>' +
+      '<aside class="notice notice--feature">duo</aside><div class="cols"></div>' +
+      '</div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const wrap = edition.querySelector('.cols') as HTMLElement;
+    wrap.appendChild(liveColumn(document, [ev(), ev(), ev(), ev(), ev(), ev(), ev(), ev()], 100));
+    wrap.appendChild(liveColumn(document, [br()], 100));
+    const paperEl = document.querySelector('.paper') as HTMLElement;
+    // Same sheet as the eight-letter trim above: the first column runs
+    // past it, so whole letters go — but never the lab story. The
+    // Workbench display goes before any letter does (fitFrontPage's
+    // standing rule), so it is already gone here; the lab story,
+    // the lead and the rail all survive.
+    mockBottom(paperEl, 244);
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBeGreaterThan(0);
+    expect(edition.querySelector('.labmail')).not.toBeNull();
+    expect(edition.querySelector('.lead')).not.toBeNull();
+    expect(edition.querySelector('.rail')).not.toBeNull();
+    expect(edition.querySelector('.notice--feature')).toBeNull();
+  });
 });
 
 describe('pages two and three hold only the classifieds that fit', () => {

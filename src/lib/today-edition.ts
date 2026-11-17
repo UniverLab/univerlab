@@ -447,22 +447,6 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
 
   out += `<div class="banner">${esc(t.banner)}</div><div class="front">`;
 
-  // At most one lab announcement prints: the day's first box. The twin
-  // below still lists every box.
-  for (const box of boxes.slice(0, 1)) {
-    const exp = expNameOf(box.topic);
-    const kicker = [t.labKicker, exp, typeOf(box, t)]
-      .filter((s) => s)
-      .join(' · ');
-    const texts = entryTexts(box, lang);
-    out +=
-      `<article class="labmail">` +
-      `<p class="kicker">${esc(kicker)}</p>` +
-      `<h2>${esc(texts.title)}</h2>` +
-      `<p>${esc(firstParagraph(texts.body))}</p>` +
-      `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
-  }
-
   if (lead) {
     const years = yearsOnWay(lead, date);
     const headline = leadHeadline(lead);
@@ -504,6 +488,24 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     : '';
   if (side) {
     out += `<div class="rail">${side}</div>`;
+  }
+
+  // At most one lab announcement prints: the day's first box. The twin
+  // below still lists every box. Priority decides admission, layout
+  // decides position: it sits under the lead like any other story, never
+  // above the lead.
+  for (const box of boxes.slice(0, 1)) {
+    const exp = expNameOf(box.topic);
+    const kicker = [t.labKicker, exp, typeOf(box, t)]
+      .filter((s) => s)
+      .join(' · ');
+    const texts = entryTexts(box, lang);
+    out +=
+      `<article class="labmail">` +
+      `<p class="kicker">${esc(kicker)}</p>` +
+      `<h2>${esc(texts.title)}</h2>` +
+      `<p>${esc(firstParagraph(texts.body))}</p>` +
+      `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
   }
 
   // The single Workbench display spans the front under the lead and, when
