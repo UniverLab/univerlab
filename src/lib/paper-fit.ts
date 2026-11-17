@@ -103,6 +103,18 @@ function bodyLinePx(col: Element): number {
   return Number.isFinite(fs) && fs > 0 ? fs * 1.5 : 24;
 }
 
+/** The sheet's display scale. Below the desktop breakpoint the sheet is shown
+ *  through a CSS transform, so a rect is a visual pixel and a style length is a
+ *  layout pixel; the two only coincide at scale one. One when nothing is
+ *  scaled, or when nothing is laid out to measure. */
+function sheetScale(edition: Element): number {
+  const paper = edition.closest('.paper') as HTMLElement | null;
+  const layout = paper ? paper.offsetHeight : 0;
+  if (!paper || !(layout > 0)) return 1;
+  const visual = paper.getBoundingClientRect().height;
+  return visual > 0 ? visual / layout : 1;
+}
+
 /** The sheet edge the columns must end above: the paper's own bottom, less
  *  the colophon line when the edition prints one and the edition grid's own
  *  row gap, so fitting never clips the colophon or hides it behind the
@@ -385,6 +397,19 @@ export function fitFrontPage(edition: Element): FrontFit {
 
   const limit = sheetLimit(edition);
   if (limit <= 0) return out;
+  const leadImg = edition.querySelector('.photo--lead img');
+  if (leadImg && storyEl) {
+    // The sheet's rects are visual pixels; a style length is a layout pixel.
+    // Below the desktop breakpoint the sheet is transform-scaled, so the
+    // bound is measured against the rects around it and then converted, or a
+    // phone would shrink the lead photo by the fitted scale twice over.
+    const scale = sheetScale(edition);
+    const h = leadImg.getBoundingClientRect().height;
+    const over = rectBottom(storyEl) - limit;
+    const cap = Math.min(h, Math.floor(limit * 0.36), h - Math.max(0, over));
+    const maxH = Math.max(192, cap / scale);
+    if (maxH < h / scale) (leadImg as HTMLElement).style.maxHeight = `${maxH}px`;
+  }
   const line = (() => {
     const cols = letterCols(edition);
     const lines = cols.map(bodyLinePx);

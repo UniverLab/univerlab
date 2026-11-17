@@ -65,8 +65,16 @@ describe("today's paper styles stay on the paper", () => {
     // room — never cropped out of the sheet.
     expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*auto/);
     expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
-    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*object-fit:\s*contain/);
-    expect(css).toMatch(/\.paper \.photo--lead img,[^}]*max-height:\s*100%/);
+    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*max-height:\s*36rem/);
+    // The portrait stands in a mat that hugs it: a lead photo narrower than
+    // the column must not sit in a column-wide empty frame.
+    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*align-self:\s*center/);
+    expect(css).toMatch(/\.paper \.photo--lead \.print \{[^}]*flex:\s*0 0 auto/);
+    expect(css).toMatch(/\.paper \.photo--lead \.print \{[^}]*align-self:\s*center/);
+    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*width:\s*auto/);
+    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*max-height:\s*34rem/);
+    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*object-fit:\s*contain/);
+    expect(css).toMatch(/\.paper \.photo--medium img \{[^}]*max-height:\s*100%/);
     expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
     expect(css).toContain('.paper .photo--medium');
   });
