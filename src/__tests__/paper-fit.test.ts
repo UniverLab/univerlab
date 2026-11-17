@@ -212,9 +212,9 @@ describe('fitFrontPage', () => {
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Install</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Install</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -240,10 +240,10 @@ describe('fitFrontPage', () => {
     expect(out.trimmedLetters).toBe(2);
     const footed = Array.from(edition.querySelectorAll('.col'));
     for (const c of footed) {
-      expect(c.querySelector('figure.paper-plate') && c.querySelector('aside.ad')).toBeFalsy();
+      expect(c.querySelector('figure.paper-plate') && c.querySelector('aside.notice')).toBeFalsy();
     }
     expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(1);
-    expect(edition.querySelectorAll('.col aside.ad')).toHaveLength(2);
+    expect(edition.querySelectorAll('.col aside.notice')).toHaveLength(2);
     expect(out.fillers).toBe(3);
   });
 
@@ -258,7 +258,7 @@ describe('fitFrontPage', () => {
     const out = fitFrontPage(edition);
     expect(out.fillers).toBe(0);
     expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(0);
-    expect(edition.querySelectorAll('.col aside.ad')).toHaveLength(0);
+    expect(edition.querySelectorAll('.col aside.notice')).toHaveLength(0);
   });
 
   it('never prints a one-word-per-line headline', () => {
@@ -282,7 +282,7 @@ describe('fitFrontPage', () => {
     try {
       const edition = scaffold([[ev()], [br()], [di()]]);
       const out = fitFrontPage(edition);
-      const notices = Array.from(edition.querySelectorAll('.col aside.ad .ad-display')).map((h) => h.textContent);
+      const notices = Array.from(edition.querySelectorAll('.col aside.notice .display-notice')).map((h) => h.textContent);
       expect(notices).not.toContain('Install');
       expect(notices).toContain('Both');
       expect(out.fillers).toBe(2);
@@ -303,9 +303,9 @@ describe('fitFrontPage', () => {
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Machines for every desk</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write to the lab</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both notices together</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Machines for every desk</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write to the lab</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both notices together</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -327,7 +327,7 @@ describe('fitFrontPage', () => {
     };
     try {
       const out = fitFrontPage(edition);
-      const notices = Array.from(edition.querySelectorAll('.col aside.ad .ad-display')).map((h) => h.textContent);
+      const notices = Array.from(edition.querySelectorAll('.col aside.notice .display-notice')).map((h) => h.textContent);
       expect(notices).not.toContain('Machines for every desk');
       expect(notices).toContain('Both notices together');
       expect(out.fillers).toBe(2);
@@ -340,7 +340,7 @@ describe('fitFrontPage', () => {
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       '<article class="lead">lead</article><div class="rail">rail</div>' +
-      '<aside class="ad ad--feature">duo</aside><div class="cols"></div>' +
+      '<aside class="notice notice--feature">duo</aside><div class="cols"></div>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
     const paperEl = document.querySelector('.paper') as HTMLElement;
@@ -349,7 +349,7 @@ describe('fitFrontPage', () => {
     expect(out.trimmedLetters).toBe(0);
     expect(edition.querySelector('.lead')).not.toBeNull();
     expect(edition.querySelector('.rail')).not.toBeNull();
-    expect(edition.querySelector('.ad--feature')).not.toBeNull();
+    expect(edition.querySelector('.notice--feature')).not.toBeNull();
   });
 });
 
@@ -394,7 +394,7 @@ describe('pages two and three hold only the classifieds that fit', () => {
     expect(document.querySelector('#lab-body .coupon-note')).not.toBeNull();
     // The trimmed page ends at the foot: nothing left to fill.
     expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(301);
-    expect(grid.querySelector('aside.ad')).toBeNull();
+    expect(grid.querySelector('aside.notice')).toBeNull();
   });
 
   it('fills a fitting grid to the foot: no cards lost, no pointer, house notices stay', () => {
@@ -417,7 +417,7 @@ describe('pages two and three hold only the classifieds that fit', () => {
     expect(out.trimmedAds).toBe(0);
     expect(out.pointers).toBe(0);
     // The last page fills to the foot with the lab's own notices and plate.
-    expect(grid.querySelectorAll('aside.ad').length).toBeGreaterThan(0);
+    expect(grid.querySelectorAll('aside.notice').length).toBeGreaterThan(0);
     expect(grid.querySelector('figure.classifieds-plate')).not.toBeNull();
     expect(grid.querySelectorAll('#lab-body .lab-more')).toHaveLength(0);
     expect(scope.getBoundingClientRect().bottom).toBeLessThanOrEqual(5000);
@@ -434,7 +434,7 @@ describe('front page fits its sheet, masthead included', () => {
     const rail = railItems
       ? `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(railItems)}</aside></div>`
       : '';
-    const duo = opts?.duo === false ? '' : '<aside class="ad ad--feature">duo</aside>';
+    const duo = opts?.duo === false ? '' : '<aside class="notice notice--feature">duo</aside>';
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
       `<article class="lead${opts?.solo ? ' solo' : ''}"><div class="story"></div><div class="lead-cols"></div></article>` +
@@ -442,9 +442,9 @@ describe('front page fits its sheet, masthead included', () => {
       duo +
       '<div class="cols"></div>' +
       '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
-      '<template data-filler="install"><aside class="ad ad--small"><h3 class="ad-display">Install</h3></aside></template>' +
-      '<template data-filler="collab"><aside class="ad ad--small"><h3 class="ad-display">Write</h3></aside></template>' +
-      '<template data-filler="house-duo"><aside class="ad ad--small"><h3 class="ad-display">Both</h3></aside></template>' +
+      '<template data-filler="install"><aside class="notice notice--small"><h3 class="display-notice">Install</h3></aside></template>' +
+      '<template data-filler="collab"><aside class="notice notice--small"><h3 class="display-notice">Write</h3></aside></template>' +
+      '<template data-filler="house-duo"><aside class="notice notice--small"><h3 class="display-notice">Both</h3></aside></template>' +
       '<p class="colophon-note">colophon</p>' +
       '</div></div></div>';
     const edition = document.getElementById('edition') as HTMLElement;
@@ -468,11 +468,11 @@ describe('front page fits its sheet, masthead included', () => {
     mockBottom(edition.querySelector('.rail') as HTMLElement, 1050, 950);
     mockBottom(edition.querySelector('.rail .also') as HTMLElement, 1030, 100);
     mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
-    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1100, 200);
+    mockBottom(edition.querySelector('aside.notice--feature') as HTMLElement, 1100, 200);
     const out = fitFrontPage(edition);
     // The display ran 100px past the sheet and the rail 50px: the display
     // goes, then one rail extra, and the letters stay whole.
-    expect(edition.querySelector('aside.ad--feature')).toBeNull();
+    expect(edition.querySelector('aside.notice--feature')).toBeNull();
     expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(1);
     expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
     expect(out.trimmedLetters).toBe(0);
@@ -530,11 +530,11 @@ describe('front page fits its sheet, masthead included', () => {
     rail.getBoundingClientRect = () => rect(900 + asideCount() * 100, asideCount() * 100);
     also.getBoundingClientRect = () => rect(1300, 400);
     mockBottom(edition.querySelector('.lead .story') as HTMLElement, 400, 300);
-    mockBottom(edition.querySelector('aside.ad--feature') as HTMLElement, 1300, 200);
+    mockBottom(edition.querySelector('aside.notice--feature') as HTMLElement, 1300, 200);
     const out = fitFrontPage(edition);
     // The display ran past the sheet and goes; the rail never did, so
     // nothing else leaves the page.
-    expect(edition.querySelector('aside.ad--feature')).toBeNull();
+    expect(edition.querySelector('aside.notice--feature')).toBeNull();
     expect(edition.querySelectorAll('.rail .also .aside-item')).toHaveLength(2);
     expect(edition.querySelectorAll('.col article.item')).toHaveLength(4);
     expect(out.trimmedLetters).toBe(0);

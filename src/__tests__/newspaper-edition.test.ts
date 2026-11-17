@@ -270,11 +270,11 @@ describe('todayEditionHtml (en)', () => {
     // the columns — no closing row, no second Workbench anywhere.
     const front = bare.slice(bare.indexOf('<div class="front">'));
     expect(front).not.toContain('<div class="rail">');
-    const order = ['ad--feature', '<div class="cols">'].map((m) => front.indexOf(m));
+    const order = ['notice--feature', '<div class="cols">'].map((m) => front.indexOf(m));
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    expect(front).not.toContain('class="ad ad--tall"');
-    expect(front).not.toContain('ad-pair');
+    expect(front).not.toContain('class="notice notice--tall"');
+    expect(front).not.toContain('notice-pair');
     expect(bare).not.toContain('rail" style=');
     // And the columns still list every birth and death.
     expect(bare).toContain('<h3>Births</h3>');
@@ -469,7 +469,7 @@ describe('the sundial engraving sits inside the grid', () => {
     expect(colsHtml.length).toBeGreaterThan(0);
     for (const [, body] of colsHtml) {
       expect(body).not.toContain('paper-plate');
-      expect(body).not.toContain('class="ad ad--small"');
+      expect(body).not.toContain('class="notice notice--small"');
     }
     // The house notices wait beside it: split apart and merged.
     expect(html).toContain('<template data-filler="install">');
@@ -478,13 +478,13 @@ describe('the sundial engraving sits inside the grid', () => {
   });
 });
 
-describe('the lab advertisements', () => {
+describe('the lab notices', () => {
   it('prints the duo and the house footing on every edition, honestly labelled, never the lead', () => {
     for (const lang of ['en', 'es'] as const) {
       const html = todayEditionHtml({ facts: [], lab: [] }, lang, DATE);
       // No columns on an empty edition: the single Workbench duo plus the
       // merged house notice closing the front on its own.
-      const asides = html.match(/<aside class="ad ad--[a-z]+" aria-label="[^"]*">/g) ?? [];
+      const asides = html.match(/<aside class="notice notice--[a-z]+" aria-label="[^"]*">/g) ?? [];
       expect(asides).toHaveLength(2);
       const label = lang === 'es' ? 'Aviso' : 'Notice';
       for (const a of asides) expect(a).toContain(`aria-label="${label}"`);
@@ -492,35 +492,35 @@ describe('the lab advertisements', () => {
       expect(html.match(new RegExp(`<p class="kicker">${label}</p>`, 'g')) ?? []).toHaveLength(2);
       expect(html).toContain('<div class="banner">');
     }
-    // With a full edition the lead carries no advertisement.
+    // With a full edition the lead carries no notice.
     const full = todayEditionHtml(feed(), 'en', DATE);
     const leadStart = full.indexOf('<article class="lead');
     expect(leadStart).toBeGreaterThan(-1);
-    expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="ad');
+    expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="notice');
     // The front runs rail, feature, columns: the side column beside the
     // lead, the single Workbench display under them, the house notices
     // footing the short columns — never a row below them.
     const front = full.slice(full.indexOf('<div class="front">'));
-    const order = ['<div class="rail">', 'class="ad ad--feature"', '<div class="cols">'].map((m) =>
+    const order = ['<div class="rail">', 'class="notice notice--feature"', '<div class="cols">'].map((m) =>
       front.indexOf(m),
     );
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    expect(full).not.toContain('<div class="ad-pair">');
-    expect(full).not.toContain('class="ad ad--tall"');
+    expect(full).not.toContain('<div class="notice-pair">');
+    expect(full).not.toContain('class="notice notice--tall"');
     // The rail holds only the side column, never a sized band and never an
-    // ad: no rail carries an inline row count.
+    // notice: no rail carries an inline row count.
     expect(full).toContain('<div class="rail">');
     expect(full.indexOf('<aside class="also">')).toBeGreaterThan(full.indexOf('<div class="rail"'));
     expect(full).not.toContain('rail" style=');
-    // Every ad is a display ad: a large display line, copy and a boxed
+    // Every notice is a display notice: a large display line, copy and a boxed
     // call to action that closes the notice.
-    for (const m of full.matchAll(/<aside class="ad ad--\w+"[^>]*>(.*?)<\/aside>/gs)) {
-      expect(m[1]).toContain('class="ad-display"');
-      expect(m[1]).toContain('class="ad-copy"');
-      const close = m[1].indexOf('class="ad-close"');
+    for (const m of full.matchAll(/<aside class="notice notice--\w+"[^>]*>(.*?)<\/aside>/gs)) {
+      expect(m[1]).toContain('class="display-notice"');
+      expect(m[1]).toContain('class="notice-copy"');
+      const close = m[1].indexOf('class="notice-close"');
       expect(close).toBeGreaterThan(-1);
-      expect(m[1].indexOf('class="ad-cta"', close)).toBeGreaterThan(close);
+      expect(m[1].indexOf('class="notice-call"', close)).toBeGreaterThan(close);
     }
   });
 
@@ -539,11 +539,11 @@ describe('the lab advertisements', () => {
     expect(html).toContain('Banco de trabajo');
     expect(html).toContain('inteligencia artificial');
     expect(html).not.toMatch(/[a-zñ] banco/);
-    expect(html).toContain('<a class="ad-cta" href="/es/workbench/#primera-llamada">Abrir el Banco de trabajo</a>');
-    expect(html).toContain('<a class="ad-cta" href="/es/workbench/audits/">');
+    expect(html).toContain('<a class="notice-call" href="/es/workbench/#primera-llamada">Abrir el Banco de trabajo</a>');
+    expect(html).toContain('<a class="notice-call" href="/es/workbench/audits/">');
     expect(html).toContain('<a href="/es/canopy/">Canopy</a>');
     expect(html).toContain('<a href="/es/facetmedia/">');
-    expect(html).toContain('<a class="ad-cta" href="/es/contributors/">');
+    expect(html).toContain('<a class="notice-call" href="/es/contributors/">');
   });
 
   it('installs with the registry one-liners, never hardcoded', () => {

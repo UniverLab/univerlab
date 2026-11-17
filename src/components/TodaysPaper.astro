@@ -217,7 +217,7 @@ const t = useTranslations(lang);
   .paper .paper-page { display: flex; flex-direction: column; gap: 18px; flex: 1 1 auto; min-height: 0; }
   .paper.js .paper-page[hidden] { display: none; }
   /* Pages 2 and 3: the announcements as a classifieds section — a composed
-     grid of display, boxed and small ads with runs of one-line notices, set
+     grid of display, boxed and small notices with runs of one-line notices, set
      in the paper's own type. Filtered rows hide only when JS manages them,
      so no-JS readers get every entry. */
   .paper .lab-heading { font-family: var(--font-serif); font-weight: 400; font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 8px; }
@@ -233,18 +233,18 @@ const t = useTranslations(lang);
   .paper .head-cartouche { position: relative; display: inline-block; max-width: 100%; }
   .paper .head-cartouche img { display: block; width: min(26rem, 100%); height: auto; }
   .paper .head-cartouche .lab-heading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; margin: 0; border-bottom: 0; padding-bottom: 0; }
-  .paper .ad-cut { display: block; }
-  .paper .ad-cut img { height: auto; }
-  .paper .ad-cut.cut-sm img { width: 1.8rem; }
-  .paper .ad-cut.cut-md img { width: 2.6rem; }
-  .paper .ad-cut.cut-lg img { width: 100%; }
+  .paper .notice-cut { display: block; }
+  .paper .notice-cut img { height: auto; }
+  .paper .notice-cut.cut-sm img { width: 1.8rem; }
+  .paper .notice-cut.cut-md img { width: 2.6rem; }
+  .paper .notice-cut.cut-lg img { width: 100%; }
   .paper .notice-fleuron { text-align: center; border-top: 0; padding: 8px 0 2px; }
   .paper .notice-fleuron img { width: 4.5rem; height: auto; }
   .paper .classifieds-rule, .paper .classifieds-ribbon { text-align: center; border-top: 0; padding: 8px 0; }
   .paper .classifieds-rule img { width: min(16rem, 100%); height: auto; }
   .paper .classifieds-ribbon img { width: min(12rem, 100%); height: auto; }
   .paper .manicule { display: inline-block; width: 1.7rem; height: auto; margin-right: 4px; vertical-align: -.18em; }
-  .paper .lab-head-ornament, .paper .ad-cut img, .paper .coupon-art img, .paper .notice-fleuron img, .paper .classifieds-rule img, .paper .classifieds-ribbon img, .paper .manicule {
+  .paper .lab-head-ornament, .paper .notice-cut img, .paper .coupon-art img, .paper .notice-fleuron img, .paper .classifieds-rule img, .paper .classifieds-ribbon img, .paper .manicule {
     filter: grayscale(1) sepia(.22) contrast(1.12); mix-blend-mode: multiply; opacity: .9;
   }
   .paper .lab-empty { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.55; color: var(--p-soft); }
@@ -258,11 +258,11 @@ const t = useTranslations(lang);
   @media (min-width: 48rem) {
     .paper .notice-run { column-count: 3; }
   }
-  .paper .ad-display { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+  .paper .display-notice { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: center; }
   @media (min-width: 48rem) {
-    .paper .ad-display { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+    .paper .display-notice { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
   }
-  .paper .ad-art { margin: 0; }
+  .paper .notice-art { margin: 0; }
   .paper .notice-run { column-count: 2; column-gap: 24px; column-rule: 1px solid var(--p-rule); }
   @media (min-width: 48rem) {
     .paper .notice-run { column-count: 3; }
@@ -273,23 +273,23 @@ const t = useTranslations(lang);
   .paper .lab-more { margin: 0; border-top: 3px double var(--p-ink); padding-top: 8px; text-align: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
   .paper .lab-more a { color: var(--p-emphasis); text-underline-offset: 3px; }
   .paper .log-entry { display: block; min-width: 0; break-inside: avoid; padding-block: 14px; border-bottom: 1px dotted var(--p-rule); }
-  /* The classifieds ads are not cards: a thin horizontal rule above each
-     ad, content-height only, over the section's vertical column rules. */
+  /* The classifieds notices are not cards: a thin horizontal rule above each
+     notice, content-height only, over the section's vertical column rules. */
   .paper .classifieds > .log-entry { border-bottom: 0; border-top: 1px solid var(--p-rule); padding: 10px 12px 12px; }
   .paper .classifieds > .coupon { break-inside: avoid; }
   /* The lead story: the middle of page two, plate over full text. */
-  .paper .ad-lead { display: flex; flex-direction: column; }
+  .paper .lead-story { display: flex; flex-direction: column; }
   .paper .lead-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-emphasis); margin: 0; border-block: 1px solid var(--p-ink); padding-block: 4px; }
-  .paper .ad-lead .ad-art { max-height: 15rem; overflow: hidden; }
-  .paper .ad-lead .ad-art img { width: 100%; height: 100%; object-fit: cover; }
-  .paper .ad-lead h3.sz-lg { font-size: clamp(32px, 4.6vw, 54px); }
-  /* Eight display voices, rotated across the ads so neighbours never match:
+  .paper .lead-story .notice-art { max-height: 15rem; overflow: hidden; }
+  .paper .lead-story .notice-art img { width: 100%; height: 100%; object-fit: cover; }
+  .paper .lead-story h3.sz-lg { font-size: clamp(32px, 4.6vw, 54px); }
+  /* Eight display voices, rotated across the notices so neighbours never match:
      oversized condensed capitals, a fat-face slab line, an inverted bar,
      a period ornamental line, small caps, a big figure, a run-in notice
      with a bold lead, and a repeated word stacked in three sizes. */
   .paper .type-v0 h3 { font-family: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .paper .type-v1 h3 { font-family: 'Alfa Slab One', 'Rockwell', 'Courier New', serif; font-weight: 400; }
-  /* Reversed ads are painted below: this line must never set the h3 colours. */
+  /* Reversed notices are painted below: this line must never set the h3 colours. */
   .paper .type-v3 h3 { font-family: 'Pirata One', 'Old Standard TT', serif; font-weight: 400; letter-spacing: 0.02em; }
   .paper .type-v4 h3 { font-variant: small-caps; letter-spacing: 0.06em; }
   .paper .type-v6 .run-in b { font-weight: 700; }
@@ -298,8 +298,8 @@ const t = useTranslations(lang);
   .paper .type-v7 .rep-word.rep-0 { font-size: clamp(26px, 3vw, 38px); letter-spacing: 0.04em; }
   .paper .type-v7 .rep-word.rep-1 { font-size: clamp(20px, 2.4vw, 30px); letter-spacing: 0.1em; }
   .paper .type-v7 .rep-word.rep-2 { font-size: clamp(15px, 1.8vw, 22px); letter-spacing: 0.22em; }
-  .paper .type-v5 .ad-figure { display: block; font-family: 'Alfa Slab One', 'Rockwell', 'Courier New', serif; font-weight: 400; font-size: clamp(28px, 3.4vw, 44px); line-height: 1; color: var(--p-emphasis); margin: 0 0 2px; }
-  /* A spare single or double rule frame on a few ads, as in the references. */
+  .paper .type-v5 .notice-figure { display: block; font-family: 'Alfa Slab One', 'Rockwell', 'Courier New', serif; font-weight: 400; font-size: clamp(28px, 3.4vw, 44px); line-height: 1; color: var(--p-emphasis); margin: 0 0 2px; }
+  /* A spare single or double rule frame on a few notices, as in the references. */
   .paper .frame-accent { outline: 1px solid var(--p-ink); outline-offset: 3px; }
   .paper .frame-accent.frame-double { outline: 3px double var(--p-ink); }
   .paper .log-entry time { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--p-soft); }
@@ -310,7 +310,7 @@ const t = useTranslations(lang);
   .paper .log-entry h3.sz-md { font-weight: 700; font-size: 20px; }
   .paper .log-entry h3.sz-sm { font-weight: 400; font-size: 18px; font-style: italic; }
   .paper .log-entry p { margin: 0; font-family: var(--font-body); font-size: 15.5px; line-height: 1.55; color: var(--p-ink); white-space: pre-line; }
-  /* Reversed ads: light letters on ink. Hung off .classifieds so it beats the
+  /* Reversed notices: light letters on ink. Hung off .classifieds so it beats the
      later generic .log-entry h3 rule at every width, in both themes, whose
      variables both define. */
   .paper .classifieds .type-v2 { background: var(--p-ink); }
@@ -326,33 +326,33 @@ const t = useTranslations(lang);
   .paper.js .notice-run[hidden] { display: none; }
   /* The classifieds, set like a Victorian advertising page (The Graphic,
      1886): five narrow columns filled top to bottom and ruled between, every
-     ad as tall as its words, so no column is ever left half empty. The lead
-     and the closing rule span the page. Each ad wears one of eight period
+     notice as tall as its words, so no column is ever left half empty. The lead
+     and the closing rule span the page. Each notice wears one of eight period
      treatments, and neighbours never share one: condensed capitals, a ruled
      box, a reversed block, a double frame, thick-thin rules with small caps,
      a big figure, a run-in notice and a repeated word in falling sizes. */
   .paper .classifieds { display: block; column-count: 5; column-gap: 18px; column-rule: 1px solid var(--p-rule); flex: 0 0 auto; }
   .paper .classifieds > * { break-inside: avoid; margin: 0 0 12px; }
-  .paper .classifieds > .ad-lead, .paper .classifieds > .classifieds-rule { column-span: all; }
+  .paper .classifieds > .lead-story, .paper .classifieds > .classifieds-rule { column-span: all; }
   /* The foot fill: house notices and one engraved plate span the page. */
-  .paper .classifieds > .ad, .paper .classifieds > .classifieds-plate { column-span: all; }
+  .paper .classifieds > aside.notice, .paper .classifieds > .classifieds-plate { column-span: all; }
   .paper .classifieds-plate { margin: 0 0 12px; text-align: center; }
   .paper .classifieds-plate img { max-width: 100%; height: auto; }
-  .paper .classifieds > .ad-lead { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 22px; align-items: center; border-block: 3px double var(--p-ink); padding: 12px 0; margin-bottom: 4px; }
-  .paper .classifieds > .ad-lead .ad-art { max-height: 17rem; }
-  .paper .classifieds > .ad-lead .ad-art img { object-fit: contain; }
-  .paper .classifieds > .ad-lead h3.sz-lg { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 46px; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
-  .paper .classifieds > .ad-lead p { font-size: 15px; line-height: 1.5; }
-  .paper .classifieds > .log-entry:not(.ad-lead) { border: 0; padding: 0 0 10px; border-bottom: 1px solid var(--p-ink); }
+  .paper .classifieds > .lead-story { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 22px; align-items: center; border-block: 3px double var(--p-ink); padding: 12px 0; margin-bottom: 4px; }
+  .paper .classifieds > .lead-story .notice-art { max-height: 17rem; }
+  .paper .classifieds > .lead-story .notice-art img { object-fit: contain; }
+  .paper .classifieds > .lead-story h3.sz-lg { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 46px; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
+  .paper .classifieds > .lead-story p { font-size: 15px; line-height: 1.5; }
+  .paper .classifieds > .log-entry:not(.lead-story) { border: 0; padding: 0 0 10px; border-bottom: 1px solid var(--p-ink); }
   .paper .classifieds .entry-body { gap: 5px; }
   .paper .classifieds .log-entry p { font-size: 12.5px; line-height: 1.38; max-width: none; text-align: justify; hyphens: auto; }
   .paper .classifieds .entry-meta { gap: 3px 6px; padding-top: 4px; }
   .paper .classifieds .entry-meta time { font-size: 9.5px; letter-spacing: 0.02em; }
   .paper .classifieds .type-badge { font-size: 9px; padding: 1px 4px; }
   .paper .classifieds .log-link { font-size: 10.5px; }
-  .paper .classifieds .ad-cut { text-align: center; }
-  .paper .classifieds .ad-cut.cut-md img { width: 3.6rem; }
-  .paper .classifieds .ad-cut.cut-sm img { width: 2.2rem; }
+  .paper .classifieds .notice-cut { text-align: center; }
+  .paper .classifieds .notice-cut.cut-md img { width: 3.6rem; }
+  .paper .classifieds .notice-cut.cut-sm img { width: 2.2rem; }
   .paper .classifieds .frame-accent { outline: 0; }
   .paper .classifieds .log-entry h3 { line-height: 1.05; text-wrap: balance; }
   /* v0 — condensed capitals, centred and big. */
@@ -365,7 +365,7 @@ const t = useTranslations(lang);
   .paper .classifieds > .log-entry.type-v2 { padding: 9px 10px; border-bottom: 0; }
   .paper .classifieds .type-v2 h3 { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 22px; text-transform: uppercase; text-align: center; letter-spacing: 0.04em; padding: 0; font-style: normal; }
   .paper .classifieds .type-v2 .entry-meta { border-top-color: var(--p-ground); }
-  .paper .classifieds .type-v2 .ad-cut img { filter: invert(1) grayscale(1); mix-blend-mode: screen; }
+  .paper .classifieds .type-v2 .notice-cut img { filter: invert(1) grayscale(1); mix-blend-mode: screen; }
   /* v3 — a double frame round a blackletter line. */
   .paper .classifieds > .log-entry.type-v3 { border: 4px double var(--p-ink); padding: 9px 10px; }
   .paper .classifieds .type-v3 h3 { font-family: 'Pirata One', 'Old Standard TT', serif; font-weight: 400; font-size: 27px; text-align: center; font-style: normal; text-transform: none; }
@@ -374,12 +374,12 @@ const t = useTranslations(lang);
   .paper .classifieds .type-v4 h3 { font-family: var(--font-serif); font-weight: 700; font-size: 17px; font-variant: small-caps; letter-spacing: 0.08em; text-align: center; text-transform: none; font-style: normal; }
   /* v5 — a big figure over a quiet italic line. */
   .paper .classifieds .type-v5 { text-align: center; }
-  .paper .classifieds .type-v5 .ad-figure { font-size: 50px; line-height: 0.95; margin: 0; }
+  .paper .classifieds .type-v5 .notice-figure { font-size: 50px; line-height: 0.95; margin: 0; }
   .paper .classifieds .type-v5 h3 { font-family: var(--font-serif); font-weight: 400; font-style: italic; font-size: 17px; text-transform: none; }
   /* v6 — a run-in notice: the bold lead word opens the paragraph. */
   .paper .classifieds .type-v6 .run-in { font-size: 12.5px; }
   .paper .classifieds .type-v6 .run-in b { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; text-transform: uppercase; font-size: 14px; letter-spacing: 0.02em; }
-  /* v7 — one word repeated in falling sizes, as the soap ads did. */
+  /* v7 — one word repeated in falling sizes, as the soap notices did. */
   .paper .classifieds .type-v7 { text-align: center; }
   .paper .classifieds .type-v7 .rep-word { display: block; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; text-transform: uppercase; line-height: 1; margin: 0; color: var(--p-ink); }
   .paper .classifieds .type-v7 .rep-word.rep-0 { font-size: 36px; letter-spacing: 0.01em; }
@@ -437,7 +437,7 @@ const t = useTranslations(lang);
   .paper .more { display: grid; gap: 14px; }
   .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
   .paper .col { padding-inline: 18px; display: grid; align-content: start; align-self: start; gap: 14px; min-width: 0; }
-  .paper .col .ad { margin-top: 16px; align-self: end; }
+  .paper .col aside.notice { margin-top: 16px; align-self: end; }
   .paper .col + .col { border-left: 1px solid var(--p-rule); }
   .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
   .paper .col h3 { border-bottom: 1px solid var(--p-ink); padding-bottom: 4px; }
@@ -474,21 +474,23 @@ const t = useTranslations(lang);
   /* The sundial engraving: an old plate set among the columns, under the
     shorter one; on phones it sits between sections at column width. */
   .paper .paper-plate { margin: 4px 0 0; }
-  /* The lab's own advertisements: period notices in type, honestly
-    labelled, each shaped by its weight. Never the lead story. */
-  .paper .ad { border: 3px double var(--p-ink); padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
-  .paper .ad .kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-block: 1px solid var(--p-rule); padding-block: 4px; width: 100%; }
-  .paper .ad .ad-display { font-family: var(--font-serif); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; margin: 0; text-transform: uppercase; letter-spacing: 0.01em; text-wrap: balance; color: var(--p-ink); }
-  .paper .ad .ad-copy { display: grid; gap: 4px; }
-  .paper .ad .ad-line--lead { margin: 0; font-family: var(--font-body); font-weight: 700; font-size: 16px; line-height: 1.4; color: var(--p-ink); }
-  .paper .ad .ad-line { margin: 0; font-family: var(--font-body); font-size: 14.5px; line-height: 1.45; color: var(--p-ink); }
-  .paper .ad .ad-close { border-top: 3px double var(--p-rule); padding-top: 8px; display: grid; gap: 8px; justify-items: start; }
-  .paper .ad .ad-tail { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
-  .paper .ad .ad-cta { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); border: 1px solid var(--p-ink); padding: 6px 14px; text-decoration: none; justify-self: start; }
-  .paper .ad .cmd { display: grid; gap: 2px; margin: 0; }
-  .paper .ad .cmd a { font-family: var(--font-mono); font-size: 11px; color: var(--p-emphasis); }
-  .paper .ad .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
-  /* The standing coupons ride the classifieds as ads of their own, set in
+  /* The lab's own notices: period notices in type, honestly
+     labelled, each shaped by its weight. Never the lead story. Hung off
+     `aside.notice`, never a bare `.notice`: the one-line entries grouped in
+     `.notice-run` are `article.log-entry.notice` and keep their dotted rule. */
+  .paper aside.notice { border: 3px double var(--p-ink); padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .paper aside.notice .kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-soft); margin: 0; border-block: 1px solid var(--p-rule); padding-block: 4px; width: 100%; }
+  .paper aside.notice .display-notice { font-family: var(--font-serif); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; margin: 0; text-transform: uppercase; letter-spacing: 0.01em; text-wrap: balance; color: var(--p-ink); }
+  .paper aside.notice .notice-copy { display: grid; gap: 4px; }
+  .paper aside.notice .notice-line--lead { margin: 0; font-family: var(--font-body); font-weight: 700; font-size: 16px; line-height: 1.4; color: var(--p-ink); }
+  .paper aside.notice .notice-line { margin: 0; font-family: var(--font-body); font-size: 14.5px; line-height: 1.45; color: var(--p-ink); }
+  .paper aside.notice .notice-close { border-top: 3px double var(--p-rule); padding-top: 8px; display: grid; gap: 8px; justify-items: start; }
+  .paper aside.notice .notice-tail { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
+  .paper aside.notice .notice-call { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); border: 1px solid var(--p-ink); padding: 6px 14px; text-decoration: none; justify-self: start; }
+  .paper aside.notice .cmd { display: grid; gap: 2px; margin: 0; }
+  .paper aside.notice .cmd a { font-family: var(--font-mono); font-size: 11px; color: var(--p-emphasis); }
+  .paper aside.notice .cmd code { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink); background: var(--p-deep); padding: 3px 8px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  /* The standing coupons ride the classifieds as notices of their own, set in
     the same type. Each coupon cuts out along its dashed border. */
   .paper .coupon { border: 1px dashed var(--p-ink); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; text-decoration: none; break-inside: avoid; }
   .paper .coupon-cut { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-soft); }
@@ -501,26 +503,26 @@ const t = useTranslations(lang);
   @media (min-width: 48rem) {
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-    .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
-    .paper .ad--feature .kicker { grid-column: 1 / -1; }
+    .paper .notice--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
+    .paper .notice--feature .kicker { grid-column: 1 / -1; }
   }
   @media (min-width: 48rem) and (max-width: 63.99rem) {
     .paper .front { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .paper .front .lead { grid-column: 1 / -1; }
     .paper .front .rail { grid-column: 1 / -1; }
-    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols { grid-column: 1 / -1; }
+    .paper .front .labmail, .paper .front .notice--feature, .paper .front .cols { grid-column: 1 / -1; }
   }
   @media (min-width: 64rem) {
     .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .paper .front .lead { grid-column: 1 / span 2; }
     .paper .front .lead.solo { grid-column: 1 / -1; }
     .paper .front .rail { grid-column: 3; }
-    .paper .front .labmail, .paper .front .ad--feature, .paper .front .cols { grid-column: 1 / -1; }
+    .paper .front .labmail, .paper .front .notice--feature, .paper .front .cols { grid-column: 1 / -1; }
   }
   @media print {
     .paper .front, .paper .cols { display: block; }
     .paper .lead-cols { display: block; }
-    .paper .ad { break-inside: avoid; }
+    .paper aside.notice { break-inside: avoid; }
     .paper .coupon { break-inside: avoid; }
   }
   .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; margin-top: auto; }
@@ -646,23 +648,23 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .masthead-name { grid-column: 2; grid-row: 1; font-size: 86px; }
   .paper-viewport.sheet .paper .masthead .ear--right { grid-column: 3; grid-row: 1; }
   .paper-viewport.sheet .paper .masthead .motto { font-size: 19px; }
-  .paper-viewport.sheet .paper .ad-display { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .paper-viewport.sheet .paper .display-notice { grid-column: 1 / -1; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
   .paper-viewport.sheet .paper .lab-heading { font-size: 38px; }
   .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading { font-size: 30px; }
   .paper-viewport.sheet .paper #lab .lab-head .head-cartouche > .lab-heading { font-size: 24px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
-  .paper-viewport.sheet .paper .ad .ad-display { font-size: 40px; }
+  .paper-viewport.sheet .paper aside.notice .display-notice { font-size: 40px; }
   .paper-viewport.sheet .paper .coupon-figure { font-size: 40px; }
   .paper-viewport.sheet .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .paper-viewport.sheet .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .paper-viewport.sheet .paper .ad--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
-  .paper-viewport.sheet .paper .ad--feature .kicker { grid-column: 1 / -1; }
+  .paper-viewport.sheet .paper .notice--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
+  .paper-viewport.sheet .paper .notice--feature .kicker { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .paper-viewport.sheet .paper .front .lead { grid-column: 1 / span 2; }
   .paper-viewport.sheet .paper .front .lead.solo { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .front .rail { grid-column: 3; }
-  .paper-viewport.sheet .paper .front .labmail, .paper-viewport.sheet .paper .front .ad--feature, .paper-viewport.sheet .paper .front .cols { grid-column: 1 / -1; }
+  .paper-viewport.sheet .paper .front .labmail, .paper-viewport.sheet .paper .front .notice--feature, .paper-viewport.sheet .paper .front .cols { grid-column: 1 / -1; }
   .paper-viewport.sheet .paper .col, .paper-viewport.sheet .paper .col:first-child, .paper-viewport.sheet .paper .col:last-child { padding-inline: 18px; }
   .paper-viewport.sheet .paper .col + .col { border-left: 1px solid var(--p-rule); border-top: 0; padding-top: 0; margin-top: 0; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }

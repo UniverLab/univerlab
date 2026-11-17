@@ -41,7 +41,7 @@ interface Coupon {
   cond: string;
   href: string;
   link: string;
-  /** The house-ad cut: the bench for the Workbench, the loupe for audits. */
+  /** The house-notice cut: the bench for the Workbench, the loupe for audits. */
   cut: 'bench' | 'loupe';
 }
 
@@ -81,34 +81,34 @@ function noStack(lang: PaperCouponLang): string {
   return rules.find((r) => /stack|acumulan/i.test(r)) ?? '';
 }
 
-/** One coupon as a classifieds ad of its own: the same content as the old
+/** One coupon as a classifieds notice of its own: the same content as the old
  *  band card — figure, condition, link and the dashed cut-out border. */
-export interface CouponAd {
+export interface CouponNotice {
   figure: string;
   cond: string;
   href: string;
   link: string;
-  /** The house-ad cut: the bench for the Workbench, the loupe for audits. */
+  /** The house-notice cut: the bench for the Workbench, the loupe for audits. */
   cut: 'bench' | 'loupe';
 }
 
-/** The standing offers as classifieds ads, in reading order. */
-export function couponAds(lang: PaperCouponLang, foundingLeft?: number | null): CouponAd[] {
+/** The standing offers as classifieds notices, in reading order. */
+export function couponNotices(lang: PaperCouponLang, foundingLeft?: number | null): CouponNotice[] {
   return coupons(lang, foundingLeft);
 }
 
-/** One coupon card as HTML: an ad among the ads, cut along its dashed border.
+/** One coupon card as HTML: a notice among the notices, cut along its dashed border.
  *  The house cut opens the card: the bench for the Workbench, the loupe for
  *  audits. The manicule stays as the pointer in the link line. */
-export function couponAdHtml(lang: PaperCouponLang, ad: CouponAd): string {
+export function couponNoticeHtml(lang: PaperCouponLang, notice: CouponNotice): string {
   const cut = today(lang).labPage.coupons.cut;
   return (
-    `<a class="coupon" href="${esc(ad.href)}">` +
+    `<a class="coupon" href="${esc(notice.href)}">` +
     `<span class="coupon-cut">✂ ${esc(cut)}</span>` +
-    `<span class="coupon-art">${ornamentImg(ad.cut)}</span>` +
-    `<span class="coupon-figure">${esc(ad.figure)}</span>` +
-    `<span class="coupon-cond">${esc(ad.cond)}</span>` +
-    `<span class="coupon-link">${ornamentImg('manicule', 'manicule')}${esc(ad.link)}</span></a>`
+    `<span class="coupon-art">${ornamentImg(notice.cut)}</span>` +
+    `<span class="coupon-figure">${esc(notice.figure)}</span>` +
+    `<span class="coupon-cond">${esc(notice.cond)}</span>` +
+    `<span class="coupon-link">${ornamentImg('manicule', 'manicule')}${esc(notice.link)}</span></a>`
   );
 }
 

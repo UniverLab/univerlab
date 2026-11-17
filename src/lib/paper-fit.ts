@@ -66,7 +66,7 @@ function isLetter(el: Element): boolean {
 function isFiller(el: Element): boolean {
   return (
     (el.tagName === 'FIGURE' && el.classList.contains('paper-plate')) ||
-    (el.tagName === 'ASIDE' && el.classList.contains('ad'))
+    (el.tagName === 'ASIDE' && el.classList.contains('notice'))
   );
 }
 
@@ -275,7 +275,7 @@ function hasPlate(col: Element): boolean {
 
 function hasHouse(col: Element): boolean {
   return Array.from(col.children).some(
-    (k) => k.tagName === 'ASIDE' && k.classList.contains('ad'),
+    (k) => k.tagName === 'ASIDE' && k.classList.contains('notice'),
   );
 }
 
@@ -315,7 +315,7 @@ function tryFiller(col: Element, html: string, limit: number, kind: 'plate' | 'h
   if (!node) return null;
   col.appendChild(node);
   const over = (col as HTMLElement).getBoundingClientRect().bottom - limit > 1;
-  const head = (node as Element).querySelector?.('.ad-display') as HTMLElement | null;
+  const head = (node as Element).querySelector?.('.display-notice') as HTMLElement | null;
   const broken = head
     ? head.scrollWidth - head.clientWidth > 1 || headlineStarved(head)
     : false;
@@ -342,7 +342,7 @@ function letterCols(edition: Element): Element[] {
 /** Fit page one to the sheet: the letters fill the space under the lead
  *  story in the lead's own columns, then the band below; whole letters, the
  *  rail and the Workbench display print whole or not at all, and the feet
- *  end within one line of each other. The house ad and the rail's extra
+ *  end within one line of each other. The house notice and the rail's extra
  *  items go before letters do. */
 export function fitFrontPage(edition: Element): FrontFit {
   const out: FrontFit = { trimmedLetters: 0, movedLetters: 0, fillers: 0, plateColumn: -1 };
@@ -350,7 +350,7 @@ export function fitFrontPage(edition: Element): FrontFit {
   const leadCols = edition.querySelector('.lead-cols');
   const railEl = edition.querySelector('.rail');
   const alsoEl = edition.querySelector('.rail .also');
-  let duoEl = edition.querySelector('aside.ad--feature');
+  let duoEl = edition.querySelector('aside.notice--feature');
 
   // The sheet never stretches a block past its content now: the row's
   // foot is its content's own foot, so the read below is content, not
@@ -470,7 +470,7 @@ export function fitFrontPage(edition: Element): FrontFit {
   return out;
 }
 
-/** The grid's last ad-like child: whole cards only — never the coupon rule
+/** The grid's last notice-like child: whole cards only — never the coupon rule
  *  line, never the pointer template. */
 function lastRemovable(grid: Element): Element | null {
   const kids = Array.from(grid.children);
@@ -483,7 +483,7 @@ function lastRemovable(grid: Element): Element | null {
   return null;
 }
 
-/** Trim a classifieds grid to the ads that fit whole, newest first from the
+/** Trim a classifieds grid to the notices that fit whole, newest first from the
  *  foot: whole cards only, a one-line run with its fleuron as one unit. */
 export function trimClassifieds(grid: Element, limit: number, slackPx = 1, sink?: Element | null): number {
   if (limit <= 0) return 0;
@@ -496,7 +496,7 @@ export function trimClassifieds(grid: Element, limit: number, slackPx = 1, sink?
   return removed;
 }
 
-/** Take the grid's last ad-like child off: whole cards only, a one-line run
+/** Take the grid's last notice-like child off: whole cards only, a one-line run
  *  with its fleuron as one unit. With a `sink` (the next page's grid) the
  *  card moves to the head of that grid instead of leaving the paper, so the
  *  classifieds flow on from page two to page three in order. False when
@@ -547,7 +547,7 @@ function siblingPageShown(page: Element): boolean {
   );
 }
 
-/** True when the grid holds printable ads — never only templates, the
+/** True when the grid holds printable notices — never only templates, the
  *  coupon note, or an earlier fill. An empty grid's page stays hidden, so it
  *  is never the page to fill. */
 function hasAds(grid: Element): boolean {
@@ -559,7 +559,7 @@ function hasAds(grid: Element): boolean {
   );
 }
 
-/** Fill the last classifieds page to the foot: with the ads run out, the
+/** Fill the last classifieds page to the foot: with the notices run out, the
  *  remaining space takes the lab's own house notices and one engraved
  *  ornament from the page's templates — sized to the space left, whole only,
  *  so the page ends at the foot instead of a blank band. Returns how many
@@ -623,10 +623,10 @@ export function fillClassifiedsFoot(grid: Element, scope: Element, limit: number
 }
 
 /** Fit pages two and three to the sheet: each classifieds grid keeps only
- *  the ads that fit whole, and a grid that lost ads points at the Logbook —
+ *  the notices that fit whole, and a grid that lost notices points at the Logbook —
  *  reusing the page's own pointer line, added only when trimming happened.
  *  The last page fills to the foot with the lab's house notices and an
- *  engraved ornament once its ads run out. */
+ *  engraved ornament once its notices run out. */
 export function fitClassifieds(root: ParentNode): ClassifiedsFit {
   const out: ClassifiedsFit = { trimmedAds: 0, pointers: 0 };
   const grids = Array.from(
@@ -655,7 +655,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
     const scope = grid.parentElement;
     if (sink) {
       out.carriedAds = (out.carriedAds ?? 0) + removed;
-      // Page two is the last page only when page three holds no ads: then
+      // Page two is the last page only when page three holds no notices: then
       // its own foot takes the house notices and the ornament.
       if (scope && !hasAds(sink as Element) && hasAds(grid as Element)) {
         fillClassifiedsFoot(grid as Element, scope, limit);
@@ -679,7 +679,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
             // The pointer itself takes room at the foot: re-measure the
             // whole scope with it in place and keep trimming whole cards
             // until page and pointer both end above the limit, so the
-            // pointer never overlaps an ad and nothing is cut off.
+            // pointer never overlaps a notice and nothing is cut off.
             for (let guard = 0; guard < 1000; guard++) {
               if ((scope as HTMLElement).getBoundingClientRect().bottom - limit <= 1) break;
               node.remove();
@@ -694,7 +694,7 @@ export function fitClassifieds(root: ParentNode): ClassifiedsFit {
         }
       }
     }
-    // The last readable grid fills to the foot once its ads run out; a grid
+    // The last readable grid fills to the foot once its notices run out; a grid
     // still carrying page two's overflow is never the last page.
     if (scope && hasAds(grid as Element)) {
       fillClassifiedsFoot(grid as Element, scope, limit);

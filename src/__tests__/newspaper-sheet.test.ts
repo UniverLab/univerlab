@@ -168,7 +168,7 @@ describe('the sheet keeps the desktop composition', () => {
   it('sets type at the non-scaling maxima instead of the viewport clamps', () => {
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.masthead-name \{[^}]*font-size:\s*86px/);
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.lead h2 \{[^}]*font-size:\s*46px/);
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.ad \.ad-display \{[^}]*font-size:\s*40px/);
+    expect(css).toMatch(/\.paper-viewport\.sheet \.paper aside\.notice \.display-notice \{[^}]*font-size:\s*40px/);
   });
 });
 
