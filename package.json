@@ -37,10 +37,10 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
     "@types/turndown": "^5.0.6",
-    "astro": "^7.1.6",
+    "astro": "^7.4.7",
     "jest": "^30.4.2",
-    "playwright": "^1.65.1",
     "jest-environment-jsdom": "^30.4.1",
+    "playwright": "^1.65.1",
     "ts-jest": "^29.4.11",
     "turndown": "^7.2.4",
     "typescript": "^6.0.3"
