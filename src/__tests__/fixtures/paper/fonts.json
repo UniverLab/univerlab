@@ -1,0 +1,177 @@
+{
+  "recordedAt": "2026-11-17T20:16:06.458Z",
+  "entries": {
+    "https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Sometype+Mono:wght@400;500&display=swap": {
+      "file": "fonts/54035a70c3cbae1f.css",
+      "contentType": "text/css; charset=utf-8"
+    },
+    "https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Alfa+Slab+One&family=Pirata+One&display=swap": {
+      "file": "fonts/201b10759affdb99.css",
+      "contentType": "text/css; charset=utf-8"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL99U6g.woff2": {
+      "file": "fonts/981cfa5703e9e9fc.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR1SDk.woff2": {
+      "file": "fonts/ef73a8c5497d3d8f.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q6bHM.woff2": {
+      "file": "fonts/d75107ee49cdcd81.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVeqlq4.woff2": {
+      "file": "fonts/62be22ef684fe03a.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tS1Zf.woff2": {
+      "file": "fonts/83a4c834be8eb306.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/sometypemono/v4/70lVu745KGk_R3uxyq0WrROhKpShQQ.woff2": {
+      "file": "fonts/a9c577e2fea24b47.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL9wU6ingQ.woff2": {
+      "file": "fonts/fa7e7df23fabc5c9.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL95U6ingQ.woff2": {
+      "file": "fonts/4ee224146605404a.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL9xU6ingQ.woff2": {
+      "file": "fonts/14c27db9861a4e8d.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL9-U6ingQ.woff2": {
+      "file": "fonts/deca914f3b110559.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL9yU6ingQ.woff2": {
+      "file": "fonts/e90f810586fe0d70.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QL9zU6ingQ.woff2": {
+      "file": "fonts/b004307aa524bdf7.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR4SDktYw.woff2": {
+      "file": "fonts/4156c73755f5513e.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GRxSDktYw.woff2": {
+      "file": "fonts/ed5505d5591e972b.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR5SDktYw.woff2": {
+      "file": "fonts/2a9f71c0858254b1.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR2SDktYw.woff2": {
+      "file": "fonts/52193417755c1731.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR6SDktYw.woff2": {
+      "file": "fonts/7abb4519962ed77a.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/ebgaramond/v33/SlGUmQSNjdsmc35JDF1K5GR7SDktYw.woff2": {
+      "file": "fonts/3c5ecd69627058c5.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q3bHNiZg.woff2": {
+      "file": "fonts/d83d4736cd7da3a3.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q-bHNiZg.woff2": {
+      "file": "fonts/5173e3be14f035fb.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q1bHNiZg.woff2": {
+      "file": "fonts/c62f813526323fcc.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQsbh3o1vLImiwAVvYawgcf2eVer2q0bHNiZg.woff2": {
+      "file": "fonts/4f9c34d5b0a3257c.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVep1q4dHc.woff2": {
+      "file": "fonts/accb0aff72a58936.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVerlq4dHc.woff2": {
+      "file": "fonts/46aa1643f799174e.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVepVq4dHc.woff2": {
+      "file": "fonts/23bdaee2bdb2142c.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVepFq4dHc.woff2": {
+      "file": "fonts/1150db8c11f66ecc.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tRlZfX80.woff2": {
+      "file": "fonts/3a3f6bba66277ada.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tT1ZfX80.woff2": {
+      "file": "fonts/5924b4738e229258.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tRFZfX80.woff2": {
+      "file": "fonts/74bf3aacc229a05f.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oldstandardtt/v22/MwQrbh3o1vLImiwAVvYawgcf2eVWEX-tRVZfX80.woff2": {
+      "file": "fonts/8fb06fbe7a19d6ae.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/sometypemono/v4/70lVu745KGk_R3uxyq0WrROhKpqhQXdC.woff2": {
+      "file": "fonts/956e4b2b0edc83ea.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh2d1he-Wv.woff2": {
+      "file": "fonts/98bd0ed487efcde2.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh2dxhe-Wv.woff2": {
+      "file": "fonts/a1c200024a6128e8.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh2dJhew.woff2": {
+      "file": "fonts/488d73cece7f9860.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oswald/v57/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlbHYjedg.woff2": {
+      "file": "fonts/26f55648485947ff.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oswald/v57/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlSHYjedg.woff2": {
+      "file": "fonts/a8499adef0c096b1.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oswald/v57/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlZHYjedg.woff2": {
+      "file": "fonts/6f9da02b9f6f5e7d.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oswald/v57/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlYHYjedg.woff2": {
+      "file": "fonts/8cf70eb38a935b74.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/oswald/v57/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlWHYg.woff2": {
+      "file": "fonts/78c7a4ddadb6d432.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/pirataone/v23/I_urMpiDvgLdLh0fAtofhiGOrq_B.woff2": {
+      "file": "fonts/d18b8c8df95009af.woff2",
+      "contentType": "font/woff2"
+    },
+    "https://fonts.gstatic.com/s/pirataone/v23/I_urMpiDvgLdLh0fAtofhi-Org.woff2": {
+      "file": "fonts/f384be545ae26794.woff2",
+      "contentType": "font/woff2"
+    }
+  }
+}

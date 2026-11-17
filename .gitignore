@@ -1,4 +1,7 @@
 
+# Page-one browser check (`npm run check:paper`): per-case sheet shots.
+.paper-fail/
+
 # AI coding agents
 .kiro/
 .cursor/
