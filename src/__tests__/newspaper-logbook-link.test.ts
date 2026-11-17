@@ -69,7 +69,7 @@ describe('the logbook link above the sheet', () => {
     expect(getComputedStyle(link).display).not.toBe('none');
   });
 
-  it('stays unscoped by width: no min/max-width query touches it, print hides it', () => {
+  it('scales with the sheet through paper-sheet.ts, never through a width query', () => {
     const hits = logbookHits(css);
     expect(hits.length).toBeGreaterThan(0);
     const ranges = mediaRanges(css);
@@ -85,7 +85,14 @@ describe('the logbook link above the sheet', () => {
         expect(css.slice(hit, css.indexOf('}', hit) + 1)).toContain('display: none');
       }
     }
-    // Exactly the print rule hides the row; every other hit is width-free.
+    // Exactly the print rule hides the row; the stylesheet never sizes it
+    // by width — the sheet script scales it by the fitted factor instead.
     expect(printHits).toBe(1);
+    const sheet = readFileSync(resolve(__dirname, '..', 'lib', 'paper-sheet.ts'), 'utf8');
+    expect(sheet).toContain('.paper-logbook');
+    expect(sheet).toMatch(/11\.5 \* scale/);
+    // …and restores the stylesheet size on desktop, so the row reads the
+    // same 11.5px there as before.
+    expect(sheet).toMatch(/fontSize = ''/);
   });
 });

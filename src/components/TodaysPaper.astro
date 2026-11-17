@@ -523,6 +523,10 @@ const t = useTranslations(lang);
        text flowing beside it, like a newspaper lead — never centred with
        empty margins on both sides. Landscape photos keep the centred span. */
     .paper .photo--lead--portrait, .paper .photo--lead--square { float: right; width: auto; max-width: min(16rem, 40%); width: fit-content; margin: 2px 0 12px 16px; min-height: 0; }
+    /* The story is the float's own block: full width with no floor, so the
+       lead's text runs to one gutter (the float's 16px margin) from a side
+       photo instead of stopping short of its frame. */
+    .paper .lead .story { width: 100%; min-width: 0; }
     .paper .photo--lead--portrait img, .paper .photo--lead--square img { margin-inline: 0; }
     /* The mat hugs the picture even when the caption line is wider: the
        caption takes the picture's width and wraps under it, so a tall
@@ -687,6 +691,7 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper #lab .lab-head .head-cartouche > .lab-heading { font-size: 24px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
   .paper-viewport.sheet .paper .photo--lead--portrait, .paper-viewport.sheet .paper .photo--lead--square { float: right; width: auto; max-width: min(16rem, 40%); width: fit-content; margin: 2px 0 12px 16px; min-height: 0; }
+  .paper-viewport.sheet .paper .lead .story { width: 100%; min-width: 0; }
   .paper-viewport.sheet .paper .photo--lead--portrait img, .paper-viewport.sheet .paper .photo--lead--square img { margin-inline: 0; }
   .paper-viewport.sheet .paper .photo--lead--portrait figcaption, .paper-viewport.sheet .paper .photo--lead--square figcaption { width: 0; min-width: 100%; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }

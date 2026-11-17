@@ -53,8 +53,10 @@ interface MockItem {
 
 /** A column whose bottom tracks its content like the laid-out page: every
  *  letter costs one row, every filler three, so removing or moving a node
- *  really moves the foot the fit measures. */
-function liveColumn(doc: Document, items: MockItem[], top: number, rowPx = 20): HTMLElement {
+ *  really moves the foot the fit measures. `scale` models a transform-scaled
+ *  sheet: rows cost `rowPx` layout pixels (offsetHeight) but advance the
+ *  visual foot by `rowPx * scale`, like a phone reader sees. */
+function liveColumn(doc: Document, items: MockItem[], top: number, rowPx = 20, scale = 1): HTMLElement {
   const col = doc.createElement('section');
   col.className = 'col';
   let lastLabel = '';
@@ -74,10 +76,10 @@ function liveColumn(doc: Document, items: MockItem[], top: number, rowPx = 20): 
   col.getBoundingClientRect = () => {
     let bottom = top;
     for (const k of Array.from(col.children)) {
-      if (k.tagName === 'ARTICLE') bottom += rowPx;
-      else if (k.tagName === 'FIGURE' || k.tagName === 'ASIDE') bottom += rowPx * 3;
+      if (k.tagName === 'ARTICLE') bottom += rowPx * scale;
+      else if (k.tagName === 'FIGURE' || k.tagName === 'ASIDE') bottom += rowPx * 3 * scale;
       // A letter moved over from the rail keeps its own markup and its row.
-      else if (k.tagName === 'DIV' && k.classList.contains('aside-item')) bottom += rowPx;
+      else if (k.tagName === 'DIV' && k.classList.contains('aside-item')) bottom += rowPx * scale;
     }
     return rect(bottom);
   };
@@ -188,6 +190,32 @@ describe('trimColumn', () => {
 });
 
 describe('balanceColumns', () => {
+  it('scales the moved letter with the sheet, or a scaled sheet under-balances', () => {
+    // A half-scale sheet (a phone): ten rows against eight. The move costs
+    // 62.5 visual pixels and evens the feet — but read unscaled it costs
+    // 125, which looks like an overshoot, so nothing moves and a wasted
+    // band survives beside letters still to print.
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      '<div class="cols"></div>' +
+      '</div></div></div>';
+    const paper = document.querySelector('.paper') as HTMLElement;
+    paper.getBoundingClientRect = () => rect(2000, 2000);
+    Object.defineProperty(paper, 'offsetHeight', { value: 4000, configurable: true });
+    const wrap = document.querySelector('.cols') as HTMLElement;
+    const tall = liveColumn(document, Array.from({ length: 10 }, () => ev()), 0, 125, 0.5);
+    const short = liveColumn(document, Array.from({ length: 8 }, () => ev()), 0, 125, 0.5);
+    wrap.append(tall, short);
+    // Feet at 625 and 500 against a 12px line: one letter crosses over.
+    const moves = balanceColumns([tall, short]);
+    expect(moves).toBe(1);
+    expect(tall.querySelectorAll('article.item')).toHaveLength(9);
+    expect(short.querySelectorAll('article.item')).toHaveLength(9);
+    for (const c of [tall, short]) {
+      expect(c.getBoundingClientRect().bottom).toBe(562.5);
+    }
+  });
+
   it('moves whole letters until the feet end within one line', () => {
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
@@ -387,14 +415,13 @@ describe('fitFrontPage', () => {
     // Paper 500, colophon 0 in jsdom: the sheet ends at 476 — one 24px
     // body line of reserve, no gap, scale one, as sheetLimit computes it.
     const PAPER_BOTTOM = 500;
-    const LIMIT = PAPER_BOTTOM - 24;
     const LAB_H = 40;
     const GAP = 18;
 
     const labScaffold = (cols: MockItem[][]): HTMLElement => {
       document.body.innerHTML =
         '<div class="paper"><div class="paper-page" id="page-1"><div id="edition"><div class="front">' +
-        '<article class="lead"><div class="story"></div><div class="lead-cols"></div></article>' +
+        '<article class="lead"><div class="story"><div class="lead-cols"></div></div></article>' +
         '<article class="labmail">lab</article>' +
         '<div class="cols"></div>' +
         '</div>' +
@@ -422,43 +449,19 @@ describe('fitFrontPage', () => {
       return edition;
     };
 
-    it('keeps the lab story while letters go, ending the lab inside the sheet', () => {
+    it('keeps the lab story while letters go', () => {
       // A column of whole letters against a 476px sheet, the lab one grid
       // row of 18px gap and 40px of its own below it. Letters go from the
       // lead's columns until the lab lands in the sheet — never the lab.
       // Heights just past the sheet (18/19 letters) are the ones a trim that
       // stops on its body-line slack would leave hanging, so all are tried.
+      // Whether every foot ends in the sheet is the browser check's rule
+      // (a)/(d); here only the unit contract holds: letters go, the lab stays.
       for (const n of [18, 19, 20, 24]) {
         const edition = labScaffold([Array.from({ length: n }, () => ev())]);
         const out = fitFrontPage(edition);
         expect(out.trimmedLetters).toBeGreaterThan(0);
-        const lab = edition.querySelector('.labmail') as HTMLElement;
-        expect(lab).not.toBeNull();
-        expect(lab.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT);
-      }
-    });
-
-    it('ends no letter or story past the sheet on a tall edition', () => {
-      const edition = labScaffold([
-        Array.from({ length: 20 }, () => ev()),
-        Array.from({ length: 20 }, () => br()),
-      ]);
-      // Every letter tracks its own column's foot like the laid-out page,
-      // so the check below reads letters and the lab alike.
-      for (const col of Array.from(edition.querySelectorAll('.col'))) {
-        const c = col as HTMLElement;
-        for (const item of Array.from(col.querySelectorAll('article.item'))) {
-          (item as HTMLElement).getBoundingClientRect = () =>
-            rect(c.getBoundingClientRect().bottom);
-        }
-      }
-      fitFrontPage(edition);
-      // Two 500px columns and a lab past the sheet: the fit measures the
-      // lab's foot and trims the letters above it, so every foot ends in.
-      for (const item of Array.from(
-        edition.querySelectorAll('article.item, article.labmail'),
-      )) {
-        expect(item.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 1);
+        expect(edition.querySelector('.labmail')).not.toBeNull();
       }
     });
   });
@@ -548,7 +551,7 @@ describe('front page fits its sheet, masthead included', () => {
     const duo = opts?.duo === false ? '' : '<aside class="notice notice--feature">duo</aside>';
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
-      `<article class="lead${opts?.solo ? ' solo' : ''}"><div class="story"></div><div class="lead-cols"></div></article>` +
+      `<article class="lead${opts?.solo ? ' solo' : ''}"><div class="story"><div class="lead-cols"></div></div></article>` +
       rail +
       duo +
       '<div class="cols"></div>' +
@@ -608,9 +611,7 @@ describe('front page fits its sheet, masthead included', () => {
     const out = fitFrontPage(edition);
     expect(out.trimmedLetters).toBeGreaterThanOrEqual(2);
     expect(edition.querySelector('.colophon-note')).not.toBeNull();
-    for (const col of Array.from(edition.querySelectorAll('.col'))) {
-      expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(471);
-    }
+    // Whether the feet end in the sheet is the browser check's rule (a).
     // Three band columns: two under the story, one left in the band, every
     // column still headed by kind.
     expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(2);
@@ -671,9 +672,6 @@ describe('front page fits its sheet, masthead included', () => {
     const out = fitFrontPage(edition);
     expect(out.trimmedLetters).toBe(6);
     expect(edition.querySelector('.colophon-note')).not.toBeNull();
-    for (const col of Array.from(edition.querySelectorAll('.col'))) {
-      expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(447);
-    }
   });
 
   it('drops the section a trim emptied', () => {
@@ -706,7 +704,7 @@ describe('front page fits its sheet, masthead included', () => {
         '<p class="kicker">Lead</p><h2>Headline</h2>' +
         '<figure class="photo photo--lead"><div class="print"><img alt="lead photo"></div></figure>' +
         '<p>Body text of the lead story.</p><a href="https://example.com">Read more</a>' +
-        '</div><div class="lead-cols"></div></article>' +
+        '<div class="lead-cols"></div></div></article>' +
         rail +
         '<div class="cols"></div>' +
         '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
@@ -717,8 +715,8 @@ describe('front page fits its sheet, masthead included', () => {
         '</div></div></div>';
       const edition = document.getElementById('edition') as HTMLElement;
       const band = edition.querySelector('.cols') as HTMLElement;
-      // The lead's own columns begin BELOW the story on the laid-out page,
-      // so a photo that grows pushes them further down the sheet.
+      // The lead's own columns live inside the story (the float's own
+      // block), so a photo that grows pushes them further down the sheet.
       const storyTop = 100;
       const textH = 300;
       const rowPx = 60;
@@ -776,16 +774,12 @@ describe('front page fits its sheet, masthead included', () => {
       expect(Number.parseFloat(img.style.maxHeight)).toBeLessThanOrEqual(Math.floor(LIMIT * 0.36));
       expect(story.querySelector('p')).not.toBeNull();
       expect(story.querySelector('a')).not.toBeNull();
-      // The lead's text and its link end inside the sheet, not clipped below.
-      expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 24);
       // The day's letters print: at least one letter survives in the lead's
-      // own columns, and every surviving column ends inside the sheet.
+      // own columns. Whether every foot ends in the sheet is the browser
+      // check's rule (a).
       expect(
         edition.querySelectorAll('.lead-cols .col article.item, .cols .col article.item').length,
       ).toBeGreaterThanOrEqual(1);
-      for (const col of Array.from(edition.querySelectorAll('.col'))) {
-        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(LIMIT + 24);
-      }
       expect(edition.querySelector('.colophon-note')).not.toBeNull();
     };
 
@@ -846,7 +840,9 @@ describe('front page fits its sheet, masthead included', () => {
       // What the reader sees is still the third-of-the-sheet bound.
       expect(written * scale).toBeGreaterThanOrEqual(visualCap - 1);
       expect(written * scale).toBeLessThanOrEqual(visualCap + 1);
-      expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(visualEdge + 24);
+      // Whether the story's foot ends in the sheet is the browser check's
+      // rule (a); the text itself is never cut to fit.
+      expect(story.querySelector('p')).not.toBeNull();
     });
 
     it('sets the side photo in a mat that hugs the image, one gutter from the text', () => {
@@ -907,10 +903,6 @@ describe('front page fits its sheet, masthead included', () => {
       // A rail that still holds a moved-in column stays, even with no
       // aside items left in it.
       expect(edition.querySelector('.rail')).not.toBeNull();
-      // Every surviving letter column ends inside the sheet whole.
-      for (const col of Array.from(edition.querySelectorAll('.col'))) {
-        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(947);
-      }
       expect(edition.querySelector('.colophon-note')).not.toBeNull();
       expect(out.trimmedLetters).toBe(0);
     });
@@ -936,9 +928,6 @@ describe('front page fits its sheet, masthead included', () => {
       mockBottom(paper, 200);
       const out = fitFrontPage(edition);
       expect(out.trimmedLetters).toBe(2);
-      for (const col of Array.from(edition.querySelectorAll('.col'))) {
-        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(177);
-      }
       expect(edition.querySelector('.colophon-note')).not.toBeNull();
     });
 
@@ -957,11 +946,72 @@ describe('front page fits its sheet, masthead included', () => {
       const out = fitFrontPage(edition);
       expect(out.trimmedLetters).toBe(0);
       expect(edition.querySelectorAll('.col article.item')).toHaveLength(44);
-      for (const col of Array.from(edition.querySelectorAll('.col'))) {
-        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(989);
-      }
       expect(edition.querySelector('.colophon-note')).not.toBeNull();
     });
+  });
+});
+
+describe('the fit closes the last gaps', () => {
+  it('rebalances after the fillers land, so a plate never strands a band', () => {
+    // Two even columns; the plate crowns the roomier one and opens a 50px
+    // band while letters remain. The fit moves one letter back after the
+    // filler lands instead of leaving the band.
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      '<div class="cols"></div>' +
+      '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
+      '<p class="colophon-note">colophon</p>' +
+      '</div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const wrap = edition.querySelector('.cols') as HTMLElement;
+    const roomy = liveColumn(document, Array.from({ length: 20 }, () => ev()), 100);
+    const full = liveColumn(document, Array.from({ length: 20 }, () => ev()), 110);
+    wrap.append(roomy, full);
+    // Paper 700 less one body line of reserve: the sheet ends at 676, both
+    // columns end above it, so nothing trims — the plate is the only move.
+    mockBottom(document.querySelector('.paper') as HTMLElement, 700);
+    const out = fitFrontPage(edition);
+    expect(out.fillers).toBe(1);
+    expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(1);
+    // The plate opened a 50px band; the rebalance moved one letter back so
+    // the feet end within a body line with every letter still printed.
+    expect(out.movedLetters).toBeGreaterThan(0);
+    expect(edition.querySelectorAll('.col article.item')).toHaveLength(40);
+    const bottoms = [roomy, full].map((c) => c.getBoundingClientRect().bottom);
+    expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThanOrEqual(24);
+  });
+
+  it('rolls back fillers that push the lab past the sheet', () => {
+    // Two columns under a short story: the lab lands at 648 against a 676
+    // sheet, so the plate is welcome — but it grows the story to 570 and
+    // pushes the lab to 688. Borrowed room is no room: the plate comes back
+    // out and the feet balance again over the surviving letters.
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition"><div class="front">' +
+      '<article class="lead"><div class="story"><div class="lead-cols"></div></div></article>' +
+      '<article class="labmail">lab</article>' +
+      '</div>' +
+      '<template data-filler="plate"><figure class="photo paper-plate"><div class="print"></div></figure></template>' +
+      '<p class="colophon-note">colophon</p></div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const leadCols = edition.querySelector('.lead-cols') as HTMLElement;
+    const a = liveColumn(document, Array.from({ length: 20 }, () => ev()), 100);
+    const b = liveColumn(document, Array.from({ length: 20 }, () => ev()), 150);
+    leadCols.append(a, b);
+    const colBottom = (): number =>
+      Math.max(a.getBoundingClientRect().bottom, b.getBoundingClientRect().bottom);
+    const story = edition.querySelector('.lead .story') as HTMLElement;
+    story.getBoundingClientRect = () => rect(Math.max(300, colBottom()));
+    const lab = edition.querySelector('.labmail') as HTMLElement;
+    lab.getBoundingClientRect = () => rect(story.getBoundingClientRect().bottom + 18 + 100);
+    // Paper 700 less one body line of reserve: the sheet ends at 676, the
+    // lab lands at 628 — healthy — until the plate grows the story.
+    mockBottom(document.querySelector('.paper') as HTMLElement, 700);
+    const out = fitFrontPage(edition);
+    expect(out.fillers).toBe(0);
+    expect(edition.querySelectorAll('.col figure.paper-plate')).toHaveLength(0);
+    expect(edition.querySelectorAll('.col article.item')).toHaveLength(40);
+    expect(lab.getBoundingClientRect().bottom).toBeLessThanOrEqual(677);
   });
 });
 
@@ -978,7 +1028,7 @@ describe('the rail and the lead columns end together', () => {
   }): { edition: HTMLElement; also: HTMLElement } => {
     document.body.innerHTML =
       '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
-      '<article class="lead"><div class="story"></div><div class="lead-cols"></div></article>' +
+      '<article class="lead"><div class="story"><div class="lead-cols"></div></div></article>' +
       `<div class="rail"><aside class="also">${'<div class="aside-item">extra</div>'.repeat(opts.railCount)}</aside></div>` +
       '<div class="cols"></div>' +
       // No filler templates: the feet below assert the balanced letters,

@@ -151,10 +151,10 @@ describe('todayEditionHtml (en)', () => {
     expect(leadBlock.indexOf('<article class="lead">')).toBe(0);
     expect(leadBlock).not.toContain('<img');
     expect(leadBlock).not.toContain('figcaption');
-    // The lead's own letter columns wait empty under the story: the client
+    // The lead's own letter columns wait empty inside the story: the client
     // fit moves whole column sections here so the space under the lead
     // story fills with letters, not blank paper.
-    expect(leadBlock.endsWith('<div class="lead-cols"></div>')).toBe(true);
+    expect(leadBlock.endsWith('<div class="lead-cols"></div></div>')).toBe(true);
     // Nobel's photo moved down to the Births column: lazy, uncaptioned.
     expect(html).toContain(NOBEL_IMG);
     const tag = html.slice(html.indexOf(NOBEL_IMG), html.indexOf(NOBEL_IMG) + 200);

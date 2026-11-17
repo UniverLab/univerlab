@@ -22,6 +22,8 @@ const base = (): CaseInput => ({
   sheet: box(0, 0, 1000, 1500),
   stories: [box(10, 100, 600, 300)],
   letters: [box(10, 420, 300, 60), box(330, 420, 300, 80)],
+  logbookLink: box(10, 0, 200, 12),
+  controlLabel: box(10, 1500, 100, 12),
   lab: null,
   colophon: box(10, 1450, 980, 40),
   colophonVisible: true,
@@ -180,6 +182,46 @@ describe('paper-rules', () => {
     expect(judgeCase(mk(594, 200)).filter((f) => f.rule === 'f')).toHaveLength(0);
     // A gutter-wide (16px) margin is not a blank band either.
     expect(judgeCase(mk(26, 768)).filter((f) => f.rule === 'f')).toHaveLength(0);
+  });
+
+  test('(g) sleeps when the link reads no larger than a control label', () => {
+    // Same height, or within the 1px slack: no finding.
+    expect(judgeCase(base()).filter((f) => f.rule === 'g')).toHaveLength(0);
+    const slack = base();
+    slack.logbookLink = box(10, 0, 200, 13);
+    expect(judgeCase(slack).filter((f) => f.rule === 'g')).toHaveLength(0);
+  });
+
+  test('(g) fails when the link reads larger than a control label', () => {
+    // The unscaled phone case: an 11.5px link against a scaled-down sheet
+    // reads far larger than the paper's own labels.
+    const input = base();
+    input.logbookLink = box(10, 0, 200, 16);
+    input.controlLabel = box(10, 1500, 100, 12);
+    const found = judgeCase(input).filter((f) => f.rule === 'g');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/16\.0px/);
+    expect(found[0].detail).toMatch(/taller than a control label/);
+  });
+
+  test('(g) fails when the link is missing or unlaid: the row must stay visible', () => {
+    const missing = base();
+    missing.logbookLink = null;
+    const found = judgeCase(missing).filter((f) => f.rule === 'g');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/not laid out/);
+    const flat = base();
+    flat.logbookLink = box(10, 0, 0, 0);
+    expect(judgeCase(flat).filter((f) => f.rule === 'g')).toHaveLength(1);
+  });
+
+  test('(g) sleeps when the comparator is missing or unlaid', () => {
+    const flat = base();
+    flat.controlLabel = box(10, 1500, 0, 0);
+    expect(judgeCase(flat).filter((f) => f.rule === 'g')).toHaveLength(0);
+    const missing = base();
+    missing.controlLabel = null;
+    expect(judgeCase(missing).filter((f) => f.rule === 'g')).toHaveLength(0);
   });
 
   test('harness: an unrendered edition or a hidden page reports only itself', () => {

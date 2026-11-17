@@ -462,8 +462,10 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
         : '') +
       // The letters fill the space under the lead story in the lead's own
       // columns, not only in a band below everything; the client fit moves
-      // whole column sections here.
-      `</div><div class="lead-cols"></div></article>`;
+      // whole column sections here. Inside the story (the float's own block)
+      // so a side photo pulls the letters up beside and under it instead of
+      // leaving the space beside the frame blank.
+      `<div class="lead-cols"></div></div></article>`;
   }
 
   // The rail beside the lead: only the events the lead pushed aside read

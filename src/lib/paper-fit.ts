@@ -103,6 +103,11 @@ function bodyLinePx(col: Element): number {
   return Number.isFinite(fs) && fs > 0 ? fs * 1.5 : 24;
 }
 
+/** The smallest a fitted photo may shrink to, in layout pixels: the lead
+ *  clamp and the flooring-row shrink below both stop here, so a picture
+ *  never collapses to a stamp while room remains elsewhere. */
+const PHOTO_FLOOR_PX = 192;
+
 /** The sheet's display scale. Below the desktop breakpoint the sheet is shown
  *  through a CSS transform, so a rect is a visual pixel and a style length is a
  *  layout pixel; the two only coincide at scale one. One when nothing is
@@ -245,8 +250,12 @@ export function balanceColumns(cols: Element[]): number {
   })();
   if (limit <= 0) return 0;
   const labels = headingLabels(cols);
-  // Layout pixels against visual rects: scale the body line with the sheet.
-  const line = Math.max(...cols.map(bodyLinePx), 1) * sheetScale(cols[0]);
+  // Rects are visual pixels while an offset height is a layout one: scale
+  // both the body line and the moved letter with the sheet, or a scaled
+  // sheet under-balances — the move reads bigger than it is and the guard
+  // below stops early, leaving a wasted band beside letters still to print.
+  const scale = sheetScale(cols[0]);
+  const line = Math.max(...cols.map(bodyLinePx), 1) * scale;
   let moves = 0;
   for (let guard = 0; guard < 500; guard++) {
     const bottoms = cols.map(rectBottom);
@@ -259,7 +268,7 @@ export function balanceColumns(cols: Element[]): number {
     if (hi === lo || bottoms[hi] - bottoms[lo] <= line) break;
     const item = lastLetter(cols[hi]);
     if (!item) break;
-    const h = (item as HTMLElement).offsetHeight || 0;
+    const h = ((item as HTMLElement).offsetHeight || 0) * scale;
     const nextHi = bottoms[hi] - h;
     const nextLo = bottoms[lo] + h;
     let nextMax = Math.max(nextHi, nextLo);
@@ -414,7 +423,7 @@ export function fitFrontPage(edition: Element): FrontFit {
     const h = leadImg.getBoundingClientRect().height;
     const over = rectBottom(storyEl) - limit;
     const cap = Math.min(h, Math.floor(limit * 0.36), h - Math.max(0, over));
-    const maxH = Math.max(192, cap / scale);
+    const maxH = Math.max(PHOTO_FLOOR_PX, cap / scale);
     if (maxH < h / scale) (leadImg as HTMLElement).style.maxHeight = `${maxH}px`;
   }
   const line = (() => {
@@ -597,15 +606,33 @@ export function fitFrontPage(edition: Element): FrontFit {
   }
 
   const cols = letterCols(edition);
-  if (!cols.length) return out;
-  for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-  out.movedLetters += balanceColumns(cols);
-  // A balance move can push a column's foot past the sheet again: trim
-  // whole letters after balancing, so nothing ends past the sheet's edge.
-  for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-  // The lab story's foot was never a band column's foot: raise it into the
-  // sheet by trimming the letters that share its row, never the lab itself.
-  out.trimmedLetters += fitLab();
+  // A page with no letter columns at all still flows below: the photo
+  // shrink at the end must run for it too, so the trims below are scoped
+  // to a page that has columns instead of returning early.
+  if (cols.length) {
+    for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
+    out.movedLetters += balanceColumns(cols);
+    // A balance move can push a column's foot past the sheet again: trim
+    // whole letters after balancing, so nothing ends past the sheet's edge.
+    for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
+    // The lab story's foot was never a band column's foot: raise it into the
+    // sheet by trimming the letters that share its row, never the lab itself.
+    out.trimmedLetters += fitLab();
+    // The last letter past the sheet's edge: a balance or a lab raise can
+    // leave any column's foot (or the lab's own) over the limit, so loop the
+    // final trim over every letter column plus the lab's foot until all end
+    // above it. The lab itself is never removed; with no letters left to
+    // yield, the loop stops.
+    for (let guard = 0; guard < 50; guard++) {
+      const feet = cols.map(rectBottom);
+      if (labEl) feet.push(labFoot());
+      if (!feet.length || Math.max(...feet) - limit <= 1) break;
+      let removed = 0;
+      for (const col of cols) removed += trimColumn(col, limit);
+      removed += fitLab();
+      if (!removed) break;
+    }
+  }
   // A trim may empty a column whole: it leaves the page, and a wrapper
   // left with no column goes with it, so the band never holds blank paper.
   const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
@@ -617,41 +644,75 @@ export function fitFrontPage(edition: Element): FrontFit {
   // carried items (no .also) is structural and stays, as does a rail still
   // holding a moved-in column of whole letters.
   if (railEl && alsoEl && !railItems().length && !railEl.querySelector('.col')) railEl.remove();
-  if (!live.length) return out;
-  // The free foot of each column, roomiest first.
-  const order = live
-    .map((col, i) => ({ col, i, free: limit - rectBottom(col) }))
-    .sort((a, b) => b.free - a.free);
-  if (!order.length || order[0].free <= 1) return out;
-  const plate = fillerHtml(edition, 'plate');
-  if (plate) {
-    const node = tryFiller(order[0].col, plate, limit, 'plate');
-    if (node) {
-      out.fillers++;
-      out.plateColumn = order[0].i;
-    }
-  }
-  const install = fillerHtml(edition, 'install');
-  const collab = fillerHtml(edition, 'collab');
-  const duo = fillerHtml(edition, 'house-duo');
-  const rest = order.filter((o) => o.i !== out.plateColumn && limit - rectBottom(o.col) > 1);
-  if (install && collab && rest.length >= 2) {
-    const a = tryFiller(rest[0].col, install, limit, 'house');
-    const b = a ? tryFiller(rest[1].col, collab, limit, 'house') : null;
-    if (a && b) {
-      out.fillers += 2;
-      return out;
-    }
-    a?.remove();
-    b?.remove();
-  }
-  if (duo && rest.length >= 1) {
-    // Re-measure: the split attempt above may have settled content.
-    const roomy = rest
-      .map((o) => ({ o, free: limit - rectBottom(o.col) }))
-      .filter((r) => r.free > 1)
+  const attached = live.filter((c) => c.isConnected);
+  // Every filler the fit keeps, so a harmful one can come back out below.
+  const placed: Element[] = [];
+  // Fillers only crown a page that already fits: when the lab still sits
+  // past the limit, every foot below is borrowed room — a plate or notice
+  // would push the lab and the colophon further past the sheet instead of
+  // filling real space.
+  const labOver = labEl ? labFoot() - limit > 1 : false;
+  if (!labOver) {
+    // The free foot of each column, roomiest first.
+    const order = attached
+      .map((col, i) => ({ col, i, free: limit - rectBottom(col) }))
       .sort((a, b) => b.free - a.free);
-    if (roomy.length && tryFiller(roomy[0].o.col, duo, limit, 'house')) out.fillers++;
+    if (order.length && order[0].free > 1) {
+      const plate = fillerHtml(edition, 'plate');
+      if (plate) {
+        const node = tryFiller(order[0].col, plate, limit, 'plate');
+        if (node) {
+          out.fillers++;
+          out.plateColumn = order[0].i;
+          placed.push(node);
+        }
+      }
+      const install = fillerHtml(edition, 'install');
+      const collab = fillerHtml(edition, 'collab');
+      const duo = fillerHtml(edition, 'house-duo');
+      const rest = order.filter((o) => o.i !== out.plateColumn && limit - rectBottom(o.col) > 1);
+      let paired = false;
+      if (install && collab && rest.length >= 2) {
+        const a = tryFiller(rest[0].col, install, limit, 'house');
+        const b = a ? tryFiller(rest[1].col, collab, limit, 'house') : null;
+        if (a && b) {
+          out.fillers += 2;
+          paired = true;
+          placed.push(a, b);
+        } else {
+          a?.remove();
+          b?.remove();
+        }
+      }
+      if (!paired && duo && rest.length >= 1) {
+        // Re-measure: the split attempt above may have settled content.
+        const roomy = rest
+          .map((o) => ({ o, free: limit - rectBottom(o.col) }))
+          .filter((r) => r.free > 1)
+          .sort((a, b) => b.free - a.free);
+        const d = roomy.length ? tryFiller(roomy[0].o.col, duo, limit, 'house') : null;
+        if (d) {
+          out.fillers++;
+          placed.push(d);
+        }
+      }
+    }
+  }
+  // A filler lands in the roomiest foot and can unbalance the row it joins:
+  // balance once more over the surviving columns so the feet end together.
+  // Balance never raises the tallest foot, so nothing fitted leaves the
+  // sheet; headings are re-issued over the moved letters as before.
+  out.movedLetters += balanceColumns(attached);
+  // A filler grows its column, and through it the story, the row, the lab
+  // and the colophon: when the lab ends past the limit afterwards, the
+  // fillers only bought borrowed room, so they come back out and the
+  // feet are balanced again over the surviving letters.
+  if (labEl && placed.length && labFoot() - limit > 1) {
+    for (const node of placed) node.remove();
+    placed.length = 0;
+    out.fillers = 0;
+    out.plateColumn = -1;
+    out.movedLetters += balanceColumns(attached);
   }
   return out;
 }

@@ -133,6 +133,7 @@ function gather(args: {
       sheet: rectOf(sheet) || { x: 0, y: 0, width: 0, height: 0 },
       stories: [], letters: [], lab: null, colophon: null,
       colophonVisible: false, leadPhoto: null, textLines: [], columns: [],
+      logbookLink: null, controlLabel: null,
       editionEmpty: !front, pageHidden: !!pageHidden, fontsLoaded,
     };
   }
@@ -226,6 +227,26 @@ function gather(args: {
       }
     }
   }
+  // The logbook link outside the sheet, weighed against the paper's own
+  // control labels: a masthead page tab first — it lives inside the
+  // transformed sheet, so it shrinks with the sheet exactly like the
+  // masthead details the link must not outread. The sheet-mode control
+  // strip's indicator is only the fallback: it lives outside the sheet,
+  // so its type never scales and a full-size link would pass against it.
+  const logbookLink = rectOf(document.querySelector('.paper-logbook a'));
+  let controlLabel = null;
+  for (const sel of ['.paper .paper-tab', '.paper-bar [data-page-indicator]']) {
+    const el = document.querySelector(sel);
+    const box = rectOf(el);
+    if (
+      el && box && box.width > 0 && box.height > 0 &&
+      getComputedStyle(el).display !== 'none' &&
+      getComputedStyle(el).visibility !== 'hidden'
+    ) {
+      controlLabel = box;
+      break;
+    }
+  }
   const colEls = Array.from(
     page.querySelectorAll('.lead-cols .col, .cols .col, .rail > .col'),
   );
@@ -254,6 +275,8 @@ function gather(args: {
     leadPhoto,
     textLines,
     columns,
+    logbookLink,
+    controlLabel,
     editionEmpty: false,
     pageHidden: false,
     fontsLoaded,

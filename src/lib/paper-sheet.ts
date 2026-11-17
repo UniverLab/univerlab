@@ -24,6 +24,9 @@ interface Tap {
 /** Wire the sheet viewport under `root`. Safe to call on desktop or when the
  *  hooks are missing: it bails, and toggles itself on breakpoint changes. */
 export function initPaperSheet(root: ParentNode = document): void {
+  const logbook = root.querySelector
+    ? (root.querySelector('.paper-logbook') as HTMLElement | null)
+    : null;
   const viewport = root.querySelector
     ? (root.querySelector('[data-paper-viewport]') as HTMLElement | null)
     : null;
@@ -72,6 +75,11 @@ export function initPaperSheet(root: ParentNode = document): void {
 
   const paint = (): void => {
     sheet.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    // The logbook row sits outside the transformed sheet, so its type never
+    // shrinks with the sheet's: scale it by the same factor, or a phone
+    // draws the link at full page size, larger than the paper's own scaled
+    // details. Print CSS hides the row; this only touches the live page.
+    if (active && logbook) logbook.style.fontSize = `${11.5 * scale}px`;
     // The viewport hugs the scaled sheet on every paint, so zooming and
     // fitting never leave a band under it.
     if (active) viewport.style.height = `${viewportHeight()}px`;
@@ -142,6 +150,7 @@ export function initPaperSheet(root: ParentNode = document): void {
 
   const deactivate = (): void => {
     active = false;
+    if (logbook) logbook.style.fontSize = '';
     viewport.classList.remove('sheet');
     fitButton.hidden = true;
     viewport.style.height = '';

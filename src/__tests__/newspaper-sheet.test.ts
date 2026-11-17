@@ -322,4 +322,36 @@ describe('the sheet pan/zoom behaviour', () => {
     window.dispatchEvent(new Event('resize'));
     expect(scaleOf(sheet.style.transform)).toBeCloseTo(500 / SHEET_W, 4);
   });
+
+  it('scales the logbook row with the fitted sheet on narrow screens, leaves it on desktop', () => {
+    // The row sits outside the transformed sheet, so its type never shrinks
+    // with the sheet's: the script scales it by the fitted factor, or a
+    // phone draws the link at full page size, larger than the paper's own
+    // scaled details. Fails if the scaling line is removed (fontSize stays
+    // unset) or if desktop gains an inline size.
+    const mountWithLogbook = (): void => {
+      document.body.innerHTML =
+        '<p class="paper-logbook"><a href="/logbook">Lab logbook →</a></p>' +
+        '<div class="paper-viewport" data-paper-viewport>' +
+        '<div class="paper-sheet" data-paper-sheet><div class="paper"></div></div>' +
+        '<button class="paper-fit" data-paper-fit type="button" hidden>Fit</button>' +
+        '</div>';
+      const viewport = document.querySelector('[data-paper-viewport]') as HTMLElement;
+      const sheet = document.querySelector('[data-paper-sheet]') as HTMLElement;
+      Object.defineProperty(viewport, 'clientWidth', { value: VIEW_W, configurable: true });
+      Object.defineProperty(viewport, 'clientHeight', { value: 600, configurable: true });
+      Object.defineProperty(sheet, 'offsetWidth', { value: SHEET_W, configurable: true });
+      Object.defineProperty(sheet, 'offsetHeight', { value: SHEET_H, configurable: true });
+    };
+    stubMatchMedia(false);
+    mountWithLogbook();
+    initPaperSheet(document);
+    expect((document.querySelector('.paper-logbook') as HTMLElement).style.fontSize)
+      .toBe(`${11.5 * (VIEW_W / SHEET_W)}px`);
+
+    stubMatchMedia(true);
+    mountWithLogbook();
+    initPaperSheet(document);
+    expect((document.querySelector('.paper-logbook') as HTMLElement).style.fontSize).toBe('');
+  });
 });

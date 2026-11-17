@@ -52,6 +52,9 @@ export interface CaseInput {
   stories: Rect[];
   /** Printed letters (`article.item` + rail `.aside-item`). */
   letters: Rect[];
+  /** The logbook link outside the sheet, and one control label beside it. */
+  logbookLink: Rect | null;
+  controlLabel: Rect | null;
   lab: Rect | null;
   colophon: Rect | null;
   colophonVisible: boolean;
@@ -67,7 +70,7 @@ export interface CaseInput {
   fontsLoaded: boolean;
 }
 
-export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'harness';
+export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'harness';
 
 export interface Finding {
   rule: RuleId;
@@ -205,6 +208,30 @@ function ruleF(input: CaseInput, out: Finding[]): void {
   }
 }
 
+function ruleG(input: CaseInput, out: Finding[]): void {
+  // The logbook link sits outside the transformed sheet, so its type never
+  // shrinks with the sheet's: it must read no larger than the paper's own
+  // control labels, still laid out and tappable. A missing link is a
+  // finding — the row must stay visible. A missing comparator is not: only
+  // a measured excess fails.
+  const link = input.logbookLink;
+  const control = input.controlLabel;
+  if (!link || link.width <= 0 || link.height <= 0) {
+    out.push({ rule: 'g', detail: 'logbook link is not laid out' });
+    return;
+  }
+  if (!control || control.width <= 0 || control.height <= 0) return;
+  const over = link.height - control.height;
+  if (over > SLACK) {
+    out.push({
+      rule: 'g',
+      detail:
+        `logbook link reads ${link.height.toFixed(1)}px tall, ` +
+        `${over.toFixed(1)}px taller than a control label (${control.height.toFixed(1)}px)`,
+    });
+  }
+}
+
 /** Judge one measured page: every broken rule yields one finding. */
 export function judgeCase(input: CaseInput): Finding[] {
   if (input.editionEmpty || input.pageHidden) {
@@ -233,5 +260,6 @@ export function judgeCase(input: CaseInput): Finding[] {
   ruleD(input, out);
   ruleE(input, out);
   ruleF(input, out);
+  ruleG(input, out);
   return out;
 }
