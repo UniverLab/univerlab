@@ -11,7 +11,7 @@ export const en = {
     // agree instead of describing two different things.
     title: 'Open-source tools for AI agents, LaTeX and git — UniverLab',
     description:
-      'Open-source CLI tools for AI coding agents, LaTeX and git — one binary each, installable today, reproducible, with docs that ship alongside the code.',
+      'We build on what was built: open-source CLI tools for AI coding agents, LaTeX and git — installable today, reproducible, documented.',
   },
   nav: {
     experiments: 'Experiments',
@@ -125,10 +125,10 @@ export const en = {
   home: {
     hero: {
       title: 'Open source for the AI era — built for real problems',
-      subtitle: 'We are the universe, observing itself.',
+      subtitle: 'We build on what was built. Every technology was once frontier knowledge.',
       lede:
-        'UniverLab is an open computational laboratory that groups experiments under the philosophy of <a href="/manifesto/">Pensamiento Cósmico</a>, where a need becomes an open experiment, and that experiment becomes open knowledge — tools, datasets, papers.',
-      pitch: 'Science · CLI · LaTeX · CAD · Git',
+        'UniverLab is an open computational laboratory working under the philosophy of <a href="/manifesto/">Pensamiento Cósmico</a>: a need becomes an open experiment, and the experiment becomes open knowledge others build on — tools, datasets, papers.',
+      pitch: 'Science · CLI · LaTeX · Agents · Git',
       pitchSub: 'Local-first. AI-assisted. Yours forever.',
       ctaExperiments: 'Explore the experiments →',
       ctaManifesto: 'Read the manifesto →',
@@ -206,7 +206,7 @@ export const en = {
         'The axis: explicit systems · reproducible work · human–AI collaboration. The fields below are where it is being tested.',
       now: 'Now',
       next: 'Next',
-      nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows', 'CAD'],
+      nowItems: ['Developer experience', 'CLI design', 'AI-assisted workflows', 'AI agents'],
       nextItems: [
         'Computational science',
         'Bioinformatics',

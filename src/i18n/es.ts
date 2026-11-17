@@ -12,7 +12,7 @@ export const es: Dict = {
     // noun goes and the topics stay, mirroring the English title's shape.
     title: 'CLI de código abierto para agentes de IA y LaTeX — UniverLab',
     description:
-      'Herramientas CLI de código abierto para agentes de IA, LaTeX y git — un binario cada una, instalables hoy, reproducibles, con docs junto al código.',
+      'Construimos sobre lo construido: herramientas CLI de código abierto para agentes de IA, LaTeX y git — instalables hoy, reproducibles, documentadas.',
   },
   nav: {
     experiments: 'Experimentos',
@@ -122,10 +122,10 @@ export const es: Dict = {
   home: {
     hero: {
       title: 'Código abierto para la era de IA — construido para problemas reales',
-      subtitle: 'Somos el universo, observándose a sí mismo.',
+      subtitle: 'Construimos sobre lo construido. Toda tecnología fue alguna vez conocimiento de frontera.',
       lede:
-        'UniverLab es un laboratorio computacional abierto que agrupa experimentos bajo la filosofía del <a href="/es/manifesto/">Pensamiento Cósmico</a>, donde una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto — herramientas, datasets, artículos.',
-      pitch: 'Ciencia · CLI · LaTeX · CAD · Git',
+        'UniverLab es un laboratorio computacional abierto que trabaja bajo la filosofía del <a href="/es/manifesto/">Pensamiento Cósmico</a>: una necesidad se convierte en un experimento abierto, y ese experimento en conocimiento abierto sobre el que otros construyen — herramientas, datasets, artículos.',
+      pitch: 'Ciencia · CLI · LaTeX · Agentes · Git',
       pitchSub: 'Local-first. Asistido por IA. Tuyo para siempre.',
       ctaExperiments: 'Explora los experimentos →',
       ctaManifesto: 'Lee el manifiesto →',
@@ -204,7 +204,7 @@ export const es: Dict = {
         'El eje: sistemas explícitos · trabajo reproducible · colaboración humano–IA. Los campos de abajo son donde se está poniendo a prueba.',
       now: 'Ahora',
       next: 'Después',
-      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'CAD'],
+      nowItems: ['Experiencia de desarrollo', 'Diseño de CLI', 'Flujos asistidos por IA', 'Agentes de inteligencia artificial'],
       nextItems: [
         'Ciencia computacional',
         'Bioinformática',
