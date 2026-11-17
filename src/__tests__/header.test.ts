@@ -84,6 +84,12 @@ describe('Header experiments link', () => {
     // brand reserve (NameGloss probes at the compact --ng-* sizes), not from
     // squeezing the menu, so the fit never depends on hiding overflow.
     expect(src).toMatch(/nav \{[^}]*gap: 0\.85rem/);
+    // Intra-item words sit visibly closer than separate items: word-spacing
+    // shrinks only the spaces inside one link, the 0.85rem gap is untouched.
+    expect(src).toMatch(/nav a \{[^}]*word-spacing:\s*-0\.3em/);
+    const ws = src.match(/nav a \{[^}]*word-spacing:\s*(-?[\d.]+)em/);
+    expect(ws).not.toBeNull();
+    expect(Math.abs(parseFloat(ws![1]))).toBeLessThan(0.5);
   });
 
   it('reserves the brand width up front and folds the mailbox with the burger', () => {
