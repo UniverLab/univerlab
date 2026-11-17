@@ -63,7 +63,7 @@ describe("today's paper styles stay on the paper", () => {
     // blank paper between the banner and the letters. The rail still
     // matches the lead's height, and the pictures scale down to make
     // room — never cropped out of the sheet.
-    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*flex[^}]*height:\s*auto/);
+    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*block[^}]*height:\s*auto/);
     expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
     expect(css).toMatch(/\.paper \.photo--lead \{[^}]*max-height:\s*36rem/);
     // The portrait stands in a mat that hugs it: a lead photo narrower than
@@ -77,6 +77,18 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper \.photo--medium img \{[^}]*max-height:\s*100%/);
     expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
     expect(css).toContain('.paper .photo--medium');
+  });
+
+  it('sets a portrait or square lead photo to one side with the text beside it', () => {
+    // A portrait or square lead photo floats right of the lead's text at a
+    // bounded width, like a newspaper lead — never centred with empty
+    // margins on both sides. The story is a block flow so the text wraps
+    // beside the float; landscape photos keep the centred span.
+    expect(css).toMatch(
+      /\.paper \.photo--lead--portrait, \.paper \.photo--lead--square \{[^}]*float:\s*right[^}]*width:\s*min\(16rem, 40%\)/,
+    );
+    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*block/);
+    expect(css).toContain('margin-inline: 0');
   });
 
   it('never spreads free space into bands', () => {

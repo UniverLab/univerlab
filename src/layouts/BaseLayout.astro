@@ -741,7 +741,7 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           { cmd: '/find', label: 'Find on page', action: function () { openFind(); } },
           { cmd: '/theme', label: 'Theme…', action: function () { showThemeMenu(); } },
           { cmd: '/archive', label: 'The Archive', href: base + '/archive/' },
-          { cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' },
+          { cmd: '/logbook', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' },
           { cmd: '/date', label: lang === 'es' ? 'Traducir una fecha de misión' : 'Translate a mission date', action: function () { openDateTranslator(close, lang); } },
         ];
 
@@ -924,8 +924,9 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           }
         }
 
-        // Global keyboard shortcuts.
-        var expFocusIndex = -1;
+        // Global keyboard shortcuts: arrow keys belong to the browser,
+        // except Shift+Down/Up on the home page (move between experiments)
+        // and Shift+Right/Left on an experiment page (next/previous experiment).
         var keySeq = '';
         document.addEventListener('keydown', function (e) {
           if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -963,90 +964,51 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
           // Don't handle navigation shortcuts when palette is open.
           if (isOpen()) return;
 
-          // Shift+Left → go back, Shift+Right → go forward (browser history)
-          if (e.shiftKey && e.key === 'ArrowLeft') {
+          // Only a bare Shift+arrow is ours; Ctrl/Alt/Meta+Shift+arrow and
+          // every other arrow combination stay with the browser.
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+          // Experiment page: Shift+Right / Shift+Left → next / previous experiment.
+          if (e.shiftKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+            var expNavTarget = e.key === 'ArrowRight'
+              ? document.querySelector('a.exp-nav-link.next')
+              : document.querySelector('a.exp-nav-link.prev');
+            if (!expNavTarget) return;
+            var expHref = expNavTarget.getAttribute('href');
+            if (!expHref) return;
             e.preventDefault();
-            history.back();
+            window.location.href = expHref;
             return;
           }
-          if (e.shiftKey && e.key === 'ArrowRight') {
+
+          // Home page: Shift+Down / Shift+Up → next / previous experiment
+          // shown on the page. Focus its title link so Enter opens it natively.
+          if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            var expEntries = Array.prototype.slice.call(
+              document.querySelectorAll('.entries article.entry:not([hidden])')
+            );
+            if (!expEntries.length) return;
+            // Focus may sit on any link inside an entry (plate, install copy);
+            // the entry it belongs to is the current experiment.
+            var focusedEntry = document.activeElement && document.activeElement.closest
+              ? document.activeElement.closest('article.entry')
+              : null;
+            var curExp = expEntries.indexOf(focusedEntry);
+            var nextExp;
+            if (e.key === 'ArrowDown') {
+              nextExp = curExp === -1 ? 0 : Math.min(curExp + 1, expEntries.length - 1);
+            } else {
+              nextExp = curExp === -1 ? expEntries.length - 1 : Math.max(curExp - 1, 0);
+            }
+            var nextLink = expEntries[nextExp].querySelector('a.hw-link');
+            if (!nextLink) return;
             e.preventDefault();
-            history.forward();
+            nextLink.focus({ preventScroll: true });
+            nextLink.scrollIntoView({ block: 'nearest' });
             return;
           }
 
-          // Shift+ArrowUp / Shift+ArrowDown → prev / next experiment, doc, or card focus
-          if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-            // Experiment detail pages: use exp-nav-link
-            var expNavLinks = document.querySelectorAll('a.exp-nav-link');
-            if (expNavLinks.length) {
-              e.preventDefault();
-              var idx = e.key === 'ArrowDown' ? 1 : 0;
-              if (expNavLinks[idx]) window.location.href = expNavLinks[idx].getAttribute('href') || '/';
-              return;
-            }
-            // Docs pages: use sidebar nav
-            var docItems = document.querySelectorAll('.docs nav .item');
-            if (docItems.length > 1) {
-              e.preventDefault();
-              var curDoc = -1;
-              for (var d = 0; d < docItems.length; d++) {
-                if (docItems[d].classList.contains('active')) { curDoc = d; break; }
-              }
-              var nextDoc = e.key === 'ArrowDown'
-                ? (curDoc < docItems.length - 1 ? curDoc + 1 : 0)
-                : (curDoc > 0 ? curDoc - 1 : docItems.length - 1);
-              window.location.href = docItems[nextDoc].getAttribute('href') || '/';
-              return;
-            }
-            // Listing pages (home, experiments): focus cards
-            var cards = document.querySelectorAll('a.card, a.row');
-            if (cards.length > 1) {
-              e.preventDefault();
-              if (expFocusIndex === -1) expFocusIndex = e.key === 'ArrowDown' ? 0 : cards.length - 1;
-              else expFocusIndex = e.key === 'ArrowDown'
-                ? (expFocusIndex + 1) % cards.length
-                : (expFocusIndex - 1 + cards.length) % cards.length;
-              var card = cards[expFocusIndex];
-              card.focus({ preventScroll: true });
-              card.scrollIntoView({ block: 'nearest' });
-              return;
-            }
-            return;
-          }
-
-          // ArrowUp / ArrowDown → jump between sections and cards on the page
-          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            var targets = [];
-            document.querySelectorAll('section, a.card, a.row, .prose-doc h2').forEach(function (el) {
-              targets.push({ el: el, top: el.offsetTop });
-            });
-            targets.sort(function (a, b) { return a.top - b.top; });
-            if (targets.length > 1) {
-              e.preventDefault();
-              var scrollY = window.scrollY;
-              var found = -1;
-              for (var i = 0; i < targets.length; i++) {
-                if (e.key === 'ArrowDown') {
-                  if (targets[i].top > scrollY + 4) { found = i; break; }
-                } else {
-                  if (targets[i].top < scrollY - 4) { found = i; break; }
-                }
-              }
-              if (found === -1) found = e.key === 'ArrowDown' ? targets.length - 1 : 0;
-              targets[found].el.scrollIntoView({ block: 'start' });
-              return;
-            }
-          }
-
-          // Enter → follow the focused card link (if palette is closed)
-          if (e.key === 'Enter' && !isOpen() && expFocusIndex !== -1) {
-            var focused = document.activeElement;
-            if (focused && focused.matches('a.card, a.row') && focused.hasAttribute('href')) {
-              e.preventDefault();
-              window.location.href = focused.getAttribute('href') || '/';
-            }
-          }
+          // Every other arrow combination is left to the browser.
         });
       })();
     </script>

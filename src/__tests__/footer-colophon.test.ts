@@ -13,6 +13,7 @@ import { toBraille, fromBraille, BRAILLE_SENTENCE } from '../lib/braille';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { byId } from '../lib/experiments';
+import { TIKTOK_URL, YOUTUBE_URL } from '../lib/social';
 
 const FOOTER = resolve(__dirname, '..', 'components', 'Footer.astro');
 const src = readFileSync(FOOTER, 'utf8');
@@ -316,6 +317,19 @@ describe('Footer — two grouped link headings', () => {
     expect(src.indexOf('https://bsky.app/profile/univerlab.bsky.social')).toBeGreaterThan(src.indexOf("https://github.com/UniverLab'"));
   });
 
+  it('the footer links the lab on TikTok and YouTube', () => {
+    expect(TIKTOK_URL).toBe('https://www.tiktok.com/@univerlab');
+    expect(YOUTUBE_URL).toBe('https://www.youtube.com/@UniverLabOrg');
+    expect(src).toMatch(/href: TIKTOK_URL,\s+label: 'TikTok',\s+ext: true/);
+    expect(src).toMatch(/href: YOUTUBE_URL,\s+label: 'YouTube',\s+ext: true/);
+    expect(src).toMatch(/brandSvg\(TIKTOK_PATH\)/);
+    expect(src).toMatch(/brandSvg\(YOUTUBE_PATH\)/);
+    // After Bluesky, before the API entry — the social row order.
+    expect(src.indexOf('href: TIKTOK_URL')).toBeGreaterThan(src.indexOf("label: 'Bluesky'"));
+    expect(src.indexOf('href: YOUTUBE_URL')).toBeGreaterThan(src.indexOf('href: TIKTOK_URL'));
+    expect(src.indexOf("localizePath('/api'")).toBeGreaterThan(src.indexOf('href: YOUTUBE_URL'));
+  });
+
   it('the social and API links read as icons in one centred row', () => {
     // GitHub, API and the sponsor heart come from the shared Lucide lib at
     // 20px; X and Bluesky use their official fill marks (Lucide lacks them).
@@ -509,5 +523,32 @@ describe('Footer — the cosmic branch names the Orion Arm', () => {
     }
     expect(en.cosmos.branchTooltip).toContain('Orion');
     expect(es.cosmos.branchTooltip).toContain('Orión');
+  });
+});
+
+describe('Footer — the logbook replaces GitHub in the work column', () => {
+  it('links the logbook in the work group and keeps GitHub to the icon row', () => {
+    const workAt = src.indexOf('t.footer.groups.work');
+    const labAt = src.indexOf('t.footer.groups.lab');
+    const workGroup = src.slice(workAt, labAt);
+    expect(workGroup).toContain("localizePath('/logbook', lang)");
+    expect(workGroup).toContain('label: t.nav.logbook');
+    expect(workGroup).not.toContain('https://github.com/UniverLab');
+    expect((src.match(/t\.nav\.github/g) || []).length).toBe(1);
+    expect(en.nav.logbook).toBe('Logbook');
+    expect(es.nav.logbook).toBe('Bitácora');
+  });
+
+  it('leaves four links in each column', () => {
+    const workAt = src.indexOf('t.footer.groups.work');
+    const labAt = src.indexOf('t.footer.groups.lab');
+    const groupsEnd = src.indexOf('];', labAt);
+    expect((src.slice(workAt, labAt).match(/\{ href:/g) || []).length).toBe(4);
+    expect((src.slice(labAt, groupsEnd).match(/\{ href:/g) || []).length).toBe(4);
+  });
+
+  it('sits the link lists tighter with tap reach intact', () => {
+    expect(src).toContain('.foot-group { display: grid; gap: 0.25rem;');
+    expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
   });
 });

@@ -2,7 +2,8 @@
  * Page-one fill priority: at most one lab announcement, the lead letter,
  * every event that fits, then births, then deaths. A lower item never
  * prints while a higher one was left out — in English and Spanish, on
- * several edition dates.
+ * several edition dates. The queue decides admission only: the lead still
+ * prints first and the lab announcement sits under it.
  */
 import {
   todayAside,
@@ -61,7 +62,7 @@ const labmails = (html: string): string[] =>
   [...html.matchAll(/<article class="labmail">([\s\S]*?)<\/article>/g)].map((m) => m[1]);
 
 describe.each([['en'], ['es']] as Array<['en' | 'es']>)('page-one fill priority (%s)', (lang) => {
-  it.each([0, 1, 2])('prints the queue in order on date %i: lab, lead, events, births, deaths', (d) => {
+  it.each([0, 1, 2])('admits the queue in order and prints the lead first on date %i', (d) => {
     const date = DATES[d];
     const feed = feedFor(date);
     const html = todayEditionHtml(feed, lang, date);
@@ -100,6 +101,11 @@ describe.each([['en'], ['es']] as Array<['en' | 'es']>)('page-one fill priority 
     expect(birthsAt).toBeGreaterThan(-1);
     expect(deathsAt).toBeGreaterThan(-1);
     expect(birthsAt).toBeLessThan(deathsAt);
+
+    // The lead is the top story of page one: the lab story is placed by
+    // the layout under the lead, above the Workbench display.
+    expect(html.indexOf('<article class="lead')).toBeLessThan(html.indexOf('<article class="labmail">'));
+    expect(html.indexOf('<article class="labmail">')).toBeLessThan(html.indexOf('class="notice notice--feature"'));
   });
 
   it.each([0, 1, 2])('the twin still lists every letter and every lab box on date %i', (d) => {

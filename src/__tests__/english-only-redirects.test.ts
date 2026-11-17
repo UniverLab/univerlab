@@ -60,7 +60,8 @@ describe('English-only pages are never linked with the /es prefix', () => {
 
   it('the command palette links the Logbook to its own page', () => {
     const src = read('src/layouts/BaseLayout.astro');
-    expect(src).toContain("{ cmd: '/status', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' }");
+    expect(src).toContain("{ cmd: '/logbook', label: lang === 'es' ? 'Cuaderno de bitácora' : 'Logbook', href: base + '/logbook/' }");
+    expect(src).not.toContain("cmd: '/status'");
     expect(src).not.toContain("base + '/status/'");
     expect(src).not.toContain("base + '/newspaper/#lab'");
   });

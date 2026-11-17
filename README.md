@@ -126,12 +126,12 @@ The site is navigable via keyboard, inspired by Canopy's TUI navigation.
 
 | Shortcut | Action |
 |---|---|
-| `↑` / `↓` | Jump between sections and cards on the page |
-| `Shift+↑` | Previous experiment or doc |
-| `Shift+↓` | Next experiment or doc |
-| `Shift+←` | Go back (browser history) |
-| `Shift+→` | Go forward (browser history) |
-| `Enter` | Follow the focused card link |
+| `↑` / `↓` / `←` / `→` | Scroll natively (the browser's own behaviour) |
+| `Shift+↓` | Next experiment on the home page |
+| `Shift+↑` | Previous experiment on the home page |
+| `Shift+→` | Next experiment page, on an experiment page |
+| `Shift+←` | Previous experiment page, on an experiment page |
+| `Enter` | Open the focused link |
 | `Esc` | Close active overlay |
 | `/` | Open command palette |
 | `?` | Open help / command list |
@@ -146,7 +146,7 @@ Commands are auto-generated from experiment IDs in `experiments.ts`.
 - **Enter** — execute the selected command
 - **Esc** — close the palette
 
-Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`.
+Built-in commands: `/home`, `/experiments`, `/manifesto`, `/contributors`, `/github`, `/docs`, `/find`, `/faq`, `/theme`, `/logbook`.
 Theme submenu: `/theme` → Circadian, Papyrus, Slate.
 Each experiment also gets a `/<id>` command (e.g. `/canopy`, `/texforge`).
 

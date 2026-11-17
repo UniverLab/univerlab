@@ -149,4 +149,10 @@ describe('the packed classifieds page', () => {
       expect(img).toMatch(/height="\d+"/);
     }
   });
+
+  it('links page two to the full logbook from its folio', () => {
+    const page2 = src.slice(src.indexOf('<section id="lab"'), src.indexOf('<section id="lab2"'));
+    expect(page2).toContain("localizePath('/logbook', lang)");
+    expect(page2).toContain('{t.nav.logbook}');
+  });
 });

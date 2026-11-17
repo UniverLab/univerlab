@@ -356,6 +356,32 @@ describe('fitFrontPage', () => {
     expect(edition.querySelector('.rail')).not.toBeNull();
     expect(edition.querySelector('.notice--feature')).not.toBeNull();
   });
+
+  it('never trims the lab story while letters go', () => {
+    document.body.innerHTML =
+      '<div class="paper"><div class="paper-page" id="page-1"><div id="edition">' +
+      '<article class="lead">lead</article><div class="rail">rail</div>' +
+      '<article class="labmail">lab</article>' +
+      '<aside class="notice notice--feature">duo</aside><div class="cols"></div>' +
+      '</div></div></div>';
+    const edition = document.getElementById('edition') as HTMLElement;
+    const wrap = edition.querySelector('.cols') as HTMLElement;
+    wrap.appendChild(liveColumn(document, [ev(), ev(), ev(), ev(), ev(), ev(), ev(), ev()], 100));
+    wrap.appendChild(liveColumn(document, [br()], 100));
+    const paperEl = document.querySelector('.paper') as HTMLElement;
+    // Same sheet as the eight-letter trim above: the first column runs
+    // past it, so whole letters go — but never the lab story. The
+    // Workbench display goes before any letter does (fitFrontPage's
+    // standing rule), so it is already gone here; the lab story,
+    // the lead and the rail all survive.
+    mockBottom(paperEl, 244);
+    const out = fitFrontPage(edition);
+    expect(out.trimmedLetters).toBeGreaterThan(0);
+    expect(edition.querySelector('.labmail')).not.toBeNull();
+    expect(edition.querySelector('.lead')).not.toBeNull();
+    expect(edition.querySelector('.rail')).not.toBeNull();
+    expect(edition.querySelector('.notice--feature')).toBeNull();
+  });
 });
 
 describe('pages two and three hold only the classifieds that fit', () => {
@@ -726,8 +752,9 @@ describe('front page fits its sheet, masthead included', () => {
       });
       fitFrontPage(edition);
       // The visual sheet edge: paper 1000, less the colophon's 30 and the
-      // 24px body line, all as seen through the scale.
-      const visualEdge = (1000 - 30) * scale - 24;
+      // 24px body line, all as seen through the scale — the line reserve
+      // scales with the display, like the fitter's own limit.
+      const visualEdge = (1000 - 30 - 24) * scale;
       const visualCap = Math.floor(visualEdge * 0.36);
       const written = Number.parseFloat(img.style.maxHeight);
       expect(Number.isFinite(written)).toBe(true);
@@ -740,6 +767,97 @@ describe('front page fits its sheet, masthead included', () => {
       expect(written * scale).toBeGreaterThanOrEqual(visualCap - 1);
       expect(written * scale).toBeLessThanOrEqual(visualCap + 1);
       expect(story.getBoundingClientRect().bottom).toBeLessThanOrEqual(visualEdge + 24);
+    });
+  });
+
+  describe('the space under the rail fills with whole letters', () => {
+    // A photo lead with a rail and enough letters: the band's leftover
+    // column moves under the rail instead of leaving a blank band beside and
+    // below it. The rail's rect breathes with its descendants, like the
+    // laid-out page, so the fill proves itself against a live foot.
+    it('moves the band column under the rail while the rail ends inside the sheet', () => {
+      const edition = frontScaffold(
+        [
+          [ev(), ev()],
+          [br(), br()],
+        ],
+        { railItems: 2, paperBottom: 1000, colophonHeight: 30 },
+      );
+      // Paper 1000, colophon 30: the sheet ends at 946.
+      const rail = edition.querySelector('.rail') as HTMLElement;
+      const also = edition.querySelector('.rail .also') as HTMLElement;
+      also.getBoundingClientRect = () =>
+        rect(200 + also.querySelectorAll('.aside-item').length * 40);
+      rail.getBoundingClientRect = () => {
+        let bottom = also.getBoundingClientRect().bottom;
+        for (const c of Array.from(rail.querySelectorAll(':scope > .col'))) {
+          bottom = Math.max(bottom, (c as Element).getBoundingClientRect().bottom);
+        }
+        return rect(bottom);
+      };
+      const out = fitFrontPage(edition);
+      // One band column stood under the lead story, the other moved under
+      // the rail: no .cols band is left holding blank paper.
+      expect(edition.querySelectorAll('.lead-cols .col')).toHaveLength(1);
+      expect(edition.querySelectorAll('.rail > .col')).toHaveLength(1);
+      expect(edition.querySelector('.cols')).toBeNull();
+      // A rail that still holds a moved-in column stays, even with no
+      // aside items left in it.
+      expect(edition.querySelector('.rail')).not.toBeNull();
+      // Every surviving letter column ends inside the sheet whole.
+      for (const col of Array.from(edition.querySelectorAll('.col'))) {
+        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(947);
+      }
+      expect(edition.querySelector('.colophon-note')).not.toBeNull();
+      expect(out.trimmedLetters).toBe(0);
+    });
+
+    // A refit after the sheet shrinks obeys the same rules as the first
+    // fit: whole letters only, nothing past the sheet's bottom edge, the
+    // colophon visible.
+    it('refits inside a shrunken sheet: whole letters only, colophon kept', () => {
+      const edition = frontScaffold(
+        [
+          [ev(), ev(), ev(), ev()],
+          [br(), br(), br(), br()],
+        ],
+        { duo: false },
+      );
+      // No filler templates: this refit is about whole letters, not feet.
+      for (const t of Array.from(edition.querySelectorAll('template[data-filler]'))) t.remove();
+      const first = fitFrontPage(edition);
+      expect(first.trimmedLetters).toBe(0);
+      // The viewport resize shrinks the sheet: paper 200, no colophon
+      // reserve mocked, so the new limit is 176.
+      const paper = edition.closest('.paper') as HTMLElement;
+      mockBottom(paper, 200);
+      const out = fitFrontPage(edition);
+      expect(out.trimmedLetters).toBe(2);
+      for (const col of Array.from(edition.querySelectorAll('.col'))) {
+        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(177);
+      }
+      expect(edition.querySelector('.colophon-note')).not.toBeNull();
+    });
+
+    // A transform-scaled sheet measures rects in visual pixels and style
+    // lengths in layout ones: the body line scales with the display, so a
+    // column ending between the unscaled and the scaled limits keeps its
+    // letter instead of losing it to a limit in the wrong units.
+    it('keeps a letter ending between the unscaled and scaled limits', () => {
+      const items = Array.from({ length: 44 }, () => ev());
+      const edition = frontScaffold([items], { duo: false, paperBottom: 1000 });
+      const paper = edition.closest('.paper') as HTMLElement;
+      paper.getBoundingClientRect = () => rect(1000, 1000);
+      Object.defineProperty(paper, 'offsetHeight', { value: 2000, configurable: true });
+      // Scale one half: the unscaled limit would be 976, the scaled one is
+      // 988, and the single 44-letter column ends at 980.
+      const out = fitFrontPage(edition);
+      expect(out.trimmedLetters).toBe(0);
+      expect(edition.querySelectorAll('.col article.item')).toHaveLength(44);
+      for (const col of Array.from(edition.querySelectorAll('.col'))) {
+        expect(col.getBoundingClientRect().bottom).toBeLessThanOrEqual(989);
+      }
+      expect(edition.querySelector('.colophon-note')).not.toBeNull();
     });
   });
 });

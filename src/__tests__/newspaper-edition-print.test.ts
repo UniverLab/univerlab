@@ -157,6 +157,22 @@ describe('event photos print beside every event that has one', () => {
     expect(html).toContain('<figure class="photo photo--lead">');
     expect(html).not.toContain('loading="lazy"');
   });
+  it('a portrait lead photo sets beside the text, a square one too, a landscape spans', () => {
+    const portrait = fact({ kind: 'event', year: '1945', page: 'Engelbart', text: 'the mouse', thumb: { src: 'https://upload.wikimedia.org/commons/p.jpg', w: 800, h: 1200 } });
+    const portraitHtml = todayEditionHtml({ facts: [portrait], lab: [] }, 'en', DATE);
+    expect(todayLead([portrait], DATE)).toBe(portrait);
+    expect(portraitHtml).toContain('<figure class="photo photo--lead photo--lead--portrait">');
+    const square = fact({ kind: 'event', year: '1946', page: 'Square', text: 'a square photo', thumb: { src: 'https://upload.wikimedia.org/commons/s.jpg', w: 640, h: 640 } });
+    expect(todayEditionHtml({ facts: [square], lab: [] }, 'en', DATE)).toContain(
+      '<figure class="photo photo--lead photo--lead--square">',
+    );
+    // A landscape photo keeps the spanning figure with no side class, and a
+    // lead without dims never guesses an orientation.
+    const wide = fact({ kind: 'event', year: '1947', page: 'Wide', text: 'a wide photo', thumb: { src: 'https://upload.wikimedia.org/commons/w.jpg', w: 320, h: 200 } });
+    expect(todayEditionHtml({ facts: [wide], lab: [] }, 'en', DATE)).toContain('<figure class="photo photo--lead">');
+    const noDims = fact({ kind: 'event', year: '1948', page: 'NoDims', text: 'no dims', thumb: { src: 'https://upload.wikimedia.org/commons/n.jpg' } });
+    expect(todayEditionHtml({ facts: [noDims], lab: [] }, 'en', DATE)).toContain('<figure class="photo photo--lead">');
+  });
   it('a lead without a thumb prints no figure', () => {
     const ev = fact({ kind: 'event', year: '1945', page: 'United Nations', text: 'charter signed' });
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
