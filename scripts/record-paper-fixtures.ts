@@ -48,6 +48,7 @@ const FIXED = [
   '2026-11-15',
   '2026-11-16',
   '2026-11-17',
+  '2026-11-18',
 ];
 
 /** Candidate scan window for the three coverage dates (all past editions). */

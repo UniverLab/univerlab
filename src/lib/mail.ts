@@ -2,7 +2,7 @@
 // been opened today and what each letter carries. No DOM here; the mailbox
 // script runs these and paints the result.
 
-import { dayKey, summaryText } from './science-filter';
+import { dayKey, passagesText, summaryText } from './science-filter';
 import { entryTexts } from './field-notes';
 
 /** One announcement of the public feed (GET https://announcements.univerlab.org). */
@@ -55,6 +55,9 @@ export interface PastLetter {
   summary?: string;
   /** True when the extract held more than `summary` shows. */
   summaryCut?: boolean;
+  /** The fallback body when the event has no text of its own: one passage
+   *  per linked page that carries text, each naming its source page. */
+  passages?: { page: string; text: string }[];
 }
 
 export type MailLetter = LabLetter | PastLetter;
@@ -158,7 +161,14 @@ export function labLetters(
 
 /** Today's letter from the past: one per day, id bound to the calendar day. */
 export function pastLetter(
-  fact: { year: string; text: string; link: string; summary?: string; summaryCut?: boolean },
+  fact: {
+    year: string;
+    text: string;
+    link: string;
+    summary?: string;
+    summaryCut?: boolean;
+    passages?: { page: string; text: string }[];
+  },
   now: Date,
 ): PastLetter {
   return {
@@ -169,11 +179,13 @@ export function pastLetter(
     link: fact.link,
     ...(fact.summary !== undefined ? { summary: fact.summary } : {}),
     ...(fact.summaryCut !== undefined ? { summaryCut: fact.summaryCut } : {}),
+    ...(fact.passages !== undefined ? { passages: fact.passages } : {}),
   };
 }
 
 /** How a past letter prints: with a summary, the one-line text is the
- *  headline and the summary the body; without one, the text is the body. */
+ *  headline and the summary the body; with passages, the text is the
+ *  headline and the passages the body; with neither, the text is the body. */
 export interface PastLetterParts {
   headline: string;
   body: string;
@@ -184,10 +196,14 @@ export function pastLetterParts(
   l: PastLetter,
   copy: { readWikipedia: string; continuesWikipedia: string },
 ): PastLetterParts {
-  const headline = l.summary ? l.text : '';
-  const body = l.summary ? summaryText(l) : l.text;
-  const linkLabel = l.summary && l.summaryCut ? copy.continuesWikipedia : copy.readWikipedia;
-  return { headline, body, linkLabel };
+  if (l.summary) {
+    const linkLabel = l.summaryCut ? copy.continuesWikipedia : copy.readWikipedia;
+    return { headline: l.text, body: summaryText(l), linkLabel };
+  }
+  if (l.passages?.length) {
+    return { headline: l.text, body: passagesText(l.passages), linkLabel: copy.readWikipedia };
+  }
+  return { headline: '', body: l.text, linkLabel: copy.readWikipedia };
 }
 
 /** One fact per day: the pool is shuffled per click in the old popup, but the

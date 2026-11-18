@@ -12,7 +12,7 @@ import { dailyFact } from './mail';
 import { balanceHeads, HEAD_LIMIT } from './paper-fit';
 import { paperNoticeHtml, paperNoticesMarkdown, paperHouseNoticeDuoHtml, paperWorkbenchNoticeDuoHtml } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
-import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
+import { letterPool, passagesText, summaryText, type Fact, type FilterLang } from './science-filter';
 
 export type TodayLang = FilterLang;
 
@@ -152,11 +152,13 @@ function leadHeadline(lead: Fact): string {
 
 /** A printed letter's body, under its line. With a summary, the summary is
  *  the paragraph (trimmed by the same rules the lead uses, so columns keep
- *  fitting); without one, an event keeps its old silence (its one line is
- *  already the headline) and a person prints their line. */
+ *  fitting); with passages, the linked pages' passages are the paragraph;
+ *  with neither, an event keeps its old silence (its one line is already
+ *  the headline) and a person prints their line. */
 function itemBody(fact: Fact): string {
   if (fact.long) return summaryText({ summary: fact.long, summaryCut: fact.longCut });
   if (fact.summary) return summaryText(fact);
+  if (fact.kind === 'event' && fact.passages?.length) return passagesText(fact.passages);
   return fact.kind === 'event' ? '' : fact.text;
 }
 
@@ -460,6 +462,13 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const headline = leadHeadline(lead);
     const body = leadBody(lead);
     const figure = photoFigure(lead, t, { eager: true, caption: true, size: 'lead' });
+    // A short passages fallback would leave a stub second column whose
+    // ragged tail prints no ink across the page (paper rule H), so it sets
+    // in one column; summaries keep the columns their length was cut for.
+    const single =
+      !lead.long && !lead.summary && body.length > 0 && body.length < 200
+        ? ' lead-text--single'
+        : '';
     // The lead's words and its photo set as one block: the kicker, the
     // headline and the text (in as many columns as its width holds) beside
     // the photo, which the client fit sizes to them so neither side ends in
@@ -468,7 +477,7 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<article class="lead${figure ? '' : ' lead--text'}"><div class="lead-main">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
-      `<div class="lead-text">` +
+      `<div class="lead-text${single}">` +
       (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`

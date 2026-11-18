@@ -19,10 +19,11 @@ const FIXED = [
   '2026-11-15',
   '2026-11-16',
   '2026-11-17',
+  '2026-11-18',
 ];
 
 describe('paper fixtures', () => {
-  test('manifest holds the 7 fixed dates plus 3 coverage dates', () => {
+  test('manifest holds the 8 fixed dates plus 3 coverage dates', () => {
     const manifest = JSON.parse(readFileSync(join(DIR, 'manifest.json'), 'utf8'));
     expect(manifest.dates).toHaveLength(FIXED.length + 3);
     for (const d of FIXED) expect(manifest.dates).toContain(d);
