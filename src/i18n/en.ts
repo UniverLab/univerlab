@@ -1084,8 +1084,8 @@ export const en = {
     h1: 'Start with a free call.',
     intro:
       'Book a free 15-minute introductory call to tell us what you need, explore your situation and determine whether UniverLab can help with automation and artificial intelligence. You don’t need technical knowledge or a defined solution. This section only books the free first call.',
-    fallbackTitle: 'Prefer to write instead?',
-    fallbackText: 'When the form cannot load, write to the lab and a person books it by hand:',
+    fallbackTitle: 'Book your free call on WhatsApp or email:',
+    fallbackText: 'Write to the lab and a person books your free call:',
     whatsapp: 'Write on WhatsApp →',
     emailLabel: 'or write to',
     loading: 'Looking for free slots…',

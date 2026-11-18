@@ -1078,8 +1078,8 @@ export const es: Dict = {
     h1: 'Empieza por una conversación gratis.',
     intro:
       'Agenda una conversación gratis de 15 minutos para contarnos qué necesitas, explorar tu situación y determinar si UniverLab puede ayudarte con automatización e inteligencia artificial. No necesitas conocimientos técnicos ni una solución definida. Esta sección solo agenda la primera llamada gratis.',
-    fallbackTitle: '¿Prefieres escribir?',
-    fallbackText: 'Si el formulario no carga, escríbenos y una persona la agenda a mano:',
+    fallbackTitle: 'Agenda tu llamada gratis por WhatsApp o correo:',
+    fallbackText: 'Escríbenos y una persona agenda tu llamada gratis:',
     whatsapp: 'Escríbenos por WhatsApp →',
     emailLabel: 'o escribe a',
     loading: 'Buscando espacios libres…',
