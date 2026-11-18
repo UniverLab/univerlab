@@ -95,8 +95,8 @@ the agent creates has no attendees and sends no notifications; its
 description carries the client's name, number, service, language and
 intake brief.
 
-Public agenda (no model): the same Worker also answers
-`https://agenda.univerlab.org` so the site's booking form can offer the
+Public booking API (no model): the same Worker also answers
+`https://booking.univerlab.org` so the site's booking form can offer the
 free 15-minute first call while the WhatsApp number is not approved.
 No WhatsApp secret is needed for these routes, and the WhatsApp
 webhook and the agent's behaviour do not change.
@@ -226,15 +226,15 @@ deploy workflow:
 }
 ```
 
-Morning agenda (configuration, not code): the Worker's Cron Trigger
+Morning booking digest (configuration, not code): the Worker's Cron Trigger
 wakes it every 30 minutes, and from the configured time on it sends the
 operator one message with that day's bookings — time, service,
 conversation name and payment state, in time order, read from the same
 Workbench calendar events the booking code writes. A day with nothing
 booked sends nothing. Later-day bookings, moves and cancellations wait
-for their own day's agenda; a same-day one that lands after the agenda
+for their own day's digest; a same-day one that lands after the digest
 went out is sent at once as one line. The `production` environment's
-variable `WA_AGENDA_CONFIG` reaches the Worker as `AGENDA_CONFIG` (a
+variable `WA_BOOKING_DIGEST_CONFIG` reaches the Worker as `BOOKING_DIGEST_CONFIG` (a
 JSON object). Unset, it runs at 06:30 America/Bogota (inside quiet
 hours, so it uses the gate's quiet-hours exemption; while the operator
 is away it waits like any other note and goes out on `/active`). A

@@ -15,7 +15,7 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
 const bookHref = bookTarget(lang);
 // Build configuration with a local default: the production workflow passes
 // the real values (see .github/workflows/deploy-site.yml).
-const api = import.meta.env.PUBLIC_BOOKING_API || 'https://agenda.univerlab.org';
+const api = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univerlab.org';
 const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 // The free-first-call service is not deployed: with this off (the default) the
 // section offers WhatsApp and email instead of a form that cannot load. Set

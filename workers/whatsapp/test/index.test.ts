@@ -14,12 +14,12 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock('../src/daybook', () => ({ runAgenda: jest.fn(async () => undefined) }));
+jest.mock('../src/daybook', () => ({ runBookingDigest: jest.fn(async () => undefined) }));
 
 import worker from '../src/index';
-import { runAgenda } from '../src/daybook';
+import { runBookingDigest } from '../src/daybook';
 
-test('the Cron Trigger hands every scheduled wake to the agenda run', async () => {
+test('the Cron Trigger hands every scheduled wake to the digest run', async () => {
   const waits: Array<Promise<unknown>> = [];
   const ctx = { waitUntil: (p: Promise<unknown>) => waits.push(p) } as unknown as ExecutionContext;
   const env = {};
@@ -28,6 +28,6 @@ test('the Cron Trigger hands every scheduled wake to the agenda run', async () =
   await worker.scheduled({ scheduledTime: at }, env as never, ctx);
   await Promise.all(waits);
 
-  expect(runAgenda).toHaveBeenCalledTimes(1);
-  expect(runAgenda).toHaveBeenCalledWith(env, at);
+  expect(runBookingDigest).toHaveBeenCalledTimes(1);
+  expect(runBookingDigest).toHaveBeenCalledWith(env, at);
 });

@@ -43,9 +43,7 @@ new_sqlite_classes = ["Calendar"]
 tag = "v4"
 new_sqlite_classes = ["Gate"]
 
-[[routes]]
-pattern = "agenda.univerlab.org"
-custom_domain = true
+# Domains/routes managed in UniverLab/infra (Terraform).
 
 [observability]
 enabled = true

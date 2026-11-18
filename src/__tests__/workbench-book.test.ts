@@ -137,7 +137,7 @@ describe('workbench-book view', () => {
   it('the service address and site key are build configuration with local defaults', () => {
     expect(VIEW).toContain('PUBLIC_BOOKING_API');
     expect(VIEW).toContain('PUBLIC_TURNSTILE_SITE_KEY');
-    expect(VIEW).toContain('https://agenda.univerlab.org');
+    expect(VIEW).toContain('https://booking.univerlab.org');
     expect(VIEW).toContain('1x00000000000000000000AA');
     expect(VIEW).toContain('data-api={api}');
     expect(VIEW).toContain('data-lang={lang}');
