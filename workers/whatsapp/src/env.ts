@@ -3,9 +3,10 @@ export interface Env {
   SITE_STATE?: KVNamespace;
   CONVERSATION: DurableObjectNamespace<import('./conversation').Conversation>;
   REGISTRY?: DurableObjectNamespace<import('./operator').Operator>;
-  CALENDAR?: DurableObjectNamespace<import('./calendar').Calendar>;
-  GATE?: DurableObjectNamespace<import('./gate').Gate>;
-  TURNSTILE_SECRET?: string;
+  /** Service binding to the standalone booking worker (booking.univerlab.org). */
+  BOOKING?: Fetcher;
+  /** Shared secret for the booking worker's POST /internal/call (agent door). */
+  INTERNAL_CALL_SECRET?: string;
   /** Shared secret for the site's POST /internal/signed (signing notices). */
   SIGN_NOTIFY_SECRET?: string;
   WA_APP_SECRET: string;
@@ -22,13 +23,7 @@ export interface Env {
   PROOF_MODEL_OPTIONS?: string;
   BURST_QUIET_MS?: string;
   BURST_MAX_MS?: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
-  GOOGLE_REFRESH_TOKEN?: string;
-  WORKBENCH_CALENDAR_ID?: string;
-  BOOKING_CONFIG?: string;
   GUARD_CONFIG?: string;
-  BOOKING_DIGEST_CONFIG?: string;
 }
 
 /** How long the agent waits for a burst of client messages before answering. */

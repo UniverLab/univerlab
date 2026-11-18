@@ -91,17 +91,6 @@ jest.mock('../src/schedule', () => {
   };
 });
 
-jest.mock('../src/google', () => ({
-  accessToken: jest.fn(),
-  freeBusy: jest.fn(),
-  listEvents: jest.fn(),
-  getEvent: jest.fn(),
-  insertEvent: jest.fn(),
-  patchEvent: jest.fn(),
-  deleteEvent: jest.fn(),
-  HOLD_PREFIX: '[Por confirmar] ',
-}));
-
 jest.mock('../src/booking', () => {
   const actual = jest.requireActual('../src/booking') as Record<string, unknown>;
   return { ...actual, decide: jest.fn() };

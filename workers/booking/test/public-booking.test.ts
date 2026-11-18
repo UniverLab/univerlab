@@ -54,6 +54,16 @@ function makeEnv(s: Scenario): {
   const notes: Record<string, unknown>[] = [];
   const calendar = s.calendar ?? (() => ({ ok: false, reason: 'calendar-down' }));
   const gate = s.gate ?? (() => ({ ok: true }));
+  // The operator lives behind the OPERATOR service binding: notes and
+  // the digest-sent query travel as /internal/booking-notify payloads.
+  const operator: Fetcher = {
+    fetch: async (req: Request) => {
+      const body = (await req.json()) as Record<string, unknown>;
+      if (body.type === 'note') notes.push(body);
+      if (body.type === 'digestSent') return Response.json({ sent: s.bookingDigestSent === true });
+      return Response.json({ ok: true });
+    },
+  } as unknown as Fetcher;
   return {
     seen,
     gateSeen,
@@ -67,14 +77,8 @@ function makeEnv(s: Scenario): {
         gateSeen.push(body);
         return gate(body);
       }),
-      REGISTRY: fakeNs((body) => {
-        if (body.action === 'note') notes.push(body);
-        if (body.action === 'bookingDigestSent') return { sent: s.bookingDigestSent === true };
-        return { name: 'ana' };
-      }),
-      OPERATOR_PHONE: '+57 300 999 8888',
+      OPERATOR: operator,
       ...(s.secret === null ? {} : { TURNSTILE_SECRET: s.secret ?? SECRET }),
-      WA_APP_SECRET: 'wa-secret',
     } as unknown as Env,
   };
 }
@@ -475,6 +479,27 @@ test('cancel answers unavailable when the owner is down', async () => {
     body: JSON.stringify({ t: token }),
   });
   expect(res.status).toBe(503);
+});
+
+test('the public door needs no WhatsApp secret to run', async () => {
+  // An env with no WA_* key at all still serves slots, bookings and
+  // cancels: only operator notes are skipped without their binding.
+  const { env } = makeEnv({ calendar: () => ({ ok: true, slots: [SLOT] }) });
+  for (const key of Object.keys(env)) {
+    expect(key.startsWith('WA_')).toBe(false);
+  }
+  expect((env as Record<string, unknown>).OPERATOR).toBeDefined();
+  const { env: bare } = makeEnv({ calendar: () => ({ ok: true, slots: [SLOT] }) });
+  delete (bare as unknown as Record<string, unknown>).OPERATOR;
+  const slots = await call('/slots', bare);
+  expect(slots.status).toBe(200);
+  const booked = await call('/book', bare, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Ana', email: 'ana@example.com', lang: 'es', slot: SLOT, turnstileToken: 't' }),
+  });
+  // The booking lands; without OPERATOR only its note is skipped.
+  expect(booked.status).toBe(200);
 });
 
 test('nothing in this path calls a language model', async () => {

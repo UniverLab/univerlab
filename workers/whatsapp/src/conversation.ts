@@ -67,11 +67,9 @@ import {
   type CaptureReason,
   type CaptureState,
 } from './reasons';
-import { HOLD_PREFIX } from './google';
 import { changeLine, sameDayAfterBookingDigest } from './daybook';
 import { contactKey, EXISTING, LIMIT_TEXT, SLOT_TAKEN } from './limits';
-import { calendarCall, refuseAndHandOff, seedFromActive } from './reservations';
-import type { ActiveInfo } from './calendar';
+import { calendarCall, refuseAndHandOff, seedFromActive, type ActiveInfo } from './reservations';
 import { register, release, postNote, nameBase } from './registry';
 import { holdReminderText, noteBody } from './notices';
 import {
@@ -1147,13 +1145,13 @@ export class Conversation extends DurableObject<Env> {
     }
     const minutes = minutesFor(st.service);
     // A paid (operator-confirmed) consultation stays confirmed when the
-    // client moves it; only unpaid holds carry the [Por confirmar] prefix. A
-    // delivery never holds: it books straight away like a first call.
-    const hold = st.service === 'consultation' && st.phase !== 'booked';
+    // client moves it; only unpaid holds are stored with the [Por confirmar]
+    // prefix, which the booking worker adds itself. A delivery never holds:
+    // it books straight away like a first call.
     const summary =
       st.service === 'delivery'
         ? 'Entrega de auditoría · ' + (st.name || '+' + st.phone)
-        : (hold ? HOLD_PREFIX : '') + serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone);
+        : serviceLabel(st.lang, st.service) + ' · ' + (st.name || '+' + st.phone);
     const description = formatBrief({
       name: st.name,
       phone: st.phone,
@@ -1180,6 +1178,7 @@ export class Conversation extends DurableObject<Env> {
           action: 'reserve',
           contactKey: contactKey('wa', st.phone),
           service: st.service,
+          lang: st.lang,
           startIso,
           minutes,
           summary,
@@ -1230,9 +1229,14 @@ export class Conversation extends DurableObject<Env> {
       await this.limitRefusal(m, st.lang, st.phone, st.name, st.service, st.brief, res.reason as 'free-limit' | 'expired-holds' | 'hold-cap' | 'day-cap' | 'moves');
       return;
     }
-    const cfg = bookingConfig(this.env);
     const now = Date.now();
     const kind = res.kind === 'booked' ? 'booked' : 'hold';
+    // The booking worker owns the booking configuration: the hold message
+    // payment sentence travels with the reservation and wins over the local
+    // fallback. This worker keeps no booking deploy variables, so the
+    // fallback always reads the built-in defaults.
+    const cfg = bookingConfig({});
+    const serverPayments = typeof res.payments === 'string' && res.payments ? res.payments : null;
     st.phase = kind === 'hold' ? 'held' : 'booked';
     st.eventId = res.eventId as string;
     st.start = startIso;
@@ -1284,7 +1288,7 @@ export class Conversation extends DurableObject<Env> {
       st.service === 'delivery'
         ? renderBooking(DELIVERED[st.lang], { slot: slotText })
         : kind === 'hold'
-          ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: paymentText(cfg, st.lang, st.phone) })
+          ? renderBooking(HOLD_SENT[st.lang], { slot: slotText, payments: serverPayments ?? paymentText(cfg, st.lang, st.phone) })
           : renderBooking(PICKED[st.lang], {
               slot: slotText,
               service: serviceLabel(st.lang, st.service),
@@ -1420,7 +1424,7 @@ export class Conversation extends DurableObject<Env> {
         phase: st.phase,
         offered: st.offered.map((s) => formatSlot(s, st.lang)),
         today: bogotaDateKey(Date.now()),
-        horizonDays: bookingConfig(this.env).horizonDays,
+        horizonDays: bookingConfig({}).horizonDays,
         eventStart: st.start,
       },
       m.text ?? ''
@@ -2089,7 +2093,7 @@ export class Conversation extends DurableObject<Env> {
       }
       // The vision reading is a model call: it never runs past the daily limit.
       if (!(await guardModelTake(this.env, st.lang))) throw new Error(GUARD_OVER);
-      const cfg = bookingConfig(this.env);
+      const cfg = bookingConfig({});
       const res = await readProof(
         this.env,
         st,
