@@ -36,6 +36,16 @@ const STRINGS: SignStrings = {
   hashLabel: 'SHA-256',
   viewerLabel: 'The document',
   zoomHint: 'Every page is here.',
+  readerLoading: 'Loading…',
+  readerError: 'Could not load.',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
+  zoomFit: 'Fit to width',
+  pagePrev: 'Previous page',
+  pageNext: 'Next page',
+  pageOf: 'Page {current} of {total}',
+  downloadOrig: 'Download the original PDF',
+  hashMismatch: 'Bytes do not match.',
   formName: 'Your full name',
   formNameError: 'Write the name.',
   formId: 'Your identification number',
@@ -88,10 +98,14 @@ describe.each([
 });
 
 describe('signInnerHtml', () => {
-  it('pending renders the viewer, the form and the disabled submit with an error slot', () => {
+  it('pending renders the reader container, the download fallback and the form with an error slot', () => {
     const html = signInnerHtml(REQ, 'ready', STRINGS);
     expect(html).toContain('class="sign-viewer"');
-    expect(html).toContain('<iframe');
+    expect(html).toContain('class="sign-reader"');
+    expect(html).toContain('data-id="req-1"');
+    expect(html).toContain(`href="/api/sign-file?id=req-1"`);
+    expect(html).toContain('Download the original PDF');
+    expect(html).not.toContain('<iframe');
     expect(html).toContain('id="sign-form"');
     expect(html).toMatch(/id="sign-submit"[^>]*disabled/);
     expect(html).toContain('data-error');
@@ -107,18 +121,18 @@ describe('signInnerHtml', () => {
     expect(html).toContain(STRINGS.expiredTitle);
   });
 
-  it('matching viewer renders the form, the iframe and the auth error slot', () => {
+  it('matching viewer renders the form, the reader and the auth error slot', () => {
     const html = signInnerHtml(REQ, 'ready', STRINGS, {
       email: 'MARIA@example.com',
       logoutUrl: 'https://team.cloudflareaccess.com/cdn-cgi/access/logout',
     });
-    expect(html).toContain('<iframe');
+    expect(html).toContain('class="sign-reader"');
     expect(html).toContain('id="sign-form"');
     expect(html).toContain('data-err-auth="Sign in with the link address."');
     expect(html).not.toContain('sign-switch');
   });
 
-  it('wrong-address viewer shows the masked address and the switch link, no form or iframe', () => {
+  it('wrong-address viewer shows the masked address and the switch link, no form or reader', () => {
     const html = signInnerHtml(REQ, 'ready', STRINGS, {
       email: 'owner@univerlab.org',
       logoutUrl: 'https://team.cloudflareaccess.com/cdn-cgi/access/logout',
@@ -128,7 +142,7 @@ describe('signInnerHtml', () => {
     expect(html).toContain('class="sign-switch"');
     expect(html).toContain('https://team.cloudflareaccess.com/cdn-cgi/access/logout');
     expect(html).not.toContain('id="sign-form"');
-    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('sign-reader');
     expect(html).not.toContain('Service order 7');
   });
 
@@ -138,7 +152,7 @@ describe('signInnerHtml', () => {
     expect(html).toContain('m•••@example.com');
     expect(html).not.toContain('sign-switch');
     expect(html).not.toContain('id="sign-form"');
-    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('sign-reader');
   });
 });
 
@@ -163,9 +177,19 @@ describe('sign.css', () => {
     expect(css).toContain('#sign-submit:disabled');
   });
 
-  it('sizes the viewer iframe for phone and desktop', () => {
-    expect(css).toMatch(/\.sign-viewer iframe[^}]*height:\s*70vh/);
+  it('renders paper sheets with a full-width canvas and no iframe', () => {
+    expect(css).not.toContain('.sign-viewer iframe');
+    expect(css).toMatch(/\.sign-sheet canvas[^}]*width:\s*100%/);
     expect(css).toMatch(/max-width:\s*40rem/);
+  });
+
+  it('keeps the text layer selectable over the sheet', () => {
+    expect(css).toMatch(/\.sign-text-layer span[^}]*user-select:\s*text/);
+  });
+
+  it('lays the owner console side by side on desktop and stacked below', () => {
+    expect(css).toMatch(/\.sign-owner-grid[^}]*display:\s*grid/);
+    expect(css).toMatch(/min-width:\s*64rem[\s\S]*?\.sign-owner-grid[^}]*grid-template-columns:\s*28rem minmax\(0,\s*1fr\)/);
   });
 
   it('clips horizontal overflow inside the signing column', () => {

@@ -25,13 +25,99 @@
   font-size: 1.25rem;
   margin: 0 0 0.5rem;
 }
-.sign-viewer iframe {
-  width: 100%;
-  height: 70vh;
-  min-height: 24rem;
+.sign-reader {
+  margin: 1rem 0;
+  outline-offset: 3px;
+}
+.sign-reader:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.sign-reader-status {
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+.sign-reader-alert {
+  color: var(--accent);
+  font-weight: bold;
+}
+.sign-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.sign-toolbar button {
+  font: inherit;
+  font-family: var(--font-mono);
+  color: var(--ink);
+  background: var(--bg-raise);
   border: 1px solid var(--line);
   border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  min-width: 2.5rem;
+}
+.sign-toolbar button:hover {
+  border-color: var(--accent);
+}
+.sign-toolbar-page {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  margin: 0 0.25rem;
+}
+.sign-sheets {
+  display: grid;
+  gap: 1.5rem;
+}
+.sign-sheet {
+  position: relative;
+  max-width: 40rem;
+  width: 100%;
+  margin-inline: auto;
   background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.sign-sheet canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sign-text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+}
+.sign-text-layer span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0% 0%;
+  color: transparent;
+  cursor: text;
+  user-select: text;
+}
+.sign-text-layer span::selection {
+  background: rgb(180 200 255 / 0.5);
+}
+.sign-text-layer br {
+  user-select: none;
+}
+.sign-sheet-no {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  text-align: center;
+  margin: 0;
+  padding: 0.5rem;
+  border-top: 1px solid var(--line);
+  background: var(--bg-raise);
+}
+.sign-actions {
+  margin: 1rem 0 0;
 }
 .sign-hint {
   color: var(--ink-dim);
@@ -107,9 +193,27 @@
   font-family: var(--font-mono);
 }
 @media (max-width: 40rem) {
-  .sign-viewer iframe {
-    height: 60vh;
-    min-height: 20rem;
+  .sign-sheet {
+    max-width: 100%;
+  }
+  .sign-toolbar {
+    gap: 0.4rem;
+  }
+}
+
+/* The owner console: the creation form (28rem) and the requests list share
+ * the width on desktop instead of stacking in a narrow half-column; phones
+ * stack. The Postcard keeps the `.page-open` width above this grid. */
+.sign-owner-grid {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1rem;
+  min-width: 0;
+}
+@media (min-width: 64rem) {
+  .sign-owner-grid {
+    grid-template-columns: 28rem minmax(0, 1fr);
+    align-items: start;
   }
 }
 #sign,

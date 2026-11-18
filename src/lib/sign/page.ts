@@ -11,6 +11,16 @@ export interface SignStrings {
   hashLabel: string;
   viewerLabel: string;
   zoomHint: string;
+  readerLoading: string;
+  readerError: string;
+  zoomIn: string;
+  zoomOut: string;
+  zoomFit: string;
+  pagePrev: string;
+  pageNext: string;
+  pageOf: string;
+  downloadOrig: string;
+  hashMismatch: string;
   formName: string;
   formNameError: string;
   formId: string;
@@ -37,10 +47,18 @@ export function acceptanceSentence(title: string, origHash: string, template: st
 }
 
 function viewerHtml(req: SigningRequest, s: SignStrings): string {
+  const fileUrl = `/api/sign-file?id=${esc(req.id)}`;
   return (
     `<div class="sign-viewer"><h2>${esc(s.viewerLabel)}</h2>` +
-    `<iframe src="/api/sign-file?id=${esc(req.id)}" title="${esc(req.title)}" loading="lazy"></iframe>` +
-    `<p class="sign-hint">${esc(s.zoomHint)}</p></div>`
+    `<div class="sign-reader" data-id="${esc(req.id)}" data-orig-hash="${esc(req.origHash)}" ` +
+    `data-loading="${esc(s.readerLoading)}" data-error="${esc(s.readerError)}" ` +
+    `data-zoom-in="${esc(s.zoomIn)}" data-zoom-out="${esc(s.zoomOut)}" data-zoom-fit="${esc(s.zoomFit)}" ` +
+    `data-page-prev="${esc(s.pagePrev)}" data-page-next="${esc(s.pageNext)}" ` +
+    `data-page-of="${esc(s.pageOf)}" data-hash-mismatch="${esc(s.hashMismatch)}">` +
+    `<p class="sign-reader-status">${esc(s.readerLoading)}</p></div>` +
+    `<p class="sign-actions"><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p>` +
+    `<p class="sign-hint">${esc(s.zoomHint)}</p>` +
+    `<noscript><p><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p></noscript></div>`
   );
 }
 

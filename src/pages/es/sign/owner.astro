@@ -2,6 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Postcard from '../../../components/Postcard.astro';
 import { useTranslations } from '../../../i18n';
+import '../../../styles/sign.css';
 
 const t = useTranslations('es');
 const a = t.sign;
@@ -20,6 +21,8 @@ const a = t.sign;
       <Postcard page="sign" alt={t.postcards.sign} />
     </div>
 
+    <div class="sign-owner-grid">
+    <div>
     <h2>{a.upSubmit}</h2>
     <form id="sign-create" method="post" action="/api/sign-request" enctype="multipart/form-data">
       <p class="sign-field">
@@ -48,7 +51,9 @@ const a = t.sign;
       <p id="sign-created" hidden>{a.upLink} <a id="sign-created-link" href="#"></a></p>
       <p><button id="sign-create-submit" type="submit">{a.upSubmit}</button></p>
     </form>
+    </div>
 
+    <div>
     <h2>{a.listTitle}</h2>
     <p id="sign-empty">{a.listEmpty}</p>
     <table class="sign-table">
@@ -71,6 +76,8 @@ const a = t.sign;
       >
       </tbody>
     </table>
+    </div>
+    </div>
   </section>
 
   <script>

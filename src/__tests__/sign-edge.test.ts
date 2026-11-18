@@ -194,7 +194,9 @@ describe('signing page identity', () => {
     expect(res.status).toBe(200);
     const body = await res.text();
     expect(body).toContain('id="sign-form"');
-    expect(body).toContain('<iframe');
+    expect(body).toContain('class="sign-reader"');
+    expect(body).toContain('/api/sign-file?id=');
+    expect(body).not.toContain('<iframe');
     expect(body).not.toContain('This link is for another address');
   });
 });
