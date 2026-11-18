@@ -7,8 +7,8 @@ curl -fsSL https://get.univerlab.org/canopy | sh      # macOS / Linux
 irm https://get.univerlab.org/texforge.ps1 | iex      # Windows
 ```
 
-`install.univerlab.org` is the same Worker under a second Custom Domain —
-not a redirect to `get`, the same `fetch`. Use whichever reads better where
+`install.univerlab.org` is the same Worker under a second hostname —
+not a redirect to `get`, the same `fetch`. Custom domains/routes for both hostnames are managed in UniverLab/infra (Terraform), not in this repo. Use whichever reads better where
 you are writing: `get` is shorter and matches what people already expect
 from `get.docker.com` and `get.helm.sh`; `install` says out loud what the
 pipe is about to do, which is worth the four characters in prose.
@@ -137,9 +137,7 @@ A failed deploy is safe: the previously deployed version keeps serving.
 1. **Buy `univerlab.org`** on Cloudflare (registrar + DNS).
 2. **Site** → connect this repo to **Cloudflare Pages** (build: `npm run build`,
    output: `dist`). Pages serves the apex + `www` and auto-deploys on push.
-3. **`get` subdomain** → after the first deploy, add the Custom Domain
-   `get.univerlab.org` to this Worker (Workers & Pages → univerlab-get →
-   Settings → Domains & Routes). Cloudflare provisions its TLS.
+3. **`get`/`install` subdomains** → custom domains/routes are managed in UniverLab/infra (Terraform), not added via Wrangler or the dashboard from this repo.
 4. **Enable Analytics Engine** → Workers & Pages → Analytics Engine. One click,
    once per account. Required before any deploy of this Worker can succeed.
 

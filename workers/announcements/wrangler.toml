@@ -15,9 +15,7 @@ class_name = "LogHub"
 tag = "v1"
 new_sqlite_classes = ["LogHub"]
 
-[[routes]]
-pattern = "announcements.univerlab.org"
-custom_domain = true
+# Domains/routes managed in UniverLab/infra (Terraform).
 
 [observability]
 enabled = true
