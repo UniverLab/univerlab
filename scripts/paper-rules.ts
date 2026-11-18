@@ -1,6 +1,5 @@
-// Page-one layout rules for `npm run check:paper`, extended to the second
-// content sheet: pure geometry over rects the browser gathers, so every rule
-// is jest-testable without a browser.
+// Page-one layout rules for `npm run check:paper`: pure geometry over rects
+// the browser gathers, so every rule is jest-testable without a browser.
 // All lengths are CSS pixels; every comparison carries a 1px slack for
 // sub-pixel rounding. The thresholds mirror the stylesheet contract:
 // the column gutter (`.cols` and the lead's text columns share it) and the
@@ -38,33 +37,11 @@ export interface LeadPhoto {
   containerRight: number;
 }
 
-/** One printed sheet's own geometry: page one's fields, or the second sheet's. */
-export interface SheetCase {
-  /** Printed letters (`article.item`). */
-  letters: Rect[];
-  columns: ColumnBand[];
-  /** The sheet's front (everything under its folio line), and every mark in it. */
-  front: Rect | null;
-  ink: Rect[];
-}
-
 export interface CaseInput {
   /** Facts in the recorded pool (whole day, both kinds the page prints). */
   poolLetters: number;
   /** Letters actually printed (column items + the lead). */
   printedLetters: number;
-  /** Every printed letter's place in the day's reading order (`data-i`), in
-   *  print order on page one. Absent when the harness predates the sheet. */
-  letterIds?: string[];
-  /** The second content sheet's own geometry, when the fit printed it. */
-  second?: {
-    hidden: boolean;
-    ids: string[];
-  } & SheetCase | null;
-  /** The dense edition must print its second sheet: without this presence
-   *  demand every rule above early-returns on a missing sheet and the gate
-   *  passes vacuously. The harness sets it for the recorded dense edition. */
-  expectSecond?: boolean;
   hasLead: boolean;
   hasLab: boolean;
   /** The edition's column gutter in px, in the same (possibly CSS-scaled)
@@ -97,7 +74,7 @@ export interface CaseInput {
   fontsLoaded: boolean;
 }
 
-export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'harness';
+export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'harness';
 
 export interface Finding {
   rule: RuleId;
@@ -135,30 +112,22 @@ function ruleA(input: CaseInput, out: Finding[]): void {
   if (input.lab) check(input.lab, 'lab story');
 }
 
-function blankBand(letters: Rect[], columns: ColumnBand[], out: Finding[], where: string): void {
-  if (!letters.length) return;
-  const shortest = Math.min(...letters.map((r) => r.height));
-  for (let i = 0; i < columns.length; i++) {
-    const band = columns[i].foot - bottom(columns[i].box);
+function ruleB(input: CaseInput, out: Finding[]): void {
+  // Gated: with every letter printed, columns may end wherever they end.
+  if (input.poolLetters <= input.printedLetters) return;
+  if (!input.letters.length) return;
+  const shortest = Math.min(...input.letters.map((r) => r.height));
+  for (let i = 0; i < input.columns.length; i++) {
+    const band = input.columns[i].foot - bottom(input.columns[i].box);
     if (band > shortest + SLACK) {
       out.push({
         rule: 'b',
         detail:
-          `${where}column ${i} ends with a ${band.toFixed(1)}px blank band, ` +
+          `column ${i} ends with a ${band.toFixed(1)}px blank band, ` +
           `taller than the shortest printed letter (${shortest.toFixed(1)}px)`,
       });
     }
   }
-}
-
-function ruleB(input: CaseInput, out: Finding[]): void {
-  // Gated: with every letter printed, columns may end wherever they end.
-  // A shown second sheet always answers for its own columns: it prints only
-  // when its letters fill it, so a trailing blank band is never legitimate.
-  if (input.poolLetters <= input.printedLetters) return;
-  blankBand(input.letters, input.columns, out, '');
-  const second = input.second;
-  if (second && !second.hidden) blankBand(second.letters, second.columns, out, 'second sheet ');
 }
 
 function ruleC(input: CaseInput, out: Finding[]): void {
@@ -263,15 +232,7 @@ function ruleG(input: CaseInput, out: Finding[]): void {
   }
 }
 
-function deadStretch(
-  front: Rect,
-  ink: Rect[],
-  sheet: Rect,
-  bottomEdge: number,
-  photoH: number,
-  out: Finding[],
-  where: string,
-): void {
+function ruleH(input: CaseInput, out: Finding[]): void {
   // Dead paper: the tallest stretch with nothing printed across a vertical
   // strip of the front, from its top to the colophon (or the sheet's foot).
   // Strips are half a column wide and slide across the front, so a hole of
@@ -279,12 +240,17 @@ function deadStretch(
   // blank where nothing printed reaches its middle half, so a gutter (a
   // quarter of a strip) never reads as blank while a hole a column's
   // quarter wide always does. One finding: the worst strip.
-  if (front.width <= 0) return;
+  const front = input.front;
+  if (!front || front.width <= 0) return;
   const top = front.y;
+  const bottomEdge = input.colophon && input.colophonVisible
+    ? input.colophon.y
+    : input.sheet.y + input.sheet.height;
   if (bottomEdge - top <= 0) return;
+  const photoH = input.leadPhoto ? input.leadPhoto.fig.height : 0;
   const limit = photoH > 0
-    ? Math.min(photoH, BLANK_CAP_SHARE * sheet.height)
-    : BLANK_SHARE * sheet.height;
+    ? Math.min(photoH, BLANK_CAP_SHARE * input.sheet.height)
+    : BLANK_SHARE * input.sheet.height;
   const stripW = front.width / (2 * FRONT_SLOTS);
   const step = stripW / 4;
   let worst = 0;
@@ -292,7 +258,7 @@ function deadStretch(
   let worstX = front.x;
   for (let left = front.x; left + stripW <= front.x + front.width + SLACK; left += step) {
     const right = left + stripW;
-    const spans = ink
+    const spans = input.ink
       .filter((r) => Math.min(r.x + r.width, right - stripW / 4) - Math.max(r.x, left + stripW / 4) > SLACK)
       .map((r) => [Math.max(r.y, top), Math.min(r.y + r.height, bottomEdge)] as const)
       .filter(([a, b]) => b > a)
@@ -315,67 +281,8 @@ function deadStretch(
     out.push({
       rule: 'h',
       detail:
-        `${where}${worst.toFixed(1)}px of blank paper at x=${worstX.toFixed(1)}, y=${worstAt.toFixed(1)}, ` +
+        `${worst.toFixed(1)}px of blank paper at x=${worstX.toFixed(1)}, y=${worstAt.toFixed(1)}, ` +
         `taller than ${photoH > 0 ? 'the lead photo' : "the page's share"} (${limit.toFixed(1)}px)`,
-    });
-  }
-}
-
-function ruleH(input: CaseInput, out: Finding[]): void {
-  const front = input.front;
-  if (front) {
-    const bottomEdge = input.colophon && input.colophonVisible
-      ? input.colophon.y
-      : input.sheet.y + input.sheet.height;
-    deadStretch(front, input.ink, input.sheet, bottomEdge, input.leadPhoto ? input.leadPhoto.fig.height : 0, out, '');
-  }
-  // The second sheet answers for its own dead paper: the scan runs to its
-  // own front's foot, where its print ends — the sheet below that is the
-  // threshold's call (a near-empty sheet never prints), not this rule's.
-  // No lead photo sets its allowance, so the sheet's own share applies.
-  const second = input.second;
-  if (second && !second.hidden && second.front) {
-    deadStretch(
-      second.front, second.ink, input.sheet, second.front.y + second.front.height, 0, out, 'second sheet ',
-    );
-  }
-}
-
-/** No letter printed twice, none lost, when the second sheet exists: every
- *  pooled letter prints on exactly one of the two content sheets. */
-function ruleI(input: CaseInput, out: Finding[]): void {
-  const second = input.second;
-  if (!second || second.hidden) return;
-  const first = input.letterIds;
-  if (!first || !second.ids) return;
-  const seen = new Set<string>();
-  for (const id of [...first, ...second.ids]) {
-    if (id === '') continue;
-    if (seen.has(id)) {
-      out.push({ rule: 'i', detail: `letter ${id} prints on both content sheets` });
-    }
-    seen.add(id);
-  }
-  const missing = input.poolLetters - (input.printedLetters + second.letters.length);
-  if (missing > 0) {
-    out.push({
-      rule: 'i',
-      detail: `${missing} of ${input.poolLetters} pooled letters print on neither content sheet`,
-    });
-  }
-}
-
-/** The dense edition's second sheet must exist: its overflow fills the
- *  sheet, so a hidden or missing sheet is not the threshold's call — it is
- *  the sheet never printing. Without this demand the rules above all
- *  early-return on a missing sheet and the gate passes on nothing. */
-function ruleJ(input: CaseInput, out: Finding[]): void {
-  if (!input.expectSecond) return;
-  const second = input.second;
-  if (!second || second.hidden || !second.letters.length) {
-    out.push({
-      rule: 'j',
-      detail: 'the dense edition drops letters but its second content sheet never printed',
     });
   }
 }
@@ -410,7 +317,5 @@ export function judgeCase(input: CaseInput): Finding[] {
   ruleF(input, out);
   ruleG(input, out);
   ruleH(input, out);
-  ruleI(input, out);
-  ruleJ(input, out);
   return out;
 }

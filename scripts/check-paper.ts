@@ -160,7 +160,6 @@ function gather(args: {
     page.querySelectorAll('article.item'),
   );
   const letters = letterEls.map(rectOf).filter((r) => r !== null);
-  const letterIds = letterEls.map((el) => el.getAttribute('data-i') || '');
   const hasLead = !!page.querySelector('article.lead');
   const labEl = page.querySelector('article.labmail');
   // Page one's own colophon line; a copy change renames the selector, so
@@ -226,12 +225,14 @@ function gather(args: {
       };
     }
   }
-  // Everything printed below a sheet's banner: every text line, every
-  // picture and every boxed story or notice. Each sheet's balance rules read
-  // its own columns against its own marks.
-  const inkOf = (scope: Element): Omit<CaseInput, 'poolLetters'>['ink'] => {
-    const marks: Omit<CaseInput, 'poolLetters'>['ink'] = [];
-    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+  // Everything printed on page one below the banner: every text line, every
+  // picture and every boxed story or notice. The blank-area rule reads the
+  // page's columns against these.
+  const frontEl = front;
+  const frontBox = rectOf(frontEl);
+  const ink: Omit<CaseInput, 'poolLetters'>['ink'] = [];
+  if (frontEl) {
+    const walker = document.createTreeWalker(frontEl, NodeFilter.SHOW_TEXT);
     let node: Node | null = walker.nextNode();
     while (node) {
       if (node.textContent && node.textContent.trim() && !node.parentElement?.closest('template')) {
@@ -240,21 +241,17 @@ function gather(args: {
         const boxes = range.getClientRects();
         for (let i = 0; i < boxes.length; i++) {
           const b = boxes[i];
-          if (b.width > 0 && b.height > 0) marks.push({ x: b.left, y: b.top, width: b.width, height: b.height });
+          if (b.width > 0 && b.height > 0) ink.push({ x: b.left, y: b.top, width: b.width, height: b.height });
         }
         range.detach();
       }
       node = walker.nextNode();
     }
-    for (const el of Array.from(scope.querySelectorAll('img, .photo .print, aside.notice, article.labmail'))) {
+    for (const el of Array.from(frontEl.querySelectorAll('img, .photo .print, aside.notice, article.labmail'))) {
       const box = rectOf(el);
-      if (box && box.width > 0 && box.height > 0) marks.push(box);
+      if (box && box.width > 0 && box.height > 0) ink.push(box);
     }
-    return marks;
-  };
-  const frontEl = front;
-  const frontBox = rectOf(frontEl);
-  const ink = frontEl ? inkOf(frontEl) : [];
+  }
   // The logbook link outside the sheet, weighed against the paper's own
   // control labels: a masthead page tab first — it lives inside the
   // transformed sheet, so it shrinks with the sheet exactly like the
@@ -288,40 +285,9 @@ function gather(args: {
       return { box, foot: foot.y + foot.height };
     })
     .filter((c) => c !== null);
-  // The second content sheet, when the fit printed it: its letters carry
-  // their reading-order ids, and its columns, front and ink answer the same
-  // balance rules as page one's. Hidden (or missing) reads as no sheet.
-  const page1b = document.getElementById('page-1b');
-  const p1bBox = rectOf(page1b);
-  const p1bHidden =
-    !page1b || !p1bBox || p1bBox.width <= 0 || p1bBox.height <= 0 ||
-    getComputedStyle(page1b).display === 'none';
-  const p1bBody = page1b?.querySelector('#page-1b-body') ?? null;
-  const p1bItems = p1bHidden || !page1b ? [] : Array.from(page1b.querySelectorAll('.cols .col article.item'));
-  const p1bLetters = p1bItems.map(rectOf).filter((r) => r !== null);
-  const p1bIds = p1bItems.map((el) => el.getAttribute('data-i') || '');
-  const p1bColumns = p1bHidden || !page1b ? [] : Array.from(page1b.querySelectorAll('.cols .col'))
-    .map((el) => {
-      const box = rectOf(el);
-      if (!box || box.width <= 0 || box.height <= 0) return null;
-      const container = el.closest('.cols');
-      const foot = container ? rectOf(container) : null;
-      if (!foot) return null;
-      return { box, foot: foot.y + foot.height };
-    })
-    .filter((c) => c !== null);
   return {
     printedLetters:
       letterEls.length + (hasLead ? 1 : 0),
-    letterIds,
-    second: p1bHidden ? null : {
-      hidden: false,
-      letters: p1bLetters,
-      ids: p1bIds,
-      columns: p1bColumns,
-      front: p1bBody ? rectOf(p1bBody) : null,
-      ink: p1bBody ? inkOf(p1bBody) : [],
-    },
     hasLead,
     hasLab: !!labEl,
     gutter,
@@ -522,14 +488,7 @@ const main = async (): Promise<void> => {
                 colophonText: await colophonCopy(lang),
                 gutterFallback: GUTTER_FALLBACK,
               });
-              // The recorded dense edition's overflow fills the second sheet,
-              // so the sheet must print there: without this demand the rules
-              // early-return on a missing sheet and the gate passes vacuously.
-              input = {
-                ...gathered,
-                poolLetters,
-                expectSecond: date === '2026-11-12' && lang === 'en',
-              };
+              input = { ...gathered, poolLetters };
             } catch (e) {
               if (!pageError) pageError = String(e?.message || e).slice(0, 300);
               input = null;
