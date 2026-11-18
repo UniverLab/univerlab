@@ -52,9 +52,11 @@ describe('sign dictionary parity', () => {
     expect(placeholders(en.sign.mailSignedBody)).toContain('hash');
   });
 
-  it('carries the request id in the evidence templates', () => {
-    expect(placeholders(en.sign.evidenceRequest)).toEqual(['v']);
-    expect(placeholders(es.sign.evidenceRequest)).toEqual(['v']);
+  it('carries the value placeholder in the seal and verify templates', () => {
+    for (const key of ['sealName', 'sealId', 'sealEmail', 'sealDate', 'sealIp', 'sealAgent', 'sealVerify', 'verifyOrigHash', 'verifySignedHash'] as const) {
+      expect(placeholders(en.sign[key])).toEqual(['v']);
+      expect(placeholders(es.sign[key])).toEqual(['v']);
+    }
   });
 
   it('gives the quill postcard a literal alt over 40 chars, different per language', () => {

@@ -3,7 +3,7 @@
 // The JSON mirror follows the AUDITS pattern — R2 holds the bytes, a small
 // sidecar holds what listings need without reading the PDFs.
 
-import type { SigningRequest } from './evidence';
+import { asSignLang, type SigningRequest } from './evidence';
 
 /** The R2 surface the signing flow needs: reads, writes and a prefix list. */
 export interface SignBucket {
@@ -39,7 +39,20 @@ export async function loadRequest(bucket: SignBucket | undefined, id: string): P
     const obj = await bucket.get(requestKey(id));
     if (!obj) return null;
     const parsed: unknown = JSON.parse(await obj.text());
-    return isRequest(parsed) ? parsed : null;
+    if (!isRequest(parsed)) return null;
+    // Sidecars written before the issuer block predate it: they read as
+    // Spanish with an empty issuer block instead of failing to load.
+    const r = parsed as unknown as Record<string, unknown>;
+    return {
+      ...parsed,
+      issuerName: typeof r['issuerName'] === 'string' ? r['issuerName'] : '',
+      issuerId: typeof r['issuerId'] === 'string' ? r['issuerId'] : '',
+      issuerEmail: typeof r['issuerEmail'] === 'string' ? r['issuerEmail'] : '',
+      issuerSignedAt: typeof r['issuerSignedAt'] === 'string' ? r['issuerSignedAt'] : parsed.createdAt,
+      lang: asSignLang(r['lang']),
+      signerIp: typeof r['signerIp'] === 'string' ? r['signerIp'] : '',
+      signerUserAgent: typeof r['signerUserAgent'] === 'string' ? r['signerUserAgent'] : '',
+    };
   } catch {
     return null;
   }

@@ -20,6 +20,7 @@ import { linkState } from '../src/lib/sign/evidence';
 import { loadRequest, listRequests, type SignBucket } from '../src/lib/sign/store';
 import { type SignStrings } from '../src/lib/sign/page';
 import { signPageHtml, signToken, siteNotFound } from './sign-edge';
+import { serveSignVerify } from './sign-verify-edge';
 import { validateAuditDocument } from '../src/lib/audit/validate-document';
 import { auditBadge } from '../src/lib/audit/badge';
 import { auditMarkdown, publicAuditUrl, PUBLIC_AUDIT_BASE } from '../src/lib/audit/markdown';
@@ -875,6 +876,8 @@ export async function onRequest(context: {
       for (const [k, v] of Object.entries(AUDIT_NO_STORE)) res.headers.set(k, v);
       return res;
     }
+    const verifyRes = await serveSignVerify(request, env, rewriteSignShell, AUDIT_NO_STORE);
+    if (verifyRes) return verifyRes;
   }
 
   const accept = request.headers.get('Accept');

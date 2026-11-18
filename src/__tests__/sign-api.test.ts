@@ -6,7 +6,7 @@
  *
  * @jest-environment node
  */
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFPage } from 'pdf-lib';
 import {
   handleCreateRequest,
   handleListRequests,
@@ -93,9 +93,9 @@ function envOf(bucket: SignBucket, fetchImpl: FetchImpl, extra: Partial<SignEnv>
 
 const depsOf = (fetchImpl: FetchImpl, now: () => number = () => NOW): SignDeps => ({ verify, fetchImpl, now });
 
-async function mintPdf(pages = 1): Promise<Uint8Array> {
+async function mintPdf(pages = 1, w = 595.28, h = 841.89): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  for (let i = 0; i < pages; i++) doc.addPage([595.28, 841.89]);
+  for (let i = 0; i < pages; i++) doc.addPage([w, h]);
   return new Uint8Array(await doc.save());
 }
 
@@ -108,17 +108,26 @@ function createForm(pdf: Uint8Array, over: Record<string, string> = {}): FormDat
   form.set('title', TITLE);
   form.set('name', 'María López');
   form.set('email', SIGNER);
+  form.set('issuerName', 'UniverLab');
+  form.set('issuerId', '901234567-8');
   form.set('lang', 'en');
   for (const [k, v] of Object.entries(over)) form.set(k, v);
   return form;
 }
 
-const post = (path: string, body: FormData | string, token?: string, jsonBody = false): Request =>
+const post = (
+  path: string,
+  body: FormData | string,
+  token?: string,
+  jsonBody = false,
+  headers: Record<string, string> = {},
+): Request =>
   new Request(`https://univerlab.org${path}`, {
     method: 'POST',
     headers: {
       ...(token ? { 'Cf-Access-Jwt-Assertion': token } : {}),
       ...(jsonBody ? { 'Content-Type': 'application/json' } : {}),
+      ...headers,
     },
     body,
   });
@@ -183,6 +192,22 @@ describe('handleCreateRequest', () => {
     expect(res.status).toBe(400);
   });
 
+  it('refuses a request without the issuer signature block', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const pdf = await mintPdf();
+    const bad: Record<string, string>[] = [{ issuerName: '' }, { issuerId: '' }, { issuerName: 'x'.repeat(121) }];
+    for (const over of bad) {
+      const res = await handleCreateRequest(
+        post('/api/sign-request', createForm(pdf, over), 'owner-jwt'),
+        envOf(bucket, fetch),
+        depsOf(fetch),
+      );
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { error: string }).error).toBe('issuer');
+    }
+  });
+
   it('records the lab acceptance and returns the signer link', async () => {
     const bucket = makeBucket();
     const { calls, fetch } = makeFetch();
@@ -198,6 +223,15 @@ describe('handleCreateRequest', () => {
     expect(sidecar['status']).toBe('pending');
     // The lab's acceptance of that exact PDF is recorded at creation.
     expect(sidecar['labAcceptedAt']).toBe(sidecar['createdAt']);
+    // The issuer signs at creation: name, ID, verified owner email, language.
+    expect(sidecar['issuerName']).toBe('UniverLab');
+    expect(sidecar['issuerId']).toBe('901234567-8');
+    expect(sidecar['issuerEmail']).toBe(OWNER);
+    expect(sidecar['issuerSignedAt']).toBe(sidecar['createdAt']);
+    expect(sidecar['lang']).toBe('en');
+    // Nothing signed yet: no network evidence recorded.
+    expect(sidecar['signerIp']).toBe('');
+    expect(sidecar['signerUserAgent']).toBe('');
     expect(bucket.files.get(`originals/${id}.pdf`)!.length).toBeGreaterThan(0);
     const invite = calls.find((c) => c.url === 'https://api.resend.com/emails');
     expect(invite).toBeDefined();
@@ -245,12 +279,19 @@ describe('handleListRequests', () => {
 });
 
 describe('handleSignComplete', () => {
-  const complete = (id: string, over: Record<string, unknown> = {}, token = 'signer-jwt', hash?: string) =>
+  const complete = (
+    id: string,
+    over: Record<string, unknown> = {},
+    token = 'signer-jwt',
+    hash?: string,
+    headers: Record<string, string> = {},
+  ) =>
     post(
       '/api/sign-complete',
       JSON.stringify({ id, name: 'María López', idNumber: '12345678', accept: true, hash, ...over }),
       token,
       true,
+      headers,
     );
 
   it('signs once: original pages plus one evidence page, hash shown', async () => {
@@ -258,7 +299,8 @@ describe('handleSignComplete', () => {
     const { calls, fetch } = makeFetch();
     const orig = await mintPdf(2);
     const { id, hash } = await createOk(bucket, fetch, {}, orig);
-    const res = await handleSignComplete(complete(id, {}, 'signer-jwt', hash), envOf(bucket, fetch), depsOf(fetch));
+    const from = { 'CF-Connecting-IP': '200.1.2.3', 'User-Agent': 'TestAgent/1.0' };
+    const res = await handleSignComplete(complete(id, {}, 'signer-jwt', hash, from), envOf(bucket, fetch), depsOf(fetch));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; signedHash: string };
     expect(body.ok).toBe(true);
@@ -278,6 +320,9 @@ describe('handleSignComplete', () => {
     >;
     expect(sidecar['status']).toBe('signed');
     expect(sidecar['signedHash']).toBe(body.signedHash);
+    // Where the signer signed from stays in storage with the signature.
+    expect(sidecar['signerIp']).toBe('200.1.2.3');
+    expect(sidecar['signerUserAgent']).toBe('TestAgent/1.0');
 
     const notice = calls.find((c) => c.url === 'https://hooks.test/internal/signed');
     expect(notice).toBeDefined();
@@ -287,6 +332,53 @@ describe('handleSignComplete', () => {
     const payload = JSON.parse(String(copy[1].init!.body)) as { attachments: { filename: string; content: string }[] };
     expect(payload.attachments).toHaveLength(1);
     expect(payload.attachments[0].content.length).toBeGreaterThan(0);
+  });
+
+  it('seals A4 and Letter with both signatures and a verification QR', async () => {
+    for (const [w, h] of [
+      [595.28, 841.89],
+      [612, 792],
+    ]) {
+      const bucket = makeBucket();
+      const { fetch } = makeFetch();
+      const orig = await mintPdf(2, w, h);
+      const { id, hash } = await createOk(bucket, fetch, {}, orig);
+      const verifyUrl = `https://univerlab.org/sign/verify/${id}`;
+
+      // Read what the signer's run actually drew on the seal page, not a
+      // copy the test assembles: the signed file must carry both parties.
+      const textSpy = jest.spyOn(PDFPage.prototype, 'drawText');
+      const rectSpy = jest.spyOn(PDFPage.prototype, 'drawRectangle');
+      let drawn = '';
+      let rects = 0;
+      try {
+        const res = await handleSignComplete(complete(id, {}, 'signer-jwt', hash), envOf(bucket, fetch), depsOf(fetch));
+        expect(res.status).toBe(200);
+        drawn = textSpy.mock.calls.map((c) => String(c[0])).join('\n');
+        rects = rectSpy.mock.calls.length;
+      } finally {
+        textSpy.mockRestore();
+        rectSpy.mockRestore();
+      }
+
+      // The seal page follows the document: same size as its last page.
+      const stored = bucket.files.get(`signed/${id}.pdf`)!;
+      const signed = await PDFDocument.load(stored);
+      expect(signed.getPageCount()).toBe(3);
+      const sealSize = signed.getPage(2).getSize();
+      expect([sealSize.width, sealSize.height]).toEqual([w, h]);
+
+      // The issuer's signature (captured at creation) and the signer's.
+      expect(drawn).toContain('Name: UniverLab');
+      expect(drawn).toContain('ID: 901234567-8');
+      expect(drawn).toContain(`Email: ${OWNER}`);
+      expect(drawn).toContain('Name: María López');
+      expect(drawn).toContain('ID: 12345678');
+      expect(drawn).toContain(`Email: ${SIGNER}`);
+      // The verification URL, wrapped but complete, and the QR grid.
+      expect(drawn.replace(/\n/g, '')).toContain(verifyUrl);
+      expect(rects).toBeGreaterThan(100);
+    }
   });
 
   it('mails the signed copy in the signer page language, Spanish by default', async () => {

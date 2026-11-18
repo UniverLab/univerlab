@@ -19,6 +19,20 @@ export interface SigningRequest {
   createdAt: string;
   /** ISO time the lab accepted the PDF (FR1): same instant as creation. */
   labAcceptedAt: string;
+  /** The issuer's signature, captured in the console at creation: name and
+   *  ID as typed, the owner's verified email, and the creation instant. */
+  issuerName: string;
+  issuerId: string;
+  issuerEmail: string;
+  issuerSignedAt: string;
+  /** The request's language: the seal page renders in this language only. */
+  lang: SignLang;
+  /** Where the signer signed from: the connecting IP and user agent at
+   *  signing time. Recorded on the seal page and in the sidecar, never on
+   *  the public verification page. Old sidecars predate them and read as
+   *  empty. */
+  signerIp: string;
+  signerUserAgent: string;
   status: 'pending' | 'signed' | 'expired';
   /** ISO time the signature was completed, once signed. */
   signedAt: string | null;
@@ -28,6 +42,14 @@ export interface SigningRequest {
 
 /** Milliseconds a signing link stays valid: 30 days (FR7). */
 export const SIGN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** The request's language: the seal page and the verify page render in this
+ *  language only. Old sidecars predate it and read as Spanish. */
+export type SignLang = 'en' | 'es';
+
+export function asSignLang(v: unknown): SignLang {
+  return v === 'en' ? 'en' : 'es';
+}
 
 /** Request ids: 128 bits, URL-safe, unguessable (the link is the capability). */
 export function newRequestId(): string {
@@ -80,6 +102,15 @@ export interface EvidenceInput {
   origHash: string;
   labAcceptedAt: string;
   requestId: string;
+  /** The issuer's signature, carried over from the stored request. */
+  issuerName: string;
+  issuerId: string;
+  issuerEmail: string;
+  issuerSignedAt: string;
+  /** The request's language: the seal page renders in this language only. */
+  lang: SignLang;
+  /** The public verification URL encoded in the seal page's QR code. */
+  verifyUrl: string;
 }
 
 function pad(n: number): string {

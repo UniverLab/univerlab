@@ -3,11 +3,10 @@
 // files under functions/api/ are thin adapters, so these handlers run
 // unchanged in jest with a fake bucket, a stub verifier and a stub fetch.
 
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import {
+  asSignLang,
   canSign,
-  formatBogota,
-  formatUtc,
   linkState,
   newRequestId,
   sha256Hex,
@@ -15,6 +14,8 @@ import {
   type EvidenceInput,
   type SigningRequest,
 } from './evidence';
+import { sealPage } from './seal';
+import { verifyUrlFor } from './verify';
 import { isRequestId, listRequests, loadRequest, originalKey, saveRequest, signedKey, type SignBucket } from './store';
 import { inviteMail, sendMail, signedCopyMail } from './mail';
 import { en } from '../../i18n/en';
@@ -74,65 +75,14 @@ async function authedEmail(request: Request, env: SignEnv, deps: SignDeps): Prom
   return deps.verify(token, env);
 }
 
-/** Wrap A4 text: Helvetica has no layout engine, so lines break on spaces. */
-function wrap(text: string, max: number): string[] {
-  const out: string[] = [];
-  for (const raw of text.split('\n')) {
-    let line = raw;
-    while (line.length > max) {
-      let cut = line.lastIndexOf(' ', max);
-      if (cut < max / 2) cut = max;
-      out.push(line.slice(0, cut));
-      line = line.slice(cut).replace(/^ /, '');
-    }
-    out.push(line);
-  }
-  return out;
-}
-
-/** The evidence page lines in one language, from one dictionary. */
-export function evidenceLines(e: EvidenceInput, t: {
-  evidenceTitle: string; evidenceSigner: string; evidenceId: string; evidenceEmail: string;
-  evidenceCo: string; evidenceUtc: string; evidenceIp: string; evidenceUa: string;
-  evidenceOrig: string; evidenceAccepted: string; evidenceRequest: string;
-}): string[] {
-  return [
-    t.evidenceTitle,
-    t.evidenceSigner.replace('{v}', e.signerName),
-    t.evidenceId.replace('{v}', e.idNumber),
-    t.evidenceEmail.replace('{v}', e.verifiedEmail),
-    t.evidenceCo.replace('{v}', formatBogota(e.signedAt)),
-    t.evidenceUtc.replace('{v}', formatUtc(e.signedAt)),
-    t.evidenceIp.replace('{v}', e.ip),
-    t.evidenceUa.replace('{v}', e.userAgent),
-    t.evidenceOrig.replace('{v}', e.origHash),
-    t.evidenceAccepted.replace('{v}', e.labAcceptedAt),
-    t.evidenceRequest.replace('{v}', e.requestId),
-  ];
-}
-
-/** The signed PDF: the original pages unchanged plus a final bilingual
- *  evidence page (FR6). */
+/** The signed PDF: the original pages unchanged plus the designed seal
+ *  page in the request's language (FR6). */
 export async function buildSignedPdf(original: Uint8Array, e: EvidenceInput): Promise<Uint8Array> {
   const src = await PDFDocument.load(original, { ignoreEncryption: true });
   const doc = await PDFDocument.create();
   const copied = await doc.copyPages(src, src.getPageIndices());
   for (const p of copied) doc.addPage(p);
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  const page = doc.addPage([595.28, 841.89]);
-  const lines: Array<{ text: string; bold: boolean }> = [];
-  for (const line of evidenceLines(e, en.sign)) lines.push({ text: line, bold: line === en.sign.evidenceTitle });
-  lines.push({ text: '', bold: false });
-  for (const line of evidenceLines(e, es.sign)) lines.push({ text: line, bold: line === es.sign.evidenceTitle });
-  let y = 800;
-  for (const line of lines) {
-    for (const part of wrap(line.text, 92)) {
-      if (y < 50) break;
-      page.drawText(part === '' ? ' ' : part, { x: 50, y, size: line.bold ? 12 : 10, font: line.bold ? bold : font });
-      y -= 15;
-    }
-  }
+  await sealPage(doc, e, e.lang === 'en' ? en.sign : es.sign);
   return new Uint8Array(await doc.save());
 }
 
@@ -157,7 +107,9 @@ export async function handleCreateRequest(request: Request, env: SignEnv, deps: 
   const name = String(form.get('name') ?? '').trim();
   const signerEmail = String(form.get('email') ?? '').trim().toLowerCase();
   const auditSlug = String(form.get('auditSlug') ?? '').trim();
-  const lang = form.get('lang') === 'en' ? 'en' : 'es';
+  const lang = asSignLang(form.get('lang'));
+  const issuerName = String(form.get('issuerName') ?? '').trim();
+  const issuerId = String(form.get('issuerId') ?? '').trim();
 
   if (!(file instanceof File)) return json({ ok: false, error: 'pdf' }, 400);
   if (file.size <= 0 || file.size > MAX_PDF_BYTES) return json({ ok: false, error: 'pdf' }, 400);
@@ -167,6 +119,12 @@ export async function handleCreateRequest(request: Request, env: SignEnv, deps: 
   }
   if (title === '' || title.length > 140) return json({ ok: false, error: 'title' }, 400);
   if (name.length < 2 || name.length > 120 || name.includes('\n')) return json({ ok: false, error: 'name' }, 400);
+  if (issuerName.length < 2 || issuerName.length > 120 || issuerName.includes('\n')) {
+    return json({ ok: false, error: 'issuer' }, 400);
+  }
+  if (issuerId === '' || issuerId.length > 60 || issuerId.includes('\n')) {
+    return json({ ok: false, error: 'issuer' }, 400);
+  }
   if (!EMAIL_RE.test(signerEmail)) return json({ ok: false, error: 'email' }, 400);
   if (auditSlug !== '' && !SLUG_RE.test(auditSlug)) return json({ ok: false, error: 'audit' }, 400);
 
@@ -180,6 +138,13 @@ export async function handleCreateRequest(request: Request, env: SignEnv, deps: 
     origHash: await sha256Hex(bytes),
     createdAt,
     labAcceptedAt: createdAt,
+    issuerName,
+    issuerId,
+    issuerEmail: email.toLowerCase(),
+    issuerSignedAt: createdAt,
+    lang,
+    signerIp: '',
+    signerUserAgent: '',
     status: 'pending',
     signedAt: null,
     signedHash: null,
@@ -277,16 +242,25 @@ export async function handleSignComplete(request: Request, env: SignEnv, deps: S
     return json({ ok: false, error: 'store' }, 500);
   }
   const signedAt = new Date(now());
+  const origin = new URL(request.url).origin;
+  const signerIp = clientIp(request);
+  const signerUserAgent = request.headers.get('User-Agent') ?? '';
   const evidence: EvidenceInput = {
     signerName: fullName,
     idNumber: idNum,
     verifiedEmail: email.toLowerCase(),
     signedAt,
-    ip: clientIp(request),
-    userAgent: request.headers.get('User-Agent') ?? '',
+    ip: signerIp,
+    userAgent: signerUserAgent,
     origHash: req.origHash,
     labAcceptedAt: req.labAcceptedAt,
     requestId: req.id,
+    issuerName: req.issuerName,
+    issuerId: req.issuerId,
+    issuerEmail: req.issuerEmail,
+    issuerSignedAt: req.issuerSignedAt,
+    lang: req.lang,
+    verifyUrl: verifyUrlFor(origin, req.lang, req.id),
   };
   let signed: Uint8Array;
   try {
@@ -297,12 +271,12 @@ export async function handleSignComplete(request: Request, env: SignEnv, deps: S
   const signedHash = await sha256Hex(signed);
   try {
     await env.SIGN_DOCS.put(signedKey(req.id), signed, { httpMetadata: { contentType: 'application/pdf' } });
-    await saveRequest(env.SIGN_DOCS, { ...req, status: 'signed', signedAt: signedAt.toISOString(), signedHash });
+    await saveRequest(env.SIGN_DOCS, { ...req, status: 'signed', signedAt: signedAt.toISOString(), signedHash, signerIp, signerUserAgent });
   } catch {
     return json({ ok: false, error: 'store' }, 500);
   }
-  // The evidence page carries both languages (see buildSignedPdf); the
-  // mailed copy follows the signer's page language, Spanish by default.
+  // The seal page renders in the request's language; the mailed copy
+  // follows the signer's page language, Spanish by default.
   const lang: 'en' | 'es' = body.lang === 'en' ? 'en' : 'es';
   await sendMail(
     env,

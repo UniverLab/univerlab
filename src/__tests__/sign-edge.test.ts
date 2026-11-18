@@ -11,6 +11,7 @@
  */
 
 import { onRequest, resetAccessKeyCacheForTests } from '../../functions/_middleware';
+import { loadRequest, type SignBucket } from '../lib/sign/store';
 
 const TEAM = 'univerlab.cloudflareaccess.com';
 const AUD = 'test-site-app-aud';
@@ -198,6 +199,17 @@ describe('signing page identity', () => {
     expect(body).toContain('/api/sign-file?id=');
     expect(body).not.toContain('<iframe');
     expect(body).not.toContain('This link is for another address');
+  });
+});
+
+describe('old sidecars', () => {
+  it('read without network evidence as empty, never failing to load', async () => {
+    const doc = JSON.stringify(requestDoc());
+    expect(doc).not.toContain('signerIp');
+    const bucket = { get: async () => ({ text: async () => doc }) } as unknown as SignBucket;
+    const req = await loadRequest(bucket, REQ_ID);
+    expect(req?.signerIp).toBe('');
+    expect(req?.signerUserAgent).toBe('');
   });
 });
 

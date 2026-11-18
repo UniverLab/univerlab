@@ -53,6 +53,12 @@ describe('evidenceText', () => {
     origHash: 'a'.repeat(64),
     labAcceptedAt: '2026-11-13T18:00:00.000Z',
     requestId: 'b'.repeat(32),
+    issuerName: 'UniverLab',
+    issuerId: '901234567-8',
+    issuerEmail: 'owner@univerlab.org',
+    issuerSignedAt: '2026-11-13T18:00:00.000Z',
+    lang: 'es' as const,
+    verifyUrl: `https://univerlab.org/es/sign/verify/${'b'.repeat(32)}`,
   };
 
   it('names who signed what, when and from where', () => {
