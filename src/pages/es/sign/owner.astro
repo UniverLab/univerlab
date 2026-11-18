@@ -63,6 +63,10 @@ const a = t.sign;
 
     <div>
     <h2>{a.listTitle}</h2>
+    <div id="sign-counts" class="sign-counts" role="group" aria-label={a.listTitle}></div>
+    <p class="sign-field">
+      <input id="sign-search" name="search" type="search" autocomplete="off" aria-label={a.searchPh} />
+    </p>
     <p id="sign-empty">{a.listEmpty}</p>
     <table class="sign-table">
       <thead>
@@ -81,6 +85,17 @@ const a = t.sign;
         data-state-pending={a.statePending}
         data-state-signed={a.stateSigned}
         data-state-expired={a.stateExpired}
+        data-state-revoked={a.stateRevoked}
+        data-filter-all={a.filterAll}
+        data-search-ph={a.searchPh}
+        data-copy-link={a.copyLink}
+        data-copied={a.copied}
+        data-resend={a.resend}
+        data-revoke={a.revoke}
+        data-confirm-revoke={a.confirmRevoke}
+        data-days-left={a.daysLeft}
+        data-open-verify={a.openVerify}
+        data-download-original={a.downloadOriginal}
       >
       </tbody>
     </table>
@@ -103,6 +118,17 @@ const a = t.sign;
       statePending: el?.dataset['statePending'] ?? '',
       stateSigned: el?.dataset['stateSigned'] ?? '',
       stateExpired: el?.dataset['stateExpired'] ?? '',
+      stateRevoked: el?.dataset['stateRevoked'] ?? '',
+      filterAll: el?.dataset['filterAll'] ?? '',
+      searchPh: el?.dataset['searchPh'] ?? '',
+      copyLink: el?.dataset['copyLink'] ?? '',
+      copied: el?.dataset['copied'] ?? '',
+      resend: el?.dataset['resend'] ?? '',
+      revoke: el?.dataset['revoke'] ?? '',
+      confirmRevoke: el?.dataset['confirmRevoke'] ?? '',
+      daysLeft: el?.dataset['daysLeft'] ?? '',
+      openVerify: el?.dataset['openVerify'] ?? '',
+      downloadOriginal: el?.dataset['downloadOriginal'] ?? '',
     });
   </script>
 </BaseLayout>

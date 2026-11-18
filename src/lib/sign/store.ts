@@ -43,8 +43,12 @@ export async function loadRequest(bucket: SignBucket | undefined, id: string): P
     // Sidecars written before the issuer block predate it: they read as
     // Spanish with an empty issuer block instead of failing to load.
     const r = parsed as unknown as Record<string, unknown>;
+    const rawStatus = r['status'];
+    const status =
+      rawStatus === 'signed' || rawStatus === 'expired' || rawStatus === 'revoked' ? rawStatus : 'pending';
     return {
       ...parsed,
+      status,
       issuerName: typeof r['issuerName'] === 'string' ? r['issuerName'] : '',
       issuerId: typeof r['issuerId'] === 'string' ? r['issuerId'] : '',
       issuerEmail: typeof r['issuerEmail'] === 'string' ? r['issuerEmail'] : '',

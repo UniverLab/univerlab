@@ -7,6 +7,7 @@ import { PDFDocument } from 'pdf-lib';
 import {
   asSignLang,
   canSign,
+  isExpired,
   linkState,
   newRequestId,
   sha256Hex,
@@ -182,9 +183,70 @@ export async function handleListRequests(request: Request, env: SignEnv, deps: S
       createdAt: r.createdAt,
       labAcceptedAt: r.labAcceptedAt,
       state: linkState(r, now()),
+      status: r.status,
+      signedAt: r.signedAt,
       signedHash: r.signedHash,
     })),
   });
+}
+
+async function readId(request: Request): Promise<string | null> {
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    return typeof body['id'] === 'string' ? (body['id'] as string) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** POST /api/sign-revoke: the owner cancels a request (FR5). The signer
+ *  link then reads as revoked; a signed request can no longer be revoked. */
+export async function handleRevokeRequest(request: Request, env: SignEnv, deps: SignDeps): Promise<Response> {
+  const email = await authedEmail(request, env, deps);
+  if (!email) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!isOwnerEmail(email, env)) return json({ ok: false, error: 'forbidden' }, 403);
+  if (!env.SIGN_DOCS) return json({ ok: false, error: 'unavailable' }, 503);
+  const id = await readId(request);
+  if (!isRequestId(id)) return json({ ok: false, error: 'invalid' }, 400);
+  const req = await loadRequest(env.SIGN_DOCS, id);
+  if (!req) return json({ ok: false, error: 'missing' }, 404);
+  if (req.status === 'signed') return json({ ok: false, error: 'signed' }, 409);
+  if (req.status !== 'revoked') {
+    try {
+      await saveRequest(env.SIGN_DOCS, { ...req, status: 'revoked' });
+    } catch {
+      return json({ ok: false, error: 'store' }, 500);
+    }
+  }
+  return json({ ok: true, id, status: 'revoked' });
+}
+
+/** POST /api/sign-resend: the owner re-sends the invitation mail (FR5).
+ *  Only a pending, unexpired request can be re-sent. */
+export async function handleResendRequest(request: Request, env: SignEnv, deps: SignDeps): Promise<Response> {
+  const now = deps.now ?? Date.now;
+  const email = await authedEmail(request, env, deps);
+  if (!email) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!isOwnerEmail(email, env)) return json({ ok: false, error: 'forbidden' }, 403);
+  if (!env.SIGN_DOCS) return json({ ok: false, error: 'unavailable' }, 503);
+  const id = await readId(request);
+  if (!isRequestId(id)) return json({ ok: false, error: 'invalid' }, 400);
+  const req = await loadRequest(env.SIGN_DOCS, id);
+  if (!req) return json({ ok: false, error: 'missing' }, 404);
+  if (req.status === 'signed') return json({ ok: false, error: 'signed' }, 409);
+  if (req.status === 'revoked') return json({ ok: false, error: 'revoked' }, 410);
+  if (req.status !== 'pending' || isExpired(req.createdAt, now())) {
+    return json({ ok: false, error: 'expired' }, 410);
+  }
+  const origin = new URL(request.url).origin;
+  const link = `${origin}${req.lang === 'es' ? '/es' : ''}/sign/${req.id}`;
+  const dict = req.lang === 'es' ? es.sign : en.sign;
+  await sendMail(
+    env,
+    inviteMail(dict, { to: req.signerEmail, signerName: req.signerName, title: req.title, link, lang: req.lang }),
+    deps.fetchImpl,
+  );
+  return json({ ok: true, id, link });
 }
 
 function clientIp(request: Request): string {
@@ -209,6 +271,7 @@ export async function handleSignComplete(request: Request, env: SignEnv, deps: S
   const req = await loadRequest(env.SIGN_DOCS, id);
   if (!req) return json({ ok: false, error: 'missing' }, 404);
   if (req.status === 'signed') return json({ ok: false, error: 'signed' }, 409);
+  if (req.status === 'revoked') return json({ ok: false, error: 'revoked' }, 410);
   if (!canSign(req, now())) {
     if (req.status !== 'expired') {
       try {

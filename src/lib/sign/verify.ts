@@ -14,6 +14,7 @@ export interface VerifyStrings {
   verifyStatusSigned: string;
   verifyStatusPending: string;
   verifyStatusExpired: string;
+  verifyStatusRevoked: string;
   verifyOrigHash: string;
   verifySignedHash: string;
   sealIssuer: string;
@@ -38,7 +39,13 @@ export function verifyHtml(req: SigningRequest, lang: 'en' | 'es', s: VerifyStri
   const state = linkState(req);
   const signed = state === 'signed';
   const status =
-    state === 'signed' ? s.verifyStatusSigned : state === 'expired' ? s.verifyStatusExpired : s.verifyStatusPending;
+    state === 'signed'
+      ? s.verifyStatusSigned
+      : state === 'revoked'
+        ? s.verifyStatusRevoked
+        : state === 'expired'
+          ? s.verifyStatusExpired
+          : s.verifyStatusPending;
   const signedRow =
     signed && req.signedHash
       ? `<p class="sign-verify-hash">${esc(fill(s.verifySignedHash, req.signedHash))}</p>`

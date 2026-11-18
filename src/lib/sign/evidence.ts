@@ -33,7 +33,7 @@ export interface SigningRequest {
    *  empty. */
   signerIp: string;
   signerUserAgent: string;
-  status: 'pending' | 'signed' | 'expired';
+  status: 'pending' | 'signed' | 'expired' | 'revoked';
   /** ISO time the signature was completed, once signed. */
   signedAt: string | null;
   /** SHA-256 of the signed PDF (original pages + evidence page), once signed. */
@@ -84,9 +84,10 @@ export function canSign(req: SigningRequest, now: number = Date.now()): boolean 
 }
 
 /** The derived state a link shows instead of the form when it cannot sign. */
-export type LinkState = 'ready' | 'signed' | 'expired';
+export type LinkState = 'ready' | 'signed' | 'expired' | 'revoked';
 
 export function linkState(req: SigningRequest, now: number = Date.now()): LinkState {
+  if (req.status === 'revoked') return 'revoked';
   if (req.status === 'signed') return 'signed';
   if (req.status === 'expired' || isExpired(req.createdAt, now)) return 'expired';
   return 'ready';

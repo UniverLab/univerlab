@@ -859,6 +859,7 @@ export const es: Dict = {
       stateReady: 'pendiente',
       stateSigned: 'firmado',
       stateExpired: 'vencido',
+      stateRevoked: 'revocado',
     },
   },
   workbench: {

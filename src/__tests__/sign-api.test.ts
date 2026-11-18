@@ -10,13 +10,17 @@ import { PDFDocument, PDFPage } from 'pdf-lib';
 import {
   handleCreateRequest,
   handleListRequests,
+  handleResendRequest,
+  handleRevokeRequest,
   handleSignComplete,
   handleSignFile,
   type SignDeps,
   type SignEnv,
 } from '../lib/sign/handlers';
-import { sha256Hex } from '../lib/sign/evidence';
+import { linkState, sha256Hex } from '../lib/sign/evidence';
 import type { SignBucket } from '../lib/sign/store';
+import { verifyHtml } from '../lib/sign/verify';
+import { en } from '../i18n/en';
 
 const NOW = Date.parse('2026-11-13T19:00:00.000Z');
 const OWNER = 'owner@univerlab.org';
@@ -522,5 +526,256 @@ describe('handleSignFile', () => {
     const { id } = await createOk(bucket, fetch);
     const res = await handleSignFile(get(id, false), envOf(bucket, fetch), depsOf(fetch));
     expect(res.status).toBe(401);
+  });
+});
+
+describe('handleRevokeRequest', () => {
+  const revoke = (id: string, token?: string) =>
+    post('/api/sign-revoke', JSON.stringify({ id }), token, true);
+
+  it('revokes a pending request and the link reads as revoked', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id, hash } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const res = await handleRevokeRequest(revoke(id, 'owner-jwt'), env, deps);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, id, status: 'revoked' });
+    const sidecar = JSON.parse(Buffer.from(bucket.files.get(`requests/${id}.json`)!).toString('utf8')) as Record<
+      string,
+      unknown
+    >;
+    expect(sidecar['status']).toBe('revoked');
+    // The stored field drives the link state, and signing is closed.
+    expect(linkState(sidecar as unknown as Parameters<typeof linkState>[0])).toBe('revoked');
+    const sign = await handleSignComplete(
+      post(
+        '/api/sign-complete',
+        JSON.stringify({ id, name: 'María López', idNumber: '12345678', accept: true, hash }),
+        'signer-jwt',
+        true,
+      ),
+      env,
+      deps,
+    );
+    expect(sign.status).toBe(410);
+    expect(((await sign.json()) as { error: string }).error).toBe('revoked');
+  });
+
+  it('refuses strangers and anonymous callers', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const forbidden = await handleRevokeRequest(revoke(id, 'stranger-jwt'), env, deps);
+    expect(forbidden.status).toBe(403);
+    const anon = await handleRevokeRequest(revoke(id), env, deps);
+    expect(anon.status).toBe(401);
+  });
+
+  it('answers 404 for an unknown id', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const res = await handleRevokeRequest(
+      revoke('0'.repeat(32), 'owner-jwt'),
+      envOf(bucket, fetch),
+      depsOf(fetch),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('answers 409 for a signed request, keeping the signature', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id, hash } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const signed = await handleSignComplete(
+      post(
+        '/api/sign-complete',
+        JSON.stringify({ id, name: 'María López', idNumber: '12345678', accept: true, hash }),
+        'signer-jwt',
+        true,
+      ),
+      env,
+      deps,
+    );
+    expect(signed.status).toBe(200);
+    const res = await handleRevokeRequest(revoke(id, 'owner-jwt'), env, deps);
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as { error: string }).error).toBe('signed');
+  });
+});
+
+describe('handleResendRequest', () => {
+  const resend = (id: string, token?: string) =>
+    post('/api/sign-resend', JSON.stringify({ id }), token, true);
+
+  it('re-sends the invitation mail with the signer link', async () => {
+    const bucket = makeBucket();
+    const { calls, fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const before = calls.filter((c) => c.url === 'https://api.resend.com/emails').length;
+    const res = await handleResendRequest(resend(id, 'owner-jwt'), envOf(bucket, fetch), depsOf(fetch));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; link: string };
+    expect(body.ok).toBe(true);
+    expect(body.link).toBe(`https://univerlab.org/sign/${id}`);
+    const invites = calls.filter((c) => c.url === 'https://api.resend.com/emails');
+    expect(invites.length).toBe(before + 1);
+    expect(JSON.parse(String(invites[invites.length - 1].init!.body))).toEqual(
+      expect.objectContaining({ to: [SIGNER] }),
+    );
+  });
+
+  it('answers 410 for an expired request', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const sidecar = JSON.parse(Buffer.from(bucket.files.get(`requests/${id}.json`)!).toString('utf8')) as Record<
+      string,
+      unknown
+    >;
+    sidecar['createdAt'] = new Date(NOW - 31 * 24 * 60 * 60 * 1000).toISOString();
+    bucket.files.set(`requests/${id}.json`, new TextEncoder().encode(JSON.stringify(sidecar)));
+    const res = await handleResendRequest(resend(id, 'owner-jwt'), envOf(bucket, fetch), depsOf(fetch));
+    expect(res.status).toBe(410);
+    expect(((await res.json()) as { error: string }).error).toBe('expired');
+  });
+
+  it('answers 409 for a signed request, keeping the signature', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id, hash } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const signed = await handleSignComplete(
+      post(
+        '/api/sign-complete',
+        JSON.stringify({ id, name: 'María López', idNumber: '12345678', accept: true, hash }),
+        'signer-jwt',
+        true,
+      ),
+      env,
+      deps,
+    );
+    expect(signed.status).toBe(200);
+    const res = await handleResendRequest(resend(id, 'owner-jwt'), env, deps);
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as { error: string }).error).toBe('signed');
+  });
+
+  it('answers 410 for a revoked request', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const wasRevoked = await handleRevokeRequest(
+      post('/api/sign-revoke', JSON.stringify({ id }), 'owner-jwt', true),
+      env,
+      deps,
+    );
+    expect(wasRevoked.status).toBe(200);
+    const res = await handleResendRequest(resend(id, 'owner-jwt'), env, deps);
+    expect(res.status).toBe(410);
+    expect(((await res.json()) as { error: string }).error).toBe('revoked');
+  });
+
+  it('refuses strangers and answers 404 for an unknown id', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const forbidden = await handleResendRequest(resend(id, 'stranger-jwt'), env, deps);
+    expect(forbidden.status).toBe(403);
+    const missing = await handleResendRequest(resend('0'.repeat(32), 'owner-jwt'), env, deps);
+    expect(missing.status).toBe(404);
+  });
+});
+
+describe('revoked requests in lists and pages', () => {
+  const revoke = (id: string, token?: string) =>
+    post('/api/sign-revoke', JSON.stringify({ id }), token, true);
+
+  it('lists the stored status and the signed date, newest first', async () => {
+    const bucket = makeBucket();
+    const { fetch } = makeFetch();
+    const env = envOf(bucket, fetch);
+    const deps = depsOf(fetch);
+    const first = await createOk(bucket, fetch);
+    const res = await handleRevokeRequest(revoke(first.id, 'owner-jwt'), env, deps);
+    expect(res.status).toBe(200);
+    const list = await handleListRequests(
+      new Request('https://univerlab.org/api/sign-request', { headers: { 'Cf-Access-Jwt-Assertion': 'owner-jwt' } }),
+      env,
+      deps,
+    );
+    expect(list.status).toBe(200);
+    const body = (await list.json()) as {
+      ok: boolean;
+      requests: { id: string; state: string; status: string; signedAt: string | null }[];
+    };
+    expect(body.requests).toHaveLength(1);
+    expect(body.requests[0].status).toBe('revoked');
+    expect(body.requests[0].state).toBe('revoked');
+    expect(body.requests[0].signedAt).toBeNull();
+  });
+
+  it('marks a revoked link revoked even inside the signing window', () => {
+    expect(
+      linkState({
+        id: 'x',
+        title: 't',
+        signerName: 'n',
+        signerEmail: 'e',
+        auditSlug: null,
+        origHash: 'h',
+        createdAt: new Date(Date.now()).toISOString(),
+        labAcceptedAt: new Date(Date.now()).toISOString(),
+        issuerName: 'i',
+        issuerId: '1',
+        issuerEmail: 'o',
+        issuerSignedAt: new Date(Date.now()).toISOString(),
+        lang: 'en',
+        signerIp: '',
+        signerUserAgent: '',
+        status: 'revoked',
+        signedAt: null,
+        signedHash: null,
+      }),
+    ).toBe('revoked');
+  });
+
+  it('shows the revoked status on the verification page', () => {
+    const html = verifyHtml(
+      {
+        id: 'a1b2c3d4e5f60718293a4b5c6d7e8f90',
+        title: 'Service order 7',
+        signerName: 'María López',
+        signerEmail: 'maria@example.com',
+        auditSlug: null,
+        origHash: 'a'.repeat(64),
+        createdAt: new Date(Date.now()).toISOString(),
+        labAcceptedAt: new Date(Date.now()).toISOString(),
+        issuerName: 'UniverLab',
+        issuerId: '901234567-8',
+        issuerEmail: 'owner@univerlab.org',
+        issuerSignedAt: '2026-11-13T19:00:00.000Z',
+        lang: 'en',
+        signerIp: '',
+        signerUserAgent: '',
+        status: 'revoked',
+        signedAt: null,
+        signedHash: null,
+      },
+      'en',
+      en.sign,
+    );
+    expect(html).toContain('Revoked: no signature');
+    expect(html).not.toContain('Waiting for signature');
   });
 });

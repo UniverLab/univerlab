@@ -64,6 +64,8 @@ const STRINGS: SignStrings = {
   downloadSigned: 'Download the signed PDF',
   expiredTitle: 'This link expired.',
   expiredLine: 'Ask the lab for a new one.',
+  revokedTitle: 'This request was revoked.',
+  revokedLine: 'The lab cancelled this request.',
 };
 
 const REQ: SigningRequest = {
@@ -126,6 +128,14 @@ describe('signInnerHtml', () => {
   it('expired renders the expired state', () => {
     const html = signInnerHtml(REQ, 'expired', STRINGS);
     expect(html).toContain(STRINGS.expiredTitle);
+  });
+
+  it('revoked renders the revoked state with no form or reader', () => {
+    const html = signInnerHtml(REQ, 'revoked', STRINGS);
+    expect(html).toContain(STRINGS.revokedTitle);
+    expect(html).toContain(STRINGS.revokedLine);
+    expect(html).not.toContain('id="sign-form"');
+    expect(html).not.toContain('sign-reader');
   });
 
   it('matching viewer renders the form, the reader and the auth error slot', () => {

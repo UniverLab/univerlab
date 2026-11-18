@@ -865,6 +865,7 @@ export const en = {
       stateReady: 'pending',
       stateSigned: 'signed',
       stateExpired: 'expired',
+      stateRevoked: 'revoked',
     },
   },
   workbench: {

@@ -39,6 +39,8 @@ export interface SignStrings {
   downloadSigned: string;
   expiredTitle: string;
   expiredLine: string;
+  revokedTitle: string;
+  revokedLine: string;
 }
 
 /** The acceptance sentence names the document and its hash (FR5). */
@@ -120,6 +122,9 @@ export function signInnerHtml(req: SigningRequest, state: LinkState, s: SignStri
       `<p>${esc(s.signedLine)}</p>` +
       `<p><a class="sign-download" href="/api/sign-file?id=${esc(req.id)}&amp;signed=1">${esc(s.downloadSigned)}</a></p>`
     );
+  }
+  if (state === 'revoked') {
+    return head + `<p class="sign-state">${esc(s.revokedTitle)}</p><p>${esc(s.revokedLine)}</p>`;
   }
   if (state === 'expired') {
     return head + `<p class="sign-state">${esc(s.expiredTitle)}</p><p>${esc(s.expiredLine)}</p>`;

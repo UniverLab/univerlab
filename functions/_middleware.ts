@@ -16,7 +16,7 @@ import { rewriteEditionWords } from './edition-words';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
 import { es } from '../src/i18n/es';
-import { linkState } from '../src/lib/sign/evidence';
+import { linkState, type LinkState } from '../src/lib/sign/evidence';
 import { loadRequest, listRequests, type SignBucket } from '../src/lib/sign/store';
 import { type SignStrings } from '../src/lib/sign/page';
 import { signPageHtml, signToken, siteNotFound } from './sign-edge';
@@ -899,7 +899,7 @@ export async function onRequest(context: {
       if (!shell.ok) return next();
       // A private audit lists its signed documents: every signing request
       // bound to this slug, with its state and the signed download.
-      let signedDocs: Array<{ id: string; title: string; state: 'ready' | 'signed' | 'expired'; signedHash: string | null }> | undefined;
+      let signedDocs: Array<{ id: string; title: string; state: LinkState; signedHash: string | null }> | undefined;
       if (doc.visibility === 'private') {
         try {
           const reqs = await listRequests(asSignBucket(env));
