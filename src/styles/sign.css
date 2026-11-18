@@ -166,7 +166,7 @@
 #sign-submit {
   font-family: var(--font-serif);
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--on-accent);
   background: var(--accent);
   border: none;
   border-radius: 3px;
@@ -251,7 +251,7 @@
 .sign-count[aria-pressed='true'] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .sign-row-actions {
   display: flex;

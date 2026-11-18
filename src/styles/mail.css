@@ -30,7 +30,7 @@
   --mail-box: #2f3b33;
   --mail-box-hi: #4d5d50;
   --mail-box-ink: #141a16;
-  --mail-brass: #a07c3a;
+  --mail-brass: var(--accent-secondary);
   --mail-flag: #9b2a2f;
   --mail-stamp-bg: #2c3a52;
   --mail-shadow: 32 22 12;
@@ -59,7 +59,7 @@
   --mail-box: #3b4a40;
   --mail-box-hi: #5f7264;
   --mail-box-ink: #101512;
-  --mail-brass: #c49a52;
+  --mail-brass: var(--accent-secondary);
   --mail-flag: #b8363c;
   --mail-stamp-bg: #1c2330;
   --mail-shadow: 0 0 0;
@@ -83,7 +83,7 @@
     --mail-box: #3b4a40;
     --mail-box-hi: #5f7264;
     --mail-box-ink: #101512;
-    --mail-brass: #c49a52;
+    --mail-brass: var(--accent-secondary);
     --mail-flag: #b8363c;
     --mail-stamp-bg: #1c2330;
     --mail-shadow: 0 0 0;

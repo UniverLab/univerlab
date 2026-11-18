@@ -320,8 +320,8 @@
 }
 
 .audit-sev--critical { color: #ff8a80; border-color: #b3261e; }
-.audit-sev--high { color: #ffc4a3; border-color: #9a5530; }
-.audit-sev--medium { color: #f0d48a; border-color: #8a6a2c; }
+.audit-sev--high { color: #ffc4a3; border-color: var(--accent-secondary); }
+.audit-sev--medium { color: #f0d48a; border-color: var(--accent-secondary); }
 .audit-sev--low,
 .audit-sev--info,
 .audit-status { color: var(--ink-dim); }

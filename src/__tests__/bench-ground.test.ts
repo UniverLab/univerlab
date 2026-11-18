@@ -112,13 +112,13 @@ describe('circadian palette endpoints', () => {
 
   it('NB is the night edge endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#e6c84a','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'}",
+      "NB={'--bg':'#1d2322','--bg-raise':'#171c1b','--ink':'#e4e3dc','--ink-dim':'#aeb3ab','--ink-faint':'#7b817b','--line':'#343c3a','--accent':'#c9a227','--canvas-color':'#aeb3ab','--canvas-mute':'#545e59'}",
     );
   });
 
   it('NS is the night endpoint', () => {
     expect(CIRCADIAN).toContain(
-      "NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#e6c84a','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'}",
+      "NS={'--bg':'#222928','--bg-raise':'#1a201f','--ink':'#ecebe4','--ink-dim':'#b9bdb5','--ink-faint':'#848a84','--line':'#3a4240','--accent':'#c9a227','--canvas-color':'#b9bdb5','--canvas-mute':'#5b6560'}",
     );
   });
 
