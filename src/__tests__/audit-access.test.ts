@@ -253,6 +253,26 @@ describe('private audit access', () => {
     }
   });
 
+  it('accepts a token from any AUD in the comma-separated list', async () => {
+    const ownerAud = 'owner-access-app-aud';
+    const envExtra = { ACCESS_AUD: `${AUD} , ${ownerAud}` };
+    for (const aud of [AUD, ownerAud]) {
+      const token = await mint({ key: signKey, aud });
+      for (const path of [pagePath(PRIVATE_SLUG), assetPath(PRIVATE_SLUG)]) {
+        const ctx = context(path, { token, envExtra });
+        const res = await onRequest(ctx);
+        expect(res.status).toBe(200);
+        expect(ctx.next).not.toHaveBeenCalled();
+      }
+    }
+    expect(await verifyAccessToken(await mint({ key: signKey, aud: ownerAud }), accessEnv(envExtra))).toBe(
+      LISTED.toLowerCase(),
+    );
+    const other = await mint({ key: signKey, aud: 'another-app' });
+    const ctx = context(pagePath(PRIVATE_SLUG), { token: other, envExtra });
+    expect((await onRequest(ctx)).status).toBe(404);
+  });
+
   it('answers 404 for page and asset on a bad signature', async () => {
     const token = await mint({ key: otherKey });
     for (const path of [pagePath(PRIVATE_SLUG), assetPath(PRIVATE_SLUG)]) {

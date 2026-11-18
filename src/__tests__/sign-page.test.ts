@@ -6,7 +6,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { signInnerHtml, type SignStrings } from '../lib/sign/page';
+import { maskEmail, signInnerHtml, type SignStrings } from '../lib/sign/page';
 import type { SigningRequest } from '../lib/sign/evidence';
 
 const SRC = resolve(__dirname, '..');
@@ -42,6 +42,10 @@ const STRINGS: SignStrings = {
   formIdError: 'Write the number.',
   acceptTemplate: 'I accept "{title}" with SHA-256 {hash}.',
   formError: 'Something is not right.',
+  formAuthError: 'Sign in with the link address.',
+  identityTitle: 'This link is for another address.',
+  identityLine: 'It belongs to {email}. Sign in with that address.',
+  switchAccount: 'Use another address',
   submit: 'Sign the document',
   submitting: 'Signing…',
   signedTitle: 'This document is already signed.',
@@ -101,6 +105,50 @@ describe('signInnerHtml', () => {
   it('expired renders the expired state', () => {
     const html = signInnerHtml(REQ, 'expired', STRINGS);
     expect(html).toContain(STRINGS.expiredTitle);
+  });
+
+  it('matching viewer renders the form, the iframe and the auth error slot', () => {
+    const html = signInnerHtml(REQ, 'ready', STRINGS, {
+      email: 'MARIA@example.com',
+      logoutUrl: 'https://team.cloudflareaccess.com/cdn-cgi/access/logout',
+    });
+    expect(html).toContain('<iframe');
+    expect(html).toContain('id="sign-form"');
+    expect(html).toContain('data-err-auth="Sign in with the link address."');
+    expect(html).not.toContain('sign-switch');
+  });
+
+  it('wrong-address viewer shows the masked address and the switch link, no form or iframe', () => {
+    const html = signInnerHtml(REQ, 'ready', STRINGS, {
+      email: 'owner@univerlab.org',
+      logoutUrl: 'https://team.cloudflareaccess.com/cdn-cgi/access/logout',
+    });
+    expect(html).toContain(STRINGS.identityTitle);
+    expect(html).toContain('m•••@example.com');
+    expect(html).toContain('class="sign-switch"');
+    expect(html).toContain('https://team.cloudflareaccess.com/cdn-cgi/access/logout');
+    expect(html).not.toContain('id="sign-form"');
+    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('Service order 7');
+  });
+
+  it('missing session shows the notice without a switch link', () => {
+    const html = signInnerHtml(REQ, 'ready', STRINGS, { email: null, logoutUrl: null });
+    expect(html).toContain(STRINGS.identityTitle);
+    expect(html).toContain('m•••@example.com');
+    expect(html).not.toContain('sign-switch');
+    expect(html).not.toContain('id="sign-form"');
+    expect(html).not.toContain('<iframe');
+  });
+});
+
+describe('maskEmail', () => {
+  it('keeps the first character and the domain', () => {
+    expect(maskEmail('maria@example.com')).toBe('m•••@example.com');
+  });
+
+  it('answers ••• when there is no domain', () => {
+    expect(maskEmail('not-an-address')).toBe('•••');
   });
 });
 
