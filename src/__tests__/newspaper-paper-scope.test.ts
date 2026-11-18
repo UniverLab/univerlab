@@ -97,7 +97,7 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).toMatch(/\.paper #edition \{[^}]*align-content:\s*start/);
     expect(css).toMatch(/\.paper \.front \{[^}]*align-content:\s*start/);
     expect(css).toMatch(/\.paper \.col \{[^}]*align-self:\s*start/);
-    expect(css).toMatch(/\.paper #lab-body, \.paper #lab2-body \{[^}]*flex:\s*0 0 auto/);
+    expect(css).toMatch(/\.paper #lab-body, \.paper #lab2-body, \.paper #page-1b-body \{[^}]*flex:\s*0 0 auto/);
     expect(css).not.toContain('fit-natural');
   });
 

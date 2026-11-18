@@ -733,10 +733,12 @@ describe('bindLabPage', () => {
       `<div class="paper">` +
       `<nav class="paper-tabs">` +
       `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+      `<a class="paper-tab" data-page="page-1b" href="#page-1b">Continued</a>` +
       `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
       `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
       `</nav>` +
       `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+      `<section id="page-1b" class="paper-page"><div id="page-1b-body"></div></section>` +
       `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(rows, lang)}</div></section>` +
       `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(rows, lang)}</div></section>` +
       `</div>`;
@@ -768,16 +770,17 @@ describe('bindLabPage', () => {
       jest.advanceTimersByTime(700);
       expect((document.getElementById('page-1') as HTMLElement).hidden).toBe(true);
       const tabs = Array.from(document.querySelectorAll('.paper-tab'));
-      expect(tabs).toHaveLength(3);
-      expect(tabs[1].classList.contains('is-active')).toBe(true);
-      expect(tabs[0].classList.contains('is-active')).toBe(false);
+      expect(tabs).toHaveLength(4);
+      const tab = (id: string) => document.querySelector(`.paper-tab[data-page="${id}"]`) as HTMLElement;
+      expect(tab('lab').classList.contains('is-active')).toBe(true);
+      expect(tab('page-1').classList.contains('is-active')).toBe(false);
       window.location.hash = '#lab2';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
       expect((document.getElementById('lab2') as HTMLElement).hidden).toBe(false);
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(false);
       jest.advanceTimersByTime(700);
       expect((document.getElementById('lab') as HTMLElement).hidden).toBe(true);
-      expect(tabs[2].classList.contains('is-active')).toBe(true);
+      expect(tab('lab2').classList.contains('is-active')).toBe(true);
     } finally {
       jest.useRealTimers();
     }
@@ -797,10 +800,12 @@ describe('bindLabPage', () => {
         `<div class="paper">` +
         `<nav class="paper-tabs">` +
         `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+        `<a class="paper-tab" data-page="page-1b" href="#page-1b">Continued</a>` +
         `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
         `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
         `</nav>` +
         `<section id="page-1" class="paper-page" aria-label="Page 1"><div id="edition">edition</div></section>` +
+        `<section id="page-1b" class="paper-page" aria-label="Continued"><div id="page-1b-body"></div></section>` +
         `<section id="lab" class="paper-page" aria-label="Page 2"><div id="lab-body">${labPageHtml(manyNotes, 'en')}</div></section>` +
         `<section id="lab2" class="paper-page" aria-label="Page 3"><div id="lab2-body">${labPageHtml2(manyNotes, 'en')}</div></section>` +
         `</div>` +
@@ -1006,10 +1011,12 @@ describe('bindLabPage', () => {
       `<div class="paper">` +
       `<nav class="paper-tabs">` +
       `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+      `<a class="paper-tab" data-page="page-1b" href="#page-1b">Continued</a>` +
       `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
       `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
       `</nav>` +
       `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+      `<section id="page-1b" class="paper-page"><div id="page-1b-body"></div></section>` +
       `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
       `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
       `</div>`;
@@ -1039,10 +1046,12 @@ describe('bindLabPage', () => {
       `<div class="paper">` +
       `<nav class="paper-tabs">` +
       `<a class="paper-tab is-active" data-page="page-1" href="#page-1">Page 1</a>` +
+      `<a class="paper-tab" data-page="page-1b" href="#page-1b">Continued</a>` +
       `<a class="paper-tab" data-page="lab" href="#lab">Page 2</a>` +
       `<a class="paper-tab" data-page="lab2" href="#lab2">Page 3</a>` +
       `</nav>` +
       `<section id="page-1" class="paper-page"><div id="edition">edition</div></section>` +
+      `<section id="page-1b" class="paper-page"><div id="page-1b-body"></div></section>` +
       `<section id="lab" class="paper-page"><div id="lab-body">${labPageHtml(entries, 'en')}</div></section>` +
       `<section id="lab2" class="paper-page"><div id="lab2-body">${labPageHtml2(entries, 'en')}</div></section>` +
       `</div>`;
