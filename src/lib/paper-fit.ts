@@ -408,7 +408,10 @@ function sizeLeadPhoto(edition: Element, budget = 0): number {
   const text = main?.querySelector('.lead-text') as HTMLElement | null;
   if (!lead || !fig || !main || !text) return 0;
   const view = lead.ownerDocument.defaultView;
+  // Track functions (`minmax(0, 1fr)`) hold spaces of their own: count the
+  // tracks with their arguments folded away.
   const tracks = (view?.getComputedStyle(lead).gridTemplateColumns || '')
+    .replace(/\([^)]*\)/g, '()')
     .trim()
     .split(/\s+/)
     .filter(Boolean);
@@ -571,15 +574,8 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
 
   let seq = letters.map((_, i) => i);
   let plan = planFor(seq, []);
-  // The Workbench display steps aside first; it comes back below if the
-  // letters leave it room after all.
-  let duoSpot: { parent: Element; next: Node | null; h: number } | null = null;
-  if (plan && plan.max - room() > 1 && duo && duo.parentElement) {
-    const before = band.getBoundingClientRect().top;
-    duoSpot = { parent: duo.parentElement, next: duo.nextSibling, h: 0 };
-    duo.remove();
-    duoSpot.h = before - band.getBoundingClientRect().top;
-  }
+  // The Workbench display steps aside before any letter does.
+  if (plan && plan.max - room() > 1 && duo) duo.remove();
   // Whole letters yield, one at a time: the one whose loss leaves the best
   // page — one that fits, with the columns ending closest together; while
   // none fits, the one that shortens the tallest column most (ties going to
@@ -639,10 +635,6 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
     if (!swap) break;
     seq = swap.seq;
     plan = swap.plan;
-  }
-  if (plan && duo && duoSpot && !out.trimmedLetters && plan.max - (room() - duoSpot.h) <= 1) {
-    duoSpot.parent.insertBefore(duo, duoSpot.next);
-    plan = planFor(seq, []);
   }
   // The fillers take only a day's spare room, once every letter fits: a
   // column the cut left short grows its pictures instead (below), so no

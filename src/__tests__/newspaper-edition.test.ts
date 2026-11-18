@@ -705,3 +705,41 @@ describe('editionDateFor', () => {
     expect(editionDateFor('?d=abc', NOW)).toEqual(today());
   });
 });
+
+describe('the front page prints what its data carries, and no more', () => {
+  it('sizes every picture by its own ratio, so a failed load keeps the fitted box', () => {
+    // The letters' pictures; the waiting plate carries its ratio in the
+    // stylesheet.
+    const html = todayEditionHtml(feed(), 'en', DATE).replace(/<template[\s\S]*?<\/template>/g, '');
+    expect(html).toContain('<img ');
+    for (const m of html.matchAll(/<img [^>]*width="(\d+)" height="(\d+)"[^>]*>/g)) {
+      expect(m[0]).toContain(`style="aspect-ratio:${m[1]}/${m[2]}"`);
+    }
+    // A thumb without dims guesses no ratio.
+    const bare: Fact = { year: '1945', text: 'something happened', link: '', kind: 'event', page: 'Event', thumb: { src: 'https://upload.wikimedia.org/x.jpg' } };
+    expect(todayEditionHtml({ facts: [bare], lab: [] }, 'en', DATE)).not.toContain('aspect-ratio');
+  });
+
+  it('captions the lead photo with its page, and prints no caption without one', () => {
+    const named: Fact = { year: '1945', text: 'a photo with a name', link: '', kind: 'event', page: 'Named', thumb: { src: 'https://upload.wikimedia.org/n.jpg', w: 300, h: 400 } };
+    const withName = todayEditionHtml({ facts: [named], lab: [] }, 'en', DATE);
+    expect(withName).toContain('<figcaption>Named · Wikimedia Commons</figcaption>');
+    expect(withName).toContain('alt="Named"');
+    const anonymous = { ...named, page: '' };
+    const without = todayEditionHtml({ facts: [anonymous], lab: [] }, 'en', DATE);
+    expect(without).toContain('<figure class="photo photo--lead photo--lead--portrait">');
+    expect(without).not.toContain('<figcaption>');
+    expect(without).toContain('alt=""');
+  });
+
+  it('boxes only the lab entries dated on the edition day, ignoring undated ones', () => {
+    const lab = [
+      { ...feed().lab[0], id: 'undated', date: '' },
+      { ...feed().lab[0], id: 'today-untyped', type: null, topic: null },
+    ];
+    const html = todayEditionHtml({ facts: [], lab }, 'en', DATE);
+    // The untyped, unfiled box keeps only the lab's own kicker.
+    expect(html).toContain('<p class="kicker">Lab mail · today</p>');
+    expect(todayEditionHtml({ facts: [], lab: null as unknown as [] }, 'en', DATE)).not.toContain('class="labmail"');
+  });
+});
