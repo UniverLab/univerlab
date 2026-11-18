@@ -17,7 +17,6 @@ import {
   fitFrontPage,
   fitPaper,
   planColumns,
-  shrinkPhotosForBalance,
   trimColumn,
 } from '../lib/paper-fit';
 import {
@@ -137,42 +136,12 @@ describe('the server prints heads only, dropped letters stay in the twin', () =>
     const html = todayEditionHtml({ facts: births, lab: [] }, 'en', DATE);
     expect(html).not.toContain('<details');
     expect(html).not.toContain('class="more"');
-    // Templates are inert: only the rendered page counts as printed.
-    const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
-    const items = rendered.match(/<article class="item/g) ?? [];
+    const items = html.match(/<article class="item/g) ?? [];
     expect(items.length).toBeLessThan(births.length);
     expect(items.length).toBe(HEAD_LIMIT);
     for (const m of html.matchAll(/<section class="col">([\s\S]*?)<\/section>/g)) {
       expect((m[1].match(/<article class="item/g) ?? []).length).toBeLessThanOrEqual(HEAD_LIMIT);
     }
-  });
-
-  it('waits the letters past the head in the overflow template, in reading order', () => {
-    const html = todayEditionHtml({ facts: births, lab: [] }, 'en', DATE);
-    const overflow = html.match(/<template data-overflow>([\s\S]*?)<\/template>/)?.[1] ?? '';
-    expect(overflow).not.toBe('');
-    // Three past the head of nine, in the order the second sheet prints.
-    const ids = [...overflow.matchAll(/data-i="(\d+)"/g)].map((m) => Number(m[1]));
-    expect(ids).toEqual([9, 10, 11]);
-    // Whole letters with their kind, year and link, ready to print.
-    expect((overflow.match(/<article class="item" data-kind="born"/g) ?? [])).toHaveLength(3);
-    // Nothing past the head prints twice: the template and the page are disjoint.
-    const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
-    const printed = [...rendered.matchAll(/data-i="(\d+)"/g)].map((m) => Number(m[1]));
-    expect(printed.filter((id) => ids.includes(id))).toEqual([]);
-  });
-
-  it('emits the overflow template even when the heads hold every letter', () => {
-    // Three births share one column and all fit its head of nine: nothing
-    // waits, but the template still ships — empty — so the client fit has a
-    // sink for the letters page one trims, and the second sheet can print.
-    const few: Fact[] = Array.from({ length: 3 }, (_, i) =>
-      letter('born', String(1800 + i), `notable person ${i} was born in town`),
-    );
-    const html = todayEditionHtml({ facts: few, lab: [] }, 'en', DATE);
-    expect(html).toContain('<template data-overflow></template>');
-    const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
-    expect((rendered.match(/<article class="item/g) ?? [])).toHaveLength(few.length);
   });
 
   it('lists every letter in the markdown twin', () => {
@@ -195,89 +164,6 @@ describe('the server prints heads only, dropped letters stay in the twin', () =>
     balanceHeads(heads, weights);
     const sums = weights.map((w) => w.reduce((a, b) => a + b, 0));
     expect(Math.max(...sums) - Math.min(...sums)).toBeLessThanOrEqual(4);
-  });
-});
-
-describe('shrinkPhotosForBalance', () => {
-  // Picture heights by inline width, like the laid-out page: stepping a
-  // picture down shortens its letter live, so the feet agree for real.
-  const photoH: Record<string, number> = {
-    '100%': 235, '62%': 145, '50%': 115, '38%': 160, '96px': 60, '76px': 40,
-  };
-
-  const photoCol = (
-    doc: Document, kind: 'event' | 'stamp', width: string, texts: number[], plains = 1,
-  ): { col: HTMLElement; figs: HTMLElement[] } => {
-    const col = doc.createElement('section');
-    col.className = 'col';
-    const figs: HTMLElement[] = [];
-    for (const text of texts) {
-      const a = doc.createElement('article');
-      a.className = `item has-photo item--${kind}`;
-      a.setAttribute('data-kind', kind);
-      const fig = doc.createElement('figure');
-      fig.className = 'photo';
-      fig.style.width = width;
-      a.appendChild(fig);
-      figs.push(fig);
-      a.getBoundingClientRect = () => rect(9000, text + (photoH[fig.style.width] ?? 0));
-      fig.getBoundingClientRect = () => rect(9000, photoH[fig.style.width] ?? 0);
-      col.appendChild(a);
-    }
-    for (let i = 0; i < plains; i++) {
-      const plain = doc.createElement('article');
-      plain.className = 'item';
-      plain.setAttribute('data-kind', kind);
-      plain.getBoundingClientRect = () => rect(9000, 100);
-      col.appendChild(plain);
-    }
-    col.getBoundingClientRect = () => {
-      let bottom = 300;
-      for (const k of Array.from(col.children)) {
-        if (k.tagName === 'ARTICLE') bottom += (k as HTMLElement).getBoundingClientRect().height + 14;
-      }
-      return rect(bottom);
-    };
-    return { col, figs };
-  };
-
-  const bottomOf = (col: HTMLElement): number => col.getBoundingClientRect().bottom;
-
-  it('steps the tallest column’s grown picture down until the feet agree', () => {
-    document.body.innerHTML = '';
-    // 913 against 788: the full-width event picture steps to 62% (823
-    // against 788) and the feet agree within the shortest letter plus one.
-    // The shorter column’s picture is never touched: fewest steps win.
-    const a = photoCol(document, 'event', '100%', [250]);
-    const b = photoCol(document, 'stamp', '38%', [200]);
-    shrinkPhotosForBalance([a.col, b.col]);
-    expect(a.figs[0].style.width).toBe('62%');
-    expect(b.figs[0].style.width).toBe('38%');
-    expect(Math.abs(bottomOf(a.col) - bottomOf(b.col))).toBeLessThanOrEqual(101);
-    // Text never moves: every letter stays in its column.
-    expect(a.col.querySelectorAll('article.item')).toHaveLength(2);
-    expect(b.col.querySelectorAll('article.item')).toHaveLength(2);
-  });
-
-  it('stops at the first step and never touches text-only columns', () => {
-    document.body.innerHTML = '';
-    // The tall column’s picture is already at its narrowest and the short
-    // column has no picture at all: nothing steps, nothing moves.
-    const a = photoCol(document, 'event', '50%', [400]);
-    const b = photoCol(document, 'stamp', '38%', [], 2);
-    shrinkPhotosForBalance([a.col, b.col]);
-    expect(a.figs[0].style.width).toBe('50%');
-    expect(a.col.querySelectorAll('article.item')).toHaveLength(2);
-    expect(b.col.querySelectorAll('article.item')).toHaveLength(2);
-  });
-
-  it('leaves columns that already end together alone', () => {
-    document.body.innerHTML = '';
-    const a = photoCol(document, 'event', '62%', [200]);
-    const b = photoCol(document, 'event', '62%', [200]);
-    shrinkPhotosForBalance([a.col, b.col]);
-    expect(a.figs[0].style.width).toBe('62%');
-    expect(b.figs[0].style.width).toBe('62%');
   });
 });
 

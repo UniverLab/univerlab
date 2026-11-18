@@ -735,7 +735,7 @@ export const en = {
     counts: '{n} letters from the past · {m} from the lab',
     labKicker: 'Lab mail · today',
     labLink: 'Read the full announcement →',
-    tabs: { p1: 'Page 1', p1b: 'Continued', p2: 'Page 2 · Classifieds', p3: 'Page 3 · Classifieds' },
+    tabs: { p1: 'Page 1', p2: 'Page 2 · Classifieds', p3: 'Page 3 · Classifieds' },
     labPage: {
       heading: 'Lab classifieds',
       head: 'Classifieds',
@@ -779,10 +779,10 @@ export const en = {
     error: 'Failed to load the day’s letters.',
     pick: { label: 'Edition of', go: 'Print', prev: 'Previous day', next: 'Next day' },
     fit: 'Fit',
-    folio: { p1b: 'Continued', p2: 'Page 2', p3: 'Page 3' },
+    folio: { p2: 'Page 2', p3: 'Page 3' },
     controls: 'Page and date controls',
     logbookLink: 'Lab logbook →',
-    pages: { prev: 'Previous page', next: 'Next page', p1b: 'Page 1 · Continued' },
+    pages: { prev: 'Previous page', next: 'Next page' },
     plate: "The sundial, the paper's engraving",
     labPlate: "The ticker, the paper's engraving",
     ads: {
