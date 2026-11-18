@@ -17,9 +17,11 @@ describe('demo loupe: asset', () => {
     expect(LUPA).toMatch(/cx="150" cy="150" r="110"/);
   });
 
-  it('is dark brass with hatching, fixed for day and night', () => {
+  it('reads copper from the site secondary token, with no hard-coded copper', () => {
     expect(LUPA).toContain('#2a2118');
-    expect(LUPA).toContain('#a07c3a');
+    expect(LUPA).toContain('var(--accent-secondary)');
+    expect(LUPA).not.toContain('#9a5530');
+    expect(LUPA).not.toContain('#a07c3a');
   });
 
   it('keeps the lens hole transparent so the magnified video shows through', () => {
@@ -34,10 +36,15 @@ describe('demo loupe: asset', () => {
 });
 
 describe('demo loupe: markup', () => {
-  it('draws the loupe image over the lens, decorative and pointer-transparent', () => {
-    expect(DEMO).toContain('/bench/identidad/lupa.svg');
+  it('draws the loupe artwork over the lens, decorative and pointer-transparent', () => {
+    // The artwork is inlined from public/bench/identidad/lupa.svg so the
+    // copper strokes resolve against the page theme tokens.
+    expect(DEMO).toContain('bench/identidad/lupa.svg');
     expect(DEMO).toContain('class="demo-loupe"');
-    expect(DEMO).toContain('alt=""');
+    expect(DEMO).toContain('<svg');
+    expect(DEMO).toContain('var(--accent-secondary)');
+    expect(DEMO).not.toContain('#9a5530');
+    expect(DEMO).not.toContain('<img src="/bench/identidad/lupa.svg"');
     expect(DEMO).toContain('aria-hidden="true"');
   });
 

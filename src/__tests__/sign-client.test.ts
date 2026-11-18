@@ -14,7 +14,7 @@ function mount(extra = ''): {
 } {
   document.body.innerHTML =
     `<form id="sign-form" data-id="abc123" data-hash="deadbeef" data-err-form="form bad" ` +
-    `data-err-name="name bad" data-err-id="id bad" data-done="done!" data-hashlabel="SHA" ` +
+    `data-err-name="name bad" data-err-id="id bad" data-err-auth="auth bad" data-done="done!" data-hashlabel="SHA" ` +
     `data-download="Get it" data-submitting="Sending…">${extra}` +
     '<input id="sign-name" type="text">' +
     '<input id="sign-idnum" type="text">' +
@@ -217,13 +217,45 @@ describe('initSignPage wiring', () => {
     expect((document.getElementById('sign-submit') as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('reports the HTTP status when the body carries no error', async () => {
+  it.each([
+    ['forbidden', 403],
+    ['unauthorized', 401],
+  ])('maps the %s API error to the auth message, never the form error', async (code, status) => {
+    const w = mount();
+    initSignPage();
+    fill(w);
+    (globalThis as Record<string, unknown>)['fetch'] = jest.fn().mockResolvedValue({
+      ok: false,
+      status,
+      json: async () => ({ ok: false, error: code }),
+    });
+    w.form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flush();
+    expect(w.error.textContent).toBe('auth bad');
+    expect(w.submit.disabled).toBe(false);
+  });
+
+  it('maps a bodyless 401/403 to the auth message', async () => {
     const w = mount();
     initSignPage();
     fill(w);
     (globalThis as Record<string, unknown>)['fetch'] = jest.fn().mockResolvedValue({
       ok: false,
       status: 403,
+      json: async () => ({ ok: false }),
+    });
+    w.form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flush();
+    expect(w.error.textContent).toBe('auth bad');
+  });
+
+  it('reports the HTTP status when the body carries no error', async () => {
+    const w = mount();
+    initSignPage();
+    fill(w);
+    (globalThis as Record<string, unknown>)['fetch'] = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
       json: async () => ({ ok: false }),
     });
     w.form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));

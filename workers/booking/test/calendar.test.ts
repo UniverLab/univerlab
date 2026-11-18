@@ -521,6 +521,10 @@ test('a web reserve invites the guest, attaches Meet and answers the link', asyn
   });
   expect(res.ok).toBe(true);
   expect(res.meet).toBe('https://meet.google.com/abc-defg-hij');
+  // The hold message payment sentence travels with the reservation, so the
+  // agent door needs no booking configuration of its own.
+  expect(typeof res.payments).toBe('string');
+  expect(res.payments).toContain('PayPal');
   const sent = (insertEvent as jest.Mock).mock.calls[0];
   expect(sent[2]).toMatchObject({ attendee: 'ana@example.com', conference: true });
   expect(sent[4]).toBe('all');

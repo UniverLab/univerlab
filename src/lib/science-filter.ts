@@ -90,6 +90,9 @@ export interface Fact {
   summary?: string;
   /** True when the extract held more than `summary` shows. */
   summaryCut?: boolean;
+  /** The fallback body when the event has no text of its own: one passage
+   *  per linked page that carries text, each naming its source page. */
+  passages?: { page: string; text: string }[];
   /** The lead story's longer body, at most LEAD_SENTENCES and LEAD_MAX chars. */
   long?: string;
   /** True when the extract held more than `long` shows. */
@@ -126,6 +129,7 @@ export interface FeedPage {
   content_urls?: { desktop?: { page?: string } };
   thumbnail?: { source?: string; width?: number; height?: number };
   extract?: string;
+  description?: string;
 }
 
 export interface FeedEntry {
@@ -330,6 +334,50 @@ export function summaryText(f: { summary?: string; summaryCut?: boolean }): stri
   return s.replace(/[.!?…\s]+$/u, '') + '…';
 }
 
+/** A passage that opens by repeating its page's name ("Eric Walter Elst —
+ *  Eric Walter Elst fue…") would read the name twice once attributed, so
+ *  the passage's own echo is dropped and the name is said once. */
+export function stripTitleEcho(text: string, title: string): string {
+  const flat = (text || '').replace(/\s+/g, ' ').trim();
+  const bare = (s: string): string => s.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (flat && bare(flat).startsWith(bare(title))) {
+    const rest = flat
+      .slice(title.replace(/\s+/g, ' ').trim().length)
+      .replace(/^[\s,.;:—–-]+/, '');
+    if (rest) return rest;
+  }
+  return flat;
+}
+
+/** One passage per linked page that carries text, each naming its source
+ *  page: the fallback body for an event with no text of its own. Pages are
+ *  read in feed order, capped at `max`; a page whose text only repeats the
+ *  event's line falls back to its trimmed description, a passage opening
+ *  with its own page's name loses that echo, and pages with no usable text
+ *  are skipped. */
+export function eventPassages(
+  entry: FeedEntry,
+  max = 2,
+): { page: string; text: string }[] {
+  const out: { page: string; text: string }[] = [];
+  for (const p of entry?.pages || []) {
+    if (out.length >= max) break;
+    const raw = p.extract || p.description || '';
+    const text =
+      shortSummary(raw, entry.text || '')?.summary ??
+      (p.description || '').replace(/\s+/g, ' ').trim();
+    const title = pageTitle(p);
+    if (!title || !text) continue;
+    out.push({ page: title, text: stripTitleEcho(text, title) });
+  }
+  return out;
+}
+
+/** The passages as one body: each passage names the page it comes from. */
+export function passagesText(passages: { page: string; text: string }[]): string {
+  return (passages || []).map((p) => `${p.page} — ${p.text}`).join('\n\n');
+}
+
 /** Turn one feed category into normalized, length-sorted pool entries. */
 export function collectFacts(
   list: FeedEntry[] | undefined,
@@ -383,6 +431,14 @@ export function collectFacts(
           longCut = lead.cut;
         }
       }
+      // No text of its own: carry the linked pages' passages instead, so
+      // the letter and the lead still have a body. Nothing is fetched —
+      // the entry's pages are already in hand.
+      let passages: Fact['passages'];
+      if (kind === 'event' && summary === undefined && long === undefined) {
+        const ps = eventPassages(e);
+        if (ps.length) passages = ps;
+      }
       return {
         year: String(e.year || '?'),
         text: e.text || '',
@@ -393,6 +449,7 @@ export function collectFacts(
         ...(summaryCut !== undefined ? { summaryCut } : {}),
         ...(long !== undefined ? { long } : {}),
         ...(longCut !== undefined ? { longCut } : {}),
+        ...(passages ? { passages } : {}),
         ...(thumb ? { thumb } : {}),
       };
     });

@@ -22,8 +22,16 @@
   --ink-faint: #7f7c76;
   --line: #23252c;
 
-  /* Lab colour: garnet by day, gold by night (see the night override below) */
+  /* Lab colours: garnet (primary) and copper (secondary) by day, gold
+     (primary) and brass (secondary) by night (see the night override below).
+     Primary is for accents and actions; secondary for metal details and
+     secondary links. facetMedia keeps its own yellow (--facetmedia). */
   --accent: #87222c;
+  --accent-secondary: #9a5530;
+  /* Label on the accent fill: white clears 9.15:1 on day garnet. Night gold
+     needs a dark label instead (white is 2.42:1 on #c9a227), so the night
+     override below flips this token. */
+  --on-accent: #ffffff;
   /* Garnet lifted for the always-black footer; pure garnet is 2.3:1 on #000 */
   --accent-lift: #e0a2a6;
 
@@ -41,16 +49,21 @@
   --page-gutter: clamp(1rem, 3vw, 2rem);
 }
 
-/* Lab colour by night: the gold the site has always worn, on dark grounds. */
+/* Lab colours by night: gold (primary) and brass (secondary) on dark grounds. */
 html[data-bench-theme='night'] {
-  --accent: #e6c84a;
-  --accent-lift: #e6c84a;
+  --accent: #c9a227;
+  --accent-secondary: #d9b878;
+  /* Warm near-black: 7.44:1 on night gold (white would be 2.42:1). */
+  --on-accent: #1d1510;
+  --accent-lift: #c9a227;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not([data-bench-theme='day']) {
-    --accent: #e6c84a;
-    --accent-lift: #e6c84a;
+    --accent: #c9a227;
+    --accent-secondary: #d9b878;
+    --on-accent: #1d1510;
+    --accent-lift: #c9a227;
   }
 }
 

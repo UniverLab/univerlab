@@ -1,21 +1,21 @@
 import type { Env } from './env';
-import { SERVICE_LABEL } from './intake';
+import { nameBase, SERVICE_LABEL } from './booking-common';
 import { contactKey } from './limits';
 import type { Lang } from './lang';
-import { calendarCall } from './reservations';
+import { calendarCall } from './calendar-client';
 import { formatSlot } from './schedule';
 import { hashAddress } from './gate';
-import { nameBase, postNote } from './registry';
-import { changeLine, sameDayAfterBookingDigest } from './daybook';
+import { changeLine, postOperatorNote, sameDayAfterBookingDigest } from './daybook';
 
 /**
  * The public HTTP door to the free 15-minute first call, served at
- * `https://booking.univerlab.org` next to the WhatsApp webhook: slot reads,
- * Turnstile-guarded bookings and signed cancel links. It shares the one
- * serialized calendar owner and the same configuration and rules as the
- * agent's offers, and no text, voice or vision model is called anywhere in
- * this path: client input is validated, stored in the event and shown to
- * the operator, never interpreted.
+ * `https://booking.univerlab.org`: slot reads, Turnstile-guarded bookings
+ * and signed cancel links. It shares the one serialized calendar owner and
+ * the same configuration and rules as the agent's offers, and no text,
+ * voice or vision model is called anywhere in this path: client input is
+ * validated, stored in the event and shown to the operator, never
+ * interpreted. The WhatsApp agent books through POST /internal/call
+ * instead, over a service binding with no Turnstile in the path.
  */
 
 const SITE = 'https://univerlab.org';
@@ -280,7 +280,7 @@ let slotsCache: { at: number; slots: string[] } | null = null;
 
 async function handleSlots(req: Request, env: Env, origin: string | null, ip: string): Promise<Response> {
   const now = Date.now();
-  const addr = await hashAddress(ip, env.TURNSTILE_SECRET ?? env.WA_APP_SECRET ?? 'univerlab-agenda');
+  const addr = await hashAddress(ip, env.TURNSTILE_SECRET ?? 'univerlab-agenda');
   if (!(await gateAllow(env, addr, 'read', 30, 60000, now))) {
     return refused('limit', 429, origin);
   }
@@ -345,7 +345,7 @@ async function handleBook(req: Request, env: Env, origin: string | null, ip: str
     // A web booking for a later day waits for that day's booking digest; a
     // same-day booking after the digest went out still goes at once.
     if (await sameDayAfterBookingDigest(env, fields.slot, now)) {
-      await postNote(env, {
+      await postOperatorNote(env, {
         name: nameBase(fields.email),
         text: changeLine('Primera llamada agendada (web)', 'first-call', fields.slot, fields.name, true),
         tag: 'CITA',
@@ -430,11 +430,11 @@ async function handleCancelPost(req: Request, env: Env, origin: string | null): 
     now,
   });
   if (res.ok) {
-    const email = claim.k.startsWith('web:') ? claim.k.slice(4) : claim.k;
+    const email = claim.k.startsWith('web:') ? claim.k.slice('web:'.length) : claim.k;
     // A later-day web cancellation waits for that day's booking digest; a
     // same-day one after the digest went out still goes at once.
     if (await sameDayAfterBookingDigest(env, claim.s, now)) {
-      await postNote(env, {
+      await postOperatorNote(env, {
         name: nameBase(email),
         text: changeLine('Cita cancelada (web)', 'first-call', claim.s, claim.n, false),
         tag: 'CITA',
@@ -460,8 +460,9 @@ async function handleCancelPost(req: Request, env: Env, origin: string | null): 
 
 /**
  * Answer the public booking routes, or null when this request is not one:
- * the worker keeps serving the WhatsApp webhook and the health check, and
- * works when the WhatsApp secrets are missing or that side is failing.
+ * the worker keeps serving the agent door and the health check alongside
+ * them. The Turnstile secret only guards the web booking write; every
+ * other route works without it.
  */
 export async function handlePublicBooking(req: Request, env: Env): Promise<Response | null> {
   const url = new URL(req.url);

@@ -33,7 +33,7 @@ export interface AuditPageOptions {
 export interface SignedDocEntry {
   id: string;
   title: string;
-  state: 'ready' | 'signed' | 'expired';
+  state: 'ready' | 'signed' | 'expired' | 'revoked';
   signedHash: string | null;
 }
 
@@ -135,7 +135,13 @@ function signedDocsHtml(docs: SignedDocEntry[], t: BlockCtx['t']): string {
         ? ` <a href="/api/sign-file?id=${esc(d.id)}&amp;signed=1">${esc(t.signedDocs.download)}</a>`
         : '';
     const state =
-      d.state === 'signed' ? t.signedDocs.stateSigned : d.state === 'expired' ? t.signedDocs.stateExpired : t.signedDocs.stateReady;
+      d.state === 'signed'
+        ? t.signedDocs.stateSigned
+        : d.state === 'expired'
+          ? t.signedDocs.stateExpired
+          : d.state === 'revoked'
+            ? t.signedDocs.stateRevoked
+            : t.signedDocs.stateReady;
     return `<li><strong>${esc(d.title)}</strong> — ${esc(state)}${dl}</li>`;
   });
   return `<section class="audit-signed-docs" aria-label="${esc(t.signedDocs.title)}"><h2>${esc(t.signedDocs.title)}</h2><ul>${rows.join('')}</ul></section>`;

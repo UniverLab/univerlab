@@ -199,6 +199,48 @@ describe('todayEditionHtml (en)', () => {
     expect(html).toContain('Thomas Edison invents a practical incandescent lamp');
   });
 
+  it('a lead with no text of its own still prints a body from its linked pages', () => {
+    // The recorded 18 November 2026 Spanish edition: the Diesel event has
+    // no summary, so the lead used to print as a bare headline.
+    const otd18 = JSON.parse(
+      readFileSync(resolve(__dirname, 'fixtures', 'paper', '2026-11-18.es.otd.json'), 'utf8'),
+    );
+    const facts18 = buildPool(otd18, 'es');
+    const diesel = facts18.find((f) => f.year === '1990' && /Diesel/.test(f.text));
+    expect(diesel).toBeDefined();
+    const leadHtml = todayEditionHtml({ facts: [diesel!], lab: [] }, 'es', new Date(2026, 10, 18, 12));
+    const leadStart = leadHtml.indexOf('<article class="lead');
+    const leadBlock = leadHtml.slice(leadStart, leadHtml.indexOf('</article>', leadStart));
+    const headline = /<h2>(.*?)<\/h2>/.exec(leadBlock)?.[1];
+    const body = /<p class="dropcap">(.*?)<\/p>/.exec(leadBlock)?.[1];
+    expect(headline).toBeDefined();
+    expect(body).toBeDefined();
+    expect(body!.length).toBeGreaterThan(0);
+    expect(body).not.toBe(headline);
+    expect(body).toContain('Eric Walter Elst');
+    // A short passages body sets in one column, so its full-width lines
+    // print ink across the page instead of a stub second column.
+    expect(leadBlock).toContain('lead-text lead-text--single');
+  });
+
+  it('a long passages body keeps the lead columns', () => {
+    const long: Fact = {
+      year: '1990',
+      kind: 'event',
+      text: 'El astrónomo Eric Elst descubre el asteroide (10093) Diesel.',
+      link: 'https://es.wikipedia.org/wiki/X',
+      page: 'Eric Walter Elst',
+      passages: [
+        { page: 'Eric Walter Elst', text: 'Fue un astrónomo belga muy prolífico, descubridor de miles de asteroides a lo largo de décadas de trabajo incansable en el observatorio, noche tras noche, placa tras placa, con una dedicación que sus colegas siempre admiraron y recordaron.' },
+      ],
+    };
+    const leadHtml = todayEditionHtml({ facts: [long], lab: [] }, 'es', new Date(2026, 10, 18, 12));
+    const leadStart = leadHtml.indexOf('<article class="lead');
+    const leadBlock = leadHtml.slice(leadStart, leadHtml.indexOf('</article>', leadStart));
+    expect(leadBlock).toContain('<p class="dropcap">');
+    expect(leadBlock).not.toContain('lead-text--single');
+  });
+
   it('a letter beside the lead is not printed again in the columns', () => {
     const facts: Fact[] = ['1901', '1912', '1923'].map((year) => ({
       year,

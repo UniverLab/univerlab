@@ -16,9 +16,11 @@ import { rewriteEditionWords } from './edition-words';
 import { roadmapLanesHtml } from '../src/lib/roadmap-board';
 import { en } from '../src/i18n/en';
 import { es } from '../src/i18n/es';
-import { linkState } from '../src/lib/sign/evidence';
+import { linkState, type LinkState } from '../src/lib/sign/evidence';
 import { loadRequest, listRequests, type SignBucket } from '../src/lib/sign/store';
-import { signInnerHtml, type SignStrings } from '../src/lib/sign/page';
+import { type SignStrings } from '../src/lib/sign/page';
+import { signPageHtml, signToken, siteNotFound } from './sign-edge';
+import { serveSignVerify } from './sign-verify-edge';
 import { validateAuditDocument } from '../src/lib/audit/validate-document';
 import { auditBadge } from '../src/lib/audit/badge';
 import { auditMarkdown, publicAuditUrl, PUBLIC_AUDIT_BASE } from '../src/lib/audit/markdown';
@@ -264,8 +266,9 @@ async function loadAuditDoc(
 
 /** Environment the private-audit gate reads. `ACCESS_TEAM_DOMAIN` is the
  *  Cloudflare Access team domain (`<team>.cloudflareaccess.com`) whose keys
- *  sign the JWT; `ACCESS_AUD` is the application AUD tag the token must
- *  carry. Both are operator dashboard values, never committed. */
+ *  sign the JWT; `ACCESS_AUD` is the comma-separated list of application
+ *  AUD tags a token may carry (one value stays valid). Both are operator
+ *  dashboard values, never committed. */
 export interface AuditAccessEnv {
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
@@ -376,8 +379,9 @@ async function accessPublicKey(teamDomain: string, kid: string): Promise<CryptoK
 }
 
 /** Verify the `Cf-Access-Jwt-Assertion` JWT against the team's keys: RS256
- *  signature, `aud` equal to `ACCESS_AUD`, issuer, and expiry. Returns the
- *  reader's email on success, null on any failure — fail closed. */
+ *  signature, `aud` matching one of the `ACCESS_AUD` list entries, issuer,
+ *  and expiry. Returns the reader's email on success, null on any failure
+ *  — fail closed. */
 export async function verifyAccessToken(
   token: string,
   env: AuditAccessEnv,
@@ -393,8 +397,15 @@ export async function verifyAccessToken(
     const signature = base64UrlToBytes(parts[2]);
     if (!header || !payload || !signature) return null;
     if (header['alg'] !== 'RS256' || typeof header['kid'] !== 'string') return null;
+    const auds = aud
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a) => a !== '');
+    if (auds.length === 0) return null;
     const tokenAud = payload['aud'];
-    const audOk = Array.isArray(tokenAud) ? tokenAud.includes(aud) : tokenAud === aud;
+    const audOk = Array.isArray(tokenAud)
+      ? tokenAud.some((a) => typeof a === 'string' && auds.includes(a))
+      : typeof tokenAud === 'string' && auds.includes(tokenAud);
     if (!audOk) return null;
     const iss = payload['iss'];
     if (typeof iss !== 'string' || (iss !== `https://${team}` && iss !== `https://${team}/`)) return null;
@@ -433,19 +444,6 @@ const SIGN_OWNER_RE = /^\/sign\/owner\/?$/;
 const SIGN_OWNER_ES_RE = /^\/es\/sign\/owner\/?$/;
 const SIGN_PAGE_RE = /^\/sign\/([0-9a-f]{32})\/?$/;
 const SIGN_PAGE_ES_RE = /^\/es\/sign\/([0-9a-f]{32})\/?$/;
-
-/** The Access JWT for a signing route: header first, then the
- *  `CF_Authorization` cookie browsers carry after the email OTP. */
-function signToken(request: Request): string | null {
-  const header = request.headers.get('Cf-Access-Jwt-Assertion');
-  if (header) return header;
-  const cookie = request.headers.get('Cookie') ?? '';
-  for (const part of cookie.split(';')) {
-    const [k, ...rest] = part.trim().split('=');
-    if (k === 'CF_Authorization' && rest.length > 0) return rest.join('=').trim();
-  }
-  return null;
-}
 
 /** The owner's private console serves only to an allowlisted address with a
  *  valid Access JWT — the same posture as a private audit, with the
@@ -838,17 +836,17 @@ export async function onRequest(context: {
   // The published-audit shell is only ever filled at request time: asked for
   // directly it answers 404, like a missing page.
   if (pathname === '/audit-shell' || pathname === '/audit-shell/') {
-    return new Response('not found', { status: 404 });
+    return siteNotFound(env, request, AUDIT_NO_STORE);
   }
 
   // The signing shell is only ever filled at request time, and the owner's
   // console only ever opens to an allowlisted address with a valid Access
   // JWT. Both stay private and unindexed, like the private audits.
   if (SIGN_SHELL_RE.test(pathname)) {
-    return new Response('not found', { status: 404 });
+    return siteNotFound(env, request, AUDIT_NO_STORE);
   }
   if (SIGN_OWNER_RE.test(pathname) || SIGN_OWNER_ES_RE.test(pathname)) {
-    if (!(await signOwnerAllowed(request, env))) return new Response('not found', { status: 404 });
+    if (!(await signOwnerAllowed(request, env))) return siteNotFound(env, request, AUDIT_NO_STORE);
     const res = await next();
     const headers = new Headers(res.headers);
     for (const [k, v] of Object.entries(AUDIT_NO_STORE)) headers.set(k, v);
@@ -866,7 +864,7 @@ export async function onRequest(context: {
       const shell = await env.ASSETS.fetch(new URL(shellPath, url.origin).href);
       if (!shell.ok) return next();
       const strings: SignStrings = (lang === 'es' ? es.sign : en.sign) as SignStrings;
-      const html = signInnerHtml(req, linkState(req), strings);
+      const html = await signPageHtml(request, req, strings, verifyAccessToken, env);
       const desc = (lang === 'es' ? es.sign : en.sign).shellDescription;
       const res = await rewriteSignShell(shell, {
         lang,
@@ -878,6 +876,8 @@ export async function onRequest(context: {
       for (const [k, v] of Object.entries(AUDIT_NO_STORE)) res.headers.set(k, v);
       return res;
     }
+    const verifyRes = await serveSignVerify(request, env, rewriteSignShell, AUDIT_NO_STORE);
+    if (verifyRes) return verifyRes;
   }
 
   const accept = request.headers.get('Accept');
@@ -899,7 +899,7 @@ export async function onRequest(context: {
       if (!shell.ok) return next();
       // A private audit lists its signed documents: every signing request
       // bound to this slug, with its state and the signed download.
-      let signedDocs: Array<{ id: string; title: string; state: 'ready' | 'signed' | 'expired'; signedHash: string | null }> | undefined;
+      let signedDocs: Array<{ id: string; title: string; state: LinkState; signedHash: string | null }> | undefined;
       if (doc.visibility === 'private') {
         try {
           const reqs = await listRequests(asSignBucket(env));

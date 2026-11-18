@@ -25,14 +25,50 @@ jest.mock('../src/registry', () => ({
 import { sendText } from '../src/meta';
 import { register, postNote } from '../src/registry';
 
-const ENV = { OPERATOR_PHONE: '+57 300 999 8888' };
+const ENV = { OPERATOR_PHONE: '+57 300 999 8888', INTERNAL_CALL_SECRET: 'internal-call-secret-for-tests' };
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-test('without a CALENDAR binding every call is calendar-down', async () => {
-  const res = await calendarCall({} as never, { action: 'status' });
+test('without a BOOKING binding every call is calendar-down', async () => {
+  const res = await calendarCall(ENV as never, { action: 'status' });
+  expect(res).toEqual({ ok: false, reason: 'calendar-down' });
+});
+
+test('without the shared agent-door secret every call is calendar-down', async () => {
+  const { seen, env } = bookingEnv(() => ({ ok: true }));
+  const res = await calendarCall({ BOOKING: env.BOOKING } as never, { action: 'status' });
+  expect(res).toEqual({ ok: false, reason: 'calendar-down' });
+  expect(seen).toHaveLength(0);
+});
+
+function bookingEnv(handler: (body: Record<string, unknown>) => unknown, throws = false) {
+  const seen: Array<{ url: string; body: Record<string, unknown>; auth: string | null }> = [];
+  const fetch = jest.fn(async (req: Request) => {
+    const body = (await req.json()) as Record<string, unknown>;
+    seen.push({ url: req.url, body, auth: req.headers.get('authorization') });
+    if (throws) throw new Error('down');
+    return new Response(JSON.stringify(handler(body)), { status: 200 });
+  });
+  return { seen, env: { BOOKING: { fetch }, INTERNAL_CALL_SECRET: 'internal-call-secret-for-tests' } as never };
+}
+
+test('the service-binding client posts the envelope to the agent door', async () => {
+  const { seen, env } = bookingEnv((body) =>
+    body.action === 'reserve' ? { ok: true, eventId: 'ev1', kind: 'hold', payments: 'paga por Bre-B' } : { ok: false, reason: 'calendar-down' }
+  );
+  const res = await calendarCall(env, { action: 'reserve', contactKey: 'wa:573001112222', service: 'consultation' });
+  expect(res).toEqual({ ok: true, eventId: 'ev1', kind: 'hold', payments: 'paga por Bre-B' });
+  expect(seen).toHaveLength(1);
+  expect(seen[0].url).toBe('https://booking/internal/call');
+  expect(seen[0].body).toEqual({ action: 'reserve', contactKey: 'wa:573001112222', service: 'consultation' });
+  expect(seen[0].auth).toBe('Bearer internal-call-secret-for-tests');
+});
+
+test('a failing binding fetch is calendar-down', async () => {
+  const { env } = bookingEnv(() => ({ ok: true }), true);
+  const res = await calendarCall(env, { action: 'status' });
   expect(res).toEqual({ ok: false, reason: 'calendar-down' });
 });
 

@@ -91,17 +91,6 @@ jest.mock('../src/schedule', () => {
   };
 });
 
-jest.mock('../src/google', () => ({
-  accessToken: jest.fn(),
-  freeBusy: jest.fn(),
-  listEvents: jest.fn(),
-  getEvent: jest.fn(),
-  insertEvent: jest.fn(),
-  patchEvent: jest.fn(),
-  deleteEvent: jest.fn(),
-  HOLD_PREFIX: '[Por confirmar] ',
-}));
-
 jest.mock('../src/reservations', () => {
   const actual = jest.requireActual('../src/reservations') as Record<string, unknown>;
   return { ...actual, calendarCall: jest.fn() };
@@ -579,7 +568,9 @@ test('books a consultation as a hold and tells the client how to pay', async () 
 
   const reserve = (calendarCall as jest.Mock).mock.calls.find((call) => call[1].action === 'reserve');
   expect(reserve).toBeDefined();
-  expect(reserve[1].summary.startsWith('[Por confirmar] ')).toBe(true);
+  // The agent sends the bare label: the booking worker stores the hold
+  // with the [Por confirmar] prefix itself.
+  expect(reserve[1].summary.startsWith('[Por confirmar] ')).toBe(false);
   expect(reserve[1].summary).toContain('Consultoría');
   expect(reserve[1].startIso).toBe(SLOT_A);
   const texts = clientTexts();
@@ -588,6 +579,23 @@ test('books a consultation as a hold and tells the client how to pay', async () 
   expect(operatorTexts().some((t) => t.includes('Apartado creado'))).toBe(true);
   const alarms = (storage.setAlarm as jest.Mock).mock.calls.map((call) => call[0] as number);
   expect(alarms[alarms.length - 1]).toBeLessThan(retentionDeadline(AT * 1000));
+});
+
+test('a hold uses the booking worker payment sentence over the local fallback', async () => {
+  const { c } = await offerSlots('consultation');
+  (decide as jest.Mock).mockResolvedValue({ action: 'pick', slot: 1, date: '' });
+  (calendarCall as jest.Mock).mockImplementation(async (_env: unknown, body: { action: string }) => {
+    if (body.action === 'status') return { ok: true, active: null, slots: [SLOT_A, SLOT_B] };
+    if (body.action === 'reserve') {
+      return { ok: true, eventId: 'ev1', start: SLOT_A, end: SLOT_B, kind: 'hold', payments: 'paga por Nequi al 300 111 2222' };
+    }
+    return { ok: false, reason: 'calendar-down' };
+  });
+
+  await say(c, inbound({ id: 'wamid.b4', text: 'el primero' }));
+
+  const texts = clientTexts();
+  expect(texts[texts.length - 1]).toContain('paga por Nequi al 300 111 2222');
 });
 
 test('books a first call without a hold prefix', async () => {

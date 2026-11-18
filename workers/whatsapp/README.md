@@ -21,25 +21,35 @@ Secrets (set in the deploy workflow, never in code):
 - `WA_ACCESS_TOKEN`
 - `WA_PHONE_NUMBER_ID`
 - `OPERATOR_PHONE`
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`:
-  the lab's Google OAuth client and refresh token (calendar events
-  and free/busy scopes). The agent uses them to read the primary
-  calendar's free/busy and to create, read and delete events in the
-  Workbench calendar. Without them booking falls back to today's
-  behavior: the intake brief goes to the operator, who books by hand.
+- `INTERNAL_CALL_SECRET`: shared secret for the booking worker's
+  `POST /internal/call`, set to the same value as the booking worker's
+  `BOOKING_INTERNAL_CALL_SECRET`. Without it every calendar read and
+  write answers calendar-down.
 
-Booking (configuration, not code): the `production` environment's
-variables `WA_WORKBENCH_CALENDAR_ID` and `WA_BOOKING_CONFIG` reach
-the Worker as `WORKBENCH_CALENDAR_ID` and `BOOKING_CONFIG`.
+Booking configuration (calendar id, windows, digest) lives in the
+`deploy-booking` workflow: this worker reaches the calendar over the
+`BOOKING` service binding to `univerlab-booking`, never a local
+Durable Object. The booking worker owns availability, holds,
+confirmation, cancellation, Turnstile verification and the Google
+Calendar integration; the site's Workbench booking form talks to it
+at `https://booking.univerlab.org` (`/slots`, `/book`, `/cancel`).
+The WhatsApp agent books through `POST /internal/call` over the
+service binding, with no public round trip and no Turnstile in that
+path: the same action envelope the owner speaks, guarded by the
+shared binding secret.
 
 - `WORKBENCH_CALENDAR_ID`: the calendar id where sessions are booked.
-  A slot is free only when it overlaps nothing in the primary
+  Set on the booking worker (`BOOKING_CALENDAR_ID`), kept here for the
+  record of what a booking means. A slot is free only when it overlaps nothing in the primary
   calendar, in this calendar, or in another booking still on hold.
-- `BOOKING_CONFIG`: a JSON object with the bookable hours and limits.
-  Unset, the agent uses weekdays 07:00–08:00 and 15:00–19:00
-  America/Bogota (never Colombian holidays), 15 minutes of margin
-  between sessions, at most 3 sessions per day, at least 12 hours of
-  notice, and slots up to 14 days ahead. Example:
+- `BOOKING_CONFIG`: the booking rules the owner enforces. Set on the
+booking worker (`BOOKING_CONFIG_JSON`); the agent keeps no booking
+deploy variables of its own and falls back to the built-in defaults
+for display only (the hold message payment sentence arrives with the
+reservation instead).
+A slot is free only when it overlaps nothing in the primary
+calendar, in the Workbench calendar, or in another booking still on
+hold. Example (from the booking worker README):
 
 ```json
 {
@@ -85,9 +95,10 @@ in code, never the text model, and the client is told a person from the lab
 takes over with their notes. Contact records live no longer than the longest
 limit window, and BORRAR MIS DATOS / DELETE MY DATA removes them too.
 
-Consultations are created as holds whose title starts with
-`[Por confirmar]`; the operator confirms by removing that prefix in
-the calendar, and the agent notices on its next check. A hold still
+Consultations are created as holds whose title the booking worker
+stores with the `[Por confirmar]` prefix; the operator confirms by
+removing that prefix in the calendar, and the agent notices on its
+next check. A hold still
 unconfirmed 24 hours after creation is deleted and the client is told
 the hold expired. A client who writes BORRAR MIS DATOS or
 DELETE MY DATA also releases their held or booked event. Every event
@@ -95,43 +106,14 @@ the agent creates has no attendees and sends no notifications; its
 description carries the client's name, number, service, language and
 intake brief.
 
-Public booking API (no model): the same Worker also answers
+Public booking API (no model): the standalone booking worker answers
 `https://booking.univerlab.org` so the site's booking form can offer the
-free 15-minute first call while the WhatsApp number is not approved.
-No WhatsApp secret is needed for these routes, and the WhatsApp
-webhook and the agent's behaviour do not change.
-
-- `GET /slots` returns the free first-call starts as UTC instants,
-  computed with the same windows, margin, sessions-per-day, notice,
-  holidays and both calendars as the agent's offers. Answers may be up
-  to 60 seconds old.
-- `POST /book` takes `{ name, email, lang, note?, slot, turnstileToken }`
-  (`lang` is `es` or `en`, `note` at most 500 characters, `slot` one of
-  the offered UTC instants) and books through the same serialized owner
-  and limits as the agent's bookings, with the lowercased email as the
-  contact. A successful booking creates one event titled like the
-  agent's first calls, with a Google Meet link, the client as its only
-  guest and Google sending the invitation; the description carries the
-  name, email, language, note, the channel (`web`) and a private cancel
-  link. It answers `{ ok: true, slot, meet }`.
-- `GET /cancel?t=…` shows the booking and asks for confirmation;
-  `POST /cancel` deletes the event, frees the slot and lets Google
-  notify the guest. The link cannot be guessed and stops working once
-  the call has started.
-- Every refusal is one fixed reason and creates nothing:
-  `verification` (Turnstile failed), `invalid` (a field),
-  `slot-taken`, `limit` (any per-contact, per-address or global limit),
-  `unavailable` (calendar or configuration down).
-- Browsers may call these routes only from `https://univerlab.org`
-  (`/slots` is also allowed from `localhost` origins so a local or
-  preview build can show slots).
-- One address gets at most 3 booking requests per hour and 30 slot reads
-  per minute; addresses are kept only as salted hashes for at most
-  24 hours.
-- `TURNSTILE_SECRET` (deploy secret, passed by the deploy workflow)
-  verifies the Turnstile token with Cloudflare before anything else.
-  Without it booking answers `unavailable` and slot reads still work.
-  Tests use Cloudflare's published Turnstile test keys.
+free 15-minute first call while the WhatsApp number is not approved
+(full route contract in `workers/booking/README.md`). It shares the one
+serialized calendar owner and the same configuration and rules as the
+agent's offers: slot reads, Turnstile-guarded bookings and signed
+cancel links. The WhatsApp webhook and the agent's behaviour do not
+change, and the agent itself serves no public booking route.
 
 Text model (configuration, not code): the `production`
 environment's variables `WA_TEXT_MODEL` and
@@ -226,15 +208,17 @@ deploy workflow:
 }
 ```
 
-Morning booking digest (configuration, not code): the Worker's Cron Trigger
-wakes it every 30 minutes, and from the configured time on it sends the
-operator one message with that day's bookings — time, service,
+Morning booking digest (configuration, not code): the booking worker's
+Cron Trigger wakes it every 30 minutes, and from the configured time on
+it sends the operator one message with that day's bookings through this
+worker's `POST /internal/booking-notify` door — time, service,
 conversation name and payment state, in time order, read from the same
 Workbench calendar events the booking code writes. A day with nothing
 booked sends nothing. Later-day bookings, moves and cancellations wait
 for their own day's digest; a same-day one that lands after the digest
 went out is sent at once as one line. The `production` environment's
-variable `WA_BOOKING_DIGEST_CONFIG` reaches the Worker as `BOOKING_DIGEST_CONFIG` (a
+variable `BOOKING_DIGEST_JSON` reaches the booking worker as
+`BOOKING_DIGEST_CONFIG` (a
 JSON object). Unset, it runs at 06:30 America/Bogota (inside quiet
 hours, so it uses the gate's quiet-hours exemption; while the operator
 is away it waits like any other note and goes out on `/active`). A

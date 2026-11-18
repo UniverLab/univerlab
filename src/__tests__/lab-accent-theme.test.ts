@@ -1,5 +1,7 @@
 /**
- * Lab accent by theme: garnet #87222c by day, gold #e6c84a by night.
+ * Lab accents by theme: garnet #87222c (primary) and copper #9a5530
+ * (secondary) by day, gold #c9a227 (primary) and brass #d9b878 (secondary)
+ * by night.
  *
  * Astro components aren't renderable in Jest, so these check the source-level
  * contract, the same way baselayout-og.test.ts does.
@@ -11,6 +13,9 @@ const SRC = resolve(__dirname, '..');
 const GLOBAL = readFileSync(resolve(SRC, 'styles', 'global.css'), 'utf8');
 const HEADER = readFileSync(resolve(SRC, 'components', 'Header.astro'), 'utf8');
 const FOOTER = readFileSync(resolve(SRC, 'components', 'Footer.astro'), 'utf8');
+const SIGN = readFileSync(resolve(SRC, 'styles', 'sign.css'), 'utf8');
+const OWNER_EN = readFileSync(resolve(SRC, 'pages', 'sign', 'owner.astro'), 'utf8');
+const OWNER_ES = readFileSync(resolve(SRC, 'pages', 'es', 'sign', 'owner.astro'), 'utf8');
 
 /** Relative luminance of a #rrggbb colour (WCAG). */
 function luminance(hex: string): number {
@@ -32,8 +37,12 @@ describe('lab accent token — garnet by day, gold by night', () => {
     expect(GLOBAL).toMatch(/:root\s*\{[^}]*--accent:\s*#87222c;/s);
   });
 
-  it('says on the token that it is garnet by day and gold by night', () => {
-    expect(GLOBAL.toLowerCase()).toMatch(/garnet by day, gold by night/);
+  it('defines the day secondary accent as copper in :root', () => {
+    expect(GLOBAL).toMatch(/:root\s*\{[^}]*--accent-secondary:\s*#9a5530;/s);
+  });
+
+  it('says on the token that it is garnet and copper by day, gold and brass by night', () => {
+    expect(GLOBAL.toLowerCase()).toMatch(/garnet \(primary\) and copper \(secondary\) by day, gold/);
   });
 
   it('defines the lifted accent for the always-black footer', () => {
@@ -42,14 +51,16 @@ describe('lab accent token — garnet by day, gold by night', () => {
 
   it('returns to gold under the night flag', () => {
     expect(GLOBAL).toMatch(
-      /html\[data-bench-theme='night'\]\s*\{\s*--accent:\s*#e6c84a;\s*--accent-lift:\s*#e6c84a;/s,
+      /html\[data-bench-theme='night'\]\s*\{[^}]*--accent:\s*#c9a227;[^}]*--accent-secondary:\s*#d9b878;[^}]*--on-accent:\s*#1d1510;[^}]*--accent-lift:\s*#c9a227;/s,
     );
   });
 
   it('returns to gold for prefers-color-scheme: dark without an explicit day flag', () => {
     expect(GLOBAL).toMatch(/@media\s*\(prefers-color-scheme:\s*dark\)/);
     const dark = GLOBAL.slice(GLOBAL.indexOf('@media (prefers-color-scheme: dark)'));
-    expect(dark).toMatch(/html:not\(\[data-bench-theme='day'\]\)\s*\{\s*--accent:\s*#e6c84a;/s);
+    expect(dark).toMatch(
+      /html:not\(\[data-bench-theme='day'\]\)\s*\{\s*--accent:\s*#c9a227;\s*--accent-secondary:\s*#d9b878;/s,
+    );
   });
 });
 
@@ -88,11 +99,62 @@ describe('lab accent — WCAG floors', () => {
     expect(contrast('#87222c', '#f4f0ea')).toBeGreaterThanOrEqual(7.9);
   });
 
-  it('holds gold at >= 8:1 on the night slate', () => {
-    expect(contrast('#e6c84a', '#222928')).toBeGreaterThanOrEqual(8);
+  it('holds gold at >= 6:1 on the night slate', () => {
+    expect(contrast('#c9a227', '#222928')).toBeGreaterThanOrEqual(6);
+  });
+
+  it('holds brass at >= 7.5:1 on the night slate', () => {
+    expect(contrast('#d9b878', '#222928')).toBeGreaterThanOrEqual(7.5);
+  });
+
+  it('holds copper at >= 4.5:1 on the day parchment', () => {
+    expect(contrast('#9a5530', '#f4f0ea')).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('holds the night gold lift at >= 8.5:1 on the footer black', () => {
+    expect(contrast('#c9a227', '#000000')).toBeGreaterThanOrEqual(8.5);
   });
 
   it('holds the lifted garnet at >= 9:1 on the footer black', () => {
     expect(contrast('#e0a2a6', '#000000')).toBeGreaterThanOrEqual(9);
+  });
+});
+
+describe('lab accent — label on accent fill (signing pages)', () => {
+  function token(block: string, name: string): string {
+    const m = block.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6});`));
+    if (!m) throw new Error(`missing ${name}`);
+    return m[1];
+  }
+
+  it('defines an --on-accent label colour for day and night', () => {
+    const root = GLOBAL.slice(0, GLOBAL.indexOf("html[data-bench-theme='night']"));
+    expect(root).toMatch(/--on-accent:\s*#[0-9a-fA-F]{6};/);
+    const night = GLOBAL.slice(GLOBAL.indexOf("html[data-bench-theme='night']"));
+    expect(night).toMatch(/--on-accent:\s*#[0-9a-fA-F]{6};/);
+    const dark = GLOBAL.slice(GLOBAL.indexOf('@media (prefers-color-scheme: dark)'));
+    expect(dark).toMatch(/--on-accent:\s*#[0-9a-fA-F]{6};/);
+  });
+
+  it('holds the day label at >= 4.5:1 on the day garnet fill', () => {
+    const root = GLOBAL.slice(0, GLOBAL.indexOf("html[data-bench-theme='night']"));
+    expect(contrast(token(root, '--on-accent'), token(root, '--accent'))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('holds the night label at >= 4.5:1 on the night gold fill', () => {
+    const nightBlock = GLOBAL.match(/html\[data-bench-theme='night'\]\s*\{[^}]*\}/s)?.[0] ?? '';
+    expect(contrast(token(nightBlock, '--on-accent'), token(nightBlock, '--accent'))).toBeGreaterThanOrEqual(
+      4.5,
+    );
+  });
+
+  it.each([
+    ['sign.css #sign-submit', SIGN],
+    ['sign.css .sign-count[pressed]', SIGN],
+    ['owner.astro EN submit', OWNER_EN],
+    ['owner.astro ES submit', OWNER_ES],
+  ])('%s labels the accent fill with var(--on-accent), not a fixed #fff', (_name, src) => {
+    expect(src).not.toMatch(/background:\s*var\(--accent\)[^}]*color:\s*#fff/s);
+    expect(src).not.toMatch(/color:\s*#fff[^}]*background:\s*var\(--accent\)/s);
   });
 });

@@ -23,11 +23,13 @@ export function initSignPage(): void {
   const errForm = form.dataset['errForm'] ?? 'error';
   const errName = form.dataset['errName'] ?? errForm;
   const errId = form.dataset['errId'] ?? errForm;
+  const errAuth = form.dataset['errAuth'] ?? errForm;
   const submitting = form.dataset['submitting'] ?? null;
   const submitLabel = submit.textContent;
   const messageFor = (code: string): string => {
     if (code === 'name') return errName;
     if (code === 'id') return errId;
+    if (code === 'unauthorized' || code === 'forbidden') return errAuth;
     return errForm;
   };
 
@@ -59,7 +61,7 @@ export function initSignPage(): void {
           body = {};
         }
         if (!res.ok || !body.ok || !body.signedHash) {
-          throw new Error(body.error ?? `HTTP ${res.status}`);
+          throw new Error(body.error ?? (res.status === 401 || res.status === 403 ? 'unauthorized' : `HTTP ${res.status}`));
         }
         const done = document.createElement('div');
         done.className = 'sign-done';

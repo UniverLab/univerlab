@@ -18,5 +18,9 @@ import '../../styles/sign.css';
   <script>
     import { initSignPage } from '../../lib/sign/client';
     initSignPage();
+    const reader = document.querySelector<HTMLElement>('.sign-reader');
+    if (reader) {
+      void import('../../lib/sign/reader').then((m) => m.initReader(reader));
+    }
   </script>
 </BaseLayout>

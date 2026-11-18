@@ -1,7 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import type { Env } from './env';
 import { admit, type ContactState, type LimitReason } from './limits';
-import { minutesFor } from './booking';
+import { minutesFor, paymentsText } from './booking-common';
 import {
   bookingConfig,
   bogotaDateKey,
@@ -496,7 +496,19 @@ export class Calendar extends DurableObject<Env> {
       moves: 0,
       updated_at: now,
     });
-    return { ok: true, eventId: created.id, start: startIso, end: endIso, kind: hold ? 'hold' : 'booked', meet: created.hangoutLink ?? '' };
+    // The agent door has no booking configuration of its own: the hold
+    // message payment sentence travels with the reservation.
+    const lang = args.lang === 'en' ? 'en' : 'es';
+    const phone = key.startsWith('wa:') ? key.slice('wa:'.length) : '';
+    return {
+      ok: true,
+      eventId: created.id,
+      start: startIso,
+      end: endIso,
+      kind: hold ? 'hold' : 'booked',
+      meet: created.hangoutLink ?? '',
+      payments: paymentsText(cfg, lang, phone),
+    };
   }
   /**
    * Public booking cancel: the web cancel link carries the contact and the

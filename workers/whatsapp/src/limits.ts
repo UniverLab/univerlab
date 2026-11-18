@@ -10,80 +10,6 @@ export type LimitReason =
   | 'moves'
   | 'slot-taken';
 
-/** The deploy knobs `admit` reads; BookingConfig satisfies this shape. */
-export interface LimitConfig {
-  freeCallDays: number;
-  expiredHoldDays: number;
-  expiredHoldsMax: number;
-  movesMax: number;
-  openHoldsMax: number;
-  bookingsPerDay: number;
-}
-
-export interface ContactState {
-  /** An upcoming booking or hold is still active. */
-  hasActive: boolean;
-  /** Epoch ms of the last free first call, or null when never. */
-  lastFreeCallMs: number | null;
-  /** Epoch ms of each expired unpaid hold. */
-  expiredHoldsMs: number[];
-  /** Moves already used by the active booking. */
-  moves: number;
-}
-
-export interface AdmitRequest {
-  service: string;
-  /** True for an unpaid consultation hold; false for a direct booking. */
-  hold: boolean;
-  /** True when moving the active booking instead of creating one. */
-  move: boolean;
-}
-
-export type AdmitResult = { ok: true } | { ok: false; reason: LimitReason };
-
-const DAY_MS = 86400000;
-
-/**
- * Decide a booking write in code, never via the text model. Order matters:
- * the contact's own state first, then the global caps. A move replaces its
- * event, so it skips the caps that count new creations.
- */
-export function admit(
-  cfg: LimitConfig,
-  now: number,
-  contact: ContactState,
-  openHolds: number,
-  createdToday: number,
-  request: AdmitRequest
-): AdmitResult {
-  if (!request.move && contact.hasActive) {
-    return { ok: false, reason: 'existing' };
-  }
-  if (request.move && contact.moves >= cfg.movesMax) {
-    return { ok: false, reason: 'moves' };
-  }
-  if (
-    request.service === 'first-call' &&
-    contact.lastFreeCallMs !== null &&
-    now - contact.lastFreeCallMs < cfg.freeCallDays * DAY_MS
-  ) {
-    return { ok: false, reason: 'free-limit' };
-  }
-  if (request.hold && !request.move) {
-    const recent = contact.expiredHoldsMs.filter((t) => now - t < cfg.expiredHoldDays * DAY_MS);
-    if (recent.length >= cfg.expiredHoldsMax) {
-      return { ok: false, reason: 'expired-holds' };
-    }
-    if (openHolds >= cfg.openHoldsMax) {
-      return { ok: false, reason: 'hold-cap' };
-    }
-  }
-  if (!request.move && createdToday >= cfg.bookingsPerDay) {
-    return { ok: false, reason: 'day-cap' };
-  }
-  return { ok: true };
-}
-
 /** Fixed client wording per refusal, Spanish and English; no model call. */
 export const LIMIT_TEXT: Record<Exclude<LimitReason, 'existing' | 'slot-taken'>, Record<Lang, string>> = {
   'free-limit': {
@@ -123,6 +49,7 @@ export const EXISTING: Record<Lang, string> = {
 /**
  * Opaque contact key shared by every channel: WhatsApp uses the phone
  * digits, a second channel can use an email address as the contact id.
+ * The booking worker carries its own identical copy for the owner side.
  */
 export function contactKey(channel: string, id: string): string {
   const c = channel.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '') || 'x';

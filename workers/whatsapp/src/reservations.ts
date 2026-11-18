@@ -6,20 +6,34 @@ import { LIMIT_TEXT, type LimitReason } from './limits';
 import type { Lang } from './lang';
 import { register, postNote } from './registry';
 import type { BookingService, BookingState } from './booking';
-import type { ActiveInfo } from './calendar';
 
 export type CalendarReply = { ok: true; [key: string]: unknown } | { ok: false; reason: string };
 
-/** Call the one serialized calendar owner; missing bindings become calendar-down. */
+/** The active booking row the owner returns, rebuilt into chat state. */
+export interface ActiveInfo {
+  eventId: string;
+  start: string;
+  end: string;
+  kind: 'hold' | 'booked';
+  service: string;
+  createdAt: number;
+}
+
+/**
+ * Call the booking worker over the BOOKING service binding: the same
+ * action envelope the owner speaks, with no public round trip and no
+ * Turnstile anywhere in this path. A missing binding or a missing shared
+ * secret reads as calendar-down, like a failing owner.
+ */
 export async function calendarCall(env: Env, body: Record<string, unknown>): Promise<CalendarReply> {
   try {
-    const ns = env.CALENDAR;
-    if (!ns) return { ok: false, reason: 'calendar-down' };
-    const stub = ns.get(ns.idFromName('calendar'));
-    const res = await stub.fetch(
-      new Request('https://calendar/call', {
+    const booking = env.BOOKING;
+    const secret = env.INTERNAL_CALL_SECRET;
+    if (!booking || !secret) return { ok: false, reason: 'calendar-down' };
+    const res = await booking.fetch(
+      new Request('https://booking/internal/call', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${secret}` },
         body: JSON.stringify(body),
       })
     );

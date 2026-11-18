@@ -1,0 +1,35 @@
+name = "univerlab-booking"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "CALENDAR"
+class_name = "Calendar"
+
+[[durable_objects.bindings]]
+name = "GATE"
+class_name = "Gate"
+
+# SQLite-backed is required on the Workers Free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Calendar"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Gate"]
+
+# Notify the WhatsApp agent's operator registry over a service binding:
+# same-day web booking lines and the morning digest go through it.
+[[services]]
+binding = "OPERATOR"
+service = "univerlab-whatsapp"
+
+# Domains/routes are managed in UniverLab/infra (Terraform).
+
+[observability]
+enabled = true
+
+[triggers]
+crons = ["*/30 * * * *"]

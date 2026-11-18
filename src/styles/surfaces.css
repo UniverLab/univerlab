@@ -437,7 +437,7 @@ html[data-surface='quorum'] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background: radial-gradient(90% 70% at 50% -18%, color-mix(in srgb, #e6b24a 16%, transparent), transparent 60%);
+  background: radial-gradient(90% 70% at 50% -18%, color-mix(in srgb, var(--surface-essence) 16%, transparent), transparent 60%);
 }
 html[data-surface='quorum'] .genesis h2 {
   font-family: var(--font-serif);

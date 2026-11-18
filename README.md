@@ -194,10 +194,11 @@ To add a new experiment command: add its ID to the `experimentIds` array in
   `/audits/*` (one application, one-time PIN by email; public audits are
   bypassed). The function verifies the `Cf-Access-Jwt-Assertion` JWT itself —
   signature against `https://<ACCESS_TEAM_DOMAIN>/cdn-cgi/access/certs`,
-  `aud` equal to `ACCESS_AUD`, issuer and expiry — and only serves a private
+  `aud` matching one of the `ACCESS_AUD` tags, issuer and expiry — and only serves a private
   audit when the token email is on the audit's own allowlist. Configure in
   the Pages dashboard: `ACCESS_TEAM_DOMAIN` (e.g.
-  `<team>.cloudflareaccess.com`), `ACCESS_AUD` (the application AUD tag),
+  `<team>.cloudflareaccess.com`), `ACCESS_AUD` (comma-separated application
+  AUD tags: the site application plus the dedicated owner application),
   and the `AUDITS` R2 binding. A missing token, an unlisted email or missing
   configuration answers the site 404, like an audit that does not exist.
 - **Audit operator commands** (run locally with your own Wrangler login;

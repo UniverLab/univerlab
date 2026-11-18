@@ -11,6 +11,16 @@ export interface SignStrings {
   hashLabel: string;
   viewerLabel: string;
   zoomHint: string;
+  readerLoading: string;
+  readerError: string;
+  zoomIn: string;
+  zoomOut: string;
+  zoomFit: string;
+  pagePrev: string;
+  pageNext: string;
+  pageOf: string;
+  downloadOrig: string;
+  hashMismatch: string;
   formName: string;
   formNameError: string;
   formId: string;
@@ -19,12 +29,18 @@ export interface SignStrings {
   formError: string;
   submit: string;
   submitting: string;
+  identityTitle: string;
+  identityLine: string;
+  switchAccount: string;
+  formAuthError: string;
   signedTitle: string;
   signedLine: string;
   signedHashLabel: string;
   downloadSigned: string;
   expiredTitle: string;
   expiredLine: string;
+  revokedTitle: string;
+  revokedLine: string;
 }
 
 /** The acceptance sentence names the document and its hash (FR5). */
@@ -33,17 +49,49 @@ export function acceptanceSentence(title: string, origHash: string, template: st
 }
 
 function viewerHtml(req: SigningRequest, s: SignStrings): string {
+  const fileUrl = `/api/sign-file?id=${esc(req.id)}`;
   return (
     `<div class="sign-viewer"><h2>${esc(s.viewerLabel)}</h2>` +
-    `<iframe src="/api/sign-file?id=${esc(req.id)}" title="${esc(req.title)}" loading="lazy"></iframe>` +
-    `<p class="sign-hint">${esc(s.zoomHint)}</p></div>`
+    `<div class="sign-reader" data-id="${esc(req.id)}" data-orig-hash="${esc(req.origHash)}" ` +
+    `data-loading="${esc(s.readerLoading)}" data-error="${esc(s.readerError)}" ` +
+    `data-zoom-in="${esc(s.zoomIn)}" data-zoom-out="${esc(s.zoomOut)}" data-zoom-fit="${esc(s.zoomFit)}" ` +
+    `data-page-prev="${esc(s.pagePrev)}" data-page-next="${esc(s.pageNext)}" ` +
+    `data-page-of="${esc(s.pageOf)}" data-hash-mismatch="${esc(s.hashMismatch)}">` +
+    `<p class="sign-reader-status">${esc(s.readerLoading)}</p></div>` +
+    `<p class="sign-actions"><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p>` +
+    `<p class="sign-hint">${esc(s.zoomHint)}</p>` +
+    `<noscript><p><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p></noscript></div>`
   );
+}
+
+/** The verified viewer of the page, when the edge knows it: the Access
+ *  token email (null when no session) and the Access logout URL that lets
+ *  the signer switch to the link's address. */
+export interface SignViewer {
+  email: string | null;
+  logoutUrl: string | null;
+}
+
+/** Mask an address to its first character and domain (`m•••@example.com`),
+ *  so the page names the link's address without exposing it in full. */
+export function maskEmail(email: string): string {
+  const at = email.indexOf('@');
+  if (at < 0) return '•••';
+  return `${email.slice(0, 1)}•••${email.slice(at)}`;
+}
+
+function identityHtml(req: SigningRequest, s: SignStrings, viewer: SignViewer): string {
+  const line = s.identityLine.replace('{email}', maskEmail(req.signerEmail));
+  const switchLink = viewer.logoutUrl
+    ? `<p><a class="sign-switch" href="${esc(viewer.logoutUrl)}">${esc(s.switchAccount)}</a></p>`
+    : '';
+  return `<p class="sign-state">${esc(s.identityTitle)}</p><p>${esc(line)}</p>` + switchLink;
 }
 
 function formHtml(req: SigningRequest, s: SignStrings): string {
   const accept = acceptanceSentence(req.title, req.origHash, s.acceptTemplate);
   return (
-    `<form id="sign-form" data-id="${esc(req.id)}" data-hash="${esc(req.origHash)}" data-done="${esc(s.signedTitle)}" data-download="${esc(s.downloadSigned)}" data-hashlabel="${esc(s.signedHashLabel)}" data-err-form="${esc(s.formError)}" data-err-name="${esc(s.formNameError)}" data-err-id="${esc(s.formIdError)}" data-submitting="${esc(s.submitting)}" method="post" action="/api/sign-complete">` +
+    `<form id="sign-form" data-id="${esc(req.id)}" data-hash="${esc(req.origHash)}" data-done="${esc(s.signedTitle)}" data-download="${esc(s.downloadSigned)}" data-hashlabel="${esc(s.signedHashLabel)}" data-err-form="${esc(s.formError)}" data-err-name="${esc(s.formNameError)}" data-err-id="${esc(s.formIdError)}" data-err-auth="${esc(s.formAuthError)}" data-submitting="${esc(s.submitting)}" method="post" action="/api/sign-complete">` +
     `<p class="sign-field"><label for="sign-name">${esc(s.formName)}</label>` +
     `<input id="sign-name" name="name" type="text" autocomplete="name" maxlength="120" required /></p>` +
     `<p class="sign-field"><label for="sign-idnum">${esc(s.formId)}</label>` +
@@ -56,8 +104,14 @@ function formHtml(req: SigningRequest, s: SignStrings): string {
   );
 }
 
-/** The `#sign` container content for one request state. */
-export function signInnerHtml(req: SigningRequest, state: LinkState, s: SignStrings): string {
+/** The `#sign` container content for one request state. When the edge
+ *  knows the verified viewer and it is not the request's signer (or there
+ *  is no session), only the identity notice renders — no title, no viewer
+ *  iframe, no form. */
+export function signInnerHtml(req: SigningRequest, state: LinkState, s: SignStrings, viewer?: SignViewer): string {
+  if (viewer && (viewer.email === null || viewer.email.toLowerCase() !== req.signerEmail.toLowerCase())) {
+    return identityHtml(req, s, viewer);
+  }
   const head =
     `<h1>${esc(req.title)}</h1>` +
     `<p class="sign-hash">${esc(s.hashLabel)} <code>${esc(req.origHash)}</code></p>`;
@@ -68,6 +122,9 @@ export function signInnerHtml(req: SigningRequest, state: LinkState, s: SignStri
       `<p>${esc(s.signedLine)}</p>` +
       `<p><a class="sign-download" href="/api/sign-file?id=${esc(req.id)}&amp;signed=1">${esc(s.downloadSigned)}</a></p>`
     );
+  }
+  if (state === 'revoked') {
+    return head + `<p class="sign-state">${esc(s.revokedTitle)}</p><p>${esc(s.revokedLine)}</p>`;
   }
   if (state === 'expired') {
     return head + `<p class="sign-state">${esc(s.expiredTitle)}</p><p>${esc(s.expiredLine)}</p>`;

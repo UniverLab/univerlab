@@ -31,6 +31,7 @@ import {
   readOtdCache,
   fetchPool,
   letterPool,
+  passagesText,
   summaryText,
   type FilterLang,
   type Fact,
@@ -190,6 +191,7 @@ function startMailbox(): void {
   const bodyOf = (m: MailLetter) => {
     if (m.kind === 'lab') return m.body;
     if (m.summary) return summaryText(m);
+    if (m.passages?.length) return passagesText(m.passages);
     return m.text;
   };
 

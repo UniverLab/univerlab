@@ -1,6 +1,6 @@
 {
   "name": "univerlab-web",
-  "version": "1.26.0",
+  "version": "1.27.0",
   "description": "<h1 align=\"center\">UniverLab — landing</h1>",
   "scripts": {
     "dev": "astro dev",
@@ -40,6 +40,7 @@
     "astro": "^7.4.7",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "jsqr": "^1.4.0",
     "playwright": "^1.65.1",
     "ts-jest": "^29.4.11",
     "turndown": "^7.2.4",
@@ -53,6 +54,8 @@
     "mermaid": "^12.3.0",
     "morphicons": "^1.7.1",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "4.10.38",
+    "qrcode": "1.5.4",
     "vega": "^6.4.0",
     "vega-embed": "^7.3.0",
     "vega-lite": "^6.5.0"

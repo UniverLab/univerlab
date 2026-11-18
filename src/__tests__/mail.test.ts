@@ -22,7 +22,7 @@ import {
 } from '../lib/mail';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildPool, letterPool, type Fact } from '../lib/science-filter';
+import { buildPool, collectFacts, letterPool, type Fact } from '../lib/science-filter';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
@@ -284,6 +284,90 @@ describe('the letter from the past carries a summary', () => {
     // The typed body comes from the summary too: without this branch the
     // letter would still print the one line twice.
     expect(MAIL_SRC).toMatch(/if \(m\.summary\) return summaryText\(m\);/);
+  });
+
+  it('the mailbox script types the passages when there is no summary', () => {
+    expect(MAIL_SRC).toMatch(/if \(m\.passages\?\.length\) return passagesText\(m\.passages\);/);
+  });
+});
+
+describe('the letter from the past carries passages', () => {
+  const COPY2 = { readWikipedia: 'Read on Wikipedia →', continuesWikipedia: 'Continues on Wikipedia →' };
+  // The recorded 18 November 2026 Spanish edition: the Diesel event has no
+  // text of its own, so the letter must carry its linked page's passage.
+  const OTD18 = JSON.parse(
+    readFileSync(resolve(__dirname, 'fixtures', 'paper', '2026-11-18.es.otd.json'), 'utf8'),
+  );
+  const diesel = () => buildPool(OTD18, 'es').find((f) => f.year === '1990' && /Diesel/.test(f.text));
+
+  it('the Diesel event carries a passage naming its source page', () => {
+    const fact = diesel();
+    expect(fact).toBeDefined();
+    expect(fact!.summary).toBeUndefined();
+    expect(fact!.long).toBeUndefined();
+    expect(fact!.passages).toBeDefined();
+    expect(fact!.passages!.length).toBeGreaterThan(0);
+    expect(fact!.passages![0].page).toBe('Eric Walter Elst');
+    expect(fact!.passages![0].text).toContain('astrónomo belga');
+  });
+
+  it('parts print the line as headline and the passages as body with the read label', () => {
+    const fact = diesel()!;
+    const parts = pastLetterParts(pastLetter(fact, NOW), COPY2);
+    expect(parts.headline).toBe(fact.text);
+    expect(parts.body).toContain('Eric Walter Elst — ');
+    expect(parts.body).not.toBe(parts.headline);
+    expect(parts.linkLabel).toBe('Read on Wikipedia →');
+  });
+
+  it('a passage never repeats its own page name', () => {
+    // The Elst extract opens with its subject, so attributing it would read
+    // the name twice; the passage keeps the name once, in the attribution.
+    const fact = diesel()!;
+    expect(fact.passages![0].text.startsWith(fact.passages![0].page)).toBe(false);
+    const parts = pastLetterParts(pastLetter(fact, NOW), COPY2);
+    expect(parts.body).toContain('Eric Walter Elst — fue un astrónomo belga');
+  });
+
+  it('each passage names the page it comes from', () => {
+    const l = pastLetter(
+      {
+        year: '1990',
+        text: 'El astrónomo Eric Elst descubre el asteroide (10093) Diesel.',
+        link: 'https://x',
+        passages: [
+          { page: 'Eric Walter Elst', text: 'Fue un astrónomo belga.' },
+          { page: '(10093) Diesel', text: 'Es un asteroide del cinturón principal.' },
+        ],
+      },
+      NOW,
+    );
+    const parts = pastLetterParts(l, COPY2);
+    expect(parts.headline).toBe('El astrónomo Eric Elst descubre el asteroide (10093) Diesel.');
+    expect(parts.body).toContain('Eric Walter Elst — Fue un astrónomo belga.');
+    expect(parts.body).toContain('(10093) Diesel — Es un asteroide del cinturón principal.');
+    expect(parts.linkLabel).toBe('Read on Wikipedia →');
+  });
+
+  it('with no linked text anywhere the letter falls back to its title alone', () => {
+    // An entry whose pages carry neither extract nor description: no
+    // passages, so the letter types the line as its body with no headline.
+    const [fact] = collectFacts(
+      [
+        {
+          year: 1990,
+          text: 'El astrónomo Eric Elst descubre el asteroide (10093) Diesel.',
+          pages: [{ titles: { normalized: 'Eric Walter Elst' } }],
+        },
+      ],
+      'event',
+      'es',
+    );
+    expect(fact.passages).toBeUndefined();
+    const parts = pastLetterParts(pastLetter(fact, NOW), COPY2);
+    expect(parts.headline).toBe('');
+    expect(parts.body).toBe('El astrónomo Eric Elst descubre el asteroide (10093) Diesel.');
+    expect(parts.linkLabel).toBe('Read on Wikipedia →');
   });
 });
 

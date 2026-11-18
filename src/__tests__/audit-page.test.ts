@@ -287,6 +287,7 @@ describe('middleware — audit page', () => {
       signedDocs: [
         { id, title: 'NDA Acme', state: 'signed', signedHash: 'e'.repeat(64) },
         { id: 'b'.repeat(32), title: 'Service order 7', state: 'ready', signedHash: null },
+        { id: 'c'.repeat(32), title: 'Old NDA', state: 'revoked', signedHash: null },
       ],
     });
     expect(html).toContain('Signed documents');
@@ -294,8 +295,10 @@ describe('middleware — audit page', () => {
     expect(html).toContain('Service order 7');
     expect(html).toContain(`/api/sign-file?id=${id}&amp;signed=1`);
     expect(html).not.toContain(`/api/sign-file?id=${'b'.repeat(32)}&amp;signed=1`);
+    expect(html).not.toContain(`/api/sign-file?id=${'c'.repeat(32)}&amp;signed=1`);
     // States are localized labels, never the raw link-state codes.
     expect(html).toContain('— pending');
+    expect(html).toContain('— revoked');
     expect(html).not.toContain('— ready');
     const bare = auditPageHtml(doc, SLUG);
     expect(bare).not.toContain('audit-signed-docs');

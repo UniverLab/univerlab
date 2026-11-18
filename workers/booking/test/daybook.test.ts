@@ -14,7 +14,7 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock('../src/reservations', () => ({ calendarCall: jest.fn() }));
+jest.mock('../src/calendar-client', () => ({ calendarCall: jest.fn() }));
 
 import {
   bookingDigestConfig,
@@ -27,7 +27,7 @@ import {
   runBookingDigest,
   sameDayAfterBookingDigest,
 } from '../src/daybook';
-import { calendarCall } from '../src/reservations';
+import { calendarCall } from '../src/calendar-client';
 
 /** 06:30 America/Bogota on Monday 2026-11-09. */
 const SLOT = Date.UTC(2026, 10, 9, 11, 30);
@@ -91,18 +91,16 @@ test('change lines keep the event naming with the payment state', () => {
   );
 });
 
-function registryNs(sent: boolean) {
+/** An OPERATOR service-binding stub answering the digest-sent query. */
+function operatorSent(sent: boolean): Fetcher {
   return {
-    idFromName: (name: string) => name,
-    get: () => ({
-      fetch: async () => Response.json({ sent }),
-    }),
-  };
+    fetch: async () => Response.json({ sent }),
+  } as unknown as Fetcher;
 }
 
 test('a same-day change counts only after the digest went out', async () => {
-  const sent = { REGISTRY: registryNs(true) };
-  const unsent = { REGISTRY: registryNs(false) };
+  const sent = { OPERATOR: operatorSent(true) };
+  const unsent = { OPERATOR: operatorSent(false) };
   const noon = Date.UTC(2026, 10, 9, 17, 0);
   const morning = Date.UTC(2026, 10, 9, 11, 0);
   expect(await sameDayAfterBookingDigest(sent as never, '2026-11-09T12:00:00.000Z', noon)).toBe(true);
@@ -112,29 +110,26 @@ test('a same-day change counts only after the digest went out', async () => {
   expect(await bookingDigestSent(unsent as never, '2026-11-09')).toBe(false);
 });
 
-/** A stateful operator stub: it remembers the days its digest took. */
+/** A stateful OPERATOR binding stub: it remembers the days its digest took. */
 function operatorNs() {
   const marked = new Set<string>();
   const calls: Array<{ dateKey: string; text: string }> = [];
   return {
     marked,
     calls,
-    ns: {
-      idFromName: (name: string) => name,
-      get: () => ({
-        fetch: async (req: Request) => {
-          const body = (await req.json()) as { action: string; dateKey?: string; text?: string };
-          const dateKey = body.dateKey ?? '';
-          if (body.action === 'bookingDigestSent') return Response.json({ sent: marked.has(dateKey) });
-          if (body.action === 'bookingDigest') {
-            calls.push({ dateKey, text: body.text ?? '' });
-            marked.add(dateKey);
-            return Response.json({ sent: Boolean(body.text) });
-          }
-          return Response.json({ ok: false });
-        },
-      }),
-    },
+    binding: {
+      fetch: async (req: Request) => {
+        const body = (await req.json()) as { type: string; dateKey?: string; text?: string };
+        const dateKey = body.dateKey ?? '';
+        if (body.type === 'digestSent') return Response.json({ sent: marked.has(dateKey) });
+        if (body.type === 'digest') {
+          calls.push({ dateKey, text: body.text ?? '' });
+          marked.add(dateKey);
+          return Response.json({ sent: true });
+        }
+        return Response.json({ ok: false });
+      },
+    } as unknown as Fetcher,
   };
 }
 
@@ -151,7 +146,7 @@ test('the morning run sends the day in time order once and never twice', async (
       { id: 'a', summary: '[Por confirmar] Consultoría · Ana', start: '2026-11-09T12:00:00.000Z', end: '2026-11-09T13:00:00.000Z' },
     ],
   });
-  const env = { REGISTRY: op.ns };
+  const env = { OPERATOR: op.binding };
 
   await runBookingDigest(env as never, SLOT);
   expect(calendarCall).toHaveBeenCalledWith(env, { action: 'day', now: SLOT });
@@ -167,7 +162,7 @@ test('the morning run sends the day in time order once and never twice', async (
 test('the run stays silent before its time and on a quiet day binds nothing', async () => {
   const op = operatorNs();
   (calendarCall as jest.Mock).mockResolvedValue({ ok: true, events: [] });
-  const env = { REGISTRY: op.ns };
+  const env = { OPERATOR: op.binding };
 
   await runBookingDigest(env as never, EARLY);
   expect(calendarCall).not.toHaveBeenCalled();
@@ -179,7 +174,7 @@ test('the run stays silent before its time and on a quiet day binds nothing', as
 test('an empty morning still marks the day, so a later same-day booking reaches the operator', async () => {
   const op = operatorNs();
   (calendarCall as jest.Mock).mockResolvedValue({ ok: true, events: [] });
-  const env = { REGISTRY: op.ns };
+  const env = { OPERATOR: op.binding };
   const noon = Date.UTC(2026, 10, 9, 17, 0);
 
   expect(await sameDayAfterBookingDigest(env as never, '2026-11-09T20:00:00.000Z', noon)).toBe(false);
@@ -191,7 +186,7 @@ test('an empty morning still marks the day, so a later same-day booking reaches 
 
 test('a failed calendar read retries on the next wake instead of losing the day', async () => {
   const op = operatorNs();
-  const env = { REGISTRY: op.ns };
+  const env = { OPERATOR: op.binding };
   (calendarCall as jest.Mock).mockResolvedValueOnce({ ok: false, reason: 'calendar-down' });
 
   await runBookingDigest(env as never, SLOT);
@@ -208,7 +203,7 @@ test('a failed calendar read retries on the next wake instead of losing the day'
 
 test('the switch off means the run does nothing at all', async () => {
   const op = operatorNs();
-  const env = { REGISTRY: op.ns, BOOKING_DIGEST_CONFIG: JSON.stringify({ enabled: false }) };
+  const env = { OPERATOR: op.binding, BOOKING_DIGEST_CONFIG: JSON.stringify({ enabled: false }) };
   await runBookingDigest(env as never, SLOT);
   expect(calendarCall).not.toHaveBeenCalled();
   expect(op.calls).toHaveLength(0);
