@@ -378,7 +378,7 @@ describe('a lab letter reads as a letter', () => {
   it('shows the kind as a postscript, not a UI label', () => {
     // The type reaches the sheet only through the postscript — remove this
     // branch and the kind is nowhere on the letter.
-    expect(MAIL_SRC).toMatch(/fmt\(copy\.psLab, \{ type: m\.type \}\)/);
+    expect(MAIL_SRC).toMatch(/fmt\(copy\.psLab, \{ type: copy\.types\?\.\[m\.type\] \?\? m\.type \}\)/);
     expect(MAIL_SRC).toMatch(/class="ps"/);
     expect(en.header.mailbox.psLab).toContain('{type}');
     expect(es.header.mailbox.psLab).toContain('{type}');

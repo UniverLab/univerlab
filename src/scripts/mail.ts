@@ -76,6 +76,8 @@ interface MailCopy {
   closing: string;
   sign: string;
   psLab: string;
+  /** Announcement kinds in the page's language (logbook labels). */
+  types?: Record<string, string>;
 }
 
 function fmt(s: string, vars: Record<string, string | number>): string {
@@ -265,7 +267,7 @@ function startMailbox(): void {
           ${heading}
           <div class="body" aria-live="polite"><span class="typed"></span><span class="caret"></span></div>
           <p class="sign">${esc(copy.closing)}<br>${esc(copy.sign)}</p>
-          <p class="ps">${esc(fmt(copy.psLab, { type: m.type }))}</p>
+          <p class="ps">${esc(fmt(copy.psLab, { type: copy.types?.[m.type] ?? m.type }))}</p>
           <div class="links">${links}</div>
           <button type="button" class="next" hidden></button>`;
     const pastInner = `
