@@ -15,7 +15,7 @@ type Sql = {
 };
 
 /**
- * The one serialized owner of the public agenda rate limits. Every slot
+ * The one serialized owner of the public booking rate limits. Every slot
  * read and every web booking passes through this object (`Gate` bound
  * under the fixed name `gate`), so a burst of requests has exactly one
  * counter: at most `limit` hits per `bucket` inside `windowMs`, with

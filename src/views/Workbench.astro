@@ -15,8 +15,12 @@ const waHref = `${WHATSAPP}?text=${encodeURIComponent(w.ctaMessage)}`;
 const bookHref = bookTarget(lang);
 // Build configuration with a local default: the production workflow passes
 // the real values (see .github/workflows/deploy-site.yml).
-const api = import.meta.env.PUBLIC_BOOKING_API || 'https://agenda.univerlab.org';
+const api = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univerlab.org';
 const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+// The free-first-call service is not deployed: with this off (the default) the
+// section offers WhatsApp and email instead of a form that cannot load. Set
+// PUBLIC_BOOKING_LIVE=true in the build environment once it answers.
+const bookingLive = (import.meta.env.PUBLIC_BOOKING_LIVE || 'false') === 'true';
 const bookWaHref = `${WHATSAPP}?text=${encodeURIComponent(lang === 'es' ? 'Hola, vengo de la página para agendar la primera llamada.' : 'Hi, I come from the free-first-call booking page.')}`;
 const copy = JSON.stringify({
   loading: b.loading,
@@ -43,10 +47,12 @@ const proof = w.proof.items.map((id) => ({
   .wb-hero h1 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05; margin: 0.6rem 0 1rem; text-wrap: balance; }
   .wb-hero h1 em { color: var(--accent); }
   .wb-intro { max-width: 40rem; color: var(--ink-dim); font-size: 1.1rem; line-height: 1.7; margin: 0 0 1.4rem; }
-  .wb-ctas { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin: 0; }
+  .wb-ctas { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin: 0; min-width: 0; }
   .wb-ctas small { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); }
   .wb-alt { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
-  .wb-btn { text-decoration: none; border: 1px solid var(--accent);
+  .wb-btn { display: inline-block; max-width: 100%; box-sizing: border-box;
+         text-align: center; text-wrap: balance; white-space: normal; overflow-wrap: break-word;
+         text-decoration: none; border: 1px solid var(--accent);
          color: var(--accent); padding: 0.55rem 1.1rem;
          font-family: var(--font-mono); font-size: 0.85rem;
          transition: background 0.15s ease, color 0.15s ease; }
@@ -97,7 +103,7 @@ const proof = w.proof.items.map((id) => ({
   .wb-policy a { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); }
   .wb-close { background: var(--bg-raise); border-block: 1px solid var(--line); margin-top: 3rem; padding: 2.5rem 1.5rem; text-align: center; display: grid; gap: 1rem; justify-items: center; }
   .wb-close h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(1.5rem, 3vw, 2rem); margin: 0; text-wrap: balance; max-width: 44rem; }
-  .wb-close p { margin: 0; }
+  .wb-close p { margin: 0; max-width: 100%; min-width: 0; }
   .wb-close small { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); }
   .wb-sticky { display: none; }
   @media (max-width: 47.99rem) {
@@ -105,13 +111,13 @@ const proof = w.proof.items.map((id) => ({
     .wb-hero { grid-template-columns: minmax(0, 1fr); }
     .wb-figure { display: block; order: -1; --machine-h-phone: 260px; }
     .wb-hero h1 { font-size: 1.95rem; }
-    .wb-ctas .wb-btn { width: 100%; display: flex; justify-content: center; }
+    .wb-ctas .wb-btn { width: 100%; display: flex; justify-content: center; text-align: center; }
     .wb-ctas .wb-long { display: none; }
     .wb-ctas .wb-short { display: inline; }
     .wb-tag .wb-price { font-size: 1.5rem; }
-    .wb-sticky { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 5; align-items: center; gap: 0.65rem; padding: 0.65rem var(--space) calc(0.65rem + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 92%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(6px); }
-    .wb-sticky .wb-btn { flex: 1; display: flex; justify-content: center; }
-    .wb-sticky .wb-alt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.06em; white-space: nowrap; }
+    .wb-sticky { display: flex; flex-wrap: wrap; position: fixed; bottom: 0; left: 0; right: 0; z-index: 5; align-items: center; gap: 0.65rem; padding: 0.65rem var(--space) calc(0.65rem + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 92%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(6px); }
+    .wb-sticky .wb-btn { flex: 1 1 12rem; min-width: 0; display: flex; justify-content: center; white-space: normal; text-align: center; text-wrap: balance; }
+    .wb-sticky .wb-alt { flex: 1 1 100%; text-align: center; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.06em; }
   }
   .book { max-width: 44rem; padding-block: 4rem 6rem; }
   .book-hero .label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; color: var(--accent); }
@@ -122,7 +128,9 @@ const proof = w.proof.items.map((id) => ({
   .book-fallback p { color: var(--ink-dim); line-height: 1.6; margin: 0.5rem 0 0; }
   .book-fallback-links { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
   .book-fallback-links a { color: var(--accent); }
-  .book-btn { text-decoration: none; border: 1px solid var(--accent);
+  .book-btn { display: inline-block; max-width: 100%; box-sizing: border-box;
+         text-align: center; text-wrap: balance; white-space: normal; overflow-wrap: break-word;
+         text-decoration: none; border: 1px solid var(--accent);
          color: var(--accent); padding: 0.55rem 1.1rem;
          font-family: var(--font-mono); font-size: 0.85rem; background: none;
          transition: background 0.15s ease, color 0.15s ease; cursor: pointer; }
@@ -216,6 +224,7 @@ const proof = w.proof.items.map((id) => ({
         <h2>{b.h1}</h2>
         <p class="book-intro">{b.intro}</p>
       </header>
+      {!bookingLive && (
       <div class="book-fallback" id="book-fallback">
         <h2>{b.fallbackTitle}</h2>
         <p>{b.fallbackText}</p>
@@ -224,6 +233,9 @@ const proof = w.proof.items.map((id) => ({
           <span>{b.emailLabel} <a href={`mailto:${contactEmail}`}>{contactEmail}</a></span>
         </p>
       </div>
+      )}
+      {bookingLive && (
+      <>
       <form class="book-form" id="book-form" hidden data-api={api} data-lang={lang} novalidate>
         <p class="book-status" id="book-status" role="status"></p>
         <fieldset class="book-field" id="book-slots">
@@ -263,6 +275,8 @@ const proof = w.proof.items.map((id) => ({
         import { bindBookForm } from '../lib/book-client';
         bindBookForm(document);
       </script>
+      </>
+      )}
     </section>
     <section class="wb-close">
       <h2>{w.close.head}</h2>

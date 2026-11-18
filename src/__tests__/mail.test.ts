@@ -301,7 +301,7 @@ describe('a letter from the past', () => {
     expect(MAIL_SRC).toMatch(/const letterCls = lab \? 'letter' :/);
   });
 
-  it('sets the past headline and body in the period hand and leaves lab letters in mono', () => {
+  it('sets the past headline and body in the period hand and leaves lab letters in serif', () => {
     // The hand sits on the past-only rules — remove either half and the past
     // letter loses its face.
     expect(rule('.mail-pop .letter.past h2')).toMatch(/font-family:\s*var\(--mail-hand\)/);
@@ -314,8 +314,9 @@ describe('a letter from the past', () => {
     // The sizes are read from those tokens, never written inline in the rule.
     expect(rule('.mail-pop .letter.past h2')).toMatch(/font-size:\s*var\(--mail-past-head\)/);
     expect(rule('.mail-pop .letter.past p')).toMatch(/font-size:\s*var\(--mail-past-body\)/);
-    // No hand on the shared rules: a lab letter stays upright in mono.
-    expect(rule('.mail-pop .letter p')).toMatch(/font-family:\s*var\(--font-mono\)/);
+    // No hand on the shared rules: a lab letter stays upright in serif.
+    expect(rule('.mail-pop .letter p')).toMatch(/font-family:\s*var\(--font-serif\)/);
+    expect(rule('.mail-pop .letter .body')).toMatch(/font-family:\s*var\(--font-serif\)/);
     expect(rule('.mail-pop .letter h2')).toMatch(/font-family:\s*var\(--font-serif\)/);
     // Meta and links keep the site's type so dates and links stay legible.
     expect(rule('.mail-pop .letter .meta')).toMatch(/font-family:\s*var\(--font-mono\)/);
@@ -347,6 +348,82 @@ describe('a letter from the past', () => {
   });
 });
 
+/* A lab letter reads as a letter: place and date at the top right, a
+   salutation, the serif body, a closing with the lab's signature, the kind
+   as a postscript and the link after the signature. The close stays a
+   plain ×, and no mono reaches the lab sheet. */
+describe('a lab letter reads as a letter', () => {
+  it('opens with the place and date at the top right, in both languages', () => {
+    // The dateline is composed from the sent date with its year — remove
+    // either half and the "Bogotá, 12 de noviembre de 2026" line is gone.
+    expect(MAIL_SRC).toMatch(/class="dateline"/);
+    expect(MAIL_SRC).toMatch(/copy\.datelinePlace/);
+    expect(MAIL_SRC).toMatch(/sent\.getFullYear\(\)/);
+    expect(en.header.mailbox.datelinePlace).toBe('Bogotá');
+    expect(es.header.mailbox.datelinePlace).toBe('Bogotá');
+    // Right-aligned, clear of the × like the meta row was.
+    expect(rule('.mail-pop .letter .dateline')).toMatch(/text-align:\s*right/);
+    expect(rule('.mail-pop .letter .dateline')).toMatch(/padding-right:\s*22px/);
+    // The salutation and signature close the letter in each language.
+    expect(en.header.mailbox.greet).toBe('Dear reader,');
+    expect(es.header.mailbox.greet).toBe('Estimada lectora, estimado lector,');
+    expect(en.header.mailbox.closing).toBe('With regards,');
+    expect(es.header.mailbox.closing).toBe('Saludos cordiales,');
+    expect(en.header.mailbox.sign).toBe('The UniverLab laboratory');
+    expect(es.header.mailbox.sign).toBe('El laboratorio UniverLab');
+    expect(rule('.mail-pop .letter .greet')).toMatch(/font-style:\s*italic/);
+    expect(rule('.mail-pop .letter .sign')).toMatch(/margin-top:\s*auto/);
+  });
+
+  it('shows the kind as a postscript, not a UI label', () => {
+    // The type reaches the sheet only through the postscript — remove this
+    // branch and the kind is nowhere on the letter.
+    expect(MAIL_SRC).toMatch(/fmt\(copy\.psLab, \{ type: copy\.types\?\.\[m\.type\] \?\? m\.type \}\)/);
+    expect(MAIL_SRC).toMatch(/class="ps"/);
+    expect(en.header.mailbox.psLab).toContain('{type}');
+    expect(es.header.mailbox.psLab).toContain('{type}');
+    // The label row is gone from the lab sheet: no meta spans remain there.
+    expect(MAIL_SRC).not.toMatch(/m\.exp \? `\$\{m\.exp\.number\}/);
+    expect(rule('.mail-pop .letter .ps')).toMatch(/font-size:\s*12px/);
+  });
+
+  it('keeps the announcement link after the signature', () => {
+    // Order in the sheet source: greeting, title, body, signature,
+    // postscript, then the link — move the link up and it stops reading
+    // as part of the letter.
+    expect(MAIL_SRC).toMatch(/class="greet"[\s\S]*\$\{heading\}[\s\S]*class="body"[\s\S]*class="sign"[\s\S]*class="ps"[\s\S]*class="links"/);
+    // The link itself is unchanged: same copy, same destination.
+    expect(MAIL_SRC).toMatch(/copy\.readAnnouncement/);
+    expect(en.header.mailbox.readAnnouncement).toBe('Read the full announcement →');
+    expect(es.header.mailbox.readAnnouncement).toBe('Leer el anuncio completo →');
+  });
+
+  it('keeps the close a plain × with its accessible name', () => {
+    expect(MAIL_SRC).toMatch(/class="close" aria-label="\$\{esc\(copy\.close\)\}">×/);
+    // No chip: no background, no border on the close rule.
+    expect(rule('.mail-pop .close')).toMatch(/border:\s*0/);
+    expect(rule('.mail-pop .close')).toMatch(/background:\s*none/);
+    expect(rule('.mail-pop .close')).not.toMatch(/background:\s*var\(/);
+  });
+
+  it('sets no monospace on the lab sheet', () => {
+    // The shared paragraph rule, the typed body and the greeting all stay
+    // clear of the mono token — a mono declaration on any of them puts the
+    // UI card back on the letter.
+    expect(rule('.mail-pop .letter p')).not.toMatch(/font-mono/);
+    expect(rule('.mail-pop .letter .body')).not.toMatch(/font-mono/);
+    expect(rule('.mail-pop .letter .greet')).not.toMatch(/font-mono/);
+    expect(rule('.mail-pop .letter .sign')).not.toMatch(/font-mono/);
+    expect(rule('.mail-pop .letter .ps')).not.toMatch(/font-mono/);
+    // The body reads at a letter's measure and leading.
+    expect(rule('.mail-pop .letter .body')).toMatch(/line-height:\s*1\.65/);
+    expect(rule('.mail-pop .letter .body')).toMatch(/max-width:\s*60ch/);
+    // A long body still scrolls inside the sheet, capped to the viewport.
+    expect(rule('.mail-pop .letter .body')).toMatch(/overflow-y:\s*auto/);
+    expect(rule('.mail-pop .letter')).toMatch(/max-height:\s*calc\(100dvh - 120px\)/);
+  });
+});
+
 /* The sheet keeps a letter page's proportions at every width, and the hand
    is self-hosted. */
 describe('the sheet keeps a letter page', () => {
@@ -372,7 +449,11 @@ describe('the sheet keeps a letter page', () => {
   it('keeps the typed line in view while the body scrolls', () => {
     // Typing happens inside a now-scrollable body: without moving the page
     // with the caret, everything after the first screenful types off-screen.
-    expect(MAIL_SRC).toMatch(/const typed = \$\('\.typed'\)[^\n]*\.letter p'\)/);
+    // The scroll target prefers the scrollable .body with the past sheet's
+    // paragraph as fallback: a lab sheet holds other paragraphs (dateline,
+    // greeting) before the body, so a group selector would land on the
+    // dateline and the typed line would scroll out of view.
+    expect(MAIL_SRC).toMatch(/querySelector\('\.letter \.body'\) \?\? .*querySelector\('\.letter p'\)/);
     expect(MAIL_SRC).toMatch(
       /typed\.textContent = text\.slice\(0, i\);\s*body\.scrollTop = body\.scrollHeight;/,
     );

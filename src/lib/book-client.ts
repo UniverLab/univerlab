@@ -91,7 +91,7 @@ export function reasonMessage(reason: string, errors: BookErrors): string {
   return errors[reasonKey(reason)];
 }
 
-/** Field rules mirror the service (`parseBooking` in the agenda worker):
+/** Field rules mirror the service (`parseBooking` in the booking worker):
  *  name on one line, well-formed email, short note, a slot chosen. Returns
  *  the invalid fields, so the caller can point at each one. */
 export function validateBooking(input: {

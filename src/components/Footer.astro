@@ -227,11 +227,17 @@ Date:   now
   /* The centred book colophon below the frieze. */
   .colophon {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     justify-items: center;
     text-align: center;
     gap: 1.125rem;
     padding-block: 2.5rem 1.5rem;
   }
+  /* Narrow phones (320px): grid items default to min-width auto and force
+     the track wider than the viewport (the icon row alone needs 320px).
+     Let every item shrink so nothing pushes the page into horizontal
+     scroll; the icon row wraps instead. */
+  .colophon > * { min-width: 0; max-width: 100%; }
   .quote { margin: 0; font-family: var(--font-serif); font-style: italic; color: var(--f-ink-dim); font-size: clamp(0.95rem, 1.4vw, 1.1rem); line-height: 1.55; max-width: 46ch; }
   /* Nav links in the colophon face (Quorum's rule: serif links, mono labels);
      every target keeps a 32px tap reach on touch screens. */
@@ -249,7 +255,7 @@ Date:   now
      to the sponsor heart, dim ink at rest, full ink on hover. The fixed box
      keeps the row from shifting; the svg inherits the anchor's colour (the
      footer paints every svg faint by default, which would freeze the hover). */
-  .icon-row { display: flex; gap: 1rem; align-items: center; justify-content: center; min-height: 32px; }
+  .icon-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center; min-height: 32px; max-width: 100%; }
   .icon-link {
     display: inline-flex; align-items: center; min-height: 32px; min-width: 32px; justify-content: center;
     color: var(--f-ink-dim);
@@ -297,6 +303,8 @@ Date:   now
      translation, just plain grade-1 cells at an opacity that still passes
      4.5:1. The font stack is chosen only for having braille glyphs. */
   .braille {
+    max-width: 100%;
+    overflow-wrap: anywhere;
     opacity: 0.9;
     font-family: "DejaVu Sans Mono", "Segoe UI Symbol", "Noto Sans Symbols 2", monospace;
     font-size: 15px;

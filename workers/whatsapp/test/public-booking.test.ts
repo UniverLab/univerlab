@@ -15,11 +15,11 @@ jest.mock(
 );
 
 import {
-  handleAgenda,
+  handlePublicBooking,
   openCancelToken,
   parseBooking,
   signCancelToken,
-} from '../src/agenda';
+} from '../src/public-booking';
 import type { Env } from '../src/env';
 
 const SECRET = 'turnstile-secret-for-tests';
@@ -40,7 +40,7 @@ interface Scenario {
   gate?: (body: Record<string, unknown>) => Record<string, unknown>;
   turnstile?: boolean;
   secret?: string | null;
-  agendaSent?: boolean;
+  bookingDigestSent?: boolean;
 }
 
 function makeEnv(s: Scenario): {
@@ -69,7 +69,7 @@ function makeEnv(s: Scenario): {
       }),
       REGISTRY: fakeNs((body) => {
         if (body.action === 'note') notes.push(body);
-        if (body.action === 'agendaSent') return { sent: s.agendaSent === true };
+        if (body.action === 'bookingDigestSent') return { sent: s.bookingDigestSent === true };
         return { name: 'ana' };
       }),
       OPERATOR_PHONE: '+57 300 999 8888',
@@ -83,8 +83,8 @@ async function call(path: string, env: Env, init?: Omit<RequestInit, 'headers'> 
   const headers: Record<string, string> = { ...(init?.headers ?? {}) };
   if (init?.origin !== undefined && init?.origin !== null) headers.origin = init.origin;
   headers['cf-connecting-ip'] = init?.ip ?? '203.0.113.7';
-  const res = (await handleAgenda(
-    new Request('https://agenda.univerlab.org' + path, { ...init, headers }),
+  const res = (await handlePublicBooking(
+    new Request('https://booking.univerlab.org' + path, { ...init, headers }),
     env
   )) as Response | null;
   if (!res) throw new Error('expected a route response for ' + path);
@@ -102,13 +102,13 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-test('unknown paths fall through to the webhook, they are not agenda routes', async () => {
+test('unknown paths fall through to the webhook, they are not booking routes', async () => {
   const { env } = makeEnv({});
   await expect(
-    handleAgenda(new Request('https://agenda.univerlab.org/webhook'), env)
+    handlePublicBooking(new Request('https://booking.univerlab.org/webhook'), env)
   ).resolves.toBeNull();
   await expect(
-    handleAgenda(new Request('https://agenda.univerlab.org/health'), env)
+    handlePublicBooking(new Request('https://booking.univerlab.org/health'), env)
   ).resolves.toBeNull();
 });
 
@@ -160,33 +160,33 @@ test('slot reads allow the site and local previews, never another origin', async
   expect(local.status).toBe(403);
 });
 
-test('the cancel page confirms from the agenda host it is served on', async () => {
+test('the cancel page confirms from the booking host it is served on', async () => {
   const claim = { k: 'web:ana@example.com', s: SLOT, n: 'Ana', l: 'es' as const };
   const token = await signCancelToken(claim, SECRET);
   const { env } = makeEnv({ calendar: (body) => ({ ok: body.action === 'cancel', start: SLOT }) });
-  // A browser posting the confirmation form sends the agenda origin itself.
+  // A browser posting the confirmation form sends the booking origin itself.
   const res = await call('/cancel', env, {
     method: 'POST',
-    origin: 'https://agenda.univerlab.org',
+    origin: 'https://booking.univerlab.org',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: 't=' + encodeURIComponent(token),
   });
   expect(res.status).toBe(200);
-  // Another host is still refused, and booking is never allowed from the agenda host.
+  // Another host is still refused, and booking is never allowed from the booking host.
   const other = await call('/cancel', env, {
     method: 'POST',
-    origin: 'https://agenda.evil.com',
+    origin: 'https://booking.evil.com',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: 't=' + encodeURIComponent(token),
   });
   expect(other.status).toBe(403);
-  const fromAgenda = await call('/book', env, {
+  const fromBooking = await call('/book', env, {
     method: 'POST',
-    origin: 'https://agenda.univerlab.org',
+    origin: 'https://booking.univerlab.org',
     headers: { 'content-type': 'application/json' },
     body: '{}',
   });
-  expect(fromAgenda.status).toBe(403);
+  expect(fromBooking.status).toBe(403);
 });
 
 test('slot reads quote the owner and answer unavailable when it is down', async () => {
@@ -297,12 +297,12 @@ test('a booking reserves through the shared owner and answers slot and meet', as
   expect(sent.description).toContain('/cancel?t=');
 });
 
-test('a same-day web booking tells the operator at once after the agenda', async () => {
+test('a same-day web booking tells the operator at once after the digest', async () => {
   // The slot is 10:00 Bogota on Nov 19, so the clock is pinned to that same morning.
   jest.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 19, 12, 0));
   const { env, notes } = makeEnv({
     calendar: () => ({ ok: true, eventId: 'ev9', start: SLOT, end: SLOT, kind: 'booked', meet: 'https://meet.google.com/x' }),
-    agendaSent: true,
+    bookingDigestSent: true,
   });
   const res = await call('/book', env, {
     method: 'POST',
@@ -317,11 +317,11 @@ test('a same-day web booking tells the operator at once after the agenda', async
   expect(text).toContain('10:00');
 });
 
-test('a later-day web booking waits for its agenda instead of an immediate note', async () => {
+test('a later-day web booking waits for its digest instead of an immediate note', async () => {
   // The default clock is Nov 17 while the slot is Nov 19: a later day.
   const { env, notes } = makeEnv({
     calendar: () => ({ ok: true, eventId: 'ev9', start: SLOT, end: SLOT, kind: 'booked', meet: 'https://meet.google.com/x' }),
-    agendaSent: true,
+    bookingDigestSent: true,
   });
   const res = await call('/book', env, {
     method: 'POST',
@@ -332,11 +332,11 @@ test('a later-day web booking waits for its agenda instead of an immediate note'
   expect(notes).toHaveLength(0);
 });
 
-test('a same-day web cancellation tells the operator at once after the agenda', async () => {
+test('a same-day web cancellation tells the operator at once after the digest', async () => {
   jest.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 19, 12, 0));
   const claim = { k: 'web:ana@example.com', s: SLOT, n: 'Ana', l: 'es' as const };
   const token = await signCancelToken(claim, SECRET);
-  const { env, notes } = makeEnv({ calendar: () => ({ ok: true, start: SLOT }), agendaSent: true });
+  const { env, notes } = makeEnv({ calendar: () => ({ ok: true, start: SLOT }), bookingDigestSent: true });
   const res = await call('/cancel', env, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

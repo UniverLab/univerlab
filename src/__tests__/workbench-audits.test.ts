@@ -305,4 +305,14 @@ describe('workbench-audits', () => {
     const phone = VIEW.slice(VIEW.indexOf('@media (max-width: 47.99rem)'));
     expect(phone).toContain('.wba-figure { display: block; order: -1; --machine-h-phone: 260px; }');
   });
+
+  it('long call-to-action buttons stay whole on narrow phones', () => {
+    expect(VIEW).toContain('.wba-btn { display: inline-block; max-width: 100%;');
+    expect(VIEW).toContain('text-wrap: balance');
+    expect(VIEW).toContain('.wba-close p { margin: 0; max-width: 100%; min-width: 0; }');
+    expect(VIEW).toContain('.wba-sticky { display: flex; flex-wrap: wrap;');
+    const altAt = VIEW.indexOf('.wba-sticky .wba-alt');
+    expect(altAt).toBeGreaterThan(-1);
+    expect(VIEW.slice(altAt, VIEW.indexOf('}', altAt))).not.toContain('nowrap');
+  });
 });

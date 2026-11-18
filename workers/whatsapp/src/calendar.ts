@@ -610,7 +610,7 @@ export class Calendar extends DurableObject<Env> {
   }
 
   /**
-   * The agenda's day read: the calendar events starting today in Bogota
+   * The digest's day read: the calendar events starting today in Bogota
    * time, so the morning message lists every booking the code wrote. The
    * read starts at midnight, so a late run still lists the whole day.
    */

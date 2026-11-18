@@ -5,25 +5,25 @@ import { calendarCall } from './reservations';
 import { bogotaDateKey, bogotaParts } from './schedule';
 
 /**
- * The morning agenda: one scheduled message with the day's bookings. The
+ * The morning booking digest: one scheduled message with the day's bookings. The
  * Worker wakes every 30 minutes on its Cron Trigger; only the 06:30
  * America/Bogota run sends, so the time is configuration, not code.
  */
-export interface AgendaConfig {
-  /** Bogota wall-clock hour of the agenda run. */
+export interface BookingDigestConfig {
+  /** Bogota wall-clock hour of the digest run. */
   hour: number;
-  /** Bogota wall-clock minute of the agenda run. */
+  /** Bogota wall-clock minute of the digest run. */
   minute: number;
   /** The scheduled run sends nothing while false. */
   enabled: boolean;
 }
 
-export const DEFAULT_AGENDA_CONFIG: AgendaConfig = { hour: 6, minute: 30, enabled: true };
+export const DEFAULT_BOOKING_DIGEST_CONFIG: BookingDigestConfig = { hour: 6, minute: 30, enabled: true };
 
-/** Parse the AGENDA_CONFIG deploy variable; any missing or invalid field falls back. */
-export function agendaConfig(env: { AGENDA_CONFIG?: string }): AgendaConfig {
-  const base: AgendaConfig = { ...DEFAULT_AGENDA_CONFIG };
-  const raw = env.AGENDA_CONFIG?.trim();
+/** Parse the BOOKING_DIGEST_CONFIG deploy variable; any missing or invalid field falls back. */
+export function bookingDigestConfig(env: { BOOKING_DIGEST_CONFIG?: string }): BookingDigestConfig {
+  const base: BookingDigestConfig = { ...DEFAULT_BOOKING_DIGEST_CONFIG };
+  const raw = env.BOOKING_DIGEST_CONFIG?.trim();
   if (!raw) return base;
   try {
     const parsed = JSON.parse(raw) as { hour?: unknown; minute?: unknown; enabled?: unknown };
@@ -52,19 +52,19 @@ export function agendaConfig(env: { AGENDA_CONFIG?: string }): AgendaConfig {
 }
 
 /**
- * Whether this instant is at or after the configured agenda time in Bogota
+ * Whether this instant is at or after the configured digest time in Bogota
  * wall time. The Worker wakes every 30 minutes, so a configured minute the
  * cron never hits (:15, say) fires on the next wake instead of never, and a
  * run that failed retries on the next wake; the day marker keeps the retries
  * from sending twice.
  */
-export function isAgendaSlot(nowMs: number, cfg: AgendaConfig): boolean {
+export function isBookingDigestSlot(nowMs: number, cfg: BookingDigestConfig): boolean {
   if (!cfg.enabled) return false;
   const p = bogotaParts(nowMs);
   return p.hour * 60 + p.minute >= cfg.hour * 60 + cfg.minute;
 }
 
-export interface AgendaItem {
+export interface BookingDigestItem {
   start: string;
   service: string;
   name: string;
@@ -99,7 +99,7 @@ function paymentLabel(service: string, paid: boolean): string {
  * the hold prefix carries the payment state, `label · name` the service and
  * the conversation name. Unknown summaries are kept as they are.
  */
-export function agendaItems(events: CalEvent[]): AgendaItem[] {
+export function bookingDigestItems(events: CalEvent[]): BookingDigestItem[] {
   return events
     .map((e) => {
       const paid = !e.summary.startsWith(HOLD_PREFIX);
@@ -110,7 +110,7 @@ export function agendaItems(events: CalEvent[]): AgendaItem[] {
         service: serviceLabelEs(sep >= 0 ? bare.slice(0, sep).trim() || bare : bare),
         name: sep >= 0 ? bare.slice(sep + 3).trim() : '',
         paid,
-      } satisfies AgendaItem;
+      } satisfies BookingDigestItem;
     })
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 }
@@ -124,10 +124,10 @@ function bogotaHHMM(iso: string): string {
 }
 
 /**
- * The agenda body the operator receives. Empty when the day holds nothing,
+ * The digest body the operator receives. Empty when the day holds nothing,
  * so a quiet day sends nothing at all.
  */
-export function formatAgenda(items: AgendaItem[]): string {
+export function formatBookingDigest(items: BookingDigestItem[]): string {
   if (items.length === 0) return '';
   const lines = items.map(
     (i) =>
@@ -137,7 +137,7 @@ export function formatAgenda(items: AgendaItem[]): string {
 }
 
 /**
- * One same-day change after the agenda went out: the event keeps the
+ * One same-day change after the digest went out: the event keeps the
  * booking-notes naming (Cita agendada, Cita movida, Cita cancelada,
  * Cita cancelada · estaba pagada), followed by the time, service, name and
  * payment state.
@@ -147,24 +147,24 @@ export function changeLine(event: string, service: string, slotIso: string, name
   return event + ' · ' + bogotaHHMM(slotIso) + ' · ' + label + ' · ' + name + ' · ' + paymentLabel(label, paid);
 }
 
-interface AgendaSentEnv {
+interface BookingDigestSentEnv {
   REGISTRY?: {
     idFromName(name: string): unknown;
     get(id: unknown): { fetch(req: Request): Promise<Response> };
   };
 }
 
-/** Whether the agenda run for this Bogota day already happened. */
-export async function agendaSent(env: AgendaSentEnv, dateKey: string): Promise<boolean> {
+/** Whether the digest run for this Bogota day already happened. */
+export async function bookingDigestSent(env: BookingDigestSentEnv, dateKey: string): Promise<boolean> {
   try {
     const ns = env.REGISTRY;
     if (!ns) return false;
     const stub = ns.get(ns.idFromName('operator'));
     const res = await stub.fetch(
-      new Request('https://agenda/call', {
+      new Request('https://booking-digest/call', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'agendaSent', dateKey }),
+        body: JSON.stringify({ action: 'bookingDigestSent', dateKey }),
       })
     );
     const data = (await res.json()) as { sent?: unknown };
@@ -176,10 +176,10 @@ export async function agendaSent(env: AgendaSentEnv, dateKey: string): Promise<b
 
 /**
  * Whether a booking change still reaches the operator at once: its start
- * falls on today and today's agenda already went out. Anything for a later
- * day waits for that day's agenda instead.
+ * falls on today and today's digest already went out. Anything for a later
+ * day waits for that day's digest instead.
  */
-export async function sameDayAfterAgenda(
+export async function sameDayAfterBookingDigest(
   env: Env,
   startIso: string,
   nowMs: number = Date.now()
@@ -188,7 +188,7 @@ export async function sameDayAfterAgenda(
   if (!Number.isFinite(startMs)) return false;
   const today = bogotaDateKey(nowMs);
   if (bogotaDateKey(startMs) !== today) return false;
-  return agendaSent(env, today);
+  return bookingDigestSent(env, today);
 }
 
 /**
@@ -197,13 +197,13 @@ export async function sameDayAfterAgenda(
  * but still marks the day, so a booking that lands later that day still gets
  * its immediate line. A retried run on the same day sends nothing twice.
  */
-export async function runAgenda(env: Env, nowMs: number): Promise<void> {
-  if (!isAgendaSlot(nowMs, agendaConfig(env))) return;
+export async function runBookingDigest(env: Env, nowMs: number): Promise<void> {
+  if (!isBookingDigestSlot(nowMs, bookingDigestConfig(env))) return;
   const dateKey = bogotaDateKey(nowMs);
-  if (await agendaSent(env, dateKey)) return;
+  if (await bookingDigestSent(env, dateKey)) return;
   const day = await calendarCall(env, { action: 'day', now: nowMs });
   if (!day.ok || !Array.isArray(day.events)) return;
-  const text = formatAgenda(agendaItems(day.events as CalEvent[]));
+  const text = formatBookingDigest(bookingDigestItems(day.events as CalEvent[]));
   try {
     const ns = env.REGISTRY;
     if (!ns) return;
@@ -212,7 +212,7 @@ export async function runAgenda(env: Env, nowMs: number): Promise<void> {
       new Request('https://registry/call', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'agenda', dateKey, text }),
+        body: JSON.stringify({ action: 'bookingDigest', dateKey, text }),
       })
     );
   } catch {

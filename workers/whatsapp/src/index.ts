@@ -1,6 +1,6 @@
 import { parseInbound, verifySignature } from './meta';
-import { handleAgenda } from './agenda';
-import { runAgenda } from './daybook';
+import { handlePublicBooking } from './public-booking';
+import { runBookingDigest } from './daybook';
 import type { Env } from './env';
 
 export { Conversation } from './conversation';
@@ -10,8 +10,8 @@ export { Gate } from './gate';
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const agenda = await handleAgenda(req, env);
-    if (agenda) return agenda;
+    const booking = await handlePublicBooking(req, env);
+    if (booking) return booking;
     const url = new URL(req.url);
     if (req.method === 'GET' && url.pathname === '/webhook') {
       if (
@@ -80,6 +80,6 @@ export default {
     return new Response('not found', { status: 404 });
   },
   async scheduled(event: { scheduledTime: number }, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(runAgenda(env, event.scheduledTime));
+    ctx.waitUntil(runBookingDigest(env, event.scheduledTime));
   },
 };

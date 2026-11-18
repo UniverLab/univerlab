@@ -151,6 +151,16 @@ describe('workbench-solutions', () => {
     expect(phone).toContain('.wbs-figure { display: block; order: -1; --machine-h-phone: 260px; }');
   });
 
+  it('long call-to-action buttons stay whole on narrow phones', () => {
+    expect(VIEW).toContain('.wbs-btn { display: inline-block; max-width: 100%;');
+    expect(VIEW).toContain('text-wrap: balance');
+    expect(VIEW).toContain('.wbs-close p { margin: 0; max-width: 100%; min-width: 0; }');
+    expect(VIEW).toContain('.wbs-sticky { display: flex; flex-wrap: wrap;');
+    const altAt = VIEW.indexOf('.wbs-sticky .wbs-alt');
+    expect(altAt).toBeGreaterThan(-1);
+    expect(VIEW.slice(altAt, VIEW.indexOf('}', altAt))).not.toContain('nowrap');
+  });
+
   it('the page is linked from the card, kept in the sitemap and listed in llms.txt', () => {
     expect(CARD).toContain("localizePath('/workbench/solutions', lang)");
     expect(LLMS).toContain('(https://univerlab.org/workbench/solutions/)');

@@ -28,7 +28,7 @@ export interface Env {
   WORKBENCH_CALENDAR_ID?: string;
   BOOKING_CONFIG?: string;
   GUARD_CONFIG?: string;
-  AGENDA_CONFIG?: string;
+  BOOKING_DIGEST_CONFIG?: string;
 }
 
 /** How long the agent waits for a burst of client messages before answering. */

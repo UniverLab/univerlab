@@ -1,8 +1,9 @@
 /**
  * The free-first-call booking section of the Workbench page (#first-call /
- * #primera-llamada): a form that lists the service's free slots and books
- * one, in both languages, with the WhatsApp line and the lab email as the
- * no-JS fallback.
+ * #primera-llamada). The service is not deployed, so by default the section
+ * offers WhatsApp and the lab email as its primary path; the form that lists
+ * the free slots and books one only renders when the build sets
+ * PUBLIC_BOOKING_LIVE=true.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -86,17 +87,46 @@ describe('workbench-book copy', () => {
 });
 
 describe('workbench-book view', () => {
-  it('the form starts hidden behind a visible WhatsApp and email fallback', () => {
+  /** The markup one branch renders, sliced at the `)}` that closes it. */
+  const branch = (marker: string): string => {
+    const start = VIEW.indexOf(marker);
+    expect(start).toBeGreaterThan(-1);
+    const end = VIEW.indexOf('\n      )}', start);
+    expect(end).toBeGreaterThan(start);
+    return VIEW.slice(start, end);
+  };
+
+  it('the booking form is gated on a deploy-time flag that defaults to off', () => {
+    expect(VIEW).toContain("const bookingLive = (import.meta.env.PUBLIC_BOOKING_LIVE || 'false') === 'true'");
+    const off = branch('{!bookingLive && (');
+    const on = branch('{bookingLive && (');
+    // Exactly one form and one widget, and both live inside the on branch: a
+    // copy outside the gate would render the form while the flag is off.
+    expect(VIEW.match(/id="book-form"/g)).toHaveLength(1);
+    expect(VIEW.match(/class="cf-turnstile"/g)).toHaveLength(1);
+    for (const tag of ['id="book-form"', 'class="cf-turnstile"', 'id="book-i18n"', 'bindBookForm(document)']) {
+      expect(on).toContain(tag);
+      expect(off).not.toContain(tag);
+    }
+  });
+
+  it('with the form off, WhatsApp and email are the primary booking path', () => {
     expect(VIEW).toContain('id="book-fallback"');
     expect(VIEW).not.toContain('id="book-fallback" hidden');
     expect(VIEW).toContain('https://wa.me/573053892323');
     expect(VIEW).toContain('mailto:');
     expect(VIEW).toContain('contactEmail');
-    expect(VIEW).toContain('id="book-form" hidden');
-    expect(VIEW).toContain('novalidate');
+    expect(en.book.fallbackTitle).toBe('Book your free call on WhatsApp or email:');
+    expect(en.book.fallbackText).toBe('Write to the lab and a person books your free call:');
+    expect(es.book.fallbackTitle).toBe('Agenda tu llamada gratis por WhatsApp o correo:');
+    expect(es.book.fallbackText).toBe('Escríbenos y una persona agenda tu llamada gratis:');
+    expect(en.book.fallbackText).not.toContain('cannot load');
+    expect(es.book.fallbackText).not.toContain('no carga');
   });
 
-  it('the Turnstile widget and the JSON copy island are wired', () => {
+  it('with the flag on, the form and Turnstile behaviour are unchanged', () => {
+    expect(VIEW).toContain('id="book-form" hidden');
+    expect(VIEW).toContain('novalidate');
     expect(VIEW).toContain('cf-turnstile');
     expect(VIEW).toContain('data-sitekey={sitekey}');
     expect(VIEW).toContain('id="book-i18n"');
@@ -107,7 +137,7 @@ describe('workbench-book view', () => {
   it('the service address and site key are build configuration with local defaults', () => {
     expect(VIEW).toContain('PUBLIC_BOOKING_API');
     expect(VIEW).toContain('PUBLIC_TURNSTILE_SITE_KEY');
-    expect(VIEW).toContain('https://agenda.univerlab.org');
+    expect(VIEW).toContain('https://booking.univerlab.org');
     expect(VIEW).toContain('1x00000000000000000000AA');
     expect(VIEW).toContain('data-api={api}');
     expect(VIEW).toContain('data-lang={lang}');

@@ -6,11 +6,11 @@ import { calendarCall } from './reservations';
 import { formatSlot } from './schedule';
 import { hashAddress } from './gate';
 import { nameBase, postNote } from './registry';
-import { changeLine, sameDayAfterAgenda } from './daybook';
+import { changeLine, sameDayAfterBookingDigest } from './daybook';
 
 /**
  * The public HTTP door to the free 15-minute first call, served at
- * `https://agenda.univerlab.org` next to the WhatsApp webhook: slot reads,
+ * `https://booking.univerlab.org` next to the WhatsApp webhook: slot reads,
  * Turnstile-guarded bookings and signed cancel links. It shares the one
  * serialized calendar owner and the same configuration and rules as the
  * agent's offers, and no text, voice or vision model is called anywhere in
@@ -19,13 +19,13 @@ import { changeLine, sameDayAfterAgenda } from './daybook';
  */
 
 const SITE = 'https://univerlab.org';
-const AGENDA = 'https://agenda.univerlab.org';
+const BOOKING_HOST = 'https://booking.univerlab.org';
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const CANCEL_HMAC_PREFIX = 'univerlab-cancel:';
 const MAX_BODY = 8192;
 const SLOTS_TTL_MS = 60000;
 
-export type AgendaReason =
+export type PublicBookingReason =
   | 'verification'
   | 'invalid'
   | 'slot-taken'
@@ -33,7 +33,7 @@ export type AgendaReason =
   | 'unavailable';
 
 /** Fixed refusal reasons; nothing is created in the calendar on a refusal. */
-function refused(reason: AgendaReason, status: number, origin: string | null): Response {
+function refused(reason: PublicBookingReason, status: number, origin: string | null): Response {
   return json({ ok: false, reason }, status, origin);
 }
 
@@ -337,14 +337,14 @@ async function handleBook(req: Request, env: Env, origin: string | null, ip: str
     conference: true,
     sendUpdates: 'all',
     summary: SERVICE_LABEL[fields.lang]['first-call'] + ' · ' + fields.name,
-    description: bookingDescription(fields, AGENDA + '/cancel?t=' + cancelToken),
+    description: bookingDescription(fields, BOOKING_HOST + '/cancel?t=' + cancelToken),
     startIso: fields.slot,
     now,
   });
   if (res.ok) {
-    // A web booking for a later day waits for that day's agenda; a
-    // same-day booking after the agenda went out still goes at once.
-    if (await sameDayAfterAgenda(env, fields.slot, now)) {
+    // A web booking for a later day waits for that day's booking digest; a
+    // same-day booking after the digest went out still goes at once.
+    if (await sameDayAfterBookingDigest(env, fields.slot, now)) {
       await postNote(env, {
         name: nameBase(fields.email),
         text: changeLine('Primera llamada agendada (web)', 'first-call', fields.slot, fields.name, true),
@@ -431,9 +431,9 @@ async function handleCancelPost(req: Request, env: Env, origin: string | null): 
   });
   if (res.ok) {
     const email = claim.k.startsWith('web:') ? claim.k.slice(4) : claim.k;
-    // A later-day web cancellation waits for that day's agenda; a
-    // same-day one after the agenda went out still goes at once.
-    if (await sameDayAfterAgenda(env, claim.s, now)) {
+    // A later-day web cancellation waits for that day's booking digest; a
+    // same-day one after the digest went out still goes at once.
+    if (await sameDayAfterBookingDigest(env, claim.s, now)) {
       await postNote(env, {
         name: nameBase(email),
         text: changeLine('Cita cancelada (web)', 'first-call', claim.s, claim.n, false),
@@ -459,11 +459,11 @@ async function handleCancelPost(req: Request, env: Env, origin: string | null): 
 }
 
 /**
- * Answer the public agenda routes, or null when this request is not one:
+ * Answer the public booking routes, or null when this request is not one:
  * the worker keeps serving the WhatsApp webhook and the health check, and
  * works when the WhatsApp secrets are missing or that side is failing.
  */
-export async function handleAgenda(req: Request, env: Env): Promise<Response | null> {
+export async function handlePublicBooking(req: Request, env: Env): Promise<Response | null> {
   const url = new URL(req.url);
   const path = url.pathname;
   if (path !== '/slots' && path !== '/book' && path !== '/cancel') return null;

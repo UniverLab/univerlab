@@ -938,42 +938,42 @@ test('exemptQuiet skips quiet hours but never away', async () => {
   expect(toOperator()).toEqual([]);
 });
 
-async function agenda(op: Operator, dateKey: string, text = 'Agenda de hoy (1):\n06:30 · Consultoría · Ana · pagada'): Promise<boolean> {
+async function bookingDigest(op: Operator, dateKey: string, text = 'Agenda de hoy (1):\n06:30 · Consultoría · Ana · pagada'): Promise<boolean> {
   const res = await op.fetch(
     new Request('https://registry/call', {
       method: 'POST',
-      body: JSON.stringify({ action: 'agenda', dateKey, text }),
+      body: JSON.stringify({ action: 'bookingDigest', dateKey, text }),
     })
   );
   return ((await res.json()) as { sent: boolean }).sent;
 }
 
-async function agendaSent(op: Operator, dateKey: string): Promise<boolean> {
+async function bookingDigestSent(op: Operator, dateKey: string): Promise<boolean> {
   const res = await op.fetch(
     new Request('https://registry/call', {
       method: 'POST',
-      body: JSON.stringify({ action: 'agendaSent', dateKey }),
+      body: JSON.stringify({ action: 'bookingDigestSent', dateKey }),
     })
   );
   return ((await res.json()) as { sent: boolean }).sent;
 }
 
-test('the agenda sends once in quiet hours, a retry sends nothing twice', async () => {
+test('the booking digest sends once in quiet hours, a retry sends nothing twice', async () => {
   const { ctx } = makeCtx();
   const env = makeEnv();
   const op = new Operator(ctx as never, env as never);
   jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
   (sendText as jest.Mock).mockClear();
 
-  await expect(agenda(op, '2026-01-05')).resolves.toBe(true);
-  expect(toOperator()).toEqual(['[agenda] AGENDA · normal\nAgenda de hoy (1):\n06:30 · Consultoría · Ana · pagada']);
-  await expect(agendaSent(op, '2026-01-05')).resolves.toBe(true);
+  await expect(bookingDigest(op, '2026-01-05')).resolves.toBe(true);
+  expect(toOperator()).toEqual(['[booking-digest] AGENDA · normal\nAgenda de hoy (1):\n06:30 · Consultoría · Ana · pagada']);
+  await expect(bookingDigestSent(op, '2026-01-05')).resolves.toBe(true);
 
-  await expect(agenda(op, '2026-01-05')).resolves.toBe(false);
+  await expect(bookingDigest(op, '2026-01-05')).resolves.toBe(false);
   expect(toOperator()).toHaveLength(1);
 });
 
-test('the agenda waits while away and goes out on /active', async () => {
+test('the booking digest waits while away and goes out on /active', async () => {
   const { ctx } = makeCtx();
   const env = makeEnv();
   const op = new Operator(ctx as never, env as never);
@@ -981,23 +981,23 @@ test('the agenda waits while away and goes out on /active', async () => {
   await op.command(opMsg({ text: '/afk' }));
   (sendText as jest.Mock).mockClear();
 
-  await expect(agenda(op, '2026-01-05')).resolves.toBe(true);
+  await expect(bookingDigest(op, '2026-01-05')).resolves.toBe(true);
   expect(toOperator()).toEqual([]);
 
   await op.command(opMsg({ text: '/active' }));
   expect(toOperator().some((t) => t.includes('Agenda de hoy'))).toBe(true);
 });
 
-test('a quiet day marks the agenda as handled without sending anything', async () => {
+test('a quiet day marks the digest as handled without sending anything', async () => {
   const { ctx } = makeCtx();
   const env = makeEnv();
   const op = new Operator(ctx as never, env as never);
   jest.spyOn(Date, 'now').mockReturnValue(NIGHT);
   (sendText as jest.Mock).mockClear();
 
-  await expect(agenda(op, '2026-01-05', '')).resolves.toBe(false);
+  await expect(bookingDigest(op, '2026-01-05', '')).resolves.toBe(false);
   expect(toOperator()).toEqual([]);
-  await expect(agendaSent(op, '2026-01-05')).resolves.toBe(true);
+  await expect(bookingDigestSent(op, '2026-01-05')).resolves.toBe(true);
 });
 
 function siteState(seed: Record<string, string> = {}) {

@@ -598,7 +598,7 @@ test('the day read keeps only the events starting today, from midnight', async (
   const store = makeStore();
   const cal = makeCal(store);
   // Monday 2026-11-09 12:00 Bogota and the next morning: only the first
-  // starts today, so the agenda lists exactly that one.
+  // starts today, so the digest lists exactly that one.
   calEvents.push(
     { id: 'today', summary: 'Consultoría · Ana', start: '2026-11-09T17:00:00.000Z', end: '2026-11-09T18:00:00.000Z' },
     { id: 'tomorrow', summary: 'Consultoría · Bea', start: '2026-11-10T17:00:00.000Z', end: '2026-11-10T18:00:00.000Z' }

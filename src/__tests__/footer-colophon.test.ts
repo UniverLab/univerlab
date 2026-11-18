@@ -551,4 +551,12 @@ describe('Footer — the logbook replaces GitHub in the work column', () => {
     expect(src).toContain('.foot-group { display: grid; gap: 0.25rem;');
     expect(src).toMatch(/\.foot-nav a\s*\{[^}]*min-height:\s*32px/s);
   });
+
+  it('the colophon never forces horizontal scroll on narrow phones', () => {
+    expect(src).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(src).toContain('.colophon > * { min-width: 0; max-width: 100%; }');
+    const iconAt = src.indexOf('.icon-row {');
+    expect(iconAt).toBeGreaterThan(-1);
+    expect(src.slice(iconAt, src.indexOf('}', iconAt))).toContain('flex-wrap: wrap');
+  });
 });

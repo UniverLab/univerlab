@@ -8,7 +8,9 @@ import { experiments } from '../lib/experiments';
 import '../styles/mail.css';
 
 const lang = getLang(Astro.url);
-const copy = useTranslations(lang).header.mailbox;
+const t = useTranslations(lang);
+// The lab letter's postscript names its kind in the page's language.
+const copy = { ...t.header.mailbox, types: t.today.logbook.types };
 
 // What a lab letter needs at runtime: identity, number and essence colour.
 const exps = experiments.map((e) => ({
