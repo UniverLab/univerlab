@@ -399,4 +399,15 @@ describe('workbench', () => {
     expect(VIEW.indexOf('<style is:inline')).toBeGreaterThan(-1);
     expect(VIEW.indexOf('<style is:inline')).toBeLessThan(VIEW.indexOf('</BaseLayout>'));
   });
+
+  it('long call-to-action buttons stay whole on narrow phones', () => {
+    expect(VIEW).toContain('.wb-btn { display: inline-block; max-width: 100%;');
+    expect(VIEW).toContain('.book-btn { display: inline-block; max-width: 100%;');
+    expect(VIEW).toContain('text-wrap: balance');
+    expect(VIEW).toContain('.wb-close p { margin: 0; max-width: 100%; min-width: 0; }');
+    expect(VIEW).toContain('.wb-sticky { display: flex; flex-wrap: wrap;');
+    const altAt = VIEW.indexOf('.wb-sticky .wb-alt');
+    expect(altAt).toBeGreaterThan(-1);
+    expect(VIEW.slice(altAt, VIEW.indexOf('}', altAt))).not.toContain('nowrap');
+  });
 });
