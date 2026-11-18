@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
-import { editionDate, editionDateFor, editionDateWords, todayAside, todayLead } from '../lib/today-edition';
+import { editionDate, editionDateFor, editionDateWords, todayLead } from '../lib/today-edition';
 import { buildPool } from '../lib/science-filter';
 
 const FIX = JSON.parse(
@@ -139,7 +139,7 @@ describe('middleware — /newspaper/ HTML', () => {
     const facts = buildPool(FIX, 'en');
     expect(inner).toContain('class="dateline"');
     expect(inner.match(/class="item/g) ?? []).toHaveLength(
-      facts.length - 1 - todayAside(facts, todayLead(facts, editionDate())).length,
+      facts.length - (todayLead(facts, editionDate()) ? 1 : 0),
     );
     expect(inner).toContain('<h3>Births</h3>');
     // Page 2 reads from the same fetch: with no lab news it stays empty.

@@ -144,17 +144,18 @@ describe('todayEditionHtml (en)', () => {
     // ...and it is printed once, not repeated as the drop-capped body.
     expect(html.split(story)).toHaveLength(2);
     expect(html).not.toContain('class="dropcap"');
-    // The lead is an event, and events never print photos: its block
-    // carries no figure and no caption at all.
-    const leadStart = html.indexOf('<article class="lead">');
+    // The lead is an event without a picture: its block carries no figure
+    // and no caption, and says so in its class (the words take the width).
+    const leadStart = html.indexOf('<article class="lead');
     const leadBlock = html.slice(leadStart, html.indexOf('</article>', leadStart));
-    expect(leadBlock.indexOf('<article class="lead">')).toBe(0);
+    expect(leadBlock.indexOf('<article class="lead lead--text">')).toBe(0);
     expect(leadBlock).not.toContain('<img');
     expect(leadBlock).not.toContain('figcaption');
-    // The lead's own letter columns wait empty inside the story: the client
-    // fit moves whole column sections here so the space under the lead
-    // story fills with letters, not blank paper.
-    expect(leadBlock.endsWith('<div class="lead-cols"></div></div>')).toBe(true);
+    // The kicker, the headline and the text are one block of words; no
+    // letter columns hide inside the lead any more.
+    expect(leadBlock).toContain('<div class="lead-main"><p class="kicker">');
+    expect(leadBlock).toContain('<div class="lead-text">');
+    expect(leadBlock).not.toContain('lead-cols');
     // Nobel's photo moved down to the Births column: lazy, uncaptioned.
     expect(html).toContain(NOBEL_IMG);
     const tag = html.slice(html.indexOf(NOBEL_IMG), html.indexOf(NOBEL_IMG) + 200);
@@ -162,40 +163,40 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('Alfred Nobel · Wikimedia Commons');
   });
 
-  it('fills the side column with every non-lead event, oldest first', () => {
-    const at = html.indexOf('<aside class="also">');
-    const aside = html.slice(at, html.indexOf('</aside>', at));
-    expect(aside).toContain('1638');
-    expect(aside).toContain('1879');
-    expect(aside).toContain('1907');
-    expect(aside.indexOf('1638')).toBeLessThan(aside.indexOf('1879'));
-    expect(aside.indexOf('1879')).toBeLessThan(aside.indexOf('1907'));
-    // The 1879 portrait prints at the side column's own size; nothing in the
-    // side column outranks the lead's engraving or shrinks to a stamp.
-    expect(aside).toContain('photo--medium');
-    expect(aside).not.toContain('photo--lead');
-    expect(aside).not.toContain('photo--event');
-    expect(aside).not.toContain('photo--stamp');
+  it('opens the columns with every non-lead event, oldest first', () => {
+    const at = html.indexOf('<div class="cols"');
+    const cols = html.slice(at);
+    const events = cols.slice(cols.indexOf('<h3>Events</h3>'), cols.indexOf('<h3>Births'));
+    expect(events).toContain('1638');
+    expect(events).toContain('1879');
+    expect(events).toContain('1907');
+    expect(events.indexOf('1638')).toBeLessThan(events.indexOf('1879'));
+    expect(events.indexOf('1879')).toBeLessThan(events.indexOf('1907'));
+    // The 1879 portrait prints at an event letter's size, never the lead's.
+    expect(events).toContain('photo--event');
+    expect(events).not.toContain('photo--lead');
     // One sentence of body under each event, never the whole summary.
-    for (const m of aside.matchAll(/<p class="aside-body">(.*?)<\/p>/g)) {
+    for (const m of events.matchAll(/<p class="body">(.*?)<\/p>/g)) {
       expect(m[1]).not.toMatch(/[.?!…] .*$/);
     }
+    // No side rail: nothing stands beside the lead to leave a hole under it.
+    expect(html).not.toContain('class="rail"');
+    expect(html).not.toContain('class="also"');
   });
 
-  it('lists every other fact once: events in the rail, births and deaths in the columns', () => {
-    expect(countItems(html)).toBe(FACTS.length - 1 - todayAside(FACTS, todayLead(FACTS, DATE)).length);
-    // The rail took every non-lead event, so the columns open on births:
-    // no event prints twice and no birth prints before an event.
-    expect(html).not.toContain('<h3>Events</h3>');
-    expect(html).toContain('<h3>Births</h3>');
-    expect(html).toContain('<h3>Deaths</h3>');
-    const railAt = html.indexOf('<div class="rail">');
-    const colsAt = html.indexOf('<div class="cols">');
-    expect(railAt).toBeGreaterThan(-1);
-    expect(colsAt).toBeGreaterThan(railAt);
-    // Capitalized text and a Wikipedia link per item.
+  it('lists every other fact once, in reading order: events, births, deaths', () => {
+    expect(countItems(html)).toBe(FACTS.length - 1);
+    const ev = html.indexOf('<h3>Events</h3>');
+    const born = html.indexOf('<h3>Births');
+    const died = html.indexOf('<h3>Deaths');
+    expect(ev).toBeGreaterThan(html.indexOf('<div class="cols"'));
+    expect(born).toBeGreaterThan(ev);
+    expect(died).toBeGreaterThan(born);
+    // Each letter carries its place in the reading order for the client fit.
+    const order = [...html.matchAll(/class="item[^"]*" data-kind="\w+" data-i="(\d+)"/g)].map((m) => Number(m[1]));
+    expect([...order].sort((a, b) => a - b)).toEqual(order.map((_, i) => i));
+    // Capitalized text in the columns.
     expect(html).toContain('Thomas Edison invents a practical incandescent lamp');
-    expect(html.indexOf('Thomas Edison invents a practical incandescent lamp')).toBeLessThan(colsAt);
   });
 
   it('a letter beside the lead is not printed again in the columns', () => {
@@ -218,7 +219,7 @@ describe('todayEditionHtml (en)', () => {
     }
   });
 
-  it('an events-only day fills the rail and prints no column', () => {
+  it('an events-only day prints its events in the columns', () => {
     const events: Fact[] = ['1901', '1912', '1923', '1934'].map((year) => ({
       year,
       text: `event of ${year} happened here`,
@@ -226,18 +227,18 @@ describe('todayEditionHtml (en)', () => {
       kind: 'event',
       page: '',
     }));
-    // One leads, the other three stand aside in the rail: nothing lower
-    // stays to fill a column, so the page carries no columns at all.
+    // One leads, the other three read in the columns under it; a day of
+    // one event is all lead and prints no column.
     const four = todayEditionHtml({ facts: events, lab: [] }, 'en', DATE);
-    expect(four).toContain('<div class="rail">');
-    expect((four.match(/<div class="aside-item/g) ?? [])).toHaveLength(3);
-    expect(four).not.toContain('<div class="cols">');
+    expect(four).not.toContain('class="rail"');
+    expect(four).toContain('<div class="cols"');
+    expect(countItems(four)).toBe(3);
     const one = todayEditionHtml({ facts: events.slice(0, 1), lab: [] }, 'en', DATE);
-    expect(one).not.toContain('<div class="cols">');
+    expect(one).not.toContain('<div class="cols"');
   });
 
   it('a column prints its head whole and leaves out the rest: the sheet fits, the twin keeps all', () => {
-    const births: Fact[] = Array.from({ length: 9 }, (_, i) => ({
+    const births: Fact[] = Array.from({ length: 12 }, (_, i) => ({
       year: String(1800 + i),
       text: `notable person ${i} was born`,
       link: '',
@@ -252,10 +253,10 @@ describe('todayEditionHtml (en)', () => {
     expect(html).not.toContain('Show 3 more');
     const cols = [...html.matchAll(/<section class="col">([\s\S]*?)<\/section>/g)];
     expect(cols).toHaveLength(1);
-    expect((cols[0][1].match(/class="item/g) ?? [])).toHaveLength(6);
+    expect((cols[0][1].match(/class="item/g) ?? [])).toHaveLength(9);
     // The letters left out of the page are all still in the twin.
     const md = todayEditionMarkdown({ facts: births, lab: [] }, 'en', DATE);
-    expect(md.match(/^- \*\*/gm)).toHaveLength(9);
+    expect(md.match(/^- \*\*/gm)).toHaveLength(12);
     for (const b of births) expect(md).toContain(`- **${b.year}**`);
   });
 
@@ -283,7 +284,7 @@ describe('todayEditionHtml (en)', () => {
     // the columns — no closing row, no second Workbench anywhere.
     const front = bare.slice(bare.indexOf('<div class="front">'));
     expect(front).not.toContain('<div class="rail">');
-    const order = ['notice--feature', '<div class="cols">'].map((m) => front.indexOf(m));
+    const order = ['notice--feature', '<div class="cols"'].map((m) => front.indexOf(m));
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(front).not.toContain('class="notice notice--tall"');
@@ -297,9 +298,8 @@ describe('todayEditionHtml (en)', () => {
     expect(countItems(bare)).toBe(noEvents.length);
   });
 
-  it('prints every rail event photo at the side column size, lazily', () => {
-    // 1879 carries a Commons portrait but sits sidelined, so the column
-    // proof uses letters of its own: one event per column slot.
+  it('prints every column event photo at the event size, lazily', () => {
+    // The column proof uses letters of its own: one event per column slot.
     const ev = (year: string): Fact => ({
       year,
       text: `something happened in ${year}`,
@@ -313,13 +313,11 @@ describe('todayEditionHtml (en)', () => {
       'en',
       DATE,
     );
-    // Six letters: one leads, five stand aside in the rail — every rail
-    // event prints its photo at the side column's size, lazily, and no
-    // event reaches the columns.
-    expect((col.match(/<div class="aside-item has-photo"/g) ?? [])).toHaveLength(5);
-    expect(col).toContain('photo--medium');
-    expect(col).not.toContain('photo--event');
-    expect(col).not.toContain('<div class="cols">');
+    // Six letters: one leads, five read in the columns — every column event
+    // prints its photo at the event size, lazily.
+    expect((col.match(/<article class="item has-photo item--event"/g) ?? [])).toHaveLength(5);
+    expect(col).not.toContain('photo--medium');
+    expect(col).toContain('<div class="cols"');
     expect(col).toContain('loading="lazy"');
   });
 
@@ -350,11 +348,10 @@ describe('todayEditionHtml (es)', () => {
   it('speaks Spanish: masthead copy lives in the component, edition copy here', () => {
     expect(html).toContain('Carta del día');
     expect(html).toContain('Carta del día · hace ');
-    // The rail took every event, so the columns open on births: the events
-    // read beside the lead, not under their own heading.
-    expect(html).not.toContain('<h3>Acontecimientos</h3>');
-    expect(html).toContain('<h3>Nacimientos</h3>');
-    expect(html).toContain('<h3>Defunciones</h3>');
+    // The columns open on the day's other events, then births and deaths.
+    expect(html).toContain('<h3>Acontecimientos</h3>');
+    expect(html).toContain('<h3>Nacimientos');
+    expect(html).toContain('<h3>Defunciones');
     expect(html).toContain('Correo del laboratorio · hoy · Quorum · lanzamiento');
     expect(html).toContain('<a href="/es/newspaper/#lab">Leer el anuncio completo →</a>');
     expect(html).toContain('Wikipedia →');
@@ -515,22 +512,18 @@ describe('the lab notices', () => {
     const leadStart = full.indexOf('<article class="lead');
     expect(leadStart).toBeGreaterThan(-1);
     expect(full.slice(leadStart, full.indexOf('</article>', leadStart))).not.toContain('class="notice');
-    // The front runs rail, feature, columns: the side column beside the
-    // lead, the single Workbench display under them, the house notices
-    // footing the short columns — never a row below them.
+    // The front runs lead, feature, columns: the single Workbench display
+    // under the lead, the house notices waiting for the columns' feet.
     const front = full.slice(full.indexOf('<div class="front">'));
-    const order = ['<div class="rail">', 'class="notice notice--feature"', '<div class="cols">'].map((m) =>
+    const order = ['<article class="lead', 'class="notice notice--feature"', '<div class="cols"'].map((m) =>
       front.indexOf(m),
     );
     for (const at of order) expect(at).toBeGreaterThan(-1);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(full).not.toContain('<div class="notice-pair">');
     expect(full).not.toContain('class="notice notice--tall"');
-    // The rail holds only the side column, never a sized band and never an
-    // notice: no rail carries an inline row count.
-    expect(full).toContain('<div class="rail">');
-    expect(full.indexOf('<aside class="also">')).toBeGreaterThan(full.indexOf('<div class="rail"'));
-    expect(full).not.toContain('rail" style=');
+    // No rail at all: nothing stands beside the lead.
+    expect(full).not.toContain('class="rail"');
     // Every notice is a display notice: a large display line, copy and a boxed
     // call to action that closes the notice.
     for (const m of full.matchAll(/<aside class="notice notice--\w+"[^>]*>(.*?)<\/aside>/gs)) {
@@ -710,5 +703,43 @@ describe('editionDateFor', () => {
     expect(editionDateFor('?d=11-09', NOW)).toEqual(today());
     expect(editionDateFor('?d=2026-02-30', NOW)).toEqual(today());
     expect(editionDateFor('?d=abc', NOW)).toEqual(today());
+  });
+});
+
+describe('the front page prints what its data carries, and no more', () => {
+  it('sizes every picture by its own ratio, so a failed load keeps the fitted box', () => {
+    // The letters' pictures; the waiting plate carries its ratio in the
+    // stylesheet.
+    const html = todayEditionHtml(feed(), 'en', DATE).replace(/<template[\s\S]*?<\/template>/g, '');
+    expect(html).toContain('<img ');
+    for (const m of html.matchAll(/<img [^>]*width="(\d+)" height="(\d+)"[^>]*>/g)) {
+      expect(m[0]).toContain(`style="aspect-ratio:${m[1]}/${m[2]}"`);
+    }
+    // A thumb without dims guesses no ratio.
+    const bare: Fact = { year: '1945', text: 'something happened', link: '', kind: 'event', page: 'Event', thumb: { src: 'https://upload.wikimedia.org/x.jpg' } };
+    expect(todayEditionHtml({ facts: [bare], lab: [] }, 'en', DATE)).not.toContain('aspect-ratio');
+  });
+
+  it('captions the lead photo with its page, and prints no caption without one', () => {
+    const named: Fact = { year: '1945', text: 'a photo with a name', link: '', kind: 'event', page: 'Named', thumb: { src: 'https://upload.wikimedia.org/n.jpg', w: 300, h: 400 } };
+    const withName = todayEditionHtml({ facts: [named], lab: [] }, 'en', DATE);
+    expect(withName).toContain('<figcaption>Named · Wikimedia Commons</figcaption>');
+    expect(withName).toContain('alt="Named"');
+    const anonymous = { ...named, page: '' };
+    const without = todayEditionHtml({ facts: [anonymous], lab: [] }, 'en', DATE);
+    expect(without).toContain('<figure class="photo photo--lead photo--lead--portrait">');
+    expect(without).not.toContain('<figcaption>');
+    expect(without).toContain('alt=""');
+  });
+
+  it('boxes only the lab entries dated on the edition day, ignoring undated ones', () => {
+    const lab = [
+      { ...feed().lab[0], id: 'undated', date: '' },
+      { ...feed().lab[0], id: 'today-untyped', type: null, topic: null },
+    ];
+    const html = todayEditionHtml({ facts: [], lab }, 'en', DATE);
+    // The untyped, unfiled box keeps only the lab's own kicker.
+    expect(html).toContain('<p class="kicker">Lab mail · today</p>');
+    expect(todayEditionHtml({ facts: [], lab: null as unknown as [] }, 'en', DATE)).not.toContain('class="labmail"');
   });
 });

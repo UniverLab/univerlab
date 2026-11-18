@@ -40,16 +40,14 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).not.toContain('var(--bench-c-slate)');
   });
 
-  it('lays the front out as three columns with the lead spanning two', () => {
-    // The lead takes two of the three columns with the rail beside it; the
-    // lab mail, the feature notice and the columns span them all, and the house
-    // notices foot the short columns instead of a row below them. No rail
-    // is ever sized by the renderer, so no band is left empty.
-    expect(css).toMatch(/\.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
-    expect(css).toMatch(/\.paper \.front \.lead \{[^}]*grid-column:\s*1 \/ span 2/);
-    expect(css).toMatch(/\.paper \.front \.rail \{[^}]*grid-column:\s*3/);
-    expect(css).toContain('grid-column: 1 / -1;');
+  it('lays the front out as one stack: the lead across, the columns under it', () => {
+    // No side rail: the lead runs across the front and every other block
+    // (lab mail, feature notice, columns) stacks under it, so nothing beside
+    // the lead can end short of it and leave a hole.
+    expect(css).toMatch(/\.paper \.front \{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+    expect(css).not.toContain('.rail');
     expect(css).not.toContain('rail-rows');
+    expect(css).not.toContain('lead-cols');
     // The columns are as many as the day prints — one, two or three — never
     // a fixed three-track grid that would leave blank paper beside a short
     // band.
@@ -58,60 +56,30 @@ describe("today's paper styles stay on the paper", () => {
     );
   });
 
-  it('keeps the lead story at content height', () => {
-    // The story wraps its own words: no stretched box pulls a band of
-    // blank paper between the banner and the letters. The rail still
-    // matches the lead's height, and the pictures scale down to make
-    // room — never cropped out of the sheet.
-    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*block[^}]*height:\s*auto/);
-    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*min-height:\s*14rem/);
-    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*max-height:\s*36rem/);
-    // The portrait stands in a mat that hugs it: a lead photo narrower than
-    // the column must not sit in a column-wide empty frame.
-    expect(css).toMatch(/\.paper \.photo--lead \{[^}]*align-self:\s*center/);
-    expect(css).toMatch(/\.paper \.photo--lead \.print \{[^}]*flex:\s*0 0 auto/);
-    expect(css).toMatch(/\.paper \.photo--lead \.print \{[^}]*align-self:\s*center/);
-    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*width:\s*auto/);
-    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*max-height:\s*34rem/);
-    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*object-fit:\s*contain/);
-    expect(css).toMatch(/\.paper \.photo--medium img \{[^}]*max-height:\s*100%/);
-    expect(css).toMatch(/\.paper \.rail \{[^}]*height:\s*100%/);
-    expect(css).toContain('.paper .photo--medium');
+  it('sets the lead photo beside the lead\'s words, sized by the fit', () => {
+    // Two tracks on a wide sheet: the words take the rest, the photo its
+    // own width, one gutter apart; the mat hugs the picture.
+    expect(css).toMatch(/\.paper \.lead:not\(\.lead--text\) \{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto/);
+    expect(css).toMatch(/\.paper \.lead \{[^}]*gap:\s*12px 24px/);
+    expect(css).toMatch(/\.paper \.photo--lead img \{[^}]*width:\s*100%[^}]*height:\s*auto/);
+    // The text sets in the page's own columns, ruled like the letters.
+    expect(css).toMatch(/\.paper \.lead-text \{[^}]*column-width:\s*17rem[^}]*column-gap:\s*32px[^}]*column-rule:\s*1px solid/);
+    // The site's reading measure never caps a paragraph inside the sheet.
+    expect(css).toMatch(/\.paper \.front p \{[^}]*max-width:\s*none/);
+    // No float, no centred span: the old side-photo rules are gone.
+    expect(css).not.toMatch(/photo--lead--portrait[^{]*\{[^}]*float:\s*right/);
   });
 
-  it('sets a portrait or square lead photo to one side with the text beside it', () => {
-    // A portrait or square lead photo floats right of the lead's text at a
-    // bounded width, like a newspaper lead — never centred with empty
-    // margins on both sides. The story is a block flow so the text wraps
-    // beside the float; landscape photos keep the centred span.
-    expect(css).toMatch(
-      /\.paper \.photo--lead--portrait, \.paper \.photo--lead--square \{[^}]*float:\s*right[^}]*width:\s*min\(16rem, 40%\)/,
-    );
-    expect(css).toMatch(/\.paper \.lead \.story \{[^}]*display:\s*block/);
-    expect(css).toContain('margin-inline: 0');
+  it('puts the headline across the lead when the fit asks for it', () => {
+    expect(css).toMatch(/\.paper \.lead\.lead--across \.lead-main \{[^}]*display:\s*contents/);
+    expect(css).toMatch(/\.paper \.lead\.lead--across \.kicker, \.paper \.lead\.lead--across h2 \{[^}]*grid-column:\s*1 \/ -1/);
+    expect(css).toMatch(/\.paper \.lead\.lead--across \.photo--lead \{[^}]*grid-column:\s*2[^}]*grid-row:\s*3/);
   });
 
-  it('floats a portrait or square lead photo on the scaled sheet', () => {
+  it('keeps the two-track lead on the scaled sheet, outside any media query', () => {
     // Phones draw the same scaled sheet as desktop, so the sheet carries
-    // its own copy of the float rules outside the 48rem query — never a
-    // centred photo with blank margins on both sides.
-    const sheetBlock = css.slice(
-      css.indexOf('.paper-viewport.sheet .paper { padding'),
-      css.indexOf('.paper .today-loading'),
-    );
-    expect(sheetBlock).toMatch(
-      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait, \.paper-viewport\.sheet \.paper \.photo--lead--square \{[^}]*float:\s*right[^}]*max-width:\s*min\(16rem, 40%\)[^}]*width:\s*fit-content[^}]*min-height:\s*0/,
-    );
-    expect(sheetBlock).toMatch(
-      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait img, \.paper-viewport\.sheet \.paper \.photo--lead--square img \{[^}]*margin-inline:\s*0/,
-    );
-    expect(sheetBlock).toMatch(
-      /\.paper-viewport\.sheet \.paper \.photo--lead--portrait figcaption, \.paper-viewport\.sheet \.paper \.photo--lead--square figcaption \{[^}]*width:\s*0[^}]*min-width:\s*100%/,
-    );
-    // It has to reach the phone: nested in any @media block the rule is keyed
-    // to viewport width again, which is the defect this fixes. Depth counts
-    // the braces opened before the rule, so 0 is the stylesheet's own level.
-    const at = css.indexOf('.paper-viewport.sheet .paper .photo--lead--portrait,');
+    // its own copy of the lead's two tracks outside the 48rem query.
+    const at = css.indexOf('.paper-viewport.sheet .paper .lead:not(.lead--text) {');
     expect(at).toBeGreaterThan(0);
     let depth = 0;
     for (const ch of css.slice(0, at)) {
@@ -119,18 +87,6 @@ describe("today's paper styles stay on the paper", () => {
       else if (ch === '}') depth -= 1;
     }
     expect(depth).toBe(0);
-  });
-
-  it('stacks a lead photo across a reflowed column', () => {
-    // Without the sheet (pre-JS reflow) a stacked lead photo spans the
-    // column width instead of centring with side margins.
-    const narrow = css.slice(css.lastIndexOf('@media (max-width: 47.99rem)'));
-    expect(narrow).toMatch(
-      /\.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--portrait \.print, \.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--square \.print \{[^}]*align-self:\s*stretch/,
-    );
-    expect(narrow).toMatch(
-      /\.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--portrait img, \.paper-viewport:not\(\.sheet\) \.paper \.photo--lead--square img \{[^}]*width:\s*100%/,
-    );
   });
 
   it('never spreads free space into bands', () => {
@@ -151,17 +107,15 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).not.toMatch(/\.paper \.item \.body \{[^}]*italic/);
   });
 
-  it('sizes pictures by weight: lead spanning, stamps small', () => {
-    expect(css).toMatch(/\.paper \.item\.has-photo \{[^}]*grid-template-columns:\s*38%/);
-    expect(css).toMatch(
-      /\.paper \.item\.has-photo\.item--stamp \{[^}]*grid-template-columns:\s*56px/,
-    );
+  it('sizes pictures by weight: events a share of the column, stamps small', () => {
+    expect(css).toMatch(/\.paper \.item\.has-photo \.photo \{[^}]*float:\s*left[^}]*width:\s*38%/);
+    expect(css).toMatch(/\.paper \.item\.has-photo\.item--stamp \.photo \{[^}]*width:\s*56px/);
   });
 
   it('sets the ads as period display notices, the feature across three', () => {
     expect(css).toMatch(/\.paper aside\.notice \{[^}]*border:\s*3px double/);
     expect(css).toContain('clamp(26px, 3.4vw, 40px)');
-    expect(css).toMatch(/\.paper \.notice--feature \{[^}]*grid-template-columns:\s*1\.2fr 1\.5fr 1fr/);
+    expect(css).toMatch(/\.paper \.notice--feature, \.paper \.front > aside\.notice--wide \{[^}]*grid-template-columns:\s*1\.2fr 1\.5fr 1fr/);
     expect(css).toMatch(/\.paper aside\.notice \.notice-close \{[^}]*border-top:\s*3px double/);
   });
 
@@ -219,10 +173,13 @@ describe("today's paper styles stay on the paper", () => {
     expect(css).not.toMatch(/\.lab-head \.head-cartouche > \.lab-heading \{[^}]*position:\s*static/);
   });
 
-  it('keeps the item photo at its own size: the frame never stretches with the entry', () => {
-    // A long event body must not pull a tall grey mat below the photo: the
-    // figure sits at the start of its grid area, so the halftone frame wraps
-    // only the image — the same fixed portrait births and deaths print.
-    expect(css).toMatch(/\.paper \.item\.has-photo \.photo \{[^}]*align-self:\s*start/);
+  it('keeps the item photo at its own size: the text runs on under it', () => {
+    // A long event body must not leave blank paper under a small photo:
+    // the photo floats in the letter's flow, so the words wrap beside it
+    // and on under it, and the frame wraps only the image.
+    expect(css).toMatch(/\.paper \.item \{[^}]*display:\s*flow-root/);
+    expect(css).toMatch(/\.paper \.item\.has-photo \.photo \{[^}]*float:\s*left/);
+    // A picture that fails to load keeps the box the page was fitted with.
+    expect(css).toMatch(/\.paper \.photo img \{[^}]*min-height:\s*0[^}]*overflow:\s*hidden/);
   });
 });

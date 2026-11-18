@@ -15,7 +15,7 @@
 export const FIT_LINE = 1;
 
 /** Letters per column at most, the head the server renders (no fold). */
-export const HEAD_LIMIT = 6;
+export const HEAD_LIMIT = 9;
 
 /** A column of whole letters with its parallel estimate weights. */
 export function balanceHeads<T>(
@@ -57,8 +57,8 @@ export function balanceHeads<T>(
   return moves;
 }
 
-/** Whole letters only: the lead, the rail and the Workbench display live
- *  outside `.cols` and are never passed here, so never trimmed or moved. */
+/** Whole letters only: the lead, the lab story and the Workbench display
+ *  live outside `.cols` and are never passed here, so never trimmed or moved. */
 function isLetter(el: Element): boolean {
   return el.tagName === 'ARTICLE' && el.classList.contains('item');
 }
@@ -73,9 +73,7 @@ function isFiller(el: Element): boolean {
 function lastLetter(col: Element): Element | null {
   const kids = Array.from(col.children);
   for (let i = kids.length - 1; i >= 0; i--) {
-    // A rail story the balance moved in is a letter too: it trims, balances
-    // and keeps its column alive exactly like an article.item does.
-    if (isLetter(kids[i]) || kids[i].classList.contains('aside-item')) return kids[i];
+    if (isLetter(kids[i])) return kids[i];
   }
   return null;
 }
@@ -102,11 +100,6 @@ function bodyLinePx(col: Element): number {
   const fs = Number.parseFloat(globalThis.getComputedStyle?.(col)?.fontSize || '');
   return Number.isFinite(fs) && fs > 0 ? fs * 1.5 : 24;
 }
-
-/** The smallest a fitted photo may shrink to, in layout pixels: the lead
- *  clamp and the flooring-row shrink below both stop here, so a picture
- *  never collapses to a stamp while room remains elsewhere. */
-const PHOTO_FLOOR_PX = 192;
 
 /** The sheet's display scale. Below the desktop breakpoint the sheet is shown
  *  through a CSS transform, so a rect is a visual pixel and a style length is a
@@ -139,13 +132,14 @@ function sheetLimit(edition: Element): number {
   } catch {
     gap = 0;
   }
-  // The colophon keeps its own line of air: reserve its height, one body
-  // line and the grid's row gap, so the foot never clips it past the sheet.
+  // The colophon closes the page inside the paper's own margin: reserve its
+  // height, the grid's row gap and the paper's bottom padding (and two
+  // pixels for rounding), so the foot never pushes it past the sheet.
   // Rects are visual pixels while a style length is a layout one: on a
-  // transform-scaled sheet the line and the gap scale with the display.
-  const line = bodyLinePx(edition);
+  // transform-scaled sheet the gap and the padding scale with the display.
+  const pad = Number.parseFloat(globalThis.getComputedStyle?.(paper as Element)?.paddingBottom || '') || 0;
   const scale = sheetScale(edition);
-  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + line * scale + gap * scale;
+  const total = (Number.isFinite(reserve) && reserve > 0 ? reserve : 0) + (pad + 2) * scale + gap * scale;
   return bottom - (total > 0 ? total : 0);
 }
 
@@ -235,78 +229,9 @@ function rehead(col: Element, labels: Map<string, HeadLabel>, openKind: string |
   return lastKind;
 }
 
-/** Move whole letters from the tallest column's foot to the shortest
- *  column's foot until the columns end within one body line of each other.
- *  Headings are re-issued afterwards, never mid-move. */
-export function balanceColumns(cols: Element[]): number {
-  if (cols.length < 2) return 0;
-  const limit = (() => {
-    let top = 0;
-    for (const col of cols) {
-      const b = rectBottom(col);
-      if (b > top) top = b;
-    }
-    return top;
-  })();
-  if (limit <= 0) return 0;
-  const labels = headingLabels(cols);
-  // Rects are visual pixels while an offset height is a layout one: scale
-  // both the body line and the moved letter with the sheet, or a scaled
-  // sheet under-balances — the move reads bigger than it is and the guard
-  // below stops early, leaving a wasted band beside letters still to print.
-  const scale = sheetScale(cols[0]);
-  const line = Math.max(...cols.map(bodyLinePx), 1) * scale;
-  let moves = 0;
-  for (let guard = 0; guard < 500; guard++) {
-    const bottoms = cols.map(rectBottom);
-    let hi = 0;
-    let lo = 0;
-    for (let i = 1; i < bottoms.length; i++) {
-      if (bottoms[i] > bottoms[hi]) hi = i;
-      if (bottoms[i] < bottoms[lo]) lo = i;
-    }
-    if (hi === lo || bottoms[hi] - bottoms[lo] <= line) break;
-    const item = lastLetter(cols[hi]);
-    if (!item) break;
-    const h = ((item as HTMLElement).offsetHeight || 0) * scale;
-    const nextHi = bottoms[hi] - h;
-    const nextLo = bottoms[lo] + h;
-    let nextMax = Math.max(nextHi, nextLo);
-    let nextMin = Math.min(nextHi, nextLo);
-    for (let i = 0; i < bottoms.length; i++) {
-      if (i === hi || i === lo) continue;
-      if (bottoms[i] > nextMax) nextMax = bottoms[i];
-      if (bottoms[i] < nextMin) nextMin = bottoms[i];
-    }
-    if (nextMax - nextMin >= bottoms[hi] - bottoms[lo]) break;
-    cols[lo].appendChild(item);
-    moves++;
-  }
-  if (moves) {
-    let openKind: string | null = null;
-    for (const col of cols) {
-      pruneOrphanHeadings(col);
-      openKind = rehead(col, labels, openKind);
-    }
-  }
-  return moves;
-}
-
 function fillerHtml(edition: Element, kind: string): string | null {
   const t = edition.querySelector(`template[data-filler="${kind}"]`);
   return t ? (t as HTMLTemplateElement).innerHTML : null;
-}
-
-function hasPlate(col: Element): boolean {
-  return Array.from(col.children).some(
-    (k) => k.tagName === 'FIGURE' && k.classList.contains('paper-plate'),
-  );
-}
-
-function hasHouse(col: Element): boolean {
-  return Array.from(col.children).some(
-    (k) => k.tagName === 'ASIDE' && k.classList.contains('notice'),
-  );
 }
 
 /** A display headline broken one word per line: no space on the sheet is
@@ -331,31 +256,6 @@ function headlineStarved(head: HTMLElement): boolean {
   return rows.size >= words.length;
 }
 
-/** Only when the filler fits whole: append it, measure, and take it back
- *  out when the column runs past the sheet, its display headline overflows
- *  its width, or the headline breaks one word per line. The engraving and
- *  a house notice never share a column's foot. */
-function tryFiller(col: Element, html: string, limit: number, kind: 'plate' | 'house'): Element | null {
-  if (kind === 'plate' && hasHouse(col)) return null;
-  if (kind === 'house' && hasPlate(col)) return null;
-  const doc = col.ownerDocument;
-  const tmp = doc.createElement('div');
-  tmp.innerHTML = html;
-  const node = tmp.firstElementChild;
-  if (!node) return null;
-  col.appendChild(node);
-  const over = (col as HTMLElement).getBoundingClientRect().bottom - limit > 1;
-  const head = (node as Element).querySelector?.('.display-notice') as HTMLElement | null;
-  const broken = head
-    ? head.scrollWidth - head.clientWidth > 1 || headlineStarved(head)
-    : false;
-  if (over || broken) {
-    node.remove();
-    return null;
-  }
-  return node as Element;
-}
-
 export interface FrontFit {
   trimmedLetters: number;
   movedLetters: number;
@@ -363,357 +263,561 @@ export interface FrontFit {
   plateColumn: number;
 }
 
-/** Every letter column on page one, in reading order: the lead's own
- *  columns first, then the band below everything, then the rail's own
- *  columns once the fill below has moved band sections under the rail. */
-function letterCols(edition: Element): Element[] {
-  return Array.from(edition.querySelectorAll('.lead-cols .col, .cols .col, .rail > .col'));
+/** Letter columns side by side under the lead: the sheet's three. */
+export const FRONT_COLUMNS = 3;
+
+/** The column flow to plan: the letters in reading order, their kinds (a
+ *  kind change prints a heading, and every column opens with one), and the
+ *  fillers that may stand at a column's foot. Any one length unit. */
+export interface PlanInput {
+  heights: number[];
+  kinds: string[];
+  columns: number;
+  /** One kind heading's height. */
+  head: number;
+  /** The gap between two blocks inside a column. */
+  gap: number;
+  /** Filler heights; each filler takes the foot of a column of its own. */
+  fillers?: number[];
+  /** The height the columns have room for: plans that fit it are preferred,
+   *  and among them the one whose columns end closest together. */
+  room?: number;
 }
 
-/** Fit page one to the sheet: the letters fill the space under the lead
- *  story in the lead's own columns, then the band below; whole letters, the
- *  rail and the Workbench display print whole or not at all, and the feet
- *  end within one line of each other. The house notice and the rail's extra
- *  items go before letters do. */
+/** Where the letter run is cut and which column foot carries each filler. */
+export interface ColumnPlan {
+  /** The index of the letter each column starts at. */
+  starts: number[];
+  /** The column of each filler, in the order the fillers were given. */
+  fillerCols: number[];
+  heights: number[];
+  max: number;
+}
+
+function columnHeight(input: PlanInput, from: number, to: number, fillers: number[]): number {
+  let total = 0;
+  let blocks = 0;
+  for (let i = from; i < to; i++) {
+    if (i === from || input.kinds[i] !== input.kinds[i - 1]) {
+      total += input.head;
+      blocks++;
+    }
+    total += input.heights[i];
+    blocks++;
+  }
+  for (const f of fillers) {
+    total += f;
+    blocks++;
+  }
+  return blocks ? total + input.gap * (blocks - 1) : 0;
+}
+
+/** Every way to give each filler a column of its own. */
+function fillerAssignments(fillers: number, columns: number): number[][] {
+  const out: number[][] = [];
+  const pick = (acc: number[]): void => {
+    if (acc.length === fillers) {
+      out.push([...acc]);
+      return;
+    }
+    for (let c = 0; c < columns; c++) {
+      if (!acc.includes(c)) pick([...acc, c]);
+    }
+  };
+  pick([]);
+  return out;
+}
+
+/** Cut the letters, kept in reading order, into balanced columns. With a
+ *  `room`, the cuts (and fillers' columns) that fit it come first and,
+ *  among them, the smallest spread between the tallest and the shortest
+ *  column wins, so the columns end together. Otherwise (or when none fits)
+ *  the cut whose tallest column is shortest wins, ties going to the
+ *  smallest spread. Every column holds at least one letter. Null with no
+ *  letters, or with more fillers than columns. */
+export function planColumns(input: PlanInput): ColumnPlan | null {
+  const n = input.heights.length;
+  const fillers = input.fillers ?? [];
+  if (!n) return null;
+  const columns = Math.max(1, Math.min(input.columns, n));
+  if (fillers.length > columns) return null;
+  const assignments = fillerAssignments(fillers.length, columns);
+  let best: ColumnPlan | null = null;
+  let bestSpread = Infinity;
+  const starts = [0];
+  const consider = (): void => {
+    for (const fillerCols of assignments) {
+      const heights = starts.map((from, c) =>
+        columnHeight(
+          input,
+          from,
+          c + 1 < starts.length ? starts[c + 1] : n,
+          fillers.filter((_, k) => fillerCols[k] === c),
+        ),
+      );
+      const max = Math.max(...heights);
+      const spread = max - Math.min(...heights);
+      const room = input.room ?? -Infinity;
+      const fits = max <= room + 0.5;
+      const bestFits = !!best && best.max <= room + 0.5;
+      const better = !best
+        ? true
+        : fits !== bestFits
+          ? fits
+          : fits
+            ? spread < bestSpread - 0.5 || (spread <= bestSpread + 0.5 && max < best.max)
+            : max < best.max - 0.5 || (max <= best.max + 0.5 && spread < bestSpread);
+      if (better) {
+        best = { starts: [...starts], fillerCols: [...fillerCols], heights, max };
+        bestSpread = spread;
+      }
+    }
+  };
+  const cut = (c: number): void => {
+    if (c === columns) {
+      consider();
+      return;
+    }
+    for (let s = starts[c - 1] + 1; s <= n - (columns - c); s++) {
+      starts[c] = s;
+      cut(c + 1);
+    }
+    starts.length = c;
+  };
+  cut(1);
+  return best;
+}
+
+/** The lead photo stands beside the lead's words: give it the width, and
+ *  the headline its place (beside the photo, or across the lead above the
+ *  text and the photo), at which the photo, caption included, and the words
+ *  beside it end closest together — the photo sized to the text, never a
+ *  frame beside blank paper. Among the settings where both sides end within
+ *  a line or so of each other, the shortest lead wins, so the lead never
+ *  takes more of the page than its words need; with none that close, the
+ *  closest pair wins. With a `budget` (the lead's height plus the page's
+ *  spare room), the tallest such lead within it wins instead: a page whose
+ *  letters all fit gives its spare room to the lead photo, not to blank
+ *  paper. Layout pixels throughout, so the sheet's display scale never
+ *  enters. Only when the photo stands beside the words (a two-track lead).
+ *  Returns the lead's height, or 0 when nothing was sized. */
+function sizeLeadPhoto(edition: Element, budget = 0): number {
+  const lead = edition.querySelector('.lead') as HTMLElement | null;
+  const fig = lead?.querySelector(':scope > .photo--lead') as HTMLElement | null;
+  const main = lead?.querySelector(':scope > .lead-main') as HTMLElement | null;
+  const text = main?.querySelector('.lead-text') as HTMLElement | null;
+  if (!lead || !fig || !main || !text) return 0;
+  const view = lead.ownerDocument.defaultView;
+  // Track functions (`minmax(0, 1fr)`) hold spaces of their own: count the
+  // tracks with their arguments folded away.
+  const tracks = (view?.getComputedStyle(lead).gridTemplateColumns || '')
+    .replace(/\([^)]*\)/g, '()')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (tracks.length < 2) return 0;
+  const total = lead.clientWidth;
+  if (!(total > 0)) return 0;
+  const upright =
+    fig.classList.contains('photo--lead--portrait') ||
+    fig.classList.contains('photo--lead--square');
+  const lo = Math.round(total * (upright ? 0.2 : 0.3));
+  const hi = Math.round(total * (upright ? 0.4 : 0.6));
+  const para = text.querySelector('p');
+  const line = (para ? Number.parseFloat(view?.getComputedStyle(para).lineHeight || '') || 29 : 29) * 1.25;
+  const tries: { across: boolean; w: number; d: number; tall: number }[] = [];
+  for (const across of [false, true]) {
+    lead.classList.toggle('lead--across', across);
+    const words = across ? text : main;
+    for (let w = lo; w <= hi; w += 8) {
+      fig.style.width = `${w}px`;
+      tries.push({ across, w, d: Math.abs(fig.offsetHeight - words.offsetHeight), tall: lead.offsetHeight });
+    }
+  }
+  if (!tries.length) return 0;
+  const close = tries.filter((c) => c.d <= line);
+  const roomy = close.filter((c) => c.tall <= budget);
+  const pick = roomy.length
+    ? roomy.reduce((a, b) => (b.tall > a.tall ? b : a))
+    : close.length
+      ? close.reduce((a, b) => (b.tall < a.tall ? b : a))
+      : tries.reduce((a, b) => (b.d < a.d ? b : a));
+  lead.classList.toggle('lead--across', pick.across);
+  fig.style.width = `${pick.w}px`;
+  return lead.offsetHeight;
+}
+
+/** One filler built from its template, measured at a column's width with its
+ *  margins, and taken back out. Null when the template is missing or its
+ *  display headline cannot set in a column (overflowing, or one word per
+ *  line). */
+function measureFiller(
+  edition: Element,
+  col: Element,
+  kind: string,
+  scale: number,
+): { el: Element; h: number; kind: string } | null {
+  const html = fillerHtml(edition, kind);
+  if (!html) return null;
+  const tmp = col.ownerDocument.createElement('div');
+  tmp.innerHTML = html;
+  const node = tmp.firstElementChild;
+  if (!node) return null;
+  col.appendChild(node);
+  const head = node.querySelector('.display-notice') as HTMLElement | null;
+  const broken = head ? head.scrollWidth - head.clientWidth > 1 || headlineStarved(head) : false;
+  const cs = globalThis.getComputedStyle?.(node);
+  const margins = cs ? (Number.parseFloat(cs.marginTop) || 0) + (Number.parseFloat(cs.marginBottom) || 0) : 0;
+  const h = node.getBoundingClientRect().height + margins * scale;
+  node.remove();
+  return broken || !(h > 0) ? null : { el: node, h, kind };
+}
+
+function rowGapOf(el: Element): number {
+  const raw = globalThis.getComputedStyle?.(el)?.rowGap || '';
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 14;
+}
+
+/** The letters that may yield when the columns cannot hold every letter:
+ *  any letter of the day's largest kinds (within one letter of the
+ *  largest), so no kind is emptied while another still prints more. */
+function yieldable(seq: number[], kinds: string[]): number[] {
+  const count = new Map<string, number>();
+  for (const i of seq) count.set(kinds[i], (count.get(kinds[i]) || 0) + 1);
+  const most = Math.max(...count.values());
+  const out: number[] = [];
+  seq.forEach((i, j) => {
+    if ((count.get(kinds[i]) || 0) >= most - 1) out.push(j);
+  });
+  return out;
+}
+
+/** Compose page one in the sheet: size the lead photo to its text, then
+ *  flow the letters, in reading order, through the columns under the lead,
+ *  balanced so the columns end together. When they cannot all fit, the
+ *  Workbench display goes first, then whole letters of the largest kinds.
+ *  On a day whose letters all fit, the plate and the house notices take
+ *  column feet, each only when the balanced page still fits; the letters'
+ *  pictures then grow into what room is left. */
+function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: number; spare: number } {
+  const done = { lead: 0, spare: 0 };
+  const limit = sheetLimit(edition);
+  if (limit <= 0) return done;
+  done.lead = sizeLeadPhoto(edition, budget);
+  const scale = sheetScale(edition);
+  const duo = edition.querySelector('aside.notice--feature');
+  const band = edition.querySelector('.cols');
+  if (!band) {
+    if (duo && rectBottom(duo) - limit > 1) duo.remove();
+    return done;
+  }
+  let sections = Array.from(band.children).filter((k) => k.classList.contains('col'));
+  const labels = headingLabels(sections);
+  const cont = band.getAttribute('data-cont') || '';
+  for (const label of labels.values()) if (!label.cont) label.cont = cont;
+  // Reading order, not the server's columns: its balance may have moved a
+  // letter to another column's foot.
+  const orderOf = (el: Element, at: number): number => {
+    const raw = Number.parseInt(el.getAttribute('data-i') || '', 10);
+    return Number.isFinite(raw) ? raw : at;
+  };
+  const letters = sections
+    .flatMap((c) => Array.from(c.children).filter(isLetter))
+    .map((el, at) => ({ el, at: orderOf(el, at) }))
+    .sort((a, b) => a.at - b.at)
+    .map((x) => x.el);
+  const origin = new Map<Element, number>();
+  sections.forEach((c, i) => {
+    for (const k of Array.from(c.children)) if (isLetter(k)) origin.set(k, i);
+  });
+  if (!letters.length) {
+    band.remove();
+    return done;
+  }
+  const doc = band.ownerDocument;
+  const columns = Math.min(FRONT_COLUMNS, letters.length);
+  // Columns of one width before measuring: the server may have printed
+  // fewer (a short day prints one per kind), and a letter's height depends
+  // on its column's width.
+  while (sections.length < columns) {
+    const col = doc.createElement('section');
+    col.className = 'col';
+    band.appendChild(col);
+    sections.push(col);
+  }
+  for (const extra of sections.slice(columns)) extra.remove();
+  sections = sections.slice(0, columns);
+  const sample = sections[0].querySelector('h3')?.cloneNode(true) as Element | undefined;
+  for (const col of sections) while (col.firstChild) col.removeChild(col.firstChild);
+  letters.forEach((l, i) => sections[Math.floor((i * columns) / letters.length)].appendChild(l));
+  let head = 0;
+  if (sample) {
+    sections[0].insertBefore(sample, sections[0].firstChild);
+    head = sample.getBoundingClientRect().height;
+    sample.remove();
+  }
+  const gap = rowGapOf(sections[0]) * scale;
+  const heights = letters.map((l) => l.getBoundingClientRect().height);
+  const kinds = letters.map((l) => l.getAttribute('data-kind') || '');
+  const room = (): number => limit - band.getBoundingClientRect().top;
+  const planFor = (seq: number[], fillers: number[]): ColumnPlan | null =>
+    planColumns({
+      heights: seq.map((i) => heights[i]),
+      kinds: seq.map((i) => kinds[i]),
+      columns,
+      head,
+      gap,
+      fillers,
+      room: room() + 1,
+    });
+
+  let seq = letters.map((_, i) => i);
+  let plan = planFor(seq, []);
+  // The Workbench display steps aside before any letter does.
+  if (plan && plan.max - room() > 1 && duo) duo.remove();
+  // Whole letters yield, one at a time: the one whose loss leaves the best
+  // page — one that fits, with the columns ending closest together; while
+  // none fits, the one that shortens the tallest column most (ties going to
+  // the later letter).
+  const dropped: number[] = [];
+  const score = (p: ColumnPlan | null): number => {
+    if (!p) return Infinity;
+    const spread = p.max - Math.min(...p.heights);
+    return p.max - room() <= 1 ? spread : 1e6 + p.max;
+  };
+  while (plan && plan.max - room() > 1) {
+    let bestJ = -1;
+    let bestScore = Infinity;
+    let bestPlan: ColumnPlan | null = null;
+    for (const j of yieldable(seq, kinds)) {
+      const p = planFor(seq.filter((_, k) => k !== j), []);
+      const sc = score(p);
+      if (bestJ < 0 || sc <= bestScore) {
+        bestJ = j;
+        bestScore = sc;
+        bestPlan = p;
+      }
+    }
+    dropped.push(seq[bestJ]);
+    seq = seq.filter((_, k) => k !== bestJ);
+    plan = bestPlan;
+  }
+  // A dropped letter shorter than the one that forced the cut may still
+  // fit in the room the cut freed: offer each back, in reading order.
+  for (const i of [...dropped].sort((a, b) => a - b)) {
+    const trial = [...seq, i].sort((a, b) => a - b);
+    const p = planFor(trial, []);
+    if (p && p.max - room() <= 1) {
+      seq = trial;
+      plan = p;
+    } else {
+      out.trimmedLetters++;
+    }
+  }
+  // Then trade within a kind (so every kind keeps its share): a dropped
+  // letter takes a printed one's place whenever the page still fits and
+  // its columns end closer together.
+  const spreadOf = (p: ColumnPlan): number => p.max - Math.min(...p.heights);
+  const outside = (): number[] => letters.map((_, i) => i).filter((i) => !seq.includes(i));
+  for (let round = 0; plan && round < 12; round++) {
+    let swap: { seq: number[]; plan: ColumnPlan } | null = null;
+    for (const d of outside()) {
+      for (const p of seq) {
+        if (kinds[d] !== kinds[p]) continue;
+        const trial = [...seq.filter((i) => i !== p), d].sort((a, b) => a - b);
+        const tp = planFor(trial, []);
+        if (!tp || tp.max - room() > 1) continue;
+        const target = swap ? spreadOf(swap.plan) : spreadOf(plan);
+        if (spreadOf(tp) < target - 1) swap = { seq: trial, plan: tp };
+      }
+    }
+    if (!swap) break;
+    seq = swap.seq;
+    plan = swap.plan;
+  }
+  // The fillers take only a day's spare room, once every letter fits: a
+  // column the cut left short grows its pictures instead (below), so no
+  // notice ever stands where a letter was left out.
+  const fillers: { el: Element; h: number; kind: string }[] = [];
+  if (plan && !out.trimmedLetters) {
+    for (const kind of ['plate', 'install', 'collab']) {
+      const m = measureFiller(edition, sections[0], kind, scale);
+      if (!m) continue;
+      const trial = planFor(seq, [...fillers.map((f) => f.h), m.h]);
+      if (trial && trial.max - room() <= 1) {
+        fillers.push(m);
+        plan = trial;
+      }
+    }
+  }
+  for (const col of sections) while (col.firstChild) col.removeChild(col.firstChild);
+  if (!plan) {
+    band.remove();
+    return done;
+  }
+  if (!out.trimmedLetters && scale > 0) done.spare = Math.max(0, (room() - plan.max) / scale);
+  const used = plan.starts.length;
+  plan.starts.forEach((from, c) => {
+    const to = c + 1 < plan!.starts.length ? plan!.starts[c + 1] : seq.length;
+    for (let j = from; j < to; j++) {
+      const el = letters[seq[j]];
+      sections[c].appendChild(el);
+      if (origin.get(el) !== c) out.movedLetters++;
+    }
+  });
+  fillers.forEach((f, k) => {
+    sections[plan!.fillerCols[k]].appendChild(f.el);
+    out.fillers++;
+    if (f.kind === 'plate') out.plateColumn = plan!.fillerCols[k];
+  });
+  for (const extra of sections.slice(used)) extra.remove();
+  sections = sections.slice(0, used);
+  let openKind: string | null = null;
+  for (const col of sections) openKind = rehead(col, labels, openKind);
+  // The plan works on measured heights; the laid-out page has the last
+  // word. A column still past the sheet gives up its filler, then letters.
+  for (const col of sections) {
+    for (let guard = 0; guard < 50 && rectBottom(col) - limit > 1; guard++) {
+      const filler = Array.from(col.children).find(isFiller);
+      if (filler) {
+        filler.remove();
+        out.fillers--;
+        continue;
+      }
+      out.trimmedLetters += trimColumn(col, limit);
+      break;
+    }
+    if (!lastLetter(col)) col.remove();
+  }
+  const live = sections.filter((c) => c.isConnected);
+  // With letters left out the columns end together at the tallest foot;
+  // with every letter printed the pictures may take the page's spare room.
+  if (live.length) growPhotos(live, out.trimmedLetters ? Math.max(...live.map(rectBottom)) : limit);
+  // A short day leaves room under every column: the house notices close
+  // the front across its width when they fit there whole.
+  const wide = !out.trimmedLetters ? fillerHtml(edition, 'house-duo') : null;
+  if (wide && band.parentElement) {
+    const tmp = doc.createElement('div');
+    tmp.innerHTML = wide;
+    const node = tmp.firstElementChild;
+    if (node) {
+      node.classList.add('notice--wide');
+      band.parentElement.insertBefore(node, band.nextSibling);
+      if (rectBottom(node) - limit > 1) node.remove();
+      else out.fillers++;
+    }
+  }
+  if (!band.querySelector('.col')) band.remove();
+  return done;
+}
+
+/** The widths a letter's picture may grow through, smallest first: an
+ *  event's from its own share of the column to the column's width (set
+ *  over the words, no longer beside them, since nothing reads beside a
+ *  full-width picture), a portrait stamp's up to an event's share. */
+const PHOTO_STEPS: Record<string, string[]> = {
+  event: ['50%', '62%', 'full'],
+  stamp: ['76px', '96px', '38%'],
+};
+
+function setPhotoStep(fig: HTMLElement, step: string): void {
+  const full = step === 'full';
+  fig.style.width = full ? '100%' : step;
+  fig.style.float = full ? 'none' : '';
+  fig.style.marginRight = full ? '0' : '';
+}
+
+/** A column ending short of the given foot grows its letters' pictures,
+ *  each through its widths while the column still ends at or above the
+ *  foot: the pictures take the room whole letters cannot, so the columns
+ *  end together without a filler. */
+function growPhotos(cols: Element[], foot: number): void {
+  for (const col of cols) {
+    if (foot - rectBottom(col) <= 1) continue;
+    // Round by round, every picture one step up, so a column's pictures
+    // grow together instead of the first taking all the room.
+    const growing = Array.from(col.children)
+      .filter((k) => isLetter(k) && k.classList.contains('has-photo'))
+      .map((item) => ({
+        fig: item.querySelector(':scope > .photo') as HTMLElement | null,
+        steps: PHOTO_STEPS[item.classList.contains('item--event') ? 'event' : 'stamp'],
+      }))
+      .filter((g): g is { fig: HTMLElement; steps: string[] } => !!g.fig);
+    const done = new Set<number>();
+    for (let step = 0; done.size < growing.length; step++) {
+      growing.forEach((g, k) => {
+        if (done.has(k)) return;
+        if (step >= g.steps.length) {
+          done.add(k);
+          return;
+        }
+        setPhotoStep(g.fig, g.steps[step]);
+        if (rectBottom(col) - foot > 1) {
+          if (step > 0) setPhotoStep(g.fig, g.steps[step - 1]);
+          else {
+            g.fig.style.width = '';
+            g.fig.style.float = '';
+            g.fig.style.marginRight = '';
+          }
+          done.add(k);
+        }
+      });
+    }
+  }
+}
+
+/** The edition's own HTML before any fit, and the HTML and layout the last
+ *  fit left: a fit for a new layout (the faces landed, the sheet resized)
+ *  starts again from every letter instead of from a page already trimmed
+ *  for other metrics; a fit for the same layout leaves the page alone. */
+const pristine = new WeakMap<Element, string>();
+const fitted = new WeakMap<Element, { html: string; key: string }>();
+
+function layoutKey(edition: Element): string {
+  const paper = edition.closest('.paper') as HTMLElement | null;
+  let faces = 0;
+  try {
+    const fonts = (edition.ownerDocument as Document & { fonts?: FontFaceSet }).fonts;
+    fonts?.forEach((f) => {
+      if (f.status === 'loaded') faces++;
+    });
+  } catch {
+    faces = 0;
+  }
+  return `${paper ? paper.offsetWidth : 0}x${paper ? paper.offsetHeight : 0}|${faces}`;
+}
+
+/** Fit page one to the sheet (see `composeFront`). Safe to call again: the
+ *  same layout keeps its fitted page, a new one refits from the edition's
+ *  own HTML, and a re-rendered edition becomes the new starting point. */
 export function fitFrontPage(edition: Element): FrontFit {
   const out: FrontFit = { trimmedLetters: 0, movedLetters: 0, fillers: 0, plateColumn: -1 };
-  const lead = edition.querySelector('.lead');
-  const leadCols = edition.querySelector('.lead-cols');
-  const railEl = edition.querySelector('.rail');
-  const alsoEl = edition.querySelector('.rail .also');
-  const labEl = edition.querySelector('.front .labmail');
-  let duoEl = edition.querySelector('aside.notice--feature');
-
-  // The sheet never stretches a block past its content now: the row's
-  // foot is its content's own foot, so the read below is content, not
-  // stretch. The stale rail height emptied the letter band; read live.
-  const storyEl = edition.querySelector('.lead .story');
-
-  // Whole column sections move under the lead story: half the band, rounded
-  // up — all of it when the lead stands alone with no rail beside it. Whole
-  // sections only, never split; emptied nodes leave the page.
-  const band = edition.querySelector('.cols');
-  if (band && leadCols) {
-    const sections = Array.from(band.children).filter((k) => k.classList.contains('col'));
-    if (sections.length) {
-      const solo = !!lead?.classList.contains('solo');
-      const count = solo ? sections.length : Math.ceil(sections.length / 2);
-      for (const s of sections.slice(0, count)) leadCols.appendChild(s);
-      if (!band.querySelector('.col')) band.remove();
-      const all = letterCols(edition);
-      const labels = headingLabels(all);
-      let openKind: string | null = null;
-      for (const col of all) {
-        pruneOrphanHeadings(col);
-        openKind = rehead(col, labels, openKind);
-      }
+  const last = fitted.get(edition);
+  if (last && last.html === edition.innerHTML) {
+    if (last.key === layoutKey(edition)) return out;
+    const original = pristine.get(edition);
+    if (original !== undefined) edition.innerHTML = original;
+  } else {
+    pristine.set(edition, edition.innerHTML);
+  }
+  const first = composeFront(edition, out);
+  // Every letter printed and room to spare: compose again with the spare
+  // room offered to the lead photo. Kept only when it prints as much.
+  if (first.lead > 0 && first.spare > 2 * bodyLinePx(edition)) {
+    const fit1 = { ...out };
+    const html1 = edition.innerHTML;
+    edition.innerHTML = pristine.get(edition) ?? html1;
+    const again: FrontFit = { trimmedLetters: 0, movedLetters: 0, fillers: 0, plateColumn: -1 };
+    composeFront(edition, again, first.lead + first.spare);
+    if (again.trimmedLetters > fit1.trimmedLetters) {
+      edition.innerHTML = html1;
+      Object.assign(out, fit1);
+    } else {
+      Object.assign(out, again);
     }
   }
-
-  const limit = sheetLimit(edition);
-  if (limit <= 0) return out;
-  // One display scale for the whole fit: rects are visual pixels, style
-  // lengths layout ones.
-  const scale = sheetScale(edition);
-  const leadImg = edition.querySelector('.photo--lead img');
-  if (leadImg && storyEl) {
-    // Below the desktop breakpoint the sheet is transform-scaled, so the
-    // bound is measured against the rects around it and then converted, or a
-    // phone would shrink the lead photo by the fitted scale twice over.
-    const h = leadImg.getBoundingClientRect().height;
-    const over = rectBottom(storyEl) - limit;
-    const cap = Math.min(h, Math.floor(limit * 0.36), h - Math.max(0, over));
-    const maxH = Math.max(PHOTO_FLOOR_PX, cap / scale);
-    if (maxH < h / scale) (leadImg as HTMLElement).style.maxHeight = `${maxH}px`;
-  }
-  const line = (() => {
-    const cols = letterCols(edition);
-    const lines = cols.map(bodyLinePx);
-    lines.push(bodyLinePx(edition));
-    return Math.max(...lines, 1) * scale;
-  })();
-
-  // The foot is the content's own foot: the story's foot floors the row
-  // when the letters are gone, and the rail never ends above it.
-  const storyFloor = storyEl ? rectBottom(storyEl) : 0;
-  const railFoot = (): number =>
-    railEl ? Math.max(rectBottom(railEl), storyFloor) : storyFloor;
-  const duoFoot = (): number => (duoEl ? rectBottom(duoEl as Element) : 0);
-  // The lab story is never cut: its foot joins the trim loop below, so the
-  // letters above it keep trimming until the lab itself ends in the sheet.
-  const labFoot = (): number => (labEl ? rectBottom(labEl) : 0);
-  // The lab is a row of its own under the lead and the rail, never under the
-  // band. Only the letters that share that row move it: the lead's columns
-  // and any column the balance moved into the rail. The band below the lab
-  // ends at the sheet on its own and does not push the lab down.
-  const labCols = (): Element[] =>
-    Array.from(edition.querySelectorAll('.lead-cols .col, .rail > .col'));
-  // Raise the lab into the sheet by trimming whole letters from the tallest
-  // column above it, re-measuring after each removal: a side-by-side lead
-  // column and a stacked rail both lose exactly the removed height from the
-  // row, so the loop converges on the lab's foot. The lab itself is never
-  // removed; when no letter above it is left the loop stops.
-  const fitLab = (): number => {
-    if (!labEl) return 0;
-    let removed = 0;
-    for (let guard = 0; guard < 500; guard++) {
-      if (!labEl || labFoot() - limit <= 1) break;
-      const cols = labCols().filter((c) => lastLetter(c));
-      if (!cols.length) break;
-      cols.sort((a, b) => rectBottom(b) - rectBottom(a));
-      (lastLetter(cols[0]) as Element).remove();
-      pruneOrphanHeadings(cols[0]);
-      removed++;
-    }
-    return removed;
-  };
-
-  // The space under the rail fills with whole letters like the space under
-  // the lead story: move the band's last column under the rail while the
-  // rail still ends inside the sheet. One column past the sheet restores at
-  // the band's end and stops; an emptied band leaves the page.
-  if (railEl) {
-    const bandEl = edition.querySelector('.cols');
-    if (bandEl && bandEl.querySelector('.col')) {
-      for (let guard = 0; guard < 50; guard++) {
-        const last = Array.from(bandEl.children).filter((k) => k.classList.contains('col')).pop();
-        if (!last) break;
-        railEl.appendChild(last);
-        if (rectBottom(railEl) - limit > 1) {
-          bandEl.appendChild(last);
-          break;
-        }
-        if (!bandEl.querySelector('.col')) {
-          bandEl.remove();
-          break;
-        }
-      }
-    }
-  }
-
-  // The rail holds the queue's head beside the lead story; the lead's own
-  // columns continue it. Balance the two feet within one body line by
-  // moving whole letters either way: the rail's last letter prepends the
-  // first front-row column (it outranks everything there), and the first
-  // front-row column's first letter appends the rail (it continues the
-  // queue). Headings are re-issued once, after the last move. The rail is
-  // only ever balanced against the front row, never the band below it.
-  // Rail children are the aside items plus any column letter the balance
-  // moved in: both count for the balance and both yield to the trim, so a
-  // relocated letter never hides from either.
-  const railItems = (): Element[] =>
-    alsoEl
-      ? Array.from(alsoEl.children).filter((k) => k.classList.contains('aside-item') || isLetter(k))
-      : [];
-  const frontCols = (): Element[] =>
-    Array.from(edition.querySelectorAll('.lead-cols .col'));
-  const firstLetter = (col: Element): Element | null => {
-    for (const k of Array.from(col.children)) if (isLetter(k)) return k;
-    return null;
-  };
-  if (lead && alsoEl) {
-    const labels = headingLabels(letterCols(edition));
-    const feetOf = (cols: Element[]): number => Math.max(...cols.map(rectBottom));
-    // A move counts only when the laid-out feet prove it narrows the gap:
-    // otherwise it is undone, so an unmeasurable layout degrades to the
-    // trim below instead of churning letters back and forth.
-    const tryRailToCol = (): boolean => {
-      const cols = frontCols();
-      const items = railItems();
-      if (!cols.length || !items.length) return false;
-      const before = Math.abs(railFoot() - feetOf(cols));
-      const node = items[items.length - 1];
-      cols[0].insertBefore(node, cols[0].firstChild);
-      const after = Math.abs(railFoot() - feetOf(frontCols()));
-      if (after < before) return true;
-      alsoEl.appendChild(node);
-      return false;
-    };
-    const tryColToRail = (): boolean => {
-      const cols = frontCols();
-      if (!cols.length || !railItems().length) return false;
-      const before = Math.abs(railFoot() - feetOf(cols));
-      const target = cols.find((c) => firstLetter(c));
-      if (!target) return false;
-      const node = firstLetter(target) as Element;
-      const next = node.nextSibling;
-      alsoEl.appendChild(node);
-      const after = Math.abs(railFoot() - feetOf(frontCols()));
-      if (after < before) return true;
-      target.insertBefore(node, next);
-      return false;
-    };
-    let balanced = 0;
-    for (let guard = 0; guard < 200; guard++) {
-      const cols = frontCols();
-      if (!cols.length || !railItems().length) break;
-      const top = feetOf(cols);
-      let moved = false;
-      if (railFoot() > Math.max(top, storyFloor) + line) moved = tryRailToCol();
-      else if (top > railFoot() + line) moved = tryColToRail();
-      else break;
-      if (!moved) break;
-      balanced++;
-    }
-    out.movedLetters += balanced;
-    if (balanced) {
-      const all = letterCols(edition);
-      let openKind: string | null = null;
-      for (const col of all) {
-        pruneOrphanHeadings(col);
-        openKind = rehead(col, labels, openKind);
-      }
-    }
-  }
-
-  for (let guard = 0; guard < 50; guard++) {
-    const cols = letterCols(edition);
-    const bottoms = cols.map(rectBottom);
-    if (railEl) bottoms.push(railFoot());
-    if (duoEl) bottoms.push(duoFoot());
-    if (labEl) bottoms.push(labFoot());
-    if (!bottoms.length) break;
-    if (Math.max(...bottoms) - limit <= line) break;
-    if (duoEl) {
-      // FR3: the house display goes before letters do.
-      (duoEl as Element).remove();
-      duoEl = null;
-      continue;
-    }
-    // The rail's extras go before column letters do, but only while the
-    // rail overhangs the columns: a balanced rail's letters outrank the
-    // columns' feet, so the feet trim first instead. Only columns that
-    // still hold letters have a foot worth comparing — an emptied column
-    // bottoms out at its own top, and with no letters at all the rail
-    // trims against the sheet limit, never the story's foot, or the page
-    // ends in a band of blank paper.
-    const frontFoot = Math.max(
-      0,
-      ...cols.filter((c) => lastLetter(c)).map(rectBottom),
-    );
-    const items = railItems();
-    if (items.length > 1 && railFoot() - frontFoot > line) {
-      items[items.length - 1].remove();
-      continue;
-    }
-    // Trim every column to the sheet, the lab's own overhang included in
-    // the check above. The lab itself is never removed: `fitLab` raises it
-    // afterwards by trimming the letters that share its row.
-    let removed = 0;
-    for (const col of cols) removed += trimColumn(col, limit);
-    out.trimmedLetters += removed;
-    if (!removed) break;
-  }
-
-  const cols = letterCols(edition);
-  // A page with no letter columns at all still flows below: the photo
-  // shrink at the end must run for it too, so the trims below are scoped
-  // to a page that has columns instead of returning early.
-  if (cols.length) {
-    for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-    out.movedLetters += balanceColumns(cols);
-    // A balance move can push a column's foot past the sheet again: trim
-    // whole letters after balancing, so nothing ends past the sheet's edge.
-    for (const col of cols) out.trimmedLetters += trimColumn(col, limit);
-    // The lab story's foot was never a band column's foot: raise it into the
-    // sheet by trimming the letters that share its row, never the lab itself.
-    out.trimmedLetters += fitLab();
-    // The last letter past the sheet's edge: a balance or a lab raise can
-    // leave any column's foot (or the lab's own) over the limit, so loop the
-    // final trim over every letter column plus the lab's foot until all end
-    // above it. The lab itself is never removed; with no letters left to
-    // yield, the loop stops.
-    for (let guard = 0; guard < 50; guard++) {
-      const feet = cols.map(rectBottom);
-      if (labEl) feet.push(labFoot());
-      if (!feet.length || Math.max(...feet) - limit <= 1) break;
-      let removed = 0;
-      for (const col of cols) removed += trimColumn(col, limit);
-      removed += fitLab();
-      if (!removed) break;
-    }
-  }
-  // A trim may empty a column whole: it leaves the page, and a wrapper
-  // left with no column goes with it, so the band never holds blank paper.
-  const live = cols.filter((c) => (lastLetter(c) ? true : (c.remove(), false)));
-  for (const wrap of Array.from(edition.querySelectorAll('.lead-cols, .cols'))) {
-    if (!wrap.querySelector('.col')) wrap.remove();
-  }
-  // An emptied rail leaves the page like an emptied column does, so no
-  // bordered box ends the row beside the lead story. A rail that never
-  // carried items (no .also) is structural and stays, as does a rail still
-  // holding a moved-in column of whole letters.
-  if (railEl && alsoEl && !railItems().length && !railEl.querySelector('.col')) railEl.remove();
-  const attached = live.filter((c) => c.isConnected);
-  // Every filler the fit keeps, so a harmful one can come back out below.
-  const placed: Element[] = [];
-  // Fillers only crown a page that already fits: when the lab still sits
-  // past the limit, every foot below is borrowed room — a plate or notice
-  // would push the lab and the colophon further past the sheet instead of
-  // filling real space.
-  const labOver = labEl ? labFoot() - limit > 1 : false;
-  if (!labOver) {
-    // The free foot of each column, roomiest first.
-    const order = attached
-      .map((col, i) => ({ col, i, free: limit - rectBottom(col) }))
-      .sort((a, b) => b.free - a.free);
-    if (order.length && order[0].free > 1) {
-      const plate = fillerHtml(edition, 'plate');
-      if (plate) {
-        const node = tryFiller(order[0].col, plate, limit, 'plate');
-        if (node) {
-          out.fillers++;
-          out.plateColumn = order[0].i;
-          placed.push(node);
-        }
-      }
-      const install = fillerHtml(edition, 'install');
-      const collab = fillerHtml(edition, 'collab');
-      const duo = fillerHtml(edition, 'house-duo');
-      const rest = order.filter((o) => o.i !== out.plateColumn && limit - rectBottom(o.col) > 1);
-      let paired = false;
-      if (install && collab && rest.length >= 2) {
-        const a = tryFiller(rest[0].col, install, limit, 'house');
-        const b = a ? tryFiller(rest[1].col, collab, limit, 'house') : null;
-        if (a && b) {
-          out.fillers += 2;
-          paired = true;
-          placed.push(a, b);
-        } else {
-          a?.remove();
-          b?.remove();
-        }
-      }
-      if (!paired && duo && rest.length >= 1) {
-        // Re-measure: the split attempt above may have settled content.
-        const roomy = rest
-          .map((o) => ({ o, free: limit - rectBottom(o.col) }))
-          .filter((r) => r.free > 1)
-          .sort((a, b) => b.free - a.free);
-        const d = roomy.length ? tryFiller(roomy[0].o.col, duo, limit, 'house') : null;
-        if (d) {
-          out.fillers++;
-          placed.push(d);
-        }
-      }
-    }
-  }
-  // A filler lands in the roomiest foot and can unbalance the row it joins:
-  // balance once more over the surviving columns so the feet end together.
-  // Balance never raises the tallest foot, so nothing fitted leaves the
-  // sheet; headings are re-issued over the moved letters as before.
-  out.movedLetters += balanceColumns(attached);
-  // A filler grows its column, and through it the story, the row, the lab
-  // and the colophon: when the lab ends past the limit afterwards, the
-  // fillers only bought borrowed room, so they come back out and the
-  // feet are balanced again over the surviving letters.
-  if (labEl && placed.length && labFoot() - limit > 1) {
-    for (const node of placed) node.remove();
-    placed.length = 0;
-    out.fillers = 0;
-    out.plateColumn = -1;
-    out.movedLetters += balanceColumns(attached);
-  }
+  fitted.set(edition, { html: edition.innerHTML, key: layoutKey(edition) });
   return out;
 }
 

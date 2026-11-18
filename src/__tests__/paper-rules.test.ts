@@ -30,6 +30,8 @@ const base = (): CaseInput => ({
   leadPhoto: null,
   textLines: [],
   columns: [{ box: box(10, 420, 300, 200), foot: 620 }],
+  front: null,
+  ink: [],
   editionEmpty: false,
   pageHidden: false,
   fontsLoaded: true,
@@ -79,7 +81,7 @@ describe('paper-rules', () => {
     expect(found[0].detail).toMatch(/blank band/);
   });
 
-  test('(c) sleeps for a spanning photo; the block sits one gutter from the frame', () => {
+  test('(c) sleeps for a stacked photo; the words sit one gutter from the frame', () => {
     const mk = (gap: number, side: boolean): CaseInput => {
       const input = base();
       input.leadPhoto = {
@@ -93,7 +95,8 @@ describe('paper-rules', () => {
       input.textLines = [{ left: 10, right: 410 - gap, top: 150, bottom: 170 }];
       return input;
     };
-    // Non-side (landscape span): no gap rule even with a wide blank.
+    // A photo stacked above or below the words: no gap rule even with a
+    // wide blank.
     expect(judgeCase(mk(500, false)).filter((f) => f.rule === 'c')).toHaveLength(0);
     // One gutter is 16px; gutter+slack (17px) passes …
     expect(judgeCase(mk(16, true)).filter((f) => f.rule === 'c')).toHaveLength(0);
@@ -103,30 +106,84 @@ describe('paper-rules', () => {
     expect(found).toHaveLength(1);
     expect(found[0].detail).toMatch(/18\.0px/);
     // A ragged last line ending far left is not the block's edge; the
-    // furthest-right wrapped line is.
+    // furthest-right line beside the photo is.
     const ragged = mk(16, true);
-    ragged.textLines.push({ left: 10, right: 100, top: 150, bottom: 170 });
+    ragged.textLines.push({ left: 10, right: 100, top: 180, bottom: 200 });
     expect(judgeCase(ragged).filter((f) => f.rule === 'c')).toHaveLength(0);
-    // A short wrapped line beside a longer one is not a gap either.
-    const uneven = mk(16, true);
-    uneven.textLines.push({ left: 10, right: 410 - 25, top: 150, bottom: 170 });
-    expect(judgeCase(uneven).filter((f) => f.rule === 'c')).toHaveLength(0);
-    // No line reaching the float: only the frame's own blank can fail.
-    const frameOk = mk(16, true);
-    frameOk.textLines = [{ left: 10, right: 50, top: 150, bottom: 170 }];
-    expect(judgeCase(frameOk).filter((f) => f.rule === 'c')).toHaveLength(0);
-    const frameBlank = mk(16, true);
-    frameBlank.textLines = [{ left: 10, right: 50, top: 150, bottom: 170 }];
-    frameBlank.leadPhoto = {
-      fig: box(410, 100, 200, 300),
-      img: box(440, 104, 160, 250),
+    // Lines above or below the photo never gap against it.
+    const above = mk(16, true);
+    above.textLines.push({ left: 10, right: 60, top: 40, bottom: 60 });
+    expect(judgeCase(above).filter((f) => f.rule === 'c')).toHaveLength(0);
+  });
+
+  test('(c) fails on the measured 2026-11-17 lead: text capped far short of its photo', () => {
+    // Desktop 1366px: the lead's text stopped near x=600 under the site's
+    // 65ch measure while the photo stood at x=875, ~270px of blank paper
+    // between them.
+    const input = base();
+    input.leadPhoto = {
+      fig: box(875, 730, 145, 215),
+      img: box(879, 734, 137, 190),
+      side: true,
+      containerLeft: 130,
+      containerRight: 1020,
+    };
+    input.textLines = [730, 759, 788, 817, 846, 875].map((top) => ({
+      left: 130, right: 600, top, bottom: top + 22,
+    }));
+    const found = judgeCase(input).filter((f) => f.rule === 'c');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/275\.0px/);
+  });
+
+  test('(h) sleeps without a measured front; passes a page printed to its foot', () => {
+    expect(judgeCase(base()).filter((f) => f.rule === 'h')).toHaveLength(0);
+    const full = base();
+    full.front = box(10, 100, 980, 1340);
+    // Three ruled columns of lines from top to colophon, 32px gutters.
+    for (const x of [10, 342, 674]) {
+      for (let y = 100; y < 1440; y += 24) full.ink.push(box(x, y, 316, 20));
+    }
+    expect(judgeCase(full).filter((f) => f.rule === 'h')).toHaveLength(0);
+  });
+
+  test('(h) fails on the measured 2026-11-17 hole: a photo column empty under its caption', () => {
+    // Three letter columns ran left of x=760 while the lead photo stood in a
+    // fourth slot on the right, with nothing printed under it for ~1100px.
+    const input = base();
+    input.front = box(10, 100, 980, 1340);
+    for (const x of [10, 260, 510]) {
+      for (let y = 100; y < 1440; y += 24) input.ink.push(box(x, y, 230, 20));
+    }
+    input.ink.push(box(760, 100, 230, 230));
+    input.leadPhoto = {
+      fig: box(760, 100, 230, 230),
+      img: box(764, 104, 222, 200),
       side: true,
       containerLeft: 10,
-      containerRight: 610,
+      containerRight: 990,
     };
-    const frameFound = judgeCase(frameBlank).filter((f) => f.rule === 'c');
-    expect(frameFound).toHaveLength(1);
-    expect(frameFound[0].detail).toMatch(/30\.0px/);
+    const found = judgeCase(input).filter((f) => f.rule === 'h');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/taller than the lead photo \(230\.0px\)/);
+  });
+
+  test('(h) without a photo, a blank past 15% of the sheet fails; under it passes', () => {
+    const mk = (blank: number): CaseInput => {
+      const input = base();
+      input.front = box(10, 100, 980, 1340);
+      for (const x of [10, 342, 674]) {
+        // The first column ends `blank` px above the colophon (y=1450).
+        const end = x === 10 ? 1450 - blank : 1450;
+        for (let y = 100; y + 20 <= end; y += 20) input.ink.push(box(x, y, 316, 20));
+      }
+      return input;
+    };
+    // 15% of the 1500px sheet is 225px.
+    expect(judgeCase(mk(210)).filter((f) => f.rule === 'h')).toHaveLength(0);
+    const found = judgeCase(mk(240)).filter((f) => f.rule === 'h');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/page's share \(225\.0px\)/);
   });
 
   test('(d) sleeps without a lab story, fails when it leaves the sheet', () => {

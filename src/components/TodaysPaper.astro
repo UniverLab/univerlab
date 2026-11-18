@@ -209,6 +209,9 @@ const t = useTranslations(lang);
   .paper .masthead-name { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px, 8.4vw, 86px); line-height: 0.95; margin: 4px 0 0; letter-spacing: -0.01em; text-wrap: balance; color: var(--p-ink); }
   .paper .masthead .motto { font-family: var(--font-serif); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); margin: 0; text-align: center; justify-self: center; color: var(--p-soft); }
   .paper #edition { display: grid; gap: 18px; align-content: start; flex: 1 1 auto; min-height: 0; }
+  /* The colophon closes the page at the sheet's foot, so any room the
+     front leaves reads above it, where the fit and the check can see it. */
+  .paper #edition:has(> .colophon-note) { grid-template-rows: auto auto minmax(0, 1fr) auto; }
   .paper #lab-body, .paper #lab2-body { flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; gap: 18px; }
   /* The two pages: tabs in the masthead switch them when JS runs. Without
      JS both read one after the other — hidden only ever applies under .js. */
@@ -416,53 +419,53 @@ const t = useTranslations(lang);
   .paper .banner { text-align: center; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--p-ink); border-bottom: 1px solid var(--p-ink); padding-bottom: 6px; margin: 0; }
   .paper .front { display: grid; gap: 18px; align-content: start; grid-template-columns: minmax(0, 1fr); }
   .paper .front > * { min-width: 0; }
-  .paper .lead { border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; }
-  .paper .lead .story { display: block; height: auto; }
+  .paper .lead { border-bottom: 1px solid var(--p-rule); padding-bottom: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 24px; align-items: start; }
+  /* Inside the sheet every paragraph runs to its block's edge: the site's
+     65ch reading measure would leave blank paper beside a lead or a box. */
+  .paper .front p { max-width: none; }
   .paper .lead .kicker, .paper .col h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; font-weight: 400; }
   .paper .lead h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05; margin: 6px 0 10px; text-wrap: balance; color: var(--p-ink); }
   .paper .lead p { margin: 0 0 10px; font-family: var(--font-body); font-size: 18px; line-height: 1.6; color: var(--p-ink); text-align: justify; hyphens: auto; }
-  .paper .lead .story .dropcap::first-letter { font-family: var(--font-serif); float: left; font-size: 3.4em; line-height: 0.82; padding: 4px 8px 0 0; }
+  .paper .lead .dropcap::first-letter { font-family: var(--font-serif); float: left; font-size: 3.4em; line-height: 0.82; padding: 4px 8px 0 0; }
   .paper .lead a, .paper .item a { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); text-underline-offset: 3px; }
-  /* The lead's read-on link never touches the section label below it: it
-     lays out as a block with a line of air after it. */
-  .paper .lead a { display: inline-block; margin-bottom: 14px; }
-  .paper .rail { display: flex; flex-direction: column; gap: 18px; height: 100%; min-width: 0; }
-  .paper .rail > * { min-width: 0; }
-  .paper .rail .also { border: 1px solid var(--p-rule); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); flex: 0 1 auto; align-content: start; }
-  /* The aside look travels with the item: the fit moves rail letters into
-     the lead's columns and column letters into the rail, so nothing here
-     may hang off .rail .also or a moved story loses its year and body. */
-  .paper .aside-item { display: flex; flex-direction: column; gap: 8px; min-height: 0; font-family: var(--font-body); font-size: 16px; color: var(--p-soft); }
-  .paper .aside-item.has-photo { flex: 1 1 auto; }
-  /* Letters the fit moves under the rail end: no column side padding inside
-     the rail's box, and a rule above on phones where the rail stacks. */
-  .paper .rail > .col { padding-inline: 0; }
-  @media (max-width: 47.99rem) {
-    .paper .rail > .col { border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }
-  }
-  .paper .aside-item b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; color: var(--p-ink); display: block; line-height: 1.1; }
-  .paper .aside-body { font-size: 14.5px; line-height: 1.5; text-align: justify; hyphens: auto; }
-  .paper .cols { display: grid; gap: 0 16px; grid-template-columns: minmax(0, 1fr); }
-  /* The lead's own columns: the letters fill the space under the lead story
-     here, not only in the band below everything. Same flow as .cols. */
-  .paper .lead-cols { display: grid; gap: 0 16px; grid-template-columns: minmax(0, 1fr); }
-  .paper .lead-cols > * { min-width: 0; }
+  /* The read-on link closes the lead's last column. */
+  .paper .lead a { display: inline-block; }
+  /* The lead's words and its photo are one block: the kicker, the headline
+     and the text (set in the page's own columns, as many as its width
+     holds) stand beside the photo, one gutter away; the fit sizes the photo
+     so both sides end together. One column gutter (32px, a hairline in its
+     middle) runs through the lead's text and the letter columns alike. */
+  .paper .lead-main { min-width: 0; }
+  /* The headline across the lead, over the text and the photo: the fit
+     sets it when that ends the two sides closer together. */
+  .paper .lead.lead--across { row-gap: 0; }
+  .paper .lead.lead--across .lead-main { display: contents; }
+  .paper .lead.lead--across .kicker, .paper .lead.lead--across h2 { grid-column: 1 / -1; }
+  .paper .lead.lead--across .lead-text { grid-column: 1; grid-row: 3; }
+  .paper .lead.lead--across .photo--lead { grid-column: 2; grid-row: 3; }
+  .paper .lead-text { min-width: 0; column-width: 17rem; column-gap: 32px; column-rule: 1px solid var(--p-rule); }
+  .paper .lead-text p:last-of-type { margin-bottom: 4px; }
+  .paper .cols { display: grid; gap: 0 32px; grid-template-columns: minmax(0, 1fr); }
   .paper .more { display: grid; gap: 14px; }
   .paper .more summary { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; color: var(--p-emphasis); cursor: pointer; }
-  .paper .col { padding-inline: 18px; display: grid; align-content: start; align-self: start; gap: 14px; min-width: 0; }
-  .paper .col aside.notice { margin-top: 16px; align-self: end; }
-  .paper .col + .col { border-left: 1px solid var(--p-rule); }
-  .paper .col:first-child { padding-left: 0; } .paper .col:last-child { padding-right: 0; }
+  /* Every column has the same width: the hairline between two columns is
+     drawn in the gutter, not as a border that would narrow one of them. */
+  .paper .col { position: relative; display: grid; align-content: start; align-self: start; gap: 14px; min-width: 0; }
+  .paper .col aside.notice { margin-top: 2px; }
+  /* A notice set in a column takes a column-sized display line. */
+  .paper .col aside.notice .display-notice { font-size: 28px; }
+  .paper .col + .col::before { content: ""; position: absolute; top: 0; bottom: 0; left: -16px; border-left: 1px solid var(--p-rule); }
   .paper .col h3 { border-bottom: 1px solid var(--p-ink); padding-bottom: 4px; }
   .paper .col h3 .cont { text-transform: none; letter-spacing: 0.02em; }
-  .paper .item { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px dotted var(--p-rule); }
+  .paper .item { display: flow-root; padding-bottom: 12px; border-bottom: 1px dotted var(--p-rule); }
+  .paper .item > * + * { margin-top: 2px; }
   .paper .item:last-child { border-bottom: 0; }
   .paper .item .yr { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .paper .item .yr b { font-family: var(--font-serif); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--p-ink); }
   .paper .item .yr span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: lowercase; font-variant: small-caps; color: var(--p-soft); white-space: nowrap; }
   .paper .item p { margin: 0; font-family: var(--font-serif); font-size: 17px; line-height: 1.4; color: var(--p-ink); text-align: left; hyphens: auto; }
   .paper .item .body { font-family: var(--font-body); font-style: normal; font-size: 15px; line-height: 1.55; text-align: left; hyphens: auto; }
-  .paper .item a { justify-self: start; }
+  .paper .item a { display: inline-block; }
   .paper .labmail { border: 1px solid var(--p-ink); outline: 1px solid var(--p-ink); outline-offset: 3px; padding: 12px 16px; display: grid; gap: 6px; margin: 4px; }
   .paper .labmail .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-soft); margin: 0; }
   .paper .labmail h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.1; margin: 0; text-wrap: balance; color: var(--p-ink); }
@@ -473,25 +476,26 @@ const t = useTranslations(lang);
   .paper .photo { position: relative; margin: 0; display: grid; gap: 4px; }
   .paper .photo .print { position: relative; overflow: hidden; background: var(--p-deep); padding: 4px; box-shadow: 0 1px 0 var(--p-rule); }
   .paper .photo img { display: block; width: 100%; height: auto; filter: grayscale(1) sepia(0.3) contrast(1.35) brightness(1.04); }
+  /* A picture that fails to load keeps its ratio box: its alt text never
+     grows the box past the height the page was fitted with. */
+  .paper .photo img { min-height: 0; overflow: hidden; }
   .paper .photo .print::after { content: ""; position: absolute; inset: 4px; pointer-events: none; mix-blend-mode: multiply; opacity: 0.28;
     background: radial-gradient(circle, #2a2118 30%, transparent 33%) 0 0 / 2.5px 2.5px; }
   .paper .photo figcaption { font-family: var(--font-mono); font-size: 10.5px; color: var(--p-soft); letter-spacing: 0.03em; }
-  .paper .photo--lead, .paper .photo--medium { flex: 1 0 auto; display: flex; flex-direction: column; }
-  .paper .photo--lead .print, .paper .photo--medium .print { flex: 1 0 auto; display: flex; }
-  .paper .photo--medium img { flex: 1 1 auto; width: 100%; object-fit: contain; max-height: 100%; min-height: 0; }
-  /* The lead portrait stands in its own mat, never in a column-wide empty
-     frame: the mat hugs the image it frames, so a portrait narrower than the
-     column reads as a picture set in the page, not as a blank box. */
-  .paper .photo--lead { min-height: 14rem; max-height: 36rem; margin: 4px 0 10px; align-self: center; }
-  .paper .photo--lead .print { align-self: center; flex: 0 0 auto; }
-  .paper .photo--lead img { flex: none; width: auto; max-width: 100%; height: auto; max-height: 34rem; margin-inline: auto; object-fit: contain; }
-  .paper .item.has-photo { grid-template-columns: 38% minmax(0, 1fr); column-gap: 12px; }
-  .paper .item.has-photo .photo { grid-row: span 3; align-self: start; }
-  .paper .item.has-photo.item--stamp { grid-template-columns: 56px minmax(0, 1fr); column-gap: 10px; }
-  .paper .item.has-photo .yr, .paper .item.has-photo p, .paper .item.has-photo a { grid-column: 2; }
+  /* The lead photo's mat hugs the picture: the figure takes the width the
+     fit gives it (a column's width before the fit runs) and the picture its
+     own height, so no frame ever stands half empty. */
+  .paper .photo--lead { width: 100%; max-width: 100%; margin: 4px 0 0; }
+  .paper .photo--lead img { width: 100%; height: auto; }
+  /* A letter's picture is set into its text: the words run beside it and
+     on under it, so a long letter never leaves blank paper under a small
+     picture. */
+  .paper .item.has-photo .photo { float: left; width: 38%; margin: 2px 12px 4px 0; }
+  .paper .item.has-photo.item--stamp .photo { width: 56px; margin-right: 10px; }
   /* The sundial engraving: an old plate set among the columns, under the
     shorter one; on phones it sits between sections at column width. */
   .paper .paper-plate { margin: 4px 0 0; }
+  .paper .paper-plate img { aspect-ratio: 16 / 9; }
   /* The lab's own notices: period notices in type, honestly
      labelled, each shaped by its weight. Never the lead story. Hung off
      `aside.notice`, never a bare `.notice`: the one-line entries grouped in
@@ -519,37 +523,14 @@ const t = useTranslations(lang);
   .paper .coupon-link { font-family: var(--font-mono); font-size: 12px; color: var(--p-emphasis); }
   .paper .coupon-note { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--p-soft); }
   @media (min-width: 48rem) {
-    /* A portrait or square lead photo sets to one side with the lead's
-       text flowing beside it, like a newspaper lead — never centred with
-       empty margins on both sides. Landscape photos keep the centred span. */
-    .paper .photo--lead--portrait, .paper .photo--lead--square { float: right; width: auto; max-width: min(16rem, 40%); width: fit-content; margin: 2px 0 12px 16px; min-height: 0; }
-    /* The story is the float's own block: full width with no floor, so the
-       lead's text runs to one gutter (the float's 16px margin) from a side
-       photo instead of stopping short of its frame. */
-    .paper .lead .story { width: 100%; min-width: 0; }
-    .paper .photo--lead--portrait img, .paper .photo--lead--square img { margin-inline: 0; }
-    /* The mat hugs the picture even when the caption line is wider: the
-       caption takes the picture's width and wraps under it, so a tall
-       portrait capped by max-height never leaves a blank band between the
-       lead's text and its frame. */
-    .paper .photo--lead--portrait figcaption, .paper .photo--lead--square figcaption { width: 0; min-width: 100%; }
+    /* The lead photo stands beside the lead's text, never centred with
+       blank margins on both sides; the fit sets its width to the text. */
+    .paper .lead:not(.lead--text) { grid-template-columns: minmax(0, 1fr) auto; }
+    .paper .photo--lead { width: 17rem; }
+    .paper .photo--lead:not(.photo--lead--portrait):not(.photo--lead--square) { width: 26rem; }
     .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-    .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-    .paper .notice--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
-    .paper .notice--feature .kicker { grid-column: 1 / -1; }
-  }
-  @media (min-width: 48rem) and (max-width: 63.99rem) {
-    .paper .front { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .paper .front .lead { grid-column: 1 / -1; }
-    .paper .front .rail { grid-column: 1 / -1; }
-    .paper .front .labmail, .paper .front .notice--feature, .paper .front .cols { grid-column: 1 / -1; }
-  }
-  @media (min-width: 64rem) {
-    .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .paper .front .lead { grid-column: 1 / span 2; }
-    .paper .front .lead.solo { grid-column: 1 / -1; }
-    .paper .front .rail { grid-column: 3; }
-    .paper .front .labmail, .paper .front .notice--feature, .paper .front .cols { grid-column: 1 / -1; }
+    .paper .notice--feature, .paper .front > aside.notice--wide { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
+    .paper .notice--feature .kicker, .paper .front > aside.notice--wide .kicker { grid-column: 1 / -1; }
   }
   .paper-logbook { width: var(--paper-sheet-w); max-width: 100%; margin-inline: auto; display: flex; justify-content: flex-end; padding-block: 6px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; }
   .paper-logbook a { color: var(--bench-line-soft); text-decoration: none; border-bottom: 1px dotted transparent; }
@@ -557,12 +538,11 @@ const t = useTranslations(lang);
   .paper-logbook a:focus-visible { outline: 1px solid var(--bench-emphasis); outline-offset: 3px; }
   @media print {
     .paper .front, .paper .cols { display: block; }
-    .paper .lead-cols { display: block; }
     .paper aside.notice { break-inside: avoid; }
     .paper .coupon { break-inside: avoid; }
     .paper-logbook { display: none; }
   }
-  .paper .colophon-note { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; margin-top: auto; }
+  .paper .colophon-note { max-width: none; font-family: var(--font-mono); font-size: 11.5px; color: var(--p-soft); text-align: center; border-top: 3px double var(--p-ink); padding-top: 8px; margin: 0; margin-top: auto; }
   /* The sheet: below the desktop breakpoint the paper keeps its full
      broadsheet composition at desktop width inside a viewport the reader
      pans and zooms. The control bar below the sheet holds the tabs, the
@@ -690,33 +670,25 @@ const t = useTranslations(lang);
   .paper-viewport.sheet .paper .lab-head .head-cartouche > .lab-heading { font-size: 30px; }
   .paper-viewport.sheet .paper #lab .lab-head .head-cartouche > .lab-heading { font-size: 24px; }
   .paper-viewport.sheet .paper .lead h2 { font-size: 46px; }
-  .paper-viewport.sheet .paper .photo--lead--portrait, .paper-viewport.sheet .paper .photo--lead--square { float: right; width: auto; max-width: min(16rem, 40%); width: fit-content; margin: 2px 0 12px 16px; min-height: 0; }
-  .paper-viewport.sheet .paper .lead .story { width: 100%; min-width: 0; }
-  .paper-viewport.sheet .paper .photo--lead--portrait img, .paper-viewport.sheet .paper .photo--lead--square img { margin-inline: 0; }
-  .paper-viewport.sheet .paper .photo--lead--portrait figcaption, .paper-viewport.sheet .paper .photo--lead--square figcaption { width: 0; min-width: 100%; }
+  .paper-viewport.sheet .paper .lead:not(.lead--text) { grid-template-columns: minmax(0, 1fr) auto; }
+  .paper-viewport.sheet .paper .photo--lead { width: 17rem; }
+  .paper-viewport.sheet .paper .photo--lead:not(.photo--lead--portrait):not(.photo--lead--square) { width: 26rem; }
   .paper-viewport.sheet .paper .labmail h2 { font-size: 30px; }
   .paper-viewport.sheet .paper aside.notice .display-notice { font-size: 40px; }
   .paper-viewport.sheet .paper .coupon-figure { font-size: 40px; }
   .paper-viewport.sheet .paper .cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .paper-viewport.sheet .paper .lead-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .paper-viewport.sheet .paper .notice--feature { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
-  .paper-viewport.sheet .paper .notice--feature .kicker { grid-column: 1 / -1; }
-  .paper-viewport.sheet .paper .front { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .paper-viewport.sheet .paper .front .lead { grid-column: 1 / span 2; }
-  .paper-viewport.sheet .paper .front .lead.solo { grid-column: 1 / -1; }
-  .paper-viewport.sheet .paper .front .rail { grid-column: 3; }
-  .paper-viewport.sheet .paper .front .labmail, .paper-viewport.sheet .paper .front .notice--feature, .paper-viewport.sheet .paper .front .cols { grid-column: 1 / -1; }
-  .paper-viewport.sheet .paper .col, .paper-viewport.sheet .paper .col:first-child, .paper-viewport.sheet .paper .col:last-child { padding-inline: 18px; }
-  .paper-viewport.sheet .paper .col + .col { border-left: 1px solid var(--p-rule); border-top: 0; padding-top: 0; margin-top: 0; }
+  .paper-viewport.sheet .paper .notice--feature, .paper-viewport.sheet .paper .front > aside.notice--wide { grid-template-columns: 1.2fr 1.5fr 1fr; align-items: center; }
+  .paper-viewport.sheet .paper .notice--feature .kicker, .paper-viewport.sheet .paper .front > aside.notice--wide .kicker { grid-column: 1 / -1; }
+  .paper-viewport.sheet .paper .col aside.notice .display-notice { font-size: 28px; }
+  .paper-viewport.sheet .paper .col + .col { border-top: 0; padding-top: 0; margin-top: 0; }
+  .paper-viewport.sheet .paper .col + .col::before { display: block; }
   .paper .today-loading { display: flex; flex-direction: column; gap: 0.8rem; padding-block: 1rem; }
   .paper .skeleton-line { height: 1rem; border-radius: 4px; background: linear-gradient(90deg, var(--p-rule) 25%, transparent 50%, var(--p-rule) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
   .paper .today-error { font-family: var(--font-mono); font-size: 0.8rem; color: var(--p-soft); padding-block: 2rem; text-align: center; }
   @media (max-width: 47.99rem) {
-    .paper-viewport:not(.sheet) .paper .photo--lead--portrait .print, .paper-viewport:not(.sheet) .paper .photo--lead--square .print { align-self: stretch; }
-    .paper-viewport:not(.sheet) .paper .photo--lead--portrait img, .paper-viewport:not(.sheet) .paper .photo--lead--square img { width: 100%; margin-inline: 0; }
     .paper .cols { grid-auto-flow: row; }
-    .paper .col, .paper .col:first-child, .paper .col:last-child { padding-inline: 0; }
-    .paper .col + .col { border-left: 0; border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }
+    .paper .col + .col { border-top: 1px solid var(--p-ink); padding-top: 14px; margin-top: 8px; }
+    .paper .col + .col::before { display: none; }
   }
 </style>

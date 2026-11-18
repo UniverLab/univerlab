@@ -133,14 +133,16 @@ function gather(args: {
       sheet: rectOf(sheet) || { x: 0, y: 0, width: 0, height: 0 },
       stories: [], letters: [], lab: null, colophon: null,
       colophonVisible: false, leadPhoto: null, textLines: [], columns: [],
+      front: null, ink: [],
       logbookLink: null, controlLabel: null,
       editionEmpty: !front, pageHidden: !!pageHidden, fontsLoaded,
     };
   }
-  // The gutter that separates page one's columns (`.cols`/`.lead-cols`
-  // `gap: 0 16px`), not #edition's 18px stack gap. Below 64rem the sheet is
-  // CSS-scaled to fit, so bring the gutter into the measured (scaled) space.
-  const colRow = page.querySelector('.lead-cols, .cols');
+  // The gutter that separates page one's columns (`.cols` and the lead's
+  // text columns share it), not #edition's 18px stack gap. Below 64rem the
+  // sheet is CSS-scaled to fit, so bring the gutter into the measured
+  // (scaled) space.
+  const colRow = page.querySelector('.cols, .lead-text');
   const colGutter = colRow
     ? parseFloat(getComputedStyle(colRow).columnGap) || gutterFallback
     : gutterFallback;
@@ -151,11 +153,11 @@ function gather(args: {
       ? sheetBox.width / sheetEl.offsetWidth
       : 1;
   const gutter = colGutter * (scale > 0 ? scale : 1);
-  const stories = Array.from(page.querySelectorAll('article.lead .story'))
+  const stories = Array.from(page.querySelectorAll('article.lead'))
     .map(rectOf)
     .filter((r) => r !== null);
   const letterEls = Array.from(
-    page.querySelectorAll('article.item, .aside-item'),
+    page.querySelectorAll('article.item'),
   );
   const letters = letterEls.map(rectOf).filter((r) => r !== null);
   const hasLead = !!page.querySelector('article.lead');
@@ -177,54 +179,77 @@ function gather(args: {
   const fig = lead ? lead.querySelector('figure.photo--lead') : null;
   const img = fig ? fig.querySelector('img') : null;
   let leadPhoto = null;
-  let textLines: Omit<CaseInput, 'poolLetters'>['textLines'] = [];
+  const textLines: Omit<CaseInput, 'poolLetters'>['textLines'] = [];
   if (lead && fig && img) {
     const figBox = rectOf(fig);
     const imgBox = rectOf(img);
-    const story = lead.querySelector('.story');
-    if (figBox && imgBox && story) {
-      const style = getComputedStyle(story);
-      const storyBox = rectOf(story);
-      const side =
-        (fig.classList.contains('photo--lead--portrait') ||
-          fig.classList.contains('photo--lead--square')) &&
-        getComputedStyle(fig).float !== 'none';
-      if (storyBox && side) {
-        // Wrapped line boxes of the text block (paragraphs, headline) beside
-        // the float: only these can gap against it. The read-on link below
-        // the paragraph is short and never wraps, so its line end is not a
-        // gap — it is excluded along with the figure's own caption.
-        const walker = document.createTreeWalker(story, NodeFilter.SHOW_TEXT);
-        let node: Node | null = walker.nextNode();
-        while (node) {
-          const host = node.parentElement;
-          const inText =
-            host && !host.closest('figure, a') && !!host.closest('p, h2');
-          if (node.textContent && node.textContent.trim() && inText) {
-            const range = document.createRange();
-            range.selectNodeContents(node);
-            const boxes = range.getClientRects();
-            for (let i = 0; i < boxes.length; i++) {
-              const b = boxes[i];
-              if (b.width > 0 && b.height > 0) {
-                textLines.push({ left: b.left, right: b.right, top: b.top, bottom: b.bottom });
-              }
+    const leadBox = rectOf(lead);
+    if (figBox && imgBox && leadBox) {
+      const style = getComputedStyle(lead);
+      // Wrapped line boxes of the lead's words (kicker, headline, text),
+      // outside the photo's own caption: only these can gap against the
+      // photo. Links (the read-on line) are short and never wrap, so their
+      // line end is no edge.
+      const walker = document.createTreeWalker(lead, NodeFilter.SHOW_TEXT);
+      let node: Node | null = walker.nextNode();
+      while (node) {
+        const host = node.parentElement;
+        const inText = host && !host.closest('figure, a') && !!host.closest('p, h2');
+        if (node.textContent && node.textContent.trim() && inText) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const boxes = range.getClientRects();
+          for (let i = 0; i < boxes.length; i++) {
+            const b = boxes[i];
+            if (b.width > 0 && b.height > 0) {
+              textLines.push({ left: b.left, right: b.right, top: b.top, bottom: b.bottom });
             }
-            range.detach();
           }
-          node = walker.nextNode();
+          range.detach();
         }
+        node = walker.nextNode();
       }
-      if (storyBox) {
-        leadPhoto = {
-          fig: figBox,
-          img: imgBox,
-          side,
-          containerLeft: storyBox.x + parseFloat(style.paddingLeft || '0'),
-          containerRight:
-            storyBox.x + storyBox.width - parseFloat(style.paddingRight || '0'),
-        };
+      // The photo stands beside the words when a line shares its height
+      // and ends left of its frame, not when it is stacked above or below.
+      const side = textLines.some(
+        (line) =>
+          Math.min(line.bottom, figBox.y + figBox.height) - Math.max(line.top, figBox.y) > 1 &&
+          line.right <= figBox.x + 1,
+      );
+      leadPhoto = {
+        fig: figBox,
+        img: imgBox,
+        side,
+        containerLeft: leadBox.x + parseFloat(style.paddingLeft || '0'),
+        containerRight: leadBox.x + leadBox.width - parseFloat(style.paddingRight || '0'),
+      };
+    }
+  }
+  // Everything printed on page one below the banner: every text line, every
+  // picture and every boxed story or notice. The blank-area rule reads the
+  // page's columns against these.
+  const frontEl = front;
+  const frontBox = rectOf(frontEl);
+  const ink: Omit<CaseInput, 'poolLetters'>['ink'] = [];
+  if (frontEl) {
+    const walker = document.createTreeWalker(frontEl, NodeFilter.SHOW_TEXT);
+    let node: Node | null = walker.nextNode();
+    while (node) {
+      if (node.textContent && node.textContent.trim() && !node.parentElement?.closest('template')) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const boxes = range.getClientRects();
+        for (let i = 0; i < boxes.length; i++) {
+          const b = boxes[i];
+          if (b.width > 0 && b.height > 0) ink.push({ x: b.left, y: b.top, width: b.width, height: b.height });
+        }
+        range.detach();
       }
+      node = walker.nextNode();
+    }
+    for (const el of Array.from(frontEl.querySelectorAll('img, .photo .print, aside.notice, article.labmail'))) {
+      const box = rectOf(el);
+      if (box && box.width > 0 && box.height > 0) ink.push(box);
     }
   }
   // The logbook link outside the sheet, weighed against the paper's own
@@ -248,13 +273,13 @@ function gather(args: {
     }
   }
   const colEls = Array.from(
-    page.querySelectorAll('.lead-cols .col, .cols .col, .rail > .col'),
+    page.querySelectorAll('.cols .col'),
   );
   const columns = colEls
     .map((el) => {
       const box = rectOf(el);
       if (!box || box.width <= 0 || box.height <= 0) return null;
-      const container = el.closest('.lead-cols, .cols, .rail');
+      const container = el.closest('.cols');
       const foot = container ? rectOf(container) : null;
       if (!foot) return null;
       return { box, foot: foot.y + foot.height };
@@ -275,6 +300,8 @@ function gather(args: {
     leadPhoto,
     textLines,
     columns,
+    front: frontBox,
+    ink,
     logbookLink,
     controlLabel,
     editionEmpty: false,

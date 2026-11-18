@@ -149,11 +149,12 @@ describe('event photos print beside every event that has one', () => {
   const thumbedEvent = (year: string): Fact =>
     fact({ kind: 'event', year, page: `Event of ${year}`, text: `something happened in ${year}`, thumb: { src: `https://upload.wikimedia.org/wikipedia/commons/${year}.jpg`, w: 320, h: 200 } });
 
-  it('the lead event prints its photo spanning the columns', () => {
+  it('the lead event prints its photo beside its words', () => {
     const ev = thumbedEvent('1945');
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
     expect(todayLead([ev], DATE)).toBe(ev);
-    expect(html).toContain('<article class="lead solo">');
+    expect(html).toContain('<article class="lead"><div class="lead-main">');
+    expect(html).toContain('</div></div><figure class="photo photo--lead">');
     expect(html).toContain('<figure class="photo photo--lead">');
     expect(html).not.toContain('loading="lazy"');
   });
@@ -177,43 +178,40 @@ describe('event photos print beside every event that has one', () => {
     const ev = fact({ kind: 'event', year: '1945', page: 'United Nations', text: 'charter signed' });
     const html = todayEditionHtml({ facts: [ev], lab: [] }, 'en', DATE);
     expect(todayLead([ev], DATE)).toBe(ev);
-    expect(html).toContain('<article class="lead solo">');
+    expect(html).toContain('<article class="lead lead--text">');
     expect(html).not.toContain('<figure');
   });
-  it('a lead with no side column spans the full width, with one it does not', () => {
+  it('the lead spans the front whatever stands under it: no side rail', () => {
     const one = [thumbedEvent('1945')];
-    expect(todayEditionHtml({ facts: one, lab: [] }, 'en', DATE)).toContain('<article class="lead solo">');
+    expect(todayEditionHtml({ facts: one, lab: [] }, 'en', DATE)).toContain('<article class="lead">');
     const three = ['1945', '1946', '1947'].map(thumbedEvent);
     const threeHtml = todayEditionHtml({ facts: three, lab: [] }, 'en', DATE);
     expect(threeHtml).toContain('<article class="lead">');
+    expect(threeHtml).not.toContain('class="rail"');
     expect(threeHtml).not.toContain('lead solo');
   });
-  it('every rail event with a thumb prints its photo, the lead included', () => {
+  it('every column event with a thumb prints its photo, the lead included', () => {
     const facts = ['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent);
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
-    // Six letters: one leads, five stand aside in the rail — no event
-    // reaches the columns, so every side photo prints medium.
-    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(0);
-    expect((html.match(/photo--medium/g) ?? []).length).toBe(5);
-    // The lead and the five side photos: no columns, so no engraving
-    // template waits in one — and no cap.
-    expect((html.match(/<figure class="photo/g) ?? []).length).toBe(6);
+    // Six letters: one leads, five read in the columns at the event size.
+    expect((html.match(/class="item has-photo item--event"/g) ?? []).length).toBe(5);
+    expect(html).not.toContain('photo--medium');
+    // The lead and the five column photos; no cap.
+    expect((html.match(/<figure class="photo photo--(lead|event)/g) ?? []).length).toBe(6);
   });
-  it('a rail event without a thumb prints no figure while the rest print theirs', () => {
+  it('a column event without a thumb prints no figure while the rest print theirs', () => {
     const noThumb = fact({ kind: 'event', year: '1800', page: 'Old event', text: 'something old happened' });
     const facts = [noThumb, ...['1901', '1902', '1903', '1904', '1905', '1906'].map(thumbedEvent)];
     const html = todayEditionHtml({ facts, lab: [] }, 'en', DATE);
     const lead = todayLead(facts, DATE)!;
-    const aside = todayAside(facts, lead);
-    // The rail took every non-lead event: each thumbed one prints its photo
-    // at the side size, thumb or none, and none prints at column size.
-    expect(aside).toHaveLength(6);
-    const withThumb = aside.filter((f) => f.thumb);
-    expect((html.match(/photo--medium/g) ?? []).length).toBe(withThumb.length);
+    const others = facts.filter((f) => f !== lead);
+    expect(others).toHaveLength(6);
+    const withThumb = others.filter((f) => f.thumb);
+    expect((html.match(/photo--event/g) ?? []).length).toBe(withThumb.length);
     for (const f of withThumb) {
       if (f.thumb) expect(html).toContain(f.thumb.src);
     }
-    expect(html).not.toContain('photo--event');
+    expect(html).not.toContain('photo--medium');
   });
 });
 
