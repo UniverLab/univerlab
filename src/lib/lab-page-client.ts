@@ -19,7 +19,7 @@ export interface LabSource {
   foundingLeft?: number | null;
 }
 
-type PageId = 'page-1' | 'lab' | 'lab2';
+type PageId = 'page-1' | 'page-1b' | 'lab' | 'lab2';
 
 const store = new WeakMap<object, LabSource>();
 
@@ -79,7 +79,7 @@ function langOf(root: ParentNode, fallback: LabSource | undefined): LabPageLang 
   return el && el.lang === 'es' ? 'es' : 'en';
 }
 
-const PAGE_ORDER = ['page-1', 'lab', 'lab2'] as const;
+const PAGE_ORDER = ['page-1', 'page-1b', 'lab', 'lab2'] as const;
 
 const TURN_CLASSES = ['turn-leave-next', 'turn-return-prev', 'turn-under'] as const;
 
@@ -133,7 +133,7 @@ function unpinLeaf(el: HTMLElement | null): void {
 function currentPage(scope: ParentNode): PageId {
   const active = scope.querySelector?.('.paper-tab.is-active') as HTMLElement | null;
   const tabPage = active?.getAttribute('data-page');
-  if (tabPage === 'page-1' || tabPage === 'lab' || tabPage === 'lab2') return tabPage;
+  if (tabPage === 'page-1' || tabPage === 'page-1b' || tabPage === 'lab' || tabPage === 'lab2') return tabPage;
   for (const page of PAGE_ORDER) {
     const section = scope.querySelector?.(`#${page}`) as HTMLElement | null;
     if (section && !section.hidden) return page;
@@ -166,17 +166,34 @@ export function syncPages(scope: ParentNode): void {
   const grid2 = lab2Body?.querySelector('.classifieds');
   const hasLab2 =
     hasLab && !!grid2 && Array.from(grid2.children).some((k) => !k.matches('template, .coupon-note'));
-  const reads: Record<'lab' | 'lab2', boolean> = { lab: hasLab, lab2: hasLab2 };
-  for (const id of ['lab', 'lab2'] as const) {
+  // The continued sheet reads only when the fit printed letters on it; with
+  // less, it hides with all its tabs, like an empty page 3.
+  const p1bBody = scope.querySelector?.('#page-1b-body') as HTMLElement | null;
+  const hasP1b = !!p1bBody?.querySelector('.cols .col article.item');
+  const reads: Record<'page-1b' | 'lab' | 'lab2', boolean> = { 'page-1b': hasP1b, lab: hasLab, lab2: hasLab2 };
+  for (const id of ['page-1b', 'lab', 'lab2'] as const) {
     for (const tab of Array.from(scope.querySelectorAll?.(`.paper-tab[data-page="${id}"]`) ?? []) as HTMLElement[]) {
       tab.hidden = !reads[id];
     }
     const section = scope.querySelector?.(`#${id}`) as HTMLElement | null;
     if (!reads[id] && section) section.hidden = true;
   }
+  // The folio links number the sheets that read, in order: with the
+  // continued sheet hidden, 1 · 3 · 4 closes back to 1 · 2 · 3.
+  for (const nav of Array.from(scope.querySelectorAll?.('nav.folio-tabs') ?? []) as HTMLElement[]) {
+    let n = 0;
+    for (const link of Array.from(nav.querySelectorAll('.paper-tab')) as HTMLElement[]) {
+      if (link.hidden) continue;
+      n += 1;
+      if (link.textContent !== String(n)) link.textContent = String(n);
+    }
+  }
   const cur = currentPage(scope);
   if (cur !== 'page-1' && !reads[cur]) {
-    const back: PageId = cur === 'lab2' && reads.lab ? 'lab' : 'page-1';
+    const back: PageId =
+      [...PAGE_ORDER.slice(0, PAGE_ORDER.indexOf(cur))]
+        .reverse()
+        .find((p): p is PageId => p === 'page-1' || reads[p as keyof typeof reads]) ?? 'page-1';
     const paper = scope.querySelector?.('.paper') as HTMLElement | null;
     const target = scope.querySelector?.(`#${back}`) as HTMLElement | null;
     if (target) target.hidden = false;
@@ -460,7 +477,7 @@ export function bindLabPage(root: ParentNode = document): void {
 
   const showFromHash = (): void => {
     const h = window.location.hash;
-    tabShow(paper, h === '#lab2' ? 'lab2' : h === '#lab' ? 'lab' : 'page-1');
+    tabShow(paper, h === '#lab2' ? 'lab2' : h === '#page-1b' ? 'page-1b' : h === '#lab' ? 'lab' : 'page-1');
   };
 
   // Tabs read as plain anchors without JS. With JS the click never leaves
@@ -496,7 +513,7 @@ export function bindLabPage(root: ParentNode = document): void {
     // Modified clicks keep the anchor's own meaning: new tab, new window.
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const id = anchor.getAttribute('data-page');
-    if (id !== 'page-1' && id !== 'lab' && id !== 'lab2') return;
+    if (id !== 'page-1' && id !== 'page-1b' && id !== 'lab' && id !== 'lab2') return;
     event.preventDefault();
     history.pushState({}, '', `#${id}`);
     tabShow(paper, id);
@@ -533,6 +550,10 @@ export function bindLabPage(root: ParentNode = document): void {
     showFromHash();
   }
   paintLab(root);
+  // The paper opens with only the pages it can fill: without this, an empty
+  // continued sheet (or page 3) would read in the count until the next turn
+  // lands. The load refit repeats it after measuring.
+  syncPages(paper.ownerDocument ?? paper);
   window.addEventListener('hashchange', showFromHash);
 }
 

@@ -526,6 +526,19 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       openKind = rendered.endKind;
     });
     out += `</div>`;
+    // The letters past the heads wait in a template for the second content
+    // sheet: the client prints them there, in reading order, when they fill
+    // it. The template is inert — page one still prints heads only. It is
+    // always emitted, even empty: the client fit gathers the letters page
+    // one trims into it, so without it those drops would leave no record
+    // for the second sheet to print.
+    const printed = new Set(heads.flat());
+    const overflow = entries.filter((e) => !printed.has(e));
+    out += '<template data-overflow>';
+    for (const e of overflow) {
+      out += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp', e.order);
+    }
+    out += '</template>';
     // The fillers wait in templates: the client appends the plate or a house
     // notice into a column's measured free foot only when it fits whole —
     // never both in one column. Page one keeps the single Workbench duo

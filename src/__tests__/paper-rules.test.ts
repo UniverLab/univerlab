@@ -300,3 +300,95 @@ describe('paper-rules', () => {
     expect(found[0].detail).toMatch(/web fonts/);
   });
 });
+
+describe('the second content sheet answers the same rules', () => {
+  const withSecond = (): CaseInput => {
+    const input = base();
+    input.poolLetters = 9;
+    input.printedLetters = 4;
+    input.letterIds = ['0', '1', '2', '3'];
+    input.second = {
+      hidden: false,
+      ids: ['4', '5', '6', '7', '8'],
+      letters: [box(10, 420, 170, 60), box(200, 420, 170, 60), box(390, 420, 170, 60), box(580, 420, 170, 60), box(770, 420, 170, 60)],
+      columns: [{ box: box(10, 420, 940, 60), foot: 480 }],
+      front: box(0, 400, 980, 100),
+      ink: [box(10, 420, 940, 60)],
+    };
+    return input;
+  };
+
+  test('a filled second sheet passes every rule', () => {
+    expect(judgeCase(withSecond())).toEqual([]);
+  });
+
+  test('(b) a blank band on the second sheet fails, naming the sheet', () => {
+    const input = withSecond();
+    input.second = { ...input.second!, columns: [{ box: box(10, 420, 940, 60), foot: 542 }] };
+    const found = judgeCase(input).filter((f) => f.rule === 'b');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/second sheet column 0/);
+  });
+
+  test('(b) sleeps when the second sheet hides or leaves no letters out', () => {
+    const hidden = withSecond();
+    hidden.second = { ...hidden.second!, hidden: true };
+    expect(judgeCase(hidden).filter((f) => f.rule === 'b')).toHaveLength(0);
+    const all = withSecond();
+    all.poolLetters = 4;
+    expect(judgeCase(all).filter((f) => f.rule === 'b')).toHaveLength(0);
+  });
+
+  test('(h) dead paper on the second sheet fails, naming the sheet', () => {
+    const input = withSecond();
+    input.second = { ...input.second!, front: box(0, 0, 900, 1500), ink: [box(0, 0, 900, 200)] };
+    const found = judgeCase(input).filter((f) => f.rule === 'h');
+    expect(found).toHaveLength(1);
+    expect(found[0].detail).toMatch(/second sheet .*blank paper/);
+  });
+
+  test('(i) a letter on both sheets fails, and every pooled letter must print', () => {
+    const dup = withSecond();
+    dup.second = { ...dup.second!, ids: ['3', '5', '6', '7', '8'] };
+    const foundDup = judgeCase(dup).filter((f) => f.rule === 'i');
+    expect(foundDup).toHaveLength(1);
+    expect(foundDup[0].detail).toMatch(/letter 3 prints on both content sheets/);
+    const lost = withSecond();
+    lost.poolLetters = 12;
+    const foundLost = judgeCase(lost).filter((f) => f.rule === 'i');
+    expect(foundLost).toHaveLength(1);
+    expect(foundLost[0].detail).toMatch(/3 of 12 pooled letters/);
+  });
+
+  test('(i) sleeps when the second sheet hides or the harness predates it', () => {
+    const hidden = withSecond();
+    hidden.second = { ...hidden.second!, hidden: true };
+    expect(judgeCase(hidden).filter((f) => f.rule === 'i')).toHaveLength(0);
+    const old = withSecond();
+    delete old.letterIds;
+    delete old.second;
+    expect(judgeCase(old).filter((f) => f.rule === 'i')).toHaveLength(0);
+  });
+
+  test('(j) the dense edition fails when its second sheet never prints', () => {
+    const missing = withSecond();
+    missing.expectSecond = true;
+    missing.second = null;
+    const foundNull = judgeCase(missing).filter((f) => f.rule === 'j');
+    expect(foundNull).toHaveLength(1);
+    expect(foundNull[0].detail).toMatch(/second content sheet never printed/);
+    const hidden = withSecond();
+    hidden.expectSecond = true;
+    hidden.second = { ...hidden.second!, hidden: true };
+    expect(judgeCase(hidden).filter((f) => f.rule === 'j')).toHaveLength(1);
+    const shown = withSecond();
+    shown.expectSecond = true;
+    expect(judgeCase(shown).filter((f) => f.rule === 'j')).toHaveLength(0);
+  });
+
+  test('(j) sleeps on every other edition', () => {
+    const input = withSecond();
+    input.second = null;
+    expect(judgeCase(input).filter((f) => f.rule === 'j')).toHaveLength(0);
+  });
+});

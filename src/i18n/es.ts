@@ -729,7 +729,7 @@ export const es: Dict = {
     counts: '{n} cartas del pasado · {m} del laboratorio',
     labKicker: 'Correo del laboratorio · hoy',
     labLink: 'Leer el anuncio completo →',
-    tabs: { p1: 'Página 1', p2: 'Página 2 · Clasificados', p3: 'Página 3 · Clasificados' },
+    tabs: { p1: 'Página 1', p1b: 'Continuación', p2: 'Página 2 · Clasificados', p3: 'Página 3 · Clasificados' },
     labPage: {
       heading: 'Clasificados del laboratorio',
       head: 'Clasificados',
@@ -773,10 +773,10 @@ export const es: Dict = {
     error: 'No se pudieron cargar las cartas del día.',
     pick: { label: 'Edición del', go: 'Imprimir', prev: 'Día anterior', next: 'Día siguiente' },
     fit: 'Ajustar',
-    folio: { p2: 'Página 2', p3: 'Página 3' },
+    folio: { p1b: 'Continuación', p2: 'Página 2', p3: 'Página 3' },
     controls: 'Controles de página y fecha',
     logbookLink: 'Bitácora del laboratorio →',
-    pages: { prev: 'Página anterior', next: 'Página siguiente' },
+    pages: { prev: 'Página anterior', next: 'Página siguiente', p1b: 'Página 1 · Continuación' },
     plate: 'El reloj de sol, el grabado del periódico',
     labPlate: 'El teletipo, el grabado del periódico',
     ads: {

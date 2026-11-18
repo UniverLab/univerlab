@@ -7,9 +7,11 @@
 // pixels, before the sheet is shown (its space is reserved by the sheet's
 // fixed height in any case, so fitting never shifts layout).
 //
-// This module imports nothing from the project: the server passes entry
-// weights in, and the client works on the laid-out DOM. That keeps the single
-// dependency direction (today-edition and lab-page import from here).
+// This module imports nothing from the project except the second sheet it
+// feeds: the server passes entry weights in, and the client works on the
+// laid-out DOM. That keeps the single dependency direction (today-edition
+// and lab-page import from here).
+import { composeSecondSheet } from './paper-second-sheet';
 
 /** One estimate line: the balance target spread between column weights. */
 export const FIT_LINE = 1;
@@ -143,8 +145,10 @@ function sheetLimit(edition: Element): number {
   return bottom - (total > 0 ? total : 0);
 }
 
-/** Trim whole letters off a column's foot until it ends above the limit. */
-export function trimColumn(col: Element, limit: number, slackPx = 1): number {
+/** Trim whole letters off a column's foot until it ends above the limit.
+ *  With a `sink`, the trimmed letters gather there instead of leaving the
+ *  paper unrecorded, so the second sheet can print what page one drops. */
+export function trimColumn(col: Element, limit: number, slackPx = 1, sink?: Element[] | null): number {
   if (limit <= 0) return 0;
   let removed = 0;
   for (let guard = 0; guard < 500; guard++) {
@@ -152,13 +156,14 @@ export function trimColumn(col: Element, limit: number, slackPx = 1): number {
     const last = lastLetter(col);
     if (!last) break;
     last.remove();
+    sink?.push(last);
     removed++;
   }
   if (removed) pruneOrphanHeadings(col);
   return removed;
 }
 
-interface HeadLabel {
+export interface HeadLabel {
   label: string;
   cont: string;
 }
@@ -166,7 +171,7 @@ interface HeadLabel {
 /** The printed kind headings, read off the laid-out page before any move:
  *  each h3's words keyed by the data-kind of the letters under it, with the
  *  continuation mark it carries, so reheaded columns speak the page language. */
-function headingLabels(cols: Element[]): Map<string, HeadLabel> {
+export function headingLabels(cols: Element[]): Map<string, HeadLabel> {
   const labels = new Map<string, HeadLabel>();
   for (const col of cols) {
     const kids = Array.from(col.children);
@@ -195,7 +200,7 @@ function headingLabels(cols: Element[]): Map<string, HeadLabel> {
 /** Re-issue a column's kind headings over its current letters: one heading
  *  per kind run, marked continued when the kind runs on from `openKind`.
  *  Fillers stay pinned at the foot. Returns the column's last kind. */
-function rehead(col: Element, labels: Map<string, HeadLabel>, openKind: string | null): string | null {
+export function rehead(col: Element, labels: Map<string, HeadLabel>, openKind: string | null): string | null {
   const doc = col.ownerDocument;
   const kids = Array.from(col.children);
   const items = kids.filter((k) => isLetter(k));
@@ -536,6 +541,12 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
     return done;
   }
   const doc = band.ownerDocument;
+  // Page one's drops gather in the overflow template the server rendered:
+  // the second sheet prints them in reading order, so a dropped letter is
+  // never lost. Without the template (an older render) drops leave as today.
+  const overflowTpl = edition.querySelector('template[data-overflow]') as HTMLTemplateElement | null;
+  const overflow = overflowTpl ? overflowTpl.content : null;
+  const droppedEls: Element[] = [];
   const columns = Math.min(FRONT_COLUMNS, letters.length);
   // Columns of one width before measuring: the server may have printed
   // fewer (a short day prints one per kind), and a letter's height depends
@@ -653,6 +664,7 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
   }
   for (const col of sections) while (col.firstChild) col.removeChild(col.firstChild);
   if (!plan) {
+    if (overflow) for (const el of letters) overflow.appendChild(el);
     band.remove();
     return done;
   }
@@ -685,7 +697,7 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
         out.fillers--;
         continue;
       }
-      out.trimmedLetters += trimColumn(col, limit);
+      out.trimmedLetters += trimColumn(col, limit, 1, droppedEls);
       break;
     }
     if (!lastLetter(col)) col.remove();
@@ -709,6 +721,24 @@ function composeFront(edition: Element, out: FrontFit, budget = 0): { lead: numb
     }
   }
   if (!band.querySelector('.col')) band.remove();
+  // The letters page one leaves out gather in the overflow template, in
+  // reading order: the scored-out (never re-appended) and the foot-trimmed.
+  // Appending moves each letter, so none ever prints on both sheets.
+  if (overflow) {
+    const kept = new Set(seq);
+    letters.forEach((el, i) => {
+      if (!kept.has(i)) droppedEls.push(el);
+    });
+    // Reading order, the page's own priority: each drop files ahead of the
+    // first seed past it, so the template stays sorted whatever the server
+    // and the client left out.
+    droppedEls.sort((a, b) => orderOf(a, 0) - orderOf(b, 0));
+    for (const el of droppedEls) {
+      const order = orderOf(el, 0);
+      const before = Array.from(overflow.children).find((k) => orderOf(k, 0) > order) ?? null;
+      overflow.insertBefore(el, before);
+    }
+  }
   return done;
 }
 
@@ -728,11 +758,56 @@ function setPhotoStep(fig: HTMLElement, step: string): void {
   fig.style.marginRight = full ? '0' : '';
 }
 
+/** A grown picture's place in its widths: `setPhotoStep` writes `100%` for
+ *  the `full` step, so the inline width is normalised back before lookup.
+ *  Never stepped (or reset to the stylesheet width) reads below the first
+ *  step and never steps down. */
+function photoStepOf(fig: HTMLElement, steps: string[]): number {
+  const width = fig.style.width;
+  if (width === '100%' && steps.includes('full')) return steps.indexOf('full');
+  return steps.indexOf(width);
+}
+
+/** Step the tallest columns' pictures back down until the columns end
+ *  together. Growth toward the sheet edge lands unevenly — picture steps
+ *  are coarse and text-only letters cannot grow at all — and the balance
+ *  rule reads the uneven feet against the shortest printed letter. Only a
+ *  picture growth widened steps down, never below its first step, and text
+ *  never moves, so nothing printed is lost or reordered. */
+export function shrinkPhotosForBalance(cols: Element[]): void {
+  const items = cols.flatMap((c) => Array.from(c.children).filter(isLetter));
+  if (!items.length) return;
+  // The balance rule lets a column end this far past its longest sibling:
+  // the shortest printed letter, with a pixel of slack.
+  const slack = Math.min(...items.map((l) => l.getBoundingClientRect().height)) + 1;
+  for (let guard = 0; guard < 500; guard++) {
+    const bottoms = cols.map((c) => c.getBoundingClientRect().bottom);
+    if (Math.max(...bottoms) - Math.min(...bottoms) <= slack) return;
+    // Only the tallest column ever gives up a picture step — stepping a
+    // shorter one can only push its foot further from the rest. Its tallest
+    // grown picture steps first, so the fewest steps bring the feet
+    // together; a tallest column with nothing to give ends the pass.
+    const tall = bottoms.indexOf(Math.max(...bottoms));
+    const figs = Array.from(cols[tall].children)
+      .filter((k) => isLetter(k) && k.classList.contains('has-photo'))
+      .map((item) => ({
+        fig: item.querySelector(':scope > .photo') as HTMLElement | null,
+        steps: PHOTO_STEPS[item.classList.contains('item--event') ? 'event' : 'stamp'],
+      }))
+      .filter((g): g is { fig: HTMLElement; steps: string[] } => !!g.fig)
+      .map((g) => ({ ...g, at: photoStepOf(g.fig, g.steps) }))
+      .filter((g) => g.at > 0)
+      .sort((a, b) => b.fig.getBoundingClientRect().height - a.fig.getBoundingClientRect().height);
+    if (!figs.length) return;
+    setPhotoStep(figs[0].fig, figs[0].steps[figs[0].at - 1]);
+  }
+}
+
 /** A column ending short of the given foot grows its letters' pictures,
  *  each through its widths while the column still ends at or above the
  *  foot: the pictures take the room whole letters cannot, so the columns
  *  end together without a filler. */
-function growPhotos(cols: Element[], foot: number): void {
+export function growPhotos(cols: Element[], foot: number): void {
   for (const col of cols) {
     if (foot - rectBottom(col) <= 1) continue;
     // Round by round, every picture one step up, so a column's pictures
@@ -1077,6 +1152,9 @@ export function fitPaper(root: ParentNode): PaperFit {
       out.fillers = front.fillers;
     }
   }
+  // Page one's overflow prints on the second content sheet when it fills it,
+  // only ever from the overflow template's seeds, never page one's counts.
+  composeSecondSheet(root);
   const cls = fitClassifieds(root);
   out.trimmedAds = cls.trimmedAds;
   out.pointers = cls.pointers;

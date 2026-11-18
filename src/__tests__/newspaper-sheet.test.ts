@@ -28,14 +28,14 @@ describe('the sheet hooks wrap the paper', () => {
   });
 
   it('holds one slim strip outside the sheet: page arrows, the date and Fit', () => {
-    // The strip never carries full-text tabs; the masthead keeps its three,
-    // and each inside page's folio line carries three short page links.
+    // The strip never carries full-text tabs; the masthead keeps its four,
+    // and each inside page's folio line carries four short page links.
     expect(paper).toContain('data-paper-bar');
     expect(paper).toContain('paper-strip-pages');
     expect(paper).toContain('t.today.controls');
     expect(paper).not.toContain('paper-bar-tabs');
-    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(9);
-    expect(paper.match(/<header class="folio">/g)).toHaveLength(2);
+    expect(paper.match(/class="paper-tab[^"]*" data-page/g)).toHaveLength(16);
+    expect(paper.match(/<header class="folio">/g)).toHaveLength(3);
     // Only page 1 carries the masthead, so a turn takes the whole page.
     const p1 = paper.slice(paper.indexOf('<section id="page-1"'), paper.indexOf('<section id="lab"'));
     expect(p1).toContain('<header class="masthead">');

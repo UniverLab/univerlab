@@ -27,6 +27,7 @@ const t = useTranslations(lang);
       <form class="edition-pick" method="get" aria-label={t.today.pick.label}><a class="step prev" data-prev href="./" aria-label={t.today.pick.prev} title={t.today.pick.prev} set:html={iconSvg(chevronLeft, { size: 15 })} /><label class="words"><span data-words>&nbsp;</span><input type="date" name="d" required /></label><a class="step next" data-next href="./" aria-label={t.today.pick.next} title={t.today.pick.next} set:html={iconSvg(chevronRight, { size: 15 })} /><button type="submit" aria-label={t.today.pick.go} title={t.today.pick.go} set:html={iconSvg(printer, { size: 15 })} /></form>
       <nav class="paper-tabs">
         <a class="paper-tab is-active" data-page="page-1" href="#page-1">{t.today.tabs.p1}</a>
+        <a class="paper-tab" data-page="page-1b" href="#page-1b">{t.today.tabs.p1b}</a>
         <a class="paper-tab" data-page="lab" href="#lab">{t.today.tabs.p2}</a>
         <a class="paper-tab" data-page="lab2" href="#lab2">{t.today.tabs.p3}</a>
       </nav>
@@ -39,11 +40,19 @@ const t = useTranslations(lang);
     </div>
     <div id="today-error" class="today-error" style="display:none" role="alert" data-msg={t.today.error}></div>
   </section>
+  <section id="page-1b" class="paper-page" aria-label={t.today.pages.p1b} hidden>
+    <header class="folio">
+      <span class="folio-page">{t.today.folio.p1b}</span>
+      <span class="folio-date" data-folio-date>&nbsp;</span>
+      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="page-1b" href="#page-1b">2</a><a class="paper-tab" data-page="lab" href="#lab">3</a><a class="paper-tab" data-page="lab2" href="#lab2">4</a></nav>
+    </header>
+    <div id="page-1b-body"></div>
+  </section>
   <section id="lab" class="paper-page" aria-label={t.today.tabs.p2}>
     <header class="folio">
       <span class="folio-page">{t.today.folio.p2}</span>
       <span class="folio-date" data-folio-date>&nbsp;</span>
-      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>
+      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="page-1b" href="#page-1b">2</a><a class="paper-tab" data-page="lab" href="#lab">3</a><a class="paper-tab" data-page="lab2" href="#lab2">4</a></nav>
     </header>
     <div id="lab-body"></div>
   </section>
@@ -51,7 +60,7 @@ const t = useTranslations(lang);
     <header class="folio">
       <span class="folio-page">{t.today.folio.p3}</span>
       <span class="folio-date" data-folio-date>&nbsp;</span>
-      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="lab" href="#lab">2</a><a class="paper-tab" data-page="lab2" href="#lab2">3</a></nav>
+      <nav class="folio-tabs" aria-label={t.today.controls}><a class="paper-tab" data-page="page-1" href="#page-1">1</a><a class="paper-tab" data-page="page-1b" href="#page-1b">2</a><a class="paper-tab" data-page="lab" href="#lab">3</a><a class="paper-tab" data-page="lab2" href="#lab2">4</a></nav>
     </header>
     <div id="lab2-body"></div>
   </section>
@@ -212,7 +221,7 @@ const t = useTranslations(lang);
   /* The colophon closes the page at the sheet's foot, so any room the
      front leaves reads above it, where the fit and the check can see it. */
   .paper #edition:has(> .colophon-note) { grid-template-rows: auto auto minmax(0, 1fr) auto; }
-  .paper #lab-body, .paper #lab2-body { flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; gap: 18px; }
+  .paper #lab-body, .paper #lab2-body, .paper #page-1b-body { flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; gap: 18px; }
   /* The two pages: tabs in the masthead switch them when JS runs. Without
      JS both read one after the other — hidden only ever applies under .js. */
   .paper .paper-tabs { display: flex; justify-content: center; gap: 4px; margin-top: 10px; border-top: 1px solid var(--p-ink); padding-top: 8px; }
@@ -538,6 +547,8 @@ const t = useTranslations(lang);
   .paper-logbook a:focus-visible { outline: 1px solid var(--bench-emphasis); outline-offset: 3px; }
   @media print {
     .paper .front, .paper .cols { display: block; }
+    /* The continued sheet keeps its folio line on its own sheet. */
+    .paper #page-1b .folio { break-after: avoid; }
     .paper aside.notice { break-inside: avoid; }
     .paper .coupon { break-inside: avoid; }
     .paper-logbook { display: none; }
