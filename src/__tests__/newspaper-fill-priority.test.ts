@@ -75,27 +75,23 @@ describe.each([['en'], ['es']] as Array<['en' | 'es']>)('page-one fill priority 
     expect(mails[0]).toContain('Title new');
     expect(mails[0]).not.toContain('Title old');
 
-    // Every letter prints exactly once: the lead, the rail's events and
-    // the columns' births and deaths.
-    const side = (html.match(/<div class="aside-item/g) ?? []).length;
+    // Every letter prints exactly once: the lead and the columns' events,
+    // births and deaths.
     const items = (html.match(/<article class="item/g) ?? []).length;
-    expect(side).toBe(aside.length);
     expect((html.match(/<article class="lead/g) ?? []).length).toBe(1);
-    expect(1 + side + items).toBe(FACTS.length);
+    expect(1 + items).toBe(FACTS.length);
+    expect(html).not.toContain('class="rail"');
 
-    // The rail carries the queue's head after the lead: every non-lead
-    // event, oldest first — so no birth or death prints before an event.
-    const railAt = html.indexOf('<div class="rail">');
-    const colsAt = html.indexOf('<div class="cols">');
-    expect(railAt).toBeGreaterThan(-1);
-    expect(colsAt).toBeGreaterThan(railAt);
-    const railYears = [...html.slice(railAt, colsAt).matchAll(/<b>(\d+)<\/b>/g)].map((m) => m[1]);
-    expect(railYears).toEqual(aside.map((f) => f.year));
+    // The queue's head after the lead opens the columns: every non-lead
+    // event, oldest first — so no birth or death reads before an event.
+    const colsAt = html.indexOf('<div class="cols"');
+    expect(colsAt).toBeGreaterThan(-1);
+    const colsHtml = html.slice(colsAt);
+    const eventYears = [...colsHtml.matchAll(/data-kind="event" data-i="\d+">(?:<figure[\s\S]*?<\/figure>)?<div class="yr"><b>(\d+)<\/b>/g)].map((m) => m[1]);
+    expect(eventYears).toEqual(aside.map((f) => f.year));
     expect(aside.map((f) => f.year)).toEqual([...aside.map((f) => f.year)].sort());
 
-    // The columns hold only what the rail did not take, kind by kind.
-    const colsHtml = html.slice(colsAt);
-    expect(colsHtml).not.toContain('<h3>Events</h3>');
+    // Births and deaths follow the events, kind by kind.
     const birthsAt = colsHtml.indexOf('1801');
     const deathsAt = colsHtml.indexOf('1950');
     expect(birthsAt).toBeGreaterThan(-1);

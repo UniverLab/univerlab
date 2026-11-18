@@ -9,7 +9,7 @@ import { experiments } from './experiments';
 import { firstParagraph } from './lab-feed';
 import { entryTexts } from './field-notes';
 import { dailyFact } from './mail';
-import { balanceHeads } from './paper-fit';
+import { balanceHeads, HEAD_LIMIT } from './paper-fit';
 import { paperNoticeHtml, paperNoticesMarkdown, paperHouseNoticeDuoHtml, paperWorkbenchNoticeDuoHtml } from './paper-ads';
 import { paperPlateHtml } from './paper-plate';
 import { letterPool, summaryText, type Fact, type FilterLang } from './science-filter';
@@ -200,10 +200,9 @@ export function todayLead(facts: Fact[], date: Date): Fact | null {
   return dailyFact<Fact>(letterPool(facts), date);
 }
 
-/** The side column: every non-lead event in the priority queue's order,
- *  oldest first. The rail takes the queue's head beside the lead and the
- *  client fit moves what does not fit there into the columns, so no cap
- *  here would only starve the rail. */
+/** Every non-lead event in the priority queue's order, oldest first: the
+ *  queue's head after the lead. The page opens its columns with them; the
+ *  markdown twin lists them under their own heading. */
 export function todayAside(facts: Fact[], lead: Fact | null): Fact[] {
   return facts.filter((f) => f.kind === 'event' && f !== lead).sort(byYearAsc);
 }
@@ -249,10 +248,10 @@ export function solOf(date: Date): number {
   return Math.floor((date.getTime() - start.getTime()) / 86400000);
 }
 
-/** The engraving's size on the page: the lead's picture spans columns, the
- *  side column's pictures are next in weight, column events print smaller
- *  and births and deaths keep their small portraits. */
-export type PhotoSize = 'lead' | 'medium' | 'event' | 'stamp';
+/** The engraving's size on the page: the lead's picture stands beside the
+ *  lead's words, column events print smaller and births and deaths keep
+ *  their small portraits (the client fit may grow both into spare room). */
+export type PhotoSize = 'lead' | 'event' | 'stamp';
 
 function photoFigure(
   fact: Fact,
@@ -263,14 +262,21 @@ function photoFigure(
   if (!src) return '';
   const name = fact.page || '';
   const alt = esc(name);
+  const w0 = fact.thumb?.w;
+  const h0 = fact.thumb?.h;
+  const sized = typeof w0 === 'number' && typeof h0 === 'number' && w0 > 0 && h0 > 0;
+  // A fixed ratio, not only the attributes' fallback one: a picture that
+  // fails to load keeps the box the page was fitted with, instead of
+  // collapsing to (or growing around) its alt text.
   const dims =
-    (typeof fact.thumb?.w === 'number' ? ` width="${fact.thumb.w}"` : '') +
-    (typeof fact.thumb?.h === 'number' ? ` height="${fact.thumb.h}"` : '');
+    (typeof w0 === 'number' ? ` width="${w0}"` : '') +
+    (typeof h0 === 'number' ? ` height="${h0}"` : '') +
+    (sized ? ` style="aspect-ratio:${w0}/${h0}"` : '');
   const loading = opts.eager ? '' : ' loading="lazy"';
   const cap = opts.caption && name ? `<figcaption>${esc(fmt(t.caption, { name }))}</figcaption>` : '';
-  // A portrait or square lead photo sets to one side with the text beside
-  // it; a landscape photo spans the lead's width. No orientation class for
-  // other sizes or missing dims.
+  // The lead photo's orientation tells the client fit which widths it may
+  // take beside the lead's words (an upright picture narrower, a landscape
+  // one wider). No orientation class for other sizes or missing dims.
   let orient = '';
   if (opts.size === 'lead') {
     const w = fact.thumb?.w;
@@ -286,7 +292,7 @@ function photoFigure(
   );
 }
 
-function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): string {
+function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp', order?: number): string {
   const years = yearsOnWay(fact, date);
   const text = fact.text ? fact.text.charAt(0).toUpperCase() + fact.text.slice(1) : '';
   const img = photoFigure(fact, t, { eager: false, caption: false, size });
@@ -303,19 +309,22 @@ function itemHtml(fact: Fact, t: Dict, date: Date, size: 'event' | 'stamp'): str
   const body = raw === fact.text ? '' : firstSentence(raw);
   const bodyHtml = body ? `<p class="body">${esc(body)}</p>` : '';
   return (
-    `<article class="${cls}" data-kind="${fact.kind}">${img}` +
+    `<article class="${cls}" data-kind="${fact.kind}"${typeof order === 'number' ? ` data-i="${order}"` : ''}>${img}` +
     `<div class="yr"><b>${esc(fact.year)}</b><span>${esc(fmt(t.ago[fact.kind], { years }))}</span></div>` +
     `<p>${esc(text)}</p>${bodyHtml}${link}</article>`
   );
 }
 
 /** A column shows this many letters before the rest fold under "show more". */
-export const COLUMN_FOLD = 6;
+export const COLUMN_FOLD = HEAD_LIMIT;
 
 /** One column entry: its kind sets the heading it prints under. */
 export interface ColEntry {
   kind: Fact['kind'];
   fact: Fact;
+  /** The letter's place in the page's reading order: the client fit re-cuts
+   *  the columns by it, whatever column the server balanced it into. */
+  order?: number;
 }
 
 /** A printed column's weight in body lines: the line, one sentence of body
@@ -419,7 +428,7 @@ function balancedColumnHtml(
       cur = e.kind;
     }
     first = false;
-    html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp');
+    html += itemHtml(e.fact, t, date, e.kind === 'event' ? 'event' : 'stamp', e.order);
   }
   return { html: html + `</section>`, endKind: cur };
 }
@@ -429,7 +438,6 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
   const t = dict(lang);
   const facts = feed?.facts || [];
   const lead = todayLead(facts, date);
-  const aside = todayAside(facts, lead);
   const boxes = todayLabBoxes(feed?.lab || [], date);
 
   const full = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -451,45 +459,21 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const years = yearsOnWay(lead, date);
     const headline = leadHeadline(lead);
     const body = leadBody(lead);
+    const figure = photoFigure(lead, t, { eager: true, caption: true, size: 'lead' });
+    // The lead's words and its photo set as one block: the kicker, the
+    // headline and the text (in as many columns as its width holds) beside
+    // the photo, which the client fit sizes to them so neither side ends in
+    // blank paper.
     out +=
-      `<article class="lead${aside.length ? '' : ' solo'}"><div class="story">` +
+      `<article class="lead${figure ? '' : ' lead--text'}"><div class="lead-main">` +
       `<p class="kicker">${esc(fmt(t.leadKicker, { years }))}</p>` +
       `<h2>${esc(headline)}</h2>` +
-      photoFigure(lead, t, { eager: true, caption: true, size: 'lead' }) +
+      `<div class="lead-text">` +
       (body ? `<p class="dropcap">${esc(body)}</p>` : '') +
       (lead.link
         ? `<a href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer">${esc(t.readOn)}</a>`
         : '') +
-      // The letters fill the space under the lead story in the lead's own
-      // columns, not only in a band below everything; the client fit moves
-      // whole column sections here. Inside the story (the float's own block)
-      // so a side photo pulls the letters up beside and under it instead of
-      // leaving the space beside the frame blank.
-      `<div class="lead-cols"></div></div></article>`;
-  }
-
-  // The rail beside the lead: only the events the lead pushed aside read
-  // here. Nothing else shares it, so a long side column can no longer
-  // stretch past the lead and leave a hole under it.
-  const side = aside.length
-    ? `<aside class="also">` +
-      aside
-        .map((f) => {
-          const text = f.text ? f.text.charAt(0).toUpperCase() + f.text.slice(1) : '';
-          const raw = itemBody(f);
-          const body = raw === f.text ? '' : firstSentence(raw);
-          const bodyHtml = body ? `<p class="aside-body">${esc(body)}</p>` : '';
-          const img = photoFigure(f, t, { eager: false, caption: false, size: 'medium' });
-          return (
-            `<div class="aside-item${img ? ' has-photo' : ''}">${img}<div>` +
-            `<p><b>${esc(f.year)}</b>${esc(text)}</p>${bodyHtml}</div></div>`
-          );
-        })
-        .join('') +
-      `</aside>`
-    : '';
-  if (side) {
-    out += `<div class="rail">${side}</div>`;
+      `</div></div>${figure}</article>`;
   }
 
   // At most one lab announcement prints: the day's first box. The twin
@@ -510,18 +494,19 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
       `<a href="${lang === 'es' ? '/es/newspaper/#lab' : '/newspaper/#lab'}">${esc(t.labLink)}</a></article>`;
   }
 
-  // The single Workbench display spans the front under the lead and, when
-  // the day has one, the rail — never the lead slot itself. It carries both
+  // The single Workbench display spans the front under the lead — never
+  // the lead slot itself. It carries both
   // offers, the free first call and the audits, each with its own link.
   out += paperWorkbenchNoticeDuoHtml(lang);
 
+  // Every letter but the lead reads in the columns, the day's events first
+  // (the queue's head), then births and deaths: one flow in reading order
+  // that the client fit balances across the page's columns.
   const rest = (kind: Fact['kind']) =>
-    facts.filter((f) => f.kind === kind && f !== lead && !aside.includes(f)).sort(byYearAsc);
-  // Every letter whose article carries a photo prints it, like births and
-  // deaths do; the column folds the overflow under "show more" instead.
-  const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
-    rest(kind).map((fact) => ({ kind, fact })),
-  );
+    facts.filter((f) => f.kind === kind && f !== lead).sort(byYearAsc);
+  const entries: ColEntry[] = (['event', 'born', 'died'] as const)
+    .flatMap((kind) => rest(kind).map((fact) => ({ kind, fact })))
+    .map((e, order) => ({ ...e, order }));
   const cols = splitColumns(entries);
   if (cols.length) {
     // Each column prints its head whole; letters beyond the head are left
@@ -532,7 +517,9 @@ export function todayEditionHtml(feed: TodayFeed, lang: TodayLang, date: Date): 
     const weights = heads.map((head) => head.map((e) => estimate(e.fact)));
     balanceHeads(heads, weights);
     let openKind: Fact['kind'] | null = null;
-    out += `<div class="cols">`;
+    // The continuation mark rides on the band: the client fit re-cuts the
+    // columns and marks whichever kind it carries over a column break.
+    out += `<div class="cols" data-cont="${esc(t.continued)}">`;
     heads.forEach((col) => {
       const rendered = balancedColumnHtml(col, openKind, t, date, lang);
       out += rendered.html;

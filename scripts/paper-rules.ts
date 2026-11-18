@@ -2,8 +2,8 @@
 // the browser gathers, so every rule is jest-testable without a browser.
 // All lengths are CSS pixels; every comparison carries a 1px slack for
 // sub-pixel rounding. The thresholds mirror the stylesheet contract:
-// the 16px column gutter (`.cols`/`lead-cols` `gap: 0 16px`) and the 2px
-// centre tolerance below which two margins read as equal.
+// the column gutter (`.cols` and the lead's text columns share it) and the
+// 2px centre tolerance below which two margins read as equal.
 
 export interface Rect {
   x: number;
@@ -12,7 +12,7 @@ export interface Rect {
   height: number;
 }
 
-/** The right edge of one wrapped text line beside the lead photo. */
+/** One wrapped text line of the lead's words. */
 export interface LineBox {
   left: number;
   right: number;
@@ -30,7 +30,7 @@ export interface ColumnBand {
 export interface LeadPhoto {
   fig: Rect;
   img: Rect;
-  /** True for a portrait/square photo floated beside the lead's text. */
+  /** True when the photo stands beside the lead's words, not under them. */
   side: boolean;
   /** Content-box edges of the lead's text block. */
   containerLeft: number;
@@ -40,7 +40,7 @@ export interface LeadPhoto {
 export interface CaseInput {
   /** Facts in the recorded pool (whole day, both kinds the page prints). */
   poolLetters: number;
-  /** Letters actually printed (items + rail stories + the lead). */
+  /** Letters actually printed (column items + the lead). */
   printedLetters: number;
   hasLead: boolean;
   hasLab: boolean;
@@ -48,9 +48,9 @@ export interface CaseInput {
    *  space as the rects below. 0 falls back to 16. */
   gutter: number;
   sheet: Rect;
-  /** Lead stories (`.lead .story`), normally one. */
+  /** Lead stories (`article.lead`), normally one. */
   stories: Rect[];
-  /** Printed letters (`article.item` + rail `.aside-item`). */
+  /** Printed letters (`article.item`). */
   letters: Rect[];
   /** The logbook link outside the sheet, and one control label beside it. */
   logbookLink: Rect | null;
@@ -59,9 +59,13 @@ export interface CaseInput {
   colophon: Rect | null;
   colophonVisible: boolean;
   leadPhoto: LeadPhoto | null;
-  /** Wrapped text line boxes of the lead's story (outside the figure). */
+  /** Wrapped text line boxes of the lead's words beside its photo. */
   textLines: LineBox[];
   columns: ColumnBand[];
+  /** Page one's front (everything under the banner), and every printed
+   *  mark in it: text lines, pictures, boxed stories and notices. */
+  front: Rect | null;
+  ink: Rect[];
   /** The client never filled the edition (fetch or render failure). */
   editionEmpty: boolean;
   /** Page one has no laid-out box (a tab or sheet failure). */
@@ -70,7 +74,7 @@ export interface CaseInput {
   fontsLoaded: boolean;
 }
 
-export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'harness';
+export type RuleId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'harness';
 
 export interface Finding {
   rule: RuleId;
@@ -81,6 +85,14 @@ export const GUTTER_FALLBACK = 16;
 export const SLACK = 1;
 /** Two side margins within this of each other read as centred. */
 export const CENTRE_TOLERANCE = 2;
+/** Page one's letter columns: the blank-area rule's strips are half as
+ *  wide as one of them. */
+export const FRONT_SLOTS = 3;
+/** Without a lead photo to measure against, a blank stretch in a column
+ *  fails past this share of the sheet's height; with one, past the photo's
+ *  own height, never more than `BLANK_CAP_SHARE` of the sheet. */
+export const BLANK_SHARE = 0.15;
+export const BLANK_CAP_SHARE = 0.2;
 
 const bottom = (r: Rect): number => r.y + r.height;
 
@@ -122,36 +134,24 @@ function ruleC(input: CaseInput, out: Finding[]): void {
   const photo = input.leadPhoto;
   if (!photo || !photo.side) return;
   const gutter = input.gutter > 0 ? input.gutter : GUTTER_FALLBACK;
+  // Only lines that run beside the photo (sharing its height, left of its
+  // frame) can gap against it; the furthest-right one is the text block's
+  // edge, so a short last line beside a full one is not a gap. The frame
+  // (photo + mat), not the image inside it, is the photo's edge.
   const beside = input.textLines.filter((line) => {
-    // Only lines that actually run beside the photo can gap against it.
     const overlap = Math.min(line.bottom, photo.fig.y + photo.fig.height) -
       Math.max(line.top, photo.fig.y);
-    return overlap > 1;
+    return overlap > 1 && line.right <= photo.fig.x + SLACK;
   });
-  // Wrapped lines reach the float (within two gutters of its edge); a ragged
-  // last line ends far left and is not the block's edge. Among the lines that
-  // reach, the furthest-right one is the text block's edge: a short wrapped
-  // line beside a longer one is not a gap. With no reaching line the text
-  // never runs beside the photo, so only the frame's own blank can fail.
-  const reach = 2 * gutter + SLACK;
-  const reaching = beside.filter((line) => photo.fig.x - line.right <= reach);
-  let worst: number;
-  if (reaching.length) {
-    // The frame (photo + mat), not the image inside it: the stylesheet's
-    // contract is the figure's one-gutter margin.
-    const blockRight = Math.max(...reaching.map((line) => line.right));
-    worst = photo.fig.x - blockRight;
-  } else if (beside.length) {
-    worst = photo.img.x - photo.fig.x;
-  } else {
-    return;
-  }
-  if (worst > gutter + SLACK) {
+  if (!beside.length) return;
+  const blockRight = Math.max(...beside.map((line) => line.right));
+  const gap = photo.fig.x - blockRight;
+  if (gap > gutter + SLACK) {
     out.push({
       rule: 'c',
       detail:
-        `blank gap between the lead's text and its side photo is ` +
-        `${worst.toFixed(1)}px, wider than one column gutter (${gutter.toFixed(1)}px)`,
+        `blank gap between the lead's text and its photo is ` +
+        `${gap.toFixed(1)}px, wider than one column gutter (${gutter.toFixed(1)}px)`,
     });
   }
 }
@@ -232,6 +232,61 @@ function ruleG(input: CaseInput, out: Finding[]): void {
   }
 }
 
+function ruleH(input: CaseInput, out: Finding[]): void {
+  // Dead paper: the tallest stretch with nothing printed across a vertical
+  // strip of the front, from its top to the colophon (or the sheet's foot).
+  // Strips are half a column wide and slide across the front, so a hole of
+  // any width from a quarter column up is seen wherever it sits: a strip is
+  // blank where nothing printed reaches its middle half, so a gutter (a
+  // quarter of a strip) never reads as blank while a hole a column's
+  // quarter wide always does. One finding: the worst strip.
+  const front = input.front;
+  if (!front || front.width <= 0) return;
+  const top = front.y;
+  const bottomEdge = input.colophon && input.colophonVisible
+    ? input.colophon.y
+    : input.sheet.y + input.sheet.height;
+  if (bottomEdge - top <= 0) return;
+  const photoH = input.leadPhoto ? input.leadPhoto.fig.height : 0;
+  const limit = photoH > 0
+    ? Math.min(photoH, BLANK_CAP_SHARE * input.sheet.height)
+    : BLANK_SHARE * input.sheet.height;
+  const stripW = front.width / (2 * FRONT_SLOTS);
+  const step = stripW / 4;
+  let worst = 0;
+  let worstAt = top;
+  let worstX = front.x;
+  for (let left = front.x; left + stripW <= front.x + front.width + SLACK; left += step) {
+    const right = left + stripW;
+    const spans = input.ink
+      .filter((r) => Math.min(r.x + r.width, right - stripW / 4) - Math.max(r.x, left + stripW / 4) > SLACK)
+      .map((r) => [Math.max(r.y, top), Math.min(r.y + r.height, bottomEdge)] as const)
+      .filter(([a, b]) => b > a)
+      .sort((a, b) => a[0] - b[0]);
+    let reach = top;
+    const consider = (from: number, to: number): void => {
+      if (to - from > worst) {
+        worst = to - from;
+        worstAt = from;
+        worstX = left;
+      }
+    };
+    for (const [a, b] of spans) {
+      consider(reach, a);
+      if (b > reach) reach = b;
+    }
+    consider(reach, bottomEdge);
+  }
+  if (worst > limit + SLACK) {
+    out.push({
+      rule: 'h',
+      detail:
+        `${worst.toFixed(1)}px of blank paper at x=${worstX.toFixed(1)}, y=${worstAt.toFixed(1)}, ` +
+        `taller than ${photoH > 0 ? 'the lead photo' : "the page's share"} (${limit.toFixed(1)}px)`,
+    });
+  }
+}
+
 /** Judge one measured page: every broken rule yields one finding. */
 export function judgeCase(input: CaseInput): Finding[] {
   if (input.editionEmpty || input.pageHidden) {
@@ -261,5 +316,6 @@ export function judgeCase(input: CaseInput): Finding[] {
   ruleE(input, out);
   ruleF(input, out);
   ruleG(input, out);
+  ruleH(input, out);
   return out;
 }

@@ -148,28 +148,20 @@ describe('the sheet keeps the desktop composition', () => {
     expect(sheetSrc).not.toMatch(/const SHEET_HEIGHT_REM/);
   });
 
-  it('pins the three-column front with the lead spanning two and the rail beside it', () => {
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \{[^}]*grid-template-columns:\s*repeat\(3/);
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \.lead \{[^}]*grid-column:\s*1 \/ span 2/);
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.front \.rail \{[^}]*grid-column:\s*3/);
-    // The rail is content-sized, never stretched: no boxed blank column runs
-    // down page one beside the lead.
-    expect(css).toMatch(/\.paper \.rail \.also \{[^}]*flex:\s*0 1 auto/);
-    // The aside look travels with the item: the fit moves rail stories into
-    // the lead's columns, so nothing may hang off .rail .also.
-    expect(css).toMatch(/\.paper \.aside-item \{[^}]*display:\s*flex/);
-    expect(css).not.toContain('.rail .also .aside-item');
-    expect(css).not.toContain('.rail .also b');
-    expect(css).not.toContain('.rail .also .aside-body');
+  it('pins the two-track lead and the three letter columns on the sheet', () => {
+    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.lead:not\(\.lead--text\) \{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto/);
+    // No side rail anywhere: nothing beside the lead to end short of it.
+    expect(css).not.toContain('.rail');
+    expect(css).not.toContain('.aside-item');
   });
 
-  it('holds the lead link off the section label below it', () => {
-    // The read-on link lays out as a block with a line of air after it, so
-    // it never touches the events heading on the next line.
-    const rule = css.match(/\.paper \.lead a \{[^}]*\}/)?.[0] ?? '';
-    expect(rule).toContain('display: inline-block');
-    const margin = /margin-bottom:\s*(\d+)px/.exec(rule)?.[1];
-    expect(Number(margin)).toBeGreaterThanOrEqual(8);
+  it('holds the lead off the section label below it', () => {
+    // The lead closes on its own rule with air under it, so its read-on
+    // link never touches the next block's label.
+    const rule = css.match(/\.paper \.lead \{ border-bottom[^}]*\}/)?.[0] ?? '';
+    expect(rule).toContain('border-bottom: 1px solid');
+    const pad = /padding-bottom:\s*(\d+)px/.exec(rule)?.[1];
+    expect(Number(pad)).toBeGreaterThanOrEqual(8);
   });
 
   it('pins the three-column masthead instead of the stacked phone ears', () => {
@@ -179,7 +171,11 @@ describe('the sheet keeps the desktop composition', () => {
   });
 
   it('undoes the phone stack: ruled columns with gutters, never borderless rows', () => {
-    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.col \+ \.col \{[^}]*border-left:\s*1px solid/);
+    // Every column one width: the hairline sits in the gutter, drawn by the
+    // column after it, never a border that narrows one column.
+    expect(css).toMatch(/\.paper \.col \+ \.col::before \{[^}]*border-left:\s*1px solid/);
+    expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.col \+ \.col::before \{[^}]*display:\s*block/);
+    expect(css).toMatch(/\.paper \.cols \{[^}]*gap:\s*0 32px/);
     expect(css).toMatch(/\.paper-viewport\.sheet \.paper \.cols \{[^}]*grid-auto-flow:\s*column/);
   });
 

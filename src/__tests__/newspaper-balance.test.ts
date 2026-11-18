@@ -1,8 +1,8 @@
 /**
  * The front page holds no holes and no lopsided band: on a long edition
  * (the 1021 fixture, 17 letters) and on a short one, the columns end within
- * a few lines of each other, every letter prints exactly once, the rail
- * carries no row count and the lead and the rail stay within a few lines.
+ * a few lines of each other, every letter prints exactly once and nothing
+ * stands beside the lead to end short of it.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,7 +13,6 @@ import {
   estimate,
   firstSentence,
   splitColumns,
-  todayAside,
   todayEditionHtml,
   todayEditionMarkdown,
   todayLead,
@@ -49,7 +48,7 @@ const textOf = (html: string): string => {
   return out;
 };
 const colTexts = (html: string): string[] => {
-  const cols = html.slice(html.indexOf('<div class="cols">'));
+  const cols = html.slice(html.indexOf('<div class="cols"'));
   return [...cols.matchAll(/<section class="col">(.*?)<\/section>/gs)].map((m) => textOf(m[1]));
 };
 const blockOf = (html: string, start: string, end: string): string => {
@@ -65,18 +64,19 @@ describe('a long edition balances its columns', () => {
   const html = todayEditionHtml({ facts: FACTS, lab: [] }, 'en', DATE);
 
   it('prints three columns ending within a few lines of each other', () => {
-    // The rail took the events, so the columns carry births and deaths: the
-    // design's own weights end within one estimate line, and the text
-    // within a few lines.
+    // The columns carry every letter but the lead, events first, and the
+    // printed text ends within a few lines.
     const lead = todayLead(FACTS, DATE);
-    const aside = todayAside(FACTS, lead);
     const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
-      FACTS.filter((f) => f.kind === kind && f !== lead && !aside.includes(f))
+      FACTS.filter((f) => f.kind === kind && f !== lead)
         .sort((a, b) => parseInt(a.year, 10) - parseInt(b.year, 10))
         .map((fact) => ({ kind, fact })),
     );
+    // Contiguous cuts end within one letter of each other: the tallest
+    // letter is the most a cut can be off.
     const weights = splitColumns(entries).map((c) => c.reduce((n, e) => n + estimate(e.fact), 0));
-    expect(Math.max(...weights) - Math.min(...weights)).toBeLessThanOrEqual(1);
+    const tallest = Math.max(...entries.map((e) => estimate(e.fact)));
+    expect(Math.max(...weights) - Math.min(...weights)).toBeLessThanOrEqual(tallest);
     const lens = colTexts(html).map((s) => s.length);
     expect(lens).toHaveLength(3);
     const lines = lens.map((n) => Math.ceil(n / 70));
@@ -85,9 +85,8 @@ describe('a long edition balances its columns', () => {
 
   it('splits contiguous kinds at the cuts nearest each third', () => {
     const lead = todayLead(FACTS, DATE);
-    const aside = todayAside(FACTS, lead);
     const entries: ColEntry[] = (['event', 'born', 'died'] as const).flatMap((kind) =>
-      FACTS.filter((f) => f.kind === kind && f !== lead && !aside.includes(f))
+      FACTS.filter((f) => f.kind === kind && f !== lead)
         .sort((a, b) => parseInt(a.year, 10) - parseInt(b.year, 10))
         .map((fact) => ({ kind, fact })),
     );
@@ -108,17 +107,9 @@ describe('a long edition balances its columns', () => {
     expect(lead + side + items).toBe(FACTS.length);
   });
 
-  it('keeps the rail content-sized beside a lead within a few lines', () => {
-    expect(html).not.toContain('rail" style=');
-    // Lines of ~70 characters: the lead story and the rail (the three
-    // non-lead events only — the Workbench notice left the rail) end within
-    // three lines of each other, so no hole opens under either of them.
-    const lines = (s: string): number => Math.ceil(s.length / 70);
-    const leadLen = blockOf(html, '<article class="lead', '</article>');
-    const railStart = html.indexOf('<div class="rail">');
-    const alsoEnd = html.indexOf('</aside>', railStart);
-    const railLen = textOf(html.slice(railStart, html.indexOf('</div>', alsoEnd)));
-    expect(Math.abs(lines(leadLen) - lines(railLen))).toBeLessThanOrEqual(3);
+  it('stands nothing beside the lead: no rail to end short of it', () => {
+    expect(html).not.toContain('class="rail"');
+    expect(html).not.toContain('class="aside-item');
   });
 
   it('carries a single Workbench notice with both offers under the lead', () => {
@@ -129,14 +120,11 @@ describe('a long edition balances its columns', () => {
     expect(duos).toHaveLength(1);
     expect(duos[0][1]).toContain('href="/workbench/#first-call"');
     expect(duos[0][1]).toContain('href="/workbench/audits/"');
-    const railStart = html.indexOf('<div class="rail">');
-    const railEnd = html.indexOf('</div>', html.indexOf('</aside>', railStart));
-    expect(html.slice(railStart, railEnd)).not.toContain('class="notice');
   });
 
   it('keeps the columns free of footers: the plate and the notices wait in templates', () => {
     expect(html).not.toContain('notice-pair');
-    const colsHtml = html.slice(html.indexOf('<div class="cols">'));
+    const colsHtml = html.slice(html.indexOf('<div class="cols"'));
     const colBodies = [...colsHtml.matchAll(/<section class="col">([\s\S]*?)<\/section>/gs)].map(
       (m) => m[1],
     );
@@ -240,9 +228,10 @@ describe('a short edition keeps one column per kind', () => {
   };
   const html = todayEditionHtml(feed, 'en', DATE);
 
-  it('lists the one remaining birth without splitting or continuing', () => {
-    expect(colTexts(html)).toHaveLength(1);
+  it('lists the other event and the births a column each, without continuing', () => {
+    expect(colTexts(html)).toHaveLength(2);
     expect(html).not.toContain('class="cont"');
+    expect(html).toContain('<h3>Events</h3>');
     expect(html).toContain('<h3>Births</h3>');
   });
 
@@ -259,13 +248,13 @@ describe('a short edition keeps one column per kind', () => {
     expect(html).not.toContain('Then she taught for decades.');
   });
 
-  it('stages the house ads in templates when a single column prints', () => {
-    // One column: the notices wait in templates instead of a row below the
+  it('stages the house ads in templates when a short day prints', () => {
+    // A short day: the notices wait in templates instead of a row below the
     // columns — the client foots the single foot with the duo or one notice.
     const rendered = html.replace(/<template[\s\S]*?<\/template>/g, '');
     expect(rendered).not.toContain('class="notice notice--small"');
     expect(html).not.toContain('notice-pair');
-    const colsStart = html.indexOf('<div class="cols">');
+    const colsStart = html.indexOf('<div class="cols"');
     expect(colsStart).toBeGreaterThan(-1);
     const duo = html.match(/<template data-filler="house-duo">([\s\S]*?)<\/template>/);
     expect(duo?.[1]).toContain('/canopy/');
