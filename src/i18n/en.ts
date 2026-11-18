@@ -63,6 +63,11 @@ export const en = {
       continuesWikipedia: 'Continues on Wikipedia →',
       allToday: 'See the newspaper →',
       readAnnouncement: 'Read the full announcement →',
+      datelinePlace: 'Bogotá',
+      greet: 'Dear reader,',
+      closing: 'With regards,',
+      sign: 'The UniverLab laboratory',
+      psLab: 'P.S. {type}',
     },
   },
   // The command palette (catalog card), its theme card and the paper slips:

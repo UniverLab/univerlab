@@ -212,6 +212,9 @@
   /* A letter page in portrait, close to 1 : 1.3, at every viewport width.
      The sheet never stretches to fit its body: long text scrolls inside. */
   aspect-ratio: 10 / 13;
+  /* On short viewports the page keeps its proportions until it would leave
+     the screen; then the height caps and the body scrolls inside instead. */
+  max-height: calc(100dvh - 120px);
   overflow: hidden;
   padding: 18px 18px 16px;
   color: var(--mail-letter-ink);
@@ -257,7 +260,7 @@
   padding-right: 22px;
 }
 .mail-pop .letter p {
-  font-family: var(--font-mono);
+  font-family: var(--font-serif);
   font-size: var(--mail-body);
   line-height: 1.55;
   margin: 0;
@@ -272,8 +275,54 @@
   min-height: 0;
   overflow-y: auto;
 }
+/* A lab letter's typed body: the site's serif at a letter's measure and
+   leading, scrolling inside the sheet like every letter body. */
+.mail-pop .letter .body {
+  font-family: var(--font-serif);
+  font-size: var(--mail-body);
+  line-height: 1.65;
+  max-width: 60ch;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* The letter's furniture reads as a letter, not labels: the place and date
+   sit at the top right, the greeting leans in italic, the signature closes
+   the page and the kind arrives as a postscript. None of them scrolls or
+   stretches: only the body takes the sheet's free height. */
+.mail-pop .letter .dateline {
+  flex: none;
+  overflow: visible;
+  font-size: 12.5px;
+  color: var(--mail-letter-soft);
+  text-align: right;
+  /* Same clearance as the meta row was given: the × sits top-right over
+     the letter, so the date's end stays clear of it. */
+  padding-right: 22px;
+}
+.mail-pop .letter .greet {
+  flex: none;
+  overflow: visible;
+  font-style: italic;
+}
+.mail-pop .letter .sign {
+  flex: none;
+  overflow: visible;
+  /* The signature closes the page: it sits at the sheet's foot with the
+     postscript and the link under it. */
+  margin-top: auto;
+}
+.mail-pop .letter .ps {
+  flex: none;
+  overflow: visible;
+  font-size: 12px;
+  color: var(--mail-letter-soft);
+}
 /* A letter from the past reads in its period hand, smaller than today's
-   text; lab letters stay upright in the site's mono. Meta lines and links
+   text; lab letters stay upright in the site's serif. Meta lines and links
    keep the site's type so dates and destinations stay legible. */
 .mail-pop .letter.past h2 {
   font-family: var(--mail-hand);
@@ -288,7 +337,7 @@
   font-size: var(--mail-past-body);
   line-height: 1.7;
 }
-.mail-pop .letter p .caret {
+.mail-pop .letter .caret {
   display: inline-block;
   width: 0.55em;
   height: 1.05em;
@@ -508,5 +557,5 @@
 @media (prefers-reduced-motion: reduce) {
   .mailbox .flag,
   .mailbox .lid { transition: none; }
-  .mail-pop .letter p .caret { animation: none; }
+  .mail-pop .letter .caret { animation: none; }
 }

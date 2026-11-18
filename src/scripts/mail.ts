@@ -71,6 +71,11 @@ interface MailCopy {
   continuesWikipedia: string;
   allToday: string;
   readAnnouncement: string;
+  datelinePlace: string;
+  greet: string;
+  closing: string;
+  sign: string;
+  psLab: string;
 }
 
 function fmt(s: string, vars: Record<string, string | number>): string {
@@ -211,7 +216,6 @@ function startMailbox(): void {
     // read; a letter from the past carries today's day and its own year.
     const posted = lab ? new Date(m.date) : now;
     const sent = Number.isFinite(posted.getTime()) ? posted : now;
-    const sentToday = sent.toDateString() === now.toDateString();
     const mark = `${sent.getDate()} ${monthName(sent, lang, 'short').toUpperCase()}`;
     const todayHref = lang === 'es' ? '/es/newspaper/' : '/newspaper/';
 
@@ -222,13 +226,11 @@ function startMailbox(): void {
     el.style.setProperty('--w', w + 'px');
     el.style.setProperty('--flap-room', Math.round(flapH - 6) + 'px');
 
-    const meta = lab
-      ? `<span>${esc(
-          m.exp ? `${m.exp.number} · ${m.exp.name} · ${m.type}` : m.type,
-        )}</span><span>${esc(sentToday ? copy.today : stampDay(sent, lang))}</span>`
-      : `<span id="mail-title">${esc(fmt(copy.headPast, { day, year: (m as { year: string }).year }))}</span><span>${esc(
-          fmt(copy.onWay, { years }),
-        )}</span>`;
+    // A letter from the past carries the UI label row; a lab letter reads as a
+    // letter instead, so its kind moves to a postscript and the meta row is gone.
+    const meta = `<span id="mail-title">${esc(fmt(copy.headPast, { day, year: (m as { year: string }).year }))}</span><span>${esc(
+      fmt(copy.onWay, { years }),
+    )}</span>`;
     // A lab letter has a title of its own; a letter from the past is titled
     // by its head ("Letter of …"), which carries the dialog's label — unless
     // it carries a summary, whose headline is the event's own line.
@@ -247,6 +249,33 @@ function startMailbox(): void {
       : `<a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer">${esc(
           parts ? parts.linkLabel : copy.readWikipedia,
         )}</a><a href="${todayHref}">${esc(copy.allToday)}</a>`;
+
+    // A lab letter reads as a letter: place and date at the top right, a
+    // salutation, the title, the typed body, a closing with the lab's
+    // signature, the kind as a postscript and the link after the signature.
+    const labDateline =
+      lang === 'es'
+        ? `${copy.datelinePlace}, ${stampDay(sent, lang)} de ${sent.getFullYear()}`
+        : `${copy.datelinePlace}, ${stampDay(sent, lang)}, ${sent.getFullYear()}`;
+    const labInner = `
+          <div class="letter-shadow"></div><div class="grime"></div>
+          <button type="button" class="close" aria-label="${esc(copy.close)}">×</button>
+          <p class="dateline">${esc(labDateline)}</p>
+          <p class="greet">${esc(copy.greet)}</p>
+          ${heading}
+          <div class="body" aria-live="polite"><span class="typed"></span><span class="caret"></span></div>
+          <p class="sign">${esc(copy.closing)}<br>${esc(copy.sign)}</p>
+          <p class="ps">${esc(fmt(copy.psLab, { type: m.type }))}</p>
+          <div class="links">${links}</div>
+          <button type="button" class="next" hidden></button>`;
+    const pastInner = `
+          <div class="letter-shadow"></div><div class="grime"></div>
+          <button type="button" class="close" aria-label="${esc(copy.close)}">×</button>
+          <div class="meta">${meta}</div>
+          ${heading}
+          <p aria-live="polite"><span class="typed"></span><span class="caret"></span></p>
+          <div class="links">${links}</div>
+          <button type="button" class="next" hidden></button>`;
 
     let face: string;
     if (lab) {
@@ -283,13 +312,7 @@ function startMailbox(): void {
         <div class="shadow"></div>
         <div class="env-back">${ENVELOPE}</div>
         <div class="holder"><article class="${letterCls}">
-          <div class="letter-shadow"></div><div class="grime"></div>
-          <button type="button" class="close" aria-label="${esc(copy.close)}">×</button>
-          <div class="meta">${meta}</div>
-          ${heading}
-          <p aria-live="polite"><span class="typed"></span><span class="caret"></span></p>
-          <div class="links">${links}</div>
-          <button type="button" class="next" hidden></button>
+          ${lab ? labInner : pastInner}
         </article></div>
         <div class="env-front">${FRONT}<div class="grime"></div></div>
         <div class="flap">${FLAP}<div class="grime"></div></div>
@@ -340,7 +363,11 @@ function startMailbox(): void {
     const $ = (s: string) => me.querySelector(s) as HTMLElement;
     const stage = $('.stage'), flap = $('.flap'), holder = $('.holder');
     const sheet = $('.letter'), seal = $('.seal'), face = $('.face');
-    const typed = $('.typed'), links = $('.links'), x = $('.close'), body = $('.letter p');
+    const typed = $('.typed'), links = $('.links'), x = $('.close');
+    // The scroll target prefers the scrollable .body: a lab sheet holds other
+    // paragraphs (dateline, greeting) before it, so a group selector would
+    // land on the dateline and the typed line would scroll out of view.
+    const body = (me.querySelector('.letter .body') ?? me.querySelector('.letter p')) as HTMLElement;
     const shadow = $('.shadow'), lshadow = $('.letter-shadow'), hint = $('.hint-step');
     deckle(sheet);
     me.querySelectorAll<HTMLElement>('.grime').forEach((g) =>

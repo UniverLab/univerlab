@@ -61,6 +61,11 @@ export const es: Dict = {
       continuesWikipedia: 'Sigue en Wikipedia →',
       allToday: 'Ver el periódico →',
       readAnnouncement: 'Leer el anuncio completo →',
+      datelinePlace: 'Bogotá',
+      greet: 'Estimada lectora, estimado lector,',
+      closing: 'Saludos cordiales,',
+      sign: 'El laboratorio UniverLab',
+      psLab: 'P. D. {type}',
     },
   },
   // La paleta de comandos (ficha de catálogo), su ficha de temas y los avisos
