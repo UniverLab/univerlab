@@ -20,11 +20,13 @@ new_sqlite_classes = ["Calendar"]
 tag = "v2"
 new_sqlite_classes = ["Gate"]
 
-# Notify the WhatsApp agent's operator registry over a service binding:
-# same-day web booking lines and the morning digest go through it.
-[[services]]
-binding = "OPERATOR"
-service = "univerlab-whatsapp"
+# The OPERATOR service binding to univerlab-whatsapp (same-day booking lines
+# and the morning digest) returns once that worker is deployed: Cloudflare
+# refuses a binding to a worker that does not exist, and the code already
+# treats a missing OPERATOR as "no notification".
+# [[services]]
+# binding = "OPERATOR"
+# service = "univerlab-whatsapp"
 
 # Domains/routes are managed in UniverLab/infra (Terraform).
 
