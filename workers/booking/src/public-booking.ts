@@ -276,7 +276,7 @@ async function gateAllow(
   }
 }
 
-let slotsCache: { at: number; slots: string[] } | null = null;
+let slotsCache: { at: number; slots: string[]; days?: Record<string, { hasRoom: boolean }> } | null = null;
 
 async function handleSlots(req: Request, env: Env, origin: string | null, ip: string): Promise<Response> {
   const now = Date.now();
@@ -285,15 +285,21 @@ async function handleSlots(req: Request, env: Env, origin: string | null, ip: st
     return refused('limit', 429, origin);
   }
   if (slotsCache && now - slotsCache.at < SLOTS_TTL_MS) {
-    return json({ ok: true, slots: slotsCache.slots }, 200, origin);
+    return json({ ok: true, slots: slotsCache.slots, days: slotsCache.days }, 200, origin);
   }
   const res = await calendarCall(env, { action: 'quote', now });
   const slots = (res as { slots?: unknown }).slots;
   if (!res.ok || !Array.isArray(slots)) {
     return refused('unavailable', 503, origin);
   }
-  slotsCache = { at: now, slots: slots as string[] };
-  return json({ ok: true, slots }, 200, origin);
+  // `days` travels only when the owner sends it; older owners still parse.
+  const days = (res as { days?: unknown }).days;
+  const room =
+    days && typeof days === 'object' && !Array.isArray(days)
+      ? (days as Record<string, { hasRoom: boolean }>)
+      : undefined;
+  slotsCache = { at: now, slots: slots as string[], days: room };
+  return json({ ok: true, slots, days: room }, 200, origin);
 }
 
 async function handleBook(req: Request, env: Env, origin: string | null, ip: string): Promise<Response> {

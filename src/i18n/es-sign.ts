@@ -41,6 +41,8 @@ export const sign = {
     mailInviteBody: 'Hola {name}:\n\nEl laboratorio te pide firmar "{title}".\nAbre este enlace para leer el documento y firmarlo: {link}\n\nEl enlace vence a los 30 días y sirve una sola vez.\n— UniverLab · https://univerlab.org',
     mailSignedSubject: 'Documento firmado: {title} — UniverLab',
     mailSignedBody: 'Tu firma de "{title}" quedó registrada.\nSHA-256 del PDF firmado: {hash}\nAdjuntamos tu copia firmada.\n— UniverLab · https://univerlab.org',
+    mailOwnerSignedSubject: 'Firmado: {title} — UniverLab',
+    mailOwnerSignedBody: '{signer} firmó "{title}" el {when}.\nRevisa la solicitud en la consola: {consoleLink}\nDescarga el PDF sellado: {pdfLink}\n— UniverLab · https://univerlab.org',
     sealTitle: 'Firmas selladas',
     sealIssuer: 'Emisor',
     sealSigner: 'Firmante',

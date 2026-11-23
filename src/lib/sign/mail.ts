@@ -9,6 +9,8 @@ export interface SignMailStrings {
   mailInviteBody: string;
   mailSignedSubject: string;
   mailSignedBody: string;
+  mailOwnerSignedSubject: string;
+  mailOwnerSignedBody: string;
 }
 
 export interface InviteMail {
@@ -40,6 +42,24 @@ export function inviteMail(s: SignMailStrings, opts: { to: string; signerName: s
     to: opts.to,
     subject: fill(s.mailInviteSubject, { title: opts.title }),
     text: fill(s.mailInviteBody, { name: opts.signerName, title: opts.title, link: opts.link }),
+  };
+}
+
+export function ownerSignedMail(
+  s: SignMailStrings,
+  opts: { to: string; signerName: string; title: string; when: string; consoleLink: string; pdfLink: string; lang: 'en' | 'es' },
+): InviteMail {
+  void opts.lang;
+  return {
+    to: opts.to,
+    subject: fill(s.mailOwnerSignedSubject, { title: opts.title }),
+    text: fill(s.mailOwnerSignedBody, {
+      signer: opts.signerName,
+      title: opts.title,
+      when: opts.when,
+      consoleLink: opts.consoleLink,
+      pdfLink: opts.pdfLink,
+    }),
   };
 }
 

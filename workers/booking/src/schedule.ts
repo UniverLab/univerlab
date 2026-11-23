@@ -347,6 +347,91 @@ export function freeSlots(
   return accepted.map((ms) => new Date(ms).toISOString());
 }
 
+export interface DayAvailability {
+  hasRoom: boolean;
+}
+
+/**
+ * The calendar read: every free start time inside the day's windows with no
+ * per-day cap applied, plus one room flag per day. The flag gates on
+ * bookings made, not on times offered: a day still has room when it holds
+ * at least one free start and fewer same-day Workbench events than
+ * `maxPerDay`. Keys are Bogota calendar days (YYYY-MM-DD), one per day in
+ * the horizon, so weekends and holidays read as no room without a lookup.
+ */
+export function freeDayAvailability(
+  cfg: BookingConfig,
+  busy: BusyBlock[],
+  wbEvents: BusyBlock[],
+  minutes: number,
+  nowMs: number,
+  noticeHours: number = cfg.noticeHours
+): { slots: string[]; days: Record<string, DayAvailability> } {
+  // One booking is one booking: the public quote merges the calendar listing
+  // with the store's active rows, so a confirmed event arrives twice under
+  // the same interval and must count once toward the daily cap.
+  const seenWb = new Set<string>();
+  const uniqWb: BusyBlock[] = [];
+  for (const wb of wbEvents) {
+    const sig = wb.start + '|' + wb.end;
+    if (seenWb.has(sig)) continue;
+    seenWb.add(sig);
+    uniqWb.push(wb);
+  }
+  const blocks = [...busy, ...uniqWb].map(parseBlock).filter((b): b is [number, number] => b !== null);
+  const marginMs = cfg.marginMin * 60000;
+  const earliest = nowMs + noticeHours * 3600000;
+  const latest = nowMs + cfg.horizonDays * DAY_MS;
+  const accepted: number[] = [];
+  const bookedPerDay = new Map<string, number>();
+  for (const wb of uniqWb) {
+    const ms = Date.parse(wb.start);
+    if (!Number.isFinite(ms)) continue;
+    const key = bogotaDateKey(ms);
+    bookedPerDay.set(key, (bookedPerDay.get(key) ?? 0) + 1);
+  }
+  const start = bogotaParts(nowMs);
+  const startDay = Date.UTC(start.year, start.month - 1, start.day);
+  const holidays = new Map<number, Set<string>>();
+  const days: Record<string, DayAvailability> = {};
+
+  const isHoliday = (y: number, key: string): boolean => {
+    let set = holidays.get(y);
+    if (!set) {
+      set = colombiaHolidays(y);
+      holidays.set(y, set);
+    }
+    return set.has(key);
+  };
+
+  for (let day = 0; day <= cfg.horizonDays; day++) {
+    const base = new Date(startDay + day * DAY_MS);
+    const y = base.getUTCFullYear();
+    const mo = base.getUTCMonth() + 1;
+    const d = base.getUTCDate();
+    const weekday = base.getUTCDay();
+    const key = keyOf(y, mo, d);
+    if (weekday === 0 || weekday === 6 || isHoliday(y, key)) {
+      days[key] = { hasRoom: false };
+      continue;
+    }
+    let free = 0;
+    for (const [ws, we] of cfg.windows) {
+      for (let t = Math.round(ws * 60); t + minutes <= Math.round(we * 60); t += 15) {
+        const s = bogotaToUtcMs(y, mo, d, Math.floor(t / 60), t % 60);
+        const e = s + minutes * 60000;
+        if (s < earliest || s > latest) continue;
+        if (blocks.some(([bs, be]) => overlaps(s - marginMs, e + marginMs, bs, be))) continue;
+        if (accepted.some((a) => overlaps(s - marginMs, e + marginMs, a - marginMs, a + minutes * 60000))) continue;
+        accepted.push(s);
+        free += 1;
+      }
+    }
+    days[key] = { hasRoom: free > 0 && (bookedPerDay.get(key) ?? 0) < cfg.maxPerDay };
+  }
+  return { slots: accepted.map((ms) => new Date(ms).toISOString()), days };
+}
+
 const WEEKDAYS: Record<Lang, string[]> = {
   es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
   en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],

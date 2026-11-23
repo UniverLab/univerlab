@@ -27,6 +27,12 @@ const copy = JSON.stringify({
   empty: b.empty,
   tzLine: b.tzLine,
   colombiaSuffix: b.colombiaSuffix,
+  pickDay: b.pickDay,
+  prevMonth: b.prevMonth,
+  nextMonth: b.nextMonth,
+  dayFull: b.dayFull,
+  noTimes: b.noTimes,
+  chosenDay: b.chosenDay,
   form: b.form,
   errors: b.errors,
   success: b.success,
@@ -119,7 +125,7 @@ const proof = w.proof.items.map((id) => ({
     .wb-sticky .wb-btn { flex: 1 1 12rem; min-width: 0; display: flex; justify-content: center; white-space: normal; text-align: center; text-wrap: balance; }
     .wb-sticky .wb-alt { flex: 1 1 100%; text-align: center; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.06em; }
   }
-  .book { max-width: 44rem; padding-block: 4rem 6rem; }
+  .book { max-width: 44rem; margin-inline: auto; padding-block: 4rem 6rem; }
   .book-hero .label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; color: var(--accent); }
   .book-hero h2 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.05; margin: 0.6rem 0 1rem; text-wrap: balance; }
   .book-intro { max-width: 40rem; color: var(--ink-dim); font-size: 1.1rem; line-height: 1.7; margin: 0 0 1.4rem; }
@@ -150,8 +156,23 @@ const proof = w.proof.items.map((id) => ({
   .book-err { font-size: 0.95rem; color: var(--accent); margin: 0; }
   .book-err:empty { display: none; }
   .book-tz { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-dim); margin: 0.6rem 0; }
-  .book-day { border: 1px solid var(--line); padding: 1rem 1rem 0.8rem; margin: 0 0 1rem; display: grid; gap: 0.5rem; }
-  .book-day legend { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); padding-inline: 0.4rem; }
+  .book-cal-label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0.6rem 0; }
+  .book-cal-nav { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.6rem; }
+  .book-cal-title { margin: 0; flex: 1; text-align: center; font-family: var(--font-serif); font-size: 1.1rem; text-transform: capitalize; }
+  .book-cal-move { font: inherit; background: none; border: 1px solid var(--line); color: var(--ink); width: 2.2rem; height: 2.2rem; cursor: pointer; }
+  .book-cal-move:disabled { opacity: 0.35; cursor: default; }
+  .book-cal-grid { display: grid; gap: 0.25rem; }
+  .book-cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.25rem; }
+  .book-cal-head { font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; color: var(--ink-dim); text-align: center; padding: 0.2rem 0; }
+  .book-cal-fill { text-align: center; color: var(--ink-dim); opacity: 0.4; padding: 0.45rem 0; font-size: 0.9rem; min-width: 0; }
+  .book-cal-day { font: inherit; font-size: 0.9rem; background: var(--bg-raise); border: 1px solid var(--line); color: var(--ink); padding: 0.45rem 0; cursor: pointer; min-width: 0; }
+  .book-cal-day[aria-disabled="true"] { opacity: 0.35; cursor: default; text-decoration: line-through; }
+  .book-cal-day.is-picked { border-color: var(--accent); color: var(--accent); }
+  .book-cal-day:focus-visible, .book-cal-move:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .book-day-head { font-family: var(--font-serif); font-size: 1.2rem; margin: 1rem 0 0; text-transform: capitalize; }
+  .book-day-empty { color: var(--ink-dim); line-height: 1.6; margin: 0.6rem 0 0; }
+  #book-day-times .book-slot { margin-top: 0.5rem; }
+  #book-day-times:empty { display: none; }
   .book-slot { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; cursor: pointer; line-height: 1.6; }
   .book-slot input { accent-color: var(--accent); }
   .book-co { color: var(--ink-dim); font-size: 0.9em; }
@@ -240,7 +261,8 @@ const proof = w.proof.items.map((id) => ({
         <p class="book-status" id="book-status" role="status"></p>
         <fieldset class="book-field" id="book-slots">
           <legend>{b.form.slots}</legend>
-          <div id="book-slot-list"></div>
+          <div id="book-cal"></div>
+          <div id="book-day-times"></div>
           <p class="book-err" id="book-slot-err" hidden></p>
         </fieldset>
         <div class="book-field">

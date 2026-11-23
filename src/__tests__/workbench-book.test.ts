@@ -149,7 +149,9 @@ describe('workbench-book view', () => {
       expect(VIEW).toContain(`id="${id}-err"`);
     }
     expect(VIEW).toContain('id="book-slots"');
-    expect(VIEW).toContain('id="book-slot-list"');
+    expect(VIEW).toContain('id="book-cal"');
+    expect(VIEW).toContain('id="book-day-times"');
+    expect(VIEW).not.toContain('id="book-slot-list"');
     expect(VIEW).toContain('id="book-slot-err"');
     expect(VIEW).toContain('id="book-status" role="status"');
     expect(VIEW).toContain('maxlength="500"');
@@ -291,7 +293,7 @@ describe('workbench-book form', () => {
     root.innerHTML = `
 <form id="book-form" hidden data-api="https://x.test" data-lang="en" novalidate>
 <p id="book-status" role="status"></p>
-<fieldset id="book-slots"><legend>slots</legend><div id="book-slot-list"></div><p id="book-slot-err" hidden></p></fieldset>
+<fieldset id="book-slots"><legend>slots</legend><div id="book-cal"></div><div id="book-day-times"></div><p id="book-slot-err" hidden></p></fieldset>
 <div><label for="book-name">n</label><input id="book-name" name="name" type="text" /><p id="book-name-err" hidden></p></div>
 <div><label for="book-email">e</label><input id="book-email" name="email" type="email" /><p id="book-email-err" hidden></p></div>
 <div><label for="book-note">t</label><textarea id="book-note" name="note"></textarea><p id="book-note-err" hidden></p></div>
@@ -309,6 +311,12 @@ describe('workbench-book form', () => {
     empty: en.book.empty,
     tzLine: en.book.tzLine,
     colombiaSuffix: en.book.colombiaSuffix,
+    pickDay: en.book.pickDay,
+    prevMonth: en.book.prevMonth,
+    nextMonth: en.book.nextMonth,
+    dayFull: en.book.dayFull,
+    noTimes: en.book.noTimes,
+    chosenDay: en.book.chosenDay,
     form: en.book.form,
     errors: en.book.errors,
     success: en.book.success,
@@ -327,7 +335,7 @@ describe('workbench-book form', () => {
     document.getElementById('cf-turnstile-api')?.remove();
   });
 
-  it('renders the free slots as radios and unhides the form', async () => {
+  it('renders the month calendar, then the picked day as radios, and unhides the form', async () => {
     const realFetch = globalThis.fetch;
     (globalThis as { fetch?: typeof fetch }).fetch = slotsFetch([
       '2026-11-20T15:00:00.000Z',
@@ -337,8 +345,13 @@ describe('workbench-book form', () => {
       const root = skeleton(island);
       bindBookForm(root);
       await flush();
+      expect(root.querySelector('.book-cal-grid')).not.toBe(null);
+      expect(root.querySelectorAll('input[name="slot"]')).toHaveLength(0);
+      const open = root.querySelector('.book-cal-day:not([aria-disabled="true"])') as HTMLButtonElement;
+      expect(open).not.toBe(null);
+      open.click();
       const radios = root.querySelectorAll('input[name="slot"]');
-      expect(radios).toHaveLength(2);
+      expect(radios).toHaveLength(1);
       expect(root.querySelector('#book-form')?.hasAttribute('hidden')).toBe(false);
       expect(root.querySelector('#book-status')?.textContent).toBe('');
     } finally {
@@ -400,6 +413,8 @@ describe('workbench-book form', () => {
       (root.querySelector('#book-name') as HTMLInputElement).value = 'Ada Lovelace';
       (root.querySelector('#book-email') as HTMLInputElement).value = 'ada@example.com';
       (root.querySelector('#book-note') as HTMLTextAreaElement).value = 'agents';
+      const open = root.querySelector('.book-cal-day:not([aria-disabled="true"])') as HTMLButtonElement;
+      open.click();
       (root.querySelector('input[name="slot"]') as HTMLInputElement).click();
       const token = document.createElement('input');
       token.name = 'cf-turnstile-response';
@@ -421,7 +436,8 @@ describe('workbench-book form', () => {
       expect((root.querySelector('#book-note') as HTMLTextAreaElement).value).toBe(
         'agents',
       );
-      expect(root.querySelectorAll('input[name="slot"]')).toHaveLength(2);
+      // The calendar reloaded around the picked day: its times are back.
+      expect(root.querySelectorAll('input[name="slot"]')).toHaveLength(1);
     } finally {
       (globalThis as { fetch?: typeof fetch }).fetch = realFetch;
     }

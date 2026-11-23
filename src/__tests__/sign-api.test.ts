@@ -332,8 +332,14 @@ describe('handleSignComplete', () => {
     expect(notice).toBeDefined();
     expect(JSON.parse(String(notice!.init!.body)) as { text: string }).toEqual({ text: `Firmado: ${TITLE} (${id})` });
     const copy = calls.filter((c) => c.url === 'https://api.resend.com/emails');
-    expect(copy).toHaveLength(2);
-    const payload = JSON.parse(String(copy[1].init!.body)) as { attachments: { filename: string; content: string }[] };
+    expect(copy).toHaveLength(3);
+    const signedCopies = copy.filter((c) => 'attachments' in JSON.parse(String(c.init!.body)));
+    expect(signedCopies).toHaveLength(1);
+    const payload = JSON.parse(String(signedCopies[0].init!.body)) as {
+      to: string[];
+      attachments: { filename: string; content: string }[];
+    };
+    expect(payload.to).toEqual([SIGNER]);
     expect(payload.attachments).toHaveLength(1);
     expect(payload.attachments[0].content.length).toBeGreaterThan(0);
   });
@@ -393,7 +399,8 @@ describe('handleSignComplete', () => {
     const deps = depsOf(fetch);
     const esRes = await handleSignComplete(complete(id, {}, 'signer-jwt', hash), env, deps);
     expect(esRes.status).toBe(200);
-    const esCopy = calls.filter((c) => c.url === 'https://api.resend.com/emails').pop()!;
+    const esMails = calls.filter((c) => c.url === 'https://api.resend.com/emails');
+    const esCopy = esMails.filter((c) => 'attachments' in JSON.parse(String(c.init!.body))).pop()!;
     expect(JSON.parse(String(esCopy.init!.body)).subject).toContain('Documento firmado');
 
     const bucket2 = makeBucket();
@@ -405,8 +412,79 @@ describe('handleSignComplete', () => {
       depsOf(seen2.fetch),
     );
     expect(enRes.status).toBe(200);
-    const enCopy = seen2.calls.filter((c) => c.url === 'https://api.resend.com/emails').pop()!;
+    const enMails = seen2.calls.filter((c) => c.url === 'https://api.resend.com/emails');
+    const enCopy = enMails.filter((c) => 'attachments' in JSON.parse(String(c.init!.body))).pop()!;
     expect(JSON.parse(String(enCopy.init!.body)).subject).toContain('Signed document');
+  });
+
+  it('emails every owner on success, with signer, title, time and links', async () => {
+    const bucket = makeBucket();
+    const { calls, fetch } = makeFetch();
+    const { id, hash } = await createOk(bucket, fetch);
+    const before = calls.filter((c) => c.url === 'https://api.resend.com/emails').length;
+    const env = envOf(bucket, fetch, { SIGN_OWNER_EMAILS: 'a@x.test,b@y.test' });
+    const res = await handleSignComplete(complete(id, {}, 'signer-jwt', hash), env, depsOf(fetch));
+    expect(res.status).toBe(200);
+    const after = calls.filter((c) => c.url === 'https://api.resend.com/emails');
+    // One signer copy plus one mail per owner, on top of the create invite.
+    expect(after.length).toBe(before + 3);
+    const signerMails = after.slice(before).filter((c) => 'attachments' in JSON.parse(String(c.init!.body)));
+    const ownerMails = after.slice(before).filter((c) => !('attachments' in JSON.parse(String(c.init!.body))));
+    expect(signerMails).toHaveLength(1);
+    expect(ownerMails).toHaveLength(2);
+    const toAddrs = ownerMails.map((c) => (JSON.parse(String(c.init!.body)) as { to: string[] }).to).sort();
+    expect(toAddrs).toEqual([['a@x.test'], ['b@y.test']]);
+    for (const m of ownerMails) {
+      const payload = JSON.parse(String(m.init!.body)) as { subject: string; text: string };
+      expect(payload.subject).toContain(TITLE);
+      expect(payload.text).toContain('María López');
+      expect(payload.text).toContain(TITLE);
+      expect(payload.text).toContain(`/api/sign-file?id=${id}&signed=1`);
+      expect(payload.text).toContain('/sign/owner');
+    }
+    const expectedWhen = new Intl.DateTimeFormat('en', {
+      timeZone: 'America/Bogota',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(NOW));
+    expect(ownerMails.some((m) => (JSON.parse(String(m.init!.body)) as { text: string }).text.includes(expectedWhen))).toBe(
+      true,
+    );
+  });
+
+  it('sends no mail when the signature fails', async () => {
+    const bucket = makeBucket();
+    const { calls, fetch } = makeFetch();
+    const { id } = await createOk(bucket, fetch);
+    const env = envOf(bucket, fetch, { SIGN_OWNER_EMAILS: 'a@x.test,b@y.test' });
+    const deps = depsOf(fetch);
+    const before = calls.filter((c) => c.url === 'https://api.resend.com/emails').length;
+    const badHash = await handleSignComplete(complete(id, {}, 'signer-jwt', 'f'.repeat(64)), env, deps);
+    expect(badHash.status).toBe(422);
+    const noAccept = await handleSignComplete(complete(id, { accept: false }, 'signer-jwt', 'f'.repeat(64)), env, deps);
+    expect(noAccept.status).toBe(400);
+    expect(calls.filter((c) => c.url === 'https://api.resend.com/emails')).toHaveLength(before);
+  });
+
+  it('a Resend failure leaves the signature intact', async () => {
+    const bucket = makeBucket();
+    const { calls, fetch } = makeFetch();
+    const { id, hash } = await createOk(bucket, fetch);
+    const failing = (async (url: unknown, init?: RequestInit) => {
+      calls.push({ url: String(url), init });
+      if (String(url) === 'https://api.resend.com/emails') throw new Error('resend down');
+      return new Response('{}', { status: 200 });
+    }) as unknown as typeof globalThis.fetch;
+    const env = envOf(bucket, failing, { SIGN_OWNER_EMAILS: 'a@x.test,b@y.test' });
+    const res = await handleSignComplete(complete(id, {}, 'signer-jwt', hash), env, depsOf(failing));
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { ok: boolean }).ok).toBe(true);
+    expect(bucket.files.get(`signed/${id}.pdf`)!.length).toBeGreaterThan(0);
+    const sidecar = JSON.parse(Buffer.from(bucket.files.get(`requests/${id}.json`)!).toString('utf8')) as Record<
+      string,
+      unknown
+    >;
+    expect(sidecar['status']).toBe('signed');
   });
 
   it('refuses a second signature on the same link', async () => {

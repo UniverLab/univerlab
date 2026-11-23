@@ -7,6 +7,7 @@ import {
   colombiaHolidays,
   DEFAULT_BOOKING_CONFIG,
   formatSlot,
+  freeDayAvailability,
   freeSlots,
   noticeHoursFor,
   type BookingConfig,
@@ -189,6 +190,54 @@ test('at most maxPerDay slots per day within the horizon', () => {
   expect(perDay.get('2026-11-10')).toBe(3);
   expect(perDay.get('2026-11-16') ?? 0).toBe(0);
   expect(perDay.get('2026-11-23')).toBe(2);
+});
+
+test('the calendar read never trims a day to the daily cap', () => {
+  const { slots, days } = freeDayAvailability(CFG, [], [], 15, MON_12);
+  // Tuesday November 10 holds the whole afternoon band from 15:00 to
+  // 18:30 Bogota, where the capped read stops at three. (The 15-minute
+  // margin between starts spaces them 30 minutes apart.)
+  const afternoon = slots.filter((s) => {
+    const p = bogotaParts(Date.parse(s));
+    return p.month === 11 && p.day === 10 && p.hour >= 15;
+  });
+  const starts = afternoon.map((s) => {
+    const p = bogotaParts(Date.parse(s));
+    return p.hour * 60 + p.minute;
+  });
+  expect(starts).toEqual([900, 930, 960, 990, 1020, 1050, 1080, 1110]);
+  expect(days['2026-11-10']).toEqual({ hasRoom: true });
+});
+
+test('the room flag gates on bookings made, not on times offered', () => {
+  const wb = [0, 1, 2].map((i) => ({
+    start: new Date(Date.UTC(2026, 10, 10, 20, i * 20)).toISOString(),
+    end: new Date(Date.UTC(2026, 10, 10, 20, i * 20 + 15)).toISOString(),
+  }));
+  // Three same-day bookings reach maxPerDay: the day closes, but its free
+  // starts stay listed.
+  const full = freeDayAvailability(CFG, [], wb, 15, MON_12);
+  expect(full.days['2026-11-10']).toEqual({ hasRoom: false });
+  expect(full.slots.some((s) => s.startsWith('2026-11-10'))).toBe(true);
+  // Two bookings leave room, and a weekend never has any.
+  const partial = freeDayAvailability(CFG, [], wb.slice(0, 2), 15, MON_12);
+  expect(partial.days['2026-11-10']).toEqual({ hasRoom: true });
+  expect(full.days['2026-11-14']).toEqual({ hasRoom: false });
+});
+
+test('the same booking listed twice counts once toward the cap', () => {
+  const wb = [0, 1].map((i) => ({
+    start: new Date(Date.UTC(2026, 10, 10, 20, i * 20)).toISOString(),
+    end: new Date(Date.UTC(2026, 10, 10, 20, i * 20 + 15)).toISOString(),
+  }));
+  // The public quote merges the calendar listing with the store's active
+  // rows, so each confirmed event arrives twice: two bookings must still
+  // read as room, not as four against the cap of three.
+  const doubled = freeDayAvailability(CFG, [], [...wb, ...wb], 15, MON_12);
+  expect(doubled.days['2026-11-10']).toEqual({ hasRoom: true });
+  const single = freeDayAvailability(CFG, [], wb, 15, MON_12);
+  expect(single.days['2026-11-10']).toEqual(doubled.days['2026-11-10']);
+  expect(single.slots).toEqual(doubled.slots);
 });
 
 test('a 60-minute service never overflows its window', () => {

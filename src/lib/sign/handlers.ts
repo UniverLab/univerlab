@@ -18,7 +18,7 @@ import {
 import { sealPage } from './seal';
 import { verifyUrlFor } from './verify';
 import { isRequestId, listRequests, loadRequest, originalKey, saveRequest, signedKey, type SignBucket } from './store';
-import { inviteMail, sendMail, signedCopyMail } from './mail';
+import { inviteMail, ownerSignedMail, sendMail, signedCopyMail } from './mail';
 import { en } from '../../i18n/en';
 import { es } from '../../i18n/es';
 
@@ -352,6 +352,35 @@ export async function handleSignComplete(request: Request, env: SignEnv, deps: S
     }),
     deps.fetchImpl,
   );
+  const ownerDict = req.lang === 'es' ? es.sign : en.sign;
+  const ownerWhen = new Intl.DateTimeFormat(req.lang, {
+    timeZone: 'America/Bogota',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(signedAt);
+  const ownerConsoleLink = `${origin}${req.lang === 'es' ? '/es' : ''}/sign/owner`;
+  const ownerPdfLink = `${origin}/api/sign-file?id=${req.id}&signed=1`;
+  for (const owner of ownerAllowlist(env)) {
+    try {
+      const ownerSent = await sendMail(
+        env,
+        ownerSignedMail(ownerDict, {
+          to: owner,
+          signerName: fullName,
+          title: req.title,
+          when: ownerWhen,
+          consoleLink: ownerConsoleLink,
+          pdfLink: ownerPdfLink,
+          lang: req.lang,
+        }),
+        deps.fetchImpl,
+      );
+      if (!ownerSent) console.error(`[sign] owner notice not sent to ${owner} for request ${req.id}`);
+    } catch (err) {
+      // The signature stands without the owner notice; the signer mail is unaffected.
+      console.error(`[sign] owner notice failed for ${owner} on request ${req.id}:`, err);
+    }
+  }
   if (env.SIGN_NOTIFY_URL) {
     try {
       await (deps.fetchImpl ?? fetch)(env.SIGN_NOTIFY_URL, {

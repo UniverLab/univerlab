@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import { Calendar } from '../src/calendar';
-import { freeSlots, DEFAULT_BOOKING_CONFIG } from '../src/schedule';
+import { freeDayAvailability, freeSlots, noticeHoursFor, DEFAULT_BOOKING_CONFIG } from '../src/schedule';
 import {
   accessToken,
   deleteEvent,
@@ -462,15 +462,67 @@ test('a second free first call inside 90 days is refused after the first is rele
 
 const DAY_MS = 86400000;
 
-test('quote offers the same free first-call slots as the agent rules', async () => {
+test('quote offers every free first-call start with no per-day trim', async () => {
   const store = makeStore();
   const cal = makeCal(store);
   const res = await call(cal, { action: 'quote', now: MON_12 });
   expect(res.ok).toBe(true);
   // No contact is admitted and no limits are checked: the public read only
-  // quotes. The offer matches the agent's own computation exactly.
-  expect(res.slots).toEqual(freeSlots(quoteCfg(), [], [], 15, MON_12));
+  // quotes. The times match the uncapped computation, and every day carries
+  // its room flag so the page calendar knows which days still open.
+  const cfg = quoteCfg();
+  const expected = freeDayAvailability(cfg, [], [], 15, MON_12, noticeHoursFor(cfg, 'first-call'));
+  expect(res.slots).toEqual(expected.slots);
+  expect(res.days).toEqual(expected.days);
   expect(res.slots.length).toBeGreaterThan(0);
+  // The daily cap never trims the times: the quote holds the full band while
+  // the agent's capped read stays at three a day.
+  const capped = freeSlots(cfg, [], [], 15, MON_12);
+  expect((res.slots as string[]).length).toBeGreaterThan(capped.length);
+  for (const s of capped) expect(res.slots).toContain(s);
+});
+
+test('quote marks a day full once it holds maxPerDay bookings', async () => {
+  const cfg = quoteCfg();
+  const earliest = freeDayAvailability(cfg, [], [], 15, MON_12, noticeHoursFor(cfg, 'first-call'));
+  const dayKey = '2026-11-10';
+  expect(earliest.days[dayKey]).toMatchObject({ hasRoom: true });
+  // Three same-day Workbench events reach the cap: the day closes while its
+  // times stay listed.
+  const wb = [0, 1, 2].map((i) => ({
+    start: new Date(Date.UTC(2026, 10, 10, 20, i * 20)).toISOString(),
+    end: new Date(Date.UTC(2026, 10, 10, 20, i * 20 + 15)).toISOString(),
+  }));
+  const full = freeDayAvailability(cfg, [], wb, 15, MON_12, noticeHoursFor(cfg, 'first-call'));
+  expect(full.days[dayKey]).toMatchObject({ hasRoom: false });
+  expect(full.slots.filter((s) => s.startsWith('2026-11-10')).length).toBeGreaterThan(0);
+});
+
+test('quote counts a confirmed booking once, not once per store copy', async () => {
+  const store = makeStore();
+  const cal = makeCal(store);
+  const cfg = quoteCfg();
+  const offered = freeSlots(cfg, [], [], 15, MON_12);
+  const sameDay = offered.filter((s) => s.startsWith('2026-11-10')).slice(0, 2);
+  expect(sameDay).toHaveLength(2);
+  // Two real bookings: each lives both on the calendar and as an active
+  // store row, the exact duplication the public read merges.
+  for (const [i, startIso] of sameDay.entries()) {
+    const booked = await call(cal, {
+      action: 'reserve', contactKey: `web:dos@example.com-${i}`, service: 'first-call',
+      startIso, minutes: 15, summary: `Primera llamada · ${i}`, description: '', now: MON_12,
+    });
+    expect(booked.ok).toBe(true);
+  }
+  expect(store.reservations.filter((r) => r.status === 'active')).toHaveLength(2);
+  const res = await call(cal, { action: 'quote', now: MON_12 });
+  expect(res.ok).toBe(true);
+  // Two bookings under a cap of three: the day stays open. Without the
+  // dedupe it would read as four and close.
+  expect(res.days['2026-11-10']).toMatchObject({ hasRoom: true });
+  expect(res.slots).not.toContain(sameDay[0]);
+  expect(res.slots).not.toContain(sameDay[1]);
+  expect(res.slots.filter((s: string) => s.startsWith('2026-11-10')).length).toBeGreaterThan(0);
 });
 
 test('quote sees the same busy blocks as the agent, in both calendars', async () => {
