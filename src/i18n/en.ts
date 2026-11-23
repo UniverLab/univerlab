@@ -1094,6 +1094,12 @@ export const en = {
     empty: 'There are no free slots right now. Write to us and we find a time together:',
     tzLine: 'Times shown in {tz}.',
     colombiaSuffix: '{time} Colombia time',
+    pickDay: 'Choose a day with free times',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    dayFull: 'That day just filled up. Pick another day.',
+    noTimes: 'No free times that day. Pick another day.',
+    chosenDay: 'Free times on {date}',
     form: {
       name: 'Your name',
       nameError: 'Write your name: 2 to 80 characters, on one line.',

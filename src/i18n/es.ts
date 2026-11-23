@@ -1088,6 +1088,12 @@ export const es: Dict = {
     empty: 'No hay espacios libres ahora mismo. Escríbenos y buscamos un horario juntos:',
     tzLine: 'Horarios en {tz}.',
     colombiaSuffix: '{time} hora de Colombia',
+    pickDay: 'Elige un día con espacios libres',
+    prevMonth: 'Mes anterior',
+    nextMonth: 'Mes siguiente',
+    dayFull: 'Ese día se acaba de llenar. Elige otro día.',
+    noTimes: 'No hay espacios libres ese día. Elige otro día.',
+    chosenDay: 'Espacios libres el {date}',
     form: {
       name: 'Tu nombre',
       nameError: 'Escribe tu nombre: de 2 a 80 caracteres, en una línea.',

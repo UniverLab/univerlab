@@ -208,6 +208,23 @@ test('slot reads quote the owner and answer unavailable when it is down', async 
   expect(await res2.json()).toEqual({ ok: false, reason: 'unavailable' });
 });
 
+test('slot reads forward the room map and cache it with the slots', async () => {
+  const days = { '2026-11-19': { hasRoom: true } };
+  const { env, seen } = makeEnv({
+    calendar: (body) => (body.action === 'quote' ? { ok: true, slots: [SLOT], days } : { ok: false, reason: 'calendar-down' }),
+  });
+  jest.spyOn(Date, 'now').mockReturnValue(NOW + 360000);
+  const res = await call('/slots', env);
+  expect(res.status).toBe(200);
+  expect(await res.json()).toEqual({ ok: true, slots: [SLOT], days });
+  // Inside the 60-second cache the owner is not quoted again, and the map
+  // still travels with the cached slots.
+  jest.spyOn(Date, 'now').mockReturnValue(NOW + 370000);
+  const cached = await call('/slots', env);
+  expect(await cached.json()).toEqual({ ok: true, slots: [SLOT], days });
+  expect(seen.filter((b) => b.action === 'quote')).toHaveLength(1);
+});
+
 test('thirty reads a minute per address, the thirty-first waits', async () => {
   let hits = 0;
   const { env } = makeEnv({

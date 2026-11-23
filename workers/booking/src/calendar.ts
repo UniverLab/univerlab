@@ -7,6 +7,7 @@ import {
   bogotaDateKey,
   bogotaParts,
   bogotaToUtcMs,
+  freeDayAvailability,
   freeSlots,
   noticeHoursFor,
 } from './schedule';
@@ -399,9 +400,14 @@ export class Calendar extends DurableObject<Env> {
   }
 
   /**
-   * Public slot read: the free first-call slots under the same configuration
-   * and rules as the agent's offers, with no contact admitted and no model
-   * anywhere in the path.
+   * Public slot read: every free first-call start under the same
+   * configuration and rules as the agent's offers, with no contact admitted
+   * and no model anywhere in the path. The per-day cap never trims the
+   * times: it only marks which days still have room, so the page calendar
+   * opens days under the cap and the day view shows the full free band.
+   * `slots` keeps its name and shape, so older readers still parse; the
+   * WhatsApp agent door (status/reserve/move) keeps the capped read and its
+   * `slot-taken` enforcement below.
    */
   private async opQuote(args: Record<string, unknown>): Promise<Record<string, unknown>> {
     const now = typeof args.now === 'number' ? args.now : Date.now();
@@ -413,7 +419,16 @@ export class Calendar extends DurableObject<Env> {
     if (!live) return { ok: false, reason: 'calendar-down' };
     this.verify(live.events);
     this.prune(now - Math.max(cfg.freeCallDays, cfg.expiredHoldDays) * DAY_MS);
-    return { ok: true, slots: this.quote('first-call', 15, now, live.busy, live.events) };
+    const extra = this.allActive().map((r) => ({ start: r.start, end: r.end }));
+    const { slots, days } = freeDayAvailability(
+      cfg,
+      live.busy,
+      [...live.events, ...extra],
+      15,
+      now,
+      noticeHoursFor(cfg, 'first-call')
+    );
+    return { ok: true, slots, days };
   }
 
   private async opReserve(args: Record<string, unknown>): Promise<Record<string, unknown>> {
