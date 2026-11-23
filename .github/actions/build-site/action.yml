@@ -11,6 +11,10 @@ inputs:
   turnstile-site-key:
     description: Public Turnstile site key for the booking form.
     required: true
+  booking-live:
+    description: "'true' once booking.univerlab.org answers; shows the booking form instead of the WhatsApp fallback."
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -123,6 +127,7 @@ runs:
         # first-call service and the Turnstile site key guarding its form.
         PUBLIC_BOOKING_API: https://booking.univerlab.org
         PUBLIC_TURNSTILE_SITE_KEY: ${{ inputs.turnstile-site-key }}
+        PUBLIC_BOOKING_LIVE: ${{ inputs.booking-live }}
       shell: bash
       run: |
         npm ci

@@ -85,6 +85,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           turnstile-site-key: ${{ secrets.TURNSTILE_SITE_KEY }}
+          # Repository variable: set BOOKING_LIVE to true or false and redeploy, no commit.
+          booking-live: ${{ vars.BOOKING_LIVE || 'false' }}
 
       # `workingDirectory` is load-bearing, not tidiness. Wrangler discovers
       # Pages Functions in `./functions` relative to its own working directory,
