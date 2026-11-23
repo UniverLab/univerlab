@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../i18n';
+import '../../styles/sign.css';
+
+const t = useTranslations('en');
+const a = t.admin;
+const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univerlab.org';
+---
+<!-- The owner's control room: the edge only serves it to an allowlisted
+     address (functions/_middleware.ts), it is never indexed, and every
+     request it makes carries the owner's Access JWT. -->
+<BaseLayout title={a.title} description={a.description} circadian noindex>
+  <section class="wrap sign-owner">
+    <div class="page-open">
+      <div class="page-open-text">
+        <span class="label">{a.auditsTitle}</span>
+        <h1>{a.h1}</h1>
+        <p class="intro">{a.intro}</p>
+      </div>
+    </div>
+
+    <div class="sign-owner-grid">
+    <div>
+    <h2>{a.auditsTitle}</h2>
+    <p class="sign-error" id="admin-error" hidden></p>
+    <p id="admin-empty" hidden>{a.auditsEmpty}</p>
+    <table class="sign-table">
+      <thead>
+        <tr><th>{a.thAudit}</th><th>{a.thDate}</th><th>{a.thVisibility}</th><th>{a.thFindings}</th><th>{a.thDoi}</th><th>{a.thActions}</th></tr>
+      </thead>
+      <tbody
+        id="admin-audits"
+        data-visibility-public={a.visibilityPublic}
+        data-visibility-private={a.visibilityPrivate}
+        data-findings-line={a.findingsLine}
+        data-publish={a.publish}
+        data-unpublish={a.unpublish}
+        data-refused={a.refused}
+        data-remove={a.remove}
+        data-confirm-remove={a.confirmRemove}
+        data-sign-counts={a.signCounts}
+        data-booking-ok={a.bookingOk}
+        data-booking-down={a.bookingDown}
+        data-booking-line={a.bookingLine}
+        data-load-error={a.loadError}
+        data-audits-empty={a.auditsEmpty}
+      >
+      </tbody>
+    </table>
+    </div>
+
+    <div>
+    <h2>{a.signTitle}</h2>
+    <p>{a.signIntro}</p>
+    <p id="admin-sign-counts" role="status"></p>
+    <p><a href="/sign/owner/">{a.openSign}</a></p>
+    <h2>{a.bookingTitle}</h2>
+    <p>{a.bookingIntro}</p>
+    <p id="admin-booking-status" role="status" data-booking-api={bookingApi}></p>
+    <p><a href={`${bookingApi}/health`}>{a.openBooking}</a></p>
+    </div>
+    </div>
+  </section>
+
+  <script>
+    import { initAdminPage } from '../../lib/admin/panel-client';
+    const el = document.getElementById('admin-audits');
+    initAdminPage(
+      {
+        visibilityPublic: el?.dataset['visibilityPublic'] ?? '',
+        visibilityPrivate: el?.dataset['visibilityPrivate'] ?? '',
+        findingsLine: el?.dataset['findingsLine'] ?? '',
+        publish: el?.dataset['publish'] ?? '',
+        unpublish: el?.dataset['unpublish'] ?? '',
+        refused: el?.dataset['refused'] ?? '',
+        remove: el?.dataset['remove'] ?? '',
+        confirmRemove: el?.dataset['confirmRemove'] ?? '',
+        signCounts: el?.dataset['signCounts'] ?? '',
+        bookingOk: el?.dataset['bookingOk'] ?? '',
+        bookingDown: el?.dataset['bookingDown'] ?? '',
+        bookingLine: el?.dataset['bookingLine'] ?? '',
+        loadError: el?.dataset['loadError'] ?? '',
+        auditsEmpty: el?.dataset['auditsEmpty'] ?? '',
+      },
+      { bookingApi: document.getElementById('admin-booking-status')?.dataset['bookingApi'] ?? '' },
+    );
+  </script>
+</BaseLayout>
+
+<style>
+  .admin-note {
+    color: var(--accent);
+    font-size: 0.9rem;
+    margin: 0.4rem 0 0;
+  }
+  #admin-sign-counts,
+  #admin-booking-status {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+  @media (max-width: 40rem) {
+    .sign-table th:nth-child(4),
+    .sign-table td:nth-child(4),
+    .sign-table th:nth-child(5),
+    .sign-table td:nth-child(5) {
+      overflow-wrap: anywhere;
+    }
+  }
+</style>

@@ -440,8 +440,8 @@ export function auditAllowed(doc: AuditDocument, email: string): boolean {
 /** The signing shell is only ever filled at request time: asked for
  *  directly it answers 404, like the audit shell. */
 const SIGN_SHELL_RE = /^\/sign-shell\/?$/;
-const SIGN_OWNER_RE = /^\/sign\/owner\/?$/;
-const SIGN_OWNER_ES_RE = /^\/es\/sign\/owner\/?$/;
+const SIGN_OWNER_RE = /^\/(sign\/owner|admin)\/?$/;
+const SIGN_OWNER_ES_RE = /^\/es\/(sign\/owner|admin)\/?$/;
 const SIGN_PAGE_RE = /^\/sign\/([0-9a-f]{32})\/?$/;
 const SIGN_PAGE_ES_RE = /^\/es\/sign\/([0-9a-f]{32})\/?$/;
 
@@ -840,8 +840,8 @@ export async function onRequest(context: {
   }
 
   // The signing shell is only ever filled at request time, and the owner's
-  // console only ever opens to an allowlisted address with a valid Access
-  // JWT. Both stay private and unindexed, like the private audits.
+  // console and the admin hub only ever open to an allowlisted address with
+  // a valid Access JWT. All stay private and unindexed, like private audits.
   if (SIGN_SHELL_RE.test(pathname)) {
     return siteNotFound(env, request, AUDIT_NO_STORE);
   }

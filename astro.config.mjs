@@ -11,6 +11,10 @@ import docsLastUpdated from './src/plugins/docs-last-updated.ts';
  * sitemap's i18n block also lists the locale alternates.
  */
 const SITEMAP_EXCLUDED = new Set([
+  '/admin',
+  '/admin/',
+  '/es/admin',
+  '/es/admin/',
   '/newspaper',
   '/newspaper/',
   '/es/newspaper',
