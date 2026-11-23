@@ -36,6 +36,8 @@ export const sign = {
     mailInviteBody: 'Hello {name}:\n\nThe lab asks you to sign "{title}".\nOpen this link to read the document and sign it: {link}\n\nThe link expires after 30 days and works once.\n— UniverLab · https://univerlab.org',
     mailSignedSubject: 'Signed document: {title} — UniverLab',
     mailSignedBody: 'Your signature of "{title}" is recorded.\nSHA-256 of the signed PDF: {hash}\nYour signed copy is attached.\n— UniverLab · https://univerlab.org',
+    mailOwnerSignedSubject: 'Signed: {title} — UniverLab',
+    mailOwnerSignedBody: '{signer} signed "{title}" on {when}.\nReview the request in the owner console: {consoleLink}\nDownload the sealed PDF: {pdfLink}\n— UniverLab · https://univerlab.org',
     sealTitle: 'Sealed signatures',
     sealIssuer: 'Issuer',
     sealSigner: 'Signer',
