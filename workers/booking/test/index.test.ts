@@ -44,7 +44,68 @@ test('the health check answers without touching the calendar', async () => {
     {} as ExecutionContext
   );
   expect(res.status).toBe(200);
+  expect(await res.text()).toBe('ok');
   expect(cal.seen).toHaveLength(0);
+});
+
+test('the health check echoes only the site origin, never *', async () => {
+  const cal = calendarNs(() => ({ ok: true }));
+  const env = { CALENDAR: cal.ns } as never;
+  const ctx = {} as ExecutionContext;
+  const site = await worker.fetch(
+    new Request('https://booking.univerlab.org/health', {
+      headers: { origin: 'https://univerlab.org' },
+    }),
+    env,
+    ctx
+  );
+  expect(site.status).toBe(200);
+  expect(site.headers.get('access-control-allow-origin')).toBe('https://univerlab.org');
+  expect(site.headers.get('vary')).toContain('Origin');
+  const local = await worker.fetch(
+    new Request('https://booking.univerlab.org/health', {
+      headers: { origin: 'http://localhost:4321' },
+    }),
+    env,
+    ctx
+  );
+  expect(local.headers.get('access-control-allow-origin')).toBe('http://localhost:4321');
+  const evil = await worker.fetch(
+    new Request('https://booking.univerlab.org/health', {
+      headers: { origin: 'https://evil.example' },
+    }),
+    env,
+    ctx
+  );
+  expect(evil.status).toBe(200);
+  expect(await evil.text()).toBe('ok');
+  expect(evil.headers.get('access-control-allow-origin')).toBeNull();
+});
+
+test('the health check preflight answers 204 for the site origin only', async () => {
+  const cal = calendarNs(() => ({ ok: true }));
+  const env = { CALENDAR: cal.ns } as never;
+  const ctx = {} as ExecutionContext;
+  const site = await worker.fetch(
+    new Request('https://booking.univerlab.org/health', {
+      method: 'OPTIONS',
+      headers: { origin: 'https://univerlab.org' },
+    }),
+    env,
+    ctx
+  );
+  expect(site.status).toBe(204);
+  expect(site.headers.get('access-control-allow-origin')).toBe('https://univerlab.org');
+  const evil = await worker.fetch(
+    new Request('https://booking.univerlab.org/health', {
+      method: 'OPTIONS',
+      headers: { origin: 'https://evil.example' },
+    }),
+    env,
+    ctx
+  );
+  expect(evil.status).toBe(204);
+  expect(evil.headers.get('access-control-allow-origin')).toBeNull();
 });
 
 const SECRET = 'internal-call-secret-for-tests';

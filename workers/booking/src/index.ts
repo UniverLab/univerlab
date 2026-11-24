@@ -44,8 +44,29 @@ export default {
         return Response.json({ ok: false, reason: 'calendar-down' }, { status: 503 });
       }
     }
-    if (req.method === 'GET' && url.pathname === '/health') {
-      return new Response('ok', { status: 200 });
+    if (url.pathname === '/health') {
+      // The admin room reads this cross-origin in the browser: echo the
+      // origin only for the site's own origins (the same list /slots
+      // trusts), never `*`. Anything else gets the bare body, no ACAO.
+      const origin = req.headers.get('origin');
+      const allowed =
+        origin === 'https://univerlab.org' ||
+        (origin !== null && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
+      if (req.method === 'OPTIONS') {
+        const headers: Record<string, string> = {
+          'access-control-allow-methods': 'GET, OPTIONS',
+          'access-control-allow-headers': 'content-type',
+          'access-control-max-age': '86400',
+          vary: 'Origin',
+        };
+        if (allowed && origin !== null) headers['access-control-allow-origin'] = origin;
+        return new Response(null, { status: 204, headers });
+      }
+      if (req.method === 'GET') {
+        const headers: Record<string, string> = { vary: 'Origin' };
+        if (allowed && origin !== null) headers['access-control-allow-origin'] = origin;
+        return new Response('ok', { status: 200, headers });
+      }
     }
     return new Response('not found', { status: 404 });
   },
