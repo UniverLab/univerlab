@@ -142,6 +142,13 @@ export async function handleRemoveAudit(request: Request, env: AdminEnv, deps: A
     if (env.AUDITS!.list) {
       const listed = await env.AUDITS!.list({ prefix });
       keys = listed.objects.map((o) => o.key).filter((k) => k.startsWith(prefix));
+      if (resolved.legacy) {
+        const editionPrefixes = listed.objects
+          .map((o) => /^([^/]+)\/([^/]+)\/audit\.json$/.exec(o.key))
+          .filter((m): m is RegExpExecArray => m !== null)
+          .map((m) => `${m[1]}/${m[2]}/`);
+        keys = keys.filter((k) => !editionPrefixes.some((p) => k.startsWith(p)));
+      }
     } else {
       keys = [resolved.key, ...doc.assets.map((a) => `${prefix}${a.path}`)];
     }

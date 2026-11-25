@@ -39,6 +39,8 @@ export interface AdminAuditRow {
   system: string;
   /** The edition within the system (`<system>/<edition>/audit.json`). */
   edition: string;
+  /** Whether this row reads from an old bare-slug `<slug>/audit.json` key. */
+  legacy: boolean;
   /** Whether this row is the system's newest edition. */
   isLatest: boolean;
   title: string;
@@ -161,7 +163,7 @@ export function publishRefusal(doc: AuditDocument): string | null {
   return null;
 }
 
-function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: boolean): AdminAuditRow {
+function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: boolean, legacy: boolean): AdminAuditRow {
   const bySeverity = emptyCounts();
   const openBySeverity = emptyCounts();
   let open = 0;
@@ -176,6 +178,7 @@ function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: bo
     slug: edition,
     system,
     edition,
+    legacy,
     isLatest,
     title: doc.meta.title,
     date: doc.badge?.issued ?? '',
@@ -202,7 +205,7 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
   try {
     if (!bucket?.list) return [];
     const listed = await bucket.list();
-    const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument }[]>();
+    const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument; legacy: boolean }[]>();
     for (const obj of listed.objects) {
       const m = AUDIT_JSON_RE.exec(obj.key) ?? LEGACY_AUDIT_JSON_RE.exec(obj.key);
       if (!m) continue;
@@ -211,7 +214,7 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
       const doc = await loadAdminAuditDoc(bucket, m[2] ? `${system}/${edition}` : system);
       if (doc) {
         const group = bySystem.get(system) ?? [];
-        group.push({ date: doc.badge?.issued ?? '', edition, doc });
+        group.push({ date: doc.badge?.issued ?? '', edition, doc, legacy: !m[2] });
         bySystem.set(system, group);
       }
     }
@@ -219,7 +222,7 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
     for (const system of [...bySystem.keys()].sort()) {
       const group = bySystem.get(system)!;
       group.sort(newestFirst);
-      group.forEach(({ edition, doc }, i) => rows.push(rowOf(system, edition, doc, i === 0)));
+      group.forEach(({ edition, doc, legacy }, i) => rows.push(rowOf(system, edition, doc, i === 0, legacy)));
     }
     return rows;
   } catch {

@@ -19,6 +19,9 @@ export interface AdminClientStrings {
   bookingLine: string;
   loadError: string;
   auditsEmpty: string;
+  actionMissing: string;
+  actionNetwork: string;
+  actionFailed: string;
 }
 
 interface AdminRowFindings {
@@ -30,6 +33,7 @@ interface AdminRowJson {
   slug: string;
   system: string;
   edition: string;
+  legacy?: boolean;
   isLatest: boolean;
   title: string;
   date: string;
@@ -83,13 +87,37 @@ function auditHref(system: string, edition: string, visibility: string): string 
     : `/audits/${system}/${edition}/`;
 }
 
-/** The request body addressing one edition. Older rows without
- *  system/edition fall back to the bare slug. */
+/** The request body addressing the stored object the row came from: a
+ *  legacy old-layout row goes back as its bare slug, a new-layout row as
+ *  its system/edition pair. Older rows without system/edition fall back
+ *  to the bare slug. */
 function editionBody(row: AdminRowJson): Record<string, string> {
-  if (typeof row.system === 'string' && row.system !== '' && typeof row.edition === 'string' && row.edition !== '') {
+  if (
+    !row.legacy &&
+    typeof row.system === 'string' &&
+    row.system !== '' &&
+    typeof row.edition === 'string' &&
+    row.edition !== ''
+  ) {
     return { system: row.system, edition: row.edition };
   }
   return { slug: row.slug };
+}
+
+/** The per-row failure line for a visibility or remove request: 404 names
+ *  the missing audit, 409 keeps the refusal with its reason, anything else
+ *  names the status. */
+function rowErrorText(
+  s: AdminClientStrings,
+  res: Response,
+  data: Record<string, unknown> | null,
+): string {
+  if (res.status === 404) return s.actionMissing;
+  if (res.status === 409) {
+    const reason = typeof data?.['reason'] === 'string' ? (data['reason'] as string) : '';
+    return fill(s.refused, { reason });
+  }
+  return fill(s.actionFailed, { status: String(res.status) });
 }
 
 /** Wire the control room. Bails without throwing when the table is absent. */
@@ -118,17 +146,12 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         body: JSON.stringify({ ...editionBody(row), visibility: target }),
       });
     } catch {
-      showError();
-      return;
-    }
-    if (res.status === 409) {
-      const data = await readJson(res);
-      const reason = typeof data?.['reason'] === 'string' ? (data['reason'] as string) : '';
-      cells.note.textContent = fill(s.refused, { reason });
+      cells.note.textContent = s.actionNetwork;
       return;
     }
     if (!res.ok) {
-      showError();
+      const data = await readJson(res);
+      cells.note.textContent = rowErrorText(s, res, data);
       return;
     }
     row.visibility = target;
@@ -138,7 +161,12 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
     cells.note.textContent = '';
   };
 
-  const removeRow = async (row: AdminRowJson, tr: HTMLElement, btn: HTMLButtonElement): Promise<void> => {
+  const removeRow = async (
+    row: AdminRowJson,
+    _tr: HTMLElement,
+    btn: HTMLButtonElement,
+    note: HTMLElement,
+  ): Promise<void> => {
     if (!btn.dataset['armed']) {
       btn.dataset['armed'] = '1';
       btn.textContent = fill(s.confirmRemove, { slug: row.slug });
@@ -152,15 +180,15 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         body: JSON.stringify({ ...editionBody(row), confirm: true }),
       });
     } catch {
-      showError();
+      note.textContent = s.actionNetwork;
       return;
     }
     if (!res.ok) {
-      showError();
+      const data = await readJson(res);
+      note.textContent = rowErrorText(s, res, data);
       return;
     }
-    tr.remove();
-    if (list && list.childElementCount === 0 && empty) empty.hidden = false;
+    await loadAudits();
   };
 
   const renderRows = (rows: AdminRowJson[]): void => {
@@ -210,7 +238,7 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       const note = document.createElement('p');
       note.className = 'admin-note';
       toggle.addEventListener('click', () => void toggleRow(row, { link, vis, action, note }, toggle));
-      remove.addEventListener('click', () => void removeRow(row, tr, remove));
+      remove.addEventListener('click', () => void removeRow(row, tr, remove, note));
       action.append(toggle, ' ', remove, note);
       tr.append(audit, date, vis, findings, doi, action);
       list.appendChild(tr);
