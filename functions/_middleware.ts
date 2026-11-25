@@ -36,6 +36,7 @@ import {
   type AuditR2Bucket,
   type PublicAuditEntry,
 } from './audit-editions';
+import { recordLanding } from './funnel-landing';
 import { esc } from '../src/lib/audit/escape';
 import { auditContentType } from '../src/lib/audit/content-type';
 import type { AuditDocument } from '../src/lib/audit/types';
@@ -710,6 +711,8 @@ export async function onRequest(context: {
 }): Promise<Response> {
   const { request, env, next } = context;
 
+  // Cookieless campaign landings: aggregate, fire-and-forget, never blocks.
+  try { recordLanding(request, env); } catch {}
   // `/mcp` (and `/mcp/server-card`) speak MCP Streamable HTTP, not markdown:
   // an MCP client's Accept can carry `text/event-stream` or `*/*`, and without
   // this guard `/mcp` would be rewritten to `/mcp/index.md`. Pass through

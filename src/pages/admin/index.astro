@@ -39,6 +39,11 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         <p class="admin-stat" id="admin-booking-status" role="status" data-booking-api={bookingApi}></p>
         <p><a href={bookTarget('en')}>{a.openBooking}</a></p>
       </div>
+      <div class="admin-card">
+        <h2>{a.analyticsTitle}</h2>
+        <p class="admin-stat" id="admin-analytics-counts" role="status"></p>
+        <p><a href="#admin-analytics">{a.analyticsFunnelTitle}</a></p>
+      </div>
     </div>
 
     <section id="admin-audits-section">
@@ -82,6 +87,48 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
           data-action-failed={a.actionFailed}
         >
         </tbody>
+      </table>
+    </section>
+
+    <section
+      id="admin-analytics"
+      class="admin-card"
+      data-analytics-unconfigured={a.analyticsUnconfigured}
+      data-analytics-empty={a.analyticsEmpty}
+      data-analytics-summary={a.analyticsSummary}
+      data-analytics-funnel-title={a.analyticsFunnelTitle}
+      data-analytics-installs-title={a.analyticsInstallsTitle}
+      data-th-event={a.thEvent}
+      data-th-source={a.thSource}
+      data-th-medium={a.thMedium}
+      data-th-campaign={a.thCampaign}
+      data-th-tool={a.thTool}
+      data-th-client={a.thClient}
+      data-th-count={a.thCount}
+      data-analytics-client-installer={a.analyticsClientInstaller}
+      data-analytics-client-browser={a.analyticsClientBrowser}
+      data-analytics-client-other={a.analyticsClientOther}
+    >
+      <h2>{a.analyticsTitle}</h2>
+      <p class="admin-upload-buttons">
+        <button type="button" class="sign-btn-secondary" data-analytics-window="7">{a.analyticsWindow7}</button>
+        <button type="button" class="sign-btn-secondary" data-analytics-window="30">{a.analyticsWindow30}</button>
+        <button type="button" class="sign-btn-secondary" data-analytics-window="90">{a.analyticsWindow90}</button>
+      </p>
+      <p class="sign-error" id="admin-analytics-notice" hidden></p>
+      <h3>{a.analyticsFunnelTitle}</h3>
+      <table class="sign-table admin-table" id="admin-analytics-funnel-table" hidden>
+        <thead>
+          <tr><th>{a.thEvent}</th><th>{a.thSource}</th><th>{a.thMedium}</th><th>{a.thCampaign}</th><th>{a.thCount}</th></tr>
+        </thead>
+        <tbody id="admin-analytics-funnel"></tbody>
+      </table>
+      <h3>{a.analyticsInstallsTitle}</h3>
+      <table class="sign-table admin-table" id="admin-analytics-installs-table" hidden>
+        <thead>
+          <tr><th>{a.thTool}</th><th>{a.thClient}</th><th>{a.thCount}</th></tr>
+        </thead>
+        <tbody id="admin-analytics-installs"></tbody>
       </table>
     </section>
 
@@ -154,6 +201,7 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
     import { initAdminPage } from '../../lib/admin/panel-client';
     const el = document.getElementById('admin-audits');
     const up = document.getElementById('admin-upload');
+    const an = document.getElementById('admin-analytics');
     initAdminPage(
       {
         visibilityPublic: el?.dataset['visibilityPublic'] ?? '',
@@ -213,6 +261,21 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         severityMedium: up?.dataset['severityMedium'] ?? '',
         severityLow: up?.dataset['severityLow'] ?? '',
         severityInfo: up?.dataset['severityInfo'] ?? '',
+        analyticsUnconfigured: an?.dataset['analyticsUnconfigured'] ?? '',
+        analyticsEmpty: an?.dataset['analyticsEmpty'] ?? '',
+        analyticsSummary: an?.dataset['analyticsSummary'] ?? '',
+        analyticsFunnelTitle: an?.dataset['analyticsFunnelTitle'] ?? '',
+        analyticsInstallsTitle: an?.dataset['analyticsInstallsTitle'] ?? '',
+        thEvent: an?.dataset['thEvent'] ?? '',
+        thSource: an?.dataset['thSource'] ?? '',
+        thMedium: an?.dataset['thMedium'] ?? '',
+        thCampaign: an?.dataset['thCampaign'] ?? '',
+        thTool: an?.dataset['thTool'] ?? '',
+        thClient: an?.dataset['thClient'] ?? '',
+        thCount: an?.dataset['thCount'] ?? '',
+        analyticsClientInstaller: an?.dataset['analyticsClientInstaller'] ?? '',
+        analyticsClientBrowser: an?.dataset['analyticsClientBrowser'] ?? '',
+        analyticsClientOther: an?.dataset['analyticsClientOther'] ?? '',
       },
       { bookingApi: document.getElementById('admin-booking-status')?.dataset['bookingApi'] ?? '' },
     );

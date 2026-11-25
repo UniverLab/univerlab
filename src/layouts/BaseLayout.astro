@@ -263,6 +263,14 @@ const serialize = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       })();
     </script>
     <script>
+      // Cookieless campaign attribution: valid utm_* on the landing URL
+      // stay in sessionStorage for this tab only (never cookies, never
+      // localStorage). Runs on every page so the landing is kept even
+      // when the funnel action fires pages later.
+      import { saveUtm } from '../lib/campaign';
+      try { saveUtm(); } catch {}
+    </script>
+    <script>
       // Console Easter egg — a diving helmet: opening the developer tools
       // goes below the page's surface. Art: lgbeard's "Scuba" (asciiart.eu),
       // cut down to the helmet; his initials LGB stay, as the artist asks.

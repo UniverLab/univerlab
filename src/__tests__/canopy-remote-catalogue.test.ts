@@ -143,7 +143,11 @@ describe('source pins: hero CTAs, fold order and the banner clip fix', () => {
   });
 
   it('gives the install box an anchor', () => {
-    expect(layout).toContain('<div class="install" id="install" data-install>');
+    expect(layout).toContain('<div class="install" id="install" data-install');
+  });
+
+  it('stamps the experiment id on the install box for funnel reporting', () => {
+    expect(layout).toContain('data-tool={id}');
   });
 
   it('pads both banner boxes so the first and last ink rows survive the clip', () => {

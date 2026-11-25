@@ -306,5 +306,23 @@ const proof = w.proof.items.map((id) => ({
       <small>{w.close.phone}</small>
     </section>
   </section>
+  <script>
+    import { reportEvent } from '../lib/campaign';
+    (function () {
+      // Aggregate funnel actions: never block navigation, never throw.
+      try { reportEvent('workbench_visit'); } catch {}
+      document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function (a) {
+        a.addEventListener('click', function () {
+          try { reportEvent('whatsapp_click'); } catch {}
+        });
+      });
+      var form = document.getElementById('book-form');
+      if (form) {
+        form.addEventListener('submit', function () {
+          try { reportEvent('booking_click'); } catch {}
+        });
+      }
+    })();
+  </script>
   <div class="wb-sticky"><a class="wb-btn" href={bookHref}>{w.ctaShort}</a><a class="wb-alt" href={waHref} target="_blank" rel="noopener">{w.altCta}</a></div>
 </BaseLayout>
