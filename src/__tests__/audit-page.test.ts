@@ -10,6 +10,8 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
+import { en } from '../i18n/en';
+import { es } from '../i18n/es';
 import { KNOWN_BLOCK_TYPES, LAYOUT_TYPES } from '../lib/audit/types';
 import { auditPageHtml } from '../lib/audit/render';
 import { renderBlock } from '../lib/audit/blocks';
@@ -555,5 +557,132 @@ describe('audit deliverable page', () => {
     expect(html).toContain('Resumen ejecutivo');
     expect(html).toContain('Sistema');
     expect(html).toContain('Publicado');
+  });
+});
+
+describe('audit real-edition rendering', () => {
+  type PageDoc = Parameters<typeof auditPageHtml>[0];
+
+  /** The fixture with prose the old renderer leaked: backticks and
+   *  `{{finding:…}}` markers in every prose-carrying field. */
+  function richDoc(lang: 'en' | 'es'): PageDoc {
+    const doc = fixtureDoc() as unknown as PageDoc;
+    doc.meta.language = lang;
+    const f = doc.findings[0];
+    f.title = '`zz-token` replay bypasses `zz-check()`';
+    f.summary = 'A `zz-token` minted for {{finding:F-02}} never expires.';
+    f.recommendation = 'Rotate the `zz-secret` after {{finding:F-02}} ships.';
+    for (const s of doc.sections) {
+      for (const b of s.blocks as { type?: string; steps?: { title?: string; description?: string }[]; rows?: unknown[][]; columns?: unknown[] }[]) {
+        if (b.type === 'timeline' && b.steps) {
+          b.steps[0].title = 'Ship `zz-v2` of the {{finding:F-02}} flow';
+          b.steps[0].description = 'Closes {{finding:F-01}} with a `zz-token` rotation.';
+        }
+        if (b.type === 'table' && b.rows) {
+          b.rows = [['`zz-k1` and {{finding:F-01}}', 1]];
+          b.columns = ['`zz-col`', 'Count'];
+        }
+      }
+    }
+    return doc;
+  }
+
+  it.each(['en', 'es'] as const)('resolves refs and inline code everywhere (%s)', (lang) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+
+    expect(html).not.toContain('{{finding:');
+    expect(html).not.toContain('`zz-token`');
+    expect(html).not.toContain('`zz-k1`');
+    expect(html).toContain('<code>zz-token</code>');
+    expect(html).toContain('<code>zz-check()</code>');
+    expect(html).toContain('<code>zz-secret</code>');
+    // Finding title in its card and in the findings table.
+    expect(html).toContain('<code>zz-token</code> replay bypasses');
+    // Timeline title and description resolve refs and code.
+    expect(html).toMatch(/audit-timeline[\s\S]*href="#audit-finding-F-02"/);
+    expect(html).toMatch(/audit-timeline[\s\S]*<code>zz-v2<\/code>/);
+    expect(html).toMatch(/audit-timeline[\s\S]*<code>zz-token<\/code>/);
+    // Table header and cell.
+    expect(html).toContain('<code>zz-col</code>');
+    expect(html).toContain('<code>zz-k1</code>');
+  });
+
+  it.each(['en', 'es'] as const)('resolves a reference inside a finding title in the findings table (%s)', (lang) => {
+    const doc = richDoc(lang);
+    doc.findings[0].title = '`zz-token` blocks {{finding:F-02}} replay';
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const html = renderBlock({ type: 'findingsTable' }, ctx);
+
+    expect(html).not.toContain('{{finding:');
+    expect(html).toContain('<code>zz-token</code>');
+    expect(html).toContain('href="#audit-finding-F-02"');
+  });
+
+  it('renders interface text in the edition language', () => {
+    const editions = [{ id: 'e1', date: '2026-01-09', version: '1.0', status: 'draft', url: '/audits/x/', current: true }];
+    const enHtml = auditPageHtml(richDoc('en'), SLUG, { editions });
+    expect(enHtml).toContain('<th>Area</th>');
+    expect(enHtml).not.toContain('<th>·</th>');
+    expect(enHtml).toContain('>Authentication<');
+    expect(enHtml).toContain('2026-01-09 · 1.0 · draft');
+
+    const esHtml = auditPageHtml(richDoc('es'), SLUG, { editions });
+    expect(esHtml).toContain('<th>Área</th>');
+    expect(esHtml).not.toContain('<th>·</th>');
+    expect(esHtml).toContain('>Autenticación<');
+    expect(esHtml).toContain('2026-01-09 · 1.0 · borrador');
+    expect(esHtml).not.toContain('>draft<');
+    // Unknown ids humanise instead of leaking kebab-case.
+    expect(esHtml).toContain('>Flows<');
+    expect(esHtml).not.toContain('>flows<');
+  });
+
+  it.each(['en', 'es'] as const)('prints the finding summary once per card (%s)', (lang) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+    const start = html.indexOf('id="audit-finding-F-01"');
+    expect(start).toBeGreaterThanOrEqual(0);
+    const card = html.slice(start, html.indexOf('</article>', start));
+    expect(card.split('never expires.').length - 1).toBe(1);
+  });
+
+  it.each([
+    ['en', 'Enlarge', 'Close'],
+    ['es', 'Ampliar', 'Cerrar'],
+  ] as const)('wraps SVG figures in a plate with a zoom button (%s)', (lang, zoom, close) => {
+    const doc = richDoc(lang);
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const html = renderBlock({ type: 'figure', asset: 'figure-svg', caption: 'C' }, ctx);
+
+    expect(html).toContain('audit-figure--svg');
+    expect(html).toContain('audit-figure-plate');
+    expect(html).toContain(`class="audit-figure-zoom" data-close="${close}">${zoom}<`);
+    expect(html).toContain('<img');
+    expect(html).not.toContain('<svg');
+  });
+
+  it.each([
+    ['en', 'Chart data is available in the downloadable bundle.'],
+    ['es', 'Los datos del gráfico están en el paquete descargable.'],
+  ] as const)('renders a chart without a spec as caption plus data link (%s)', (lang, fallback) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+
+    // The data-fed chart keeps its caption and links its data…
+    expect(html).toContain('Fixture chart fed by a data asset.');
+    expect(html).toContain(`href="/audits/${SLUG}/assets/chart-data.json"`);
+    // …while only the drawable chart keeps a mount and a spec.
+    expect(html.match(/data-spec=/g)).toHaveLength(1);
+    expect(html.match(/audit-chart-mount/g)).toHaveLength(1);
+
+    // No spec and no data: caption plus the fallback line, never a mount.
+    const doc = richDoc(lang);
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const bare = renderBlock({ type: 'chart', caption: 'C' }, ctx);
+    expect(bare).toContain('<figcaption>C</figcaption>');
+    expect(bare).toContain(fallback);
+    expect(bare).not.toContain('data-spec');
+    expect(bare).not.toContain('audit-chart-mount');
   });
 });

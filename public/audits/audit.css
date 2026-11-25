@@ -16,7 +16,7 @@
   --audit-sev-info: var(--bench-c-graphite);
   max-width: 72rem;
   margin-inline: auto;
-  padding-block: 3rem 5rem;
+  padding-block: 1rem 4rem;
   overflow-x: clip;
   font-family: var(--font-body);
   font-size: 1.125rem;
@@ -256,6 +256,8 @@
 .audit-layout--grid .audit-sec-body {
   --audit-cols: 2;
   grid-template-columns: repeat(var(--audit-cols), minmax(0, 1fr));
+  align-items: start;
+  grid-auto-flow: dense;
 }
 
 .audit-layout--grid.audit-layout--cols-3 .audit-sec-body {
@@ -558,6 +560,65 @@
   min-height: 8rem;
 }
 
+/* Report figures (diagram-design): flat paper plate, hairline ink border,
+   no shadows, no gradients — the same plate in both themes. */
+.audit-figure-plate,
+.audit-diagram {
+  background: #f4f0ea;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.audit-diagram-mount {
+  min-width: 0;
+}
+
+.audit-diagram svg {
+  max-width: none;
+  filter: none;
+}
+
+.audit-figure-zoom {
+  font: inherit;
+  color: #1d1510;
+  background: #f1ece4;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  margin-block-start: 0.75rem;
+}
+
+.audit-lightbox {
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  background: #f4f0ea;
+  max-width: min(90vw, 80rem);
+}
+
+.audit-lightbox::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.audit-lightbox img {
+  max-width: 100%;
+  height: auto;
+}
+
+.audit-lightbox-close {
+  font: inherit;
+  color: #1d1510;
+  background: #f1ece4;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  margin-block-start: 0.75rem;
+}
+
 .audit-chart figcaption,
 .audit-diagram figcaption,
 .audit-figure figcaption,
@@ -702,6 +763,10 @@ blockquote cite {
   font-weight: 600;
 }
 
+.audit-annex-file code {
+  overflow-wrap: anywhere;
+}
+
 .audit-sources ol {
   margin: 0.5rem 0 0;
   padding-inline-start: 1.25rem;
@@ -724,6 +789,15 @@ blockquote cite {
 .audit-auto-findings,
 .audit-auto-sources {
   margin-block-end: 3rem;
+}
+
+/* The audit shells: the postcard floats beside the cover instead of filling
+   the first screen, so the audit's own title, client and edition show at
+   once. The figure sits before #audit so the edge rewrite keeps it. */
+.audit-page .audit-page-pc {
+  float: right;
+  width: 14rem;
+  margin: 0 0 1rem 1.5rem;
 }
 
 .audit-auto-findings {
@@ -782,5 +856,38 @@ blockquote cite {
 
   .audit-aside {
     position: static;
+  }
+
+  .audit-page .audit-page-pc {
+    width: 7.5rem;
+    margin: 0 0 0.75rem 1rem;
+  }
+
+  /* An SVG plate scrolls sideways instead of shrinking past legibility. */
+  .audit-figure-plate img {
+    width: max(100%, 40rem);
+    max-width: none;
+  }
+
+  /* The findings table stacks: titles read full-width, nothing runs off. */
+  .audit-findingsTable table,
+  .audit-findingsTable tbody,
+  .audit-findingsTable tr,
+  .audit-findingsTable td {
+    display: block;
+  }
+
+  .audit-findingsTable thead {
+    display: none;
+  }
+
+  .audit-findingsTable td {
+    border-block-end: 0;
+    padding-block: 0.25rem;
+  }
+
+  .audit-findingsTable tr {
+    border-block-end: 1px solid var(--audit-rule);
+    padding-block: 0.5rem;
   }
 }

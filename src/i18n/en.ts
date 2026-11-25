@@ -840,7 +840,7 @@ export const en = {
     summary: { title: 'Executive summary', open: '{n} open', fixed: '{n} fixed', highest: 'Highest open severity: {sev}' },
     evidence: { expand: 'Expand' },
     status: { draft: 'draft', delivered: 'delivered', final: 'final' },
-    filters: { all: 'All', severity: 'Severity', status: 'Status' },
+    filters: { all: 'All', severity: 'Severity', status: 'Status', area: 'Area' },
     severity: { critical: 'critical', high: 'high', medium: 'medium', low: 'low', info: 'info' },
     findingStatus: { open: 'open', fixed: 'fixed', accepted: 'accepted', 'wont-fix': 'won’t fix' },
     finding: { evidence: 'Evidence', recommendation: 'Recommendation', effort: 'Effort', cost: 'Cost', fixedIn: 'Fixed in' },
@@ -851,6 +851,8 @@ export const en = {
     chartFallback: 'Chart data is available in the downloadable bundle.',
     codeCopy: 'Copy',
     codeCopied: 'Copied',
+    figureZoom: 'Enlarge',
+    figureClose: 'Close',
     published: {
       issued: 'Audit date',
       validUntil: 'Valid until',

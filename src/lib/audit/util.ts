@@ -27,20 +27,37 @@ function safeMarkdownHref(href: string, image: boolean): string {
   return h;
 }
 
+function withNoopener(html: string): string {
+  return html.replace(/<a href="((?:https?:)?\/\/[^"]*)"/g, '<a href="$1" rel="noopener noreferrer"');
+}
+
+function walkSafeTokens(token: { type: string; text?: string; href?: string }): void {
+  if (token.type === 'html') {
+    token.text = esc(token.text ?? '');
+  } else if (token.type === 'link' || token.type === 'image') {
+    token.href = safeMarkdownHref(String(token.href || ''), token.type === 'image');
+  }
+}
+
 /** Markdown without raw HTML: html tokens are escaped to text, and link and
  *  image targets outside http(s)/relative URLs are dropped. */
 export function md(src: string): string {
   const html = marked.parse(src, {
     breaks: false,
-    walkTokens(token) {
-      if (token.type === 'html') {
-        token.text = esc(token.text);
-      } else if (token.type === 'link' || token.type === 'image') {
-        token.href = safeMarkdownHref(String(token.href || ''), token.type === 'image');
-      }
-    },
+    walkTokens: walkSafeTokens,
   }) as string;
-  return html.replace(/<a href="((?:https?:)?\/\/[^"]*)"/g, '<a href="$1" rel="noopener noreferrer"');
+  return withNoopener(html);
+}
+
+/** Inline markdown for titles and other single-line strings: backticks
+ *  become `<code>`, emphasis and links render, raw HTML stays escaped.
+ *  Emits no block wrapper, so it is safe inside `h3`, `th`, `td` and links. */
+export function inlineMd(src: string): string {
+  const html = marked.parseInline(src, {
+    breaks: false,
+    walkTokens: walkSafeTokens,
+  }) as string;
+  return withNoopener(html);
 }
 
 /** File name for the report download: `{system}-{edition}-{lang}.pdf`,
@@ -109,6 +126,17 @@ export interface ProseCtx {
  *  carry their definition, asset references link to the file. Unknown
  *  targets render as plain escaped text, never as a broken link. */
 export function proseRefs(markdown: string, ctx: ProseCtx): string {
+  return proseRefsWith(markdown, ctx, false);
+}
+
+/** `proseRefs` for single-line strings (titles, table cells, timeline
+ *  steps): references resolve and backticks become `<code>`, with no block
+ *  wrapper, so the result is safe inside `h3`, `th`, `td`, `p` and links. */
+export function inlineProseRefs(markdown: string, ctx: ProseCtx): string {
+  return proseRefsWith(markdown, ctx, true);
+}
+
+function proseRefsWith(markdown: string, ctx: ProseCtx, inline: boolean): string {
   const { slug, doc } = ctx;
   const assetBase = ctx.assetBase ?? '/audits';
   const findings = new Map(doc.findings.map((f) => [f.id, f]));
@@ -128,7 +156,7 @@ export function proseRefs(markdown: string, ctx: ProseCtx): string {
     if (kind === 'finding' && findings.has(id)) {
       const f = findings.get(id)!;
       slots.push(
-        `<a class="audit-ref" href="#audit-finding-${esc(id)}">${esc(f.title)}</a>`,
+        `<a class="audit-ref" href="#audit-finding-${esc(id)}">${inlineMd(f.title)}</a>`,
       );
     } else if (kind === 'source' && sources.has(id)) {
       const s = sources.get(id)!;
@@ -161,5 +189,6 @@ export function proseRefs(markdown: string, ctx: ProseCtx): string {
     last = m.index + m[0].length;
   }
   out += markdown.slice(last);
-  return md(out).replace(/\u0000(\d+)\u0000/g, (_, n) => slots[+n] ?? '');
+  const html = inline ? inlineMd(out) : md(out);
+  return html.replace(/\u0000(\d+)\u0000/g, (_, n) => slots[+n] ?? '');
 }

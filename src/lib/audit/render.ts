@@ -275,7 +275,8 @@ function editionsHtml(editions: AuditEditionLink[], t: BlockCtx['t']): string {
   if (!editions.length) return '';
   const rows = editions
     .map((e) => {
-      const label = `${e.date} · ${e.version} · ${e.status}`;
+      const status = (t.status as Record<string, string>)[e.status] ?? e.status;
+      const label = `${e.date} · ${e.version} · ${status}`;
       const body = e.current
         ? `<a href="${esc(e.url)}" aria-current="true">${esc(label)}</a> <span class="audit-edition-latest">${esc(t.latestBadge)}</span>`
         : `<a href="${esc(e.url)}" aria-label="${esc(t.editionOpen)}: ${esc(label)}">${esc(label)}</a>`;

@@ -834,7 +834,7 @@ export const es: Dict = {
     summary: { title: 'Resumen ejecutivo', open: '{n} abiertos', fixed: '{n} corregidos', highest: 'Severidad abierta más alta: {sev}' },
     evidence: { expand: 'Ampliar' },
     status: { draft: 'borrador', delivered: 'entregada', final: 'final' },
-    filters: { all: 'Todos', severity: 'Severidad', status: 'Estado' },
+    filters: { all: 'Todos', severity: 'Severidad', status: 'Estado', area: 'Área' },
     severity: { critical: 'crítica', high: 'alta', medium: 'media', low: 'baja', info: 'informativa' },
     findingStatus: { open: 'abierto', fixed: 'corregido', accepted: 'aceptado', 'wont-fix': 'no se corrige' },
     finding: { evidence: 'Evidencia', recommendation: 'Recomendación', effort: 'Esfuerzo', cost: 'Costo', fixedIn: 'Corregido en' },
@@ -845,6 +845,8 @@ export const es: Dict = {
     chartFallback: 'Los datos del gráfico están en el paquete descargable.',
     codeCopy: 'Copiar',
     codeCopied: 'Copiado',
+    figureZoom: 'Ampliar',
+    figureClose: 'Cerrar',
     published: {
       issued: 'Fecha de la auditoría',
       validUntil: 'Vigencia',

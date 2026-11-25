@@ -87,7 +87,17 @@ describe('diagrams', () => {
   it('hands the mount with the source as text to mermaid.run', async () => {
     initAuditPage(mount(DIAGRAM));
     await flush();
-    expect(initMock).toHaveBeenCalledWith(expect.objectContaining({ theme: 'default' }));
+    expect(initMock).toHaveBeenCalledWith(expect.objectContaining({
+      theme: 'base',
+      flowchart: expect.objectContaining({ useMaxWidth: false, padding: 16, nodeSpacing: 44, rankSpacing: 56 }),
+      themeVariables: expect.objectContaining({
+        background: '#F4F0EA',
+        primaryBorderColor: '#1D1510',
+        lineColor: '#6B5A43',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '15px',
+      }),
+    }));
     const mountEl = document.querySelector('.audit-diagram-mount') as HTMLElement;
     expect(mountEl.textContent).toBe('graph TD;A-->B');
     expect(runMock).toHaveBeenCalledWith({ nodes: [mountEl], suppressErrors: true });
@@ -102,13 +112,37 @@ describe('diagrams', () => {
     expect(runMock).toHaveBeenCalledWith({ nodes: [mountEl], suppressErrors: true });
   });
 
-  it('uses the dark theme on a night bench and survives run failure', async () => {
+  it('keeps the paper theme on a night bench and survives run failure', async () => {
     document.documentElement.dataset['benchTheme'] = 'night';
     runMock.mockRejectedValueOnce(new Error('bad diagram'));
     initAuditPage(mount(DIAGRAM));
     await flush();
-    expect(initMock).toHaveBeenCalledWith(expect.objectContaining({ theme: 'dark' }));
+    expect(initMock).toHaveBeenCalledWith(expect.objectContaining({ theme: 'base' }));
     expect((document.querySelector('.audit-diagram-mount') as HTMLElement).textContent).toBe('graph TD;A-->B');
+  });
+
+  it('opens an SVG plate larger in a dialog and closes it', async () => {
+    initAuditPage(mount(
+      '<span class="audit-figure-plate"><img src="f.svg" alt="F">' +
+      '<button type="button" class="audit-figure-zoom" data-close="Close">Enlarge</button></span>',
+    ));
+    await flush();
+    expect(document.querySelector('dialog.audit-lightbox')).toBeNull();
+
+    (document.querySelector('.audit-figure-zoom') as HTMLElement).dispatchEvent(
+      new Event('click', { bubbles: true, cancelable: true }));
+    await flush();
+    const dialog = document.querySelector('dialog.audit-lightbox') as HTMLElement | null;
+    expect(dialog).not.toBeNull();
+    const img = dialog?.querySelector('img');
+    expect(img?.getAttribute('src')).toBe('f.svg');
+    expect(img?.getAttribute('alt')).toBe('F');
+    const close = dialog?.querySelector('.audit-lightbox-close') as HTMLElement | null;
+    expect(close?.textContent).toBe('Close');
+
+    close?.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+    await flush();
+    expect(document.querySelector('dialog.audit-lightbox')).toBeNull();
   });
 });
 
