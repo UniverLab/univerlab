@@ -4,12 +4,17 @@
 //   contract (public/schemas/audit/v1.json) and every cross reference the
 //   schema cannot express. Prints each issue with its JSON path; exits 1 on
 //   any error. Warnings (unknown block types) never fail the run.
-// - `node scripts/audit.ts push <folder> [--slug <slug>]` validates first
-//   and refuses an invalid folder, then uploads audit.json and every
-//   declared asset to the remote `univerlab-audits` R2 bucket with the
-//   operator's own Wrangler login, and prints the page URL.
-// - `node scripts/audit.ts remove <slug>` lists the audit's remote objects,
-//   asks for confirmation on stdin, then deletes them.
+// - `node scripts/audit.ts push <folder> [--slug <slug>] [--system <system>] [--edition <edition>]`
+//   validates first and refuses an invalid folder, then uploads audit.json
+//   and every declared asset to the remote `univerlab-audits` R2 bucket with
+//   the operator's own Wrangler login, and prints the page URL. The audit
+//   lands as one edition under its system (`<system>/<edition>/`): the
+//   system defaults to the slug minus a trailing -YYYY-MM[-DD] date, the
+//   edition to the slug, so a re-audit adds an edition without changing the
+//   system's stable address.
+// - `node scripts/audit.ts remove <system[/edition]>` lists the remote
+//   objects under that prefix, asks for confirmation on stdin, then deletes
+//   them. Without an edition the whole system (every edition) goes.
 //
 // Runs on plain Node (24+) via native type-stripping, like the other
 // scripts/*.ts tools.
@@ -39,7 +44,40 @@ const SITE = 'https://univerlab.org';
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 
 function usage(): string {
-  return 'usage: node scripts/audit.ts validate <folder> | push <folder> [--slug <slug>] | remove <slug> | deposit <folder> [--slug <slug>] [--sandbox|--prod] [--draft|--discard]';
+  return 'usage: node scripts/audit.ts validate <folder> | push <folder> [--slug <slug>] [--system <system>] [--edition <edition>] | remove <system[/edition]> | deposit <folder> [--slug <slug>] [--system <system>] [--edition <edition>] [--sandbox|--prod] [--draft|--discard]';
+}
+
+/** The system a slug belongs to: the slug minus a trailing -YYYY-MM[-DD]
+ *  audit date, or the slug itself when there is no date to strip. */
+function deriveSystem(name: string): string {
+  const stripped = name.replace(/-\d{4}-\d{2}(-\d{2})?$/, '');
+  if (stripped !== '' && SLUG_RE.test(stripped)) return stripped;
+  return name;
+}
+
+/** The R2 key prefix of one audit edition: `<system>/<edition>/`. The
+ *  system defaults to the slug (or folder name) minus its audit date, the
+ *  edition to the slug (or folder name), so `push audits/canopy-2026-11`
+ *  lands at `canopy/canopy-2026-11/` and keeps the stable `/audits/canopy/`
+ *  address. Exits on an invalid segment. */
+function resolveTarget(
+  opts: { slug?: string; system?: string; edition?: string },
+  folder: string,
+): { system: string; edition: string; prefix: string } {
+  const base = opts.slug ?? basename(resolve(folder));
+  if (!SLUG_RE.test(base)) {
+    console.error(`invalid slug '${base}': letters, digits, '-' and '_' only`);
+    process.exit(2);
+  }
+  const system = opts.system ?? deriveSystem(base);
+  const edition = opts.edition ?? base;
+  for (const [label, value] of [['system', system], ['edition', edition]] as const) {
+    if (!SLUG_RE.test(value)) {
+      console.error(`invalid ${label} '${value}': letters, digits, '-' and '_' only`);
+      process.exit(2);
+    }
+  }
+  return { system, edition, prefix: `${system}/${edition}` };
 }
 
 function reportValidation(folder: string): boolean {
@@ -76,34 +114,30 @@ function readAuditJson(folder: string): { assets: { path: string }[]; visibility
   }
 }
 
-function push(folder: string, slugArg: string | undefined): void {
+function push(folder: string, opts: { slug?: string; system?: string; edition?: string }): void {
   if (!reportValidation(folder)) process.exit(1);
-  const slug = slugArg ?? basename(resolve(folder));
-  if (!SLUG_RE.test(slug)) {
-    console.error(`invalid slug '${slug}': letters, digits, '-' and '_' only`);
-    process.exit(2);
-  }
+  const { system, edition, prefix } = resolveTarget(opts, folder);
   const doc = readAuditJson(folder);
   if (!doc || !Array.isArray(doc.assets)) {
     console.error(`${join(folder, 'audit.json')}: cannot read the asset catalogue`);
     process.exit(1);
   }
   const uploads: { key: string; file: string }[] = [
-    { key: `${slug}/audit.json`, file: join(folder, 'audit.json') },
+    { key: `${prefix}/audit.json`, file: join(folder, 'audit.json') },
   ];
   for (const asset of doc.assets) {
     if (typeof asset?.path !== 'string' || asset.path === '') {
       console.error(`${join(folder, 'audit.json')}: asset with an empty path cannot be uploaded`);
       process.exit(1);
     }
-    uploads.push({ key: `${slug}/${asset.path}`, file: join(folder, asset.path) });
+    uploads.push({ key: `${prefix}/${asset.path}`, file: join(folder, asset.path) });
   }
   for (const { key, file } of uploads) {
     const out = wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', file, '--remote']);
     if (out === null) process.exit(1);
   }
-  const pageUrl = doc.visibility === 'public' ? `${SITE}/workbench/audits/${slug}/` : `${SITE}/audits/${slug}/`;
-  console.log(`Pushed audit '${slug}' (${uploads.length} object(s)): ${pageUrl}`);
+  const pageUrl = doc.visibility === 'public' ? `${SITE}/workbench/audits/${system}/` : `${SITE}/audits/${system}/`;
+  console.log(`Pushed audit '${system}' edition '${edition}' (${uploads.length} object(s)): ${pageUrl}`);
 }
 
 function confirm(question: string): boolean {
@@ -112,19 +146,34 @@ function confirm(question: string): boolean {
   return answer === 'y' || answer === 'yes';
 }
 
-function remove(slug: string): void {
-  if (!SLUG_RE.test(slug)) {
-    console.error(`invalid slug '${slug}': letters, digits, '-' and '_' only`);
+function remove(target: string): void {
+  const parts = target.split('/');
+  if (
+    (parts.length !== 1 && parts.length !== 2) ||
+    parts.some((p) => !SLUG_RE.test(p))
+  ) {
+    console.error(`invalid target '${target}': a system, or a system/edition pair`);
     process.exit(2);
   }
+  const prefix = parts.join('/');
   // The remote audit.json is the source of truth for which objects belong to
   // the audit: wrangler has no object-list command, and the catalogue lists
-  // every asset the push uploaded.
+  // every asset the push uploaded. A bare system names every edition, which
+  // the CLI cannot enumerate — unless the bare slug is a legacy pre-edition
+  // audit, whose own key still answers.
+  const label =
+    parts.length === 2
+      ? `system '${parts[0]}' edition '${parts[1]}'`
+      : `legacy audit '${parts[0]}'`;
   const tmp = mkdtempSync(join(tmpdir(), 'audit-remove-'));
   const tmpDoc = join(tmp, 'audit.json');
-  const fetched = wrangler(['r2', 'object', 'get', `${BUCKET}/${slug}/audit.json`, '--file', tmpDoc, '--remote']);
+  const fetched = wrangler(['r2', 'object', 'get', `${BUCKET}/${prefix}/audit.json`, '--file', tmpDoc, '--remote']);
   if (fetched === null) {
-    console.error(`no audit '${slug}' in bucket '${BUCKET}'`);
+    if (parts.length === 1) {
+      console.error(`no audit '${target}' in bucket '${BUCKET}': pass an explicit system/edition pair`);
+    } else {
+      console.error(`no audit '${target}' in bucket '${BUCKET}'`);
+    }
     process.exit(1);
   }
   let assets: { path: string }[] = [];
@@ -136,11 +185,11 @@ function remove(slug: string): void {
       );
     }
   } catch {
-    console.error(`remote audit '${slug}' has an unreadable audit.json; refusing to delete blindly`);
+    console.error(`remote audit '${target}' has an unreadable audit.json; refusing to delete blindly`);
     process.exit(1);
   }
-  const keys = [`${slug}/audit.json`, ...assets.map((a) => `${slug}/${a.path}`)];
-  console.log(`Will delete ${keys.length} object(s) of audit '${slug}' from bucket '${BUCKET}':`);
+  const keys = [`${prefix}/audit.json`, ...assets.map((a) => `${prefix}/${a.path}`)];
+  console.log(`Will delete ${keys.length} object(s) of ${label} from bucket '${BUCKET}':`);
   for (const key of keys) console.log(`  ${key}`);
   if (!confirm(`Delete these ${keys.length} object(s)?`)) {
     console.log('Aborted: nothing deleted.');
@@ -151,7 +200,7 @@ function remove(slug: string): void {
     if (wrangler(['r2', 'object', 'delete', `${BUCKET}/${key}`, '--remote']) === null) process.exit(1);
     deleted += 1;
   }
-  console.log(`Removed audit '${slug}': ${deleted} object(s) deleted.`);
+  console.log(`Removed ${label}: ${deleted} object(s) deleted.`);
 }
 
 function contentTypeOf(path: string): string {
@@ -169,11 +218,11 @@ function contentTypeOf(path: string): string {
 }
 
 /** The remote audit.json of an earlier audit, or null when the bucket does
- *  not hold that slug. Used to resolve a re-audit's concept DOI. */
-function fetchRemoteAuditJson(slug: string): AuditDocument | null {
+ *  not hold that key prefix. Used to resolve a re-audit's concept DOI. */
+function fetchRemoteAuditJson(prefix: string): AuditDocument | null {
   const tmp = mkdtempSync(join(tmpdir(), 'audit-deposit-'));
   const tmpDoc = join(tmp, 'audit.json');
-  if (wrangler(['r2', 'object', 'get', `${BUCKET}/${slug}/audit.json`, '--file', tmpDoc, '--remote']) === null) {
+  if (wrangler(['r2', 'object', 'get', `${BUCKET}/${prefix}/audit.json`, '--file', tmpDoc, '--remote']) === null) {
     return null;
   }
   try {
@@ -250,9 +299,11 @@ function zenodoApiBase(sandbox: boolean): string {
 }
 
 /** Resolve a re-audit's earlier deposition (badge.previous naming an
- *  earlier slug) to its concept DOI: the new record becomes a new version
- *  under it. Refuses when the chain is unresolvable. */
+ *  earlier edition) to its concept DOI: the new record becomes a new version
+ *  under it. Refuses when the chain is unresolvable. The previous edition is
+ *  looked up under the same system first, then at the legacy bare-slug key. */
 async function resolvePriorDeposition(
+  system: string,
   slug: string,
   doc: AuditDocument,
   apiBase: string,
@@ -262,7 +313,7 @@ async function resolvePriorDeposition(
   let conceptNote = 'a new Zenodo concept (first audit of this system)';
   const previous = doc.badge?.previous;
   if (typeof previous === 'string' && previous !== '') {
-    const prevDoc = fetchRemoteAuditJson(previous);
+    const prevDoc = fetchRemoteAuditJson(`${system}/${previous}`) ?? fetchRemoteAuditJson(previous);
     const conceptDoi = prevDoc?.deposit?.conceptDoi;
     if (typeof conceptDoi !== 'string' || conceptDoi === '') {
       console.error(
@@ -290,14 +341,7 @@ function readLocalAudit(folder: string): AuditDocument {
   }
 }
 
-function checkSlug(slugArg: string | undefined, folder: string): string {
-  const slug = slugArg ?? basename(resolve(folder));
-  if (!SLUG_RE.test(slug)) {
-    console.error(`invalid slug '${slug}': letters, digits, '-' and '_' only`);
-    process.exit(2);
-  }
-  return slug;
-}
+type TargetOpts = { slug?: string; system?: string; edition?: string };
 
 // `deposit <folder>`: publish the audit's public deliverables in Zenodo and
 // write the DOIs back into audit.json. Refuses a private audit, open
@@ -308,9 +352,10 @@ function checkSlug(slugArg: string | undefined, folder: string): string {
 // already recorded: then that same draft is published as-is. Sandbox is the
 // default until the operator has tested the flow; the token comes from
 // ZENODO_TOKEN only.
-async function deposit(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
+async function deposit(folder: string, opts: TargetOpts, sandbox: boolean): Promise<void> {
   if (!reportValidation(folder)) process.exit(1);
-  const slug = checkSlug(slugArg, folder);
+  const { system, edition, prefix } = resolveTarget(opts, folder);
+  const slug = `${system}/${edition}`;
   const doc = readLocalAudit(folder);
   const refusal = depositRefusal(doc);
   if (refusal !== null) {
@@ -324,7 +369,7 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
   let priorDepositionId: number | null = null;
   let conceptNote = 'a new Zenodo concept (first audit of this system)';
   if (draftId === null) {
-    ({ priorDepositionId, conceptNote } = await resolvePriorDeposition(slug, doc, apiBase, token));
+    ({ priorDepositionId, conceptNote } = await resolvePriorDeposition(system, slug, doc, apiBase, token));
   } else {
     conceptNote = `the recorded draft deposition ${draftId}`;
   }
@@ -362,7 +407,7 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
     consent: true,
   };
   writeFileSync(join(folder, 'audit.json'), `${JSON.stringify(doc, null, 2)}\n`);
-  if (wrangler(['r2', 'object', 'put', `${BUCKET}/${slug}/audit.json`, '--file', join(folder, 'audit.json'), '--remote']) === null) {
+  if (wrangler(['r2', 'object', 'put', `${BUCKET}/${prefix}/audit.json`, '--file', join(folder, 'audit.json'), '--remote']) === null) {
     process.exit(1);
   }
   console.log(`Deposited audit '${slug}': version DOI ${result.versionDoi}, concept DOI ${result.conceptDoi}.`);
@@ -376,9 +421,10 @@ async function deposit(folder: string, slugArg: string | undefined, sandbox: boo
 // carries a published version DOI. A rerun updates the same draft. The
 // reserved DOI and deposition id are recorded in audit.json (never rendered
 // as a published DOI); only the local file is rewritten, never R2.
-async function depositDraft(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
+async function depositDraft(folder: string, opts: TargetOpts, sandbox: boolean): Promise<void> {
   if (!reportValidation(folder)) process.exit(1);
-  const slug = checkSlug(slugArg, folder);
+  const { system, edition } = resolveTarget(opts, folder);
+  const slug = `${system}/${edition}`;
   const doc = readLocalAudit(folder);
   const refusal = draftRefusal(doc);
   if (refusal !== null) {
@@ -393,7 +439,7 @@ async function depositDraft(folder: string, slugArg: string | undefined, sandbox
   if (draftId === null) {
     // A re-audit's draft is a new version of the earlier deposition, so
     // publishing it later keeps the concept chain publication would have.
-    ({ priorDepositionId } = await resolvePriorDeposition(slug, doc, apiBase, token));
+    ({ priorDepositionId } = await resolvePriorDeposition(system, slug, doc, apiBase, token));
   }
   const metadata = depositMetadata(doc);
   const host = sandbox ? 'sandbox.zenodo.org' : 'zenodo.org';
@@ -422,8 +468,9 @@ async function depositDraft(folder: string, slugArg: string | undefined, sandbox
 
 // `deposit <folder> --discard`: delete the unpublished Zenodo draft
 // deposition recorded in audit.json and clear what the draft step recorded.
-async function discardDepositDraft(folder: string, slugArg: string | undefined, sandbox: boolean): Promise<void> {
-  const slug = checkSlug(slugArg, folder);
+async function discardDepositDraft(folder: string, opts: TargetOpts, sandbox: boolean): Promise<void> {
+  const { system, edition } = resolveTarget(opts, folder);
+  const slug = `${system}/${edition}`;
   const doc = readLocalAudit(folder);
   const draftId = recordedDraftId(doc);
   if (draftId === null) {
@@ -451,6 +498,47 @@ async function discardDepositDraft(folder: string, slugArg: string | undefined, 
   console.log(`Discarded draft deposition ${draftId} for audit '${slug}'.`);
 }
 
+/** `--slug/--system/--edition` for push: each consumes its value, anything
+ *  else is a usage error. Exits on a missing value or an unknown flag. */
+function parseTargetFlags(flags: string[]): TargetOpts {
+  const opts: TargetOpts = {};
+  for (let i = 0; i < flags.length; i++) {
+    if ((flags[i] === '--slug' || flags[i] === '--system' || flags[i] === '--edition') && i + 1 < flags.length) {
+      const key = flags[i].slice(2) as keyof TargetOpts;
+      opts[key] = flags[++i];
+    } else {
+      console.error(`${usage()}\nunknown flag '${flags[i]}'`);
+      process.exit(2);
+    }
+  }
+  return opts;
+}
+
+function parseDepositFlags(flags: string[]): { opts: TargetOpts; sandbox: boolean; draft: boolean; discard: boolean } {
+  const opts: TargetOpts = {};
+  let sandbox = true;
+  let draft = false;
+  let discard = false;
+  for (let i = 0; i < flags.length; i++) {
+    if ((flags[i] === '--slug' || flags[i] === '--system' || flags[i] === '--edition') && i + 1 < flags.length) {
+      const key = flags[i].slice(2) as keyof TargetOpts;
+      opts[key] = flags[++i];
+    } else if (flags[i] === '--sandbox') {
+      sandbox = true;
+    } else if (flags[i] === '--prod') {
+      sandbox = false;
+    } else if (flags[i] === '--draft') {
+      draft = true;
+    } else if (flags[i] === '--discard') {
+      discard = true;
+    } else {
+      console.error(`${usage()}\nunknown flag '${flags[i]}'`);
+      process.exit(2);
+    }
+  }
+  return { opts, sandbox, draft, discard };
+}
+
 const [, , command, ...rest] = process.argv;
 
 if (command === 'validate') {
@@ -466,54 +554,27 @@ if (command === 'validate') {
     console.error(usage());
     process.exit(2);
   }
-  let slug: string | undefined;
-  for (let i = 0; i < flags.length; i++) {
-    if (flags[i] === '--slug' && i + 1 < flags.length) {
-      slug = flags[++i];
-    } else {
-      console.error(`${usage()}\nunknown flag '${flags[i]}'`);
-      process.exit(2);
-    }
-  }
-  push(folder, slug);
+  const opts = parseTargetFlags(flags);
+  push(folder, opts);
 } else if (command === 'remove') {
-  const [slug] = rest;
-  if (!slug) {
+  const [target] = rest;
+  if (!target) {
     console.error(usage());
     process.exit(2);
   }
-  remove(slug);
+  remove(target);
 } else if (command === 'deposit') {
   const [folder, ...flags] = rest;
   if (!folder) {
     console.error(usage());
     process.exit(2);
   }
-  let slug: string | undefined;
-  let sandbox = true;
-  let draft = false;
-  let discard = false;
-  for (let i = 0; i < flags.length; i++) {
-    if (flags[i] === '--slug' && i + 1 < flags.length) {
-      slug = flags[++i];
-    } else if (flags[i] === '--sandbox') {
-      sandbox = true;
-    } else if (flags[i] === '--prod') {
-      sandbox = false;
-    } else if (flags[i] === '--draft') {
-      draft = true;
-    } else if (flags[i] === '--discard') {
-      discard = true;
-    } else {
-      console.error(`${usage()}\nunknown flag '${flags[i]}'`);
-      process.exit(2);
-    }
-  }
+  const { opts, sandbox, draft, discard } = parseDepositFlags(flags);
   if (draft && discard) {
     console.error(usage());
     process.exit(2);
   }
-  const run = discard ? discardDepositDraft(folder, slug, sandbox) : draft ? depositDraft(folder, slug, sandbox) : deposit(folder, slug, sandbox);
+  const run = discard ? discardDepositDraft(folder, opts, sandbox) : draft ? depositDraft(folder, opts, sandbox) : deposit(folder, opts, sandbox);
   run.then(undefined, (err: unknown) => {
     console.error(`deposit failed: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);

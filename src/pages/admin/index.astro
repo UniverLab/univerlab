@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { useTranslations } from '../../i18n';
+import { bookTarget } from '../../lib/book-target';
 import '../../styles/sign.css';
 
 const t = useTranslations('en');
@@ -58,7 +59,7 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
     <h2>{a.bookingTitle}</h2>
     <p>{a.bookingIntro}</p>
     <p id="admin-booking-status" role="status" data-booking-api={bookingApi}></p>
-    <p><a href={`${bookingApi}/health`}>{a.openBooking}</a></p>
+    <p><a href={bookTarget('en')}>{a.openBooking}</a></p>
     </div>
     </div>
   </section>

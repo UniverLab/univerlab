@@ -156,8 +156,11 @@ function annexMarkdown(doc: AuditDocument, slug: string, a: NonNullable<AuditDoc
 }
 
 /** The markdown twin of a published audit. Public only: the caller gates,
- *  and only public annexes travel with it — a private annex stays out. */
-export function auditMarkdown(doc: AuditDocument, slug: string): string {
+ *  and only public annexes travel with it — a private annex stays out.
+ *  `slug` is the canonical address (the system, or one `system/edition`
+ *  path); assets always resolve under `assetSlug`, the exact edition
+ *  served, so a system twin never points at another edition's files. */
+export function auditMarkdown(doc: AuditDocument, slug: string, assetSlug: string = slug): string {
   const canonical = `https://univerlab.org${publicAuditUrl(slug)}`;
   const m = doc.meta;
   const lang = m.language;
@@ -197,7 +200,7 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
     : [];
   const annexes = (doc.annexes ?? []).filter((a) => a.visibility === 'public');
   const annexLines = annexes.length
-    ? [lang === 'es' ? '## Anexos' : '## Annexes', '', ...annexes.map((a) => annexMarkdown(doc, slug, a)), '']
+    ? [lang === 'es' ? '## Anexos' : '## Annexes', '', ...annexes.map((a) => annexMarkdown(doc, assetSlug, a)), '']
     : [];
   const sources = doc.sources.length
     ? [
@@ -210,7 +213,7 @@ export function auditMarkdown(doc: AuditDocument, slug: string): string {
   const sections = doc.sections.flatMap((s) => [
     `## ${s.title}`,
     '',
-    ...s.blocks.map((b) => blockMarkdown(doc, slug, b)).filter((x) => x !== ''),
+    ...s.blocks.map((b) => blockMarkdown(doc, assetSlug, b)).filter((x) => x !== ''),
     '',
   ]);
   return [...head, ...findings, ...annexLines, ...sources, ...sections].join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';

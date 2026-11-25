@@ -7,7 +7,8 @@ import {
   type AuditDocument,
   type AuditFinding,
 } from './types';
-import { assetById, assetUrl, esc, formatBytes, md, proseRefs, safeExternalUrl } from './util';
+import { assetById, assetUrl, esc, formatBytes, inlineProseRefs, md, proseRefs, safeExternalUrl } from './util';
+import { areaLabel } from './areas';
 import { iconSvg } from '../icon-svg';
 import { copy } from '../icons';
 import type { en } from '../../i18n/en';
@@ -82,7 +83,7 @@ function evidenceList(ctx: BlockCtx, f: AuditFinding): string {
       const a = assetById(ctx.doc, e.id);
       const label = a ? a.title : e.id;
       return a
-        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(label)}</a></li>`
+        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${inlineProseRefs(label, ctx)}</a></li>`
         : `<li>${esc(label)}</li>`;
     })
     .join('');
@@ -91,9 +92,10 @@ function evidenceList(ctx: BlockCtx, f: AuditFinding): string {
 
 function findingCard(ctx: BlockCtx, f: AuditFinding): string {
   const { t } = ctx;
+  const lang = ctx.doc.meta.language;
   const extra: string[] = [];
   extra.push(
-    `<p>${esc(t.finding.recommendation)}: ${esc(f.recommendation)}</p>`,
+    `<p>${esc(t.finding.recommendation)}: ${inlineProseRefs(f.recommendation, ctx)}</p>`,
     `<p>${esc(t.finding.effort)}: ${esc(t.effort[f.effort])}</p>`,
   );
   if (f.cost) extra.push(`<p>${esc(t.finding.cost)}: ${costText(ctx.doc, f.cost)}</p>`);
@@ -101,16 +103,18 @@ function findingCard(ctx: BlockCtx, f: AuditFinding): string {
   return (
     `<article class="audit-finding" id="audit-finding-${esc(f.id)}" ` +
     `data-severity="${esc(f.severity)}" data-status="${esc(f.status)}">` +
-    `<p class="audit-finding-badges"><span class="audit-sev audit-sev--${esc(f.severity)}">` +
-    `${esc(t.severity[f.severity])}</span> ` +
-    `<span class="audit-status audit-status--${esc(f.status)}">${esc(t.findingStatus[f.status])}</span></p>` +
-    `<h3>${esc(f.title)}</h3>` +
-    `<p class="audit-finding-area">${esc(f.area)} · ${esc(String(f.likelihood))}×${esc(String(f.impact))}</p>` +
-    `<p>${esc(f.summary)}</p>` +
+    `<details><summary class="audit-finding-row">` +
+    `<span class="audit-finding-id">${esc(f.id)}</span> ` +
+    `<span class="audit-sev audit-sev--${esc(f.severity)}">${esc(t.severity[f.severity])}</span> ` +
+    `<span class="audit-status audit-status--${esc(f.status)}">${esc(t.findingStatus[f.status])}</span>` +
+    `<h3>${inlineProseRefs(f.title, ctx)}</h3>` +
+    `<span class="audit-finding-impact">${inlineProseRefs(f.summary, ctx)}</span>` +
+    `</summary><div class="audit-finding-body">` +
+    `<p class="audit-finding-area">${esc(areaLabel(f.area, lang))} · ${esc(String(f.likelihood))}×${esc(String(f.impact))}</p>` +
     evidenceList(ctx, f) +
     extra.join('') +
     backButton(t) +
-    `</article>`
+    `</div></details></article>`
   );
 }
 
@@ -136,15 +140,16 @@ function findingsTable(ctx: BlockCtx, b: { severity?: string[]; status?: string[
         `${esc(s === 'all' ? t.filters.all : t.findingStatus[s as keyof typeof t.findingStatus])}</button>`,
     )
     .join('');
+  const lang = doc.meta.language;
   const rows = doc.findings
     .map((f) => {
       const hidden = sevMatch(f.severity) && stMatch(f.status) ? '' : ' hidden';
       return (
         `<tr data-severity="${esc(f.severity)}" data-status="${esc(f.status)}"${hidden}>` +
-        `<td><a class="audit-ref" href="#audit-finding-${esc(f.id)}">${esc(f.title)}</a></td>` +
+        `<td><a class="audit-ref" href="#audit-finding-${esc(f.id)}">${inlineProseRefs(f.title, ctx)}</a></td>` +
         `<td><span class="audit-sev audit-sev--${esc(f.severity)}">${esc(t.severity[f.severity])}</span></td>` +
         `<td>${esc(t.findingStatus[f.status])}</td>` +
-        `<td>${esc(f.area)}</td></tr>`
+        `<td>${esc(areaLabel(f.area, lang))}</td></tr>`
       );
     })
     .join('');
@@ -153,7 +158,7 @@ function findingsTable(ctx: BlockCtx, b: { severity?: string[]; status?: string[
     `<div class="audit-filters" role="group" aria-label="${esc(t.filters.severity)}">${sevBtns}</div>` +
     `<div class="audit-filters" role="group" aria-label="${esc(t.filters.status)}">${stBtns}</div>` +
     `<table><thead><tr><th>${esc(t.findings)}</th><th>${esc(t.filters.severity)}</th>` +
-    `<th>${esc(t.filters.status)}</th><th>·</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    `<th>${esc(t.filters.status)}</th><th>${esc(t.filters.area)}</th></tr></thead><tbody>${rows}</tbody></table></div>`
   );
 }
 
@@ -180,16 +185,33 @@ function riskMatrix(ctx: BlockCtx, title?: string): string {
 
 function chart(ctx: BlockCtx, b: { spec?: Record<string, unknown>; dataAsset?: string; caption?: string }): string {
   let dataUrl = '';
+  let dataTitle = '';
   if (typeof b.dataAsset === 'string' && b.dataAsset !== '') {
     const a = assetById(ctx.doc, b.dataAsset);
-    if (a) dataUrl = assetUrl(ctx.slug, a.path, ctx.assetBase);
+    if (a) {
+      dataUrl = assetUrl(ctx.slug, a.path, ctx.assetBase);
+      dataTitle = a.title;
+    }
   }
   const spec = b.spec ?? {};
+  const drawable = spec !== null && typeof spec === 'object' && Object.keys(spec).length > 0;
+  // No drawable specification: never an empty box — the caption and a link
+  // to the data (or the fallback line when there is no data asset).
+  if (!drawable) {
+    return (
+      `<figure class="audit-chart">` +
+      (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
+      (dataUrl
+        ? `<a href="${esc(dataUrl)}">${inlineProseRefs(dataTitle, ctx)}</a>`
+        : `<p>${esc(ctx.t.chartFallback)}</p>`) +
+      `</figure>`
+    );
+  }
   return (
     `<figure class="audit-chart" data-spec="${esc(JSON.stringify(spec))}"` +
     (dataUrl ? ` data-url="${esc(dataUrl)}"` : '') +
     `><div class="audit-chart-mount"></div>` +
-    (b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : '') +
+    (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
     `<noscript><p>${esc(ctx.t.chartFallback)}</p></noscript></figure>`
   );
 }
@@ -198,9 +220,20 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
   const a = typeof b.asset === 'string' ? assetById(ctx.doc, b.asset) : null;
   if (!a) return '';
   const url = assetUrl(ctx.slug, a.path, ctx.assetBase);
+  let svg = false;
   let media = '';
   if (a.kind === 'image') {
-    media = `<img src="${esc(url)}" alt="${esc(a.alt ?? a.title)}" loading="lazy">`;
+    const img = `<img src="${esc(url)}" alt="${esc(a.alt ?? a.title)}" loading="lazy">`;
+    // SVG assets stay in an image context, never inlined: a light paper
+    // plate carries them, with a zoom button that opens them larger.
+    if (/\.svg$/i.test(a.path)) {
+      svg = true;
+      media =
+        `<span class="audit-figure-plate">${img}` +
+        `<button type="button" class="audit-figure-zoom" data-close="${esc(ctx.t.figureClose)}">${esc(ctx.t.figureZoom)}</button></span>`;
+    } else {
+      media = img;
+    }
   } else if (a.kind === 'video') {
     let poster = '';
     if (typeof b.poster === 'string' && b.poster !== '') {
@@ -213,11 +246,11 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
   } else if (a.kind === 'audio') {
     media = `<audio controls preload="metadata" src="${esc(url)}"></audio>`;
   } else {
-    media = `<a href="${esc(url)}">${esc(a.title)}</a>`;
+    media = `<a href="${esc(url)}">${inlineProseRefs(a.title, ctx)}</a>`;
   }
   return (
-    `<figure class="audit-figure">${media}` +
-    (b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : '') +
+    `<figure class="audit-figure${svg ? ' audit-figure--svg' : ''}">${media}` +
+    (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
     `</figure>`
   );
 }
@@ -225,19 +258,21 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
 function code(ctx: BlockCtx, b: { language: string; source?: string; sourceAsset?: string; highlight?: number[] }): string {
   const hl = Array.isArray(b.highlight) ? b.highlight.filter((n) => Number.isInteger(n) && n >= 1) : [];
   const hlAttr = hl.length ? ` data-highlight="${esc(hl.join(','))}"` : '';
+  const expand =
+    `<button type="button" class="audit-code-expand" hidden aria-expanded="false">${esc(ctx.t.evidence.expand)}</button>`;
   if (typeof b.sourceAsset === 'string' && b.sourceAsset !== '') {
     const a = assetById(ctx.doc, b.sourceAsset);
     if (!a) return '';
     return (
       `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
-      `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
+      `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>${expand}` +
       `<pre><code data-lang="${esc(b.language)}" data-src="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}"${hlAttr}></code></pre></figure>`
     );
   }
   const src = typeof b.source === 'string' ? b.source : '';
   return (
     `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
-    `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
+    `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>${expand}` +
     `<pre><code data-lang="${esc(b.language)}" data-inline="${esc(src)}"${hlAttr}>${esc(src)}</code></pre></figure>`
   );
 }
@@ -301,7 +336,7 @@ export function annexEntryHtml(ctx: BlockCtx, a: AuditAnnex): string {
       const file = asset.path.split('/').pop() ?? asset.path;
       return (
         `<li class="audit-annex-file">` +
-        `<a href="${esc(assetUrl(ctx.slug, asset.path, ctx.assetBase))}">${esc(asset.title)}</a> ` +
+        `<a href="${esc(assetUrl(ctx.slug, asset.path, ctx.assetBase))}">${inlineProseRefs(asset.title, ctx)}</a> ` +
         `<span class="audit-annex-file-name">${esc(file)}</span> ` +
         `<span class="audit-annex-size">${esc(formatBytes(asset.bytes))}</span> ` +
         `<code>${esc(asset.sha256)}</code>` +
@@ -313,7 +348,7 @@ export function annexEntryHtml(ctx: BlockCtx, a: AuditAnnex): string {
     .join('');
   return (
     `<article class="audit-annex" id="audit-annex-${esc(a.id)}">` +
-    `<h3>${esc(a.title)}</h3>` +
+    `<h3>${inlineProseRefs(a.title, ctx)}</h3>` +
     md(a.description) +
     (typeof a.instructions === 'string' && a.instructions !== ''
       ? `<p class="audit-annex-usage">${esc(ctx.t.annexUsage)}</p>` + md(a.instructions)
@@ -384,7 +419,8 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
         span,
         `<figure class="audit-diagram" data-mermaid="${esc(mermaid)}">` +
           `<div class="audit-diagram-mount"></div>` +
-          (typeof caption === 'string' && caption !== '' ? `<figcaption>${esc(caption)}</figcaption>` : '') +
+          `<button type="button" class="audit-diagram-zoom" data-close="${esc(ctx.t.figureClose)}">${esc(ctx.t.figureZoom)}</button>` +
+          (typeof caption === 'string' && caption !== '' ? `<figcaption>${inlineProseRefs(caption, ctx)}</figcaption>` : '') +
           `</figure>`,
       );
     }
@@ -420,8 +456,8 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
         span,
         `<figure class="audit-table"><table>` +
           (typeof caption === 'string' && caption !== '' ? `<caption>${esc(caption)}</caption>` : '') +
-          `<thead><tr>${columns.map((c) => `<th>${esc(String(c))}</th>`).join('')}</tr></thead>` +
-          `<tbody>${rows.map((r) => `<tr>${(Array.isArray(r) ? r : []).map((c) => `<td>${esc(String(c))}</td>`).join('')}</tr>`).join('')}</tbody>` +
+          `<thead><tr>${columns.map((c) => `<th>${inlineProseRefs(String(c), ctx)}</th>`).join('')}</tr></thead>` +
+          `<tbody>${rows.map((r) => `<tr>${(Array.isArray(r) ? r : []).map((c) => `<td>${inlineProseRefs(String(c), ctx)}</td>`).join('')}</tr>`).join('')}</tbody>` +
           `</table></figure>`,
       );
     }
@@ -430,8 +466,8 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
       return wrap(
         b.type,
         span,
-        `<ol class="audit-timeline">${steps.map((s) => `<li><p class="audit-timeline-title">${esc(String(s.title ?? ''))}</p>` +
-          (typeof s.description === 'string' && s.description !== '' ? `<p>${esc(s.description)}</p>` : '') +
+        `<ol class="audit-timeline">${steps.map((s) => `<li><p class="audit-timeline-title">${inlineProseRefs(String(s.title ?? ''), ctx)}</p>` +
+          (typeof s.description === 'string' && s.description !== '' ? proseRefs(s.description, ctx) : '') +
           (typeof s.effort === 'string' && s.effort !== '' ? `<p>${esc(ctx.t.finding.effort)}: ${esc(ctx.t.effort[s.effort as keyof typeof ctx.t.effort] ?? s.effort)}</p>` : '') +
           (s.cost ? `<p>${esc(ctx.t.finding.cost)}: ${costText(ctx.doc, s.cost)}</p>` : '') +
           `</li>`).join('')}</ol>`,
@@ -458,9 +494,9 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
       return wrap(
         b.type,
         span,
-        `<div class="audit-assetCard"><p class="audit-assetCard-title">${esc(a.title)}</p>` +
-          (typeof desc === 'string' && desc !== '' ? `<p>${esc(desc)}</p>` : '') +
-          `<a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(a.title)}</a></div>`,
+        `<div class="audit-assetCard"><p class="audit-assetCard-title">${inlineProseRefs(a.title, ctx)}</p>` +
+          (typeof desc === 'string' && desc !== '' ? `<p>${inlineProseRefs(desc, ctx)}</p>` : '') +
+          `<a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${inlineProseRefs(a.title, ctx)}</a></div>`,
       );
     }
     case 'sources':

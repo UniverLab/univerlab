@@ -11,7 +11,8 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { listPublicAudits, onRequest, publicAuditHistory } from '../../functions/_middleware';
+import { onRequest } from '../../functions/_middleware';
+import { listPublicAudits, publicAuditHistory } from '../../functions/audit-editions';
 import { auditBadge, badgeExpired, badgeSnippet, badgeText, badgeValidUntil } from '../lib/audit/badge';
 import { auditMarkdown, PUBLIC_AUDIT_BASE } from '../lib/audit/markdown';
 import { auditPageHtml } from '../lib/audit/render';
@@ -286,16 +287,18 @@ describe('middleware — published audit page', () => {
     const priv = fixtureDoc();
     priv['visibility'] = 'private';
     priv['access'] = { emails: ['reader@example.com'] };
+    const older = recentIssued();
     const plain = fixtureDoc();
     return {
-      'pub-audit': publicDoc('es', { issued: recentIssued(), scope: 'Tienda en línea' }),
-      'pub-reaudit': publicDoc('es', {
-        issued: recentIssued(),
+      // One system, two public editions: the re-audit names the first.
+      'tienda/pub-audit': publicDoc('es', { issued: '2026-01-15', scope: 'Tienda en línea' }),
+      'tienda/pub-reaudit': publicDoc('es', {
+        issued: older,
         scope: 'Tienda en línea',
         previous: 'pub-audit',
       }),
-      'priv-audit': priv,
-      'plain-public': plain,
+      'privada/priv-audit': priv,
+      'llana/plain-public': plain,
     };
   }
 
@@ -339,22 +342,22 @@ describe('middleware — published audit page', () => {
   });
 
   it('renders 200 with canonical, dates, history, badge and snippet — indexable and cached', async () => {
-    const ctx = context('/workbench/audits/pub-audit/');
+    const ctx = context('/workbench/audits/tienda/');
     const res = await onRequest(ctx);
     const body = await res.text();
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
     expect(res.headers.get('X-Robots-Tag')).toBeNull();
     expect(body).toContain('<html lang="es">');
-    expect(body).toContain('https://univerlab.org/workbench/audits/pub-audit/');
+    expect(body).toContain('https://univerlab.org/workbench/audits/tienda/');
     expect(body).toContain('class="audit-published"');
     expect(body).toContain('Fecha de la auditoría');
     expect(body).toContain('Vigencia');
-    expect(body).toContain(`href="${PUBLIC_AUDIT_BASE}/pub-reaudit/"`);
+    expect(body).toContain(`href="${PUBLIC_AUDIT_BASE}/tienda/pub-audit/"`);
     expect(body).toContain('class="audit-badge-copy"');
     expect(body).toContain('badge.svg');
-    expect(body).toContain('/workbench/audits/pub-audit/assets/report.pdf');
-    expect(body).not.toContain('"/audits/pub-audit/assets/');
+    expect(body).toContain('/workbench/audits/tienda/pub-reaudit/assets/report.pdf');
+    expect(body).not.toContain('"/audits/tienda/assets/');
     expect(body).not.toContain('reader@example.com');
     // The shell is noindex; the published page is indexed and keeps the
     // feed's alternate link pointing at the feed, not at index.md.
@@ -366,14 +369,14 @@ describe('middleware — published audit page', () => {
   });
 
   it('links the previous audit from the re-audit', async () => {
-    const ctx = context('/workbench/audits/pub-reaudit/');
+    const ctx = context('/workbench/audits/tienda/pub-reaudit/');
     const body = await (await onRequest(ctx)).text();
-    expect(body).toContain(`href="${PUBLIC_AUDIT_BASE}/pub-audit/"`);
+    expect(body).toContain(`href="${PUBLIC_AUDIT_BASE}/tienda/pub-audit/"`);
     expect(body).toContain('Auditoría anterior');
   });
 
   it('answers 404 for a private slug, a missing slug and an invalid document', async () => {
-    const priv = context('/workbench/audits/priv-audit/');
+    const priv = context('/workbench/audits/privada/');
     expect((await onRequest(priv)).status).toBe(404);
     expect(priv.next).toHaveBeenCalled();
 
@@ -382,31 +385,41 @@ describe('middleware — published audit page', () => {
   });
 
   it('serves badge.svg for public audits with a badge, 404 otherwise', async () => {
-    const ok = context('/workbench/audits/pub-audit/badge.svg');
+    const ok = context('/workbench/audits/tienda/badge.svg');
     const res = await onRequest(ok);
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toContain('image/svg+xml');
     expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
     expect(await res.text()).toContain('Auditado por UniverLab');
 
-    expect((await onRequest(context('/workbench/audits/priv-audit/badge.svg'))).status).toBe(404);
-    expect((await onRequest(context('/workbench/audits/plain-public/badge.svg'))).status).toBe(404);
+    const named = await onRequest(context('/workbench/audits/tienda/pub-audit/badge.svg'));
+    expect(named.status).toBe(200);
+    expect(await named.text()).toContain('Auditado por UniverLab');
+
+    expect((await onRequest(context('/workbench/audits/privada/badge.svg'))).status).toBe(404);
+    expect((await onRequest(context('/workbench/audits/llana/plain-public/badge.svg'))).status).toBe(404);
   });
 
   it('serves the markdown twin at index.md and for a markdown Accept, never with emails', async () => {
-    const twin = context('/workbench/audits/pub-audit/index.md');
+    const twin = context('/workbench/audits/tienda/index.md');
     const res = await onRequest(twin);
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toContain('text/markdown');
     const md = await res.text();
-    expect(md).toContain('source: "https://univerlab.org/workbench/audits/pub-audit/"');
+    expect(md).toContain('source: "https://univerlab.org/workbench/audits/tienda/"');
+    expect(md).toContain('/workbench/audits/tienda/pub-reaudit/assets/report.pdf');
     expect(md).not.toContain('reader@example.com');
 
-    const negotiated = context('/workbench/audits/pub-audit/', { accept: 'text/markdown' });
-    expect((await onRequest(negotiated)).status).toBe(200);
-    expect((await (await onRequest(negotiated)).text())).toContain('source: "https://univerlab.org/workbench/audits/pub-audit/"');
+    const namedTwin = context('/workbench/audits/tienda/pub-audit/index.md');
+    const namedRes = await onRequest(namedTwin);
+    expect(namedRes.status).toBe(200);
+    expect(await namedRes.text()).toContain('source: "https://univerlab.org/workbench/audits/tienda/pub-audit/"');
 
-    const privTwin = context('/workbench/audits/priv-audit/index.md');
+    const negotiated = context('/workbench/audits/tienda/', { accept: 'text/markdown' });
+    expect((await onRequest(negotiated)).status).toBe(200);
+    expect((await (await onRequest(negotiated)).text())).toContain('source: "https://univerlab.org/workbench/audits/tienda/"');
+
+    const privTwin = context('/workbench/audits/privada/index.md');
     expect((await onRequest(privTwin)).status).toBe(404);
   });
 
@@ -445,9 +458,9 @@ describe('middleware — published audit page', () => {
 
   function annexBucket(doc: Doc) {
     const files = new Map<string, Uint8Array>();
-    files.set(`${ANNEX_SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
-    files.set(`${ANNEX_SLUG}/assets/chart-data.json`, new Uint8Array(readFileSync(join(FIXTURE_DIR, 'assets', 'chart-data.json'))));
-    files.set(`${ANNEX_SLUG}/assets/sandbox.zip`, new Uint8Array(ZIP_BYTES));
+    files.set(`${ANNEX_SLUG}/${ANNEX_SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
+    files.set(`${ANNEX_SLUG}/${ANNEX_SLUG}/assets/chart-data.json`, new Uint8Array(readFileSync(join(FIXTURE_DIR, 'assets', 'chart-data.json'))));
+    files.set(`${ANNEX_SLUG}/${ANNEX_SLUG}/assets/sandbox.zip`, new Uint8Array(ZIP_BYTES));
     return {
       async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
         const bytes = files.get(key);
@@ -541,30 +554,47 @@ describe('middleware — published audit page', () => {
   it('injects public audits into the sitemap and llms.txt, never private ones', async () => {
     const sitemap = await onRequest(context('/sitemap-0.xml'));
     const xml = await sitemap.text();
-    expect(xml).toContain('<loc>https://univerlab.org/workbench/audits/pub-audit/</loc>');
-    expect(xml).toContain('<loc>https://univerlab.org/workbench/audits/pub-reaudit/</loc>');
-    expect(xml).not.toContain('priv-audit');
+    expect(xml).toContain('<loc>https://univerlab.org/workbench/audits/tienda/</loc>');
+    expect(xml).toContain('<loc>https://univerlab.org/workbench/audits/llana/</loc>');
+    expect(xml).not.toContain('pub-reaudit');
+    expect(xml).not.toContain('privada');
 
     const llms = await onRequest(context('/llms.txt'));
     const txt = await llms.text();
-    expect(txt).toContain('(https://univerlab.org/workbench/audits/pub-audit/)');
-    expect(txt).toContain('https://univerlab.org/workbench/audits/pub-audit/index.md');
-    expect(txt).not.toContain('priv-audit');
+    expect(txt).toContain('(https://univerlab.org/workbench/audits/tienda/)');
+    expect(txt).toContain('https://univerlab.org/workbench/audits/tienda/index.md');
+    expect(txt).not.toContain('privada');
   });
 
   it('lists only public documents from the bucket', async () => {
     const all = await listPublicAudits({ AUDITS: makeBucket(docs()) });
-    expect(all.map((e) => e.slug).sort()).toEqual(['plain-public', 'pub-audit', 'pub-reaudit']);
+    expect(all.map((e) => `${e.system}/${e.edition}`).sort()).toEqual([
+      'llana/plain-public',
+      'tienda/pub-audit',
+      'tienda/pub-reaudit',
+    ]);
   });
 
   it('links history only between public audits', () => {
     const ghost = asAuditDocument(publicDoc('es', { issued: recentIssued(), scope: 'X', previous: 'priv-audit' }));
     const all = [
-      { slug: 'pub-audit', doc: asAuditDocument(publicDoc('es', { issued: recentIssued(), scope: 'X' })) },
-      { slug: 'ghost', doc: ghost },
+      { system: 'tienda', edition: 'pub-audit', doc: asAuditDocument(publicDoc('es', { issued: recentIssued(), scope: 'X' })) },
+      { system: 'fantasma', edition: 'ghost', doc: ghost },
     ];
-    expect(publicAuditHistory('ghost', ghost, all)).toEqual({ previous: null, next: [] });
-    expect(publicAuditHistory('pub-audit', all[0].doc, all)).toEqual({ previous: null, next: [] });
+    expect(publicAuditHistory('fantasma', 'ghost', ghost, all)).toEqual({ previous: null, next: [] });
+    expect(publicAuditHistory('tienda', 'pub-audit', all[0].doc, all)).toEqual({ previous: null, next: [] });
+    const chained = [
+      ...all,
+      { system: 'tienda', edition: 'pub-reaudit', doc: asAuditDocument(publicDoc('es', { issued: recentIssued(), scope: 'X', previous: 'pub-audit' })) },
+    ];
+    expect(publicAuditHistory('tienda', 'pub-reaudit', chained[2].doc, chained)).toEqual({
+      previous: 'tienda/pub-audit',
+      next: [],
+    });
+    expect(publicAuditHistory('tienda', 'pub-audit', chained[0].doc, chained)).toEqual({
+      previous: null,
+      next: ['tienda/pub-reaudit'],
+    });
   });
 });
 
@@ -574,15 +604,17 @@ describe('published audit renderer', () => {
   }
 
   it('shows dates, history, badge and snippet only when published', () => {
-    const withPub = auditPageHtml(badged('es'), 'tienda', {
+    const withPub = auditPageHtml(badged('es'), 'tienda/segunda', {
       assetBase: PUBLIC_AUDIT_BASE,
-      published: { previous: 'primera', next: ['tercera'] },
+      system: 'tienda',
+      published: { previous: 'tienda/primera', next: ['tienda/tercera'] },
     });
     expect(withPub).toContain('class="audit-published"');
     expect(withPub).toContain('2026-06-15');
     expect(withPub).toContain('2027-06-15');
-    expect(withPub).toContain(`${PUBLIC_AUDIT_BASE}/primera/`);
-    expect(withPub).toContain(`${PUBLIC_AUDIT_BASE}/tercera/`);
+    expect(withPub).toContain(`${PUBLIC_AUDIT_BASE}/tienda/primera/`);
+    expect(withPub).toContain(`${PUBLIC_AUDIT_BASE}/tienda/tercera/`);
+    expect(withPub).toContain(`${PUBLIC_AUDIT_BASE}/tienda/"`);
     expect(withPub).toContain('Insignia para tu sitio');
     expect(withPub).toContain('Copiar el HTML');
 

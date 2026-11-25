@@ -204,8 +204,11 @@ To add a new experiment command: add its ID to the `experimentIds` array in
 - **Audit operator commands** (run locally with your own Wrangler login;
   audits are never committed to the repo):
   `node scripts/audit.ts validate <folder>` checks the folder against the
-  contract; `node scripts/audit.ts push <folder> [--slug <slug>]` validates
-  first, then uploads `audit.json` plus every declared asset to
-  `univerlab-audits/<slug>/` and prints the page URL;
-  `node scripts/audit.ts remove <slug>` lists the audit's remote objects,
-  asks for confirmation, then deletes them.
+  contract; `node scripts/audit.ts push <folder> [--slug <slug>]
+  [--system <system>] [--edition <edition>]` validates first, then uploads
+  `audit.json` plus every declared asset to `univerlab-audits/<system>/<edition>/`
+  and prints the stable system page URL (`/audits/<system>/`). The system
+  defaults to the slug minus its trailing audit date and the edition to the
+  slug, so a re-audit adds an edition under the same address;
+  `node scripts/audit.ts remove <system/edition>` lists that edition's remote
+  objects, asks for confirmation, then deletes them.

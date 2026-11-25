@@ -21,10 +21,21 @@ import { loadRequest, listRequests, type SignBucket } from '../src/lib/sign/stor
 import { type SignStrings } from '../src/lib/sign/page';
 import { signPageHtml, signToken, siteNotFound } from './sign-edge';
 import { serveSignVerify } from './sign-verify-edge';
-import { validateAuditDocument } from '../src/lib/audit/validate-document';
 import { auditBadge } from '../src/lib/audit/badge';
 import { auditMarkdown, publicAuditUrl, PUBLIC_AUDIT_BASE } from '../src/lib/audit/markdown';
-import { auditPageHtml, type PublishedAuditLinks } from '../src/lib/audit/render';
+import { auditPageHtml } from '../src/lib/audit/render';
+import {
+  auditRoutePrefix,
+  editionNavEntries,
+  findEditionSystem,
+  listEditions,
+  listPublicAudits,
+  loadAuditDoc,
+  publicAuditHistory,
+  resolveAuditEdition,
+  type AuditR2Bucket,
+  type PublicAuditEntry,
+} from './audit-editions';
 import { esc } from '../src/lib/audit/escape';
 import type { AuditDocument } from '../src/lib/audit/types';
 
@@ -136,33 +147,18 @@ async function liveTodayEdition(
   };
 }
 
-/** The R2 surface the audit routes need: reads only, never writes. */
-interface AuditR2Object {
-  body: ReadableStream | Uint8Array | string | null;
-  size: number;
-  etag: string;
-  httpMetadata?: { contentType?: string };
-  text(): Promise<string>;
-}
+/** One address segment: a system name or an edition id. A page route carries
+ *  `<system>` (the latest edition) or `<system>/<edition>`; legacy dated
+ *  slugs that match a known edition id anywhere redirect to the system. */
+const SEG = '[A-Za-z0-9][A-Za-z0-9_-]{0,127}';
+const AUDIT_PAGE_RE = new RegExp(`^/audits/(${SEG})(?:/(${SEG}))?/?$`);
+const AUDIT_ASSET_RE = new RegExp(`^/audits/(${SEG})(?:/(${SEG}))?/assets/(.+)$`);
+const AUDIT_TWIN_RE = new RegExp(`^/audits/[^/]+/(?:[^/]+/)?index\\.md$`);
 
-interface AuditR2Bucket {
-  get(
-    key: string,
-    opts?: { range?: { offset?: number; length?: number } },
-  ): Promise<(AuditR2Object & { range?: { offset: number; length: number } }) | null>;
-  /** Enumerate keys (`<slug>/audit.json` plus assets). Optional so a binding
-   *  that only serves single keys still satisfies the type. */
-  list?: (options?: { prefix?: string }) => Promise<{ objects: { key: string }[] }>;
-}
-
-const AUDIT_PAGE_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/?$/;
-const AUDIT_ASSET_RE = /^\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/assets\/(.+)$/;
-const AUDIT_TWIN_RE = /^\/audits\/[^/]+\/index\.md$/;
-
-const PUBLIC_AUDIT_PAGE_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/?$/;
-const PUBLIC_AUDIT_ASSET_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/assets\/(.+)$/;
-const PUBLIC_AUDIT_BADGE_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/badge\.svg$/;
-const PUBLIC_AUDIT_TWIN_RE = /^\/workbench\/audits\/([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/index\.md$/;
+const PUBLIC_AUDIT_PAGE_RE = new RegExp(`^/workbench/audits/(${SEG})(?:/(${SEG}))?/?$`);
+const PUBLIC_AUDIT_ASSET_RE = new RegExp(`^/workbench/audits/(${SEG})(?:/(${SEG}))?/assets/(.+)$`);
+const PUBLIC_AUDIT_BADGE_RE = new RegExp(`^/workbench/audits/(${SEG})(?:/(${SEG}))?/badge\\.svg$`);
+const PUBLIC_AUDIT_TWIN_RE = new RegExp(`^/workbench/audits/(${SEG})(?:/(${SEG}))?/index\\.md$`);
 
 const AUDIT_NO_STORE: Record<string, string> = {
   'Cache-Control': 'private, no-store',
@@ -173,44 +169,6 @@ const AUDIT_NO_STORE: Record<string, string> = {
 const PUBLIC_AUDIT_CACHE: Record<string, string> = {
   'Cache-Control': 'public, max-age=300',
 };
-
-/** Every public audit in the R2 bucket: only documents whose visibility is
- *  public are listed, so a private slug never leaks through an index. An
- *  unbound bucket or a listing failure yields no entries. */
-export interface PublicAuditEntry {
-  slug: string;
-  doc: AuditDocument;
-}
-
-export async function listPublicAudits(env: { AUDITS?: AuditR2Bucket }): Promise<PublicAuditEntry[]> {
-  try {
-    if (!env.AUDITS?.list) return [];
-    const listed = await env.AUDITS.list();
-    const out: PublicAuditEntry[] = [];
-    for (const obj of listed.objects) {
-      const m = /^([A-Za-z0-9][A-Za-z0-9_-]{0,127})\/audit\.json$/.exec(obj.key);
-      if (!m) continue;
-      const doc = await loadAuditDoc(env, m[1]);
-      if (doc && doc.visibility === 'public') out.push({ slug: m[1], doc });
-    }
-    return out;
-  } catch {
-    return [];
-  }
-}
-
-/** The re-audit history around one published audit: the previous audit only
- *  when it is public itself, and every public audit naming this one. */
-export function publicAuditHistory(slug: string, doc: AuditDocument, all: PublicAuditEntry[]): PublishedAuditLinks {
-  const slugs = new Set(all.map((e) => e.slug));
-  const previous =
-    typeof doc.badge?.previous === 'string' && slugs.has(doc.badge.previous) ? doc.badge.previous : null;
-  const next = all
-    .filter((e) => e.doc.badge?.previous === slug)
-    .map((e) => e.slug)
-    .sort();
-  return { previous, next };
-}
 
 function auditContentType(path: string): string {
   const ext = path.split('.').pop()!.toLowerCase();
@@ -231,36 +189,6 @@ function auditContentType(path: string): string {
     case 'json': return 'application/json; charset=utf-8';
     case 'zip': return 'application/zip';
     default: return 'application/octet-stream';
-  }
-}
-
-/** Catalogue paths become both R2 keys and public URLs; keep them plain
- *  relative paths so `/audits/<slug>/assets/` cannot be escaped. */
-function safeAuditAssetPath(path: string): boolean {
-  if (path.startsWith('/') || path.includes('\\')) return false;
-  return path.split('/').every((s) => s !== '' && s !== '.' && s !== '..');
-}
-
-/** A valid audit document of any visibility, or null when the route must
- *  answer 404: no binding, no file, invalid JSON or a contract violation.
- *  Visibility is gated by the caller: public audits serve to anyone, private
- *  audits only after `auditRequestAllowed` passes. */
-async function loadAuditDoc(
-  env: { AUDITS?: AuditR2Bucket },
-  slug: string,
-): Promise<AuditDocument | null> {
-  try {
-    if (!env.AUDITS) return null;
-    const obj = await env.AUDITS.get(`${slug}/audit.json`);
-    if (!obj) return null;
-    const doc = JSON.parse(await obj.text()) as AuditDocument;
-    if (validateAuditDocument(doc).errors.length > 0) return null;
-    if (typeof doc !== 'object' || doc === null) return null;
-    if (doc.visibility !== 'public' && doc.visibility !== 'private') return null;
-    if (!doc.assets.every((a) => safeAuditAssetPath(a.path))) return null;
-    return doc;
-  } catch {
-    return null;
   }
 }
 
@@ -555,7 +483,7 @@ function assetAnnexVisibility(doc: AuditDocument, assetId: string): 'public' | '
 async function serveAuditAsset(
   env: { AUDITS?: AuditR2Bucket } & AuditAccessEnv,
   request: Request,
-  slug: string,
+  prefix: string,
   rest: string,
   cache: Record<string, string>,
   allowed: (doc: AuditDocument) => Promise<boolean>,
@@ -567,7 +495,7 @@ async function serveAuditAsset(
   } catch {
     // A malformed escape cannot name a catalogue path; leave it encoded.
   }
-  const doc = await loadAuditDoc(env, slug);
+  const doc = await loadAuditDoc(env, prefix);
   const entry = doc?.assets.find((a) => a.path === `assets/${path}` || a.path === path) ?? null;
   if (!doc || !entry || !env.AUDITS) return null;
   if (!(await allowed(doc))) return null;
@@ -576,7 +504,7 @@ async function serveAuditAsset(
   // audit itself is public.
   if (annexVis === 'private' && opts?.publicRoute) return null;
   try {
-    const full = await env.AUDITS.get(`${slug}/${entry.path}`);
+    const full = await env.AUDITS.get(`${prefix}/${entry.path}`);
     if (!full) return null;
     const type = full.httpMetadata?.contentType || auditContentType(entry.path);
     const headers: Record<string, string> = {
@@ -592,7 +520,7 @@ async function serveAuditAsset(
     }
     const range = parseAuditRange(request.headers.get('Range'), full.size);
     if (range) {
-      const obj = await env.AUDITS.get(`${slug}/${entry.path}`, { range });
+      const obj = await env.AUDITS.get(`${prefix}/${entry.path}`, { range });
       if (!obj) return null;
       headers['Content-Range'] = `bytes ${range.offset}-${range.offset + range.length - 1}/${full.size}`;
       headers['Content-Length'] = String(range.length);
@@ -741,14 +669,20 @@ async function servePublicAuditIndex(
   pathname: string,
 ): Promise<Response | null> {
   if (pathname !== '/sitemap-0.xml' && pathname !== '/llms.txt') return null;
-  const all = await listPublicAudits(env);
-  if (!all.length) return null;
+  const listed = await listPublicAudits(env);
+  if (!listed.length) return null;
+  // One stable address per system: the newest public edition speaks for it.
+  const seen = new Map<string, PublicAuditEntry>();
+  for (const e of [...listed].sort((a, b) => (a.doc.badge?.issued ?? '') < (b.doc.badge?.issued ?? '') ? 1 : -1)) {
+    if (!seen.has(e.system)) seen.set(e.system, e);
+  }
+  const all = [...seen.values()];
   const url = new URL(request.url);
   const staticRes = await env.ASSETS.fetch(new URL(pathname, url.origin).href);
   if (!staticRes.ok) return null;
   if (pathname === '/sitemap-0.xml') {
     const xml = await staticRes.text();
-    const urls = all.map((e) => `<url><loc>https://univerlab.org${publicAuditUrl(e.slug)}</loc></url>`).join('');
+    const urls = all.map((e) => `<url><loc>https://univerlab.org${publicAuditUrl(e.system)}</loc></url>`).join('');
     return new Response(xml.replace('</urlset>', `${urls}</urlset>`), {
       headers: { 'Content-Type': 'application/xml; charset=utf-8', ...PUBLIC_AUDIT_CACHE },
     });
@@ -757,7 +691,7 @@ async function servePublicAuditIndex(
   const lines = all
     .map((e) => {
       const title = e.doc.meta.title.replace(/[\[\]]/g, '(');
-      const page = `https://univerlab.org${publicAuditUrl(e.slug)}`;
+      const page = `https://univerlab.org${publicAuditUrl(e.system)}`;
       return `- [${title}](${page}): ${e.doc.meta.scope}\n- [${title} (markdown)](${page}index.md)`;
     })
     .join('\n');
@@ -888,29 +822,52 @@ export async function onRequest(context: {
   if (request.method === 'GET' || request.method === 'HEAD') {
     const page = !wantsMarkdown(accept) ? AUDIT_PAGE_RE.exec(pathname) : null;
     if (page) {
-      const slug = page[1];
-      const doc = await loadAuditDoc(env, slug);
-      if (!doc) return next();
-      // A private audit answers as if it did not exist unless the request
-      // carries a valid Access JWT for an email on its own list.
+      const system = page[1];
+      const named = page[2] ?? null;
+      const resolved = await resolveAuditEdition(env, system, named);
+      if (!resolved) {
+        // A legacy dated address (`/audits/<edition>/`) answers with a
+        // permanent redirect to the stable system address; anything else
+        // is a missing page.
+        if (!named) {
+          const target = await findEditionSystem(env, system);
+          // Only a system with a readable edition takes the redirect: an
+          // invalid document must stay a 404, never a 301 to itself.
+          if (target && (await listEditions(env, target)).length) {
+            const url = new URL(request.url);
+            return Response.redirect(new URL(`/audits/${target}/`, url.origin).href, 301);
+          }
+        }
+        return next();
+      }
+      const { edition, doc, entries } = resolved;
+      const prefix = `${system}/${edition}`;
+      // A private edition answers as if it did not exist unless the
+      // request carries a valid Access JWT for an email on its own list.
       if (doc.visibility === 'private' && !(await auditRequestAllowed(request, env, doc))) return next();
       const url = new URL(request.url);
       const shell = await env.ASSETS.fetch(new URL('/audits/', url.origin).href);
       if (!shell.ok) return next();
-      // A private audit lists its signed documents: every signing request
-      // bound to this slug, with its state and the signed download.
+      // A private edition lists its signed documents: every signing
+      // request bound to this edition, with its state and the signed
+      // download. Older requests name the bare edition id, which still
+      // matches.
       let signedDocs: Array<{ id: string; title: string; state: LinkState; signedHash: string | null }> | undefined;
       if (doc.visibility === 'private') {
         try {
           const reqs = await listRequests(asSignBucket(env));
           signedDocs = reqs
-            .filter((r) => r.auditSlug === slug)
+            .filter((r) => r.auditSlug === edition || r.auditSlug === prefix || r.auditSlug === system)
             .map((r) => ({ id: r.id, title: r.title, state: linkState(r), signedHash: r.signedHash }));
         } catch {
           signedDocs = undefined;
         }
       }
-      const html = auditPageHtml(doc, slug, signedDocs?.length ? { signedDocs } : {});
+      const html = auditPageHtml(doc, prefix, {
+        system,
+        ...(signedDocs?.length ? { signedDocs } : {}),
+        editions: editionNavEntries(entries, edition, `/audits/${system}`),
+      });
       const lang = doc.meta.language;
       const title = `${doc.meta.title} — UniverLab`;
       const desc = doc.meta.subtitle || doc.meta.title;
@@ -963,26 +920,43 @@ export async function onRequest(context: {
     }
     const asset = AUDIT_ASSET_RE.exec(pathname);
     if (asset) {
-      const res = await serveAuditAsset(env, request, asset[1], asset[2], AUDIT_NO_STORE, async (doc) =>
-        doc.visibility === 'public' ? true : auditRequestAllowed(request, env, doc),
-      );
-      if (res) return res;
+      const prefix = await auditRoutePrefix(env, asset[1], asset[2] ?? null);
+      if (prefix) {
+        const res = await serveAuditAsset(env, request, prefix, asset[3], AUDIT_NO_STORE, async (doc) =>
+          doc.visibility === 'public' ? true : auditRequestAllowed(request, env, doc),
+        );
+        if (res) return res;
+      }
       return next();
     }
     const publicAsset = PUBLIC_AUDIT_ASSET_RE.exec(pathname);
     if (publicAsset) {
-      const res = await serveAuditAsset(env, request, publicAsset[1], publicAsset[2], PUBLIC_AUDIT_CACHE, async (doc) =>
-        doc.visibility === 'public',
-        { publicRoute: true },
-      );
-      if (res) return res;
+      const prefix = await auditRoutePrefix(env, publicAsset[1], publicAsset[2] ?? null, true);
+      if (prefix) {
+        const res = await serveAuditAsset(env, request, prefix, publicAsset[3], PUBLIC_AUDIT_CACHE, async (doc) =>
+          doc.visibility === 'public',
+          { publicRoute: true },
+        );
+        if (res) return res;
+      }
       return next();
     }
     const badge = PUBLIC_AUDIT_BADGE_RE.exec(pathname);
     if (badge) {
-      const doc = await loadAuditDoc(env, badge[1]);
-      if (!doc || doc.visibility !== 'public' || !doc.badge) return next();
-      return new Response(auditBadge(doc, badge[1], 'https://univerlab.org'), {
+      const system = badge[1];
+      const named = badge[2] ?? null;
+      // The badge is a public artifact: a named edition serves when it is
+      // public, the system address follows the newest public badged edition.
+      let doc: AuditDocument | null = null;
+      if (named) {
+        const resolved = await resolveAuditEdition(env, system, named);
+        if (resolved && resolved.doc.visibility === 'public') doc = resolved.doc;
+      } else {
+        const entries = await listEditions(env, system);
+        doc = entries.find((e) => e.doc.visibility === 'public' && e.doc.badge)?.doc ?? null;
+      }
+      if (!doc?.badge) return next();
+      return new Response(auditBadge(doc, system, 'https://univerlab.org'), {
         headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', ...PUBLIC_AUDIT_CACHE },
       });
     }
@@ -990,29 +964,48 @@ export async function onRequest(context: {
     // never from dist/. Private slugs answer 404 here, like missing ones.
     const twin = PUBLIC_AUDIT_TWIN_RE.exec(pathname) ?? (wantsMarkdown(accept) ? PUBLIC_AUDIT_PAGE_RE.exec(pathname) : null);
     if (twin) {
-      const doc = await loadAuditDoc(env, twin[1]);
-      if (!doc || doc.visibility !== 'public') return next();
-      return new Response(auditMarkdown(doc, twin[1]), {
+      const resolved = await resolveAuditEdition(env, twin[1], twin[2] ?? null, true);
+      if (!resolved) return next();
+      const prefix = `${twin[1]}/${resolved.edition}`;
+      const canonicalSlug = twin[2] ? prefix : twin[1];
+      return new Response(auditMarkdown(resolved.doc, canonicalSlug, prefix), {
         headers: { ...MARKDOWN_HEADERS, ...PUBLIC_AUDIT_CACHE },
       });
     }
     const publicPage = !wantsMarkdown(accept) ? PUBLIC_AUDIT_PAGE_RE.exec(pathname) : null;
     if (publicPage) {
-      const slug = publicPage[1];
-      const doc = await loadAuditDoc(env, slug);
-      if (!doc || doc.visibility !== 'public') return next();
+      const system = publicPage[1];
+      const named = publicPage[2] ?? null;
+      const entries = await listEditions(env, system);
+      const pub = entries.filter((e) => e.doc.visibility === 'public');
+      const pick = named ? pub.find((e) => e.edition === named) : pub[0];
+      if (!pick) {
+        // A legacy dated address redirects to the stable system address
+        // while the system still holds a public edition.
+        if (!named) {
+          const target = await findEditionSystem(env, system);
+          if (target && (await listEditions(env, target)).some((e) => e.doc.visibility === 'public')) {
+            const url = new URL(request.url);
+            return Response.redirect(new URL(`/workbench/audits/${target}/`, url.origin).href, 301);
+          }
+        }
+        return next();
+      }
       const url = new URL(request.url);
       const shell = await env.ASSETS.fetch(new URL('/audit-shell/', url.origin).href);
       if (!shell.ok) return next();
       const all = await listPublicAudits(env);
-      const html = auditPageHtml(doc, slug, {
+      const prefix = `${system}/${pick.edition}`;
+      const html = auditPageHtml(pick.doc, prefix, {
+        system,
         assetBase: PUBLIC_AUDIT_BASE,
-        published: publicAuditHistory(slug, doc, all),
+        published: publicAuditHistory(system, pick.edition, pick.doc, all),
+        editions: editionNavEntries(pub, pick.edition, `/workbench/audits/${system}`),
       });
-      const canonical = `https://univerlab.org${publicAuditUrl(slug)}`;
-      const title = `${doc.meta.title} — UniverLab`;
-      const desc = doc.meta.subtitle || doc.meta.title;
-      const lang = doc.meta.language;
+      const canonical = `https://univerlab.org${publicAuditUrl(system)}`;
+      const title = `${pick.doc.meta.title} — UniverLab`;
+      const desc = pick.doc.meta.subtitle || pick.doc.meta.title;
+      const lang = pick.doc.meta.language;
       const res = await rewriteAuditShell(shell, { lang, title, desc, canonical, html });
       for (const [k, v] of Object.entries(PUBLIC_AUDIT_CACHE)) res.headers.set(k, v);
       return res;

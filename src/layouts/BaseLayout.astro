@@ -42,6 +42,9 @@ interface Props {
   articleModifiedTime?: string;
   /** Hidden pages: prevent indexing by search engines. */
   noindex?: boolean;
+  /** Audit shells set this false: the floating "Press / for commands"
+   *  slip must not cover the audit page. Defaults to true. */
+  ghostHints?: boolean;
   /** The page builds an `index.html` and therefore has a markdown twin.
    *  `false` only for pages whose output is not `index.html` (404). */
   markdownTwin?: boolean;
@@ -76,6 +79,7 @@ const {
   expId,
   fondo,
   langCorner = true,
+  ghostHints = true,
   paperDisplayFonts = false,
 } = Astro.props;
 const colorScheme = ['paper', 'blueprint', 'studio', 'pastel'].includes(surface ?? '') ? 'light' : 'dark';
@@ -460,11 +464,13 @@ function calc(){var n=nat(),h=n.h,sr=n.sr,ss=n.ss,day=n.day,pal;if(day){var w=0,
       <slot />
     </main>
     <Footer expId={expId} />
-    <GhostHint hints={[
-      { id: 'cmd-palette', msg: t.hints.palette, first: true },
-      { id: 'theme-mark', msg: t.hints.themeMark, prob: 0.16 },
-      { id: 'footer-commit', msg: t.hints.branch, prob: 0.1 },
-    ]} />
+    {ghostHints && (
+      <GhostHint hints={[
+        { id: 'cmd-palette', msg: t.hints.palette, first: true },
+        { id: 'theme-mark', msg: t.hints.themeMark, prob: 0.16 },
+        { id: 'footer-commit', msg: t.hints.branch, prob: 0.1 },
+      ]} />
+    )}
     {/* The palette reads its strings (drawer labels, foot line, theme names,
         the 42 answer) from this JSON at runtime: one source, the i18n
         dictionary, no literals in the script. */}

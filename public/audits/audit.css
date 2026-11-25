@@ -1,11 +1,46 @@
-/* Audit pages: the site's tokens carry both themes, so every surface below
-   reuses --bg/--ink/--line/--accent and never names a fixed palette. */
+/* Audit pages: the bench tokens carry both themes, so every surface below
+   reads the --audit-* aliases (day parchment, night slate) and never names
+   a fixed palette outside the severity scale. */
 .audit {
   --audit-accent: var(--accent);
+  --audit-ink: var(--bench-line);
+  --audit-ink-dim: var(--bench-line-soft);
+  --audit-rule: var(--bench-rule);
+  --audit-plate: var(--bench-ground-alt);
+  --audit-ground: var(--bench-ground);
+  /* Day severity scale: garnet, copper, sepia, graphite on parchment. */
+  --audit-sev-critical: var(--bench-c-garnet);
+  --audit-sev-high: var(--bench-c-copper);
+  --audit-sev-medium: var(--bench-c-sepia);
+  --audit-sev-low: var(--bench-c-graphite);
+  --audit-sev-info: var(--bench-c-graphite);
   max-width: 72rem;
   margin-inline: auto;
-  padding-block: 3rem 5rem;
+  padding-block: 1rem 4rem;
   overflow-x: clip;
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--audit-ink);
+}
+
+/* Night severity scale: emphasis, bright copper, dim chalk. */
+[data-bench-theme='night'] .audit {
+  --audit-sev-critical: var(--bench-emphasis);
+  --audit-sev-high: var(--bench-c-copper-bright);
+  --audit-sev-medium: var(--bench-c-chalk-dim);
+  --audit-sev-low: var(--bench-c-chalk-dim);
+  --audit-sev-info: var(--bench-c-chalk-dim);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-bench-theme='day']) .audit {
+    --audit-sev-critical: var(--bench-emphasis);
+    --audit-sev-high: var(--bench-c-copper-bright);
+    --audit-sev-medium: var(--bench-c-chalk-dim);
+    --audit-sev-low: var(--bench-c-chalk-dim);
+    --audit-sev-info: var(--bench-c-chalk-dim);
+  }
 }
 
 .audit-accent--lab {
@@ -63,33 +98,46 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: color-mix(in srgb, var(--bg) 74%, transparent);
+  background: color-mix(in srgb, var(--audit-ground) 74%, transparent);
 }
 
 .audit-cover-bg--lab {
   background:
     radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--audit-accent) 20%, transparent), transparent 42%),
-    linear-gradient(135deg, var(--bg-raise), var(--bg));
+    linear-gradient(135deg, var(--audit-plate), var(--audit-ground));
 }
 
 .audit-cover-bg--experiment {
   background:
     radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--canopy) 20%, transparent), transparent 42%),
-    linear-gradient(135deg, var(--bg-raise), var(--bg));
+    linear-gradient(135deg, var(--audit-plate), var(--audit-ground));
 }
 
 .audit-kicker {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-family: var(--font-mono);
   letter-spacing: 0.04em;
 }
 
+.audit-cover-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--audit-ink-dim);
+}
+
 .audit-cover h1 {
   margin-block: 0.35rem 0.75rem;
+  font-family: var(--font-serif);
 }
 
 .audit-subtitle {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-size: 1.15rem;
 }
 
@@ -101,7 +149,7 @@
 }
 
 .audit-meta dt {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-size: 0.85rem;
 }
 
@@ -111,7 +159,7 @@
 
 .audit-scope {
   max-width: var(--measure);
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
 }
 
 .audit-deliverables {
@@ -128,22 +176,32 @@
 }
 
 .audit-deliverable {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
+  min-width: 0;
 }
 
 .audit-deliverable p {
   margin: 0 0 0.5rem;
 }
 
+.audit-report-download {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.audit-report-viewer summary {
+  cursor: pointer;
+}
+
 .audit-toc {
   margin-block-end: 2.5rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-toc ol {
@@ -198,6 +256,8 @@
 .audit-layout--grid .audit-sec-body {
   --audit-cols: 2;
   grid-template-columns: repeat(var(--audit-cols), minmax(0, 1fr));
+  align-items: start;
+  grid-auto-flow: dense;
 }
 
 .audit-layout--grid.audit-layout--cols-3 .audit-sec-body {
@@ -217,8 +277,8 @@
 }
 
 .audit-layout--band {
-  background: var(--bg-raise);
-  border-block: 1px solid var(--line);
+  background: var(--audit-plate);
+  border-block: 1px solid var(--audit-rule);
   padding: 2rem clamp(1rem, 4vw, 3rem);
 }
 
@@ -234,7 +294,7 @@
 .audit-aside {
   position: sticky;
   top: 1rem;
-  border-inline-start: 2px solid var(--line);
+  border-inline-start: 2px solid var(--audit-rule);
   padding-inline-start: 1rem;
 }
 
@@ -246,11 +306,11 @@
 }
 
 .audit-callout {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-inline-start: 4px solid var(--audit-accent);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-callout--success { border-inline-start-color: #3d9a50; }
@@ -270,14 +330,14 @@
 }
 
 .audit-stats > div {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-stats dt {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-size: 0.85rem;
 }
 
@@ -291,26 +351,107 @@
   display: block;
   font-family: var(--font-body);
   font-size: 0.85rem;
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
 }
 
 .audit-finding {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
-.audit-finding-badges {
-  display: flex;
-  flex-wrap: wrap;
+.audit-summary {
+  border: 1px solid var(--audit-rule);
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--audit-plate);
+  margin-block-end: 2rem;
+}
+
+.audit-summary h2 {
+  font-family: var(--font-serif);
+  margin-block: 0 1rem;
+}
+
+.audit-summary ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
   gap: 0.5rem;
-  margin: 0 0 0.75rem;
+}
+
+.audit-summary li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  background: linear-gradient(to right, color-mix(in srgb, var(--audit-accent) 14%, transparent) var(--audit-bar, 0%), transparent var(--audit-bar, 0%));
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.audit-summary-count {
+  font-family: var(--font-mono);
+  margin-inline-start: auto;
+}
+
+.audit-summary-risk {
+  color: var(--audit-ink-dim);
+  font-size: 1rem;
+  margin-block-end: 0;
+}
+
+.audit-finding details {
+  margin: 0;
+}
+
+.audit-finding-row {
+  cursor: pointer;
+  list-style: none;
+  display: block;
+}
+
+.audit-finding-row .audit-sev,
+.audit-finding-row .audit-status {
+  display: inline-block;
+  margin-block-end: 0.35rem;
+  margin-inline-end: 0.5rem;
+}
+
+.audit-finding-row::-webkit-details-marker {
+  display: none;
+}
+
+.audit-finding-row::marker {
+  content: '';
+}
+
+.audit-finding-id {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--audit-ink-dim);
+}
+
+.audit-finding-row h3 {
+  font-family: var(--font-serif);
+}
+
+.audit-finding-impact {
+  display: block;
+  color: var(--audit-ink-dim);
+  font-size: 1rem;
+}
+
+.audit-finding-body {
+  margin-block-start: 1rem;
+  border-block-start: 1px solid var(--audit-rule);
+  padding-block-start: 1rem;
 }
 
 .audit-sev,
 .audit-status {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
   font-family: var(--font-mono);
@@ -319,19 +460,19 @@
   letter-spacing: 0.04em;
 }
 
-.audit-sev--critical { color: #ff8a80; border-color: #b3261e; }
-.audit-sev--high { color: #ffc4a3; border-color: var(--accent-secondary); }
-.audit-sev--medium { color: #f0d48a; border-color: var(--accent-secondary); }
-.audit-sev--low,
-.audit-sev--info,
-.audit-status { color: var(--ink-dim); }
+.audit-sev--critical { color: var(--audit-sev-critical); border-color: var(--audit-sev-critical); }
+.audit-sev--high { color: var(--audit-sev-high); border-color: var(--audit-sev-high); }
+.audit-sev--medium { color: var(--audit-sev-medium); border-color: var(--audit-sev-medium); }
+.audit-sev--low { color: var(--audit-sev-low); border-color: var(--audit-sev-low); }
+.audit-sev--info { color: var(--audit-sev-info); border-color: var(--audit-sev-info); }
+.audit-status { color: var(--audit-ink-dim); }
 
 .audit-finding h3 {
   margin-block: 0 0.5rem;
 }
 
 .audit-finding-area {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-family: var(--font-mono);
   font-size: 0.85rem;
 }
@@ -346,14 +487,19 @@
   margin-block: 0.75rem;
 }
 
+.audit p {
+  max-width: 65ch;
+}
+
 .audit-back,
 .audit-filters button,
 .audit-code-copy,
+.audit-code-expand,
 .audit-step-btn {
   font: inherit;
-  color: var(--ink);
-  background: var(--bg-raise);
-  border: 1px solid var(--line);
+  color: var(--audit-ink);
+  background: var(--audit-plate);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.375rem;
   padding: 0.35rem 0.7rem;
   cursor: pointer;
@@ -390,7 +536,7 @@
 .audit-riskMatrix td,
 .audit-table th,
 .audit-table td {
-  border-block-end: 1px solid var(--line);
+  border-block-end: 1px solid var(--audit-rule);
   padding: 0.5rem 0.65rem;
   text-align: start;
   vertical-align: top;
@@ -414,20 +560,104 @@
   min-height: 8rem;
 }
 
+/* Report figures (diagram-design): flat paper plate, hairline ink border,
+   no shadows, no gradients — the same plate in both themes. */
+.audit-figure-plate,
+.audit-diagram {
+  background: #f4f0ea;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.audit-figure-plate {
+  display: block;
+  max-width: 100%;
+}
+
+.audit-figure-plate img {
+  display: block;
+}
+
+.audit-diagram-mount {
+  min-width: 0;
+}
+
+/* Mermaid labels keep their case and normal spacing — no inherited caps. */
+.audit-diagram-mount,
+.audit-diagram-mount * {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.audit-diagram svg {
+  max-width: 100%;
+  height: auto;
+  filter: none;
+}
+
+.audit-figure-zoom,
+.audit-diagram-zoom {
+  font: inherit;
+  color: #1d1510;
+  background: #f1ece4;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  margin-block-start: 0.75rem;
+}
+
+.audit-lightbox {
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  background: #f4f0ea;
+  max-width: min(90vw, 80rem);
+}
+
+.audit-lightbox::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.audit-lightbox img,
+.audit-lightbox svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.audit-lightbox-close {
+  font: inherit;
+  color: #1d1510;
+  background: #f1ece4;
+  border: 1px solid #1d1510;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  margin-block-start: 0.75rem;
+}
+
 .audit-chart figcaption,
 .audit-diagram figcaption,
 .audit-figure figcaption,
 .audit-table figcaption,
 .audit-compare figcaption {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-size: 0.9rem;
   margin-block-start: 0.5rem;
 }
 
+/* The diagram sits on a light paper plate in both themes, so its caption
+   stays dark ink even at night. */
+.audit-diagram figcaption {
+  color: #1d1510;
+}
+
 .audit-code {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
   padding: 0.75rem;
   position: relative;
 }
@@ -462,7 +692,16 @@
 
 .audit-code pre {
   margin: 0;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 22rem;
+}
+
+.audit-code[data-open] pre {
+  max-height: none;
+}
+
+.audit-code-expand {
+  margin-block-start: 0.5rem;
 }
 
 .audit-code code {
@@ -483,7 +722,7 @@ blockquote {
 
 blockquote cite {
   display: block;
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   font-style: normal;
   margin-block-start: 0.5rem;
 }
@@ -496,7 +735,7 @@ blockquote cite {
 }
 
 .audit-timeline li {
-  border-inline-start: 2px solid var(--line);
+  border-inline-start: 2px solid var(--audit-rule);
   padding-inline-start: 1rem;
 }
 
@@ -515,10 +754,10 @@ blockquote cite {
 }
 
 .audit-step-body {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-step-body[hidden] {
@@ -532,21 +771,57 @@ blockquote cite {
 }
 
 .audit-compare > div {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-assetCard {
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-raise);
+  background: var(--audit-plate);
 }
 
 .audit-assetCard-title {
   font-weight: 600;
+}
+
+.audit-annex-files {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+}
+
+.audit-annex-file {
+  border: 1px solid var(--audit-rule);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: var(--audit-plate);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.audit-annex-file code {
+  overflow-wrap: anywhere;
+}
+
+/* Long code, paths and links wrap or scroll inside their block on a phone. */
+.audit a,
+.audit code,
+.audit .audit-annex-file-name {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.audit-block {
+  overflow-wrap: break-word;
 }
 
 .audit-sources ol {
@@ -557,15 +832,30 @@ blockquote cite {
 }
 
 .audit-sources li {
-  border-block-end: 1px solid var(--line);
+  border-block-end: 1px solid var(--audit-rule);
   padding-block-end: 0.75rem;
 }
 
 .audit-divider {
-  color: var(--ink-dim);
+  color: var(--audit-ink-dim);
   text-align: center;
   font-family: var(--font-mono);
   letter-spacing: 0.08em;
+}
+
+/* The audit shells keep the postcard small and above the report: the cover
+   below holds the full column, and its title stays in the first screen at
+   390 px and at 1280 px. The figure stays ahead of #audit so the edge
+   rewrite that fills #audit keeps it. */
+.audit-page .audit-page-pc {
+  width: min(14rem, 60%);
+  margin: 0 0 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .audit-page .audit-page-pc {
+    display: none;
+  }
 }
 
 .audit-auto-findings,
@@ -591,10 +881,10 @@ blockquote cite {
   z-index: 20;
   display: none;
   width: min(24rem, 80vw);
-  border: 1px solid var(--line);
+  border: 1px solid var(--audit-rule);
   border-radius: 0.5rem;
-  background: var(--bg-raise);
-  color: var(--ink);
+  background: var(--audit-plate);
+  color: var(--audit-ink);
   padding: 0.75rem;
   box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
 }
@@ -610,6 +900,20 @@ blockquote cite {
 }
 
 @media (max-width: 48rem) {
+  /* A wide table scrolls inside its block instead of squeezing a column. */
+  .audit-block--table,
+  .audit-table {
+    overflow-x: auto;
+  }
+
+  .audit-table table {
+    min-width: 36rem;
+  }
+
+  .audit-sources ol {
+    padding-inline-start: 2.2rem;
+  }
+
   .audit-toc ol {
     columns: 1;
   }
@@ -623,11 +927,40 @@ blockquote cite {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .audit-block {
+  .audit-block,
+  .audit-layout--grid .audit-block {
     grid-column: auto;
   }
 
   .audit-aside {
     position: static;
+  }
+
+  /* An SVG plate scrolls sideways instead of shrinking past legibility. */
+  .audit-figure-plate img {
+    width: max(100%, 40rem);
+    max-width: none;
+  }
+
+  /* The findings table stacks: titles read full-width, nothing runs off. */
+  .audit-findingsTable table,
+  .audit-findingsTable tbody,
+  .audit-findingsTable tr,
+  .audit-findingsTable td {
+    display: block;
+  }
+
+  .audit-findingsTable thead {
+    display: none;
+  }
+
+  .audit-findingsTable td {
+    border-block-end: 0;
+    padding-block: 0.25rem;
+  }
+
+  .audit-findingsTable tr {
+    border-block-end: 1px solid var(--audit-rule);
+    padding-block: 0.5rem;
   }
 }

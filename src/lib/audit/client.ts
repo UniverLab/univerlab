@@ -138,9 +138,40 @@ async function wireCharts(root: ParentNode): Promise<void> {
 async function wireDiagrams(root: ParentNode): Promise<void> {
   const figs = Array.from(root.querySelectorAll('.audit-diagram[data-mermaid]'));
   if (!figs.length) return;
-  const night = document.documentElement.dataset['benchTheme'] === 'night';
   const { default: mermaid } = await import('mermaid');
-  mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: night ? 'dark' : 'default' });
+  // The lab's report-figure palette (diagram-design): flat ink on paper,
+  // muted brown connectors, one garnet accent — the same plate in both
+  // themes, so the figure reads on day and on night.
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'strict',
+    theme: 'base',
+    flowchart: { useMaxWidth: false, padding: 16, nodeSpacing: 44, rankSpacing: 56, curve: 'linear' },
+    themeVariables: {
+      background: '#F4F0EA',
+      mainBkg: '#F4F0EA',
+      primaryColor: '#F1ECE4',
+      primaryBorderColor: '#1D1510',
+      primaryTextColor: '#1D1510',
+      secondaryColor: '#F1ECE4',
+      secondaryBorderColor: '#6B5A43',
+      secondaryTextColor: '#1D1510',
+      tertiaryColor: '#F4F0EA',
+      tertiaryBorderColor: '#1D1510',
+      tertiaryTextColor: '#1D1510',
+      lineColor: '#6B5A43',
+      textColor: '#1D1510',
+      mainContrastColor: '#1D1510',
+      nodeBorder: '#1D1510',
+      clusterBkg: '#F1ECE4',
+      clusterBorder: '#6B5A43',
+      edgeLabelBackground: '#F4F0EA',
+      arrowheadColor: '#6B5A43',
+      titleColor: '#87222C',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '15px',
+    },
+  });
   const nodes: HTMLElement[] = [];
   for (const fig of figs) {
     const mount = fig.querySelector('.audit-diagram-mount');
@@ -216,6 +247,9 @@ async function wireCode(root: ParentNode): Promise<void> {
         });
         code.replaceChildren(frag);
         code.classList.add(`language-${lang}`);
+        // Fetched transcripts arrive after the init-time overflow pass, so
+        // re-measure this block now that it has its full height.
+        revealCodeExpand(block);
       } catch {
         /* the escaped inline source stays in place */
       }
@@ -228,6 +262,47 @@ function wireVideos(root: ParentNode): void {
   if (reduced) return;
   root.querySelectorAll('video[data-autoplay]').forEach((v) => {
     (v as HTMLVideoElement).play?.().catch(() => {});
+  });
+}
+
+/** A `{{finding:F-01}}` reference targets the card's article, whose body
+ *  lives inside a closed `<details>`: open it so the jump lands on text,
+ *  not on a shut card. Also honours a deep link on load and hash changes. */
+function wireFindingOpen(root: ParentNode): void {
+  const openForHash = (hash: string): void => {
+    if (!hash.startsWith('#audit-finding-')) return;
+    const id = hash.slice(1);
+    // The CSS escape keeps hostile hashes (quotes, brackets) inert.
+    const el = root.querySelector(`#${CSS.escape(id)} details`);
+    if (el instanceof HTMLDetailsElement) el.open = true;
+  };
+  root.addEventListener('click', (ev) => {
+    const ref = (ev.target as Element).closest?.('a.audit-ref[href^="#audit-finding-"]');
+    const hash = ref?.getAttribute('href');
+    if (hash) openForHash(hash);
+  });
+  window.addEventListener('hashchange', () => openForHash(window.location.hash));
+  openForHash(window.location.hash);
+}
+
+/** Long transcripts stay capped at the CSS max-height; the expand button
+ *  appears only when the block actually overflows and toggles `data-open`. */
+function revealCodeExpand(fig: Element): void {
+  const pre = fig.querySelector('pre');
+  const btn = fig.querySelector('.audit-code-expand');
+  if (!(pre instanceof HTMLElement) || !(btn instanceof HTMLElement)) return;
+  if (pre.scrollHeight > pre.clientHeight + 1) btn.hidden = false;
+}
+
+function wireCodeExpand(root: ParentNode): void {
+  root.querySelectorAll('.audit-code').forEach(revealCodeExpand);
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-code-expand');
+    if (!(btn instanceof HTMLElement)) return;
+    const fig = btn.closest('.audit-code');
+    if (!fig) return;
+    const open = fig.toggleAttribute('data-open');
+    btn.setAttribute('aria-expanded', String(open));
   });
 }
 
@@ -256,13 +331,126 @@ function wireBadgeCopy(root: ParentNode): void {
   });
 }
 
+/** Lazily render the report PDF with the signing console's viewer: the
+ *  `pdfjs-dist` bundle loads only when the reader opens the report. */
+function wireReportViewer(root: ParentNode): void {
+  const load = (details: HTMLDetailsElement): void => {
+    if (!details.open) return;
+    const reader = details.querySelector<HTMLElement>('.sign-reader');
+    if (!reader || reader.dataset['loaded'] === '1') return;
+    reader.dataset['loaded'] = '1';
+    void import('../sign/reader')
+      .then((m) => m.initReader(reader))
+      .catch(() => {
+        delete reader.dataset['loaded'];
+      });
+  };
+  for (const details of Array.from(root.querySelectorAll('details.audit-report-viewer'))) {
+    const d = details as HTMLDetailsElement;
+    if (d.open) void load(d);
+    d.addEventListener('toggle', () => load(d));
+  }
+}
+
+/** A diagram's zoom button opens the rendered SVG larger in a dialog,
+ *  cloning the mount's SVG into the same lightbox the figure zoom uses. */
+function wireDiagramZoom(root: ParentNode): void {
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-diagram-zoom');
+    if (!(btn instanceof HTMLElement)) return;
+    const svg = btn.closest('.audit-diagram')?.querySelector('svg');
+    if (!(svg instanceof SVGElement)) return;
+    const doc = root instanceof Document ? root : (root.ownerDocument ?? document);
+    const dialog = doc.createElement('dialog');
+    dialog.className = 'audit-lightbox';
+    const big = svg.cloneNode(true) as SVGElement;
+    big.removeAttribute('id');
+    const close = doc.createElement('button');
+    close.type = 'button';
+    close.className = 'audit-lightbox-close';
+    close.textContent = btn.getAttribute('data-close') || 'Close';
+    const dismiss = (): void => {
+      try {
+        if (typeof dialog.close === 'function') dialog.close();
+        else dialog.remove();
+      } catch {
+        dialog.remove();
+      }
+      if (dialog.isConnected) dialog.remove();
+    };
+    close.addEventListener('click', dismiss);
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dismiss();
+    });
+    dialog.addEventListener('close', () => dialog.remove());
+    dialog.append(big, close);
+    doc.body.appendChild(dialog);
+    try {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    } catch {
+      dialog.setAttribute('open', '');
+    }
+  });
+}
+
+/** An SVG figure's zoom button opens the image larger in a dialog: the
+ *  plate keeps page text readable, the dialog carries the full figure. */
+function wireFigures(root: ParentNode): void {
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-figure-zoom');
+    if (!(btn instanceof HTMLElement)) return;
+    const img = btn.closest('.audit-figure-plate')?.querySelector('img');
+    if (!(img instanceof HTMLImageElement)) return;
+    const doc = root instanceof Document ? root : (root.ownerDocument ?? document);
+    const dialog = doc.createElement('dialog');
+    dialog.className = 'audit-lightbox';
+    const big = doc.createElement('img');
+    big.setAttribute('src', img.getAttribute('src') || '');
+    big.setAttribute('alt', img.getAttribute('alt') || '');
+    const close = doc.createElement('button');
+    close.type = 'button';
+    close.className = 'audit-lightbox-close';
+    close.textContent = btn.getAttribute('data-close') || 'Close';
+    // `close`/`showModal` exist in browsers; the guards keep older engines
+    // (and the jsdom suite) on the `open` attribute path instead.
+    const dismiss = (): void => {
+      try {
+        if (typeof dialog.close === 'function') dialog.close();
+        else dialog.remove();
+      } catch {
+        dialog.remove();
+      }
+      if (dialog.isConnected) dialog.remove();
+    };
+    close.addEventListener('click', dismiss);
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dismiss();
+    });
+    dialog.addEventListener('close', () => dialog.remove());
+    dialog.append(big, close);
+    doc.body.appendChild(dialog);
+    try {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    } catch {
+      dialog.setAttribute('open', '');
+    }
+  });
+}
+
 export function initAuditPage(root: ParentNode = document): void {
   if (!readData()) return;
   wireTerms(root);
   wireBack(root);
+  wireFigures(root);
+  wireDiagramZoom(root);
+  wireFindingOpen(root);
+  wireCodeExpand(root);
   wireTables(root);
   wireBadgeCopy(root);
   wireSteppers(root);
+  wireReportViewer(root);
   void wireCharts(root).catch(() => {});
   void wireDiagrams(root).catch(() => {});
   void wireCode(root).catch(() => {});

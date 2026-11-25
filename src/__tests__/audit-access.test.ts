@@ -46,12 +46,16 @@ function makeAudits() {
   const docs: Record<string, Doc> = { [PRIVATE_SLUG]: privateDoc(), [PUBLIC_SLUG]: fixtureDoc() };
   const assets = (fixtureDoc()['assets'] ?? []) as { path: string }[];
   for (const [slug, doc] of Object.entries(docs)) {
-    files.set(`${slug}/audit.json`, Buffer.from(JSON.stringify(doc)));
+    files.set(`${slug}/${slug}/audit.json`, Buffer.from(JSON.stringify(doc)));
     for (const a of assets) {
-      files.set(`${slug}/${a.path}`, new Uint8Array(readFileSync(join(FIXTURE_DIR, a.path))));
+      files.set(`${slug}/${slug}/${a.path}`, new Uint8Array(readFileSync(join(FIXTURE_DIR, a.path))));
     }
   }
   return {
+    async list(options?: { prefix?: string }) {
+      const prefix = options?.prefix ?? '';
+      return { objects: [...files.keys()].filter((k) => k.startsWith(prefix)).map((key) => ({ key })) };
+    },
     async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
       const bytes = files.get(key);
       if (!bytes) return null;

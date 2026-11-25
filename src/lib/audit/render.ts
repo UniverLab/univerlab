@@ -4,7 +4,9 @@
 import { en } from '../../i18n/en';
 import { es } from '../../i18n/es';
 import { annexEntryHtml, findingEntryHtml, renderBlock, sourcesEntriesHtml, type BlockCtx } from './blocks';
-import { assetById, assetUrl, esc, safeExternalUrl, visibleAnnexes } from './util';
+import { labMarkSvg } from './mark';
+import { execSummaryHtml } from './summary';
+import { assetById, assetUrl, esc, reportDownloadName, safeExternalUrl, visibleAnnexes } from './util';
 import { auditBadge, badgeExpired, badgeLinkLabel, badgeSnippet, badgeValidUntil } from './badge';
 import { PUBLIC_AUDIT_BASE } from './markdown';
 import { citationTexts } from '../citation';
@@ -12,10 +14,21 @@ import type { Citation } from '../experiments';
 import type { AuditDocument, AuditLayout, AuditSection } from './types';
 
 export interface PublishedAuditLinks {
-  /** Slug of the previous audit of the same system, when it is public. */
+  /** `system/edition` path of the previous audit of the same system, when it is public. */
   previous: string | null;
-  /** Slugs of later audits of the same system that are public. */
+  /** `system/edition` paths of later audits of the same system that are public. */
   next: string[];
+}
+
+/** One edition in the system's edition list: newest first. `url` is the
+ *  edition's own page address. */
+export interface AuditEditionLink {
+  id: string;
+  date: string;
+  version: string;
+  status: string;
+  url: string;
+  current: boolean;
 }
 
 export interface AuditPageOptions {
@@ -27,6 +40,12 @@ export interface AuditPageOptions {
   /** Signing requests bound to this audit (`auditSlug == slug`): the
    *  private page lists them. Only the middleware passes this. */
   signedDocs?: SignedDocEntry[];
+  /** The stable system address the badge and snippet point at, so the link
+   *  a client pins never changes between editions. Defaults to slug. */
+  system?: string;
+  /** Every edition of the system, newest first; rendered as a nav list of
+   *  links that each open one edition. */
+  editions?: AuditEditionLink[];
 }
 
 /** One signing request of this audit, as the private page lists it. */
@@ -58,10 +77,13 @@ function personHtml(name: string, url?: string): string {
   return safe ? `<a href="${esc(safe)}" rel="noopener noreferrer">${label}</a>` : label;
 }
 
-function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string): string {
+function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, system: string): string {
   const m = doc.meta;
   const auditors = m.auditors.map((a) => personHtml(a.name, a.url)).join(', ');
   const client = personHtml(m.client.name, m.client.url);
+  const editionDate = doc.badge?.issued ?? m.auditPeriod.end;
+  const edition = `${editionDate} · ${m.version} · ${t.status[m.status]}`;
+  const classification = doc.visibility === 'private' ? t.cover.classified : t.cover.published;
   let bgClass = '';
   let bgAttr = '';
   let bgMedia = '';
@@ -82,15 +104,16 @@ function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: str
   return (
     `<header class="audit-cover ${layoutClasses(doc.cover.layout)}${bgClass}"${bgAttr}>` +
     bgMedia +
+    `<p class="audit-cover-mark">${labMarkSvg()}<span>${esc(t.cover.mark)}</span></p>` +
     `<p class="audit-kicker">${esc(m.version)} · ${esc(t.status[m.status])}</p>` +
     `<h1>${esc(m.title)}</h1>` +
     (m.subtitle ? `<p class="audit-subtitle">${esc(m.subtitle)}</p>` : '') +
     `<dl class="audit-meta">` +
+    `<div><dt>${esc(t.cover.system)}</dt><dd><code>${esc(system)}</code></dd></div>` +
     `<div><dt>${esc(t.meta.client)}</dt><dd>${client}</dd></div>` +
+    `<div><dt>${esc(t.cover.edition)}</dt><dd>${esc(edition)}</dd></div>` +
     `<div><dt>${esc(t.meta.auditors)}</dt><dd>${auditors}</dd></div>` +
-    `<div><dt>${esc(t.meta.period)}</dt><dd>${esc(m.auditPeriod.start)} – ${esc(m.auditPeriod.end)}</dd></div>` +
-    `<div><dt>${esc(t.meta.version)}</dt><dd>${esc(m.version)}</dd></div>` +
-    `<div><dt>${esc(t.meta.status)}</dt><dd>${esc(t.status[m.status])}</dd></div>` +
+    `<div><dt>${esc(t.cover.classification)}</dt><dd>${esc(classification)}</dd></div>` +
     `</dl>` +
     `<p class="audit-scope">${esc(m.scope)}</p>` +
     `<span class="audit-slug" hidden>${esc(slug)}</span>` +
@@ -98,13 +121,21 @@ function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: str
   );
 }
 
-function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, isPublic: boolean): string {
+function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, isPublic: boolean, system: string, edition: string, signT: typeof en.sign): string {
   const cards: string[] = [];
   const report = doc.deliverables.report ? assetById(doc, doc.deliverables.report) : null;
   if (report) {
+    const pdfUrl = assetUrl(slug, report.path, base);
     cards.push(
       `<div class="audit-deliverable"><p>${esc(report.title)}</p>` +
-        `<a href="${esc(assetUrl(slug, report.path, base))}">${esc(t.downloadPdf)}</a></div>`,
+        `<a class="audit-report-download" href="${esc(pdfUrl)}" download="${esc(reportDownloadName(system, edition, doc.meta.language))}">${esc(t.downloadPdf)}</a>` +
+        `<details class="audit-report-viewer"><summary>${esc(t.readReport)}</summary>` +
+        `<div class="sign-reader" data-src="${esc(pdfUrl)}" ` +
+        `data-loading="${esc(signT.readerLoading)}" data-error="${esc(signT.readerError)}" ` +
+        `data-zoom-in="${esc(signT.zoomIn)}" data-zoom-out="${esc(signT.zoomOut)}" data-zoom-fit="${esc(signT.zoomFit)}" ` +
+        `data-page-prev="${esc(signT.pagePrev)}" data-page-next="${esc(signT.pageNext)}" ` +
+        `data-page-of="${esc(signT.pageOf)}">` +
+        `<p class="sign-reader-status">${esc(signT.readerLoading)}</p></div></details></div>`,
     );
   }
   const bundle = doc.deliverables.bundle ? assetById(doc, doc.deliverables.bundle) : null;
@@ -237,6 +268,24 @@ function depositHtml(doc: AuditDocument, t: BlockCtx['t']): string {
   );
 }
 
+/** The edition list, right after the cover: every edition of the system,
+ *  newest first, each opening its own page. The current edition is marked;
+ *  every label follows the edition's `meta.language`. */
+function editionsHtml(editions: AuditEditionLink[], t: BlockCtx['t']): string {
+  if (!editions.length) return '';
+  const rows = editions
+    .map((e) => {
+      const status = (t.status as Record<string, string>)[e.status] ?? e.status;
+      const label = `${e.date} · ${e.version} · ${status}`;
+      const body = e.current
+        ? `<a href="${esc(e.url)}" aria-current="true">${esc(label)}</a> <span class="audit-edition-latest">${esc(t.latestBadge)}</span>`
+        : `<a href="${esc(e.url)}" aria-label="${esc(t.editionOpen)}: ${esc(label)}">${esc(label)}</a>`;
+      return `<li>${body}</li>`;
+    })
+    .join('');
+  return `<nav class="audit-editions" aria-label="${esc(t.editionsTitle)}"><h2>${esc(t.editionsTitle)}</h2><ol>${rows}</ol></nav>`;
+}
+
 /** The published-audit block, right after the cover: the audit date and its
  *  validity, links to earlier and later audits of the same system, the
  *  Zenodo deposit with its DOI and citation, and the badge with the copyable
@@ -319,16 +368,24 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   const sourceEntries = missingSources.length
     ? `<section class="audit-auto-sources">${sourcesEntriesHtml(ctx, missingSources)}</section>`
     : '';
+  const stable = opts.system ?? slug;
+  const system = opts.system ?? (slug.includes('/') ? slug.split('/')[0] : slug);
+  const edition = (slug.includes('/') ? slug.split('/')[1] : '') || doc.meta.version;
+  const signT = doc.meta.language === 'es' ? es.sign : en.sign;
+  const summary = execSummaryHtml(doc, t);
+  const editions = opts.editions?.length ? editionsHtml(opts.editions, t) : '';
   const published = opts.published
-    ? publishedHtml(doc, slug, t, opts.published, new Date())
+    ? publishedHtml(doc, stable, t, opts.published, new Date())
     : '';
   const signedDocs = opts.signedDocs?.length ? signedDocsHtml(opts.signedDocs, t) : '';
   return (
     `<div class="audit audit-accent--${esc(accent)}">` +
     `<script type="application/json" id="audit-data">${data}</script>` +
-    coverHtml(doc, slug, t, base) +
+    coverHtml(doc, slug, t, base, system) +
+    summary +
+    editions +
     published +
-    deliverablesHtml(doc, slug, t, base, Boolean(opts.published)) +
+    deliverablesHtml(doc, slug, t, base, Boolean(opts.published), system, edition, signT) +
     signedDocs +
     tocHtml(doc, t) +
     sectionsHtml +

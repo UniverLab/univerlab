@@ -10,9 +10,12 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { onRequest } from '../../functions/_middleware';
+import { en } from '../i18n/en';
+import { es } from '../i18n/es';
 import { KNOWN_BLOCK_TYPES, LAYOUT_TYPES } from '../lib/audit/types';
 import { auditPageHtml } from '../lib/audit/render';
-import { renderBlock } from '../lib/audit/blocks';
+import { annexEntryHtml, findingEntryHtml, renderBlock } from '../lib/audit/blocks';
+import { areaLabel } from '../lib/audit/areas';
 
 const FIXTURE_DIR = resolve(__dirname, 'fixtures', 'audit-contract');
 const SLUG = 'fixture-audit';
@@ -24,13 +27,21 @@ function fixtureDoc(): Doc {
 }
 
 /** In-memory AUDITS bucket: `<slug>/audit.json` plus the fixture asset files. */
+/** In-memory AUDITS bucket in the edition layout: `<system>/<edition>/`
+ * plus the fixture asset files, with a prefix-aware `list`. The fixture
+ * slug doubles as its own system and edition, so `/audits/<SLUG>/` keeps
+ * serving it as the latest edition. */
 function makeAudits(doc: Doc) {
   const files = new Map<string, Uint8Array>();
-  files.set(`${SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
+  files.set(`${SLUG}/${SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
   for (const entry of readFixtureAssets()) {
-    files.set(`${SLUG}/${entry.path}`, entry.bytes);
+    files.set(`${SLUG}/${SLUG}/${entry.path}`, entry.bytes);
   }
   return {
+    async list(options?: { prefix?: string }) {
+      const prefix = options?.prefix ?? '';
+      return { objects: [...files.keys()].filter((k) => k.startsWith(prefix)).map((key) => ({ key })) };
+    },
     async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
       const bytes = files.get(key);
       if (!bytes) return null;
@@ -169,8 +180,8 @@ describe('middleware — audit page', () => {
     expect(body).toMatch(/<p>Read the <span class="audit-term"/);
     expect(body).toMatch(/<p>Read the(?:(?!<\/p>)[\s\S])*summary first\.<\/p>/);
     expect(body).toContain('Fixture definition: one client journey');
-    expect(body).toContain(`href="/audits/${SLUG}/assets/figure.svg"`);
-    expect(body).toContain(`href="/audits/${SLUG}/assets/report.pdf"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/figure.svg"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/report.pdf"`);
     expect(body).toContain('href="#audit-sec-overview"');
     expect(body).toContain('id="audit-sec-overview"');
     expect(body).toContain('id="audit-finding-F-01"');
@@ -181,7 +192,7 @@ describe('middleware — audit page', () => {
     expect(body).toContain('Access is by invitation');
     expect(body).toContain('Fixture Client (not a real client)');
     expect(body).toContain('Contract Test Team');
-    expect(body).toContain('2026-01-05');
+    expect(body).toContain('2026-01-09');
     expect(body).toContain('id="audit-data"');
   });
 
@@ -218,7 +229,7 @@ describe('middleware — audit page', () => {
     expect(body).toContain('Repro sandbox');
     expect(body).toContain('Runs the finding end to end.');
     expect(body).toContain('Usage');
-    expect(body).toContain(`href="/audits/${SLUG}/assets/chart-data.json"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/chart-data.json"`);
     expect(body).toContain('class="audit-annex-file-name">chart-data.json<');
     const chart = (doc['assets'] as Doc[]).find((a) => a['id'] === 'chart-data')!;
     expect(body).toContain(chart['sha256'] as string);
@@ -398,6 +409,54 @@ describe('middleware — audit assets', () => {
   });
 });
 
+describe('audit report viewer', () => {
+  it('embeds the signing viewer and a named download when a report exists', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const priv = auditPageHtml(doc, SLUG);
+    expect(priv).toContain('class="audit-report-viewer"');
+    expect(priv).toContain('class="sign-reader"');
+    expect(priv).toContain(`data-src="/audits/${SLUG}/assets/report.pdf"`);
+    expect(priv).toContain('download="fixture-audit-1.0-en.pdf"');
+    expect(priv).toContain('Read the report here');
+    expect(priv).toContain('data-page-of=');
+  });
+
+  it('loads the report through the public route on the published page', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const pub = auditPageHtml(doc, SLUG, {
+      assetBase: '/workbench/audits',
+      published: { previous: null, next: [] },
+    });
+    expect(pub).toContain(`data-src="/workbench/audits/${SLUG}/assets/report.pdf"`);
+    expect(pub).toContain('download="fixture-audit-1.0-en.pdf"');
+  });
+
+  it('names the download after system, edition and language', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const html = auditPageHtml(doc, 'acme/2026-01', { system: 'acme' });
+    expect(html).toContain('download="acme-2026-01-en.pdf"');
+    const esDoc = { ...doc, meta: { ...doc.meta, language: 'es' as const } };
+    const esHtml = auditPageHtml(esDoc, 'acme/2026-01', { system: 'acme' });
+    expect(esHtml).toContain('download="acme-2026-01-es.pdf"');
+    expect(esHtml).toContain('Leer el informe aquí');
+    expect(esHtml).not.toContain('Read the report here');
+  });
+
+  it('emits nothing report-related when there is no report deliverable', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    delete doc.deliverables.report;
+    const html = auditPageHtml(doc, SLUG);
+    expect(html).not.toContain('audit-report-viewer');
+    expect(html).not.toContain('sign-reader');
+    expect(html).not.toContain('audit-report-download');
+  });
+
+  it('loads the signing reader lazily from the audit client', () => {
+    const client = readFileSync(resolve(__dirname, '..', 'lib', 'audit', 'client.ts'), 'utf8');
+    expect(client).toMatch(/import\(['"]\.\.\/sign\/reader['"]\)/);
+  });
+});
+
 describe('audit renderer — safety', () => {
   const strings = {
     contents: 'Contents', deliverables: 'D', downloadPdf: 'PDF', downloadBundle: 'Bundle',
@@ -439,5 +498,265 @@ describe('audit renderer — safety', () => {
     // Code blocks render as plain-text spans, so no syntax library ships.
     expect(client).not.toMatch(/highlight\.js/);
     expect(client).not.toMatch(/^import .* from ['"](vega-embed|mermaid)['"]/m);
+  });
+});
+
+describe('audit deliverable page', () => {
+  function pageDoc(): Parameters<typeof auditPageHtml>[0] {
+    return fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+  }
+
+  it('covers system, client, edition, auditors and classification with the lab mark', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('class="audit-cover-mark"');
+    expect(html).toContain('<svg');
+    expect(html).toContain('UniverLab');
+    expect(html).toContain('<code>fixture-audit</code>');
+    expect(html).toContain('Fixture Client (not a real client)');
+    expect(html).toContain('2026-01-09 · 1.0 · delivered');
+    expect(html).toContain('Contract Test Team');
+    expect(html).toContain('Classification');
+    expect(html).toContain('Published');
+
+    const priv = { ...pageDoc(), visibility: 'private' } as Parameters<typeof auditPageHtml>[0];
+    expect(auditPageHtml(priv, SLUG)).toContain('Confidential');
+  });
+
+  it('summarizes the severities before the table of contents', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    const summaryAt = html.indexOf('audit-summary');
+    const tocAt = html.indexOf('audit-toc');
+    expect(summaryAt).toBeGreaterThanOrEqual(0);
+    expect(summaryAt).toBeLessThan(tocAt);
+    expect(html).toContain('Executive summary');
+    // One critical, one high, one informational finding in the fixture.
+    expect(html).toContain('data-severity="critical" style="--audit-bar:33%"');
+    expect(html).toContain('data-severity="high" style="--audit-bar:33%"');
+    expect(html).toContain('data-severity="info" style="--audit-bar:33%"');
+    expect(html).toContain('1 open · 1 fixed · Highest open severity: critical');
+  });
+
+  it('renders every finding as a shut card that opens to the full finding', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('<details>');
+    expect(html).toContain('<summary class="audit-finding-row">');
+    expect(html).not.toMatch(/<details open/);
+    expect(html).toContain('class="audit-finding-id">F-01<');
+    expect(html).toContain('class="audit-finding-impact">A placeholder finding proving the critical path renders.<');
+    expect(html).toContain('class="audit-finding-body"');
+  });
+
+  it('caps code transcripts behind an expand control', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('class="audit-code-expand" hidden aria-expanded="false">Expand<');
+  });
+
+  it('covers the same ground in Spanish', () => {
+    const doc = pageDoc();
+    const esDoc = { ...doc, meta: { ...doc.meta, language: 'es' as const } };
+    const html = auditPageHtml(esDoc, SLUG);
+    expect(html).toContain('Resumen ejecutivo');
+    expect(html).toContain('Sistema');
+    expect(html).toContain('Publicado');
+  });
+});
+
+describe('audit real-edition rendering', () => {
+  type PageDoc = Parameters<typeof auditPageHtml>[0];
+
+  /** The fixture with prose the old renderer leaked: backticks and
+   *  `{{finding:…}}` markers in every prose-carrying field. */
+  function richDoc(lang: 'en' | 'es'): PageDoc {
+    const doc = fixtureDoc() as unknown as PageDoc;
+    doc.meta.language = lang;
+    const f = doc.findings[0];
+    f.title = '`zz-token` replay bypasses `zz-check()`';
+    f.summary = 'A `zz-token` minted for {{finding:F-02}} never expires.';
+    f.recommendation = 'Rotate the `zz-secret` after {{finding:F-02}} ships.';
+    for (const s of doc.sections) {
+      for (const b of s.blocks as { type?: string; steps?: { title?: string; description?: string }[]; rows?: unknown[][]; columns?: unknown[] }[]) {
+        if (b.type === 'timeline' && b.steps) {
+          b.steps[0].title = 'Ship `zz-v2` of the {{finding:F-02}} flow';
+          b.steps[0].description = 'Closes {{finding:F-01}} with a `zz-token` rotation.';
+        }
+        if (b.type === 'table' && b.rows) {
+          b.rows = [['`zz-k1` and {{finding:F-01}}', 1]];
+          b.columns = ['`zz-col`', 'Count'];
+        }
+      }
+    }
+    return doc;
+  }
+
+  it.each(['en', 'es'] as const)('resolves refs and inline code everywhere (%s)', (lang) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+
+    expect(html).not.toContain('{{finding:');
+    expect(html).not.toContain('`zz-token`');
+    expect(html).not.toContain('`zz-k1`');
+    expect(html).toContain('<code>zz-token</code>');
+    expect(html).toContain('<code>zz-check()</code>');
+    expect(html).toContain('<code>zz-secret</code>');
+    // Finding title in its card and in the findings table.
+    expect(html).toContain('<code>zz-token</code> replay bypasses');
+    // Timeline title and description resolve refs and code.
+    expect(html).toMatch(/audit-timeline[\s\S]*href="#audit-finding-F-02"/);
+    expect(html).toMatch(/audit-timeline[\s\S]*<code>zz-v2<\/code>/);
+    expect(html).toMatch(/audit-timeline[\s\S]*<code>zz-token<\/code>/);
+    // Table header and cell.
+    expect(html).toContain('<code>zz-col</code>');
+    expect(html).toContain('<code>zz-k1</code>');
+  });
+
+  it.each(['en', 'es'] as const)('resolves a reference inside a finding title in the findings table (%s)', (lang) => {
+    const doc = richDoc(lang);
+    doc.findings[0].title = '`zz-token` blocks {{finding:F-02}} replay';
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const html = renderBlock({ type: 'findingsTable' }, ctx);
+
+    expect(html).not.toContain('{{finding:');
+    expect(html).toContain('<code>zz-token</code>');
+    expect(html).toContain('href="#audit-finding-F-02"');
+  });
+
+  it('renders interface text in the edition language', () => {
+    const editions = [{ id: 'e1', date: '2026-01-09', version: '1.0', status: 'draft', url: '/audits/x/', current: true }];
+    const enHtml = auditPageHtml(richDoc('en'), SLUG, { editions });
+    expect(enHtml).toContain('<th>Area</th>');
+    expect(enHtml).not.toContain('<th>·</th>');
+    expect(enHtml).toContain('>Authentication<');
+    expect(enHtml).toContain('2026-01-09 · 1.0 · draft');
+
+    const esHtml = auditPageHtml(richDoc('es'), SLUG, { editions });
+    expect(esHtml).toContain('<th>Área</th>');
+    expect(esHtml).not.toContain('<th>·</th>');
+    expect(esHtml).toContain('>Autenticación<');
+    expect(esHtml).toContain('2026-01-09 · 1.0 · borrador');
+    expect(esHtml).not.toContain('>draft<');
+    // Unknown ids show the raw id, never a half translation.
+    expect(esHtml).toContain('>flows<');
+    expect(esHtml).not.toContain('>Flows<');
+    expect(enHtml).toContain('>flows<');
+    expect(enHtml).not.toContain('>Flows<');
+    for (const lang of ['es', 'en'] as const) {
+      expect(areaLabel('data-flows', lang)).toBe('data-flows');
+      expect(areaLabel('', lang)).toBe('');
+    }
+    // Every category a published audit uses has words in both languages.
+    for (const [id, word] of [
+      ['authorisation', 'Autorización'],
+      ['transport', 'Transporte'],
+      ['resource-limits', 'Límites de recursos'],
+      ['usage', 'Uso'],
+      ['graph-execution', 'Ejecución de graphs'],
+      ['recovery', 'Recuperación'],
+      ['privacy', 'Privacidad'],
+    ] as const) {
+      expect(areaLabel(id, 'es')).toBe(word);
+      expect(areaLabel(id, 'en')).not.toBe(id);
+    }
+  });
+
+  it.each(['en', 'es'] as const)('prints the finding summary once per card (%s)', (lang) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+    const start = html.indexOf('id="audit-finding-F-01"');
+    expect(start).toBeGreaterThanOrEqual(0);
+    const card = html.slice(start, html.indexOf('</article>', start));
+    expect(card.split('never expires.').length - 1).toBe(1);
+  });
+
+  it.each([
+    ['en', 'Enlarge', 'Close'],
+    ['es', 'Ampliar', 'Cerrar'],
+  ] as const)('wraps SVG figures in a plate with a zoom button (%s)', (lang, zoom, close) => {
+    const doc = richDoc(lang);
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const html = renderBlock({ type: 'figure', asset: 'figure-svg', caption: 'C' }, ctx);
+
+    expect(html).toContain('audit-figure--svg');
+    expect(html).toContain('audit-figure-plate');
+    expect(html).toContain(`class="audit-figure-zoom" data-close="${close}">${zoom}<`);
+    expect(html).toContain('<img');
+    expect(html).not.toContain('<svg');
+  });
+
+  it.each(['en', 'es'] as const)('renders code and refs in media captions and asset titles (%s)', (lang) => {
+    const doc = richDoc(lang);
+    const asset = doc.assets.find((a) => a.id === 'report-pdf')!;
+    asset.title = '`zz-report` for {{finding:F-01}}';
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const caption = 'A `zz-cap` for {{finding:F-01}} while {{spec_name}} stays';
+    const fig = renderBlock({ type: 'figure', asset: 'figure-svg', caption }, ctx);
+    expect(fig).toContain('<code>zz-cap</code>');
+    expect(fig).toContain('href="#audit-finding-F-01"');
+    expect(fig).toContain('{{spec_name}}');
+    const chartHtml = renderBlock({ type: 'chart', spec: { mark: 'bar' }, caption }, ctx);
+    expect(chartHtml).toContain('<code>zz-cap</code>');
+    expect(chartHtml).toContain('href="#audit-finding-F-01"');
+    expect(chartHtml).toContain('{{spec_name}}');
+    const bareChart = renderBlock({ type: 'chart', caption }, ctx);
+    expect(bareChart).toContain('<code>zz-cap</code>');
+    expect(bareChart).toContain('href="#audit-finding-F-01"');
+    // The bare chart's data link carries its asset title, so code resolves there too.
+    const dataAsset = doc.assets.find((a) => a.id === 'chart-data')!;
+    dataAsset.title = '`zz-data` for {{finding:F-01}}';
+    const fedBare = renderBlock({ type: 'chart', dataAsset: 'chart-data', caption: 'C' }, ctx);
+    expect(fedBare).toContain('<code>zz-data</code>');
+    expect(fedBare).toContain('href="#audit-finding-F-01"');
+    // A non-image figure falls back to a link with its asset title.
+    const fallbackFig = renderBlock({ type: 'figure', asset: 'report-pdf', caption: 'C' }, ctx);
+    expect(fallbackFig).toContain('<code>zz-report</code>');
+    expect(fallbackFig).toContain('href="#audit-finding-F-01"');
+    const diagram = renderBlock({ type: 'diagram', mermaid: 'flowchart LR\n  A-->B', caption }, ctx);
+    expect(diagram).toContain('<code>zz-cap</code>');
+    expect(diagram).toContain('href="#audit-finding-F-01"');
+    expect(diagram).toContain('{{spec_name}}');
+    const card = renderBlock({ type: 'assetCard', asset: 'report-pdf' }, ctx);
+    expect(card).toContain('<code>zz-report</code>');
+    expect(card).toContain('href="#audit-finding-F-01"');
+    // The asset card description carries the same inline treatment: it is
+    // the last backticked fragment the real audit shows (F-02 transcript).
+    const cardDesc = renderBlock(
+      { type: 'assetCard', asset: 'report-pdf', description: 'See `zz-desc` for {{finding:F-01}}' },
+      ctx,
+    );
+    expect(cardDesc).toContain('<code>zz-desc</code>');
+    expect(cardDesc).toContain('href="#audit-finding-F-01"');
+    expect(cardDesc).not.toContain('`zz-desc`');
+    const annex = annexEntryHtml(ctx, { id: 'a1', title: '`zz-annex` index', description: 'd', assets: ['report-pdf'] });
+    expect(annex).toContain('<code>zz-annex</code>');
+    expect(annex).toContain('<code>zz-report</code>');
+    expect(annex).toContain('href="#audit-finding-F-01"');
+    const f = doc.findings[0];
+    f.evidence = [{ type: 'asset' as const, id: 'report-pdf' }];
+    const entry = findingEntryHtml(ctx, f);
+    expect(entry).toContain('<code>zz-report</code>');
+  });
+
+  it.each([
+    ['en', 'Chart data is available in the downloadable bundle.'],
+    ['es', 'Los datos del gráfico están en el paquete descargable.'],
+  ] as const)('renders a chart without a spec as caption plus data link (%s)', (lang, fallback) => {
+    const html = auditPageHtml(richDoc(lang), SLUG);
+
+    // The data-fed chart keeps its caption and links its data…
+    expect(html).toContain('Fixture chart fed by a data asset.');
+    expect(html).toContain(`href="/audits/${SLUG}/assets/chart-data.json"`);
+    // …while only the drawable chart keeps a mount and a spec.
+    expect(html.match(/data-spec=/g)).toHaveLength(1);
+    expect(html.match(/audit-chart-mount/g)).toHaveLength(1);
+
+    // No spec and no data: caption plus the fallback line, never a mount.
+    const doc = richDoc(lang);
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const bare = renderBlock({ type: 'chart', caption: 'C' }, ctx);
+    expect(bare).toContain('<figcaption>C</figcaption>');
+    expect(bare).toContain(fallback);
+    expect(bare).not.toContain('data-spec');
+    expect(bare).not.toContain('audit-chart-mount');
   });
 });
