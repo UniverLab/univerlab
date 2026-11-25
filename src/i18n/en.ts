@@ -1145,6 +1145,7 @@ export const en = {
     intro: 'Every audit, the signing console and the booking service — owner only.',
     auditsTitle: 'Audits',
     auditsEmpty: 'No audits in the bucket yet.',
+    auditCounts: '{pub} public · {priv} private · {high} open high',
     loadError: 'The panel could not be loaded. Try again.',
     thAudit: 'Audit',
     thDate: 'Date',

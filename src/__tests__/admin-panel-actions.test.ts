@@ -152,6 +152,13 @@ function strings(): AdminClientStrings {
     visibilityPublic: 'public',
     visibilityPrivate: 'private',
     findingsLine: '{open}/{total}',
+    auditCounts: '{pub}/{priv}/{high}',
+    thAudit: 'Audit',
+    thDate: 'Date',
+    thVisibility: 'Visibility',
+    thFindings: 'Findings',
+    thDoi: 'DOI',
+    thActions: 'Actions',
     publish: 'Publish',
     unpublish: 'Unpublish',
     refused: 'refused {reason}',
@@ -172,6 +179,7 @@ function strings(): AdminClientStrings {
 function mount(): void {
   document.body.innerHTML =
     '<table><tbody id="admin-audits"></tbody></table>' +
+    '<p id="admin-audits-counts"></p>' +
     '<p id="admin-error" hidden></p>' +
     '<p id="admin-empty" hidden></p>' +
     '<p id="admin-sign-counts"></p>' +
@@ -429,5 +437,42 @@ describe('admin panel actions over both layouts', () => {
     expect(bucket.files.has('legacy-other/audit.json')).toBe(true);
     expect(panelError().hidden).toBe(true);
     expect(panelError().textContent).toBe('');
+  });
+
+  it('counts visibility and open high findings, dates rows with time, and labels cells', async () => {
+    const bucket = seedBucket();
+    bridgeFetch(bucket);
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+
+    // Five public rows, one private row; every fixture row but sys/ed-1
+    // keeps one open critical finding, so the glance names 5/1/5.
+    expect(document.getElementById('admin-audits-counts')?.textContent).toBe('5/1/5');
+
+    const row = rowBySlug('legacy') as HTMLTableRowElement;
+    const time = row.querySelector('time');
+    expect(time).not.toBeNull();
+    expect(time?.getAttribute('datetime')).toBe('2024-01-01');
+    expect(time?.textContent).not.toBe('2024-01-01');
+    expect(row.querySelector('.admin-sev')).not.toBeNull();
+
+    // Every data cell names its column for the narrow card layout.
+    const cells = [...row.querySelectorAll('td')];
+    expect(cells.map((td) => td.dataset['label'])).toEqual([
+      'Audit',
+      'Date',
+      'Visibility',
+      'Findings',
+      'DOI',
+      'Actions',
+    ]);
+
+    // The publish toggle and the remove button no longer compete: the
+    // publish sits in the shared row-action group, removal apart from it.
+    const buttons = row.querySelector('.sign-row-actions.admin-row-actions');
+    expect(buttons).not.toBeNull();
+    expect(buttons?.querySelector('.admin-publish')).toBe(cellsOf(row).toggle);
+    expect(row.querySelector('.admin-remove')).toBe(cellsOf(row).remove);
   });
 });

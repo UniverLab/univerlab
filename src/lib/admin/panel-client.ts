@@ -18,6 +18,13 @@ export interface AdminClientStrings {
   visibilityPublic: string;
   visibilityPrivate: string;
   findingsLine: string;
+  auditCounts?: string;
+  thAudit?: string;
+  thDate?: string;
+  thVisibility?: string;
+  thFindings?: string;
+  thDoi?: string;
+  thActions?: string;
   publish: string;
   unpublish: string;
   refused: string;
@@ -53,6 +60,8 @@ export interface AdminUploadStrings {
 interface AdminRowFindings {
   total: number;
   open: number;
+  bySeverity?: Partial<Record<string, number>>;
+  openBySeverity?: Partial<Record<string, number>>;
 }
 
 interface AdminRowJson {
@@ -217,6 +226,21 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
     await loadAudits();
   };
 
+  const formatDate = (iso: string): string => {
+    const time = Date.parse(iso);
+    if (Number.isNaN(time)) return iso;
+    try {
+      return new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      }).format(new Date(time));
+    } catch {
+      return iso;
+    }
+  };
+
   const renderRows = (rows: AdminRowJson[]): void => {
     list.textContent = '';
     if (empty) empty.hidden = rows.length !== 0;
@@ -235,17 +259,34 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       }
       const tr = document.createElement('tr');
       const audit = document.createElement('td');
+      if (s.thAudit) audit.dataset['label'] = s.thAudit;
       const link = document.createElement('a');
       link.href = auditHref(row.system ?? row.slug, row.edition ?? row.slug, row.visibility);
       link.textContent = row.title === '' ? row.slug : `${row.title} — ${row.slug}`;
       audit.appendChild(link);
       const date = document.createElement('td');
-      date.textContent = row.date;
+      if (s.thDate) date.dataset['label'] = s.thDate;
+      const time = document.createElement('time');
+      time.dateTime = row.date;
+      time.textContent = formatDate(row.date);
+      date.appendChild(time);
       const vis = document.createElement('td');
+      if (s.thVisibility) vis.dataset['label'] = s.thVisibility;
       vis.textContent = row.visibility === 'public' ? s.visibilityPublic : s.visibilityPrivate;
       const findings = document.createElement('td');
+      if (s.thFindings) findings.dataset['label'] = s.thFindings;
       findings.textContent = fill(s.findingsLine, { open: String(row.findings.open), total: String(row.findings.total) });
+      for (const sev of ['critical', 'high', 'medium', 'low', 'info'] as const) {
+        const n = row.findings.openBySeverity?.[sev] ?? 0;
+        if (n > 0) {
+          const chip = document.createElement('span');
+          chip.className = `admin-sev admin-sev-${sev}`;
+          chip.textContent = `${sev} ${n}`;
+          findings.appendChild(chip);
+        }
+      }
       const doi = document.createElement('td');
+      if (s.thDoi) doi.dataset['label'] = s.thDoi;
       if (row.doi) {
         const a = document.createElement('a');
         a.href = `https://doi.org/${row.doi}`;
@@ -255,17 +296,23 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         doi.textContent = '—';
       }
       const action = document.createElement('td');
+      if (s.thActions) action.dataset['label'] = s.thActions;
+      const buttons = document.createElement('div');
+      buttons.className = 'sign-row-actions admin-row-actions';
       const toggle = document.createElement('button');
       toggle.type = 'button';
+      toggle.className = 'sign-row-action admin-publish';
       toggle.textContent = row.visibility === 'public' ? s.unpublish : s.publish;
       const remove = document.createElement('button');
       remove.type = 'button';
+      remove.className = 'sign-row-action admin-remove';
       remove.textContent = s.remove;
       const note = document.createElement('p');
       note.className = 'admin-note';
       toggle.addEventListener('click', () => void toggleRow(row, { link, vis, action, note }, toggle));
       remove.addEventListener('click', () => void removeRow(row, tr, remove, note));
-      action.append(toggle, ' ', remove, note);
+      buttons.append(toggle, remove);
+      action.append(buttons, note);
       tr.append(audit, date, vis, findings, doi, action);
       list.appendChild(tr);
     }
@@ -290,6 +337,22 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       return;
     }
     renderRows(rows);
+    const glance = document.getElementById('admin-audits-counts');
+    if (glance && s.auditCounts) {
+      let pub = 0;
+      let priv = 0;
+      let high = 0;
+      for (const row of rows) {
+        if (row.visibility === 'public') pub += 1;
+        else priv += 1;
+        high += (row.findings.openBySeverity?.['critical'] ?? 0) + (row.findings.openBySeverity?.['high'] ?? 0);
+      }
+      glance.textContent = fill(s.auditCounts, {
+        pub: String(pub),
+        priv: String(priv),
+        high: String(high),
+      });
+    }
   };
 
   const loadSignCounts = async (): Promise<void> => {

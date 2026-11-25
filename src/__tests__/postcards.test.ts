@@ -36,6 +36,8 @@ const carriers: Array<[string, string, string]> = [
   ['src/pages/es/logbook.astro', 'logbook', 'es.postcards.logbook'],
   ['src/pages/audits/index.astro', 'audit', 'en.postcards.audit'],
   ['src/pages/audit-shell.astro', 'audit', 'en.postcards.audit'],
+  ['src/pages/admin/index.astro', 'status', 't.postcards.status'],
+  ['src/pages/es/admin/index.astro', 'status', 't.postcards.status'],
 ];
 
 const dayBlock = postcard.slice(postcard.indexOf('data-pc="day"'), postcard.indexOf('data-pc="night"'));
@@ -87,8 +89,8 @@ describe('Postcard component', () => {
 });
 
 describe('page openings', () => {
-  it('all 17 carriers import the Postcard with their own page key and alt', () => {
-    expect(carriers).toHaveLength(17);
+  it('all 19 carriers import the Postcard with their own page key and alt', () => {
+    expect(carriers).toHaveLength(19);
     for (const [file, page, alt] of carriers) {
       const src = read(file);
       expect(`${file}\n${src}`).toContain(`<Postcard page="${page}" alt={`);
@@ -161,7 +163,7 @@ describe('Watermark component', () => {
     const others = carriers
       .map(([f]) => f)
       .filter((f) => !['src/views/Manifesto.astro', 'src/views/People.astro', 'src/pages/roadmap.astro'].includes(f));
-    expect(others).toHaveLength(14);
+    expect(others).toHaveLength(16);
     for (const f of others) {
       expect(`${f}: ${read(f)}`).not.toContain('<Watermark');
     }

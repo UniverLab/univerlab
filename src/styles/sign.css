@@ -363,3 +363,104 @@ button.sign-row-action:disabled {
   color: var(--ink-dim);
   font-size: 0.8rem;
 }
+
+/* The control room: the glance cards share the signing console's raised
+ * surface, and the audits table reuses the console's row actions. */
+.admin-glance {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  min-width: 0;
+}
+@media (min-width: 64rem) {
+  .admin-glance {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.admin-card {
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  min-width: 0;
+}
+#admin-upload {
+  margin-top: 2rem;
+}
+.admin-stat {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+.admin-note {
+  color: var(--accent);
+  font-size: 0.9rem;
+  margin: 0.4rem 0 0;
+}
+.admin-sev {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  margin: 0.15rem 0 0 0.4rem;
+  background: var(--bg-raise);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.admin-sev-critical,
+.admin-sev-high {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.admin-row-actions {
+  justify-content: flex-start;
+}
+.admin-row-actions .admin-remove {
+  margin-left: auto;
+}
+@media (max-width: 40rem) {
+  .admin-table {
+    overflow-x: clip;
+  }
+  .admin-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .admin-table,
+  .admin-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .admin-table tr.admin-system th {
+    display: block;
+  }
+  .admin-table tr:not(.admin-system) {
+    display: block;
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin: 0 0 0.75rem;
+    min-width: 0;
+  }
+  .admin-table tr:not(.admin-system) td {
+    display: block;
+    border: none;
+    padding: 0.2rem 0;
+    overflow-wrap: anywhere;
+  }
+  .admin-table tr:not(.admin-system) td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-dim);
+  }
+}

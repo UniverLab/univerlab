@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Postcard from '../../components/Postcard.astro';
 import { useTranslations } from '../../i18n';
 import { bookTarget } from '../../lib/book-target';
 import '../../styles/sign.css';
@@ -19,13 +20,69 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         <h1>{a.h1}</h1>
         <p class="intro">{a.intro}</p>
       </div>
+      <Postcard page="status" alt={t.postcards.status} />
     </div>
 
-    <div class="sign-owner-grid">
-    <div>
-    <h2>{a.auditsTitle}</h2>
+    <div class="admin-glance">
+      <div class="admin-card">
+        <h2>{a.auditsTitle}</h2>
+        <p class="admin-stat" id="admin-audits-counts" role="status"></p>
+        <p><a href="#admin-upload">{a.uploadTitle}</a></p>
+      </div>
+      <div class="admin-card">
+        <h2>{a.signTitle}</h2>
+        <p class="admin-stat" id="admin-sign-counts" role="status"></p>
+        <p><a href="/sign/owner/">{a.openSign}</a></p>
+      </div>
+      <div class="admin-card">
+        <h2>{a.bookingTitle}</h2>
+        <p class="admin-stat" id="admin-booking-status" role="status" data-booking-api={bookingApi}></p>
+        <p><a href={bookTarget('en')}>{a.openBooking}</a></p>
+      </div>
+    </div>
+
+    <section id="admin-audits-section">
+      <h2>{a.auditsTitle}</h2>
+      <p class="sign-error" id="admin-error" hidden></p>
+      <p id="admin-empty" hidden>{a.auditsEmpty}</p>
+      <table class="sign-table admin-table">
+        <thead>
+          <tr><th>{a.thAudit}</th><th>{a.thDate}</th><th>{a.thVisibility}</th><th>{a.thFindings}</th><th>{a.thDoi}</th><th>{a.thActions}</th></tr>
+        </thead>
+        <tbody
+          id="admin-audits"
+          data-visibility-public={a.visibilityPublic}
+          data-visibility-private={a.visibilityPrivate}
+          data-findings-line={a.findingsLine}
+          data-audit-counts={a.auditCounts}
+          data-th-audit={a.thAudit}
+          data-th-date={a.thDate}
+          data-th-visibility={a.thVisibility}
+          data-th-findings={a.thFindings}
+          data-th-doi={a.thDoi}
+          data-th-actions={a.thActions}
+          data-publish={a.publish}
+          data-unpublish={a.unpublish}
+          data-refused={a.refused}
+          data-remove={a.remove}
+          data-confirm-remove={a.confirmRemove}
+          data-sign-counts={a.signCounts}
+          data-booking-ok={a.bookingOk}
+          data-booking-down={a.bookingDown}
+          data-booking-line={a.bookingLine}
+          data-load-error={a.loadError}
+          data-audits-empty={a.auditsEmpty}
+          data-action-missing={a.actionMissing}
+          data-action-network={a.actionNetwork}
+          data-action-failed={a.actionFailed}
+        >
+        </tbody>
+      </table>
+    </section>
+
     <section
       id="admin-upload"
+      class="admin-card"
       data-upload-system={a.uploadSystem}
       data-upload-edition={a.uploadEdition}
       data-upload-send={a.uploadSend}
@@ -38,14 +95,14 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
       data-upload-reading={a.uploadReading}
       data-upload-sending={a.uploadSending}
     >
-      <h3>{a.uploadTitle}</h3>
+      <h2>{a.uploadTitle}</h2>
       <p>{a.uploadHint}</p>
-      <p>
+      <p class="sign-field">
         <label>{a.uploadChoose} <input type="file" id="admin-upload-folder" webkitdirectory /></label>
         <label>.zip <input type="file" id="admin-upload-zip" accept=".zip" /></label>
       </p>
       <div id="admin-upload-preview" hidden></div>
-      <p>
+      <p class="sign-field">
         <label>{a.uploadSystem} <input type="text" id="admin-upload-system" autocomplete="off" /></label>
         <label>{a.uploadEdition} <input type="text" id="admin-upload-edition" autocomplete="off" /></label>
       </p>
@@ -55,47 +112,6 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
       </p>
       <p class="admin-note" id="admin-upload-note" role="status"></p>
     </section>
-    <p class="sign-error" id="admin-error" hidden></p>
-    <p id="admin-empty" hidden>{a.auditsEmpty}</p>
-    <table class="sign-table">
-      <thead>
-        <tr><th>{a.thAudit}</th><th>{a.thDate}</th><th>{a.thVisibility}</th><th>{a.thFindings}</th><th>{a.thDoi}</th><th>{a.thActions}</th></tr>
-      </thead>
-      <tbody
-        id="admin-audits"
-        data-visibility-public={a.visibilityPublic}
-        data-visibility-private={a.visibilityPrivate}
-        data-findings-line={a.findingsLine}
-        data-publish={a.publish}
-        data-unpublish={a.unpublish}
-        data-refused={a.refused}
-        data-remove={a.remove}
-        data-confirm-remove={a.confirmRemove}
-        data-sign-counts={a.signCounts}
-        data-booking-ok={a.bookingOk}
-        data-booking-down={a.bookingDown}
-        data-booking-line={a.bookingLine}
-        data-load-error={a.loadError}
-        data-audits-empty={a.auditsEmpty}
-        data-action-missing={a.actionMissing}
-        data-action-network={a.actionNetwork}
-        data-action-failed={a.actionFailed}
-      >
-      </tbody>
-    </table>
-    </div>
-
-    <div>
-    <h2>{a.signTitle}</h2>
-    <p>{a.signIntro}</p>
-    <p id="admin-sign-counts" role="status"></p>
-    <p><a href="/sign/owner/">{a.openSign}</a></p>
-    <h2>{a.bookingTitle}</h2>
-    <p>{a.bookingIntro}</p>
-    <p id="admin-booking-status" role="status" data-booking-api={bookingApi}></p>
-    <p><a href={bookTarget('en')}>{a.openBooking}</a></p>
-    </div>
-    </div>
   </section>
 
   <script>
@@ -107,6 +123,13 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         visibilityPublic: el?.dataset['visibilityPublic'] ?? '',
         visibilityPrivate: el?.dataset['visibilityPrivate'] ?? '',
         findingsLine: el?.dataset['findingsLine'] ?? '',
+        auditCounts: el?.dataset['auditCounts'] ?? '',
+        thAudit: el?.dataset['thAudit'] ?? '',
+        thDate: el?.dataset['thDate'] ?? '',
+        thVisibility: el?.dataset['thVisibility'] ?? '',
+        thFindings: el?.dataset['thFindings'] ?? '',
+        thDoi: el?.dataset['thDoi'] ?? '',
+        thActions: el?.dataset['thActions'] ?? '',
         publish: el?.dataset['publish'] ?? '',
         unpublish: el?.dataset['unpublish'] ?? '',
         refused: el?.dataset['refused'] ?? '',
@@ -137,24 +160,3 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
     );
   </script>
 </BaseLayout>
-
-<style>
-  .admin-note {
-    color: var(--accent);
-    font-size: 0.9rem;
-    margin: 0.4rem 0 0;
-  }
-  #admin-sign-counts,
-  #admin-booking-status {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-  }
-  @media (max-width: 40rem) {
-    .sign-table th:nth-child(4),
-    .sign-table td:nth-child(4),
-    .sign-table th:nth-child(5),
-    .sign-table td:nth-child(5) {
-      overflow-wrap: anywhere;
-    }
-  }
-</style>
