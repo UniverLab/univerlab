@@ -3,11 +3,35 @@
 // string comes from the page's dataset so both languages share this module;
 // every row is built with textContent, never innerHTML, because titles ride
 // in from R2.
+import { validateAuditDocument } from '../audit/validate-document';
+import { formatBytes } from '../audit/util';
+import {
+  forcePrivate,
+  formatEdition,
+  parseZipCentralDirectory,
+  proposeAuditTarget,
+  summarizeUpload,
+  unwrapZipRoot,
+  validateUploadEntries,
+  type UploadFile,
+} from './upload';
 
 export interface AdminClientStrings {
   visibilityPublic: string;
   visibilityPrivate: string;
   findingsLine: string;
+  auditCountsPubOne?: string;
+  auditCountsPubOther?: string;
+  auditCountsPrivOne?: string;
+  auditCountsPrivOther?: string;
+  auditCountsHighOne?: string;
+  auditCountsHighOther?: string;
+  thAudit?: string;
+  thDate?: string;
+  thVisibility?: string;
+  thFindings?: string;
+  thDoi?: string;
+  thActions?: string;
   publish: string;
   unpublish: string;
   refused: string;
@@ -19,17 +43,56 @@ export interface AdminClientStrings {
   bookingLine: string;
   loadError: string;
   auditsEmpty: string;
+  actionMissing: string;
+  actionNetwork: string;
+  actionFailed: string;
+}
+
+/** The "New audit" intake strings: a partial because older pages only
+ *  carry the table strings. Missing keys fall back to plain words. */
+export interface AdminUploadStrings {
+  uploadSystem: string;
+  uploadEdition: string;
+  uploadSend: string;
+  uploadReplace: string;
+  uploadCancel: string;
+  uploadCancelled?: string;
+  uploadStored: string;
+  uploadExists: string;
+  uploadInvalidOne?: string;
+  uploadInvalidOther?: string;
+  uploadIssuesOne?: string;
+  uploadIssuesOther?: string;
+  uploadFilesOne?: string;
+  uploadFilesOther?: string;
+  uploadPreviewTitle?: string;
+  uploadPreviewClient?: string;
+  uploadPreviewLanguage?: string;
+  uploadPreviewVersion?: string;
+  uploadPreviewFindings?: string;
+  uploadPreviewFiles?: string;
+  uploadEmpty: string;
+  uploadReading: string;
+  uploadSending: string;
+  severityCritical?: string;
+  severityHigh?: string;
+  severityMedium?: string;
+  severityLow?: string;
+  severityInfo?: string;
 }
 
 interface AdminRowFindings {
   total: number;
   open: number;
+  bySeverity?: Partial<Record<string, number>>;
+  openBySeverity?: Partial<Record<string, number>>;
 }
 
 interface AdminRowJson {
   slug: string;
   system: string;
   edition: string;
+  legacy?: boolean;
   isLatest: boolean;
   title: string;
   date: string;
@@ -83,23 +146,58 @@ function auditHref(system: string, edition: string, visibility: string): string 
     : `/audits/${system}/${edition}/`;
 }
 
-/** The request body addressing one edition. Older rows without
- *  system/edition fall back to the bare slug. */
+/** The request body addressing the stored object the row came from: a
+ *  legacy old-layout row goes back as its bare slug, a new-layout row as
+ *  its system/edition pair. Older rows without system/edition fall back
+ *  to the bare slug. */
 function editionBody(row: AdminRowJson): Record<string, string> {
-  if (typeof row.system === 'string' && row.system !== '' && typeof row.edition === 'string' && row.edition !== '') {
+  if (
+    !row.legacy &&
+    typeof row.system === 'string' &&
+    row.system !== '' &&
+    typeof row.edition === 'string' &&
+    row.edition !== ''
+  ) {
     return { system: row.system, edition: row.edition };
   }
   return { slug: row.slug };
 }
 
+/** The per-row failure line for a visibility or remove request: 404 names
+ *  the missing audit, 409 keeps the refusal with its reason, anything else
+ *  names the status. */
+function rowErrorText(
+  s: AdminClientStrings,
+  res: Response,
+  data: Record<string, unknown> | null,
+): string {
+  if (res.status === 404) return s.actionMissing;
+  if (res.status === 409) {
+    const reason = typeof data?.['reason'] === 'string' ? (data['reason'] as string) : '';
+    return fill(s.refused, { reason });
+  }
+  return fill(s.actionFailed, { status: String(res.status) });
+}
+
+/** One count in singular or plural: the page's language decides, with a
+ *  plain-English fallback for older pages that only carry the table
+ *  strings. */
+function pluralCount(one: string | undefined, other: string | undefined, n: number, fallback: string): string {
+  return fill(n === 1 ? (one ?? fallback) : (other ?? fallback), { n: String(n) });
+}
+
 /** Wire the control room. Bails without throwing when the table is absent. */
-export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string }): void {
+export function initAdminPage(
+  s: AdminClientStrings & Partial<AdminUploadStrings>,
+  opts: { bookingApi: string },
+): void {
   const list = document.getElementById('admin-audits');
   if (!list) return;
   const error = document.getElementById('admin-error');
   const empty = document.getElementById('admin-empty');
   const counts = document.getElementById('admin-sign-counts');
   const booking = document.getElementById('admin-booking-status');
+  let knownSystems: string[] = [];
 
   const showError = (): void => {
     if (error) {
@@ -118,17 +216,12 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         body: JSON.stringify({ ...editionBody(row), visibility: target }),
       });
     } catch {
-      showError();
-      return;
-    }
-    if (res.status === 409) {
-      const data = await readJson(res);
-      const reason = typeof data?.['reason'] === 'string' ? (data['reason'] as string) : '';
-      cells.note.textContent = fill(s.refused, { reason });
+      cells.note.textContent = s.actionNetwork;
       return;
     }
     if (!res.ok) {
-      showError();
+      const data = await readJson(res);
+      cells.note.textContent = rowErrorText(s, res, data);
       return;
     }
     row.visibility = target;
@@ -138,7 +231,12 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
     cells.note.textContent = '';
   };
 
-  const removeRow = async (row: AdminRowJson, tr: HTMLElement, btn: HTMLButtonElement): Promise<void> => {
+  const removeRow = async (
+    row: AdminRowJson,
+    _tr: HTMLElement,
+    btn: HTMLButtonElement,
+    note: HTMLElement,
+  ): Promise<void> => {
     if (!btn.dataset['armed']) {
       btn.dataset['armed'] = '1';
       btn.textContent = fill(s.confirmRemove, { slug: row.slug });
@@ -152,15 +250,30 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         body: JSON.stringify({ ...editionBody(row), confirm: true }),
       });
     } catch {
-      showError();
+      note.textContent = s.actionNetwork;
       return;
     }
     if (!res.ok) {
-      showError();
+      const data = await readJson(res);
+      note.textContent = rowErrorText(s, res, data);
       return;
     }
-    tr.remove();
-    if (list && list.childElementCount === 0 && empty) empty.hidden = false;
+    await loadAudits();
+  };
+
+  const formatDate = (iso: string): string => {
+    const time = Date.parse(iso);
+    if (Number.isNaN(time)) return iso;
+    try {
+      return new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      }).format(new Date(time));
+    } catch {
+      return iso;
+    }
   };
 
   const renderRows = (rows: AdminRowJson[]): void => {
@@ -181,17 +294,44 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       }
       const tr = document.createElement('tr');
       const audit = document.createElement('td');
+      if (s.thAudit) audit.dataset['label'] = s.thAudit;
       const link = document.createElement('a');
       link.href = auditHref(row.system ?? row.slug, row.edition ?? row.slug, row.visibility);
       link.textContent = row.title === '' ? row.slug : `${row.title} — ${row.slug}`;
       audit.appendChild(link);
       const date = document.createElement('td');
-      date.textContent = row.date;
+      if (s.thDate) date.dataset['label'] = s.thDate;
+      const time = document.createElement('time');
+      time.dateTime = row.date;
+      time.textContent = formatDate(row.date);
+      date.appendChild(time);
       const vis = document.createElement('td');
+      if (s.thVisibility) vis.dataset['label'] = s.thVisibility;
       vis.textContent = row.visibility === 'public' ? s.visibilityPublic : s.visibilityPrivate;
       const findings = document.createElement('td');
+      if (s.thFindings) findings.dataset['label'] = s.thFindings;
       findings.textContent = fill(s.findingsLine, { open: String(row.findings.open), total: String(row.findings.total) });
+      const sevNames: Record<string, string> = {
+        critical: s.severityCritical || 'critical',
+        high: s.severityHigh || 'high',
+        medium: s.severityMedium || 'medium',
+        low: s.severityLow || 'low',
+        info: s.severityInfo || 'info',
+      };
+      const sevs = document.createElement('span');
+      sevs.className = 'admin-sevs';
+      for (const sev of ['critical', 'high', 'medium', 'low', 'info'] as const) {
+        const n = row.findings.openBySeverity?.[sev] ?? 0;
+        if (n > 0) {
+          const chip = document.createElement('span');
+          chip.className = `admin-sev admin-sev-${sev}`;
+          chip.textContent = `${sevNames[sev]} ${n}`;
+          sevs.appendChild(chip);
+        }
+      }
+      if (sevs.childNodes.length > 0) findings.appendChild(sevs);
       const doi = document.createElement('td');
+      if (s.thDoi) doi.dataset['label'] = s.thDoi;
       if (row.doi) {
         const a = document.createElement('a');
         a.href = `https://doi.org/${row.doi}`;
@@ -201,17 +341,23 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
         doi.textContent = '—';
       }
       const action = document.createElement('td');
+      if (s.thActions) action.dataset['label'] = s.thActions;
+      const buttons = document.createElement('div');
+      buttons.className = 'sign-row-actions admin-row-actions';
       const toggle = document.createElement('button');
       toggle.type = 'button';
+      toggle.className = 'sign-row-action admin-publish';
       toggle.textContent = row.visibility === 'public' ? s.unpublish : s.publish;
       const remove = document.createElement('button');
       remove.type = 'button';
+      remove.className = 'sign-row-action admin-remove';
       remove.textContent = s.remove;
       const note = document.createElement('p');
       note.className = 'admin-note';
       toggle.addEventListener('click', () => void toggleRow(row, { link, vis, action, note }, toggle));
-      remove.addEventListener('click', () => void removeRow(row, tr, remove));
-      action.append(toggle, ' ', remove, note);
+      remove.addEventListener('click', () => void removeRow(row, tr, remove, note));
+      buttons.append(toggle, remove);
+      action.append(buttons, note);
       tr.append(audit, date, vis, findings, doi, action);
       list.appendChild(tr);
     }
@@ -236,6 +382,34 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       return;
     }
     renderRows(rows);
+    // The systems the table already holds: the upload form suggests them
+    // while typing, so an existing audit keeps its system name.
+    knownSystems = [...new Set(rows.map((row) => row.system).filter((sys) => sys !== ''))].sort();
+    const datalist = document.getElementById('admin-upload-systems');
+    if (datalist) {
+      datalist.textContent = '';
+      for (const sys of knownSystems) {
+        const option = document.createElement('option');
+        option.value = sys;
+        datalist.appendChild(option);
+      }
+    }
+    const glance = document.getElementById('admin-audits-counts');
+    if (glance) {
+      let pub = 0;
+      let priv = 0;
+      let high = 0;
+      for (const row of rows) {
+        if (row.visibility === 'public') pub += 1;
+        else priv += 1;
+        high += (row.findings.openBySeverity?.['critical'] ?? 0) + (row.findings.openBySeverity?.['high'] ?? 0);
+      }
+      glance.textContent = [
+        pluralCount(s.auditCountsPubOne, s.auditCountsPubOther, pub, '{n} public'),
+        pluralCount(s.auditCountsPrivOne, s.auditCountsPrivOther, priv, '{n} private'),
+        pluralCount(s.auditCountsHighOne, s.auditCountsHighOther, high, '{n} open high or critical'),
+      ].join(' · ');
+    }
   };
 
   const loadSignCounts = async (): Promise<void> => {
@@ -267,4 +441,438 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
   void loadAudits();
   void loadSignCounts();
   void loadBooking();
+  void initUpload(
+    s,
+    () => {
+      void loadAudits();
+    },
+    () => knownSystems,
+  );
+}
+
+async function postUploadJson(
+  body: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<{ res: Response; data: Record<string, unknown> | null }> {
+  const res = await fetch('/api/admin-audits/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
+  });
+  return { res, data: await readJson(res) };
+}
+
+/** One file travels as the raw request body, never base64 inside JSON. */
+async function postUploadFile(
+  uploadId: string,
+  name: string,
+  bytes: Uint8Array,
+  signal?: AbortSignal,
+): Promise<{ res: Response; data: Record<string, unknown> | null }> {
+  const res = await fetch(
+    `/api/admin-audits/upload?action=file&uploadId=${encodeURIComponent(uploadId)}&name=${encodeURIComponent(name)}`,
+    { method: 'POST', body: bytes as unknown as BodyInit, ...(signal ? { signal } : {}) },
+  );
+  return { res, data: await readJson(res) };
+}
+
+/** The "New audit" intake: a folder (webkitdirectory) or a .zip is read
+ *  locally, previewed as a compact summary (title, client, language,
+ *  version, findings by severity, files, total size) with the
+ *  system/edition the title and the known systems propose, then sent one
+ *  file per request and confirmed. The new edition joins the list through
+ *  loadAudits. Absent when the page carries no upload section. */
+function initUpload(
+  u: AdminClientStrings & Partial<AdminUploadStrings>,
+  reload: () => void,
+  getSystems: () => string[],
+): void {
+  const section = document.getElementById('admin-upload');
+  if (!section) return;
+  const folder = document.getElementById('admin-upload-folder') as HTMLInputElement | null;
+  const zip = document.getElementById('admin-upload-zip') as HTMLInputElement | null;
+  const pickFolder = document.getElementById('admin-upload-pick-folder') as HTMLButtonElement | null;
+  const pickZip = document.getElementById('admin-upload-pick-zip') as HTMLButtonElement | null;
+  const preview = document.getElementById('admin-upload-preview');
+  const target = document.getElementById('admin-upload-target');
+  const systemInput = document.getElementById('admin-upload-system') as HTMLInputElement | null;
+  const editionInput = document.getElementById('admin-upload-edition') as HTMLInputElement | null;
+  const send = document.getElementById('admin-upload-send') as HTMLButtonElement | null;
+  const replace = document.getElementById('admin-upload-replace') as HTMLButtonElement | null;
+  const cancel = document.getElementById('admin-upload-cancel') as HTMLButtonElement | null;
+  const progress = document.getElementById('admin-upload-progress') as HTMLProgressElement | null;
+  const errorsEl = document.getElementById('admin-upload-errors');
+  const note = document.getElementById('admin-upload-note');
+  if (
+    !folder || !zip || !pickFolder || !pickZip || !preview || !target ||
+    !systemInput || !editionInput || !send || !replace || !cancel || !progress || !errorsEl || !note
+  ) {
+    return;
+  }
+
+  let files: UploadFile[] = [];
+  let issues: { path: string; message: string }[] = [];
+  let parsedDoc: unknown = null;
+  let lastProposed: { system: string; edition: string } | null = null;
+  let lastIssued: string | undefined;
+  let editionEdited = false;
+  let aborter: AbortController | null = null;
+  let activeUploadId: string | null = null;
+  let busy = false;
+
+  const say = (text: string): void => {
+    note.textContent = text;
+  };
+
+  const clearErrors = (): void => {
+    errorsEl.textContent = '';
+    errorsEl.hidden = true;
+  };
+
+  /** After a refusal the problems read as a list, one item per path. */
+  const showErrorList = (items: { path: string; message: string }[]): void => {
+    errorsEl.textContent = '';
+    for (const item of items) {
+      const li = document.createElement('li');
+      li.textContent = `${item.path}: ${item.message}`;
+      errorsEl.appendChild(li);
+    }
+    errorsEl.hidden = items.length === 0;
+    if (items.length > 0) {
+      say(
+        pluralCount(
+          u.uploadIssuesOne,
+          u.uploadIssuesOther,
+          items.length,
+          '{n} problems keep this upload from being stored:',
+        ),
+      );
+    }
+  };
+
+  const sevName = (sev: string): string => {
+    switch (sev) {
+      case 'critical':
+        return u.severityCritical || 'critical';
+      case 'high':
+        return u.severityHigh || 'high';
+      case 'medium':
+        return u.severityMedium || 'medium';
+      case 'low':
+        return u.severityLow || 'low';
+      default:
+        return u.severityInfo || 'info';
+    }
+  };
+
+  const chipFor = (sev: string, n: number): HTMLSpanElement => {
+    const chip = document.createElement('span');
+    chip.className = `admin-sev admin-sev-${sev}`;
+    chip.textContent = `${sevName(sev)} ${n}`;
+    return chip;
+  };
+
+  const renderPreview = (): void => {
+    preview.textContent = '';
+    // System and edition stay hidden until a readable selection exists.
+    target.hidden = files.length === 0 || parsedDoc === null;
+    if (files.length === 0 || parsedDoc === null) {
+      preview.hidden = true;
+      send.disabled = true;
+      return;
+    }
+    const locale = document.documentElement.lang || undefined;
+    const summary = summarizeUpload(parsedDoc, files);
+    const dl = document.createElement('dl');
+    dl.className = 'admin-preview';
+    const addRow = (label: string | undefined, fallback: string, value: string): void => {
+      if (value === '') return;
+      const wrap = document.createElement('div');
+      const dt = document.createElement('dt');
+      dt.textContent = label || fallback;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      wrap.append(dt, dd);
+      dl.appendChild(wrap);
+    };
+    addRow(u.uploadPreviewTitle, 'Title', summary.title);
+    addRow(u.uploadPreviewClient, 'Client', summary.client);
+    addRow(u.uploadPreviewLanguage, 'Language', summary.language);
+    addRow(u.uploadPreviewVersion, 'Version', summary.version);
+    const findingsWrap = document.createElement('div');
+    const findingsDt = document.createElement('dt');
+    findingsDt.textContent = u.uploadPreviewFindings || 'Findings';
+    const findingsDd = document.createElement('dd');
+    const sevs = document.createElement('span');
+    sevs.className = 'admin-sevs';
+    for (const sev of ['critical', 'high', 'medium', 'low', 'info'] as const) {
+      const n = summary.findings.bySeverity[sev] ?? 0;
+      if (n > 0) sevs.appendChild(chipFor(sev, n));
+    }
+    if (sevs.childNodes.length > 0) findingsDd.appendChild(sevs);
+    else findingsDd.textContent = '0';
+    findingsWrap.append(findingsDt, findingsDd);
+    dl.appendChild(findingsWrap);
+    const filesWrap = document.createElement('div');
+    const filesDt = document.createElement('dt');
+    filesDt.textContent = u.uploadPreviewFiles || 'Files';
+    const filesDd = document.createElement('dd');
+    filesDd.textContent = `${pluralCount(u.uploadFilesOne, u.uploadFilesOther, summary.files, '{n} files')} · ${formatBytes(summary.totalSize, locale)}`;
+    filesWrap.append(filesDt, filesDd);
+    dl.appendChild(filesWrap);
+    preview.appendChild(dl);
+    if (issues.length > 0) {
+      const head = document.createElement('p');
+      head.textContent = pluralCount(
+        u.uploadInvalidOne,
+        u.uploadInvalidOther,
+        issues.length,
+        'The document holds {n} problems:',
+      );
+      preview.appendChild(head);
+      const list = document.createElement('ul');
+      for (const issue of issues) {
+        const item = document.createElement('li');
+        item.textContent = `${issue.path}: ${issue.message}`;
+        list.appendChild(item);
+      }
+      preview.appendChild(list);
+    }
+    preview.hidden = false;
+    send.disabled = issues.length > 0 || busy;
+  };
+
+  /** Title and issue date from a freshly read document, for the proposal. */
+  const docTitle = (doc: unknown): string | undefined => {
+    if (typeof doc !== 'object' || doc === null) return undefined;
+    const meta = (doc as Record<string, unknown>)['meta'];
+    if (typeof meta !== 'object' || meta === null) return undefined;
+    const title = (meta as Record<string, unknown>)['title'];
+    return typeof title === 'string' && title !== '' ? title : undefined;
+  };
+
+  /** The issue date, or the end of the audit period while no badge exists. */
+  const docIssued = (doc: unknown): string | undefined => {
+    const d = doc as { badge?: { issued?: unknown }; meta?: { auditPeriod?: { end?: unknown } } } | null;
+    return [d?.badge?.issued, d?.meta?.auditPeriod?.end].find((v): v is string => typeof v === 'string' && v !== '');
+  };
+
+  const readSelection = async (picked: File[], baseName: string): Promise<void> => {
+    say(u.uploadReading ?? 'Reading…');
+    replace.hidden = true;
+    clearErrors();
+    editionEdited = false;
+    parsedDoc = null;
+    try {
+      if (picked.length === 1 && picked[0].name.toLowerCase().endsWith('.zip')) {
+        files = unwrapZipRoot(await parseZipCentralDirectory(new Uint8Array(await picked[0].arrayBuffer())));
+      } else {
+        files = [];
+        for (const file of picked) {
+          const rel = typeof file.webkitRelativePath === 'string' && file.webkitRelativePath !== ''
+            ? file.webkitRelativePath
+            : file.name;
+          const name = rel.includes('/') ? rel.slice(rel.indexOf('/') + 1) : rel;
+          if (name === '') continue;
+          files.push({ name, bytes: new Uint8Array(await file.arrayBuffer()) });
+        }
+      }
+    } catch {
+      files = [];
+      issues = [{ path: 'audit.json', message: 'not a readable .zip archive' }];
+      showErrorList(issues);
+      renderPreview();
+      return;
+    }
+    const raw = files.find((f) => f.name === 'audit.json');
+    if (!raw) {
+      issues = [{ path: 'audit.json', message: u.uploadEmpty ?? 'The selection holds no audit.json.' }];
+      showErrorList(issues);
+      renderPreview();
+      return;
+    }
+    let doc: unknown;
+    try {
+      doc = JSON.parse(new TextDecoder().decode(raw.bytes)) as unknown;
+    } catch {
+      issues = [{ path: 'audit.json', message: 'audit.json is not valid JSON' }];
+      showErrorList(issues);
+      renderPreview();
+      return;
+    }
+    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
+      issues = [{ path: 'audit.json', message: 'audit.json is not a JSON object' }];
+      showErrorList(issues);
+      renderPreview();
+      return;
+    }
+    parsedDoc = doc;
+    lastIssued = docIssued(doc);
+    // The preview checks the stored form: the upload is always private.
+    const stored = forcePrivate(doc as Record<string, unknown>, 'owner@univerlab.org');
+    issues = [
+      ...validateAuditDocument(stored).errors.map((e) => ({ path: e.path, message: e.message })),
+      ...(await validateUploadEntries(files, stored)),
+    ];
+    const proposed = proposeAuditTarget({
+      baseName,
+      title: docTitle(doc),
+      issued: lastIssued,
+      existingSystems: getSystems(),
+    });
+    if (proposed) {
+      if (systemInput.value === '' || systemInput.value === lastProposed?.system) systemInput.value = proposed.system;
+      if (editionInput.value === '' || editionInput.value === lastProposed?.edition) editionInput.value = proposed.edition;
+      lastProposed = proposed;
+    }
+    say('');
+    renderPreview();
+  };
+
+  folder.addEventListener('change', () => {
+    const picked = [...(folder.files ?? [])] as File[];
+    const first = (picked[0] as File & { webkitRelativePath?: string })?.webkitRelativePath ?? '';
+    void readSelection(picked, first.includes('/') ? first.slice(0, first.indexOf('/')) : 'audit');
+  });
+  zip.addEventListener('change', () => {
+    const picked = [...(zip.files ?? [])] as File[];
+    const name = picked[0]?.name ?? 'audit.zip';
+    void readSelection(picked, name.toLowerCase().endsWith('.zip') ? name.slice(0, -4) : name);
+  });
+
+  // The two visible choices open the hidden inputs; a folder or a .zip
+  // can also be dropped anywhere on the form.
+  pickFolder.addEventListener('click', () => folder.click());
+  pickZip.addEventListener('click', () => zip.click());
+  section.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    section.classList.add('is-dragover');
+  });
+  section.addEventListener('dragleave', () => {
+    section.classList.remove('is-dragover');
+  });
+  section.addEventListener('drop', (event) => {
+    event.preventDefault();
+    section.classList.remove('is-dragover');
+    const picked = [...(event.dataTransfer?.files ?? [])] as File[];
+    if (picked.length === 0 || busy) return;
+    if (picked.length === 1 && picked[0].name.toLowerCase().endsWith('.zip')) {
+      const name = picked[0].name;
+      void readSelection(picked, name.slice(0, -4));
+      return;
+    }
+    const first = (picked[0] as File & { webkitRelativePath?: string })?.webkitRelativePath ?? '';
+    void readSelection(picked, first.includes('/') ? first.slice(0, first.indexOf('/')) : 'audit');
+  });
+
+  // The edition follows the system field until it is edited by hand.
+  systemInput.addEventListener('input', () => {
+    if (!editionEdited) editionInput.value = formatEdition(systemInput.value, lastIssued);
+  });
+  editionInput.addEventListener('input', () => {
+    editionEdited = true;
+  });
+  cancel.addEventListener('click', () => {
+    aborter?.abort();
+    // Tell the server to drop the staging area; the in-flight request is
+    // already aborted, so this cleanup rides on its own request.
+    if (activeUploadId) void postUploadJson({ action: 'cancel', uploadId: activeUploadId }).catch(() => {});
+  });
+
+  const listedIssues = (data: Record<string, unknown> | null | undefined): { path: string; message: string }[] | null => {
+    const raw = data?.['issues'];
+    if (!Array.isArray(raw)) return null;
+    return (raw as { path: string; message: string }[]).filter(
+      (i) => typeof i?.path === 'string' && typeof i?.message === 'string',
+    );
+  };
+
+  const sendAll = async (withReplace: boolean): Promise<void> => {
+    if (busy || files.length === 0) return;
+    busy = true;
+    send.disabled = true;
+    replace.hidden = true;
+    clearErrors();
+    const controller = new AbortController();
+    aborter = controller;
+    cancel.hidden = false;
+    progress.hidden = false;
+    progress.max = files.length;
+    progress.value = 0;
+    try {
+      const init = await postUploadJson(
+        { action: 'init', system: systemInput.value, edition: editionInput.value },
+        controller.signal,
+      );
+      if (!init.res.ok || init.data?.['uploadId'] == null) {
+        say(fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(init.res.status) }));
+        return;
+      }
+      const uploadId = String(init.data['uploadId']);
+      activeUploadId = uploadId;
+      if (init.data['exists'] === true && !withReplace) {
+        say(fill(u.uploadExists ?? 'Edition {slug} already exists.', { slug: editionInput.value }));
+        replace.hidden = false;
+        return;
+      }
+      let done = 0;
+      for (const file of files) {
+        say(fill(u.uploadSending ?? 'Sending {done}/{total}…', { done: String(done), total: String(files.length) }));
+        progress.value = done;
+        const sent = await postUploadFile(uploadId, file.name, file.bytes, controller.signal);
+        if (!sent.res.ok) {
+          const refused = listedIssues(sent.data);
+          if (refused) showErrorList(refused);
+          else {
+            say(fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(sent.res.status) }));
+          }
+          return;
+        }
+        done += 1;
+        progress.value = done;
+      }
+      const fin = await postUploadJson(
+        withReplace ? { action: 'finalize', uploadId, replace: true } : { action: 'finalize', uploadId },
+        controller.signal,
+      );
+      if (!fin.res.ok) {
+        if (fin.res.status === 409) {
+          say(fill(u.uploadExists ?? 'Edition {slug} already exists.', { slug: editionInput.value }));
+          replace.hidden = false;
+          return;
+        }
+        const refused = listedIssues(fin.data);
+        if (refused) showErrorList(refused);
+        else say(fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(fin.res.status) }));
+        return;
+      }
+      say(fill(u.uploadStored ?? 'Stored: {slug}', { slug: String((fin.data as Record<string, unknown>)?.['slug'] ?? editionInput.value) }));
+      files = [];
+      issues = [];
+      parsedDoc = null;
+      lastProposed = null;
+      lastIssued = undefined;
+      editionEdited = false;
+      folder.value = '';
+      zip.value = '';
+      systemInput.value = '';
+      editionInput.value = '';
+      renderPreview();
+      reload();
+    } catch (error) {
+      if (controller.signal.aborted) say(u.uploadCancelled ?? 'Upload cancelled.');
+      else say(u.actionNetwork ?? 'Network error. Try again.');
+    } finally {
+      busy = false;
+      aborter = null;
+      activeUploadId = null;
+      progress.hidden = true;
+      cancel.hidden = true;
+      renderPreview();
+    }
+  };
+
+  send.addEventListener('click', () => void sendAll(false));
+  replace.addEventListener('click', () => void sendAll(true));
 }

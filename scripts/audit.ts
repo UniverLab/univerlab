@@ -38,6 +38,7 @@ import {
   sha256Hex,
 } from '../src/lib/audit/zenodo.ts';
 import type { AuditDocument } from '../src/lib/audit/types.ts';
+import { auditContentType as contentTypeOf } from '../src/lib/audit/content-type.ts';
 
 const BUCKET = 'univerlab-audits';
 const SITE = 'https://univerlab.org';
@@ -201,20 +202,6 @@ function remove(target: string): void {
     deleted += 1;
   }
   console.log(`Removed ${label}: ${deleted} object(s) deleted.`);
-}
-
-function contentTypeOf(path: string): string {
-  const ext = path.split('.').pop()!.toLowerCase();
-  switch (ext) {
-    case 'pdf': return 'application/pdf';
-    case 'json': return 'application/json';
-    case 'svg': return 'image/svg+xml';
-    case 'png': return 'image/png';
-    case 'zip': return 'application/zip';
-    case 'txt':
-    case 'md': return 'text/plain; charset=utf-8';
-    default: return 'application/octet-stream';
-  }
 }
 
 /** The remote audit.json of an earlier audit, or null when the bucket does

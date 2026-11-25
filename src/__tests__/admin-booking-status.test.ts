@@ -23,6 +23,9 @@ function strings(): AdminClientStrings {
     bookingLine: 'Servicio de agenda: {status}',
     loadError: 'load error',
     auditsEmpty: 'empty',
+    actionMissing: 'missing',
+    actionNetwork: 'network',
+    actionFailed: 'failed {status}',
   };
 }
 

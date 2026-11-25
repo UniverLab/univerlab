@@ -125,7 +125,7 @@ describe('admin audits list', () => {
     const row = data.audits[0] as Record<string, unknown>;
     expect(row['title']).toBe('Contract fixture audit (not a real audit)');
     expect(row['visibility']).toBe('public');
-    expect(row['date']).toBe('');
+    expect(row['date']).toBe('2026-01-09');
     expect(row['doi']).toBeNull();
     const findings = row['findings'] as Record<string, unknown>;
     expect(findings['total']).toBe(3);

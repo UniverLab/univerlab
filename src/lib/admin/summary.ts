@@ -4,13 +4,21 @@
 // any. Pure data shaping over an injected bucket surface, so the Pages
 // Function adapters stay thin and jest runs it with a fake bucket.
 
+import { isHiddenAuditSystem } from '../audit/system';
 import { validateAuditDocument } from '../audit/validate-document';
 import type { AuditDocument, Severity } from '../audit/types';
+
+/** One stored object: text for documents, binary where the binding
+ *  offers it (staged upload files are hashed byte-exact). */
+export interface AdminR2Object {
+  text(): Promise<string>;
+  arrayBuffer?(): Promise<ArrayBuffer>;
+}
 
 /** The R2 surface the admin routes need: reads, visibility writes and
  *  removal. The edge binding satisfies this structurally. */
 export interface AdminR2Bucket {
-  get(key: string): Promise<{ text(): Promise<string> } | null>;
+  get(key: string): Promise<AdminR2Object | null>;
   put(
     key: string,
     value: Uint8Array | ArrayBuffer | string,
@@ -39,6 +47,8 @@ export interface AdminAuditRow {
   system: string;
   /** The edition within the system (`<system>/<edition>/audit.json`). */
   edition: string;
+  /** Whether this row reads from an old bare-slug `<slug>/audit.json` key. */
+  legacy: boolean;
   /** Whether this row is the system's newest edition. */
   isLatest: boolean;
   title: string;
@@ -91,6 +101,10 @@ export async function resolveAdminAudit(
 ): Promise<AdminAuditRef | null> {
   try {
     if (!bucket) return null;
+    // Internal systems are never an addressable audit: a half-finished
+    // upload leaves no edition visible in the panel or on the site.
+    const head = ref.split('/')[0];
+    if (head !== undefined && isHiddenAuditSystem(head)) return null;
     if (ref.includes('/')) {
       const [system, edition, ...rest] = ref.split('/');
       if (!system || !edition || rest.length > 0) return null;
@@ -161,7 +175,7 @@ export function publishRefusal(doc: AuditDocument): string | null {
   return null;
 }
 
-function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: boolean): AdminAuditRow {
+function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: boolean, legacy: boolean): AdminAuditRow {
   const bySeverity = emptyCounts();
   const openBySeverity = emptyCounts();
   let open = 0;
@@ -176,9 +190,10 @@ function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: bo
     slug: edition,
     system,
     edition,
+    legacy,
     isLatest,
     title: doc.meta.title,
-    date: doc.badge?.issued ?? '',
+    date: doc.badge?.issued ?? doc.meta.auditPeriod?.end ?? '',
     visibility: doc.visibility,
     doi: typeof doc.deposit?.versionDoi === 'string' && doc.deposit.versionDoi !== '' ? doc.deposit.versionDoi : null,
     findings: { total: (doc.findings ?? []).length, open, bySeverity, openBySeverity },
@@ -202,8 +217,11 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
   try {
     if (!bucket?.list) return [];
     const listed = await bucket.list();
-    const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument }[]>();
+    const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument; legacy: boolean }[]>();
     for (const obj of listed.objects) {
+      // Internal systems never read as panel rows: only finished editions do.
+      const sys = obj.key.split('/')[0];
+      if (sys !== undefined && isHiddenAuditSystem(sys)) continue;
       const m = AUDIT_JSON_RE.exec(obj.key) ?? LEGACY_AUDIT_JSON_RE.exec(obj.key);
       if (!m) continue;
       const system = m[1];
@@ -211,7 +229,7 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
       const doc = await loadAdminAuditDoc(bucket, m[2] ? `${system}/${edition}` : system);
       if (doc) {
         const group = bySystem.get(system) ?? [];
-        group.push({ date: doc.badge?.issued ?? '', edition, doc });
+        group.push({ date: doc.badge?.issued ?? '', edition, doc, legacy: !m[2] });
         bySystem.set(system, group);
       }
     }
@@ -219,7 +237,7 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
     for (const system of [...bySystem.keys()].sort()) {
       const group = bySystem.get(system)!;
       group.sort(newestFirst);
-      group.forEach(({ edition, doc }, i) => rows.push(rowOf(system, edition, doc, i === 0)));
+      group.forEach(({ edition, doc, legacy }, i) => rows.push(rowOf(system, edition, doc, i === 0, legacy)));
     }
     return rows;
   } catch {
