@@ -24,6 +24,37 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
     <div class="sign-owner-grid">
     <div>
     <h2>{a.auditsTitle}</h2>
+    <section
+      id="admin-upload"
+      data-upload-system={a.uploadSystem}
+      data-upload-edition={a.uploadEdition}
+      data-upload-send={a.uploadSend}
+      data-upload-replace={a.uploadReplace}
+      data-upload-cancel={a.uploadCancel}
+      data-upload-stored={a.uploadStored}
+      data-upload-exists={a.uploadExists}
+      data-upload-invalid={a.uploadInvalid}
+      data-upload-empty={a.uploadEmpty}
+      data-upload-reading={a.uploadReading}
+      data-upload-sending={a.uploadSending}
+    >
+      <h3>{a.uploadTitle}</h3>
+      <p>{a.uploadHint}</p>
+      <p>
+        <label>{a.uploadChoose} <input type="file" id="admin-upload-folder" webkitdirectory /></label>
+        <label>.zip <input type="file" id="admin-upload-zip" accept=".zip" /></label>
+      </p>
+      <div id="admin-upload-preview" hidden></div>
+      <p>
+        <label>{a.uploadSystem} <input type="text" id="admin-upload-system" autocomplete="off" /></label>
+        <label>{a.uploadEdition} <input type="text" id="admin-upload-edition" autocomplete="off" /></label>
+      </p>
+      <p>
+        <button type="button" id="admin-upload-send" disabled>{a.uploadSend}</button>
+        <button type="button" id="admin-upload-replace" hidden>{a.uploadReplace}</button>
+      </p>
+      <p class="admin-note" id="admin-upload-note" role="status"></p>
+    </section>
     <p class="sign-error" id="admin-error" hidden></p>
     <p id="admin-empty" hidden>{a.auditsEmpty}</p>
     <table class="sign-table">
@@ -70,6 +101,7 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
   <script>
     import { initAdminPage } from '../../lib/admin/panel-client';
     const el = document.getElementById('admin-audits');
+    const up = document.getElementById('admin-upload');
     initAdminPage(
       {
         visibilityPublic: el?.dataset['visibilityPublic'] ?? '',
@@ -89,6 +121,17 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         actionMissing: el?.dataset['actionMissing'] ?? '',
         actionNetwork: el?.dataset['actionNetwork'] ?? '',
         actionFailed: el?.dataset['actionFailed'] ?? '',
+        uploadSystem: up?.dataset['uploadSystem'] ?? '',
+        uploadEdition: up?.dataset['uploadEdition'] ?? '',
+        uploadSend: up?.dataset['uploadSend'] ?? '',
+        uploadReplace: up?.dataset['uploadReplace'] ?? '',
+        uploadCancel: up?.dataset['uploadCancel'] ?? '',
+        uploadStored: up?.dataset['uploadStored'] ?? '',
+        uploadExists: up?.dataset['uploadExists'] ?? '',
+        uploadInvalid: up?.dataset['uploadInvalid'] ?? '',
+        uploadEmpty: up?.dataset['uploadEmpty'] ?? '',
+        uploadReading: up?.dataset['uploadReading'] ?? '',
+        uploadSending: up?.dataset['uploadSending'] ?? '',
       },
       { bookingApi: document.getElementById('admin-booking-status')?.dataset['bookingApi'] ?? '' },
     );

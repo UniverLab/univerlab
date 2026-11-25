@@ -7,10 +7,17 @@
 import { validateAuditDocument } from '../audit/validate-document';
 import type { AuditDocument, Severity } from '../audit/types';
 
+/** One stored object: text for documents, binary where the binding
+ *  offers it (staged upload files are hashed byte-exact). */
+export interface AdminR2Object {
+  text(): Promise<string>;
+  arrayBuffer?(): Promise<ArrayBuffer>;
+}
+
 /** The R2 surface the admin routes need: reads, visibility writes and
  *  removal. The edge binding satisfies this structurally. */
 export interface AdminR2Bucket {
-  get(key: string): Promise<{ text(): Promise<string> } | null>;
+  get(key: string): Promise<AdminR2Object | null>;
   put(
     key: string,
     value: Uint8Array | ArrayBuffer | string,
@@ -93,6 +100,9 @@ export async function resolveAdminAudit(
 ): Promise<AdminAuditRef | null> {
   try {
     if (!bucket) return null;
+    // Staged uploads are never an addressable audit: a half-finished
+    // upload leaves no edition visible in the panel or on the site.
+    if (ref === '_staging' || ref.startsWith('_staging/')) return null;
     if (ref.includes('/')) {
       const [system, edition, ...rest] = ref.split('/');
       if (!system || !edition || rest.length > 0) return null;
@@ -207,6 +217,8 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
     const listed = await bucket.list();
     const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument; legacy: boolean }[]>();
     for (const obj of listed.objects) {
+      // Staged uploads never read as panel rows: only finished editions do.
+      if (obj.key === '_staging' || obj.key.startsWith('_staging/')) continue;
       const m = AUDIT_JSON_RE.exec(obj.key) ?? LEGACY_AUDIT_JSON_RE.exec(obj.key);
       if (!m) continue;
       const system = m[1];

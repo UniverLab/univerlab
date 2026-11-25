@@ -3,6 +3,16 @@
 // string comes from the page's dataset so both languages share this module;
 // every row is built with textContent, never innerHTML, because titles ride
 // in from R2.
+import { validateAuditDocument } from '../audit/validate-document';
+import {
+  forcePrivate,
+  parseZipCentralDirectory,
+  proposeTarget,
+  summarizeUpload,
+  unwrapZipRoot,
+  validateUploadEntries,
+  type UploadFile,
+} from './upload';
 
 export interface AdminClientStrings {
   visibilityPublic: string;
@@ -22,6 +32,22 @@ export interface AdminClientStrings {
   actionMissing: string;
   actionNetwork: string;
   actionFailed: string;
+}
+
+/** The "New audit" intake strings: a partial because older pages only
+ *  carry the table strings. Missing keys fall back to plain words. */
+export interface AdminUploadStrings {
+  uploadSystem: string;
+  uploadEdition: string;
+  uploadSend: string;
+  uploadReplace: string;
+  uploadCancel: string;
+  uploadStored: string;
+  uploadExists: string;
+  uploadInvalid: string;
+  uploadEmpty: string;
+  uploadReading: string;
+  uploadSending: string;
 }
 
 interface AdminRowFindings {
@@ -295,4 +321,235 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
   void loadAudits();
   void loadSignCounts();
   void loadBooking();
+  void initUpload(s as AdminClientStrings & Partial<AdminUploadStrings>, () => {
+    void loadAudits();
+  });
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(out);
+}
+
+async function postUpload(body: Record<string, unknown>): Promise<{ res: Response; data: Record<string, unknown> | null }> {
+  const res = await fetch('/api/admin-upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return { res, data: await readJson(res) };
+}
+
+/** The "New audit" intake: a folder (webkitdirectory) or a .zip is read
+ *  locally, previewed (title, client, language, version, findings by
+ *  severity, files, total size) with the system/edition the CLI rule
+ *  proposes, then sent one file per request and confirmed. The new edition
+ *  joins the list through loadAudits — no reload. Absent when the page
+ *  carries no upload section. */
+function initUpload(u: AdminClientStrings & Partial<AdminUploadStrings>, reload: () => void): void {
+  const section = document.getElementById('admin-upload');
+  if (!section) return;
+  const folder = document.getElementById('admin-upload-folder') as HTMLInputElement | null;
+  const zip = document.getElementById('admin-upload-zip') as HTMLInputElement | null;
+  const preview = document.getElementById('admin-upload-preview');
+  const systemInput = document.getElementById('admin-upload-system') as HTMLInputElement | null;
+  const editionInput = document.getElementById('admin-upload-edition') as HTMLInputElement | null;
+  const send = document.getElementById('admin-upload-send') as HTMLButtonElement | null;
+  const replace = document.getElementById('admin-upload-replace') as HTMLButtonElement | null;
+  const note = document.getElementById('admin-upload-note');
+  if (!folder || !zip || !preview || !systemInput || !editionInput || !send || !replace || !note) return;
+
+  let files: UploadFile[] = [];
+  let issues: { path: string; message: string }[] = [];
+  let lastProposed: { system: string; edition: string } | null = null;
+  let busy = false;
+
+  const say = (text: string): void => {
+    note.textContent = text;
+  };
+
+  const renderPreview = (): void => {
+    preview.textContent = '';
+    if (files.length === 0) {
+      preview.hidden = true;
+      send.disabled = true;
+      return;
+    }
+    const raw = files.find((f) => f.name === 'audit.json');
+    let doc: unknown = null;
+    try {
+      doc = raw ? (JSON.parse(new TextDecoder().decode(raw.bytes)) as unknown) : null;
+    } catch {
+      doc = null;
+    }
+    const summary = summarizeUpload(doc, files);
+    const lines = [
+      `${summary.title}`,
+      `${summary.client} · ${summary.language} · v${summary.version}`,
+      Object.entries(summary.findings.bySeverity)
+        .map(([sev, n]) => `${sev}: ${n}`)
+        .join(' · '),
+      `${summary.files} files · ${summary.totalSize} bytes`,
+    ];
+    for (const line of lines) {
+      const p = document.createElement('p');
+      p.textContent = line;
+      preview.appendChild(p);
+    }
+    if (issues.length > 0) {
+      const head = document.createElement('p');
+      head.textContent = fill(u.uploadInvalid ?? 'The document holds {n} problem(s).', { n: String(issues.length) });
+      preview.appendChild(head);
+      const list = document.createElement('ul');
+      for (const issue of issues) {
+        const item = document.createElement('li');
+        item.textContent = `${issue.path}: ${issue.message}`;
+        list.appendChild(item);
+      }
+      preview.appendChild(list);
+    }
+    preview.hidden = false;
+    send.disabled = issues.length > 0 || busy;
+  };
+
+  const readSelection = async (picked: File[], baseName: string): Promise<void> => {
+    say(u.uploadReading ?? 'Reading…');
+    replace.hidden = true;
+    try {
+      if (picked.length === 1 && picked[0].name.toLowerCase().endsWith('.zip')) {
+        files = unwrapZipRoot(await parseZipCentralDirectory(new Uint8Array(await picked[0].arrayBuffer())));
+      } else {
+        files = [];
+        for (const file of picked) {
+          const rel = typeof file.webkitRelativePath === 'string' && file.webkitRelativePath !== ''
+            ? file.webkitRelativePath
+            : file.name;
+          const name = rel.includes('/') ? rel.slice(rel.indexOf('/') + 1) : rel;
+          if (name === '') continue;
+          files.push({ name, bytes: new Uint8Array(await file.arrayBuffer()) });
+        }
+      }
+    } catch {
+      files = [];
+      issues = [{ path: 'audit.json', message: 'not a readable .zip archive' }];
+      say(u.uploadEmpty ?? 'The selection holds no audit.json.');
+      renderPreview();
+      return;
+    }
+    const raw = files.find((f) => f.name === 'audit.json');
+    if (!raw) {
+      issues = [{ path: 'audit.json', message: 'audit.json is missing from the upload' }];
+      say(u.uploadEmpty ?? 'The selection holds no audit.json.');
+      renderPreview();
+      return;
+    }
+    let doc: unknown;
+    try {
+      doc = JSON.parse(new TextDecoder().decode(raw.bytes)) as unknown;
+    } catch {
+      issues = [{ path: 'audit.json', message: 'audit.json is not valid JSON' }];
+      say(u.uploadEmpty ?? 'The selection holds no audit.json.');
+      renderPreview();
+      return;
+    }
+    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
+      issues = [{ path: 'audit.json', message: 'audit.json is not a JSON object' }];
+      renderPreview();
+      return;
+    }
+    // The preview checks the stored form: the upload is always private.
+    const stored = forcePrivate(doc as Record<string, unknown>, 'owner@univerlab.org');
+    issues = [
+      ...validateAuditDocument(stored).errors.map((e) => ({ path: e.path, message: e.message })),
+      ...(await validateUploadEntries(files, stored)),
+    ];
+    const proposed = proposeTarget(baseName);
+    if (proposed) {
+      if (systemInput.value === '' || systemInput.value === lastProposed?.system) systemInput.value = proposed.system;
+      if (editionInput.value === '' || editionInput.value === lastProposed?.edition) editionInput.value = proposed.edition;
+      lastProposed = proposed;
+    }
+    say('');
+    renderPreview();
+  };
+
+  folder.addEventListener('change', () => {
+    const picked = [...(folder.files ?? [])] as File[];
+    const first = (picked[0] as File & { webkitRelativePath?: string })?.webkitRelativePath ?? '';
+    void readSelection(picked, first.includes('/') ? first.slice(0, first.indexOf('/')) : 'audit');
+  });
+  zip.addEventListener('change', () => {
+    const picked = [...(zip.files ?? [])] as File[];
+    const name = picked[0]?.name ?? 'audit.zip';
+    void readSelection(picked, name.toLowerCase().endsWith('.zip') ? name.slice(0, -4) : name);
+  });
+
+  const sendAll = async (withReplace: boolean): Promise<void> => {
+    if (busy || files.length === 0) return;
+    busy = true;
+    send.disabled = true;
+    try {
+      const init = await postUpload({ action: 'init', system: systemInput.value, edition: editionInput.value });
+      if (!init.res.ok || init.data?.['uploadId'] == null) {
+        say(fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(init.res.status) }));
+        return;
+      }
+      const uploadId = String(init.data['uploadId']);
+      if (init.data['exists'] === true && !withReplace) {
+        say(fill(u.uploadExists ?? 'Edition {slug} already exists.', { slug: editionInput.value }));
+        replace.hidden = false;
+        return;
+      }
+      replace.hidden = true;
+      let done = 0;
+      for (const file of files) {
+        say(fill(u.uploadSending ?? 'Sending {done}/{total}…', { done: String(done), total: String(files.length) }));
+        const sent = await postUpload({ action: 'file', uploadId, name: file.name, bytes: bytesToBase64(file.bytes) });
+        if (!sent.res.ok) {
+          const rawIssues = (sent.data as Record<string, unknown> | null)?.['issues'];
+          say(
+            Array.isArray(rawIssues)
+              ? (rawIssues as { path: string; message: string }[]).map((i) => `${i.path}: ${i.message}`).join('; ')
+              : fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(sent.res.status) }),
+          );
+          return;
+        }
+        done += 1;
+      }
+      const fin = await postUpload(withReplace ? { action: 'finalize', uploadId, replace: true } : { action: 'finalize', uploadId });
+      if (!fin.res.ok) {
+        if (fin.res.status === 409) {
+          say(fill(u.uploadExists ?? 'Edition {slug} already exists.', { slug: editionInput.value }));
+          replace.hidden = false;
+          return;
+        }
+        const listed = Array.isArray((fin.data as Record<string, unknown> | null)?.['issues'])
+          ? ((fin.data as Record<string, unknown>)['issues'] as { path: string; message: string }[]).map((i) => `${i.path}: ${i.message}`).join('; ')
+          : fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(fin.res.status) });
+        say(listed);
+        return;
+      }
+      say(fill(u.uploadStored ?? 'Stored: {slug}', { slug: String((fin.data as Record<string, unknown>)?.['slug'] ?? editionInput.value) }));
+      files = [];
+      issues = [];
+      lastProposed = null;
+      folder.value = '';
+      zip.value = '';
+      systemInput.value = '';
+      editionInput.value = '';
+      renderPreview();
+      reload();
+    } catch {
+      say(u.actionNetwork ?? 'Network error. Try again.');
+    } finally {
+      busy = false;
+      renderPreview();
+    }
+  };
+
+  send.addEventListener('click', () => void sendAll(false));
+  replace.addEventListener('click', () => void sendAll(true));
 }
