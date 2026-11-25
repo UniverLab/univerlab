@@ -334,6 +334,7 @@
 }
 .sign-field input {
   box-sizing: border-box;
+  min-height: 44px;
 }
 .sign-counts {
   display: flex;
@@ -378,10 +379,79 @@ button.sign-row-action:disabled {
   opacity: 0.5;
   cursor: wait;
 }
+button.sign-row-action {
+  line-height: inherit;
+}
+/* The shared table: the signing console and the control room read the
+ * same rhythm — left-aligned header and cells, row separators, cell
+ * padding. Moved here from the owner console so both pages share it. */
+.sign-owner h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.4rem;
+  margin: 2rem 0 0.5rem;
+}
+.sign-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.sign-table th,
+.sign-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.sign-table th {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
 .sign-table small {
   display: block;
   color: var(--ink-dim);
   font-size: 0.8rem;
+}
+/* The site's button styles: the primary accent button and its secondary
+ * outline sibling, shared by the signing console and the control room.
+ * Every control stays at least 44 px tall; the focus ring reads in day
+ * and night themes. */
+.sign-btn,
+.sign-btn-secondary {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  border-radius: 3px;
+  padding: 0.65rem 1.4rem;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.sign-btn {
+  color: var(--on-accent);
+  background: var(--accent);
+  border: none;
+}
+.sign-btn-secondary {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+.sign-btn:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+.sign-btn-secondary:not(:disabled):hover {
+  border-color: var(--accent);
+}
+.sign-btn:disabled,
+.sign-btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sign-btn:focus-visible,
+.sign-btn-secondary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* The control room: the glance cards share the signing console's raised
@@ -395,15 +465,34 @@ button.sign-row-action:disabled {
 @media (min-width: 64rem) {
   .admin-glance {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
   }
 }
 .admin-card {
+  display: flex;
+  flex-direction: column;
   background: var(--bg-raise);
   border: 1px solid var(--line);
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
   min-width: 0;
+}
+.admin-card > p:last-child {
+  margin-top: auto;
+}
+#admin-audits-section {
+  margin-top: 2rem;
+}
+.admin-table tr.admin-system th {
+  text-align: left;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.05rem;
+}
+.admin-sevs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
 }
 #admin-upload {
   margin-top: 2rem;
@@ -424,10 +513,62 @@ button.sign-row-action:disabled {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.1rem 0.5rem;
-  margin: 0.15rem 0 0 0.4rem;
+  margin: 0;
   background: var(--bg-raise);
   color: var(--ink);
   white-space: nowrap;
+}
+/* The file inputs stay in the form for keyboard and screen-reader users,
+ * but the browser-drawn "Choose File" button never shows: the visible
+ * controls are the site's own pick buttons. */
+.admin-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+#admin-upload.is-dragover {
+  border-color: var(--accent);
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+#admin-upload-target[hidden] {
+  display: none;
+}
+#admin-upload-progress {
+  width: 100%;
+  accent-color: var(--accent);
+}
+/* The upload preview: a compact definition list, never loose paragraphs. */
+.admin-preview {
+  display: grid;
+  gap: 0.3rem;
+  margin: 1rem 0;
+}
+.admin-preview > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+.admin-preview dt {
+  font-family: var(--font-serif);
+  min-width: 7rem;
+}
+.admin-preview dd {
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#admin-upload-errors {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+  overflow-wrap: anywhere;
 }
 .admin-sev-critical,
 .admin-sev-high {
@@ -441,6 +582,15 @@ button.sign-row-action:disabled {
   margin-left: auto;
 }
 @media (max-width: 40rem) {
+  .sign-row-action {
+    min-height: 44px;
+  }
+  .admin-glance,
+  .admin-card,
+  .admin-table {
+    min-width: 0;
+    max-width: 100%;
+  }
   .admin-table {
     overflow-x: clip;
   }

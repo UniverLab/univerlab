@@ -3,6 +3,7 @@
  *  part of this dictionary. */
 import { experiments } from './en-experiments.ts';
 import { sign } from './en-sign.ts';
+import { admin } from './en-admin.ts';
 
 export const en = {
   meta: {
@@ -1138,57 +1139,7 @@ export const en = {
     },
   },
   sign,
-  admin: {
-    title: 'Admin — UniverLab',
-    description: 'The owner control room: audits, signing requests and the booking service.',
-    h1: 'Control room',
-    intro: 'Every audit, the signing console and the booking service — owner only.',
-    auditsTitle: 'Audits',
-    auditsEmpty: 'No audits in the bucket yet.',
-    auditCounts: '{pub} public · {priv} private · {high} open high',
-    loadError: 'The panel could not be loaded. Try again.',
-    thAudit: 'Audit',
-    thDate: 'Date',
-    thVisibility: 'Visibility',
-    thFindings: 'Findings',
-    thDoi: 'DOI',
-    thActions: 'Actions',
-    visibilityPublic: 'public',
-    visibilityPrivate: 'private',
-    findingsLine: '{open} open · {total} total',
-    publish: 'Publish',
-    unpublish: 'Unpublish',
-    refused: 'Cannot publish: {reason}',
-    remove: 'Remove',
-    confirmRemove: 'Remove {slug} and every file with it? Click again to confirm.',
-    actionMissing: 'Audit not found.',
-    actionNetwork: 'Network error. Try again.',
-    actionFailed: 'Action failed ({status}).',
-    uploadTitle: 'New audit',
-    uploadChoose: 'Choose a folder or a .zip',
-    uploadHint: 'audit.json plus its assets/. One file travels per request.',
-    uploadSystem: 'System',
-    uploadEdition: 'Edition',
-    uploadSend: 'Upload the edition',
-    uploadReplace: 'Replace the existing edition',
-    uploadCancel: 'Cancel',
-    uploadStored: 'Stored: {slug}',
-    uploadExists: 'Edition {slug} already exists. Confirm to replace it.',
-    uploadInvalid: 'The document holds {n} problem(s).',
-    uploadEmpty: 'The selection holds no audit.json.',
-    uploadReading: 'Reading…',
-    uploadSending: 'Sending {done}/{total}…',
-    signTitle: 'Signing',
-    signIntro: 'Create requests and download the signed copies.',
-    signCounts: '{pending} pending · {signed} signed',
-    openSign: 'Open the signing console',
-    bookingTitle: 'Booking',
-    bookingIntro: 'The free first-call service.',
-    bookingOk: 'answering',
-    bookingDown: 'not answering',
-    bookingLine: 'Booking service: {status}.',
-    openBooking: 'Open the booking service',
-  },
+  admin,
 };
 
 export type Dict = typeof en;

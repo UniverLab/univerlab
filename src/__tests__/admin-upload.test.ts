@@ -29,7 +29,9 @@ import {
   deriveEdition,
   deriveSystem,
   forcePrivate,
+  formatEdition,
   parseZipCentralDirectory,
+  proposeAuditTarget,
   proposeTarget,
   unwrapZipRoot,
   validateUploadEntries,
@@ -37,6 +39,7 @@ import {
   MAX_FILES,
   type UploadFile,
 } from '../lib/admin/upload';
+import { formatBytes } from '../lib/audit/util';
 
 const FIXTURE = resolve(__dirname, 'fixtures', 'audit-contract', 'audit.json');
 const ASSETS = resolve(__dirname, 'fixtures', 'audit-contract');
@@ -897,6 +900,60 @@ describe('failed uploads leave no staging', () => {
     expect(fin.status).toBe(500);
     expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
     expect(await listAdminAudits(bucket)).toEqual([]);
+  });
+
+  it('proposes <system>-<YYYY-MM> editions from the issue date', () => {
+    expect(formatEdition('canopy', '2026-03-15')).toBe('canopy-2026-03');
+    expect(formatEdition('canopy', '2025-11-02T10:00:00Z')).toBe('canopy-2025-11');
+    expect(formatEdition('canopy')).toBe('canopy');
+    expect(formatEdition('canopy', '')).toBe('canopy');
+    expect(formatEdition('canopy', 'not-a-date')).toBe('canopy');
+  });
+
+  it('prefers the title and the known systems over the folder name', () => {
+    // A folder like `canopy-audit-es` never becomes the system when the
+    // title or an existing system gives a better match.
+    expect(
+      proposeAuditTarget({ baseName: 'canopy-audit-es', title: 'Canopy', issued: '2026-03-15', existingSystems: ['canopy'] }),
+    ).toEqual({ system: 'canopy', edition: 'canopy-2026-03' });
+    // Title alone slugifies to the system when nothing is known yet.
+    expect(proposeAuditTarget({ baseName: 'misc', title: 'New System', issued: '2025-11-02' })).toEqual({
+      system: 'new-system',
+      edition: 'new-system-2025-11',
+    });
+    // A known system inside the folder name beats the raw folder segment.
+    expect(proposeAuditTarget({ baseName: 'canopy-audit-es', existingSystems: ['canopy'] })).toEqual({
+      system: 'canopy',
+      edition: 'canopy',
+    });
+    // A bare folder name with generic suffixes never becomes the system
+    // when there is no better match: strip the suffixes.
+    expect(proposeAuditTarget({ baseName: 'canopy-audit-es', issued: '2026-03-15' })).toEqual({
+      system: 'canopy',
+      edition: 'canopy-2026-03',
+    });
+    expect(proposeAuditTarget({ baseName: 'canopy-audit-en' })).toEqual({
+      system: 'canopy',
+      edition: 'canopy',
+    });
+    // Without title or date the folder rule still applies.
+    expect(proposeAuditTarget({ baseName: 'canopy-2026-03' })).toEqual({ system: 'canopy', edition: 'canopy-2026-03' });
+    expect(proposeAuditTarget({ baseName: '!!!' })).toBeNull();
+  });
+
+  it('formats bytes with the locale decimal separator when asked', () => {
+    expect(formatBytes(512)).toBe('512 B');
+    expect(formatBytes(1572864)).toBe('1.5 MB');
+    expect(formatBytes(1572864, 'en')).toBe('1.5 MB');
+    expect(formatBytes(1572864, 'es')).toBe('1,5 MB');
+  });
+
+  it('keys every upload problem with a stable code', async () => {
+    const issues = await validateUploadEntries([], uploadDoc('2026-01-01'));
+    const missing = issues.find((i) => i.code === 'audit-missing');
+    expect(missing).toBeDefined();
+    expect(missing?.path).toBe('audit.json');
+    expect(missing?.params).toBeUndefined();
   });
 
   it('deletes the staging when the replace is refused as existing', async () => {

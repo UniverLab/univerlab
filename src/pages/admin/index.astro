@@ -54,7 +54,12 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
           data-visibility-public={a.visibilityPublic}
           data-visibility-private={a.visibilityPrivate}
           data-findings-line={a.findingsLine}
-          data-audit-counts={a.auditCounts}
+          data-audit-counts-pub-one={a.auditCountsPubOne}
+          data-audit-counts-pub-other={a.auditCountsPubOther}
+          data-audit-counts-priv-one={a.auditCountsPrivOne}
+          data-audit-counts-priv-other={a.auditCountsPrivOther}
+          data-audit-counts-high-one={a.auditCountsHighOne}
+          data-audit-counts-high-other={a.auditCountsHighOther}
           data-th-audit={a.thAudit}
           data-th-date={a.thDate}
           data-th-visibility={a.thVisibility}
@@ -85,31 +90,62 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
       class="admin-card"
       data-upload-system={a.uploadSystem}
       data-upload-edition={a.uploadEdition}
+      data-upload-folder={a.uploadFolder}
+      data-upload-zip={a.uploadZip}
       data-upload-send={a.uploadSend}
       data-upload-replace={a.uploadReplace}
       data-upload-cancel={a.uploadCancel}
+      data-upload-cancelled={a.uploadCancelled}
       data-upload-stored={a.uploadStored}
       data-upload-exists={a.uploadExists}
-      data-upload-invalid={a.uploadInvalid}
+      data-upload-invalid-one={a.uploadInvalidOne}
+      data-upload-invalid-other={a.uploadInvalidOther}
+      data-upload-issues-one={a.uploadIssuesOne}
+      data-upload-issues-other={a.uploadIssuesOther}
+      data-upload-files-one={a.uploadFilesOne}
+      data-upload-files-other={a.uploadFilesOther}
+      data-upload-preview-title={a.uploadPreviewTitle}
+      data-upload-preview-client={a.uploadPreviewClient}
+      data-upload-preview-language={a.uploadPreviewLanguage}
+      data-upload-preview-version={a.uploadPreviewVersion}
+      data-upload-preview-findings={a.uploadPreviewFindings}
+      data-upload-preview-files={a.uploadPreviewFiles}
       data-upload-empty={a.uploadEmpty}
       data-upload-reading={a.uploadReading}
       data-upload-sending={a.uploadSending}
+      data-severity-critical={t.audit.severity.critical}
+      data-severity-high={t.audit.severity.high}
+      data-severity-medium={t.audit.severity.medium}
+      data-severity-low={t.audit.severity.low}
+      data-severity-info={t.audit.severity.info}
     >
       <h2>{a.uploadTitle}</h2>
       <p>{a.uploadHint}</p>
-      <p class="sign-field">
-        <label>{a.uploadChoose} <input type="file" id="admin-upload-folder" webkitdirectory /></label>
-        <label>.zip <input type="file" id="admin-upload-zip" accept=".zip" /></label>
-      </p>
-      <div id="admin-upload-preview" hidden></div>
-      <p class="sign-field">
-        <label>{a.uploadSystem} <input type="text" id="admin-upload-system" autocomplete="off" /></label>
-        <label>{a.uploadEdition} <input type="text" id="admin-upload-edition" autocomplete="off" /></label>
-      </p>
       <p>
-        <button type="button" id="admin-upload-send" disabled>{a.uploadSend}</button>
-        <button type="button" id="admin-upload-replace" hidden>{a.uploadReplace}</button>
+        <button type="button" id="admin-upload-pick-folder" class="sign-btn-secondary">{a.uploadFolder}</button>
+        <button type="button" id="admin-upload-pick-zip" class="sign-btn-secondary">{a.uploadZip}</button>
       </p>
+      <input type="file" id="admin-upload-folder" class="admin-file-input" webkitdirectory tabindex="-1" aria-hidden="true" />
+      <input type="file" id="admin-upload-zip" class="admin-file-input" accept=".zip" tabindex="-1" aria-hidden="true" />
+      <div id="admin-upload-preview" hidden></div>
+      <div id="admin-upload-target" hidden>
+        <p class="sign-field">
+          <label for="admin-upload-system">{a.uploadSystem}</label>
+          <input type="text" id="admin-upload-system" list="admin-upload-systems" autocomplete="off" />
+          <datalist id="admin-upload-systems"></datalist>
+        </p>
+        <p class="sign-field">
+          <label for="admin-upload-edition">{a.uploadEdition}</label>
+          <input type="text" id="admin-upload-edition" autocomplete="off" />
+        </p>
+      </div>
+      <progress id="admin-upload-progress" hidden max="100" value="0"></progress>
+      <p>
+        <button type="button" id="admin-upload-send" class="sign-btn" disabled>{a.uploadSend}</button>
+        <button type="button" id="admin-upload-replace" class="sign-btn-secondary" hidden>{a.uploadReplace}</button>
+        <button type="button" id="admin-upload-cancel" class="sign-btn-secondary" hidden>{a.uploadCancel}</button>
+      </p>
+      <ul id="admin-upload-errors" hidden></ul>
       <p class="admin-note" id="admin-upload-note" role="status"></p>
     </section>
   </section>
@@ -123,7 +159,12 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         visibilityPublic: el?.dataset['visibilityPublic'] ?? '',
         visibilityPrivate: el?.dataset['visibilityPrivate'] ?? '',
         findingsLine: el?.dataset['findingsLine'] ?? '',
-        auditCounts: el?.dataset['auditCounts'] ?? '',
+        auditCountsPubOne: el?.dataset['auditCountsPubOne'] ?? '',
+        auditCountsPubOther: el?.dataset['auditCountsPubOther'] ?? '',
+        auditCountsPrivOne: el?.dataset['auditCountsPrivOne'] ?? '',
+        auditCountsPrivOther: el?.dataset['auditCountsPrivOther'] ?? '',
+        auditCountsHighOne: el?.dataset['auditCountsHighOne'] ?? '',
+        auditCountsHighOther: el?.dataset['auditCountsHighOther'] ?? '',
         thAudit: el?.dataset['thAudit'] ?? '',
         thDate: el?.dataset['thDate'] ?? '',
         thVisibility: el?.dataset['thVisibility'] ?? '',
@@ -149,12 +190,29 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         uploadSend: up?.dataset['uploadSend'] ?? '',
         uploadReplace: up?.dataset['uploadReplace'] ?? '',
         uploadCancel: up?.dataset['uploadCancel'] ?? '',
+        uploadCancelled: up?.dataset['uploadCancelled'] ?? '',
         uploadStored: up?.dataset['uploadStored'] ?? '',
         uploadExists: up?.dataset['uploadExists'] ?? '',
-        uploadInvalid: up?.dataset['uploadInvalid'] ?? '',
+        uploadInvalidOne: up?.dataset['uploadInvalidOne'] ?? '',
+        uploadInvalidOther: up?.dataset['uploadInvalidOther'] ?? '',
+        uploadIssuesOne: up?.dataset['uploadIssuesOne'] ?? '',
+        uploadIssuesOther: up?.dataset['uploadIssuesOther'] ?? '',
+        uploadFilesOne: up?.dataset['uploadFilesOne'] ?? '',
+        uploadFilesOther: up?.dataset['uploadFilesOther'] ?? '',
+        uploadPreviewTitle: up?.dataset['uploadPreviewTitle'] ?? '',
+        uploadPreviewClient: up?.dataset['uploadPreviewClient'] ?? '',
+        uploadPreviewLanguage: up?.dataset['uploadPreviewLanguage'] ?? '',
+        uploadPreviewVersion: up?.dataset['uploadPreviewVersion'] ?? '',
+        uploadPreviewFindings: up?.dataset['uploadPreviewFindings'] ?? '',
+        uploadPreviewFiles: up?.dataset['uploadPreviewFiles'] ?? '',
         uploadEmpty: up?.dataset['uploadEmpty'] ?? '',
         uploadReading: up?.dataset['uploadReading'] ?? '',
         uploadSending: up?.dataset['uploadSending'] ?? '',
+        severityCritical: up?.dataset['severityCritical'] ?? '',
+        severityHigh: up?.dataset['severityHigh'] ?? '',
+        severityMedium: up?.dataset['severityMedium'] ?? '',
+        severityLow: up?.dataset['severityLow'] ?? '',
+        severityInfo: up?.dataset['severityInfo'] ?? '',
       },
       { bookingApi: document.getElementById('admin-booking-status')?.dataset['bookingApi'] ?? '' },
     );

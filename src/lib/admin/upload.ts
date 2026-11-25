@@ -12,6 +12,11 @@ export const ADMIN_UPLOAD_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 export interface UploadIssue {
   path: string;
   message: string;
+  /** Stable machine key for the problem kind (e.g. `asset-missing`),
+   *  so clients can style or group problems without parsing English. */
+  code?: string;
+  /** The values the message interpolates, keyed by placeholder. */
+  params?: Record<string, string | number>;
 }
 
 /** The system a slug belongs to: the slug minus a trailing -YYYY-MM[-DD]
@@ -34,6 +39,83 @@ export function proposeTarget(name: string): { system: string; edition: string }
   const base = name.trim().replace(/\/+$/, '');
   if (!ADMIN_UPLOAD_SLUG_RE.test(base)) return null;
   return { system: deriveSystem(base), edition: deriveEdition(base) };
+}
+
+/** The edition for a system: `<system>-<YYYY-MM>` from the document's
+ *  issue date, or the bare system when there is no usable date. */
+export function formatEdition(system: string, issued?: string): string {
+  const m = typeof issued === 'string' ? issued.match(/^(\d{4})-(0[1-9]|1[0-2])/) : null;
+  if (m) return `${system}-${m[1]}-${m[2]}`;
+  return system;
+}
+
+/** Slugify free text the way a title becomes a system candidate:
+ *  lowercase, runs of anything else folded to one dash, trimmed. */
+function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function stripGenericSuffixes(slug: string): string {
+  return slug
+    .replace(/-\d{4}-\d{2}(-\d{2})?$/, '')
+    .replace(/-audit$/, '')
+    .replace(/-(es|en)$/, '')
+    .replace(/-audit$/, '');
+}
+
+export interface ProposeAuditTargetInput {
+  baseName: string;
+  title?: string;
+  issued?: string;
+  existingSystems?: string[];
+}
+
+/** Propose the system/edition pair for a picked folder or .zip: the title
+ *  and the already-known systems win over the folder name, so a folder
+ *  like `canopy-audit-es` never becomes the system when the document's
+ *  title or an existing system gives a better match. The edition follows
+ *  as `<system>-<YYYY-MM>` from the issue date. */
+export function proposeAuditTarget(input: ProposeAuditTargetInput): { system: string; edition: string } | null {
+  const base = input.baseName.trim().replace(/\/+$/, '');
+  const existing = (input.existingSystems ?? []).filter((s) => ADMIN_UPLOAD_SLUG_RE.test(s));
+  const normTitle = typeof input.title === 'string' ? input.title.toLowerCase() : '';
+  // An existing system named by the title wins: exact slug match first,
+  // then a system the title merely contains.
+  if (typeof input.title === 'string' && input.title !== '') {
+    const slug = stripGenericSuffixes(slugifyTitle(input.title));
+    if (slug !== '' && existing.includes(slug) && ADMIN_UPLOAD_SLUG_RE.test(slug)) {
+      return { system: slug, edition: formatEdition(slug, input.issued) };
+    }
+    const contained = existing.find((s) => s.length >= 2 && normTitle.includes(s.toLowerCase()));
+    if (contained) return { system: contained, edition: formatEdition(contained, input.issued) };
+    if (slug !== '' && ADMIN_UPLOAD_SLUG_RE.test(slug)) {
+      return { system: slug, edition: formatEdition(slug, input.issued) };
+    }
+  }
+  // Next an existing system the folder name contains — still better than
+  // a raw folder segment like `canopy-audit-es`.
+  const normBase = base.toLowerCase();
+  const inBase = existing.find((s) => s.length >= 2 && normBase.includes(s.toLowerCase()));
+  if (inBase) return { system: inBase, edition: formatEdition(inBase, input.issued) };
+  const fallback = proposeTarget(base);
+  if (!fallback) return null;
+  // A raw folder name like `canopy-audit-es` carries generic suffixes
+  // that are never a system name; strip them before proposing, the same
+  // way a title is cleaned.
+  const cleanedSystem = stripGenericSuffixes(slugifyTitle(fallback.system));
+  const system =
+    cleanedSystem !== '' && ADMIN_UPLOAD_SLUG_RE.test(cleanedSystem) ? cleanedSystem : fallback.system;
+  if (input.issued !== undefined) {
+    return { system, edition: formatEdition(system, input.issued) };
+  }
+  if (system !== fallback.system) {
+    const edition = stripGenericSuffixes(slugifyTitle(deriveEdition(base.replace(/\/+$/, ''))));
+    return { system, edition: edition !== '' && ADMIN_UPLOAD_SLUG_RE.test(edition) ? edition : system };
+  }
+  return fallback;
 }
 
 type Doc = Record<string, unknown>;
@@ -80,50 +162,85 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 export async function validateUploadEntries(files: UploadFile[], doc: unknown): Promise<UploadIssue[]> {
   const issues: UploadIssue[] = [];
   if (!isRecord(doc)) {
-    issues.push({ path: 'audit.json', message: 'audit.json is not a JSON object' });
+    issues.push({ path: 'audit.json', message: 'audit.json is not a JSON object', code: 'audit-not-object' });
     return issues;
   }
   if (files.length > MAX_FILES) {
-    issues.push({ path: 'audit.json', message: `upload holds ${files.length} files but at most ${MAX_FILES} are allowed` });
+    issues.push({
+      path: 'audit.json',
+      message: `upload holds ${files.length} files but at most ${MAX_FILES} are allowed`,
+      code: 'too-many-files',
+      params: { count: files.length, max: MAX_FILES },
+    });
   }
   let total = 0;
   for (const f of files) {
     total += f.bytes.length;
     if (f.bytes.length > MAX_FILE) {
-      issues.push({ path: `$.assets: '${f.name}'`, message: `file '${f.name}' is ${f.bytes.length} bytes but at most ${MAX_FILE} are allowed` });
+      issues.push({
+        path: `$.assets: '${f.name}'`,
+        message: `file '${f.name}' is ${f.bytes.length} bytes but at most ${MAX_FILE} are allowed`,
+        code: 'file-too-large',
+        params: { name: f.name, bytes: f.bytes.length, max: MAX_FILE },
+      });
     }
   }
   if (total > MAX_TOTAL) {
-    issues.push({ path: 'audit.json', message: `upload is ${total} bytes in total but at most ${MAX_TOTAL} are allowed` });
+    issues.push({
+      path: 'audit.json',
+      message: `upload is ${total} bytes in total but at most ${MAX_TOTAL} are allowed`,
+      code: 'total-too-large',
+      params: { bytes: total, max: MAX_TOTAL },
+    });
   }
   for (const f of files) {
     if (uploadNameEscapes(f.name)) {
-      issues.push({ path: `$.assets: '${f.name}'`, message: `file name '${f.name}' escapes the audit folder` });
+      issues.push({
+        path: `$.assets: '${f.name}'`,
+        message: `file name '${f.name}' escapes the audit folder`,
+        code: 'name-escapes',
+        params: { name: f.name },
+      });
     }
   }
   const paths = cataloguePaths(doc);
   if (paths === null) {
-    issues.push({ path: '$.assets', message: 'the asset catalogue cannot be read' });
+    issues.push({ path: '$.assets', message: 'the asset catalogue cannot be read', code: 'catalogue-unreadable' });
     return issues;
   }
   for (const p of paths) {
     if (uploadNameEscapes(p)) {
-      issues.push({ path: '$.assets', message: `asset path '${p}' escapes the audit folder` });
+      issues.push({
+        path: '$.assets',
+        message: `asset path '${p}' escapes the audit folder`,
+        code: 'asset-escapes',
+        params: { path: p },
+      });
     }
   }
   const byName = new Map(files.map((f) => [f.name, f]));
   if (!byName.has('audit.json')) {
-    issues.push({ path: 'audit.json', message: 'audit.json is missing from the upload' });
+    issues.push({ path: 'audit.json', message: 'audit.json is missing from the upload', code: 'audit-missing' });
   }
   for (const p of new Set(paths)) {
     if (!byName.has(p)) {
-      issues.push({ path: '$.assets', message: `asset file '${p}' is missing from the upload` });
+      issues.push({
+        path: '$.assets',
+        message: `asset file '${p}' is missing from the upload`,
+        code: 'asset-missing',
+        params: { path: p },
+      });
     }
   }
   const catalogued = new Set([...paths, 'audit.json']);
   for (const f of files) {
     if (!catalogued.has(f.name)) {
-      issues.push({ path: `$.assets: '${f.name}'`, message: `file '${f.name}' is not in the catalogue` });
+      issues.push({
+        path: `$.assets: '${f.name}'`,
+        message: `file '${f.name}' is not in the catalogue`,
+        code: 'catalogue-extra',
+        params: { name: f.name },
+      });
     }
   }
   if (!Array.isArray(doc['assets'])) return issues;
@@ -141,6 +258,8 @@ export async function validateUploadEntries(files: UploadFile[], doc: unknown): 
         issues.push({
           path: `$.assets[${i}].bytes`,
           message: `asset file '${a['path']}' is ${file.bytes.length} bytes, catalogue says ${a['bytes']}`,
+          code: 'bytes-mismatch',
+          params: { name: a['path'], bytes: file.bytes.length, expected: a['bytes'] },
         });
       }
     }
@@ -150,6 +269,8 @@ export async function validateUploadEntries(files: UploadFile[], doc: unknown): 
         issues.push({
           path: `$.assets[${i}].sha256`,
           message: `asset file '${a['path']}' hash does not match the catalogue`,
+          code: 'hash-mismatch',
+          params: { name: a['path'] },
         });
       }
     }

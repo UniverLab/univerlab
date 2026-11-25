@@ -8,6 +8,19 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { webcrypto } from 'node:crypto';
+import { TextDecoder as NodeTextDecoder } from 'node:util';
+import { formatBytes } from '../lib/audit/util';
+
+// The jsdom sandbox here ships no TextDecoder, no SubtleCrypto and no
+// File.arrayBuffer; the panel client only needs them at event time, so
+// the test scope lends the Node ones (jsdom's window.crypto is a
+// getter-only accessor, hence the redefine) and hands each File its bytes.
+const testGlobals = globalThis as Record<string, unknown>;
+if (typeof testGlobals['TextDecoder'] === 'undefined') testGlobals['TextDecoder'] = NodeTextDecoder;
+if (typeof (testGlobals['crypto'] as { subtle?: unknown } | undefined)?.subtle === 'undefined') {
+  Object.defineProperty(testGlobals, 'crypto', { value: webcrypto, configurable: true, writable: true });
+}
 
 // Minimal fetch-API stand-ins: the jsdom sandbox ships no Request or
 // Response, and the admin handlers only need headers, a JSON body, and a
@@ -62,7 +75,7 @@ import {
   type AdminDeps,
   type AdminEnv,
 } from '../lib/admin/handlers';
-import { initAdminPage, type AdminClientStrings } from '../lib/admin/panel-client';
+import { initAdminPage, type AdminClientStrings, type AdminUploadStrings } from '../lib/admin/panel-client';
 import type { AdminR2Bucket } from '../lib/admin/summary';
 
 const FIXTURE = resolve(__dirname, 'fixtures', 'audit-contract', 'audit.json');
@@ -147,12 +160,17 @@ function envOf(bucket: AdminR2Bucket): AdminEnv {
   return { AUDITS: bucket, SIGN_OWNER_EMAILS: OWNER };
 }
 
-function strings(): AdminClientStrings {
+function strings(): AdminClientStrings & Partial<AdminUploadStrings> {
   return {
     visibilityPublic: 'public',
     visibilityPrivate: 'private',
     findingsLine: '{open}/{total}',
-    auditCounts: '{pub}/{priv}/{high}',
+    auditCountsPubOne: '{n} pub1',
+    auditCountsPubOther: '{n} pubs',
+    auditCountsPrivOne: '{n} priv1',
+    auditCountsPrivOther: '{n} privs',
+    auditCountsHighOne: '{n} high1',
+    auditCountsHighOther: '{n} highs',
     thAudit: 'Audit',
     thDate: 'Date',
     thVisibility: 'Visibility',
@@ -173,6 +191,24 @@ function strings(): AdminClientStrings {
     actionMissing: 'missing',
     actionNetwork: 'network',
     actionFailed: 'failed {status}',
+    uploadCancelled: 'cancelled',
+    uploadInvalidOne: '1 invalid problem',
+    uploadInvalidOther: '{n} invalid problems',
+    uploadIssuesOne: '1 refusal problem',
+    uploadIssuesOther: '{n} refusal problems',
+    uploadFilesOne: '{n} file',
+    uploadFilesOther: '{n} files',
+    uploadPreviewTitle: 'Title',
+    uploadPreviewClient: 'Client',
+    uploadPreviewLanguage: 'Language',
+    uploadPreviewVersion: 'Version',
+    uploadPreviewFindings: 'Findings',
+    uploadPreviewFiles: 'Files',
+    severityCritical: 'crit',
+    severityHigh: 'high',
+    severityMedium: 'med',
+    severityLow: 'low',
+    severityInfo: 'info',
   };
 }
 
@@ -183,7 +219,25 @@ function mount(): void {
     '<p id="admin-error" hidden></p>' +
     '<p id="admin-empty" hidden></p>' +
     '<p id="admin-sign-counts"></p>' +
-    '<p id="admin-booking-status" data-booking-api="https://booking.univerlab.org"></p>';
+    '<p id="admin-booking-status" data-booking-api="https://booking.univerlab.org"></p>' +
+    '<section id="admin-upload">' +
+    '<input type="file" id="admin-upload-folder" />' +
+    '<input type="file" id="admin-upload-zip" />' +
+    '<button type="button" id="admin-upload-pick-folder"></button>' +
+    '<button type="button" id="admin-upload-pick-zip"></button>' +
+    '<div id="admin-upload-preview" hidden></div>' +
+    '<div id="admin-upload-target" hidden>' +
+    '<input type="text" id="admin-upload-system" list="admin-upload-systems" />' +
+    '<datalist id="admin-upload-systems"></datalist>' +
+    '<input type="text" id="admin-upload-edition" />' +
+    '</div>' +
+    '<progress id="admin-upload-progress" hidden max="100" value="0"></progress>' +
+    '<button type="button" id="admin-upload-send" disabled></button>' +
+    '<button type="button" id="admin-upload-replace" hidden></button>' +
+    '<button type="button" id="admin-upload-cancel" hidden></button>' +
+    '<ul id="admin-upload-errors" hidden></ul>' +
+    '<p id="admin-upload-note"></p>' +
+    '</section>';
 }
 
 function flush(rounds = 8): Promise<void> {
@@ -447,8 +501,9 @@ describe('admin panel actions over both layouts', () => {
     await flush();
 
     // Five public rows, one private row; every fixture row but sys/ed-1
-    // keeps one open critical finding, so the glance names 5/1/5.
-    expect(document.getElementById('admin-audits-counts')?.textContent).toBe('5/1/5');
+    // keeps one open critical finding, and the glance picks the singular
+    // form only for the single private count.
+    expect(document.getElementById('admin-audits-counts')?.textContent).toBe('5 pubs · 1 priv1 · 5 highs');
 
     const row = rowBySlug('legacy') as HTMLTableRowElement;
     const time = row.querySelector('time');
@@ -475,4 +530,201 @@ describe('admin panel actions over both layouts', () => {
     expect(buttons?.querySelector('.admin-publish')).toBe(cellsOf(row).toggle);
     expect(row.querySelector('.admin-remove')).toBe(cellsOf(row).remove);
   });
+
+  it('previews a selection as a definition list and reveals the target', async () => {
+    bridgeFetch(seedBucket());
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+
+    const preview = document.getElementById('admin-upload-preview') as HTMLElement;
+    expect(preview.hidden).toBe(false);
+    const dl = preview.querySelector('dl.admin-preview');
+    expect(dl).not.toBeNull();
+    // Compact summary rows, never loose paragraphs.
+    expect(preview.querySelectorAll('dl > div').length).toBeGreaterThan(0);
+    expect(preview.querySelector('p')).toBeNull();
+    const terms = [...preview.querySelectorAll('dt')].map((dt) => dt.textContent);
+    expect(terms).toEqual(['Title', 'Client', 'Language', 'Version', 'Findings', 'Files']);
+    const defs = [...preview.querySelectorAll('dd')].map((dd) => dd.textContent);
+    expect(defs[0]).toBe('Sys audit');
+    // Severities with findings share the table chips; empty severities
+    // are left out.
+    const sevs = preview.querySelector('.admin-sevs');
+    expect(sevs).not.toBeNull();
+    expect([...(sevs as HTMLElement).querySelectorAll('.admin-sev')].map((c) => c.textContent)).toEqual([
+      'crit 1',
+      'high 1',
+      'info 1',
+    ]);
+    const total = uploadSelection().total;
+    expect(defs[5]).toBe(
+      `6 files · ${formatBytes(total, document.documentElement.lang === '' ? undefined : document.documentElement.lang)}`,
+    );
+    // System and edition appear with the title proposal applied.
+    const target = document.getElementById('admin-upload-target') as HTMLElement;
+    expect(target.hidden).toBe(false);
+    expect(systemInput().value).toBe('sys');
+    expect(editionInput().value).toBe('sys-2026-03');
+    expect((document.getElementById('admin-upload-send') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('keeps the edition following the system until edited by hand', async () => {
+    bridgeFetch(seedBucket());
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+    expect(editionInput().value).toBe('sys-2026-03');
+
+    systemInput().value = 'sys2';
+    systemInput().dispatchEvent(new Event('input', { bubbles: true }));
+    expect(editionInput().value).toBe('sys2-2026-03');
+
+    editionInput().value = 'custom-edition';
+    editionInput().dispatchEvent(new Event('input', { bubbles: true }));
+    systemInput().value = 'sys3';
+    systemInput().dispatchEvent(new Event('input', { bubbles: true }));
+    expect(editionInput().value).toBe('custom-edition');
+  });
+
+  it('shows progress while uploading and cancels on request', async () => {
+    const fetchMock = bridgeUpload({ hangFiles: true });
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+
+    sendButton().click();
+    await flush(2);
+    const progress = document.getElementById('admin-upload-progress') as HTMLProgressElement;
+    const cancel = document.getElementById('admin-upload-cancel') as HTMLButtonElement;
+    expect(progress.hidden).toBe(false);
+    expect(progress.max).toBe(6);
+    expect(cancel.hidden).toBe(false);
+
+    cancel.click();
+    await flush();
+    expect(noteEl().textContent).toBe('cancelled');
+    expect(progress.hidden).toBe(true);
+    expect(cancel.hidden).toBe(true);
+    // The cancel click aborts the in-flight request and tells the server
+    // to drop the staging area for this upload id.
+    const bodies = fetchMock.mock.calls
+      .map((c) => String((c[1] as { body?: unknown } | undefined)?.body ?? ''))
+      .filter((b) => b.includes('"cancel"'));
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(bodies.some((b) => b.includes('"uploadId":"u1"'))).toBe(true);
+  });
+
+  it('lists refusal problems with the path of each one', async () => {
+    bridgeUpload({ refuseFiles: [{ path: '$.assets', message: 'asset file is missing' }] });
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+
+    sendButton().click();
+    await flush();
+    const errors = document.getElementById('admin-upload-errors') as HTMLElement;
+    expect(errors.hidden).toBe(false);
+    expect([...errors.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
+      '$.assets: asset file is missing',
+    ]);
+    expect(noteEl().textContent).toBe('1 refusal problem');
+  });
+
+  it('reads a dropped set of files like a picked folder', async () => {
+    bridgeFetch(seedBucket());
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    const section = document.getElementById('admin-upload') as HTMLElement;
+    const drop = new Event('drop', { bubbles: true });
+    Object.defineProperty(drop, 'dataTransfer', { value: { files: uploadSelection().files } });
+    section.dispatchEvent(drop);
+    await flush();
+
+    expect((document.getElementById('admin-upload-preview') as HTMLElement).hidden).toBe(false);
+    expect((document.getElementById('admin-upload-target') as HTMLElement).hidden).toBe(false);
+    expect(section.classList.contains('is-dragover')).toBe(false);
+  });
 });
+
+/** A valid upload selection: the contract fixture retitled, dated, and
+ *  read with its real asset bytes so catalogue checks pass. */
+function uploadSelection(): { files: File[]; total: number } {
+  const doc = fixtureDoc();
+  (doc['meta'] as Doc)['title'] = 'Sys audit';
+  doc['badge'] = { issued: '2026-03-15', scope: 'Panel actions fixture' };
+  const assetsDir = resolve(__dirname, 'fixtures', 'audit-contract');
+  const entries: { name: string; bytes: Uint8Array }[] = [
+    { name: 'audit.json', bytes: new Uint8Array(Buffer.from(`${JSON.stringify(doc)}\n`, 'utf8')) },
+    ...((doc['assets'] as { path: string }[]).map((a) => ({
+      name: a.path,
+      bytes: new Uint8Array(readFileSync(resolve(assetsDir, a.path))),
+    }))),
+  ];
+  const files = entries.map((e) => {
+    const copy = Uint8Array.from(e.bytes);
+    const file = new File([copy as unknown as BlobPart], e.name);
+    (file as unknown as Record<string, unknown>)['arrayBuffer'] = async () => Uint8Array.from(copy).buffer;
+    // A real folder pick reports `folder/<path>` here and the bare file
+    // name in `name`; jsdom keeps only the basename, so lend the path.
+    Object.defineProperty(file, 'webkitRelativePath', { value: `top/${e.name}`, configurable: true });
+    return file;
+  });
+  return { files, total: entries.reduce((n, e) => n + e.bytes.length, 0) };
+}
+
+function selectFiles(files: File[]): void {
+  const folder = document.getElementById('admin-upload-folder') as HTMLInputElement;
+  Object.defineProperty(folder, 'files', { value: files, configurable: true });
+  folder.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function systemInput(): HTMLInputElement {
+  return document.getElementById('admin-upload-system') as HTMLInputElement;
+}
+
+function editionInput(): HTMLInputElement {
+  return document.getElementById('admin-upload-edition') as HTMLInputElement;
+}
+
+function sendButton(): HTMLButtonElement {
+  return document.getElementById('admin-upload-send') as HTMLButtonElement;
+}
+
+function noteEl(): HTMLElement {
+  return document.getElementById('admin-upload-note') as HTMLElement;
+}
+
+/** Upload fetch stub: init/finalize succeed, file posts either hang until
+ *  the abort signal (cancel test) or refuse with the given issues. */
+function bridgeUpload(opts: {
+  hangFiles?: boolean;
+  refuseFiles?: { path: string; message: string }[];
+}): jest.Mock {
+  const fetchMock = jest.fn().mockImplementation(async (url: string, init?: { signal?: AbortSignal }) => {
+    const u = String(url);
+    if (u.endsWith('/health')) return { ok: true, status: 200, text: async () => 'ok' };
+    if (u.endsWith('/api/sign-request')) return { ok: true, status: 200, json: async () => ({ requests: [] }) };
+    if (u.endsWith('/api/admin-audits')) return { ok: true, status: 200, json: async () => ({ audits: [] }) };
+    if (u.includes('action=file')) {
+      if (opts.hangFiles) {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+        });
+      }
+      return { ok: false, status: 400, json: async () => ({ issues: opts.refuseFiles ?? [] }) };
+    }
+    return { ok: true, status: 200, json: async () => ({ uploadId: 'u1' }) };
+  });
+  (globalThis as Record<string, unknown>)['fetch'] = fetchMock;
+  return fetchMock;
+}

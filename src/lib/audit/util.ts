@@ -96,8 +96,11 @@ export function visibleAnnexes(doc: AuditDocument, published: boolean): AuditAnn
   return published ? all.filter(annexIsPublic) : all;
 }
 
-/** Human file size: `0 B`, `512 B`, `1.5 KB`, `200 MB`. */
-export function formatBytes(bytes: number): string {
+/** Human file size: `0 B`, `512 B`, `1.5 KB`, `200 MB` in English,
+ *  `0,9 MB` in Spanish — the decimal separator follows the locale through
+ *  `Intl.NumberFormat`, so the control-room preview reads right in both
+ *  languages. */
+export function formatBytes(bytes: number, locale?: string): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
   if (bytes < 1024) return `${Math.floor(bytes)} B`;
   const units = ['KB', 'MB', 'GB', 'TB'];
@@ -108,7 +111,16 @@ export function formatBytes(bytes: number): string {
     unit += 1;
   }
   const rounded = Math.round(value * 10) / 10;
-  return `${Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)} ${units[unit]}`;
+  const fractionDigits = Number.isInteger(rounded) ? 0 : 1;
+  const digits =
+    locale === undefined
+      ? rounded.toFixed(fractionDigits)
+      : new Intl.NumberFormat(locale, {
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: 1,
+          useGrouping: false,
+        }).format(rounded);
+  return `${digits} ${units[unit]}`;
 }
 
 export interface ProseCtx {
