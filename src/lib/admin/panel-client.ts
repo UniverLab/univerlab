@@ -5,6 +5,7 @@
 // in from R2.
 import { validateAuditDocument } from '../audit/validate-document';
 import { formatBytes } from '../audit/util';
+import { coarseClientClass } from './analytics';
 import {
   forcePrivate,
   formatEdition,
@@ -46,6 +47,27 @@ export interface AdminClientStrings {
   actionMissing: string;
   actionNetwork: string;
   actionFailed: string;
+}
+
+/** The analytics section strings: every user-visible word of the
+ *  funnel/installs tables rides in the page dataset so both languages
+ *  share this module. */
+export interface AdminAnalyticsStrings {
+  analyticsUnconfigured: string;
+  analyticsEmpty: string;
+  analyticsSummary: string;
+  analyticsFunnelTitle: string;
+  analyticsInstallsTitle: string;
+  thEvent: string;
+  thSource: string;
+  thMedium: string;
+  thCampaign: string;
+  thTool: string;
+  thClient: string;
+  thCount: string;
+  analyticsClientInstaller: string;
+  analyticsClientBrowser: string;
+  analyticsClientOther: string;
 }
 
 /** The "New audit" intake strings: a partial because older pages only
@@ -188,7 +210,7 @@ function pluralCount(one: string | undefined, other: string | undefined, n: numb
 
 /** Wire the control room. Bails without throwing when the table is absent. */
 export function initAdminPage(
-  s: AdminClientStrings & Partial<AdminUploadStrings>,
+  s: AdminClientStrings & Partial<AdminUploadStrings> & Partial<AdminAnalyticsStrings>,
   opts: { bookingApi: string },
 ): void {
   const list = document.getElementById('admin-audits');
@@ -441,6 +463,7 @@ export function initAdminPage(
   void loadAudits();
   void loadSignCounts();
   void loadBooking();
+  initAnalytics(s);
   void initUpload(
     s,
     () => {
@@ -448,6 +471,151 @@ export function initAdminPage(
     },
     () => knownSystems,
   );
+}
+
+interface FunnelPayloadRow {
+  event?: unknown;
+  utm_source?: unknown;
+  utm_medium?: unknown;
+  utm_campaign?: unknown;
+  count?: unknown;
+}
+
+interface InstallPayloadRow {
+  tool?: unknown;
+  clientClass?: unknown;
+  count?: unknown;
+}
+
+/** One analytics window: fetch the aggregates and render both tables with
+ *  textContent only (UTM values ride in from visitors). Unconfigured or
+ *  empty answers show the notice string — never zero-filled rows. */
+export async function renderAnalytics(s: Pick<AdminClientStrings, 'loadError'> & Partial<AdminAnalyticsStrings>, win: number): Promise<void> {
+  const section = document.getElementById('admin-analytics');
+  if (!section) return;
+  const notice = document.getElementById('admin-analytics-notice');
+  const funnelTable = document.getElementById('admin-analytics-funnel-table');
+  const installsTable = document.getElementById('admin-analytics-installs-table');
+  const funnelBody = document.getElementById('admin-analytics-funnel');
+  const installsBody = document.getElementById('admin-analytics-installs');
+  const glance = document.getElementById('admin-analytics-counts');
+  if (!notice || !funnelBody || !installsBody) return;
+  const say = (text: string): void => {
+    notice.textContent = text;
+    notice.hidden = text === '';
+  };
+  const showTables = (show: boolean): void => {
+    if (funnelTable) funnelTable.hidden = !show;
+    if (installsTable) installsTable.hidden = !show;
+    if (!show && glance) glance.textContent = '';
+  };
+  let res: Response;
+  try {
+    res = await fetch(`/api/admin-analytics?window=${win}`);
+  } catch {
+    say(s.loadError);
+    showTables(false);
+    return;
+  }
+  if (!res.ok) {
+    say(s.loadError);
+    showTables(false);
+    return;
+  }
+  const data = await readJson(res);
+  if (!data || typeof data !== 'object') {
+    say(s.loadError);
+    showTables(false);
+    return;
+  }
+  if ((data as Record<string, unknown>)['state'] === 'unconfigured' || (data as Record<string, unknown>)['ok'] === false) {
+    say(s.analyticsUnconfigured ?? 'Analytics is not configured.');
+    showTables(false);
+    return;
+  }
+  const funnel = Array.isArray((data as Record<string, unknown>)['funnel'])
+    ? ((data as Record<string, unknown>)['funnel'] as FunnelPayloadRow[])
+    : [];
+  const installs = Array.isArray((data as Record<string, unknown>)['installs'])
+    ? ((data as Record<string, unknown>)['installs'] as InstallPayloadRow[])
+    : [];
+  if (funnel.length === 0 && installs.length === 0) {
+    say(s.analyticsEmpty ?? 'No analytics yet.');
+    showTables(false);
+    return;
+  }
+  say('');
+  const cell = (text: string): HTMLTableCellElement => {
+    const td = document.createElement('td');
+    td.textContent = text;
+    return td;
+  };
+  funnelBody.textContent = '';
+  let funnelTotal = 0;
+  for (const row of funnel) {
+    const count = typeof row.count === 'number' && Number.isFinite(row.count) ? row.count : 0;
+    funnelTotal += count;
+    const tr = document.createElement('tr');
+    tr.append(
+      cell(typeof row.event === 'string' ? row.event : ''),
+      cell(typeof row.utm_source === 'string' && row.utm_source !== '' ? row.utm_source : '—'),
+      cell(typeof row.utm_medium === 'string' && row.utm_medium !== '' ? row.utm_medium : '—'),
+      cell(typeof row.utm_campaign === 'string' && row.utm_campaign !== '' ? row.utm_campaign : '—'),
+      cell(String(count)),
+    );
+    funnelBody.appendChild(tr);
+  }
+  // Installs group by tool and coarse client class: installer CLIs
+  // together, browsers together, everything else together.
+  const coarseName = (c: string): string => {
+    if (c === 'installer') return s.analyticsClientInstaller ?? 'installer';
+    if (c === 'browser') return s.analyticsClientBrowser ?? 'browser';
+    return s.analyticsClientOther ?? 'other';
+  };
+  const grouped = new Map<string, { tool: string; coarse: 'installer' | 'browser' | 'other'; count: number }>();
+  for (const row of installs) {
+    const count = typeof row.count === 'number' && Number.isFinite(row.count) ? row.count : 0;
+    const tool = typeof row.tool === 'string' ? row.tool : '';
+    const coarse = coarseClientClass(typeof row.clientClass === 'string' ? row.clientClass : '');
+    const key = JSON.stringify([tool, coarse]);
+    const prev = grouped.get(key);
+    grouped.set(key, { tool, coarse, count: (prev?.count ?? 0) + count });
+  }
+  installsBody.textContent = '';
+  let installsTotal = 0;
+  for (const entry of [...grouped.values()].sort((a, b) => b.count - a.count)) {
+    installsTotal += entry.count;
+    const tr = document.createElement('tr');
+    tr.append(cell(entry.tool), cell(coarseName(entry.coarse)), cell(String(entry.count)));
+    installsBody.appendChild(tr);
+  }
+  showTables(true);
+  if (glance) {
+    glance.textContent = fill(s.analyticsSummary ?? '{funnel} funnel · {installs} installs', {
+      funnel: String(funnelTotal),
+      installs: String(installsTotal),
+    });
+  }
+  for (const btn of section.querySelectorAll<HTMLButtonElement>('[data-analytics-window]')) {
+    if (btn.dataset['analyticsWindow'] === String(win)) btn.setAttribute('aria-current', 'true');
+    else btn.removeAttribute('aria-current');
+  }
+}
+
+/** The analytics section: window buttons re-render the tables. Absent
+ *  without throwing when the page carries no analytics section. */
+function initAnalytics(s: Pick<AdminClientStrings, 'loadError'> & Partial<AdminAnalyticsStrings>): void {
+  const section = document.getElementById('admin-analytics');
+  if (!section) return;
+  let current = 30;
+  for (const btn of section.querySelectorAll<HTMLButtonElement>('[data-analytics-window]')) {
+    btn.addEventListener('click', () => {
+      const next = Number.parseInt(btn.dataset['analyticsWindow'] ?? '', 10);
+      current = next === 7 || next === 30 || next === 90 ? next : 30;
+      void renderAnalytics(s, current);
+    });
+  }
+  void renderAnalytics(s, current);
 }
 
 async function postUploadJson(
