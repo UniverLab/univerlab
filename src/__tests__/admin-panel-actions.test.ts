@@ -654,6 +654,108 @@ describe('admin panel actions over both layouts', () => {
     expect((document.getElementById('admin-upload-target') as HTMLElement).hidden).toBe(false);
     expect(section.classList.contains('is-dragover')).toBe(false);
   });
+
+  it('completes an upload, resets the form, and reloads the audit list', async () => {
+    const fetchMock = bridgeUpload({ succeed: true });
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+
+    sendButton().click();
+    await flush(16);
+    expect(noteEl().textContent).toBe('Stored: sys-2026-03');
+    expect(systemInput().value).toBe('');
+    expect(editionInput().value).toBe('');
+    expect(sendButton().disabled).toBe(true);
+    const listCalls = fetchMock.mock.calls.filter((c) => String(c[0]).endsWith('/api/admin-audits'));
+    expect(listCalls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('offers replace when an edition exists and replaces on confirmation', async () => {
+    const fetchMock = bridgeUpload({ succeed: true, existsOnFirstInit: true });
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+    selectFiles(uploadSelection().files);
+    await flush();
+
+    sendButton().click();
+    await flush();
+    const replaceBtn = document.getElementById('admin-upload-replace') as HTMLButtonElement;
+    expect(replaceBtn.hidden).toBe(false);
+    expect(noteEl().textContent).toContain('sys-2026-03');
+
+    replaceBtn.click();
+    await flush(16);
+    expect(replaceBtn.hidden).toBe(true);
+    expect(noteEl().textContent).toBe('Stored: sys-2026-03');
+    const finalizeBodies = fetchMock.mock.calls
+      .map((c) => String((c[1] as { body?: unknown } | undefined)?.body ?? ''))
+      .filter((b) => b.includes('"finalize"'));
+    expect(finalizeBodies.some((b) => b.includes('"replace":true'))).toBe(true);
+  });
+
+  it('reports init, finalize, network, and selection errors cleanly', async () => {
+    // Selection without audit.json, with invalid JSON, with non-object JSON, and bad .zip
+    bridgeFetch(seedBucket());
+    mount();
+    initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
+    await flush();
+
+    const makeFile = (name: string, text: string, rel?: string): File => {
+      const bytes = new Uint8Array(Buffer.from(text, 'utf8'));
+      const f = new File([bytes as unknown as BlobPart], name);
+      (f as unknown as Record<string, unknown>)['arrayBuffer'] = async () => bytes.buffer;
+      if (rel !== undefined) Object.defineProperty(f, 'webkitRelativePath', { value: rel, configurable: true });
+      return f;
+    };
+
+    selectFiles([makeFile('notes.txt', 'hi', 'top/notes.txt')]);
+    await flush();
+    expect(document.getElementById('admin-upload-errors')?.textContent).toContain('audit.json');
+
+    selectFiles([makeFile('audit.json', '{bad', 'top/audit.json')]);
+    await flush();
+    expect(document.getElementById('admin-upload-errors')?.textContent).toContain('not valid JSON');
+
+    selectFiles([makeFile('audit.json', '[]', 'top/audit.json')]);
+    await flush();
+    expect(document.getElementById('admin-upload-errors')?.textContent).toContain('not a JSON object');
+
+    const zipInput = document.getElementById('admin-upload-zip') as HTMLInputElement;
+    Object.defineProperty(zipInput, 'files', { value: [makeFile('broken.zip', 'not-a-zip')], configurable: true });
+    zipInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    expect(document.getElementById('admin-upload-errors')?.textContent).toContain('not a readable .zip');
+
+    // Init failure
+    bridgeUpload({ initStatus: 500 });
+    selectFiles(uploadSelection().files);
+    await flush();
+    sendButton().click();
+    await flush();
+    expect(noteEl().textContent).toBe('failed 500');
+
+    // Finalize 409 conflict
+    bridgeUpload({ succeed: true, finalizeStatus: 409 });
+    sendButton().click();
+    await flush(16);
+    expect((document.getElementById('admin-upload-replace') as HTMLButtonElement).hidden).toBe(false);
+
+    // Finalize 400 with issues
+    bridgeUpload({ succeed: true, finalizeStatus: 400, finalizeIssues: [{ path: '$.meta', message: 'bad meta' }] });
+    sendButton().click();
+    await flush(16);
+    expect(document.getElementById('admin-upload-errors')?.textContent).toContain('$.meta: bad meta');
+
+    // Network failure
+    bridgeUpload({ throwNetwork: true });
+    sendButton().click();
+    await flush();
+    expect(noteEl().textContent).toBe('network');
+  });
 });
 
 /** A valid upload selection: the contract fixture retitled, dated, and
@@ -704,24 +806,50 @@ function noteEl(): HTMLElement {
   return document.getElementById('admin-upload-note') as HTMLElement;
 }
 
-/** Upload fetch stub: init/finalize succeed, file posts either hang until
- *  the abort signal (cancel test) or refuse with the given issues. */
+/** Upload fetch stub: supports happy path, cancel hang, refusal issues,
+ *  existing-edition conflict, finalize errors, and network failures. */
 function bridgeUpload(opts: {
   hangFiles?: boolean;
   refuseFiles?: { path: string; message: string }[];
+  succeed?: boolean;
+  existsOnFirstInit?: boolean;
+  initStatus?: number;
+  finalizeStatus?: number;
+  finalizeIssues?: { path: string; message: string }[];
+  throwNetwork?: boolean;
 }): jest.Mock {
-  const fetchMock = jest.fn().mockImplementation(async (url: string, init?: { signal?: AbortSignal }) => {
+  let initCalls = 0;
+  const fetchMock = jest.fn().mockImplementation(async (url: string, init?: { signal?: AbortSignal; body?: string }) => {
     const u = String(url);
     if (u.endsWith('/health')) return { ok: true, status: 200, text: async () => 'ok' };
     if (u.endsWith('/api/sign-request')) return { ok: true, status: 200, json: async () => ({ requests: [] }) };
     if (u.endsWith('/api/admin-audits')) return { ok: true, status: 200, json: async () => ({ audits: [] }) };
+    if (opts.throwNetwork) throw new Error('network down');
     if (u.includes('action=file')) {
       if (opts.hangFiles) {
         return new Promise((_resolve, reject) => {
           init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
         });
       }
+      if (opts.succeed) return { ok: true, status: 200, json: async () => ({ ok: true }) };
       return { ok: false, status: 400, json: async () => ({ issues: opts.refuseFiles ?? [] }) };
+    }
+    const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : {};
+    if (body['action'] === 'init') {
+      initCalls += 1;
+      if (opts.initStatus) return { ok: false, status: opts.initStatus, json: async () => ({}) };
+      const exists = Boolean(opts.existsOnFirstInit && initCalls === 1);
+      return { ok: true, status: 200, json: async () => ({ uploadId: 'u1', exists }) };
+    }
+    if (body['action'] === 'finalize') {
+      if (opts.finalizeStatus) {
+        return {
+          ok: false,
+          status: opts.finalizeStatus,
+          json: async () => (opts.finalizeIssues ? { issues: opts.finalizeIssues } : {}),
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({ slug: 'sys-2026-03' }) };
     }
     return { ok: true, status: 200, json: async () => ({ uploadId: 'u1' }) };
   });
