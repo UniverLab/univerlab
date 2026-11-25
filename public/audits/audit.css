@@ -843,6 +843,12 @@ blockquote cite {
   margin: 0 0 1.5rem;
 }
 
+@media (max-width: 600px) {
+  .audit-page .audit-page-pc {
+    display: none;
+  }
+}
+
 .audit-auto-findings,
 .audit-auto-sources {
   margin-block-end: 3rem;

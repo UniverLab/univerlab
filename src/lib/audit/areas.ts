@@ -11,6 +11,13 @@ const EN: Record<string, string> = {
   configuration: 'Configuration',
   injection: 'Injection',
   'supply-chain': 'Supply chain',
+  authorisation: 'Authorisation',
+  transport: 'Transport',
+  'resource-limits': 'Resource limits',
+  usage: 'Usage',
+  'graph-execution': 'Graph execution',
+  recovery: 'Recovery',
+  privacy: 'Privacy',
 };
 
 const ES: Record<string, string> = {
@@ -22,6 +29,13 @@ const ES: Record<string, string> = {
   configuration: 'Configuración',
   injection: 'Inyección',
   'supply-chain': 'Cadena de suministro',
+  authorisation: 'Autorización',
+  transport: 'Transporte',
+  'resource-limits': 'Límites de recursos',
+  usage: 'Uso',
+  'graph-execution': 'Ejecución de graphs',
+  recovery: 'Recuperación',
+  privacy: 'Privacidad',
 };
 
 /** Words for one kebab-case area id in the edition's language. Pure. */

@@ -639,15 +639,22 @@ describe('audit real-edition rendering', () => {
     expect(esHtml).not.toContain('>Flows<');
     expect(enHtml).toContain('>flows<');
     expect(enHtml).not.toContain('>Flows<');
-    // The real audit's untranslated categories stay raw in both editions.
     for (const lang of ['es', 'en'] as const) {
       expect(areaLabel('data-flows', lang)).toBe('data-flows');
       expect(areaLabel('', lang)).toBe('');
-      // Every category the real audit leaves in English keeps its id in the
-      // label face, never a Title Case half translation.
-      for (const id of ['authorisation', 'resource-limits', 'transport', 'usage', 'recovery', 'privacy', 'graph-execution']) {
-        expect(areaLabel(id, lang)).toBe(id);
-      }
+    }
+    // Every category a published audit uses has words in both languages.
+    for (const [id, word] of [
+      ['authorisation', 'Autorización'],
+      ['transport', 'Transporte'],
+      ['resource-limits', 'Límites de recursos'],
+      ['usage', 'Uso'],
+      ['graph-execution', 'Ejecución de graphs'],
+      ['recovery', 'Recuperación'],
+      ['privacy', 'Privacidad'],
+    ] as const) {
+      expect(areaLabel(id, 'es')).toBe(word);
+      expect(areaLabel(id, 'en')).not.toBe(id);
     }
   });
 
