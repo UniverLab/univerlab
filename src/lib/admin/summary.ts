@@ -4,6 +4,7 @@
 // any. Pure data shaping over an injected bucket surface, so the Pages
 // Function adapters stay thin and jest runs it with a fake bucket.
 
+import { isHiddenAuditSystem } from '../audit/system';
 import { validateAuditDocument } from '../audit/validate-document';
 import type { AuditDocument, Severity } from '../audit/types';
 
@@ -100,9 +101,10 @@ export async function resolveAdminAudit(
 ): Promise<AdminAuditRef | null> {
   try {
     if (!bucket) return null;
-    // Staged uploads are never an addressable audit: a half-finished
+    // Internal systems are never an addressable audit: a half-finished
     // upload leaves no edition visible in the panel or on the site.
-    if (ref === '_staging' || ref.startsWith('_staging/')) return null;
+    const head = ref.split('/')[0];
+    if (head !== undefined && isHiddenAuditSystem(head)) return null;
     if (ref.includes('/')) {
       const [system, edition, ...rest] = ref.split('/');
       if (!system || !edition || rest.length > 0) return null;
@@ -217,8 +219,9 @@ export async function listAdminAudits(bucket: AdminR2Bucket | undefined): Promis
     const listed = await bucket.list();
     const bySystem = new Map<string, { date: string; edition: string; doc: AuditDocument; legacy: boolean }[]>();
     for (const obj of listed.objects) {
-      // Staged uploads never read as panel rows: only finished editions do.
-      if (obj.key === '_staging' || obj.key.startsWith('_staging/')) continue;
+      // Internal systems never read as panel rows: only finished editions do.
+      const sys = obj.key.split('/')[0];
+      if (sys !== undefined && isHiddenAuditSystem(sys)) continue;
       const m = AUDIT_JSON_RE.exec(obj.key) ?? LEGACY_AUDIT_JSON_RE.exec(obj.key);
       if (!m) continue;
       const system = m[1];

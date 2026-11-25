@@ -37,6 +37,7 @@ import {
   type PublicAuditEntry,
 } from './audit-editions';
 import { esc } from '../src/lib/audit/escape';
+import { auditContentType } from '../src/lib/audit/content-type';
 import type { AuditDocument } from '../src/lib/audit/types';
 
 const MARKDOWN_EXTS = new Set(['md', 'json', 'png', 'svg', 'xml', 'txt', 'mp4']);
@@ -169,28 +170,6 @@ const AUDIT_NO_STORE: Record<string, string> = {
 const PUBLIC_AUDIT_CACHE: Record<string, string> = {
   'Cache-Control': 'public, max-age=300',
 };
-
-function auditContentType(path: string): string {
-  const ext = path.split('.').pop()!.toLowerCase();
-  switch (ext) {
-    case 'pdf': return 'application/pdf';
-    case 'svg': return 'image/svg+xml';
-    case 'png': return 'image/png';
-    case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'webp': return 'image/webp';
-    case 'gif': return 'image/gif';
-    case 'avif': return 'image/avif';
-    case 'mp4': return 'video/mp4';
-    case 'webm': return 'video/webm';
-    case 'mp3': return 'audio/mpeg';
-    case 'ogg': return 'audio/ogg';
-    case 'wav': return 'audio/wav';
-    case 'json': return 'application/json; charset=utf-8';
-    case 'zip': return 'application/zip';
-    default: return 'application/octet-stream';
-  }
-}
 
 /** Environment the private-audit gate reads. `ACCESS_TEAM_DOMAIN` is the
  *  Cloudflare Access team domain (`<team>.cloudflareaccess.com`) whose keys

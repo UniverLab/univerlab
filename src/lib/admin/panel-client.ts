@@ -389,20 +389,25 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
   });
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
-  let out = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(out);
-}
-
-async function postUpload(body: Record<string, unknown>): Promise<{ res: Response; data: Record<string, unknown> | null }> {
-  const res = await fetch('/api/admin-upload', {
+async function postUploadJson(body: Record<string, unknown>): Promise<{ res: Response; data: Record<string, unknown> | null }> {
+  const res = await fetch('/api/admin-audits/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+  return { res, data: await readJson(res) };
+}
+
+/** One file travels as the raw request body, never base64 inside JSON. */
+async function postUploadFile(
+  uploadId: string,
+  name: string,
+  bytes: Uint8Array,
+): Promise<{ res: Response; data: Record<string, unknown> | null }> {
+  const res = await fetch(
+    `/api/admin-audits/upload?action=file&uploadId=${encodeURIComponent(uploadId)}&name=${encodeURIComponent(name)}`,
+    { method: 'POST', body: bytes as unknown as BodyInit },
+  );
   return { res, data: await readJson(res) };
 }
 
@@ -555,7 +560,7 @@ function initUpload(u: AdminClientStrings & Partial<AdminUploadStrings>, reload:
     busy = true;
     send.disabled = true;
     try {
-      const init = await postUpload({ action: 'init', system: systemInput.value, edition: editionInput.value });
+      const init = await postUploadJson({ action: 'init', system: systemInput.value, edition: editionInput.value });
       if (!init.res.ok || init.data?.['uploadId'] == null) {
         say(fill(u.actionFailed ?? 'Action failed ({status}).', { status: String(init.res.status) }));
         return;
@@ -570,7 +575,7 @@ function initUpload(u: AdminClientStrings & Partial<AdminUploadStrings>, reload:
       let done = 0;
       for (const file of files) {
         say(fill(u.uploadSending ?? 'Sending {done}/{total}…', { done: String(done), total: String(files.length) }));
-        const sent = await postUpload({ action: 'file', uploadId, name: file.name, bytes: bytesToBase64(file.bytes) });
+        const sent = await postUploadFile(uploadId, file.name, file.bytes);
         if (!sent.res.ok) {
           const rawIssues = (sent.data as Record<string, unknown> | null)?.['issues'];
           say(
@@ -582,7 +587,7 @@ function initUpload(u: AdminClientStrings & Partial<AdminUploadStrings>, reload:
         }
         done += 1;
       }
-      const fin = await postUpload(withReplace ? { action: 'finalize', uploadId, replace: true } : { action: 'finalize', uploadId });
+      const fin = await postUploadJson(withReplace ? { action: 'finalize', uploadId, replace: true } : { action: 'finalize', uploadId });
       if (!fin.res.ok) {
         if (fin.res.status === 409) {
           say(fill(u.uploadExists ?? 'Edition {slug} already exists.', { slug: editionInput.value }));

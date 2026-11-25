@@ -1,8 +1,9 @@
 /**
  * The control-room audit intake: a new audit reaches the site through
- * POST /api/admin-upload, one file per request, checked with the same
- * contract validator and always stored private. The real handler runs over
- * a fake bucket; both intake paths (a folder's files and a .zip's bytes)
+ * POST /api/admin-audits/upload — init and finalize as JSON bodies, each
+ * file as the raw request body — checked against the catalogue as each
+ * file is stored and always stored private. The real handler runs over a
+ * fake bucket; both intake paths (a folder's files and a .zip's bytes)
  * are exercised end to end.
  *
  * @jest-environment node
@@ -14,6 +15,16 @@ import { deflateRawSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { handleAdminUpload, type AdminDeps, type AdminEnv } from '../lib/admin/handlers';
 import { listAdminAudits, loadAdminAuditDoc, resolveAdminAudit, type AdminR2Bucket } from '../lib/admin/summary';
+import { auditContentType } from '../lib/audit/content-type';
+import {
+  auditRoutePrefix,
+  findEditionSystem,
+  listEditions,
+  listPublicAudits,
+  loadAuditDoc,
+  resolveAuditEdition,
+  type AuditR2Bucket as EdgeBucket,
+} from '../../functions/audit-editions';
 import {
   deriveEdition,
   deriveSystem,
@@ -59,10 +70,12 @@ function uploadFiles(doc: Doc, extra: UploadFile[] = []): UploadFile[] {
   return [...files, ...extra];
 }
 
-function makeBucket(): AdminR2Bucket & { files: Map<string, Uint8Array> } {
+function makeBucket(): AdminR2Bucket & { files: Map<string, Uint8Array>; contentTypes: Map<string, string | undefined> } {
   const files = new Map<string, Uint8Array>();
+  const contentTypes = new Map<string, string | undefined>();
   return {
     files,
+    contentTypes,
     async get(key: string) {
       const bytes = files.get(key);
       if (!bytes) return null;
@@ -71,13 +84,15 @@ function makeBucket(): AdminR2Bucket & { files: Map<string, Uint8Array> } {
         arrayBuffer: async () => Uint8Array.from(bytes).buffer as ArrayBuffer,
       };
     },
-    async put(key: string, value: Uint8Array | ArrayBuffer | string) {
+    async put(key: string, value: Uint8Array | ArrayBuffer | string, opts?: { httpMetadata?: { contentType?: string } }) {
       if (typeof value === 'string') files.set(key, new TextEncoder().encode(value));
       else if (value instanceof Uint8Array) files.set(key, Uint8Array.from(value));
       else files.set(key, new Uint8Array(value));
+      contentTypes.set(key, opts?.httpMetadata?.contentType);
     },
     async delete(key: string) {
       files.delete(key);
+      contentTypes.delete(key);
     },
     async list(options?: { prefix?: string }) {
       const prefix = options?.prefix ?? '';
@@ -101,11 +116,15 @@ function envOf(bucket: AdminR2Bucket): AdminEnv {
 function post(token: string | null, body: unknown): Request {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Cf-Access-Jwt-Assertion'] = token;
-  return new Request('https://univerlab.org/api/admin-upload', { method: 'POST', headers, body: JSON.stringify(body) });
+  return new Request('https://univerlab.org/api/admin-audits/upload', { method: 'POST', headers, body: JSON.stringify(body) });
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString('base64');
+/** One file travels as the raw request body on the query-string step. */
+function postFile(token: string | null, uploadId: string, name: string, bytes: Uint8Array): Request {
+  const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
+  if (token) headers['Cf-Access-Jwt-Assertion'] = token;
+  const url = `https://univerlab.org/api/admin-audits/upload?action=file&uploadId=${encodeURIComponent(uploadId)}&name=${encodeURIComponent(name)}`;
+  return new Request(url, { method: 'POST', headers, body: bytes as unknown as BodyInit });
 }
 
 async function respond(res: Response): Promise<{ status: number; data: Record<string, unknown> }> {
@@ -124,9 +143,7 @@ async function uploadAll(
   const init = await respond(await handleAdminUpload(post(token, { action: 'init', ...initBody }), envOf(bucket), deps));
   const uploadId = String(init.data['uploadId'] ?? '');
   for (const file of files) {
-    const sent = await respond(
-      await handleAdminUpload(post(token, { action: 'file', uploadId, name: file.name, bytes: bytesToBase64(file.bytes) }), envOf(bucket), deps),
-    );
+    const sent = await respond(await handleAdminUpload(postFile(token, uploadId, file.name, file.bytes), envOf(bucket), deps));
     if (sent.status !== 200) return { ...sent, uploadId };
   }
   const fin = await respond(
@@ -348,11 +365,11 @@ describe('upload auth', () => {
     const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'x' }), envOf(bucket), deps));
     const uploadId = String(init.data['uploadId']);
     const fileAnon = await respond(
-      await handleAdminUpload(post(null, { action: 'file', uploadId, name: 'audit.json', bytes: '' }), envOf(bucket), deps),
+      await handleAdminUpload(postFile(null, uploadId, 'audit.json', new Uint8Array([1])), envOf(bucket), deps),
     );
     expect(fileAnon.status).toBe(401);
     const fileStranger = await respond(
-      await handleAdminUpload(post('stranger-jwt', { action: 'file', uploadId, name: 'audit.json', bytes: '' }), envOf(bucket), deps),
+      await handleAdminUpload(postFile('stranger-jwt', uploadId, 'audit.json', new Uint8Array([1])), envOf(bucket), deps),
     );
     expect(fileStranger.status).toBe(403);
     const finAnon = await respond(
@@ -377,16 +394,18 @@ describe('upload refusals store nothing', () => {
     expect(await listAdminAudits(bucket)).toEqual([]);
   });
 
-  it('rejects names that escape the folder at the file step', async () => {
+  it('rejects names that escape the folder at the file step and deletes the staging', async () => {
     const bucket = makeBucket();
-    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'esc' }), envOf(bucket), deps));
-    const uploadId = String(init.data['uploadId']);
     for (const name of ['../evil.json', '/abs.json', 'a\\b.json', 'a/../b.json']) {
+      const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'esc' }), envOf(bucket), deps));
+      const uploadId = String(init.data['uploadId']);
       const sent = await respond(
-        await handleAdminUpload(post('owner-jwt', { action: 'file', uploadId, name, bytes: bytesToBase64(new Uint8Array([1])) }), envOf(bucket), deps),
+        await handleAdminUpload(postFile('owner-jwt', uploadId, name, new Uint8Array([1])), envOf(bucket), deps),
       );
       expect(sent.status).toBe(400);
       expect(sent.data['error']).toBe('escape');
+      // The refused upload leaves no staged file and no manifest behind.
+      expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
     }
     expect(await listAdminAudits(bucket)).toEqual([]);
   });
@@ -416,29 +435,42 @@ describe('upload refusals store nothing', () => {
   it('rejects more than 300 files', async () => {
     const bucket = makeBucket();
     const doc = uploadDoc('2026-01-01');
-    const extra: UploadFile[] = [];
+    const base = uploadFiles(doc).filter((f) => f.name !== 'audit.json');
+    const extras: UploadFile[] = [];
     for (let i = 0; i < MAX_FILES; i += 1) {
-      extra.push({ name: `extra-${i}.txt`, bytes: new Uint8Array([i % 256]) });
+      const bytes = new Uint8Array([i % 256]);
+      extras.push({ name: `extra-${i}.txt`, bytes });
+      (doc['assets'] as Doc[]).push({
+        id: `extra-${i}`,
+        path: `extra-${i}.txt`,
+        kind: 'data',
+        title: `Extra ${i}`,
+        bytes: bytes.length,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      });
     }
-    const done = await uploadAll(bucket, 'owner-jwt', { system: 'many', edition: 'many-1' }, uploadFiles(doc, extra));
+    const files = [
+      { name: 'audit.json', bytes: new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`) },
+      ...base,
+      ...extras,
+    ];
+    const done = await uploadAll(bucket, 'owner-jwt', { system: 'many', edition: 'many-1' }, files);
     expect(done.status).toBe(422);
     expect(JSON.stringify(done.data['issues'])).toContain(String(MAX_FILES));
     expect(await listAdminAudits(bucket)).toEqual([]);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
   });
 
-  it('rejects one file over 25 MB at the file step', async () => {
+  it('rejects one file over 25 MB at the file step and deletes the staging', async () => {
     const bucket = makeBucket();
     const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'big' }), envOf(bucket), deps));
     const uploadId = String(init.data['uploadId']);
     const sent = await respond(
-      await handleAdminUpload(
-        post('owner-jwt', { action: 'file', uploadId, name: 'big.bin', bytes: bytesToBase64(new Uint8Array(MAX_FILE + 1)) }),
-        envOf(bucket),
-        deps,
-      ),
+      await handleAdminUpload(postFile('owner-jwt', uploadId, 'big.bin', new Uint8Array(MAX_FILE + 1)), envOf(bucket), deps),
     );
     expect(sent.status).toBe(413);
     expect(await listAdminAudits(bucket)).toEqual([]);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
   });
 
   it('rejects a total over 200 MB', async () => {
@@ -462,18 +494,45 @@ describe('upload refusals store nothing', () => {
     expect(await listAdminAudits(bucket)).toEqual([]);
   });
 
-  it('rejects a missing audit.json without storing', async () => {
+  it('rejects a tampered file at the file step, once audit.json is staged', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'early-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    const staged = await respond(
+      await handleAdminUpload(
+        postFile('owner-jwt', uploadId, 'audit.json', new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`)),
+        envOf(bucket),
+        deps,
+      ),
+    );
+    expect(staged.status).toBe(200);
+    const target = uploadFiles(doc).find((f) => f.name !== 'audit.json')!;
+    const sent = await respond(
+      await handleAdminUpload(
+        postFile('owner-jwt', uploadId, target.name, new TextEncoder().encode('tampered bytes, wrong hash and size')),
+        envOf(bucket),
+        deps,
+      ),
+    );
+    expect(sent.status).toBe(422);
+    expect(JSON.stringify(sent.data['issues'])).toContain('hash does not match');
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+  });
+
+  it('rejects a missing audit.json without storing and deletes the staging', async () => {
     const bucket = makeBucket();
     const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'nojson' }), envOf(bucket), deps));
     const uploadId = String(init.data['uploadId']);
     await handleAdminUpload(
-      post('owner-jwt', { action: 'file', uploadId, name: 'notes.txt', bytes: bytesToBase64(new TextEncoder().encode('x')) }),
+      postFile('owner-jwt', uploadId, 'notes.txt', new TextEncoder().encode('x')),
       envOf(bucket),
       deps,
     );
     const fin = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(bucket), deps));
     expect(fin.status).toBe(400);
     expect(await listAdminAudits(bucket)).toEqual([]);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
   });
 });
 
@@ -495,13 +554,13 @@ describe('existing editions and half-finished uploads', () => {
     expect(bucket.files.has('sys/ed-1/old-report.pdf')).toBe(false);
   });
 
-  it('leaves no edition visible when the upload stops half way, and retries', async () => {
+  it('leaves no edition visible when the upload stops half way, then retries fresh', async () => {
     const bucket = makeBucket();
     const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'half-2026-01' }), envOf(bucket), deps));
     const uploadId = String(init.data['uploadId']);
     const doc = uploadDoc('2026-01-01');
     await handleAdminUpload(
-      post('owner-jwt', { action: 'file', uploadId, name: 'audit.json', bytes: bytesToBase64(new TextEncoder().encode(JSON.stringify(doc))) }),
+      postFile('owner-jwt', uploadId, 'audit.json', new TextEncoder().encode(JSON.stringify(doc))),
       envOf(bucket),
       deps,
     );
@@ -509,14 +568,13 @@ describe('existing editions and half-finished uploads', () => {
     expect(await listAdminAudits(bucket)).toEqual([]);
     expect(await resolveAdminAudit(bucket, 'half/half-2026-01')).toBeNull();
     expect(await loadAdminAuditDoc(bucket, 'half/half-2026-01')).toBeNull();
-    // A failed finalize also stores nothing, and the same upload retries.
+    // A failed finalize stores nothing and deletes the staging at once, so
+    // the retry starts a fresh upload.
     const bad = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(bucket), deps));
     expect(bad.status).toBe(422);
     expect(await listAdminAudits(bucket)).toEqual([]);
-    for (const file of uploadFiles(doc).filter((f) => f.name !== 'audit.json')) {
-      await handleAdminUpload(post('owner-jwt', { action: 'file', uploadId, name: file.name, bytes: bytesToBase64(file.bytes) }), envOf(bucket), deps);
-    }
-    const retry = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(bucket), deps));
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+    const retry = await uploadAll(bucket, 'owner-jwt', { system: 'half', edition: 'half-2026-01' }, uploadFiles(doc));
     expect(retry.status).toBe(200);
     expect((await listAdminAudits(bucket)).map((r) => r.slug)).toEqual(['half-2026-01']);
   });
@@ -545,5 +603,309 @@ describe('upload entry checks', () => {
       { assets: [{ path: 'assets/report.pdf', bytes: 206, sha256: sha }] },
     );
     expect(issues).toEqual([]);
+  });
+});
+
+describe('stored content types', () => {
+  it('serves each extension with the type the command-line push stores', async () => {
+    expect(auditContentType('assets/report.pdf')).toBe('application/pdf');
+    expect(auditContentType('assets/figure.svg')).toBe('image/svg+xml');
+    expect(auditContentType('assets/figure.png')).toBe('image/png');
+    expect(auditContentType('photo.jpg')).toBe('image/jpeg');
+    expect(auditContentType('photo.jpeg')).toBe('image/jpeg');
+    expect(auditContentType('photo.webp')).toBe('image/webp');
+    expect(auditContentType('anim.gif')).toBe('image/gif');
+    expect(auditContentType('photo.avif')).toBe('image/avif');
+    expect(auditContentType('assets/clip.mp4')).toBe('video/mp4');
+    expect(auditContentType('clip.webm')).toBe('video/webm');
+    expect(auditContentType('clip.mp3')).toBe('audio/mpeg');
+    expect(auditContentType('clip.ogg')).toBe('audio/ogg');
+    expect(auditContentType('clip.wav')).toBe('audio/wav');
+    expect(auditContentType('audit.json')).toBe('application/json; charset=utf-8');
+    expect(auditContentType('archive.zip')).toBe('application/zip');
+    expect(auditContentType('notes.txt')).toBe('text/plain; charset=utf-8');
+    expect(auditContentType('notes.md')).toBe('text/plain; charset=utf-8');
+    expect(auditContentType('assets/snippet.py')).toBe('application/octet-stream');
+  });
+
+  it('stores every uploaded file with its extension content type', async () => {
+    const bucket = makeBucket();
+    const done = await uploadAll(bucket, 'owner-jwt', { system: 'ct', edition: 'ct-1' }, uploadFiles(uploadDoc('2026-01-01')));
+    expect(done.status).toBe(200);
+    expect(bucket.contentTypes.get('ct/ct-1/audit.json')).toBe('application/json; charset=utf-8');
+    expect(bucket.contentTypes.get('ct/ct-1/assets/report.pdf')).toBe('application/pdf');
+    expect(bucket.contentTypes.get('ct/ct-1/assets/figure.svg')).toBe('image/svg+xml');
+    expect(bucket.contentTypes.get('ct/ct-1/assets/clip.mp4')).toBe('video/mp4');
+    expect(bucket.contentTypes.get('ct/ct-1/assets/chart-data.json')).toBe('application/json; charset=utf-8');
+    expect(bucket.contentTypes.get('ct/ct-1/assets/snippet.py')).toBe('application/octet-stream');
+  });
+});
+
+describe('staged and hidden systems stay unreachable', () => {
+  /** A staged upload whose document declares public visibility: half the
+   *  files are stored, finalize never ran. */
+  async function stagePublicUpload(bucket: AdminR2Bucket): Promise<string> {
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'pub-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const pub = fixtureDoc();
+    pub['badge'] = { issued: '2026-01-01', scope: 'Staged fixture' };
+    expect(pub['visibility']).toBe('public');
+    for (const file of uploadFiles(pub)) {
+      const sent = await respond(await handleAdminUpload(postFile('owner-jwt', uploadId, file.name, file.bytes), envOf(bucket), deps));
+      expect(sent.status).toBe(200);
+    }
+    return uploadId;
+  }
+
+  it('hides a staged public document from every panel and edge route', async () => {
+    const bucket = makeBucket();
+    const uploadId = await stagePublicUpload(bucket);
+    const edgeEnv = { AUDITS: bucket as unknown as EdgeBucket };
+    // Panel routes.
+    expect(await listAdminAudits(bucket)).toEqual([]);
+    expect(await resolveAdminAudit(bucket, `_staging/${uploadId}`)).toBeNull();
+    expect(await loadAdminAuditDoc(bucket, `_staging/${uploadId}`)).toBeNull();
+    // Edge routes: listing, pages, assets, badges, twins, feeds, edition
+    // lookup all read through these helpers.
+    expect(await listPublicAudits(edgeEnv)).toEqual([]);
+    expect(await listEditions(edgeEnv, '_staging')).toEqual([]);
+    expect(await findEditionSystem(edgeEnv, uploadId)).toBeNull();
+    expect(await resolveAuditEdition(edgeEnv, '_staging', null)).toBeNull();
+    expect(await resolveAuditEdition(edgeEnv, '_staging', uploadId)).toBeNull();
+    expect(await auditRoutePrefix(edgeEnv, '_staging', uploadId)).toBeNull();
+    expect(await auditRoutePrefix(edgeEnv, '_staging', null)).toBeNull();
+    expect(await loadAuditDoc(edgeEnv, `_staging/${uploadId}`)).toBeNull();
+  });
+
+  it('hides every underscore system from every panel and edge route', async () => {
+    const bucket = makeBucket();
+    const pub = fixtureDoc();
+    pub['badge'] = { issued: '2026-01-01', scope: 'Hidden fixture' };
+    const text = `${JSON.stringify(pub, null, 2)}\n`;
+    bucket.files.set('_priv/ed1/audit.json', new TextEncoder().encode(text));
+    const edgeEnv = { AUDITS: bucket as unknown as EdgeBucket };
+    expect(await listAdminAudits(bucket)).toEqual([]);
+    expect(await resolveAdminAudit(bucket, '_priv/ed1')).toBeNull();
+    expect(await resolveAdminAudit(bucket, '_priv')).toBeNull();
+    expect(await loadAdminAuditDoc(bucket, '_priv/ed1')).toBeNull();
+    expect(await listPublicAudits(edgeEnv)).toEqual([]);
+    expect(await listEditions(edgeEnv, '_priv')).toEqual([]);
+    expect(await findEditionSystem(edgeEnv, 'ed1')).toBeNull();
+    expect(await resolveAuditEdition(edgeEnv, '_priv', 'ed1')).toBeNull();
+    expect(await auditRoutePrefix(edgeEnv, '_priv', 'ed1')).toBeNull();
+    expect(await loadAuditDoc(edgeEnv, '_priv/ed1')).toBeNull();
+  });
+});
+
+describe('cancelled uploads and stale sweeps', () => {
+  it('deletes the staging at once when an upload is cancelled', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'gone-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    const sent = await respond(
+      await handleAdminUpload(postFile('owner-jwt', uploadId, 'audit.json', new TextEncoder().encode(JSON.stringify(doc))), envOf(bucket), deps),
+    );
+    expect(sent.status).toBe(200);
+    const cancelled = await respond(await handleAdminUpload(post('owner-jwt', { action: 'cancel', uploadId }), envOf(bucket), deps));
+    expect(cancelled.status).toBe(200);
+    expect(cancelled.data['ok']).toBe(true);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+    expect(await listAdminAudits(bucket)).toEqual([]);
+  });
+
+  it('refuses to cancel a missing upload, or another owner’s', async () => {
+    const bucket = makeBucket();
+    const missing = await respond(
+      await handleAdminUpload(post('owner-jwt', { action: 'cancel', uploadId: '0'.repeat(32) }), envOf(bucket), deps),
+    );
+    expect(missing.status).toBe(404);
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'kept-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const stranger = await respond(
+      await handleAdminUpload(post('stranger-jwt', { action: 'cancel', uploadId }), envOf(bucket), deps),
+    );
+    expect(stranger.status).toBe(403);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).not.toEqual([]);
+  });
+
+  it('deletes uploads older than 24 hours when the next upload starts', async () => {
+    const bucket = makeBucket();
+    const first = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'stale-2026-01' }), envOf(bucket), deps));
+    const staleId = String(first.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    await handleAdminUpload(postFile('owner-jwt', staleId, 'audit.json', new TextEncoder().encode(JSON.stringify(doc))), envOf(bucket), deps);
+    const manifestKey = `_staging/${staleId}.manifest.json`;
+    const manifest = JSON.parse(new TextDecoder().decode(bucket.files.get(manifestKey)!)) as Record<string, unknown>;
+    manifest['createdAt'] = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    bucket.files.set(manifestKey, new TextEncoder().encode(JSON.stringify(manifest)));
+    const second = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'fresh-2026-02' }), envOf(bucket), deps));
+    expect(second.status).toBe(200);
+    expect(bucket.files.has(manifestKey)).toBe(false);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith(`_staging/${staleId}/`))).toEqual([]);
+    expect(bucket.files.has(`_staging/${String(second.data['uploadId'])}.manifest.json`)).toBe(true);
+  });
+});
+
+describe('finalize storage failures', () => {
+  it('reports the upload as stored when only the temp cleanup fails', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'warn-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    for (const file of uploadFiles(doc)) {
+      const sent = await respond(await handleAdminUpload(postFile('owner-jwt', uploadId, file.name, file.bytes), envOf(bucket), deps));
+      expect(sent.status).toBe(200);
+    }
+    const deleting = { ...bucket, delete: async (_key: string): Promise<void> => { throw new Error('r2 down'); } };
+    const fin = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(deleting), deps));
+    expect(fin.status).toBe(200);
+    expect(fin.data['ok']).toBe(true);
+    expect(fin.data['warning']).toBe('cleanup');
+    // The edition itself is stored and readable.
+    expect((await loadAdminAuditDoc(bucket, 'warn/warn-2026-01'))?.badge?.issued).toBe('2026-01-01');
+  });
+
+  it('leaves the previous edition readable when replacing fails before audit.json', async () => {
+    const bucket = makeBucket();
+    const first = await uploadAll(bucket, 'owner-jwt', { system: 'sys', edition: 'ed-1' }, uploadFiles(uploadDoc('2026-01-01')));
+    expect(first.status).toBe(200);
+    const next = uploadDoc('2026-02-01');
+    const extraBytes = assetBytes('assets/report.pdf');
+    const base = uploadFiles(next).filter((f) => f.name !== 'audit.json');
+    (next['assets'] as Doc[]).push({
+      id: 'added-pdf',
+      path: 'assets/added.pdf',
+      kind: 'pdf',
+      title: 'Added in the re-audit',
+      bytes: extraBytes.length,
+      sha256: createHash('sha256').update(extraBytes).digest('hex'),
+    });
+    // audit.json goes last, so the staged audit.json carries the new catalogue.
+    const files = [
+      ...base,
+      { name: 'assets/added.pdf', bytes: extraBytes },
+      { name: 'audit.json', bytes: new TextEncoder().encode(`${JSON.stringify(next, null, 2)}\n`) },
+    ];
+    const init = await respond(
+      await handleAdminUpload(post('owner-jwt', { action: 'init', system: 'sys', edition: 'ed-1' }), envOf(bucket), deps),
+    );
+    const uploadId = String(init.data['uploadId']);
+    for (const file of files) {
+      const sent = await respond(await handleAdminUpload(postFile('owner-jwt', uploadId, file.name, file.bytes), envOf(bucket), deps));
+      expect(sent.status).toBe(200);
+    }
+    // The live audit.json put fails: nothing before it may show.
+    let armed = true;
+    const failing = {
+      ...bucket,
+      put: async (key: string, value: Uint8Array | ArrayBuffer | string, opts?: { httpMetadata?: { contentType?: string } }): Promise<void> => {
+        if (armed && key === 'sys/ed-1/audit.json') throw new Error('r2 down');
+        return bucket.put(key, value, opts);
+      },
+    };
+    const fin = await respond(
+      await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId, replace: true }), envOf(failing), deps),
+    );
+    expect(fin.status).toBe(500);
+    armed = false;
+    // The previous document and every file it names still read.
+    const kept = await loadAdminAuditDoc(bucket, 'sys/ed-1');
+    expect(kept?.badge?.issued).toBe('2026-01-01');
+    for (const path of (kept?.assets ?? []).map((a) => (a as { path: string }).path)) {
+      expect(bucket.files.has(`sys/ed-1/${path}`)).toBe(true);
+    }
+    // The new file written before the failure is rolled back, and the
+    // staging is gone.
+    expect(bucket.files.has('sys/ed-1/assets/added.pdf')).toBe(false);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+  });
+});
+
+describe('failed uploads leave no staging', () => {
+  it('deletes the staging when the store refuses a file', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'boom-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const failing = {
+      ...bucket,
+      put: async (): Promise<void> => {
+        throw new Error('r2 down');
+      },
+    };
+    const sent = await respond(
+      await handleAdminUpload(postFile('owner-jwt', uploadId, 'audit.json', new TextEncoder().encode('{}')), envOf(failing), deps),
+    );
+    expect(sent.status).toBe(500);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+  });
+
+  it('deletes the staging when the init existence check fails', async () => {
+    const bucket = makeBucket();
+    const failing = {
+      ...bucket,
+      get: async (_key: string): Promise<null> => {
+        throw new Error('r2 down');
+      },
+    };
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'init-2026-01' }), envOf(failing), deps));
+    expect(init.status).toBe(500);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+  });
+
+  it('deletes the staging when the finalize existence check fails', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'gone-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    for (const file of uploadFiles(doc)) {
+      const sent = await respond(await handleAdminUpload(postFile('owner-jwt', uploadId, file.name, file.bytes), envOf(bucket), deps));
+      expect(sent.status).toBe(200);
+    }
+    const failing = {
+      ...bucket,
+      get: async (key: string) => {
+        if (!key.startsWith('_staging/')) throw new Error('r2 down');
+        return bucket.get(key);
+      },
+    };
+    const fin = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(failing), deps));
+    expect(fin.status).toBe(500);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+    expect(await listAdminAudits(bucket)).toEqual([]);
+  });
+
+  it('deletes the staging when the finalize snapshot fails', async () => {
+    const bucket = makeBucket();
+    const init = await respond(await handleAdminUpload(post('owner-jwt', { action: 'init', folder: 'snap-2026-01' }), envOf(bucket), deps));
+    const uploadId = String(init.data['uploadId']);
+    const doc = uploadDoc('2026-01-01');
+    for (const file of uploadFiles(doc)) {
+      const sent = await respond(await handleAdminUpload(postFile('owner-jwt', uploadId, file.name, file.bytes), envOf(bucket), deps));
+      expect(sent.status).toBe(200);
+    }
+    const failing = {
+      ...bucket,
+      list: async (options?: { prefix?: string }): Promise<{ objects: { key: string }[] }> => {
+        // Only the live edition listing fails; staging still lists so the
+        // failed finalize can clear it at once.
+        if ((options?.prefix ?? '').startsWith('_staging/')) return bucket.list!(options);
+        throw new Error('r2 down');
+      },
+    };
+    const fin = await respond(await handleAdminUpload(post('owner-jwt', { action: 'finalize', uploadId }), envOf(failing), deps));
+    expect(fin.status).toBe(500);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+    expect(await listAdminAudits(bucket)).toEqual([]);
+  });
+
+  it('deletes the staging when the replace is refused as existing', async () => {
+    const bucket = makeBucket();
+    const first = await uploadAll(bucket, 'owner-jwt', { system: 'sys', edition: 'ed-1' }, uploadFiles(uploadDoc('2026-01-01')));
+    expect(first.status).toBe(200);
+    const again = await uploadAll(bucket, 'owner-jwt', { system: 'sys', edition: 'ed-1' }, uploadFiles(uploadDoc('2026-02-01')));
+    expect(again.status).toBe(409);
+    expect([...bucket.files.keys()].filter((k) => k.startsWith('_staging/'))).toEqual([]);
+    expect((await loadAdminAuditDoc(bucket, 'sys/ed-1'))?.badge?.issued).toBe('2026-01-01');
   });
 });

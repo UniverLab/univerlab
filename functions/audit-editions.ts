@@ -3,6 +3,7 @@
 // wires them to URLs — so the file stays under the size guard. Keys are
 // `<system>/<edition>/audit.json` with assets under the same prefix; legacy
 // dated slugs are edition ids that redirect to their system.
+import { isHiddenAuditSystem } from '../src/lib/audit/system';
 import { validateAuditDocument } from '../src/lib/audit/validate-document';
 import type { AuditEditionLink, PublishedAuditLinks } from '../src/lib/audit/render';
 import type { AuditDocument } from '../src/lib/audit/types';
@@ -43,7 +44,7 @@ export async function listPublicAudits(env: { AUDITS?: AuditR2Bucket }): Promise
     const out: PublicAuditEntry[] = [];
     for (const obj of listed.objects) {
       const m = /^([^/]+)\/([^/]+)\/audit\.json$/.exec(obj.key);
-      if (!m) continue;
+      if (!m || isHiddenAuditSystem(m[1])) continue;
       const doc = await loadAuditDoc(env, `${m[1]}/${m[2]}`);
       if (doc && doc.visibility === 'public') out.push({ system: m[1], edition: m[2], doc });
     }
@@ -65,6 +66,7 @@ export async function listEditions(
   env: { AUDITS?: AuditR2Bucket },
   system: string,
 ): Promise<AuditEditionEntry[]> {
+  if (isHiddenAuditSystem(system)) return [];
   try {
     if (!env.AUDITS?.list) return [];
     const listed = await env.AUDITS.list({ prefix: `${system}/` });
@@ -102,7 +104,7 @@ export async function findEditionSystem(
     const listed = await env.AUDITS.list();
     for (const obj of listed.objects) {
       const m = /^([^/]+)\/([^/]+)\/audit\.json$/.exec(obj.key);
-      if (m && m[2] === edition) return m[1];
+      if (m && m[2] === edition && !isHiddenAuditSystem(m[1])) return m[1];
     }
     return null;
   } catch {
@@ -199,6 +201,8 @@ export async function loadAuditDoc(
   env: { AUDITS?: AuditR2Bucket },
   prefix: string,
 ): Promise<AuditDocument | null> {
+  const system = prefix.split('/')[0];
+  if (system !== undefined && isHiddenAuditSystem(system)) return null;
   try {
     if (!env.AUDITS) return null;
     const obj = await env.AUDITS.get(`${prefix}/audit.json`);
