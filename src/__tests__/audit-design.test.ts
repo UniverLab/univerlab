@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const CSS = readFileSync(resolve(__dirname, '../../public/audits/audit.css'), 'utf8');
+const CSS = readFileSync(resolve(__dirname, '../../public/audit/audit.css'), 'utf8');
 const BENCH = readFileSync(resolve(__dirname, '../../src/styles/bench-tokens.css'), 'utf8');
 const GLOBAL = readFileSync(resolve(__dirname, '../../src/styles/global.css'), 'utf8');
 
