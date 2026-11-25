@@ -1,6 +1,7 @@
 // Localised labels for finding `area` ids. Areas are kebab-case ids in the
 // contract (`host-exposure`, `access-control`); the pages show words in the
-// edition's language. Unknown ids are humanised so no raw id ever shows.
+// edition's language. Unknown ids show the raw id so a half translation
+// never ships.
 const EN: Record<string, string> = {
   'host-exposure': 'Host exposure',
   authentication: 'Authentication',
@@ -27,10 +28,5 @@ const ES: Record<string, string> = {
 export function areaLabel(area: string, lang: 'es' | 'en'): string {
   const hit = (lang === 'es' ? ES : EN)[area];
   if (hit) return hit;
-  const words = area
-    .split('-')
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-  return words || area;
+  return area;
 }

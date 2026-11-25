@@ -14,7 +14,8 @@ import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 import { KNOWN_BLOCK_TYPES, LAYOUT_TYPES } from '../lib/audit/types';
 import { auditPageHtml } from '../lib/audit/render';
-import { renderBlock } from '../lib/audit/blocks';
+import { annexEntryHtml, findingEntryHtml, renderBlock } from '../lib/audit/blocks';
+import { areaLabel } from '../lib/audit/areas';
 
 const FIXTURE_DIR = resolve(__dirname, 'fixtures', 'audit-contract');
 const SLUG = 'fixture-audit';
@@ -633,9 +634,21 @@ describe('audit real-edition rendering', () => {
     expect(esHtml).toContain('>Autenticación<');
     expect(esHtml).toContain('2026-01-09 · 1.0 · borrador');
     expect(esHtml).not.toContain('>draft<');
-    // Unknown ids humanise instead of leaking kebab-case.
-    expect(esHtml).toContain('>Flows<');
-    expect(esHtml).not.toContain('>flows<');
+    // Unknown ids show the raw id, never a half translation.
+    expect(esHtml).toContain('>flows<');
+    expect(esHtml).not.toContain('>Flows<');
+    expect(enHtml).toContain('>flows<');
+    expect(enHtml).not.toContain('>Flows<');
+    // The real audit's untranslated categories stay raw in both editions.
+    for (const lang of ['es', 'en'] as const) {
+      expect(areaLabel('data-flows', lang)).toBe('data-flows');
+      expect(areaLabel('', lang)).toBe('');
+      // Every category the real audit leaves in English keeps its id in the
+      // label face, never a Title Case half translation.
+      for (const id of ['authorisation', 'resource-limits', 'transport', 'usage', 'recovery', 'privacy', 'graph-execution']) {
+        expect(areaLabel(id, lang)).toBe(id);
+      }
+    }
   });
 
   it.each(['en', 'es'] as const)('prints the finding summary once per card (%s)', (lang) => {
@@ -660,6 +673,60 @@ describe('audit real-edition rendering', () => {
     expect(html).toContain(`class="audit-figure-zoom" data-close="${close}">${zoom}<`);
     expect(html).toContain('<img');
     expect(html).not.toContain('<svg');
+  });
+
+  it.each(['en', 'es'] as const)('renders code and refs in media captions and asset titles (%s)', (lang) => {
+    const doc = richDoc(lang);
+    const asset = doc.assets.find((a) => a.id === 'report-pdf')!;
+    asset.title = '`zz-report` for {{finding:F-01}}';
+    const t = (lang === 'es' ? es.audit : en.audit) as Parameters<typeof renderBlock>[1]['t'];
+    const ctx = { slug: SLUG, doc: doc as Parameters<typeof renderBlock>[1]['doc'], t, sec: 0, i: 0 };
+    const caption = 'A `zz-cap` for {{finding:F-01}} while {{spec_name}} stays';
+    const fig = renderBlock({ type: 'figure', asset: 'figure-svg', caption }, ctx);
+    expect(fig).toContain('<code>zz-cap</code>');
+    expect(fig).toContain('href="#audit-finding-F-01"');
+    expect(fig).toContain('{{spec_name}}');
+    const chartHtml = renderBlock({ type: 'chart', spec: { mark: 'bar' }, caption }, ctx);
+    expect(chartHtml).toContain('<code>zz-cap</code>');
+    expect(chartHtml).toContain('href="#audit-finding-F-01"');
+    expect(chartHtml).toContain('{{spec_name}}');
+    const bareChart = renderBlock({ type: 'chart', caption }, ctx);
+    expect(bareChart).toContain('<code>zz-cap</code>');
+    expect(bareChart).toContain('href="#audit-finding-F-01"');
+    // The bare chart's data link carries its asset title, so code resolves there too.
+    const dataAsset = doc.assets.find((a) => a.id === 'chart-data')!;
+    dataAsset.title = '`zz-data` for {{finding:F-01}}';
+    const fedBare = renderBlock({ type: 'chart', dataAsset: 'chart-data', caption: 'C' }, ctx);
+    expect(fedBare).toContain('<code>zz-data</code>');
+    expect(fedBare).toContain('href="#audit-finding-F-01"');
+    // A non-image figure falls back to a link with its asset title.
+    const fallbackFig = renderBlock({ type: 'figure', asset: 'report-pdf', caption: 'C' }, ctx);
+    expect(fallbackFig).toContain('<code>zz-report</code>');
+    expect(fallbackFig).toContain('href="#audit-finding-F-01"');
+    const diagram = renderBlock({ type: 'diagram', mermaid: 'flowchart LR\n  A-->B', caption }, ctx);
+    expect(diagram).toContain('<code>zz-cap</code>');
+    expect(diagram).toContain('href="#audit-finding-F-01"');
+    expect(diagram).toContain('{{spec_name}}');
+    const card = renderBlock({ type: 'assetCard', asset: 'report-pdf' }, ctx);
+    expect(card).toContain('<code>zz-report</code>');
+    expect(card).toContain('href="#audit-finding-F-01"');
+    // The asset card description carries the same inline treatment: it is
+    // the last backticked fragment the real audit shows (F-02 transcript).
+    const cardDesc = renderBlock(
+      { type: 'assetCard', asset: 'report-pdf', description: 'See `zz-desc` for {{finding:F-01}}' },
+      ctx,
+    );
+    expect(cardDesc).toContain('<code>zz-desc</code>');
+    expect(cardDesc).toContain('href="#audit-finding-F-01"');
+    expect(cardDesc).not.toContain('`zz-desc`');
+    const annex = annexEntryHtml(ctx, { id: 'a1', title: '`zz-annex` index', description: 'd', assets: ['report-pdf'] });
+    expect(annex).toContain('<code>zz-annex</code>');
+    expect(annex).toContain('<code>zz-report</code>');
+    expect(annex).toContain('href="#audit-finding-F-01"');
+    const f = doc.findings[0];
+    f.evidence = [{ type: 'asset' as const, id: 'report-pdf' }];
+    const entry = findingEntryHtml(ctx, f);
+    expect(entry).toContain('<code>zz-report</code>');
   });
 
   it.each([

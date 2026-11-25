@@ -121,6 +121,23 @@ describe('audit design tokens', () => {
     }
   });
 
+  it('keeps the diagram caption dark on its light plate', () => {
+    // The diagram plate is paper in both themes, so its caption pins ink,
+    // never the dim token that would wash out at night.
+    const block = firstBlock(CSS, /\.audit-diagram figcaption\s*\{/);
+    expect(block).toMatch(/color:\s*#1d1510/);
+  });
+
+  it('keeps the shell postcard small above the cover, never beside it', () => {
+    // No float anywhere near the cover: the postcard stacks above at a
+    // capped width, so the cover title holds the full column and the first
+    // screen at 390 px and at 1280 px. Restoring the float fails here.
+    expect(CSS).not.toMatch(/\.audit-page-pc\s*\{[^}]*float/);
+    const block = firstBlock(CSS, /\.audit-page \.audit-page-pc\s*\{/);
+    expect(block).toMatch(/width:\s*min\(/);
+    expect(block).not.toMatch(/float/);
+  });
+
   it('caps code transcripts with an expand control and measures prose', () => {
     expect(CSS).toContain('max-height: 22rem');
     expect(CSS).toContain('.audit-code[data-open] pre');

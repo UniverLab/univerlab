@@ -352,6 +352,48 @@ function wireReportViewer(root: ParentNode): void {
   }
 }
 
+/** A diagram's zoom button opens the rendered SVG larger in a dialog,
+ *  cloning the mount's SVG into the same lightbox the figure zoom uses. */
+function wireDiagramZoom(root: ParentNode): void {
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-diagram-zoom');
+    if (!(btn instanceof HTMLElement)) return;
+    const svg = btn.closest('.audit-diagram')?.querySelector('svg');
+    if (!(svg instanceof SVGElement)) return;
+    const doc = root instanceof Document ? root : (root.ownerDocument ?? document);
+    const dialog = doc.createElement('dialog');
+    dialog.className = 'audit-lightbox';
+    const big = svg.cloneNode(true) as SVGElement;
+    big.removeAttribute('id');
+    const close = doc.createElement('button');
+    close.type = 'button';
+    close.className = 'audit-lightbox-close';
+    close.textContent = btn.getAttribute('data-close') || 'Close';
+    const dismiss = (): void => {
+      try {
+        if (typeof dialog.close === 'function') dialog.close();
+        else dialog.remove();
+      } catch {
+        dialog.remove();
+      }
+      if (dialog.isConnected) dialog.remove();
+    };
+    close.addEventListener('click', dismiss);
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dismiss();
+    });
+    dialog.addEventListener('close', () => dialog.remove());
+    dialog.append(big, close);
+    doc.body.appendChild(dialog);
+    try {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    } catch {
+      dialog.setAttribute('open', '');
+    }
+  });
+}
+
 /** An SVG figure's zoom button opens the image larger in a dialog: the
  *  plate keeps page text readable, the dialog carries the full figure. */
 function wireFigures(root: ParentNode): void {
@@ -402,6 +444,7 @@ export function initAuditPage(root: ParentNode = document): void {
   wireTerms(root);
   wireBack(root);
   wireFigures(root);
+  wireDiagramZoom(root);
   wireFindingOpen(root);
   wireCodeExpand(root);
   wireTables(root);

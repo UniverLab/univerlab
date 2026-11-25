@@ -83,7 +83,7 @@ function evidenceList(ctx: BlockCtx, f: AuditFinding): string {
       const a = assetById(ctx.doc, e.id);
       const label = a ? a.title : e.id;
       return a
-        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(label)}</a></li>`
+        ? `<li><a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${inlineProseRefs(label, ctx)}</a></li>`
         : `<li>${esc(label)}</li>`;
     })
     .join('');
@@ -200,9 +200,9 @@ function chart(ctx: BlockCtx, b: { spec?: Record<string, unknown>; dataAsset?: s
   if (!drawable) {
     return (
       `<figure class="audit-chart">` +
-      (b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : '') +
+      (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
       (dataUrl
-        ? `<a href="${esc(dataUrl)}">${esc(dataTitle)}</a>`
+        ? `<a href="${esc(dataUrl)}">${inlineProseRefs(dataTitle, ctx)}</a>`
         : `<p>${esc(ctx.t.chartFallback)}</p>`) +
       `</figure>`
     );
@@ -211,7 +211,7 @@ function chart(ctx: BlockCtx, b: { spec?: Record<string, unknown>; dataAsset?: s
     `<figure class="audit-chart" data-spec="${esc(JSON.stringify(spec))}"` +
     (dataUrl ? ` data-url="${esc(dataUrl)}"` : '') +
     `><div class="audit-chart-mount"></div>` +
-    (b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : '') +
+    (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
     `<noscript><p>${esc(ctx.t.chartFallback)}</p></noscript></figure>`
   );
 }
@@ -246,11 +246,11 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
   } else if (a.kind === 'audio') {
     media = `<audio controls preload="metadata" src="${esc(url)}"></audio>`;
   } else {
-    media = `<a href="${esc(url)}">${esc(a.title)}</a>`;
+    media = `<a href="${esc(url)}">${inlineProseRefs(a.title, ctx)}</a>`;
   }
   return (
     `<figure class="audit-figure${svg ? ' audit-figure--svg' : ''}">${media}` +
-    (b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : '') +
+    (b.caption ? `<figcaption>${inlineProseRefs(b.caption, ctx)}</figcaption>` : '') +
     `</figure>`
   );
 }
@@ -336,7 +336,7 @@ export function annexEntryHtml(ctx: BlockCtx, a: AuditAnnex): string {
       const file = asset.path.split('/').pop() ?? asset.path;
       return (
         `<li class="audit-annex-file">` +
-        `<a href="${esc(assetUrl(ctx.slug, asset.path, ctx.assetBase))}">${esc(asset.title)}</a> ` +
+        `<a href="${esc(assetUrl(ctx.slug, asset.path, ctx.assetBase))}">${inlineProseRefs(asset.title, ctx)}</a> ` +
         `<span class="audit-annex-file-name">${esc(file)}</span> ` +
         `<span class="audit-annex-size">${esc(formatBytes(asset.bytes))}</span> ` +
         `<code>${esc(asset.sha256)}</code>` +
@@ -348,7 +348,7 @@ export function annexEntryHtml(ctx: BlockCtx, a: AuditAnnex): string {
     .join('');
   return (
     `<article class="audit-annex" id="audit-annex-${esc(a.id)}">` +
-    `<h3>${esc(a.title)}</h3>` +
+    `<h3>${inlineProseRefs(a.title, ctx)}</h3>` +
     md(a.description) +
     (typeof a.instructions === 'string' && a.instructions !== ''
       ? `<p class="audit-annex-usage">${esc(ctx.t.annexUsage)}</p>` + md(a.instructions)
@@ -419,7 +419,8 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
         span,
         `<figure class="audit-diagram" data-mermaid="${esc(mermaid)}">` +
           `<div class="audit-diagram-mount"></div>` +
-          (typeof caption === 'string' && caption !== '' ? `<figcaption>${esc(caption)}</figcaption>` : '') +
+          `<button type="button" class="audit-diagram-zoom" data-close="${esc(ctx.t.figureClose)}">${esc(ctx.t.figureZoom)}</button>` +
+          (typeof caption === 'string' && caption !== '' ? `<figcaption>${inlineProseRefs(caption, ctx)}</figcaption>` : '') +
           `</figure>`,
       );
     }
@@ -493,9 +494,9 @@ export function renderBlock(b: AuditBlock, ctx: BlockCtx): string {
       return wrap(
         b.type,
         span,
-        `<div class="audit-assetCard"><p class="audit-assetCard-title">${esc(a.title)}</p>` +
-          (typeof desc === 'string' && desc !== '' ? `<p>${esc(desc)}</p>` : '') +
-          `<a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${esc(a.title)}</a></div>`,
+        `<div class="audit-assetCard"><p class="audit-assetCard-title">${inlineProseRefs(a.title, ctx)}</p>` +
+          (typeof desc === 'string' && desc !== '' ? `<p>${inlineProseRefs(desc, ctx)}</p>` : '') +
+          `<a href="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}">${inlineProseRefs(a.title, ctx)}</a></div>`,
       );
     }
     case 'sources':
