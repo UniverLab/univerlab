@@ -193,7 +193,7 @@ function rowOf(system: string, edition: string, doc: AuditDocument, isLatest: bo
     legacy,
     isLatest,
     title: doc.meta.title,
-    date: doc.badge?.issued ?? '',
+    date: doc.badge?.issued ?? doc.meta.auditPeriod?.end ?? '',
     visibility: doc.visibility,
     doi: typeof doc.deposit?.versionDoi === 'string' && doc.deposit.versionDoi !== '' ? doc.deposit.versionDoi : null,
     findings: { total: (doc.findings ?? []).length, open, bySeverity, openBySeverity },

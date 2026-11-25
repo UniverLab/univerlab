@@ -652,12 +652,10 @@ function initUpload(
     return typeof title === 'string' && title !== '' ? title : undefined;
   };
 
+  /** The issue date, or the end of the audit period while no badge exists. */
   const docIssued = (doc: unknown): string | undefined => {
-    if (typeof doc !== 'object' || doc === null) return undefined;
-    const badge = (doc as Record<string, unknown>)['badge'];
-    if (typeof badge !== 'object' || badge === null) return undefined;
-    const issued = (badge as Record<string, unknown>)['issued'];
-    return typeof issued === 'string' && issued !== '' ? issued : undefined;
+    const d = doc as { badge?: { issued?: unknown }; meta?: { auditPeriod?: { end?: unknown } } } | null;
+    return [d?.badge?.issued, d?.meta?.auditPeriod?.end].find((v): v is string => typeof v === 'string' && v !== '');
   };
 
   const readSelection = async (picked: File[], baseName: string): Promise<void> => {

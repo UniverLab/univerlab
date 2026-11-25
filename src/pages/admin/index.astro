@@ -121,7 +121,7 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
     >
       <h2>{a.uploadTitle}</h2>
       <p>{a.uploadHint}</p>
-      <p>
+      <p class="admin-upload-buttons">
         <button type="button" id="admin-upload-pick-folder" class="sign-btn-secondary">{a.uploadFolder}</button>
         <button type="button" id="admin-upload-pick-zip" class="sign-btn-secondary">{a.uploadZip}</button>
       </p>
@@ -140,7 +140,7 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         </p>
       </div>
       <progress id="admin-upload-progress" hidden max="100" value="0"></progress>
-      <p>
+      <p class="admin-upload-buttons">
         <button type="button" id="admin-upload-send" class="sign-btn" disabled>{a.uploadSend}</button>
         <button type="button" id="admin-upload-replace" class="sign-btn-secondary" hidden>{a.uploadReplace}</button>
         <button type="button" id="admin-upload-cancel" class="sign-btn-secondary" hidden>{a.uploadCancel}</button>

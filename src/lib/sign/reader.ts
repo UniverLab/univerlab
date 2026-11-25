@@ -194,8 +194,9 @@ export async function initReader(el: HTMLElement): Promise<void> {
   toolbar.setAttribute('role', 'toolbar');
   const prev = button(s.pagePrev, 'prev', '‹');
   const next = button(s.pageNext, 'next', '›');
-  // One page control: the jump input names the current page and the total
-  // beside it announces turns to screen readers (aria-live).
+  // One page control: the jump input holds the first page on screen and the
+  // text beside it closes the count (`–5 / 69`). The full label is for screen
+  // readers, which it tells about every turn (aria-live).
   const goto = document.createElement('input');
   goto.type = 'number';
   goto.min = '1';
@@ -207,16 +208,22 @@ export async function initReader(el: HTMLElement): Promise<void> {
   totalEl.className = 'sign-toolbar-total';
   totalEl.setAttribute('aria-live', 'polite');
   totalEl.textContent = pageLabel(1, total, s.pageOf);
+  const countEl = document.createElement('span');
+  countEl.className = 'sign-toolbar-count';
+  countEl.setAttribute('aria-hidden', 'true');
+  countEl.textContent = `/ ${total}`;
   const zoomOut = button(s.zoomOut, 'zoom-out', '−');
   const zoomIn = button(s.zoomIn, 'zoom-in', '+');
-  const fit = button(s.zoomFit, 'fit', s.zoomFit);
+  const fit = button(s.zoomFit, 'fit', '↔');
+  for (const b of [prev, next, zoomOut, zoomIn, fit]) b.title = b.getAttribute('aria-label') ?? '';
   const dl = document.createElement('a');
   dl.dataset['act'] = 'dl';
   dl.href = src;
   dl.setAttribute('download', '');
   dl.setAttribute('aria-label', s.pageDownload);
+  dl.title = s.pageDownload;
   dl.textContent = '⤓';
-  toolbar.append(prev, goto, totalEl, next, zoomOut, zoomIn, fit, dl);
+  toolbar.append(prev, goto, countEl, totalEl, next, zoomOut, zoomIn, fit, dl);
 
   const sheets = document.createElement('div');
   sheets.className = 'sign-sheets';
@@ -248,7 +255,9 @@ export async function initReader(el: HTMLElement): Promise<void> {
     const pages = shownPages();
     totalEl.textContent =
       pages.length > 1 ? spreadLabel(pages, total, s.spreadOf) : pageLabel(pages[0] ?? 1, total, s.pageOf);
-    if (document.activeElement !== goto) goto.value = String(current);
+    const last = pages[pages.length - 1] ?? 1;
+    countEl.textContent = pages.length > 1 ? `–${last} / ${total}` : `/ ${total}`;
+    if (document.activeElement !== goto) goto.value = String(pages[0] ?? current);
   };
 
   const ensureSheet = (n: number): HTMLElement => {
@@ -448,10 +457,12 @@ export async function initReader(el: HTMLElement): Promise<void> {
     if (ev.key === 'Enter') {
       ev.preventDefault();
       commitGoto();
-      goto.blur();
+      // The reader takes the focus so the arrow keys keep turning pages.
+      el.focus({ preventScroll: true });
+      syncPageUi();
     } else if (ev.key === 'Escape') {
-      goto.value = String(current);
-      goto.blur();
+      el.focus({ preventScroll: true });
+      syncPageUi();
     }
   });
   el.tabIndex = 0;

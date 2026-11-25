@@ -42,11 +42,10 @@
 }
 .sign-toolbar {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  overflow-x: auto;
   /* The controls stay in sight next to the page at any zoom and width,
    * above the header corner, the mailbox and the theme switch. */
   position: sticky;
@@ -54,11 +53,6 @@
   z-index: 60;
   background: var(--bg);
   padding-block: 0.5rem;
-}
-@media (max-width: 389px) {
-  .sign-toolbar {
-    flex-wrap: wrap;
-  }
 }
 .sign-toolbar button {
   font: inherit;
@@ -74,12 +68,37 @@
 .sign-toolbar button:hover {
   border-color: var(--accent);
 }
-.sign-toolbar-total {
+.sign-toolbar-count {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--ink-dim);
-  margin: 0 0.25rem;
   white-space: nowrap;
+}
+.sign-toolbar-total {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* One row on a phone: tighter controls, and zooming out already fits. */
+@media (max-width: 30rem) {
+  .sign-reader .sign-toolbar {
+    gap: 0.3rem;
+  }
+  .sign-reader .sign-toolbar button,
+  .sign-reader .sign-toolbar a[data-act='dl'] {
+    min-width: 2.2rem;
+    padding-inline: 0.3rem;
+  }
+  .sign-reader .sign-toolbar button[data-act='fit'] {
+    display: none;
+  }
+  .sign-reader .sign-toolbar input[data-act='goto'] {
+    width: 2.9rem;
+    appearance: textfield;
+  }
 }
 .sign-toolbar input[data-act='goto'] {
   font: inherit;
@@ -531,6 +550,11 @@ button.sign-row-action {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+.admin-upload-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 #admin-upload.is-dragover {
   border-color: var(--accent);

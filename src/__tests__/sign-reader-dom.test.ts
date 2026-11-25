@@ -251,6 +251,8 @@ describe('initReader fit-to-width and zoom', () => {
       await flush();
       expect(status(el)).toBe('Pages 4–5 of 5');
       expect(canvases(el)).toBe(2);
+      expect(input.value).toBe('4');
+      expect(el.querySelector('.sign-toolbar-count')?.textContent).toBe('–5 / 5');
 
       input.value = '99';
       input.dispatchEvent(new Event('change', { bubbles: true }));
