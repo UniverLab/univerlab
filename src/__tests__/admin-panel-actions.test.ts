@@ -246,6 +246,13 @@ function flush(rounds = 8): Promise<void> {
   return chain;
 }
 
+async function waitFor(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate() && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}
+
 /** The panel's fetch wired to the real handlers over the bucket. Rejections
  *  stand in for a dropped network on the named actions. */
 function bridgeFetch(bucket: Bucket, fail?: { visibility?: boolean; remove?: boolean }): jest.Mock {
@@ -661,10 +668,10 @@ describe('admin panel actions over both layouts', () => {
     initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
     await flush();
     selectFiles(uploadSelection().files);
-    await flush();
+    await waitFor(() => !sendButton().disabled);
 
     sendButton().click();
-    await flush(16);
+    await waitFor(() => noteEl().textContent === 'Stored: sys-2026-03');
     expect(noteEl().textContent).toBe('Stored: sys-2026-03');
     expect(systemInput().value).toBe('');
     expect(editionInput().value).toBe('');
@@ -679,16 +686,16 @@ describe('admin panel actions over both layouts', () => {
     initAdminPage(strings(), { bookingApi: 'https://booking.univerlab.org' });
     await flush();
     selectFiles(uploadSelection().files);
-    await flush();
+    await waitFor(() => !sendButton().disabled);
 
     sendButton().click();
-    await flush();
     const replaceBtn = document.getElementById('admin-upload-replace') as HTMLButtonElement;
+    await waitFor(() => !replaceBtn.hidden);
     expect(replaceBtn.hidden).toBe(false);
     expect(noteEl().textContent).toContain('sys-2026-03');
 
     replaceBtn.click();
-    await flush(16);
+    await waitFor(() => noteEl().textContent === 'Stored: sys-2026-03');
     expect(replaceBtn.hidden).toBe(true);
     expect(noteEl().textContent).toBe('Stored: sys-2026-03');
     const finalizeBodies = fetchMock.mock.calls
@@ -733,27 +740,27 @@ describe('admin panel actions over both layouts', () => {
     // Init failure
     bridgeUpload({ initStatus: 500 });
     selectFiles(uploadSelection().files);
-    await flush();
+    await waitFor(() => !sendButton().disabled);
     sendButton().click();
-    await flush();
+    await waitFor(() => noteEl().textContent === 'failed 500');
     expect(noteEl().textContent).toBe('failed 500');
 
     // Finalize 409 conflict
     bridgeUpload({ succeed: true, finalizeStatus: 409 });
     sendButton().click();
-    await flush(16);
+    await waitFor(() => !(document.getElementById('admin-upload-replace') as HTMLButtonElement).hidden);
     expect((document.getElementById('admin-upload-replace') as HTMLButtonElement).hidden).toBe(false);
 
     // Finalize 400 with issues
     bridgeUpload({ succeed: true, finalizeStatus: 400, finalizeIssues: [{ path: '$.meta', message: 'bad meta' }] });
     sendButton().click();
-    await flush(16);
+    await waitFor(() => (document.getElementById('admin-upload-errors')?.textContent ?? '').includes('$.meta: bad meta'));
     expect(document.getElementById('admin-upload-errors')?.textContent).toContain('$.meta: bad meta');
 
     // Network failure
     bridgeUpload({ throwNetwork: true });
     sendButton().click();
-    await flush();
+    await waitFor(() => noteEl().textContent === 'network');
     expect(noteEl().textContent).toBe('network');
   });
 });
