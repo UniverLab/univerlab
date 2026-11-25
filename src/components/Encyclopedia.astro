@@ -64,6 +64,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
                   type="button"
                   class="copy-btn"
                   data-cmd={installCmd}
+                  data-tool={entry.id}
                   data-copy={enc.use.copy}
                   data-copied={enc.use.copied}
                   aria-label={enc.use.copy}
@@ -97,6 +98,7 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
 
 <script>
   import { COPY_DONE_MS, setCopyState } from '../lib/copy-morph';
+  import { reportEvent } from '../lib/campaign';
   (function () {
     // Tabs filter entries by status via the `hidden` attribute.
     var tabs = document.querySelectorAll('.thumbs button');
@@ -138,6 +140,8 @@ const expCopy = (id: string) => t.experiments[id as keyof typeof t.experiments];
       btn.addEventListener('click', async function () {
         var cmd = btn.getAttribute('data-cmd') || '';
         try { await navigator.clipboard.writeText(cmd); } catch { return; }
+        // Aggregate funnel action: never blocks copy, never throws.
+        try { reportEvent('copy_install', { tool: btn.getAttribute('data-tool') || '' }); } catch {}
         var copied = btn.getAttribute('data-copied') || '';
         setCopyState(btn, true);
         if (copied) btn.setAttribute('aria-label', copied);
