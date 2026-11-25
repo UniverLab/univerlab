@@ -750,6 +750,17 @@ describe('composeDocsDescription', () => {
     expect(out.length).toBeLessThanOrEqual(160);
   });
 
+  it('pads a very short sibling description past the 120-char SEO floor', () => {
+    const out = composeDocsDescription({
+      description: 'Notable changes to Canopy.',
+      title: 'Release notes',
+      expName: 'Canopy',
+      tagline: 'Multi-agent runtime with memory and graphs.',
+    });
+    expect(out.length).toBeGreaterThanOrEqual(120);
+    expect(out.length).toBeLessThanOrEqual(160);
+  });
+
   it('truncateAtWord never splits a word and strips trailing punctuation', () => {
     expect(truncateAtWord('alpha beta, gamma', 11)).toBe('alpha beta');
     expect(truncateAtWord('short', 160)).toBe('short');

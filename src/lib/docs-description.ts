@@ -21,8 +21,10 @@ export interface DocsDescriptionInput {
   tagline: string;
 }
 
+const SEO_MIN = 120;
 const IN_RANGE_MIN = 140;
 const MAX = 160;
+const LAB_SUFFIX = 'Part of the UniverLab open-source engineering lab.';
 
 /** Cut to `max` chars at the last space, with no trailing punctuation fragment. */
 export function truncateAtWord(s: string, max: number): string {
@@ -36,5 +38,7 @@ export function composeDocsDescription({ description, title, expName, tagline }:
   const base = description?.trim() || title.trim();
   if (base.length >= IN_RANGE_MIN && base.length <= MAX) return base;
   if (base.length > MAX) return truncateAtWord(base, MAX);
-  return truncateAtWord(`${base} ${expName} documentation — ${tagline}`, MAX);
+  const extended = `${base} ${expName} documentation — ${tagline}`;
+  const padded = extended.length < SEO_MIN ? `${extended} ${LAB_SUFFIX}` : extended;
+  return truncateAtWord(padded, MAX);
 }
