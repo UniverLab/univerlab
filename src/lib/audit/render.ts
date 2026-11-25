@@ -134,7 +134,7 @@ function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], ba
         `data-loading="${esc(signT.readerLoading)}" data-error="${esc(signT.readerError)}" ` +
         `data-zoom-in="${esc(signT.zoomIn)}" data-zoom-out="${esc(signT.zoomOut)}" data-zoom-fit="${esc(signT.zoomFit)}" ` +
         `data-page-prev="${esc(signT.pagePrev)}" data-page-next="${esc(signT.pageNext)}" ` +
-        `data-page-of="${esc(signT.pageOf)}" data-page-go="${esc(signT.pageGo)}" ` +
+        `data-page-of="${esc(signT.pageOf)}" data-page-go="${esc(signT.pageGo)}" data-spread-of="${esc(signT.spreadOf)}" ` +
         `data-download="${esc(signT.pageDownload)}">` +
         `<p class="sign-reader-status">${esc(signT.readerLoading)}</p></div></details></div>`,
     );

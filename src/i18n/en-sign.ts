@@ -11,6 +11,7 @@ export const sign = {
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', zoomFit: 'Fit to width',
     pagePrev: 'Previous page', pageNext: 'Next page',
     pageOf: 'Page {current} of {total}', pageGo: 'Go to page', pageDownload: 'Download PDF',
+    spreadOf: 'Pages {first}–{last} of {total}',
     downloadOrig: 'Download the original PDF',
     hashMismatch: 'Warning: these bytes do not match the document hash. Ask the lab for a new link.',
     formName: 'Your full name',

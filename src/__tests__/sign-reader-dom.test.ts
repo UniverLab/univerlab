@@ -157,8 +157,9 @@ describe('initReader fit-to-width and zoom', () => {
   });
 
   describe('paged (book) mode', () => {
-    const openPaged = async (): Promise<HTMLElement> => {
-      mockNumPages = 3;
+    const openPaged = async (opts?: { pages?: number; width?: number }): Promise<HTMLElement> => {
+      mockNumPages = opts?.pages ?? 5;
+      if (opts?.width !== undefined) hostWidth = opts.width;
       const el = document.createElement('div');
       el.className = 'sign-reader';
       el.dataset['mode'] = 'paged';
@@ -169,40 +170,75 @@ describe('initReader fit-to-width and zoom', () => {
     };
 
     const status = (el: HTMLElement): string =>
-      (el.querySelector('.sign-toolbar-page') as HTMLElement).textContent ?? '';
+      (el.querySelector('.sign-toolbar-total') as HTMLElement).textContent ?? '';
 
     const canvases = (el: HTMLElement): number =>
       el.querySelectorAll('.sign-sheet canvas').length;
 
-    it('renders one sheet only and announces the page with a download link', async () => {
+    it('stands the cover alone with one goto control and no caption under the page', async () => {
       const el = await openPaged();
       expect(canvases(el)).toBe(1);
       expect(el.querySelectorAll('.sign-sheet').length).toBe(1);
-      expect(status(el)).toBe('Page 1 of 3');
-      const live = el.querySelector('.sign-toolbar-page') as HTMLElement;
+      expect(status(el)).toBe('Page 1 of 5');
+      const live = el.querySelector('.sign-toolbar-total') as HTMLElement;
       expect(live.getAttribute('aria-live')).toBe('polite');
+      expect(el.querySelectorAll('input[data-act="goto"]').length).toBe(1);
+      expect(el.querySelector('.sign-toolbar-page')).toBeNull();
+      expect(el.querySelector('.sign-sheet-no')).toBeNull();
       const dl = el.querySelector('a[data-act="dl"]') as HTMLAnchorElement;
       expect(dl.getAttribute('href')).toBe('/audits/s/assets/report.pdf');
       expect(dl.getAttribute('aria-label')).toBeTruthy();
     });
 
-    it('stays on the first page at prev and on the last page at next', async () => {
+    it('turns a two-page spread and names it in the toolbar', async () => {
       const el = await openPaged();
       const prev = el.querySelector('button[data-act="prev"]') as HTMLButtonElement;
       const next = el.querySelector('button[data-act="next"]') as HTMLButtonElement;
 
-      prev.click();
+      next.click();
       await flush();
-      expect(status(el)).toBe('Page 1 of 3');
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      expect(canvases(el)).toBe(2);
+      expect(el.querySelector('.sign-sheets')?.classList.contains('is-spread')).toBe(true);
 
       next.click();
       await flush();
+      expect(status(el)).toBe('Pages 4–5 of 5');
+      expect(canvases(el)).toBe(2);
+
       next.click();
       await flush();
-      expect(status(el)).toBe('Page 3 of 3');
+      expect(status(el)).toBe('Pages 4–5 of 5');
+
+      prev.click();
+      await flush();
+      expect(status(el)).toBe('Pages 2–3 of 5');
+
+      prev.click();
+      await flush();
+      expect(status(el)).toBe('Page 1 of 5');
+      expect(canvases(el)).toBe(1);
+    });
+
+    it('stays on the cover at prev', async () => {
+      const el = await openPaged();
+      const prev = el.querySelector('button[data-act="prev"]') as HTMLButtonElement;
+      prev.click();
+      await flush();
+      expect(status(el)).toBe('Page 1 of 5');
+      expect(canvases(el)).toBe(1);
+    });
+
+    it('shows one centred page when the frame is narrower than 1080px', async () => {
+      const el = await openPaged({ pages: 3, width: 800 });
+      expect(status(el)).toBe('Page 1 of 3');
+      expect(canvases(el)).toBe(1);
+      expect(el.querySelector('.sign-sheets')?.classList.contains('is-spread')).toBe(false);
+
+      const next = el.querySelector('button[data-act="next"]') as HTMLButtonElement;
       next.click();
       await flush();
-      expect(status(el)).toBe('Page 3 of 3');
+      expect(status(el)).toBe('Page 2 of 3');
       expect(canvases(el)).toBe(1);
     });
 
@@ -210,21 +246,21 @@ describe('initReader fit-to-width and zoom', () => {
       const el = await openPaged();
       const input = el.querySelector('input[data-act="goto"]') as HTMLInputElement;
 
-      input.value = '2';
+      input.value = '4';
       input.dispatchEvent(new Event('change', { bubbles: true }));
       await flush();
-      expect(status(el)).toBe('Page 2 of 3');
-      expect(canvases(el)).toBe(1);
+      expect(status(el)).toBe('Pages 4–5 of 5');
+      expect(canvases(el)).toBe(2);
 
       input.value = '99';
       input.dispatchEvent(new Event('change', { bubbles: true }));
       await flush();
-      expect(status(el)).toBe('Page 2 of 3');
+      expect(status(el)).toBe('Pages 4–5 of 5');
 
       input.value = '';
       input.dispatchEvent(new Event('change', { bubbles: true }));
       await flush();
-      expect(status(el)).toBe('Page 2 of 3');
+      expect(status(el)).toBe('Pages 4–5 of 5');
     });
 
     it('keeps the zoom across page turns', async () => {
@@ -240,8 +276,8 @@ describe('initReader fit-to-width and zoom', () => {
 
       next.click();
       await flush();
-      expect(status(el)).toBe('Page 2 of 3');
-      expect(canvases(el)).toBe(1);
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      expect(canvases(el)).toBe(2);
       expect(
         parseFloat((el.querySelector('.sign-sheet canvas') as HTMLCanvasElement).style.width),
       ).toBe(zoomedWidth);
@@ -251,10 +287,49 @@ describe('initReader fit-to-width and zoom', () => {
       const el = await openPaged();
       el.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
       await flush();
-      expect(status(el)).toBe('Page 3 of 3');
+      expect(status(el)).toBe('Pages 4–5 of 5');
       el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
       await flush();
-      expect(status(el)).toBe('Page 1 of 3');
+      expect(status(el)).toBe('Page 1 of 5');
+    });
+
+    it('turns with sideways keys but scrolls with up and down', async () => {
+      const el = await openPaged();
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await flush();
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await flush();
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      await flush();
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      await flush();
+      expect(status(el)).toBe('Page 1 of 5');
+    });
+
+    it('pans instead of turning while zoomed in', async () => {
+      const el = await openPaged();
+      const zoomIn = el.querySelector('button[data-act="zoom-in"]') as HTMLButtonElement;
+      zoomIn.click();
+      await flush();
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await flush();
+      expect(status(el)).toBe('Page 1 of 5');
+    });
+
+    it('draws each canvas at the screen pixel density', async () => {
+      const origDpr = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+      Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 3 });
+      try {
+        const el = await openPaged();
+        const canvas = el.querySelector('.sign-sheet canvas') as HTMLCanvasElement;
+        const cssWidth = parseFloat(canvas.style.width);
+        expect(canvas.width).toBe(Math.round(cssWidth * 3));
+      } finally {
+        if (origDpr) Object.defineProperty(window, 'devicePixelRatio', origDpr);
+      }
     });
 
     it('turns to the page an internal link points at', async () => {
@@ -262,21 +337,21 @@ describe('initReader fit-to-width and zoom', () => {
         { subtype: 'Link', dest: [{ num: 5, gen: 0 }], rect: [10, 10, 110, 30] },
       ]);
       mockGetPageIndex.mockResolvedValue(2);
-      const el = await openPaged();
+      const el = await openPaged({ pages: 3 });
       await flush();
       const overlay = el.querySelector('a.sign-link-overlay') as HTMLAnchorElement | null;
       expect(overlay?.getAttribute('href')).toBe('#page=3');
       overlay?.click();
       await flush();
-      expect(status(el)).toBe('Page 3 of 3');
-      expect(canvases(el)).toBe(1);
+      expect(status(el)).toBe('Pages 2–3 of 3');
+      expect(canvases(el)).toBe(2);
     });
 
-    it('turns on an unzoomed horizontal swipe', async () => {
+    it('turns a spread on an unzoomed horizontal swipe', async () => {
       const el = await openPaged();
       swipe(el, 200, 100);
       await flush();
-      expect(status(el)).toBe('Page 2 of 3');
+      expect(status(el)).toBe('Pages 2–3 of 5');
     });
 
     it('ignores a horizontal swipe while zoomed so the page can pan', async () => {
@@ -286,7 +361,52 @@ describe('initReader fit-to-width and zoom', () => {
       await flush();
       swipe(el, 200, 100);
       await flush();
-      expect(status(el)).toBe('Page 1 of 3');
+      expect(status(el)).toBe('Page 1 of 5');
+    });
+
+    it('caps a single page at 760px when the frame is between 760 and 1080px', async () => {
+      const el = await openPaged({ pages: 3, width: 900 });
+      const canvas = el.querySelector('.sign-sheet canvas') as HTMLCanvasElement;
+      expect(parseFloat(canvas.style.width)).toBeLessThanOrEqual(760);
+    });
+
+    it('keeps the current sheet on screen until the next spread finishes drawing', async () => {
+      const el = await openPaged({ pages: 5, width: 1200 });
+      const initialSheet = el.querySelector('.sign-sheet');
+      let resolveTurn!: () => void;
+      const pendingRender = new Promise<void>((r) => {
+        resolveTurn = r;
+      });
+      mockRender.mockImplementationOnce(() => ({ promise: pendingRender }));
+
+      const next = el.querySelector('button[data-act="next"]') as HTMLButtonElement;
+      next.click();
+      await flush();
+      // While page 2 is still rendering, page 1 stays mounted — no empty frame.
+      expect(el.querySelector('.sign-sheet')).toBe(initialSheet);
+      expect(canvases(el)).toBe(1);
+
+      resolveTurn();
+      await flush();
+      await flush();
+      expect(canvases(el)).toBe(2);
+      expect(status(el)).toBe('Pages 2–3 of 5');
+    });
+
+    it('re-renders and updates the spread label when resizing across 1080px', async () => {
+      const el = await openPaged({ pages: 5, width: 800 });
+      const next = el.querySelector('button[data-act="next"]') as HTMLButtonElement;
+      next.click();
+      await flush();
+      expect(status(el)).toBe('Page 2 of 5');
+      expect(canvases(el)).toBe(1);
+
+      hostWidth = 1200;
+      window.dispatchEvent(new Event('resize'));
+      await new Promise((r) => setTimeout(r, 200));
+      await flush();
+      expect(status(el)).toBe('Pages 2–3 of 5');
+      expect(canvases(el)).toBe(2);
     });
   });
 
@@ -302,7 +422,7 @@ describe('initReader fit-to-width and zoom', () => {
 
       expect(el.querySelectorAll('.sign-sheet canvas').length).toBe(3);
       expect(mockObserve).toHaveBeenCalledTimes(3);
-      expect((el.querySelector('.sign-toolbar-page') as HTMLElement).textContent).toBe(
+      expect((el.querySelector('.sign-toolbar-total') as HTMLElement).textContent).toBe(
         'Page 1 of 3',
       );
     });

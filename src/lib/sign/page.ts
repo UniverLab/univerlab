@@ -20,6 +20,7 @@ export interface SignStrings {
   pageNext: string;
   pageOf: string;
   pageGo: string;
+  spreadOf: string;
   pageDownload: string;
   downloadOrig: string;
   hashMismatch: string;
@@ -58,7 +59,7 @@ function viewerHtml(req: SigningRequest, s: SignStrings): string {
     `data-loading="${esc(s.readerLoading)}" data-error="${esc(s.readerError)}" ` +
     `data-zoom-in="${esc(s.zoomIn)}" data-zoom-out="${esc(s.zoomOut)}" data-zoom-fit="${esc(s.zoomFit)}" ` +
     `data-page-prev="${esc(s.pagePrev)}" data-page-next="${esc(s.pageNext)}" ` +
-    `data-page-of="${esc(s.pageOf)}" data-page-go="${esc(s.pageGo)}" ` +
+    `data-page-of="${esc(s.pageOf)}" data-page-go="${esc(s.pageGo)}" data-spread-of="${esc(s.spreadOf)}" ` +
     `data-download="${esc(s.pageDownload)}" data-hash-mismatch="${esc(s.hashMismatch)}">` +
     `<p class="sign-reader-status">${esc(s.readerLoading)}</p></div>` +
     `<p class="sign-actions"><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p>` +

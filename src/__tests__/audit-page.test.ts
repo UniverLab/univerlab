@@ -419,6 +419,7 @@ describe('audit report viewer', () => {
     expect(priv).toContain('download="fixture-audit-1.0-en.pdf"');
     expect(priv).toContain('Read the report here');
     expect(priv).toContain('data-page-of=');
+    expect(priv).toContain('data-spread-of=');
   });
 
   it('loads the report through the public route on the published page', () => {

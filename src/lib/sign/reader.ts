@@ -21,6 +21,31 @@ export function pageLabel(current: number, total: number, template: string): str
   return template.replace('{current}', String(current)).replace('{total}', String(total));
 }
 
+/** The viewer's frame shows two facing pages at 1080 px and up, one below.
+ *  Pure, tested. */
+export function isSpread(frameW: number): boolean {
+  return frameW >= 1080;
+}
+
+/** The pages shown for `current`: the cover stands alone, then facing
+ *  pairs 2-3, 4-5 and so on; a lone last page stands alone. Pure, tested. */
+export function spreadPages(current: number, total: number): number[] {
+  const c = clampPage(current, total);
+  if (c <= 1) return [1];
+  if (c % 2 === 0) return c + 1 <= total ? [c, c + 1] : [c];
+  return [c - 1, c];
+}
+
+/** Fill the `spreadOf` template: "Pages {first}–{last} of {total}". Pure, tested. */
+export function spreadLabel(pages: number[], total: number, template: string): string {
+  const first = pages[0] ?? 1;
+  const last = pages[pages.length - 1] ?? first;
+  return template
+    .replace('{first}', String(first))
+    .replace('{last}', String(last))
+    .replace('{total}', String(total));
+}
+
 /** Hex digests match ignoring case and surrounding whitespace. Pure, tested. */
 export function hashesEqual(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -58,6 +83,7 @@ interface ReaderStrings {
   pagePrev: string;
   pageNext: string;
   pageOf: string;
+  spreadOf: string;
   pageGo: string;
   pageDownload: string;
   hashMismatch: string;
@@ -74,6 +100,7 @@ function readStrings(el: HTMLElement): ReaderStrings {
     pagePrev: d['pagePrev'] ?? '‹',
     pageNext: d['pageNext'] ?? '›',
     pageOf: d['pageOf'] ?? 'Page {current} of {total}',
+    spreadOf: d['spreadOf'] ?? 'Pages {first}–{last} of {total}',
     pageGo: d['pageGo'] ?? 'Go to page',
     pageDownload: d['download'] ?? 'Download PDF',
     hashMismatch: d['hashMismatch'] ?? 'hash mismatch',
@@ -167,22 +194,19 @@ export async function initReader(el: HTMLElement): Promise<void> {
   toolbar.setAttribute('role', 'toolbar');
   const prev = button(s.pagePrev, 'prev', '‹');
   const next = button(s.pageNext, 'next', '›');
-  // The page label announces turns to screen readers (aria-live); it is
-  // also the label of the jump input, so the number can be typed to jump.
-  const pageStatus = document.createElement('label');
-  pageStatus.className = 'sign-toolbar-page';
-  pageStatus.setAttribute('aria-live', 'polite');
-  const gotoId = `sign-goto-${Math.random().toString(36).slice(2, 8)}`;
-  pageStatus.setAttribute('for', gotoId);
-  pageStatus.textContent = pageLabel(1, total, s.pageOf);
+  // One page control: the jump input names the current page and the total
+  // beside it announces turns to screen readers (aria-live).
   const goto = document.createElement('input');
-  goto.id = gotoId;
   goto.type = 'number';
   goto.min = '1';
   goto.max = String(total);
   goto.value = '1';
   goto.dataset['act'] = 'goto';
   goto.setAttribute('aria-label', s.pageGo);
+  const totalEl = document.createElement('span');
+  totalEl.className = 'sign-toolbar-total';
+  totalEl.setAttribute('aria-live', 'polite');
+  totalEl.textContent = pageLabel(1, total, s.pageOf);
   const zoomOut = button(s.zoomOut, 'zoom-out', '−');
   const zoomIn = button(s.zoomIn, 'zoom-in', '+');
   const fit = button(s.zoomFit, 'fit', s.zoomFit);
@@ -192,24 +216,38 @@ export async function initReader(el: HTMLElement): Promise<void> {
   dl.setAttribute('download', '');
   dl.setAttribute('aria-label', s.pageDownload);
   dl.textContent = '⤓';
-  toolbar.append(prev, pageStatus, goto, next, zoomOut, zoomIn, fit, dl);
+  toolbar.append(prev, goto, totalEl, next, zoomOut, zoomIn, fit, dl);
 
   const sheets = document.createElement('div');
   sheets.className = 'sign-sheets';
   el.append(toolbar, sheets);
 
-  // Fit-to-width is the default (phones included): the first page sets the
-  // base scale, zoom multiplies it. A re-render keeps every sheet in sync.
-  // Paged mode fits the whole page (width and height) instead, so at fit
-  // the page shows without scrolling the document; zoomed in, the reader
-  // pans inside the viewer.
+  // Fit-to-width is the default (phones included): the frame sets the base
+  // scale, zoom multiplies it. A re-render keeps every sheet in sync. Paged
+  // mode fits the page width (half the frame per page in a spread) and the
+  // document scrolls; zoomed in, the document pans.
   let baseScale = 1;
   let zoom = 1;
   let current = 1;
   const rendered = new Map<number, HTMLElement>();
 
+  /** The viewer's frame: the sheets box when laid out, else the reader. */
+  const frameWidth = (): number => sheets.clientWidth || el.clientWidth || 1;
+
+  /** A spread turn moves two pages, a single page moves one. */
+  const turnStep = (): number => (paged && isSpread(frameWidth()) ? 2 : 1);
+
+  /** The pages on screen: the facing spread at 1080 px and up, else the
+   *  current page alone. Continuous always names the current page. */
+  const shownPages = (): number[] => {
+    if (!paged) return [current];
+    return isSpread(frameWidth()) ? spreadPages(current, total) : [clampPage(current, total)];
+  };
+
   const syncPageUi = (): void => {
-    pageStatus.textContent = pageLabel(current, total, s.pageOf);
+    const pages = shownPages();
+    totalEl.textContent =
+      pages.length > 1 ? spreadLabel(pages, total, s.spreadOf) : pageLabel(pages[0] ?? 1, total, s.pageOf);
     if (document.activeElement !== goto) goto.value = String(current);
   };
 
@@ -219,10 +257,14 @@ export async function initReader(el: HTMLElement): Promise<void> {
       sheet = document.createElement('section');
       sheet.className = 'sign-sheet';
       sheet.dataset['page'] = String(n);
-      const num = document.createElement('p');
-      num.className = 'sign-sheet-no';
-      num.textContent = pageLabel(n, total, s.pageOf);
-      sheet.append(num);
+      if (!paged) {
+        // Continuous keeps its caption under every page; paged shows the
+        // spread label in the toolbar instead, never under the page.
+        const num = document.createElement('p');
+        num.className = 'sign-sheet-no';
+        num.textContent = pageLabel(n, total, s.pageOf);
+        sheet.append(num);
+      }
       sheets.append(sheet);
       rendered.set(n, sheet);
       if (!paged) {
@@ -248,26 +290,17 @@ export async function initReader(el: HTMLElement): Promise<void> {
     }
   };
 
-  const renderPage = async (n: number): Promise<void> => {
+  /** Paint page `n` into `sheet` at the current scale: canvas, text layer
+   *  and internal-link overlays. Works detached, so a spread renders
+   *  off-DOM before it swaps in. `alive` turns false when a later turn
+   *  started: painting stops and the sheet is discarded. */
+  const paintSheet = async (n: number, sheet: HTMLElement, alive: () => boolean): Promise<boolean> => {
     const page = await pdf.getPage(n);
-    // A stale turn (a second goTo before this render started) never paints:
-    // only the current page may create or replace its sheet.
-    if (paged && n !== current) return;
+    if (!alive()) return false;
     const scale = baseScale * zoom;
     const viewport = page.getViewport({ scale });
-    const sheet = ensureSheet(n);
-    if (paged) {
-      // One sheet only: pages that are not shown never render.
-      for (const [k, other] of rendered) {
-        if (k !== n) {
-          other.remove();
-          rendered.delete(k);
-        }
-      }
-    }
-    sheet.querySelectorAll('canvas, .sign-text-layer, .sign-link-overlay').forEach((c) => c.remove());
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = window.devicePixelRatio || 1;
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(viewport.width * dpr);
     canvas.height = Math.round(viewport.height * dpr);
@@ -275,8 +308,9 @@ export async function initReader(el: HTMLElement): Promise<void> {
     canvas.style.height = zoom > 1 ? `${viewport.height}px` : 'auto';
     canvas.style.maxWidth = zoom > 1 ? 'none' : '100%';
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) return false;
     await page.render({ canvasContext: ctx, viewport: viewport.clone({ scale: scale * dpr }) }).promise;
+    if (!alive()) return false;
 
     const layer = document.createElement('div');
     layer.className = 'sign-text-layer';
@@ -290,6 +324,7 @@ export async function initReader(el: HTMLElement): Promise<void> {
       viewport,
     });
     await textLayer.render();
+    if (!alive()) return false;
     sheet.prepend(canvas, layer);
 
     // Internal links: the report's own table of contents and
@@ -312,7 +347,7 @@ export async function initReader(el: HTMLElement): Promise<void> {
           const target = await resolveDestPage(link.dest);
           if (target === null || target < 1 || target > total) continue;
           // A later turn may have moved on while the destination resolved.
-          if (paged && n !== current) return;
+          if (!alive()) return false;
           const [qx1, qy1, qx2, qy2] = rectOf.call(viewport, corners);
           const overlay = document.createElement('a');
           overlay.href = `#page=${target}`;
@@ -328,6 +363,40 @@ export async function initReader(el: HTMLElement): Promise<void> {
     } catch {
       // The page still reads; only its internal links stay inert.
     }
+    return true;
+  };
+
+  const renderPage = async (n: number): Promise<void> => {
+    const sheet = ensureSheet(n);
+    sheet.querySelectorAll('canvas, .sign-text-layer, .sign-link-overlay').forEach((c) => c.remove());
+    await paintSheet(n, sheet, () => !paged || n === current);
+  };
+
+  /** Every turn gets a number; a newer turn discards an older one's sheets,
+   *  so the current spread stays until the next one is fully drawn: a page
+   *  turn never flashes an empty frame. */
+  let turnToken = 0;
+
+  const renderSpread = async (): Promise<void> => {
+    const token = ++turnToken;
+    const alive = (): boolean => token === turnToken;
+    const pages = shownPages();
+    const built: HTMLElement[] = [];
+    for (const p of pages) {
+      const sheet = document.createElement('section');
+      sheet.className = 'sign-sheet';
+      sheet.dataset['page'] = String(p);
+      if (!(await paintSheet(p, sheet, alive))) return;
+      built.push(sheet);
+    }
+    if (!alive()) return;
+    for (const [, other] of rendered) other.remove();
+    rendered.clear();
+    for (const sheet of built) {
+      sheets.append(sheet);
+      rendered.set(Number(sheet.dataset['page']), sheet);
+    }
+    sheets.classList.toggle('is-spread', built.length > 1);
   };
 
   const renderAll = async (): Promise<void> => {
@@ -339,13 +408,9 @@ export async function initReader(el: HTMLElement): Promise<void> {
     current = next;
     syncPageUi();
     if (paged) {
-      // One sheet only: the rest of the document never renders, the turn
-      // keeps the zoom, and only the viewer scrolls — never the document.
-      sheets.classList.add('is-turning');
-      window.setTimeout(() => sheets.classList.remove('is-turning'), 170);
-      void renderPage(current).then(() => {
-        sheets.scrollTop = 0;
-      });
+      // The current spread stays until the next one is drawn, the turn
+      // keeps the zoom, and the document scrolls — never an inner viewer.
+      void renderSpread();
     } else {
       rendered.get(current)?.scrollIntoView({ block: 'nearest' });
     }
@@ -356,7 +421,7 @@ export async function initReader(el: HTMLElement): Promise<void> {
     sheets.classList.toggle('is-zoomed', zoom > 1);
     if (zoom === 1) measureBase();
     if (paged) {
-      await renderPage(current);
+      await renderSpread();
     } else {
       // Sheets collapse while their canvases re-render, which can throw the
       // scroll position (and the observer-tracked page) elsewhere: hold the
@@ -367,8 +432,8 @@ export async function initReader(el: HTMLElement): Promise<void> {
     }
   };
 
-  prev.addEventListener('click', () => goTo(current - 1));
-  next.addEventListener('click', () => goTo(current + 1));
+  prev.addEventListener('click', () => goTo(current - turnStep()));
+  next.addEventListener('click', () => goTo(current + turnStep()));
   zoomIn.addEventListener('click', () => void setZoom(zoom * 1.25));
   zoomOut.addEventListener('click', () => void setZoom(zoom / 1.25));
   fit.addEventListener('click', () => void setZoom(1));
@@ -393,6 +458,37 @@ export async function initReader(el: HTMLElement): Promise<void> {
   el.addEventListener('keydown', (ev) => {
     const t = ev.target as Element | null;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    // Paged mode scrolls with the document: up and down arrows always keep
+    // their default scroll, and while zoomed in every arrow pans instead of
+    // turning. Only an unzoomed sideways key turns the spread.
+    if (paged) {
+      // Up and down arrows keep their default document scroll; while zoomed
+      // in every navigation key pans instead of turning.
+      const step = turnStep();
+      if (zoom <= 1 && (ev.key === 'ArrowRight' || ev.key === 'PageDown')) {
+        goTo(current + step);
+        ev.preventDefault();
+      } else if (zoom <= 1 && (ev.key === 'ArrowLeft' || ev.key === 'PageUp')) {
+        goTo(current - step);
+        ev.preventDefault();
+      } else if (zoom <= 1 && ev.key === 'Home') {
+        goTo(1);
+        ev.preventDefault();
+      } else if (zoom <= 1 && ev.key === 'End') {
+        goTo(total);
+        ev.preventDefault();
+      } else if (ev.key === '+' || ev.key === '=') {
+        void setZoom(zoom * 1.25);
+        ev.preventDefault();
+      } else if (ev.key === '-' || ev.key === '_') {
+        void setZoom(zoom / 1.25);
+        ev.preventDefault();
+      } else if (ev.key === '0') {
+        void setZoom(1);
+        ev.preventDefault();
+      }
+      return;
+    }
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowRight' || ev.key === 'PageDown') goTo(current + 1);
     else if (ev.key === 'ArrowUp' || ev.key === 'ArrowLeft' || ev.key === 'PageUp') goTo(current - 1);
     else if (ev.key === 'Home') goTo(1);
@@ -412,11 +508,11 @@ export async function initReader(el: HTMLElement): Promise<void> {
   sheets.addEventListener('touchend', (ev) => {
     const startX = touchX;
     touchX = null;
-    // A zoomed reader pans inside the viewer; only an unzoomed swipe turns.
-    if (startX === null || zoom !== 1) return;
+    // A zoomed reader pans with the document; only an unzoomed swipe turns.
+    if (startX === null || zoom > 1) return;
     const dx = (ev.changedTouches[0]?.clientX ?? startX) - startX;
     if (Math.abs(dx) < 40) return;
-    goTo(current + (dx < 0 ? 1 : -1));
+    goTo(current + (dx < 0 ? turnStep() : -turnStep()));
   }, { passive: true });
 
   // Links inside the PDF to its own sections go to the right page instead
@@ -451,15 +547,18 @@ export async function initReader(el: HTMLElement): Promise<void> {
   };
   const measureBase = (): void => {
     const probeNow = probeRef.viewport;
-    // Paged mode measures the sheet on screen, never a leftover page 1:
-    // after a turn there is exactly one sheet, the current one.
-    const anchor = paged ? current : 1;
-    const sheet = rendered.get(anchor) ?? ensureSheet(anchor);
-    const avail = sheet.clientWidth || sheets.clientWidth || el.clientWidth || probeNow.width;
     if (paged) {
-      const availH = Math.max(1, Math.round((window.innerHeight || 900) * 0.7));
-      baseScale = fitPage(avail, availH, probeNow.width, probeNow.height);
+      // Each page of a spread gets half the frame minus the 24px gap and
+      // 2px border per sheet; a single page caps at 760px. The sheet
+      // shrink-wraps the rendered page, so text and link layers stay aligned.
+      const frame = frameWidth();
+      const avail = isSpread(frame)
+        ? Math.max(1, (frame - 24 - 4) / 2)
+        : Math.max(1, Math.min(frame, 760) - 2);
+      baseScale = fitScale(avail, probeNow.width);
     } else {
+      const sheet = rendered.get(1) ?? ensureSheet(1);
+      const avail = sheet.clientWidth || sheets.clientWidth || el.clientWidth || probeNow.width;
       baseScale = fitScale(avail, probeNow.width);
     }
   };
@@ -470,7 +569,7 @@ export async function initReader(el: HTMLElement): Promise<void> {
     probeRef.viewport = probe;
     measureBase();
     if (paged) {
-      await renderPage(1);
+      await renderSpread();
       syncPageUi();
     } else {
       await renderAll();
@@ -493,12 +592,20 @@ export async function initReader(el: HTMLElement): Promise<void> {
     const onResize = (): void => {
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
+        // A breakpoint crossing re-lays the spread even at fit zoom, so it
+        // re-renders whenever the zoom is at fit.
         if (zoom !== 1) return;
         measureBase();
-        void (paged ? renderPage(current) : renderAll());
+        if (paged) {
+          syncPageUi();
+          void renderSpread();
+        } else {
+          void renderAll();
+        }
       }, 150);
     };
     window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
   } catch {
     const alert = document.createElement('p');
     alert.className = 'sign-reader-alert';

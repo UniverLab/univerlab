@@ -42,16 +42,23 @@
 }
 .sign-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  /* The controls stay in sight next to the page at any zoom and width. */
+  overflow-x: auto;
+  /* The controls stay in sight next to the page at any zoom and width,
+   * above the header corner, the mailbox and the theme switch. */
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 60;
   background: var(--bg);
   padding-block: 0.5rem;
+}
+@media (max-width: 389px) {
+  .sign-toolbar {
+    flex-wrap: wrap;
+  }
 }
 .sign-toolbar button {
   font: inherit;
@@ -67,12 +74,12 @@
 .sign-toolbar button:hover {
   border-color: var(--accent);
 }
-.sign-toolbar-page {
+.sign-toolbar-total {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--ink-dim);
   margin: 0 0.25rem;
-  cursor: text;
+  white-space: nowrap;
 }
 .sign-toolbar input[data-act='goto'] {
   font: inherit;
@@ -104,20 +111,37 @@
 .sign-toolbar a[data-act='dl']:hover {
   border-color: var(--accent);
 }
-/* Paged (book) mode: a single sheet pans inside the viewer, whose height
- * fits the viewport, so the document itself never scrolls. */
+/* Paged (book) mode: facing pages sit side by side like an open book and
+ * the document scrolls — no inner viewer, no empty sheet around a page. */
 .sign-reader[data-mode='paged'] .sign-sheets {
-  display: block;
-  overflow: auto;
-  max-height: 70vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  overflow: visible;
+  max-height: none;
 }
 .sign-reader[data-mode='paged'] .sign-sheet {
+  width: max-content;
+  max-width: 100%;
+  margin-inline: 0;
   overflow: visible;
-  transition: opacity 150ms ease, transform 150ms ease;
 }
-.sign-reader[data-mode='paged'] .sign-sheets.is-turning .sign-sheet {
-  opacity: 0;
-  transform: translateX(1rem);
+/* One page: the full frame up to 760 px, centred. */
+.sign-reader[data-mode='paged'] .sign-sheets:not(.is-spread) .sign-sheet {
+  flex: 0 1 auto;
+  max-width: 760px;
+  margin-inline: auto;
+}
+/* A spread: each facing page shrink-wraps its rendered canvas (≥ 520 px at fit). */
+.sign-reader[data-mode='paged'] .sign-sheets.is-spread .sign-sheet {
+  flex: 0 0 auto;
+  max-width: none;
+}
+.sign-reader[data-mode='paged'] .sign-sheets.is-zoomed {
+  justify-content: safe center;
+  overflow-x: auto;
 }
 .sign-reader[data-mode='paged'] .sign-sheets.is-zoomed .sign-sheet {
   max-width: none;
@@ -126,10 +150,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sign-reader[data-mode='paged'] .sign-sheet {
     transition: none;
-  }
-  .sign-reader[data-mode='paged'] .sign-sheets.is-turning .sign-sheet {
-    opacity: 1;
-    transform: none;
   }
 }
 .sign-sheets {
