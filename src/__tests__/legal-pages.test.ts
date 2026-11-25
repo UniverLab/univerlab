@@ -346,6 +346,62 @@ describe('one date constant, shared section ids, bounded metadata', () => {
   });
 });
 
+describe('privacy documents the aggregate funnel and install counts', () => {
+  const text = (doc: LegalDoc): string =>
+    [doc.intro, ...doc.sections.flatMap((s) => [...s.paras, ...(s.items ?? [])])].join(' ');
+  const FUNNEL_EVENTS = ['copy_install', 'workbench_visit', 'booking_click', 'whatsapp_click'];
+
+  it.each([
+    ['English privacy', privacyEn],
+    ['Spanish privacy', privacyEs],
+  ] as Array<[string, LegalDoc]>)('%s names the installer redirector and its alias', (_name, doc) => {
+    const body = text(doc);
+    expect(body).toContain('install.univerlab.org');
+    expect(body).toContain('get.univerlab.org');
+  });
+
+  it.each([
+    ['English privacy', privacyEn],
+    ['Spanish privacy', privacyEs],
+  ] as Array<[string, LegalDoc]>)('%s names the tab-only campaign storage and the utm parameters', (_name, doc) => {
+    const body = text(doc);
+    expect(body).toContain('sessionStorage');
+    expect(body).toContain('utm_');
+  });
+
+  it.each(FUNNEL_EVENTS)('English privacy names the funnel action %s', (event) => {
+    expect(text(privacyEn)).toContain(event);
+  });
+
+  it.each(FUNNEL_EVENTS)('Spanish privacy names the funnel action %s', (event) => {
+    expect(text(privacyEs)).toContain(event);
+  });
+
+  it('both privacy pages keep the counts in Analytics Engine for 90 days', () => {
+    expect(text(privacyEn)).toContain('Analytics Engine');
+    expect(text(privacyEn)).toContain('90-day totals');
+    expect(text(privacyEs)).toContain('Analytics Engine');
+    expect(text(privacyEs)).toContain('90 días');
+  });
+
+  it('both privacy pages say the installed binaries send no telemetry', () => {
+    expect(text(privacyEn)).toContain('zero telemetry');
+    expect(text(privacyEs)).toContain('ninguna telemetría');
+  });
+
+  it('neither privacy page keeps the old blanket marketing line', () => {
+    expect(text(privacyEn)).not.toContain('Nothing we collect is used for advertising or marketing');
+    expect(text(privacyEs)).not.toContain('Nada de lo que recogemos se usa para publicidad ni mercadeo');
+  });
+
+  it('both privacy pages use the accurate no-personalization wording', () => {
+    expect(text(privacyEn)).toMatch(/personalized advertising/i);
+    expect(text(privacyEn)).toMatch(/behavioral profiling/i);
+    expect(text(privacyEs)).toMatch(/publicidad personalizada/);
+    expect(text(privacyEs)).toMatch(/perfiles de comportamiento/);
+  });
+});
+
 describe('paid services not denied', () => {
   const enUsing = termsEn.sections.find((s) => s.id === 'using-the-services')!;
   const esUsing = termsEs.sections.find((s) => s.id === 'using-the-services')!;
