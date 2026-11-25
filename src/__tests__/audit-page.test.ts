@@ -406,6 +406,54 @@ describe('middleware — audit assets', () => {
   });
 });
 
+describe('audit report viewer', () => {
+  it('embeds the signing viewer and a named download when a report exists', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const priv = auditPageHtml(doc, SLUG);
+    expect(priv).toContain('class="audit-report-viewer"');
+    expect(priv).toContain('class="sign-reader"');
+    expect(priv).toContain(`data-src="/audits/${SLUG}/assets/report.pdf"`);
+    expect(priv).toContain('download="fixture-audit-1.0-en.pdf"');
+    expect(priv).toContain('Read the report here');
+    expect(priv).toContain('data-page-of=');
+  });
+
+  it('loads the report through the public route on the published page', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const pub = auditPageHtml(doc, SLUG, {
+      assetBase: '/workbench/audits',
+      published: { previous: null, next: [] },
+    });
+    expect(pub).toContain(`data-src="/workbench/audits/${SLUG}/assets/report.pdf"`);
+    expect(pub).toContain('download="fixture-audit-1.0-en.pdf"');
+  });
+
+  it('names the download after system, edition and language', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    const html = auditPageHtml(doc, 'acme/2026-01', { system: 'acme' });
+    expect(html).toContain('download="acme-2026-01-en.pdf"');
+    const esDoc = { ...doc, meta: { ...doc.meta, language: 'es' as const } };
+    const esHtml = auditPageHtml(esDoc, 'acme/2026-01', { system: 'acme' });
+    expect(esHtml).toContain('download="acme-2026-01-es.pdf"');
+    expect(esHtml).toContain('Leer el informe aquí');
+    expect(esHtml).not.toContain('Read the report here');
+  });
+
+  it('emits nothing report-related when there is no report deliverable', () => {
+    const doc = fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+    delete doc.deliverables.report;
+    const html = auditPageHtml(doc, SLUG);
+    expect(html).not.toContain('audit-report-viewer');
+    expect(html).not.toContain('sign-reader');
+    expect(html).not.toContain('audit-report-download');
+  });
+
+  it('loads the signing reader lazily from the audit client', () => {
+    const client = readFileSync(resolve(__dirname, '..', 'lib', 'audit', 'client.ts'), 'utf8');
+    expect(client).toMatch(/import\(['"]\.\.\/sign\/reader['"]\)/);
+  });
+});
+
 describe('audit renderer — safety', () => {
   const strings = {
     contents: 'Contents', deliverables: 'D', downloadPdf: 'PDF', downloadBundle: 'Bundle',

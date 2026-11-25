@@ -132,10 +132,20 @@
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
   background: var(--bg-raise);
+  min-width: 0;
 }
 
 .audit-deliverable p {
   margin: 0 0 0.5rem;
+}
+
+.audit-report-download {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.audit-report-viewer summary {
+  cursor: pointer;
 }
 
 .audit-toc {

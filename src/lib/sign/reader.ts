@@ -63,20 +63,27 @@ function button(label: string, act: string, text: string): HTMLButtonElement {
   return b;
 }
 
+/** Resolve the PDF URL for a `.sign-reader` element: the audit page passes
+ *  `data-src` (no `data-orig-hash`, so no hash check), while `/sign` keeps
+ *  passing `data-id`/`data-orig-hash`. Pure, tested. */
+export function resolveReaderSrc(d: DOMStringMap): string {
+  return d['src'] || (d['id'] ? `/api/sign-file?id=${encodeURIComponent(d['id'])}` : '');
+}
+
 /** Render every page of the request's PDF into `el`. Never throws: failures
  *  replace the loading status with the localized error. */
 export async function initReader(el: HTMLElement): Promise<void> {
   const s = readStrings(el);
-  const id = el.dataset['id'] ?? '';
+  const src = resolveReaderSrc(el.dataset);
   const origHash = el.dataset['origHash'] ?? '';
-  if (!id) {
+  if (!src) {
     el.textContent = s.error;
     return;
   }
 
   let bytes: ArrayBuffer;
   try {
-    const res = await fetch(`/api/sign-file?id=${encodeURIComponent(id)}`);
+    const res = await fetch(src);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     bytes = await res.arrayBuffer();
   } catch {

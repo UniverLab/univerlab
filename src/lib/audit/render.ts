@@ -4,7 +4,7 @@
 import { en } from '../../i18n/en';
 import { es } from '../../i18n/es';
 import { annexEntryHtml, findingEntryHtml, renderBlock, sourcesEntriesHtml, type BlockCtx } from './blocks';
-import { assetById, assetUrl, esc, safeExternalUrl, visibleAnnexes } from './util';
+import { assetById, assetUrl, esc, reportDownloadName, safeExternalUrl, visibleAnnexes } from './util';
 import { auditBadge, badgeExpired, badgeLinkLabel, badgeSnippet, badgeValidUntil } from './badge';
 import { PUBLIC_AUDIT_BASE } from './markdown';
 import { citationTexts } from '../citation';
@@ -115,13 +115,21 @@ function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: str
   );
 }
 
-function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, isPublic: boolean): string {
+function deliverablesHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, isPublic: boolean, system: string, edition: string, signT: typeof en.sign): string {
   const cards: string[] = [];
   const report = doc.deliverables.report ? assetById(doc, doc.deliverables.report) : null;
   if (report) {
+    const pdfUrl = assetUrl(slug, report.path, base);
     cards.push(
       `<div class="audit-deliverable"><p>${esc(report.title)}</p>` +
-        `<a href="${esc(assetUrl(slug, report.path, base))}">${esc(t.downloadPdf)}</a></div>`,
+        `<a class="audit-report-download" href="${esc(pdfUrl)}" download="${esc(reportDownloadName(system, edition, doc.meta.language))}">${esc(t.downloadPdf)}</a>` +
+        `<details class="audit-report-viewer"><summary>${esc(t.readReport)}</summary>` +
+        `<div class="sign-reader" data-src="${esc(pdfUrl)}" ` +
+        `data-loading="${esc(signT.readerLoading)}" data-error="${esc(signT.readerError)}" ` +
+        `data-zoom-in="${esc(signT.zoomIn)}" data-zoom-out="${esc(signT.zoomOut)}" data-zoom-fit="${esc(signT.zoomFit)}" ` +
+        `data-page-prev="${esc(signT.pagePrev)}" data-page-next="${esc(signT.pageNext)}" ` +
+        `data-page-of="${esc(signT.pageOf)}">` +
+        `<p class="sign-reader-status">${esc(signT.readerLoading)}</p></div></details></div>`,
     );
   }
   const bundle = doc.deliverables.bundle ? assetById(doc, doc.deliverables.bundle) : null;
@@ -354,6 +362,9 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
     ? `<section class="audit-auto-sources">${sourcesEntriesHtml(ctx, missingSources)}</section>`
     : '';
   const stable = opts.system ?? slug;
+  const system = opts.system ?? (slug.includes('/') ? slug.split('/')[0] : slug);
+  const edition = (slug.includes('/') ? slug.split('/')[1] : '') || doc.meta.version;
+  const signT = doc.meta.language === 'es' ? es.sign : en.sign;
   const editions = opts.editions?.length ? editionsHtml(opts.editions, t) : '';
   const published = opts.published
     ? publishedHtml(doc, stable, t, opts.published, new Date())
@@ -365,7 +376,7 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
     coverHtml(doc, slug, t, base) +
     editions +
     published +
-    deliverablesHtml(doc, slug, t, base, Boolean(opts.published)) +
+    deliverablesHtml(doc, slug, t, base, Boolean(opts.published), system, edition, signT) +
     signedDocs +
     tocHtml(doc, t) +
     sectionsHtml +

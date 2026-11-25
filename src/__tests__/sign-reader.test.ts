@@ -5,7 +5,7 @@
  *
  * @jest-environment node
  */
-import { hashesEqual, pageLabel } from '../lib/sign/reader';
+import { hashesEqual, pageLabel, resolveReaderSrc } from '../lib/sign/reader';
 
 jest.mock('pdfjs-dist', () => ({ GlobalWorkerOptions: {}, getDocument: jest.fn() }), { virtual: true });
 jest.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => 'worker.js', { virtual: true });
@@ -21,6 +21,21 @@ describe('pageLabel', () => {
 
   it('leaves a template without placeholders untouched', () => {
     expect(pageLabel(1, 2, 'pages')).toBe('pages');
+  });
+});
+
+describe('resolveReaderSrc', () => {
+  it('prefers data-src, the audit page route', () => {
+    expect(resolveReaderSrc({ src: '/audits/acme/2026-01/assets/report.pdf' } as DOMStringMap))
+      .toBe('/audits/acme/2026-01/assets/report.pdf');
+  });
+
+  it('falls back to the data-id sign-file route', () => {
+    expect(resolveReaderSrc({ id: 'abc 123' } as DOMStringMap)).toBe('/api/sign-file?id=abc%20123');
+  });
+
+  it('resolves to empty when neither is present', () => {
+    expect(resolveReaderSrc({} as DOMStringMap)).toBe('');
   });
 });
 

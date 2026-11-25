@@ -4,6 +4,8 @@
 // findings-table buttons filter rows by severity/status and set aria-pressed;
 // stepper buttons toggle their bodies and aria-expanded.
 jest.mock('../lib/copy-morph', () => ({ COPY_DONE_MS: 50, setCopyState: jest.fn() }));
+jest.mock('../lib/sign/reader', () => ({ initReader: jest.fn() }));
+import { initReader } from '../lib/sign/reader';
 import { initAuditPage } from '../lib/audit/client';
 
 function mountShell(inner: string, data = { slug: 's', lang: 'en' }): HTMLElement {
@@ -176,6 +178,35 @@ describe('copy buttons', () => {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
     initAuditPage(mountShell('<button class="audit-badge-copy" data-snippet="s">c</button>'));
     click(document.querySelector('.audit-badge-copy') as HTMLElement);
+  });
+});
+
+describe('report viewer', () => {
+  const VIEWER = '<details class="audit-report-viewer"><summary>report</summary>' +
+    '<div class="sign-reader" data-src="/audits/s/s/assets/report.pdf">' +
+    '<p class="sign-reader-status">Loading</p></div></details>';
+
+  function flush(): Promise<void> {
+    return new Promise((r) => setTimeout(r, 0));
+  }
+
+  it('never loads the reader while the report stays closed', async () => {
+    initAuditPage(mountShell(VIEWER));
+    await flush();
+    expect(initReader).not.toHaveBeenCalled();
+  });
+
+  it('loads the reader once when the report opens', async () => {
+    initAuditPage(mountShell(VIEWER));
+    const details = document.querySelector('details') as HTMLDetailsElement;
+    details.open = true;
+    details.dispatchEvent(new Event('toggle'));
+    await flush();
+    expect(initReader).toHaveBeenCalledTimes(1);
+    expect(initReader).toHaveBeenCalledWith(document.querySelector('.sign-reader'));
+    details.dispatchEvent(new Event('toggle'));
+    await flush();
+    expect(initReader).toHaveBeenCalledTimes(1);
   });
 });
 

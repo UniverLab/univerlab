@@ -43,6 +43,13 @@ export function md(src: string): string {
   return html.replace(/<a href="((?:https?:)?\/\/[^"]*)"/g, '<a href="$1" rel="noopener noreferrer"');
 }
 
+/** File name for the report download: `{system}-{edition}-{lang}.pdf`,
+ *  sanitized to URL/file-safe characters. Pure, tested. */
+export function reportDownloadName(system: string, edition: string, lang: string): string {
+  const clean = (p: string): string => p.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'report';
+  return `${clean(system)}-${clean(edition)}-${clean(lang)}.pdf`;
+}
+
 /** Public URL of an audit file, served through the assets route. Catalogue
  *  paths are stored as `assets/<file>`; the private route mounts them at
  *  `/audits/<slug>/assets/<file>`, the public one at

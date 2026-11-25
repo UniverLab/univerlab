@@ -821,6 +821,7 @@ export const es: Dict = {
     contents: 'Contenido',
     deliverables: 'Entregables',
     downloadPdf: 'Descargar el informe (PDF)',
+    readReport: 'Leer el informe aquí',
     downloadBundle: 'Descargar el paquete de archivos',
     repository: 'Repositorio del código',
     openRepository: 'Abrir el repositorio',

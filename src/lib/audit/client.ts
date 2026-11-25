@@ -256,6 +256,27 @@ function wireBadgeCopy(root: ParentNode): void {
   });
 }
 
+/** Lazily render the report PDF with the signing console's viewer: the
+ *  `pdfjs-dist` bundle loads only when the reader opens the report. */
+function wireReportViewer(root: ParentNode): void {
+  const load = (details: HTMLDetailsElement): void => {
+    if (!details.open) return;
+    const reader = details.querySelector<HTMLElement>('.sign-reader');
+    if (!reader || reader.dataset['loaded'] === '1') return;
+    reader.dataset['loaded'] = '1';
+    void import('../sign/reader')
+      .then((m) => m.initReader(reader))
+      .catch(() => {
+        delete reader.dataset['loaded'];
+      });
+  };
+  for (const details of Array.from(root.querySelectorAll('details.audit-report-viewer'))) {
+    const d = details as HTMLDetailsElement;
+    if (d.open) void load(d);
+    d.addEventListener('toggle', () => load(d));
+  }
+}
+
 export function initAuditPage(root: ParentNode = document): void {
   if (!readData()) return;
   wireTerms(root);
@@ -263,6 +284,7 @@ export function initAuditPage(root: ParentNode = document): void {
   wireTables(root);
   wireBadgeCopy(root);
   wireSteppers(root);
+  wireReportViewer(root);
   void wireCharts(root).catch(() => {});
   void wireDiagrams(root).catch(() => {});
   void wireCode(root).catch(() => {});

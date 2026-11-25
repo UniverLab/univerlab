@@ -827,6 +827,7 @@ export const en = {
     contents: 'Contents',
     deliverables: 'Deliverables',
     downloadPdf: 'Download the report (PDF)',
+    readReport: 'Read the report here',
     downloadBundle: 'Download the asset bundle',
     repository: 'Code repository',
     openRepository: 'Open the repository',
