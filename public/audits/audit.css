@@ -571,6 +571,15 @@
   overflow-x: auto;
 }
 
+.audit-figure-plate {
+  display: block;
+  max-width: 100%;
+}
+
+.audit-figure-plate img {
+  display: block;
+}
+
 .audit-diagram-mount {
   min-width: 0;
 }
@@ -891,6 +900,20 @@ blockquote cite {
 }
 
 @media (max-width: 48rem) {
+  /* A wide table scrolls inside its block instead of squeezing a column. */
+  .audit-block--table,
+  .audit-table {
+    overflow-x: auto;
+  }
+
+  .audit-table table {
+    min-width: 36rem;
+  }
+
+  .audit-sources ol {
+    padding-inline-start: 2.2rem;
+  }
+
   .audit-toc ol {
     columns: 1;
   }
@@ -904,7 +927,8 @@ blockquote cite {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .audit-block {
+  .audit-block,
+  .audit-layout--grid .audit-block {
     grid-column: auto;
   }
 
