@@ -46,6 +46,12 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  /* The controls stay in sight next to the page at any zoom and width. */
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+  padding-block: 0.5rem;
 }
 .sign-toolbar button {
   font: inherit;
@@ -66,6 +72,65 @@
   font-size: 0.85rem;
   color: var(--ink-dim);
   margin: 0 0.25rem;
+  cursor: text;
+}
+.sign-toolbar input[data-act='goto'] {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.3rem 0.4rem;
+  width: 3.75rem;
+}
+.sign-toolbar input[data-act='goto']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.sign-toolbar a[data-act='dl'] {
+  font: inherit;
+  font-family: var(--font-mono);
+  color: var(--ink);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  min-width: 2.5rem;
+  text-align: center;
+  text-decoration: none;
+}
+.sign-toolbar a[data-act='dl']:hover {
+  border-color: var(--accent);
+}
+/* Paged (book) mode: a single sheet pans inside the viewer, whose height
+ * fits the viewport, so the document itself never scrolls. */
+.sign-reader[data-mode='paged'] .sign-sheets {
+  display: block;
+  overflow: auto;
+  max-height: 70vh;
+}
+.sign-reader[data-mode='paged'] .sign-sheet {
+  overflow: visible;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.sign-reader[data-mode='paged'] .sign-sheets.is-turning .sign-sheet {
+  opacity: 0;
+  transform: translateX(1rem);
+}
+.sign-reader[data-mode='paged'] .sign-sheets.is-zoomed .sign-sheet {
+  max-width: none;
+  width: max-content;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sign-reader[data-mode='paged'] .sign-sheet {
+    transition: none;
+  }
+  .sign-reader[data-mode='paged'] .sign-sheets.is-turning .sign-sheet {
+    opacity: 1;
+    transform: none;
+  }
 }
 .sign-sheets {
   display: grid;
@@ -86,6 +151,17 @@
   display: block;
   width: 100%;
   height: auto;
+}
+/* Tap targets for the PDF's own internal links (table of contents,
+ * cross-references): transparent, above the text layer like a native
+ * annotation layer, keyboard-focusable. */
+.sign-sheet .sign-link-overlay {
+  position: absolute;
+  z-index: 1;
+}
+.sign-sheet .sign-link-overlay:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .sign-sheets:not(.is-zoomed) {
   overflow-x: clip;

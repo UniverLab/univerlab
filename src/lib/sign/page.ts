@@ -19,6 +19,8 @@ export interface SignStrings {
   pagePrev: string;
   pageNext: string;
   pageOf: string;
+  pageGo: string;
+  pageDownload: string;
   downloadOrig: string;
   hashMismatch: string;
   formName: string;
@@ -52,11 +54,12 @@ function viewerHtml(req: SigningRequest, s: SignStrings): string {
   const fileUrl = `/api/sign-file?id=${esc(req.id)}`;
   return (
     `<div class="sign-viewer"><h2>${esc(s.viewerLabel)}</h2>` +
-    `<div class="sign-reader" data-id="${esc(req.id)}" data-orig-hash="${esc(req.origHash)}" ` +
+    `<div class="sign-reader" data-mode="continuous" data-id="${esc(req.id)}" data-orig-hash="${esc(req.origHash)}" ` +
     `data-loading="${esc(s.readerLoading)}" data-error="${esc(s.readerError)}" ` +
     `data-zoom-in="${esc(s.zoomIn)}" data-zoom-out="${esc(s.zoomOut)}" data-zoom-fit="${esc(s.zoomFit)}" ` +
     `data-page-prev="${esc(s.pagePrev)}" data-page-next="${esc(s.pageNext)}" ` +
-    `data-page-of="${esc(s.pageOf)}" data-hash-mismatch="${esc(s.hashMismatch)}">` +
+    `data-page-of="${esc(s.pageOf)}" data-page-go="${esc(s.pageGo)}" ` +
+    `data-download="${esc(s.pageDownload)}" data-hash-mismatch="${esc(s.hashMismatch)}">` +
     `<p class="sign-reader-status">${esc(s.readerLoading)}</p></div>` +
     `<p class="sign-actions"><a class="sign-download" href="${fileUrl}">${esc(s.downloadOrig)}</a></p>` +
     `<p class="sign-hint">${esc(s.zoomHint)}</p>` +

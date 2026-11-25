@@ -44,6 +44,8 @@ const STRINGS: SignStrings = {
   pagePrev: 'Previous page',
   pageNext: 'Next page',
   pageOf: 'Page {current} of {total}',
+  pageGo: 'Go to page',
+  pageDownload: 'Download PDF',
   downloadOrig: 'Download the original PDF',
   hashMismatch: 'Bytes do not match.',
   formName: 'Your full name',

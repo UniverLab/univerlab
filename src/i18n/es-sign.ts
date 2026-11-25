@@ -15,6 +15,7 @@ export const sign = {
     pagePrev: 'Página anterior',
     pageNext: 'Página siguiente',
     pageOf: 'Página {current} de {total}',
+    pageGo: 'Ir a la página', pageDownload: 'Descargar PDF',
     downloadOrig: 'Descargar el PDF original',
     hashMismatch: 'Aviso: estos bytes no coinciden con el hash del documento. Pide al laboratorio un enlace nuevo.',
     formName: 'Tu nombre completo',
