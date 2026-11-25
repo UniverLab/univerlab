@@ -63,6 +63,12 @@ function button(label: string, act: string, text: string): HTMLButtonElement {
   return b;
 }
 
+/** Fit-to-width scale for a page of `pageW` CSS px in `availW` CSS px.
+ *  Pure so jest can pin it: the rendered page is never wider than its sheet. */
+export function fitScale(availW: number, pageW: number): number {
+  return availW > 0 ? availW / pageW : 1;
+}
+
 /** Resolve the PDF URL for a `.sign-reader` element: the audit page passes
  *  `data-src` (no `data-orig-hash`, so no hash check), while `/sign` keeps
  *  passing `data-id`/`data-orig-hash`. Pure, tested. */
@@ -144,10 +150,7 @@ export async function initReader(el: HTMLElement): Promise<void> {
   let current = 1;
   const rendered = new Map<number, HTMLElement>();
 
-  const renderPage = async (n: number): Promise<void> => {
-    const page = await pdf.getPage(n);
-    const scale = baseScale * zoom;
-    const viewport = page.getViewport({ scale });
+  const ensureSheet = (n: number): HTMLElement => {
     let sheet = rendered.get(n);
     if (!sheet) {
       sheet = document.createElement('section');
@@ -164,6 +167,14 @@ export async function initReader(el: HTMLElement): Promise<void> {
         .sort((a, b) => Number((a as HTMLElement).dataset['page']) - Number((b as HTMLElement).dataset['page']))
         .forEach((c) => sheets.append(c));
     }
+    return sheet;
+  };
+
+  const renderPage = async (n: number): Promise<void> => {
+    const page = await pdf.getPage(n);
+    const scale = baseScale * zoom;
+    const viewport = page.getViewport({ scale });
+    const sheet = ensureSheet(n);
     sheet.querySelectorAll('canvas, .sign-text-layer').forEach((c) => c.remove());
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -171,7 +182,8 @@ export async function initReader(el: HTMLElement): Promise<void> {
     canvas.width = Math.round(viewport.width * dpr);
     canvas.height = Math.round(viewport.height * dpr);
     canvas.style.width = `${viewport.width}px`;
-    canvas.style.height = `${viewport.height}px`;
+    canvas.style.height = zoom > 1 ? `${viewport.height}px` : 'auto';
+    canvas.style.maxWidth = zoom > 1 ? 'none' : '100%';
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     await page.render({ canvasContext: ctx, viewport: viewport.clone({ scale: scale * dpr }) }).promise;
@@ -203,6 +215,8 @@ export async function initReader(el: HTMLElement): Promise<void> {
 
   const setZoom = async (z: number): Promise<void> => {
     zoom = Math.min(4, Math.max(0.5, z));
+    sheets.classList.toggle('is-zoomed', zoom > 1);
+    if (zoom === 1) measureBase();
     // Sheets collapse while their canvases re-render, which can throw the
     // scroll position (and the observer-tracked page) elsewhere: hold the
     // reader's place so zooming never teleports the signer.
@@ -240,13 +254,31 @@ export async function initReader(el: HTMLElement): Promise<void> {
     { rootMargin: '-40% 0px -40% 0px' },
   );
 
+  const probeRef: { viewport: { width: number } } = { viewport: { width: 1 } };
+  const measureBase = (): void => {
+    const probeNow = probeRef.viewport;
+    const sheet = rendered.get(1) ?? ensureSheet(1);
+    const avail = sheet.clientWidth || sheets.clientWidth || el.clientWidth || probeNow.width;
+    baseScale = fitScale(avail, probeNow.width);
+  };
+
   try {
     const first = await pdf.getPage(1);
     const probe = first.getViewport({ scale: 1 });
-    const width = el.clientWidth || probe.width;
-    baseScale = width / probe.width;
+    probeRef.viewport = probe;
+    measureBase();
     await renderAll();
     rendered.forEach((sheet) => seen.observe(sheet));
+    let resizeTimer = 0;
+    const onResize = (): void => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (zoom !== 1) return;
+        measureBase();
+        void renderAll();
+      }, 150);
+    };
+    window.addEventListener('resize', onResize);
   } catch {
     const alert = document.createElement('p');
     alert.className = 'sign-reader-alert';

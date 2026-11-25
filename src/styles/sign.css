@@ -79,12 +79,19 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 3px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .sign-sheet canvas {
   display: block;
   width: 100%;
   height: auto;
+}
+.sign-sheets:not(.is-zoomed) {
+  overflow-x: clip;
+}
+.sign-sheets:not(.is-zoomed) .sign-sheet canvas {
+  max-width: 100%;
 }
 .sign-text-layer {
   position: absolute;

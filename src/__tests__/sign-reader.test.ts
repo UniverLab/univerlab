@@ -5,7 +5,7 @@
  *
  * @jest-environment node
  */
-import { hashesEqual, pageLabel, resolveReaderSrc } from '../lib/sign/reader';
+import { fitScale, hashesEqual, pageLabel, resolveReaderSrc } from '../lib/sign/reader';
 
 jest.mock('pdfjs-dist', () => ({ GlobalWorkerOptions: {}, getDocument: jest.fn() }), { virtual: true });
 jest.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => 'worker.js', { virtual: true });
@@ -37,6 +37,23 @@ describe('resolveReaderSrc', () => {
   it('resolves to empty when neither is present', () => {
     expect(resolveReaderSrc({} as DOMStringMap)).toBe('');
   });
+});
+
+describe('fitScale', () => {
+  it('fits the 680px sheet into the 1120px page at fit-to-width', () => {
+    expect(fitScale(680, 1120)).toBeCloseTo(680 / 1120, 10);
+  });
+
+  it('falls back to 1 when there is no width to measure', () => {
+    expect(fitScale(0, 1120)).toBe(1);
+  });
+
+  it.each([360, 680, 1120, 1920])(
+    'never renders wider than a %dpx sheet at fit-to-width',
+    (sheetW) => {
+      expect(fitScale(sheetW, 1120) * 1120).toBeLessThanOrEqual(sheetW);
+    },
+  );
 });
 
 describe('hashesEqual', () => {
