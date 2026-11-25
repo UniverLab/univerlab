@@ -12,10 +12,21 @@ import type { Citation } from '../experiments';
 import type { AuditDocument, AuditLayout, AuditSection } from './types';
 
 export interface PublishedAuditLinks {
-  /** Slug of the previous audit of the same system, when it is public. */
+  /** `system/edition` path of the previous audit of the same system, when it is public. */
   previous: string | null;
-  /** Slugs of later audits of the same system that are public. */
+  /** `system/edition` paths of later audits of the same system that are public. */
   next: string[];
+}
+
+/** One edition in the system's edition list: newest first. `url` is the
+ *  edition's own page address. */
+export interface AuditEditionLink {
+  id: string;
+  date: string;
+  version: string;
+  status: string;
+  url: string;
+  current: boolean;
 }
 
 export interface AuditPageOptions {
@@ -27,6 +38,12 @@ export interface AuditPageOptions {
   /** Signing requests bound to this audit (`auditSlug == slug`): the
    *  private page lists them. Only the middleware passes this. */
   signedDocs?: SignedDocEntry[];
+  /** The stable system address the badge and snippet point at, so the link
+   *  a client pins never changes between editions. Defaults to slug. */
+  system?: string;
+  /** Every edition of the system, newest first; rendered as a nav list of
+   *  links that each open one edition. */
+  editions?: AuditEditionLink[];
 }
 
 /** One signing request of this audit, as the private page lists it. */
@@ -237,6 +254,23 @@ function depositHtml(doc: AuditDocument, t: BlockCtx['t']): string {
   );
 }
 
+/** The edition list, right after the cover: every edition of the system,
+ *  newest first, each opening its own page. The current edition is marked;
+ *  every label follows the edition's `meta.language`. */
+function editionsHtml(editions: AuditEditionLink[], t: BlockCtx['t']): string {
+  if (!editions.length) return '';
+  const rows = editions
+    .map((e) => {
+      const label = `${e.date} · ${e.version} · ${e.status}`;
+      const body = e.current
+        ? `<a href="${esc(e.url)}" aria-current="true">${esc(label)}</a> <span class="audit-edition-latest">${esc(t.latestBadge)}</span>`
+        : `<a href="${esc(e.url)}" aria-label="${esc(t.editionOpen)}: ${esc(label)}">${esc(label)}</a>`;
+      return `<li>${body}</li>`;
+    })
+    .join('');
+  return `<nav class="audit-editions" aria-label="${esc(t.editionsTitle)}"><h2>${esc(t.editionsTitle)}</h2><ol>${rows}</ol></nav>`;
+}
+
 /** The published-audit block, right after the cover: the audit date and its
  *  validity, links to earlier and later audits of the same system, the
  *  Zenodo deposit with its DOI and citation, and the badge with the copyable
@@ -319,14 +353,17 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   const sourceEntries = missingSources.length
     ? `<section class="audit-auto-sources">${sourcesEntriesHtml(ctx, missingSources)}</section>`
     : '';
+  const stable = opts.system ?? slug;
+  const editions = opts.editions?.length ? editionsHtml(opts.editions, t) : '';
   const published = opts.published
-    ? publishedHtml(doc, slug, t, opts.published, new Date())
+    ? publishedHtml(doc, stable, t, opts.published, new Date())
     : '';
   const signedDocs = opts.signedDocs?.length ? signedDocsHtml(opts.signedDocs, t) : '';
   return (
     `<div class="audit audit-accent--${esc(accent)}">` +
     `<script type="application/json" id="audit-data">${data}</script>` +
     coverHtml(doc, slug, t, base) +
+    editions +
     published +
     deliverablesHtml(doc, slug, t, base, Boolean(opts.published)) +
     signedDocs +

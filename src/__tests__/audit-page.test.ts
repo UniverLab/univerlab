@@ -24,13 +24,21 @@ function fixtureDoc(): Doc {
 }
 
 /** In-memory AUDITS bucket: `<slug>/audit.json` plus the fixture asset files. */
+/** In-memory AUDITS bucket in the edition layout: `<system>/<edition>/`
+ * plus the fixture asset files, with a prefix-aware `list`. The fixture
+ * slug doubles as its own system and edition, so `/audits/<SLUG>/` keeps
+ * serving it as the latest edition. */
 function makeAudits(doc: Doc) {
   const files = new Map<string, Uint8Array>();
-  files.set(`${SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
+  files.set(`${SLUG}/${SLUG}/audit.json`, Buffer.from(JSON.stringify(doc)));
   for (const entry of readFixtureAssets()) {
-    files.set(`${SLUG}/${entry.path}`, entry.bytes);
+    files.set(`${SLUG}/${SLUG}/${entry.path}`, entry.bytes);
   }
   return {
+    async list(options?: { prefix?: string }) {
+      const prefix = options?.prefix ?? '';
+      return { objects: [...files.keys()].filter((k) => k.startsWith(prefix)).map((key) => ({ key })) };
+    },
     async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
       const bytes = files.get(key);
       if (!bytes) return null;
@@ -169,8 +177,8 @@ describe('middleware — audit page', () => {
     expect(body).toMatch(/<p>Read the <span class="audit-term"/);
     expect(body).toMatch(/<p>Read the(?:(?!<\/p>)[\s\S])*summary first\.<\/p>/);
     expect(body).toContain('Fixture definition: one client journey');
-    expect(body).toContain(`href="/audits/${SLUG}/assets/figure.svg"`);
-    expect(body).toContain(`href="/audits/${SLUG}/assets/report.pdf"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/figure.svg"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/report.pdf"`);
     expect(body).toContain('href="#audit-sec-overview"');
     expect(body).toContain('id="audit-sec-overview"');
     expect(body).toContain('id="audit-finding-F-01"');
@@ -218,7 +226,7 @@ describe('middleware — audit page', () => {
     expect(body).toContain('Repro sandbox');
     expect(body).toContain('Runs the finding end to end.');
     expect(body).toContain('Usage');
-    expect(body).toContain(`href="/audits/${SLUG}/assets/chart-data.json"`);
+    expect(body).toContain(`href="/audits/${SLUG}/${SLUG}/assets/chart-data.json"`);
     expect(body).toContain('class="audit-annex-file-name">chart-data.json<');
     const chart = (doc['assets'] as Doc[]).find((a) => a['id'] === 'chart-data')!;
     expect(body).toContain(chart['sha256'] as string);

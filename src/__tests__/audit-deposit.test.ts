@@ -525,7 +525,7 @@ describe('deposit command', () => {
         consent: true,
       });
       expect(typeof (written['deposit'] as Doc)['depositedAt']).toBe('string');
-      const remote = JSON.parse(readFileSync(join(dir, 'bucket', 'doi-slug', 'audit.json'), 'utf8')) as Doc;
+      const remote = JSON.parse(readFileSync(join(dir, 'bucket', 'doi-slug', 'doi-slug', 'audit.json'), 'utf8')) as Doc;
       expect((remote['deposit'] as Doc)).toMatchObject({ versionDoi: '10.5281/zenodo.100' });
     } finally {
       rmSync(folder, { recursive: true, force: true });

@@ -4,7 +4,7 @@
 // run unchanged in jest with a fake bucket and a stub verifier.
 
 import { isOwnerEmail, readToken } from '../sign/handlers';
-import { ADMIN_SLUG_RE, listAdminAudits, loadAdminAuditDoc, publishRefusal, type AdminR2Bucket } from './summary';
+import { ADMIN_SLUG_RE, listAdminAudits, publishRefusal, resolveAdminAudit, type AdminR2Bucket } from './summary';
 
 export interface AdminEnv {
   AUDITS?: AdminR2Bucket;
@@ -44,12 +44,39 @@ export async function handleListAudits(request: Request, env: AdminEnv, deps: Ad
   return json({ ok: true, audits });
 }
 
-/** POST /api/admin-visibility: flip one audit between private and public.
- *  Body: slug, visibility. Publishing refuses while a critical or high
- *  finding is open; unpublishing always applies. A flip to private keeps the
- *  document valid: a public audit carries no reader allowlist, so without one
- *  the stored private document would fail validation and vanish from the
- *  panel — the acting owner's email becomes the allowlist instead. */
+/** The audit a visibility or remove body addresses: `{ system, edition }`
+ *  names one edition, `{ slug }` names a legacy bare slug or a bare system
+ *  (its newest edition) for compatibility. Null when the shape is invalid. */
+function addressOf(body: Record<string, unknown>): string | null {
+  const system = typeof body['system'] === 'string' ? body['system'] : null;
+  const edition = typeof body['edition'] === 'string' ? body['edition'] : null;
+  if (system !== null) {
+    if (!ADMIN_SLUG_RE.test(system)) return null;
+    if (edition !== null) {
+      if (!ADMIN_SLUG_RE.test(edition)) return null;
+      return `${system}/${edition}`;
+    }
+    return system;
+  }
+  const slug = typeof body['slug'] === 'string' ? body['slug'] : '';
+  if (slug.includes('/')) {
+    const [s, e, ...rest] = slug.split('/');
+    if (!s || !e || rest.length > 0) return null;
+    if (!ADMIN_SLUG_RE.test(s) || !ADMIN_SLUG_RE.test(e)) return null;
+    return `${s}/${e}`;
+  }
+  if (!ADMIN_SLUG_RE.test(slug)) return null;
+  return slug;
+}
+
+/** POST /api/admin-visibility: flip one audit edition between private and
+ *  public. Body: `{ system, edition }` (or `{ slug }` for a legacy bare
+ *  slug or a bare system, its newest edition), visibility. Publishing
+ *  refuses while a critical or high finding is open; unpublishing always
+ *  applies. A flip to private keeps the document valid: a public audit
+ *  carries no reader allowlist, so without one the stored private document
+ *  would fail validation and vanish from the panel — the acting owner's
+ *  email becomes the allowlist instead. */
 export async function handleSetVisibility(request: Request, env: AdminEnv, deps: AdminDeps): Promise<Response> {
   const owner = await authedOwner(request, env, deps);
   if (typeof owner !== 'string') return owner;
@@ -59,18 +86,19 @@ export async function handleSetVisibility(request: Request, env: AdminEnv, deps:
   } catch {
     return json({ ok: false, error: 'invalid' }, 400);
   }
-  const slug = typeof body['slug'] === 'string' ? body['slug'] : '';
+  const ref = addressOf(body);
   const visibility = typeof body['visibility'] === 'string' ? body['visibility'] : '';
-  if (!ADMIN_SLUG_RE.test(slug) || (visibility !== 'public' && visibility !== 'private')) {
+  if (ref === null || (visibility !== 'public' && visibility !== 'private')) {
     return json({ ok: false, error: 'invalid' }, 400);
   }
-  const doc = await loadAdminAuditDoc(env.AUDITS, slug);
-  if (!doc) return json({ ok: false, error: 'missing' }, 404);
+  const resolved = await resolveAdminAudit(env.AUDITS, ref);
+  if (!resolved) return json({ ok: false, error: 'missing' }, 404);
+  const { doc, key, system, edition } = resolved;
   if (visibility === 'public') {
     const refusal = publishRefusal(doc);
     if (refusal) return json({ ok: false, error: 'refused', reason: refusal }, 409);
   }
-  if (doc.visibility === visibility) return json({ ok: true, slug, visibility });
+  if (doc.visibility === visibility) return json({ ok: true, slug: edition, system, edition, visibility });
   const next = { ...doc, visibility };
   if (visibility === 'private') {
     const emails = Array.isArray(next.access?.emails)
@@ -79,17 +107,20 @@ export async function handleSetVisibility(request: Request, env: AdminEnv, deps:
     if (emails.length === 0) next.access = { emails: [owner] };
   }
   try {
-    await env.AUDITS!.put(`${slug}/audit.json`, `${JSON.stringify(next, null, 2)}\n`, {
+    await env.AUDITS!.put(key, `${JSON.stringify(next, null, 2)}\n`, {
       httpMetadata: { contentType: 'application/json; charset=utf-8' },
     });
   } catch {
     return json({ ok: false, error: 'store' }, 500);
   }
-  return json({ ok: true, slug, visibility });
+  return json({ ok: true, slug: edition, system, edition, visibility });
 }
 
-/** POST /api/admin-remove: delete an audit and every object under its key
- *  prefix. Body: slug, confirm (must be true: the panel asks twice). */
+/** POST /api/admin-remove: delete one audit edition and every object under
+ *  its key prefix, or the whole system when the body names no edition.
+ *  Body: `{ system, edition? }` (or `{ slug }`: an edition pair, a legacy
+ *  bare slug, or a bare system), confirm (must be true: the panel asks
+ *  twice). */
 export async function handleRemoveAudit(request: Request, env: AdminEnv, deps: AdminDeps): Promise<Response> {
   const owner = await authedOwner(request, env, deps);
   if (typeof owner !== 'string') return owner;
@@ -99,18 +130,20 @@ export async function handleRemoveAudit(request: Request, env: AdminEnv, deps: A
   } catch {
     return json({ ok: false, error: 'invalid' }, 400);
   }
-  const slug = typeof body['slug'] === 'string' ? body['slug'] : '';
-  if (!ADMIN_SLUG_RE.test(slug)) return json({ ok: false, error: 'invalid' }, 400);
+  const ref = addressOf(body);
+  if (ref === null) return json({ ok: false, error: 'invalid' }, 400);
   if (body['confirm'] !== true) return json({ ok: false, error: 'confirm' }, 400);
-  const doc = await loadAdminAuditDoc(env.AUDITS, slug);
-  if (!doc) return json({ ok: false, error: 'missing' }, 404);
+  const resolved = await resolveAdminAudit(env.AUDITS, ref);
+  if (!resolved) return json({ ok: false, error: 'missing' }, 404);
+  const { doc, system, edition } = resolved;
+  const prefix = resolved.scope === 'edition' ? `${system}/${edition}/` : `${system}/`;
   let keys: string[];
   try {
     if (env.AUDITS!.list) {
-      const listed = await env.AUDITS!.list({ prefix: `${slug}/` });
-      keys = listed.objects.map((o) => o.key).filter((k) => k === `${slug}/audit.json` || k.startsWith(`${slug}/`));
+      const listed = await env.AUDITS!.list({ prefix });
+      keys = listed.objects.map((o) => o.key).filter((k) => k.startsWith(prefix));
     } else {
-      keys = [`${slug}/audit.json`, ...doc.assets.map((a) => `${slug}/${a.path}`)];
+      keys = [resolved.key, ...doc.assets.map((a) => `${prefix}${a.path}`)];
     }
   } catch {
     return json({ ok: false, error: 'store' }, 500);
@@ -120,5 +153,5 @@ export async function handleRemoveAudit(request: Request, env: AdminEnv, deps: A
   } catch {
     return json({ ok: false, error: 'store' }, 500);
   }
-  return json({ ok: true, slug, deleted: keys.length });
+  return json({ ok: true, slug: edition, system, edition, deleted: keys.length });
 }

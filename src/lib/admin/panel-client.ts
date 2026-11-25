@@ -28,6 +28,9 @@ interface AdminRowFindings {
 
 interface AdminRowJson {
   slug: string;
+  system: string;
+  edition: string;
+  isLatest: boolean;
   title: string;
   date: string;
   visibility: 'public' | 'private';
@@ -72,8 +75,21 @@ async function readJson(res: Response): Promise<Record<string, unknown> | null> 
   }
 }
 
-function auditHref(slug: string, visibility: string): string {
-  return visibility === 'public' ? `/workbench/audits/${slug}/` : `/audits/${slug}/`;
+/** One edition's own address: the stable system page shows the latest, and
+ *  every edition opens under it. */
+function auditHref(system: string, edition: string, visibility: string): string {
+  return visibility === 'public'
+    ? `/workbench/audits/${system}/${edition}/`
+    : `/audits/${system}/${edition}/`;
+}
+
+/** The request body addressing one edition. Older rows without
+ *  system/edition fall back to the bare slug. */
+function editionBody(row: AdminRowJson): Record<string, string> {
+  if (typeof row.system === 'string' && row.system !== '' && typeof row.edition === 'string' && row.edition !== '') {
+    return { system: row.system, edition: row.edition };
+  }
+  return { slug: row.slug };
 }
 
 /** Wire the control room. Bails without throwing when the table is absent. */
@@ -99,7 +115,7 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       res = await fetch('/api/admin-visibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: row.slug, visibility: target }),
+        body: JSON.stringify({ ...editionBody(row), visibility: target }),
       });
     } catch {
       showError();
@@ -116,7 +132,7 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       return;
     }
     row.visibility = target;
-    cells.link.href = auditHref(row.slug, row.visibility);
+    cells.link.href = auditHref(row.system ?? row.slug, row.edition ?? row.slug, row.visibility);
     cells.vis.textContent = row.visibility === 'public' ? s.visibilityPublic : s.visibilityPrivate;
     btn.textContent = row.visibility === 'public' ? s.unpublish : s.publish;
     cells.note.textContent = '';
@@ -133,7 +149,7 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
       res = await fetch('/api/admin-remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: row.slug, confirm: true }),
+        body: JSON.stringify({ ...editionBody(row), confirm: true }),
       });
     } catch {
       showError();
@@ -150,11 +166,23 @@ export function initAdminPage(s: AdminClientStrings, opts: { bookingApi: string 
   const renderRows = (rows: AdminRowJson[]): void => {
     list.textContent = '';
     if (empty) empty.hidden = rows.length !== 0;
+    let system: string | null = null;
     for (const row of rows) {
+      const group = typeof row.system === 'string' && row.system !== '' ? row.system : null;
+      if (group !== null && group !== system) {
+        system = group;
+        const header = document.createElement('tr');
+        header.className = 'admin-system';
+        const cell = document.createElement('th');
+        cell.colSpan = 6;
+        cell.textContent = system;
+        header.appendChild(cell);
+        list.appendChild(header);
+      }
       const tr = document.createElement('tr');
       const audit = document.createElement('td');
       const link = document.createElement('a');
-      link.href = auditHref(row.slug, row.visibility);
+      link.href = auditHref(row.system ?? row.slug, row.edition ?? row.slug, row.visibility);
       link.textContent = row.title === '' ? row.slug : `${row.title} — ${row.slug}`;
       audit.appendChild(link);
       const date = document.createElement('td');

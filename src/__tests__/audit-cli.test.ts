@@ -139,15 +139,15 @@ describe('audit CLI push', () => {
       expect(out).toContain('valid audit');
       expect(out).toContain('https://univerlab.org/workbench/audits/push-slug/');
       const calls = wranglerCalls(dir);
-      expect(calls).toContain('r2 object put univerlab-audits/push-slug/audit.json');
-      expect(existsSync(join(dir, 'bucket', 'push-slug', 'audit.json'))).toBe(true);
+      expect(calls).toContain('r2 object put univerlab-audits/push-slug/push-slug/audit.json');
+      expect(existsSync(join(dir, 'bucket', 'push-slug', 'push-slug', 'audit.json'))).toBe(true);
       const doc = JSON.parse(readFileSync(join(FIXTURE_DIR, 'audit.json'), 'utf8')) as {
         assets: { path: string }[];
       };
       expect(doc.assets.length).toBeGreaterThan(0);
       for (const asset of doc.assets) {
-        expect(calls).toContain(`r2 object put univerlab-audits/push-slug/${asset.path}`);
-        expect(existsSync(join(dir, 'bucket', 'push-slug', asset.path))).toBe(true);
+        expect(calls).toContain(`r2 object put univerlab-audits/push-slug/push-slug/${asset.path}`);
+        expect(existsSync(join(dir, 'bucket', 'push-slug', 'push-slug', asset.path))).toBe(true);
       }
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -167,8 +167,41 @@ describe('audit CLI push', () => {
       expect(code).toBe(0);
       expect(out).toContain('https://univerlab.org/audits/private-slug/');
       expect(out).not.toContain('/workbench/audits/');
+      expect(existsSync(join(dir, 'bucket', 'private-slug', 'private-slug', 'audit.json'))).toBe(true);
     } finally {
       rmSync(folder, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('adds a second edition under the same system without changing the address', () => {
+    const { dir, env } = fakeWranglerEnv();
+    try {
+      const first = runWithEnv(['push', FIXTURE_DIR, '--system', 'canopy', '--edition', 'canopy-2026-10'], env);
+      expect(first.code).toBe(0);
+      expect(first.out).toContain('https://univerlab.org/workbench/audits/canopy/');
+      const second = runWithEnv(['push', FIXTURE_DIR, '--system', 'canopy', '--edition', 'canopy-2026-11'], env);
+      expect(second.code).toBe(0);
+      expect(second.out).toContain('https://univerlab.org/workbench/audits/canopy/');
+      // Both editions land under the system; the address stays one.
+      expect(existsSync(join(dir, 'bucket', 'canopy', 'canopy-2026-10', 'audit.json'))).toBe(true);
+      expect(existsSync(join(dir, 'bucket', 'canopy', 'canopy-2026-11', 'audit.json'))).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('derives the system from a dated slug when no system is given', () => {
+    const { dir, env } = fakeWranglerEnv();
+    const folder = join(mkdtempSync(join(tmpdir(), 'audit-ed-')), 'canopy-2026-11');
+    try {
+      cpSync(FIXTURE_DIR, folder, { recursive: true });
+      const { code, out } = runWithEnv(['push', folder], env);
+      expect(code).toBe(0);
+      expect(out).toContain("Pushed audit 'canopy' edition 'canopy-2026-11'");
+      expect(out).toContain('https://univerlab.org/workbench/audits/canopy/');
+      expect(existsSync(join(dir, 'bucket', 'canopy', 'canopy-2026-11', 'audit.json'))).toBe(true);
+    } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -230,12 +263,12 @@ describe('audit CLI remove', () => {
       expect(pushed.code).toBe(0);
       writeFileSync(join(dir, 'calls.log'), '');
 
-      const { code, out } = runWithEnv(['remove', 'gone-slug'], env, 'y\n');
+      const { code, out } = runWithEnv(['remove', 'gone-slug/gone-slug'], env, 'y\n');
       expect(code).toBe(0);
-      expect(out).toContain('gone-slug/audit.json');
+      expect(out).toContain('gone-slug/gone-slug/audit.json');
       expect(out).toContain('object(s) deleted');
-      expect(wranglerCalls(dir)).toContain('r2 object delete univerlab-audits/gone-slug/audit.json');
-      expect(existsSync(join(dir, 'bucket', 'gone-slug', 'audit.json'))).toBe(false);
+      expect(wranglerCalls(dir)).toContain('r2 object delete univerlab-audits/gone-slug/gone-slug/audit.json');
+      expect(existsSync(join(dir, 'bucket', 'gone-slug', 'gone-slug', 'audit.json'))).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -245,11 +278,11 @@ describe('audit CLI remove', () => {
     const { dir, env } = fakeWranglerEnv();
     try {
       expect(runWithEnv(['push', FIXTURE_DIR, '--slug', 'keep-slug'], env).code).toBe(0);
-      const { code, out } = runWithEnv(['remove', 'keep-slug'], env, 'n\n');
+      const { code, out } = runWithEnv(['remove', 'keep-slug/keep-slug'], env, 'n\n');
       expect(code).toBe(1);
       expect(out).toContain('Aborted');
       expect(wranglerCalls(dir)).not.toContain('r2 object delete');
-      expect(existsSync(join(dir, 'bucket', 'keep-slug', 'audit.json'))).toBe(true);
+      expect(existsSync(join(dir, 'bucket', 'keep-slug', 'keep-slug', 'audit.json'))).toBe(true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -258,10 +291,39 @@ describe('audit CLI remove', () => {
   it('fails clearly when the slug is not in the bucket', () => {
     const { dir, env } = fakeWranglerEnv();
     try {
-      const { code, out } = runWithEnv(['remove', 'no-such-audit'], env, 'y\n');
+      const { code, out } = runWithEnv(['remove', 'no-such-audit/no-such-edition'], env, 'y\n');
       expect(code).toBe(1);
-      expect(out).toContain("no audit 'no-such-audit'");
+      expect(out).toContain("no audit 'no-such-audit/no-such-edition'");
       expect(wranglerCalls(dir)).not.toContain('r2 object delete');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses a bare system with no legacy key: name the edition explicitly', () => {
+    const { dir, env } = fakeWranglerEnv();
+    try {
+      const { code, out } = runWithEnv(['remove', 'some-system'], env, 'y\n');
+      expect(code).toBe(1);
+      expect(out).toContain('explicit system/edition pair');
+      expect(wranglerCalls(dir)).not.toContain('r2 object delete');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('removes a legacy pre-edition audit by its bare slug', () => {
+    const { dir, env } = fakeWranglerEnv();
+    try {
+      // A legacy push stored the audit at the bare key; the migration
+      // removes it after the edition-layout push is verified.
+      const legacy = join(dir, 'bucket', 'legacy-slug');
+      cpSync(FIXTURE_DIR, legacy, { recursive: true });
+      const { code, out } = runWithEnv(['remove', 'legacy-slug'], env, 'y\n');
+      expect(code).toBe(0);
+      expect(out).toContain('legacy audit');
+      expect(wranglerCalls(dir)).toContain('r2 object delete univerlab-audits/legacy-slug/audit.json');
+      expect(existsSync(join(legacy, 'audit.json'))).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -859,6 +859,9 @@ export const en = {
       match: 'PDF SHA-256 {hash} — matches the file deposited in Zenodo (record checksum verified at deposit).',
     },
     badge: { title: 'Badge for your site', copy: 'Copy the HTML', copied: 'Copied' },
+    editionsTitle: 'Editions',
+    editionOpen: 'Open this edition',
+    latestBadge: 'Latest',
     signedDocs: {
       title: 'Signed documents',
       download: 'Download the signed PDF',

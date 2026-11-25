@@ -853,6 +853,9 @@ export const es: Dict = {
       match: 'SHA-256 del PDF {hash} — coincide con el archivo depositado en Zenodo (checksum del registro verificado al depositar).',
     },
     badge: { title: 'Insignia para tu sitio', copy: 'Copiar el HTML', copied: 'Copiado' },
+    editionsTitle: 'Ediciones',
+    editionOpen: 'Abrir esta edición',
+    latestBadge: 'Última',
     signedDocs: {
       title: 'Documentos firmados',
       download: 'Descargar el PDF firmado',
