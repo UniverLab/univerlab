@@ -101,16 +101,19 @@ function findingCard(ctx: BlockCtx, f: AuditFinding): string {
   return (
     `<article class="audit-finding" id="audit-finding-${esc(f.id)}" ` +
     `data-severity="${esc(f.severity)}" data-status="${esc(f.status)}">` +
-    `<p class="audit-finding-badges"><span class="audit-sev audit-sev--${esc(f.severity)}">` +
-    `${esc(t.severity[f.severity])}</span> ` +
-    `<span class="audit-status audit-status--${esc(f.status)}">${esc(t.findingStatus[f.status])}</span></p>` +
+    `<details><summary class="audit-finding-row">` +
+    `<span class="audit-finding-id">${esc(f.id)}</span> ` +
+    `<span class="audit-sev audit-sev--${esc(f.severity)}">${esc(t.severity[f.severity])}</span> ` +
+    `<span class="audit-status audit-status--${esc(f.status)}">${esc(t.findingStatus[f.status])}</span>` +
     `<h3>${esc(f.title)}</h3>` +
+    `<span class="audit-finding-impact">${esc(f.summary)}</span>` +
+    `</summary><div class="audit-finding-body">` +
     `<p class="audit-finding-area">${esc(f.area)} · ${esc(String(f.likelihood))}×${esc(String(f.impact))}</p>` +
     `<p>${esc(f.summary)}</p>` +
     evidenceList(ctx, f) +
     extra.join('') +
     backButton(t) +
-    `</article>`
+    `</div></details></article>`
   );
 }
 
@@ -225,19 +228,21 @@ function figure(ctx: BlockCtx, b: { asset: string; caption?: string; poster?: st
 function code(ctx: BlockCtx, b: { language: string; source?: string; sourceAsset?: string; highlight?: number[] }): string {
   const hl = Array.isArray(b.highlight) ? b.highlight.filter((n) => Number.isInteger(n) && n >= 1) : [];
   const hlAttr = hl.length ? ` data-highlight="${esc(hl.join(','))}"` : '';
+  const expand =
+    `<button type="button" class="audit-code-expand" hidden aria-expanded="false">${esc(ctx.t.evidence.expand)}</button>`;
   if (typeof b.sourceAsset === 'string' && b.sourceAsset !== '') {
     const a = assetById(ctx.doc, b.sourceAsset);
     if (!a) return '';
     return (
       `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
-      `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
+      `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>${expand}` +
       `<pre><code data-lang="${esc(b.language)}" data-src="${esc(assetUrl(ctx.slug, a.path, ctx.assetBase))}"${hlAttr}></code></pre></figure>`
     );
   }
   const src = typeof b.source === 'string' ? b.source : '';
   return (
     `<figure class="audit-code"><button type="button" class="audit-code-copy" aria-label="${esc(ctx.t.codeCopy)}" title="${esc(ctx.t.codeCopy)}">` +
-    `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>` +
+    `<span class="copy-icon">${iconSvg(copy, { size: 16 })}</span></button>${expand}` +
     `<pre><code data-lang="${esc(b.language)}" data-inline="${esc(src)}"${hlAttr}>${esc(src)}</code></pre></figure>`
   );
 }

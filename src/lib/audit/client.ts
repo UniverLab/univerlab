@@ -216,6 +216,9 @@ async function wireCode(root: ParentNode): Promise<void> {
         });
         code.replaceChildren(frag);
         code.classList.add(`language-${lang}`);
+        // Fetched transcripts arrive after the init-time overflow pass, so
+        // re-measure this block now that it has its full height.
+        revealCodeExpand(block);
       } catch {
         /* the escaped inline source stays in place */
       }
@@ -228,6 +231,47 @@ function wireVideos(root: ParentNode): void {
   if (reduced) return;
   root.querySelectorAll('video[data-autoplay]').forEach((v) => {
     (v as HTMLVideoElement).play?.().catch(() => {});
+  });
+}
+
+/** A `{{finding:F-01}}` reference targets the card's article, whose body
+ *  lives inside a closed `<details>`: open it so the jump lands on text,
+ *  not on a shut card. Also honours a deep link on load and hash changes. */
+function wireFindingOpen(root: ParentNode): void {
+  const openForHash = (hash: string): void => {
+    if (!hash.startsWith('#audit-finding-')) return;
+    const id = hash.slice(1);
+    // The CSS escape keeps hostile hashes (quotes, brackets) inert.
+    const el = root.querySelector(`#${CSS.escape(id)} details`);
+    if (el instanceof HTMLDetailsElement) el.open = true;
+  };
+  root.addEventListener('click', (ev) => {
+    const ref = (ev.target as Element).closest?.('a.audit-ref[href^="#audit-finding-"]');
+    const hash = ref?.getAttribute('href');
+    if (hash) openForHash(hash);
+  });
+  window.addEventListener('hashchange', () => openForHash(window.location.hash));
+  openForHash(window.location.hash);
+}
+
+/** Long transcripts stay capped at the CSS max-height; the expand button
+ *  appears only when the block actually overflows and toggles `data-open`. */
+function revealCodeExpand(fig: Element): void {
+  const pre = fig.querySelector('pre');
+  const btn = fig.querySelector('.audit-code-expand');
+  if (!(pre instanceof HTMLElement) || !(btn instanceof HTMLElement)) return;
+  if (pre.scrollHeight > pre.clientHeight + 1) btn.hidden = false;
+}
+
+function wireCodeExpand(root: ParentNode): void {
+  root.querySelectorAll('.audit-code').forEach(revealCodeExpand);
+  root.addEventListener('click', (ev) => {
+    const btn = (ev.target as Element).closest?.('.audit-code-expand');
+    if (!(btn instanceof HTMLElement)) return;
+    const fig = btn.closest('.audit-code');
+    if (!fig) return;
+    const open = fig.toggleAttribute('data-open');
+    btn.setAttribute('aria-expanded', String(open));
   });
 }
 
@@ -281,6 +325,8 @@ export function initAuditPage(root: ParentNode = document): void {
   if (!readData()) return;
   wireTerms(root);
   wireBack(root);
+  wireFindingOpen(root);
+  wireCodeExpand(root);
   wireTables(root);
   wireBadgeCopy(root);
   wireSteppers(root);

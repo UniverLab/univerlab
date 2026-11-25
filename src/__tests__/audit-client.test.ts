@@ -232,3 +232,92 @@ describe('steppers', () => {
     expect((document.querySelector('.audit-step-body') as HTMLElement).hasAttribute('hidden')).toBe(true);
   });
 });
+
+describe('finding cards', () => {
+  const CARD = '<a class="audit-ref" href="#audit-finding-F-01">F-01</a>' +
+    '<article class="audit-finding" id="audit-finding-F-01"><details>' +
+    '<summary class="audit-finding-row">row</summary>' +
+    '<div class="audit-finding-body">body</div></details></article>';
+
+  it('opens the card when its reference is clicked', () => {
+    initAuditPage(mountShell(CARD));
+    const details = document.querySelector('details') as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    click(document.querySelector('.audit-ref') as HTMLElement);
+    expect(details.open).toBe(true);
+  });
+
+  it('opens the card named by the initial hash', () => {
+    window.location.hash = '#audit-finding-F-01';
+    initAuditPage(mountShell(CARD));
+    expect((document.querySelector('details') as HTMLDetailsElement).open).toBe(true);
+  });
+
+  it('ignores reference clicks that name no finding', () => {
+    initAuditPage(mountShell('<a class="audit-ref" href="#audit-finding-nope">x</a>'));
+    click(document.querySelector('.audit-ref') as HTMLElement);
+  });
+});
+
+describe('code expand', () => {
+  const CODE = '<figure class="audit-code">' +
+    '<button type="button" class="audit-code-expand" hidden aria-expanded="false">Expand</button>' +
+    '<pre><code>transcript</code></pre></figure>';
+
+  function sizes(scroll: number, client: number): void {
+    const pre = document.querySelector('pre') as HTMLElement;
+    Object.defineProperty(pre, 'scrollHeight', { value: scroll, configurable: true });
+    Object.defineProperty(pre, 'clientHeight', { value: client, configurable: true });
+  }
+
+  it('reveals the button only on overflow and toggles data-open', () => {
+    const scope = mountShell(CODE);
+    sizes(500, 200);
+    initAuditPage(scope);
+    const btn = document.querySelector('.audit-code-expand') as HTMLElement;
+    const fig = document.querySelector('.audit-code') as HTMLElement;
+    expect(btn.hidden).toBe(false);
+    click(btn);
+    expect(fig.hasAttribute('data-open')).toBe(true);
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+    click(btn);
+    expect(fig.hasAttribute('data-open')).toBe(false);
+    expect(btn.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('keeps the button hidden when the transcript fits', () => {
+    const scope = mountShell(CODE);
+    sizes(100, 200);
+    initAuditPage(scope);
+    expect((document.querySelector('.audit-code-expand') as HTMLElement).hidden).toBe(true);
+  });
+
+  it('reveals the button when a fetched transcript overflows', async () => {
+    const remote = '<figure class="audit-code">' +
+      '<button type="button" class="audit-code-expand" hidden aria-expanded="false">Expand</button>' +
+      '<pre><code data-lang="text" data-src="/audits/s/assets/t.log"></code></pre></figure>';
+    const scope = mountShell(remote);
+    const g = globalThis as unknown as Record<string, unknown>;
+    const prevFetch = g['fetch'];
+    g['fetch'] = jest.fn(async () => ({ ok: true, text: async () => 'line\n'.repeat(400) }));
+    try {
+      const pre = document.querySelector('pre') as HTMLElement;
+      // Empty at init (nothing fetched yet), overflowing once filled.
+      Object.defineProperty(pre, 'scrollHeight', {
+        get() {
+          const len = pre.querySelector('code')?.textContent?.length ?? 0;
+          return len > 100 ? 500 : 0;
+        },
+        configurable: true,
+      });
+      Object.defineProperty(pre, 'clientHeight', { value: 200, configurable: true });
+      initAuditPage(scope);
+      expect((document.querySelector('.audit-code-expand') as HTMLElement).hidden).toBe(true);
+      await new Promise((r) => setTimeout(r, 0));
+      expect((document.querySelector('.audit-code-expand') as HTMLElement).hidden).toBe(false);
+    } finally {
+      if (prevFetch === undefined) delete g['fetch'];
+      else g['fetch'] = prevFetch;
+    }
+  });
+});

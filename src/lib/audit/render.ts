@@ -4,6 +4,8 @@
 import { en } from '../../i18n/en';
 import { es } from '../../i18n/es';
 import { annexEntryHtml, findingEntryHtml, renderBlock, sourcesEntriesHtml, type BlockCtx } from './blocks';
+import { labMarkSvg } from './mark';
+import { execSummaryHtml } from './summary';
 import { assetById, assetUrl, esc, reportDownloadName, safeExternalUrl, visibleAnnexes } from './util';
 import { auditBadge, badgeExpired, badgeLinkLabel, badgeSnippet, badgeValidUntil } from './badge';
 import { PUBLIC_AUDIT_BASE } from './markdown';
@@ -75,10 +77,13 @@ function personHtml(name: string, url?: string): string {
   return safe ? `<a href="${esc(safe)}" rel="noopener noreferrer">${label}</a>` : label;
 }
 
-function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string): string {
+function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: string, system: string): string {
   const m = doc.meta;
   const auditors = m.auditors.map((a) => personHtml(a.name, a.url)).join(', ');
   const client = personHtml(m.client.name, m.client.url);
+  const editionDate = doc.badge?.issued ?? m.auditPeriod.end;
+  const edition = `${editionDate} · ${m.version} · ${t.status[m.status]}`;
+  const classification = doc.visibility === 'private' ? t.cover.classified : t.cover.published;
   let bgClass = '';
   let bgAttr = '';
   let bgMedia = '';
@@ -99,15 +104,16 @@ function coverHtml(doc: AuditDocument, slug: string, t: BlockCtx['t'], base: str
   return (
     `<header class="audit-cover ${layoutClasses(doc.cover.layout)}${bgClass}"${bgAttr}>` +
     bgMedia +
+    `<p class="audit-cover-mark">${labMarkSvg()}<span>${esc(t.cover.mark)}</span></p>` +
     `<p class="audit-kicker">${esc(m.version)} · ${esc(t.status[m.status])}</p>` +
     `<h1>${esc(m.title)}</h1>` +
     (m.subtitle ? `<p class="audit-subtitle">${esc(m.subtitle)}</p>` : '') +
     `<dl class="audit-meta">` +
+    `<div><dt>${esc(t.cover.system)}</dt><dd><code>${esc(system)}</code></dd></div>` +
     `<div><dt>${esc(t.meta.client)}</dt><dd>${client}</dd></div>` +
+    `<div><dt>${esc(t.cover.edition)}</dt><dd>${esc(edition)}</dd></div>` +
     `<div><dt>${esc(t.meta.auditors)}</dt><dd>${auditors}</dd></div>` +
-    `<div><dt>${esc(t.meta.period)}</dt><dd>${esc(m.auditPeriod.start)} – ${esc(m.auditPeriod.end)}</dd></div>` +
-    `<div><dt>${esc(t.meta.version)}</dt><dd>${esc(m.version)}</dd></div>` +
-    `<div><dt>${esc(t.meta.status)}</dt><dd>${esc(t.status[m.status])}</dd></div>` +
+    `<div><dt>${esc(t.cover.classification)}</dt><dd>${esc(classification)}</dd></div>` +
     `</dl>` +
     `<p class="audit-scope">${esc(m.scope)}</p>` +
     `<span class="audit-slug" hidden>${esc(slug)}</span>` +
@@ -365,6 +371,7 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   const system = opts.system ?? (slug.includes('/') ? slug.split('/')[0] : slug);
   const edition = (slug.includes('/') ? slug.split('/')[1] : '') || doc.meta.version;
   const signT = doc.meta.language === 'es' ? es.sign : en.sign;
+  const summary = execSummaryHtml(doc, t);
   const editions = opts.editions?.length ? editionsHtml(opts.editions, t) : '';
   const published = opts.published
     ? publishedHtml(doc, stable, t, opts.published, new Date())
@@ -373,7 +380,8 @@ export function auditPageHtml(doc: AuditDocument, slug: string, opts: AuditPageO
   return (
     `<div class="audit audit-accent--${esc(accent)}">` +
     `<script type="application/json" id="audit-data">${data}</script>` +
-    coverHtml(doc, slug, t, base) +
+    coverHtml(doc, slug, t, base, system) +
+    summary +
     editions +
     published +
     deliverablesHtml(doc, slug, t, base, Boolean(opts.published), system, edition, signT) +

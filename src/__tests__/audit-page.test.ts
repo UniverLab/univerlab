@@ -189,7 +189,7 @@ describe('middleware — audit page', () => {
     expect(body).toContain('Access is by invitation');
     expect(body).toContain('Fixture Client (not a real client)');
     expect(body).toContain('Contract Test Team');
-    expect(body).toContain('2026-01-05');
+    expect(body).toContain('2026-01-09');
     expect(body).toContain('id="audit-data"');
   });
 
@@ -495,5 +495,65 @@ describe('audit renderer — safety', () => {
     // Code blocks render as plain-text spans, so no syntax library ships.
     expect(client).not.toMatch(/highlight\.js/);
     expect(client).not.toMatch(/^import .* from ['"](vega-embed|mermaid)['"]/m);
+  });
+});
+
+describe('audit deliverable page', () => {
+  function pageDoc(): Parameters<typeof auditPageHtml>[0] {
+    return fixtureDoc() as unknown as Parameters<typeof auditPageHtml>[0];
+  }
+
+  it('covers system, client, edition, auditors and classification with the lab mark', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('class="audit-cover-mark"');
+    expect(html).toContain('<svg');
+    expect(html).toContain('UniverLab');
+    expect(html).toContain('<code>fixture-audit</code>');
+    expect(html).toContain('Fixture Client (not a real client)');
+    expect(html).toContain('2026-01-09 · 1.0 · delivered');
+    expect(html).toContain('Contract Test Team');
+    expect(html).toContain('Classification');
+    expect(html).toContain('Published');
+
+    const priv = { ...pageDoc(), visibility: 'private' } as Parameters<typeof auditPageHtml>[0];
+    expect(auditPageHtml(priv, SLUG)).toContain('Confidential');
+  });
+
+  it('summarizes the severities before the table of contents', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    const summaryAt = html.indexOf('audit-summary');
+    const tocAt = html.indexOf('audit-toc');
+    expect(summaryAt).toBeGreaterThanOrEqual(0);
+    expect(summaryAt).toBeLessThan(tocAt);
+    expect(html).toContain('Executive summary');
+    // One critical, one high, one informational finding in the fixture.
+    expect(html).toContain('data-severity="critical" style="--audit-bar:33%"');
+    expect(html).toContain('data-severity="high" style="--audit-bar:33%"');
+    expect(html).toContain('data-severity="info" style="--audit-bar:33%"');
+    expect(html).toContain('1 open · 1 fixed · Highest open severity: critical');
+  });
+
+  it('renders every finding as a shut card that opens to the full finding', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('<details>');
+    expect(html).toContain('<summary class="audit-finding-row">');
+    expect(html).not.toMatch(/<details open/);
+    expect(html).toContain('class="audit-finding-id">F-01<');
+    expect(html).toContain('class="audit-finding-impact">A placeholder finding proving the critical path renders.<');
+    expect(html).toContain('class="audit-finding-body"');
+  });
+
+  it('caps code transcripts behind an expand control', () => {
+    const html = auditPageHtml(pageDoc(), SLUG);
+    expect(html).toContain('class="audit-code-expand" hidden aria-expanded="false">Expand<');
+  });
+
+  it('covers the same ground in Spanish', () => {
+    const doc = pageDoc();
+    const esDoc = { ...doc, meta: { ...doc.meta, language: 'es' as const } };
+    const html = auditPageHtml(esDoc, SLUG);
+    expect(html).toContain('Resumen ejecutivo');
+    expect(html).toContain('Sistema');
+    expect(html).toContain('Publicado');
   });
 });
