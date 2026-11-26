@@ -165,6 +165,39 @@ describe('POST /api/event', () => {
     });
   });
 
+  it('204s and writes one aggregate point on a valid page_view', async () => {
+    const { env, points } = funnel();
+    const req = post({
+      event: 'page_view',
+      path: '/Texforge/?ref=home#top',
+      utm_source: 'x',
+      utm_campaign: 'launch',
+      gclid: 'abc',
+    });
+    const res = await onRequestPost({ request: req, env });
+    expect(res.status).toBe(204);
+    expect(points).toHaveLength(1);
+    // Path normalized (query/hash stripped, lowercased); the ad id dropped.
+    expect(points[0]).toEqual({
+      indexes: ['page_view'],
+      blobs: ['page_view', '', '/texforge', 'x', '', 'launch', '', ''],
+      doubles: [1],
+    });
+  });
+
+  it('400s a page_view with an invalid path, just like the other events', async () => {
+    const { env, points } = funnel();
+    expect(
+      (await onRequestPost({ request: post({ event: 'page_view', path: 'no-slash' }), env }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await onRequestPost({ request: post({ event: 'page_view', path: `/${'a'.repeat(256)}` }), env }))
+        .status,
+    ).toBe(400);
+    expect(points).toHaveLength(0);
+  });
+
   it('204s with no write when the FUNNEL binding is absent', async () => {
     const res = await onRequestPost({
       request: post({ event: 'workbench_visit', utm_source: 'x' }),

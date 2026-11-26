@@ -23,6 +23,7 @@ export const FUNNEL_EVENTS = [
   'workbench_visit',
   'booking_click',
   'whatsapp_click',
+  'page_view',
 ] as const;
 
 export type FunnelEvent = (typeof FUNNEL_EVENTS)[number];
@@ -214,5 +215,47 @@ export function reportEvent(name: FunnelEvent, payload?: ReportPayload): void {
     }
   } catch {
     // Reporting never breaks copy or navigation.
+  }
+}
+
+/**
+ * Paths where no `page_view` is ever emitted: private areas plus the
+ * workbench, which already reports `workbench_visit`. Exact match or a
+ * subpath (`/admin/x`, never `/administrator`).
+ */
+const PAGE_VIEW_SKIP = [
+  '/admin',
+  '/es/admin',
+  '/sign',
+  '/es/sign',
+  '/workbench',
+  '/es/workbench',
+];
+
+function isSkippedPageViewPath(pathname: string): boolean {
+  return PAGE_VIEW_SKIP.some((s) => pathname === s || pathname.startsWith(s + '/'));
+}
+
+/**
+ * Record one cookieless `page_view` for post-landing navigation in a
+ * campaign tab. Refreshes the tab UTM from the current URL first; when
+ * the URL itself carries valid `utm_*` the edge `recordLanding` already
+ * wrote `landing`, so nothing is emitted. Emits only when
+ * `sessionStorage` already holds active UTM fields and the current page
+ * is public. Never throws; `sessionStorage` only, no cookies, no
+ * `localStorage`, no user/session IDs, no IP, no raw user-agent.
+ */
+export function trackCampaignNavigation(): void {
+  try {
+    saveUtm();
+    if (typeof window === 'undefined') return;
+    const urlUtm = parseUtm(new URLSearchParams(window.location.search));
+    if (Object.keys(urlUtm).length > 0) return;
+    if (Object.keys(loadUtm()).length === 0) return;
+    const pathname = window.location.pathname;
+    if (isSkippedPageViewPath(pathname)) return;
+    reportEvent('page_view', { path: pathname });
+  } catch {
+    // Attribution is best-effort, never a breakage.
   }
 }

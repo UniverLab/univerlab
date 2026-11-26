@@ -10,6 +10,7 @@ import {
   reportEvent,
   saveUtm,
   parseUtm,
+  trackCampaignNavigation,
   UTM_KEY,
 } from '../lib/campaign';
 
@@ -160,5 +161,105 @@ describe('reportEvent', () => {
     Object.defineProperty(window, 'fetch', { value: fetchMock, configurable: true });
     reportEvent('nope' as never);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('trackCampaignNavigation', () => {
+  function mockFetchOnly() {
+    Object.defineProperty(window.navigator, 'sendBeacon', {
+      value: undefined,
+      configurable: true,
+    });
+    const fetchMock = jest.fn(() => Promise.resolve(new Response()));
+    Object.defineProperty(window, 'fetch', { value: fetchMock, configurable: true });
+    return fetchMock;
+  }
+
+  function go(path: string): void {
+    window.history.replaceState({}, '', path);
+  }
+
+  function lastBody(fetchMock: jest.Mock): Record<string, string> {
+    const [, init] = fetchMock.mock.calls[fetchMock.mock.calls.length - 1] as unknown as [
+      string,
+      RequestInit,
+    ];
+    return JSON.parse(init.body as string) as Record<string, string>;
+  }
+
+  it('does NOT emit page_view on a URL that carries utm_* (edge already wrote landing)', () => {
+    const fetchMock = mockFetchOnly();
+    saveUtm({ utm_source: 'x', utm_medium: 'social' });
+    go('/texforge?utm_source=x&utm_medium=social');
+    trackCampaignNavigation();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(window.localStorage.length).toBe(0);
+    expect(document.cookie).toBe('');
+  });
+
+  it('does NOT emit page_view when sessionStorage has no UTM', () => {
+    const fetchMock = mockFetchOnly();
+    expect(loadUtm()).toEqual({});
+    go('/texforge');
+    trackCampaignNavigation();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('emits page_view with the current pathname when storage has UTM and the URL is clean', () => {
+    const fetchMock = mockFetchOnly();
+    saveUtm({ utm_source: 'x', utm_campaign: 'launch' });
+    go('/texforge');
+    trackCampaignNavigation();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const body = lastBody(fetchMock);
+    expect(body['event']).toBe('page_view');
+    expect(body['path']).toBe('/texforge');
+    expect(body['utm_source']).toBe('x');
+    expect(body['utm_campaign']).toBe('launch');
+    expect(body).not.toHaveProperty('tool');
+    expect(window.localStorage.length).toBe(0);
+    expect(document.cookie).toBe('');
+  });
+
+  it.each([
+    '/admin',
+    '/es/admin',
+    '/sign',
+    '/es/sign',
+    '/workbench',
+    '/es/workbench',
+    '/admin/users',
+    '/es/workbench/sessions',
+  ])('skips %s (private area or workbench, already counted)', (path) => {
+    const fetchMock = mockFetchOnly();
+    saveUtm({ utm_source: 'x' });
+    go(path);
+    trackCampaignNavigation();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still emits on public paths that merely share a prefix with a skip path', () => {
+    const fetchMock = mockFetchOnly();
+    saveUtm({ utm_source: 'x' });
+    go('/administrator');
+    trackCampaignNavigation();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(lastBody(fetchMock)['path']).toBe('/administrator');
+  });
+
+  it('saves utm_* from the landing URL first and never touches localStorage or cookies', () => {
+    const fetchMock = mockFetchOnly();
+    go('/?utm_source=x');
+    // Landing URL itself: no page_view, but the UTM is kept for the tab.
+    trackCampaignNavigation();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(loadUtm()).toEqual({ utm_source: 'x' });
+    // Later navigation in the same tab now emits.
+    go('/');
+    trackCampaignNavigation();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(lastBody(fetchMock)['event']).toBe('page_view');
+    expect(window.localStorage.length).toBe(0);
+    expect(document.cookie).toBe('');
   });
 });
