@@ -516,6 +516,12 @@ button.sign-row-action {
 #admin-upload {
   margin-top: 2rem;
 }
+#admin-analytics {
+  margin-top: 2rem;
+}
+#admin-analytics h3 {
+  margin-top: 1.5rem;
+}
 .admin-stat {
   font-family: var(--font-mono);
   font-size: 0.9rem;
@@ -600,10 +606,9 @@ button.sign-row-action {
   color: var(--accent);
 }
 .admin-row-actions {
+  align-items: center;
+  gap: 0.3rem 0.8rem;
   justify-content: flex-start;
-}
-.admin-row-actions .admin-remove {
-  margin-left: auto;
 }
 @media (max-width: 40rem) {
   .sign-row-action {

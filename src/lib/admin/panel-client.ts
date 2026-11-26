@@ -65,6 +65,11 @@ export interface AdminAnalyticsStrings {
   thTool: string;
   thClient: string;
   thCount: string;
+  thPage: string;
+  thStatus: string;
+  analyticsFilterReal: string;
+  analyticsFilterProbes: string;
+  analyticsFilterAll: string;
   analyticsClientInstaller: string;
   analyticsClientBrowser: string;
   analyticsClientOther: string;
@@ -475,6 +480,8 @@ export function initAdminPage(
 
 interface FunnelPayloadRow {
   event?: unknown;
+  tool?: unknown;
+  path?: unknown;
   utm_source?: unknown;
   utm_medium?: unknown;
   utm_campaign?: unknown;
@@ -484,7 +491,33 @@ interface FunnelPayloadRow {
 interface InstallPayloadRow {
   tool?: unknown;
   clientClass?: unknown;
+  outcome?: unknown;
   count?: unknown;
+}
+
+/** The installer downloads filter: real tool redirects by default so bot
+ *  404 probes never inflate the table; `probes` audits the 404s, `all`
+ *  shows every recorded outcome. */
+export type InstallsFilter = 'real' | 'probes' | 'all';
+
+let installsFilter: InstallsFilter = 'real';
+
+/** The recorded `blob6` outcome as a clear HTTP status: real tool
+ *  redirects and root hits are 302s, unknown tools and missing Windows
+ *  installers are 404s; any other non-empty outcome shows verbatim so
+ *  unexpected responses are never hidden. */
+export function statusFor(outcome: string): string {
+  if (outcome === 'redirect' || outcome === 'root') return '302';
+  if (outcome === 'unknown-tool' || outcome === 'no-windows') return '404';
+  return outcome;
+}
+
+export function getInstallsFilter(): InstallsFilter {
+  return installsFilter;
+}
+
+export function setInstallsFilter(next: InstallsFilter): void {
+  installsFilter = next;
 }
 
 /** One analytics window: fetch the aggregates and render both tables with
@@ -545,9 +578,21 @@ export async function renderAnalytics(s: Pick<AdminClientStrings, 'loadError'> &
     return;
   }
   say('');
-  const cell = (text: string): HTMLTableCellElement => {
+  const headers = {
+    event: s.thEvent ?? 'Event',
+    page: s.thPage ?? 'Page',
+    source: s.thSource ?? 'Source',
+    medium: s.thMedium ?? 'Medium',
+    campaign: s.thCampaign ?? 'Campaign',
+    tool: s.thTool ?? 'Tool',
+    client: s.thClient ?? 'Client',
+    status: s.thStatus ?? 'Status',
+    count: s.thCount ?? 'Count',
+  };
+  const cell = (text: string, label?: string): HTMLTableCellElement => {
     const td = document.createElement('td');
     td.textContent = text;
+    if (label) td.dataset['label'] = label;
     return td;
   };
   funnelBody.textContent = '';
@@ -555,45 +600,76 @@ export async function renderAnalytics(s: Pick<AdminClientStrings, 'loadError'> &
   for (const row of funnel) {
     const count = typeof row.count === 'number' && Number.isFinite(row.count) ? row.count : 0;
     funnelTotal += count;
+    const path = typeof row.path === 'string' ? row.path : '';
+    const tool = typeof row.tool === 'string' ? row.tool : '';
+    const page = path !== '' && tool !== '' ? `${path} (${tool})` : path !== '' || tool !== '' ? path + tool : '—';
     const tr = document.createElement('tr');
     tr.append(
-      cell(typeof row.event === 'string' ? row.event : ''),
-      cell(typeof row.utm_source === 'string' && row.utm_source !== '' ? row.utm_source : '—'),
-      cell(typeof row.utm_medium === 'string' && row.utm_medium !== '' ? row.utm_medium : '—'),
-      cell(typeof row.utm_campaign === 'string' && row.utm_campaign !== '' ? row.utm_campaign : '—'),
-      cell(String(count)),
+      cell(typeof row.event === 'string' ? row.event : '', headers.event),
+      cell(page, headers.page),
+      cell(typeof row.utm_source === 'string' && row.utm_source !== '' ? row.utm_source : '—', headers.source),
+      cell(typeof row.utm_medium === 'string' && row.utm_medium !== '' ? row.utm_medium : '—', headers.medium),
+      cell(typeof row.utm_campaign === 'string' && row.utm_campaign !== '' ? row.utm_campaign : '—', headers.campaign),
+      cell(String(count), headers.count),
     );
     funnelBody.appendChild(tr);
   }
-  // Installs group by tool and coarse client class: installer CLIs
-  // together, browsers together, everything else together.
+  // Installs group by tool, coarse client class and outcome: installer
+  // CLIs together, browsers together, everything else together — the
+  // outcome stays on the group so 404 probes never merge into real rows.
   const coarseName = (c: string): string => {
     if (c === 'installer') return s.analyticsClientInstaller ?? 'installer';
     if (c === 'browser') return s.analyticsClientBrowser ?? 'browser';
     return s.analyticsClientOther ?? 'other';
   };
-  const grouped = new Map<string, { tool: string; coarse: 'installer' | 'browser' | 'other'; count: number }>();
+  const grouped = new Map<
+    string,
+    { tool: string; coarse: 'installer' | 'browser' | 'other'; outcome: string; count: number }
+  >();
   for (const row of installs) {
     const count = typeof row.count === 'number' && Number.isFinite(row.count) ? row.count : 0;
     const tool = typeof row.tool === 'string' ? row.tool : '';
+    const outcome = typeof row.outcome === 'string' ? row.outcome : '';
     const coarse = coarseClientClass(typeof row.clientClass === 'string' ? row.clientClass : '');
-    const key = JSON.stringify([tool, coarse]);
+    const key = JSON.stringify([tool, coarse, outcome]);
     const prev = grouped.get(key);
-    grouped.set(key, { tool, coarse, count: (prev?.count ?? 0) + count });
+    grouped.set(key, { tool, coarse, outcome, count: (prev?.count ?? 0) + count });
   }
-  installsBody.textContent = '';
-  let installsTotal = 0;
-  for (const entry of [...grouped.values()].sort((a, b) => b.count - a.count)) {
-    installsTotal += entry.count;
-    const tr = document.createElement('tr');
-    tr.append(cell(entry.tool), cell(coarseName(entry.coarse)), cell(String(entry.count)));
-    installsBody.appendChild(tr);
+  const entries = [...grouped.values()].sort((a, b) => b.count - a.count);
+  const redirectTotal = entries.filter((e) => e.outcome === 'redirect').reduce((sum, e) => sum + e.count, 0);
+  const renderInstalls = (): void => {
+    installsBody.textContent = '';
+    for (const entry of entries) {
+      if (installsFilter === 'real' && entry.outcome !== 'redirect') continue;
+      if (installsFilter === 'probes' && entry.outcome !== 'unknown-tool' && entry.outcome !== 'no-windows') continue;
+      const status = entry.outcome === '' ? '—' : `${statusFor(entry.outcome)} · ${entry.outcome}`;
+      const tr = document.createElement('tr');
+      tr.append(
+        cell(entry.tool, headers.tool),
+        cell(coarseName(entry.coarse), headers.client),
+        cell(status, headers.status),
+        cell(String(entry.count), headers.count),
+      );
+      installsBody.appendChild(tr);
+    }
+  };
+  renderInstalls();
+  for (const btn of section.querySelectorAll<HTMLButtonElement>('[data-installs-filter]')) {
+    const mode = btn.dataset['installsFilter'];
+    btn.onclick = (): void => {
+      installsFilter = mode === 'probes' || mode === 'all' ? mode : 'real';
+      for (const peer of section.querySelectorAll<HTMLButtonElement>('[data-installs-filter]')) {
+        if (peer === btn) peer.setAttribute('aria-current', 'true');
+        else peer.removeAttribute('aria-current');
+      }
+      renderInstalls();
+    };
   }
   showTables(true);
   if (glance) {
     glance.textContent = fill(s.analyticsSummary ?? '{funnel} funnel · {installs} installs', {
       funnel: String(funnelTotal),
-      installs: String(installsTotal),
+      installs: String(redirectTotal),
     });
   }
   for (const btn of section.querySelectorAll<HTMLButtonElement>('[data-analytics-window]')) {
