@@ -9,6 +9,7 @@ import {
   capabilitySummary,
   facetTryCommand,
   facetPullCommand,
+  facetFaqItems,
 } from '../../lib/catalogs';
 import { iconSvg } from '../../lib/icon-svg';
 import { copy } from '../../lib/icons';
@@ -19,6 +20,7 @@ const exp = byId('facetmedia');
 const { caps, facets: regFacets } = readFacetCatalog();
 const facets = groupFacetCapabilities(caps, facetLabelsFor(regFacets, lang));
 const groups = [{ facet: 'all', label: e.capabilities.all, caps }, ...facets];
+const resolvedFaq = facetFaqItems(e.faq.items, caps, lang);
 
 // The record beside every asset, laid out over 10 lines as in the mockup.
 // Yellow (span.ok) marks only what was verified: the status and the metrics.
@@ -36,7 +38,7 @@ const recordHtml = [
 ].join('\n');
 ---
 
-<ExperimentLayout id="facetmedia">
+<ExperimentLayout id="facetmedia" faqItems={resolvedFaq}>
   <p slot="hero-mark" class="ascii-motif" aria-hidden="true">{exp.motif}</p>
   <Fragment slot="hero-visual">
     <div class="fm-hero">
@@ -147,7 +149,7 @@ const recordHtml = [
   <section class="wrap section fm-faq">
     <h2>{e.faq.title}</h2>
     <dl class="fm-faq-list">
-      {e.faq.items.map(([q, a]) => (
+      {resolvedFaq.map(([q, a]) => (
         <div class="fm-faq-item">
           <dt>{q}</dt>
           <dd set:html={a} />

@@ -94,3 +94,14 @@ facetmedia: `
  ░░░░░      ░░░░░░░░  ░░░░░░   ░░░░░░     ░░░░░  ░░░░░     ░░░░░  ░░░░░░   ░░░░░░░░ ░░░░░  ░░░░░░░░
 `,
 };
+
+// Narrow banners for small viewports: the same art the project prints, drawn
+// for a narrow measure. Rendered next to the wide art by Banner.astro.
+export const narrowBanners: Record<string, string> = {
+facetmedia: `
+ ▄▀▄                        █    █▄ ▄█           ▀█    ▀
+▄█▄   ▀▀▀▄   ▄▀▀▀▄  ▄▀▀▀▄  ▀█▀▀  █ ▀ █  ▄▀▀▀▄   ▄▄█   ▀█   ▀▀▀▄
+ █    ▄▀▀█   █   ▄  █▀▀▀▀   █ ▄  █   █  █▀▀▀▀  █  █    █   ▄▀▀█
+▀▀▀    ▀▀ ▀   ▀▀▀    ▀▀▀     ▀   ▀   ▀   ▀▀▀    ▀▀ ▀  ▀▀▀   ▀▀ ▀
+`,
+};

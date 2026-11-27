@@ -359,6 +359,44 @@ export function readFacetCatalog(
   return { caps: caps.sort((a, b) => a.id.localeCompare(b.id)), facets };
 }
 
+/**
+ * Resolve `{catalogCounts}` and `{gpuCounts}` placeholders in the facetMedia
+ * FAQ answers from the live registry catalog. Counts distinct facets
+ * (`c.facet`), distinct packages (`c.tool`) and GPU packages (`c.tool` where
+ * `c.gpu`). When the registry checkout is missing (`caps` empty) the
+ * placeholders fall back to neutral phrasing so the page still reads
+ * naturally without a rebuild-time registry.
+ */
+export function facetFaqItems(
+  items: [string, string][],
+  caps: FacetCapability[],
+  lang: string,
+): [string, string][] {
+  const es = lang.startsWith('es');
+  let catalogCounts: string;
+  let gpuCounts: string;
+  if (caps.length > 0) {
+    const facets = new Set(caps.map((c) => c.facet)).size;
+    const pkgs = new Set(caps.map((c) => c.tool)).size;
+    const gpuPkgs = new Set(caps.filter((c) => c.gpu).map((c) => c.tool)).size;
+    catalogCounts = es
+      ? `${facets} facetas, con ${pkgs} paquetes y ${caps.length} capacidades`
+      : `${facets} facets, with ${pkgs} packages and ${caps.length} capabilities`;
+    gpuCounts = es
+      ? `Solo ${gpuPkgs} de los ${pkgs} paquetes`
+      : `Only ${gpuPkgs} of the ${pkgs} packages`;
+  } else {
+    catalogCounts = es
+      ? 'varias facetas, paquetes y capacidades'
+      : 'several facets, packages and capabilities';
+    gpuCounts = es ? 'Solo algunos de los paquetes' : 'Only a few of the packages';
+  }
+  return items.map(([q, a]) => [
+    q,
+    a.replace(/\{catalogCounts\}/g, catalogCounts).replace(/\{gpuCounts\}/g, gpuCounts),
+  ]);
+}
+
 export function readFacetCapabilities(root = resolve(process.cwd(), '../facetmedia-registry')): FacetCapability[] {
   return readFacetCatalog(root).caps;
 }
