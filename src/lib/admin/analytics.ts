@@ -44,6 +44,8 @@ export interface AnalyticsDeps {
 
 export interface FunnelRow {
   event: string;
+  tool: string;
+  path: string;
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
@@ -53,6 +55,7 @@ export interface FunnelRow {
 export interface InstallRow {
   tool: string;
   clientClass: string;
+  outcome: string;
   count: number;
 }
 
@@ -73,10 +76,10 @@ const json = (obj: unknown, status = 200): Response =>
  *  is safe. */
 export function buildFunnelQuery(days: AnalyticsWindow): string {
   return (
-    `SELECT blob1 AS event, blob4 AS utm_source, blob5 AS utm_medium, blob6 AS utm_campaign, ` +
+    `SELECT blob1 AS event, blob2 AS tool, blob3 AS path, blob4 AS utm_source, blob5 AS utm_medium, blob6 AS utm_campaign, ` +
     `SUM(_sample_interval) AS count FROM univerlab_funnel ` +
     `WHERE timestamp > NOW() - INTERVAL '${days}' DAY ` +
-    `GROUP BY blob1, blob4, blob5, blob6 ORDER BY count DESC`
+    `GROUP BY blob1, blob2, blob3, blob4, blob5, blob6 ORDER BY count DESC`
   );
 }
 
@@ -84,9 +87,9 @@ export function buildFunnelQuery(days: AnalyticsWindow): string {
  *  client class (the panel maps them to the coarse class). */
 export function buildInstallsQuery(days: AnalyticsWindow): string {
   return (
-    `SELECT blob1 AS tool, blob3 AS client_class, SUM(_sample_interval) AS count FROM univerlab_installs ` +
+    `SELECT blob1 AS tool, blob3 AS client_class, blob6 AS outcome, SUM(_sample_interval) AS count FROM univerlab_installs ` +
     `WHERE timestamp > NOW() - INTERVAL '${days}' DAY ` +
-    `GROUP BY blob1, blob3 ORDER BY count DESC`
+    `GROUP BY blob1, blob3, blob6 ORDER BY count DESC`
   );
 }
 
@@ -131,6 +134,8 @@ export async function fetchSql(
 function funnelRows(data: Record<string, unknown>[]): FunnelRow[] {
   return data.map((r) => ({
     event: str(r['event']),
+    tool: str(r['tool']),
+    path: str(r['path']),
     utm_source: str(r['utm_source']),
     utm_medium: str(r['utm_medium']),
     utm_campaign: str(r['utm_campaign']),
@@ -142,6 +147,7 @@ function installRows(data: Record<string, unknown>[]): InstallRow[] {
   return data.map((r) => ({
     tool: str(r['tool']),
     clientClass: str(r['client_class']),
+    outcome: str(r['outcome']),
     count: num(r['count']),
   }));
 }

@@ -14,7 +14,12 @@ import {
   type AnalyticsDeps,
   type AnalyticsEnv,
 } from '../lib/admin/analytics';
-import { renderAnalytics, type AdminAnalyticsStrings } from '../lib/admin/panel-client';
+import {
+  renderAnalytics,
+  setInstallsFilter,
+  statusFor,
+  type AdminAnalyticsStrings,
+} from '../lib/admin/panel-client';
 
 const OWNER = 'owner@univerlab.org';
 
@@ -184,8 +189,8 @@ describe('admin analytics queries', () => {
   it('returns funnel and installs rows without zero-filling', async () => {
     const funnel = [{ event: 'landing', utm_source: 'gh', utm_medium: 'readme', utm_campaign: 'launch', count: 12 }];
     const installs = [
-      { tool: 'canopy', client_class: 'curl', count: 5 },
-      { tool: 'canopy', client_class: 'browser', count: 2 },
+      { tool: 'canopy', client_class: 'curl', outcome: 'redirect', count: 5 },
+      { tool: 'canopy', client_class: 'browser', outcome: 'redirect', count: 2 },
     ];
     const res = await handleAdminAnalytics(get('/api/admin-analytics?window=7', 'owner-jwt'), envOf(creds()), {
       ...deps,
@@ -194,10 +199,20 @@ describe('admin analytics queries', () => {
     const body = (await res.json()) as Record<string, unknown>;
     expect(body['ok']).toBe(true);
     expect(body['window']).toBe(7);
-    expect(body['funnel']).toEqual(funnel);
+    expect(body['funnel']).toEqual([
+      {
+        event: 'landing',
+        tool: '',
+        path: '',
+        utm_source: 'gh',
+        utm_medium: 'readme',
+        utm_campaign: 'launch',
+        count: 12,
+      },
+    ]);
     expect(body['installs']).toEqual([
-      { tool: 'canopy', clientClass: 'curl', count: 5 },
-      { tool: 'canopy', clientClass: 'browser', count: 2 },
+      { tool: 'canopy', clientClass: 'curl', outcome: 'redirect', count: 5 },
+      { tool: 'canopy', clientClass: 'browser', outcome: 'redirect', count: 2 },
     ]);
   });
 
@@ -274,6 +289,11 @@ function analyticsStrings(): AdminAnalyticsStrings & { loadError: string } {
     thTool: 'Tool',
     thClient: 'Client',
     thCount: 'Count',
+    thPage: 'Page',
+    thStatus: 'Status',
+    analyticsFilterReal: 'Real tools',
+    analyticsFilterProbes: '404 / probes',
+    analyticsFilterAll: 'All',
     analyticsClientInstaller: 'installer',
     analyticsClientBrowser: 'browser',
     analyticsClientOther: 'other',
@@ -285,6 +305,9 @@ function mountAnalytics(): void {
     '<section id="admin-analytics">' +
     '<p id="admin-analytics-notice" hidden></p>' +
     '<table id="admin-analytics-funnel-table" hidden><tbody id="admin-analytics-funnel"></tbody></table>' +
+    '<p><button type="button" data-installs-filter="real" aria-current="true">Real tools</button>' +
+    '<button type="button" data-installs-filter="probes">404 / probes</button>' +
+    '<button type="button" data-installs-filter="all">All</button></p>' +
     '<table id="admin-analytics-installs-table" hidden><tbody id="admin-analytics-installs"></tbody></table>' +
     '</section><p id="admin-analytics-counts"></p>';
 }
@@ -296,6 +319,7 @@ describe('admin analytics panel', () => {
   });
 
   it('renders the unconfigured notice instead of zeros', async () => {
+    setInstallsFilter('real');
     mountAnalytics();
     global.fetch = (async () =>
       new Response(JSON.stringify({ ok: false, state: 'unconfigured', window: 30 }), { status: 200 })) as unknown as typeof fetch;
@@ -305,10 +329,11 @@ describe('admin analytics panel', () => {
     expect(notice.hidden).toBe(false);
     expect(document.getElementById('admin-analytics-funnel')?.textContent).toBe('');
     expect(document.getElementById('admin-analytics-installs')?.textContent).toBe('');
-    expect(document.body.textContent ?? '').not.toContain('0');
+    expect(document.getElementById('admin-analytics-counts')?.textContent ?? '').not.toContain('0');
   });
 
   it('groups installer CLIs under the installer label', async () => {
+    setInstallsFilter('real');
     mountAnalytics();
     global.fetch = (async () =>
       new Response(
@@ -317,9 +342,9 @@ describe('admin analytics panel', () => {
           window: 30,
           funnel: [{ event: 'landing', utm_source: 'gh', utm_medium: '', utm_campaign: '', count: 4 }],
           installs: [
-            { tool: 'canopy', clientClass: 'curl', count: 5 },
-            { tool: 'canopy', clientClass: 'powershell', count: 3 },
-            { tool: 'canopy', clientClass: 'browser', count: 2 },
+            { tool: 'canopy', clientClass: 'curl', outcome: 'redirect', count: 5 },
+            { tool: 'canopy', clientClass: 'powershell', outcome: 'redirect', count: 3 },
+            { tool: 'canopy', clientClass: 'browser', outcome: 'redirect', count: 2 },
           ],
         }),
         { status: 200 },
@@ -338,5 +363,122 @@ describe('admin analytics panel', () => {
     await renderAnalytics(analyticsStrings(), 7);
     expect(document.getElementById('admin-analytics-counts')?.textContent).toBe('');
     expect((document.getElementById('admin-analytics-notice') as HTMLElement).textContent).toBe('empty window');
+  });
+});
+
+describe('admin analytics outcome filtering', () => {
+  const realFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+
+  function mixedPayload() {
+    return {
+      ok: true,
+      window: 30,
+      funnel: [
+        { event: 'landing', tool: 'canopy', path: '/es/canopy', utm_source: 'gh', utm_medium: '', utm_campaign: '', count: 4 },
+        { event: 'view', utm_source: '', utm_medium: '', utm_campaign: '', count: 1 },
+      ],
+      installs: [
+        { tool: 'canopy', clientClass: 'curl', outcome: 'redirect', count: 5 },
+        { tool: '', clientClass: '', outcome: 'unknown-tool', count: 7 },
+        { tool: '', clientClass: '', outcome: 'no-windows', count: 2 },
+        { tool: '(root)', clientClass: 'browser', outcome: 'root', count: 3 },
+        { tool: 'weird', clientClass: 'curl', outcome: 'teapot', count: 1 },
+      ],
+    };
+  }
+
+  function mockPayload(payload: unknown): void {
+    global.fetch = (async () =>
+      new Response(JSON.stringify(payload), { status: 200 })) as unknown as typeof fetch;
+  }
+
+  it('selects tool, path and outcome blobs in the read-only aggregates', () => {
+    for (const days of [7, 30, 90] as const) {
+      const funnel = buildFunnelQuery(days);
+      expect(funnel).toContain('blob2 AS tool');
+      expect(funnel).toContain('blob3 AS path');
+      expect(funnel).toContain('univerlab_funnel');
+      const installs = buildInstallsQuery(days);
+      expect(installs).toContain('blob6 AS outcome');
+      expect(installs).toContain('univerlab_installs');
+    }
+  });
+
+  it('maps recorded outcomes to HTTP status labels', () => {
+    expect(statusFor('redirect')).toBe('302');
+    expect(statusFor('root')).toBe('302');
+    expect(statusFor('unknown-tool')).toBe('404');
+    expect(statusFor('no-windows')).toBe('404');
+    expect(statusFor('teapot')).toBe('teapot');
+  });
+
+  it('renders the Page column and defaults to real tool redirects', async () => {
+    setInstallsFilter('real');
+    mountAnalytics();
+    mockPayload(mixedPayload());
+    await renderAnalytics(analyticsStrings(), 30);
+    const funnelText = document.getElementById('admin-analytics-funnel')?.textContent ?? '';
+    expect(funnelText).toContain('/es/canopy (canopy)');
+    const installsText = document.getElementById('admin-analytics-installs')?.textContent ?? '';
+    expect(installsText).toContain('canopy');
+    expect(installsText).toContain('302 · redirect');
+    expect(installsText).not.toContain('unknown-tool');
+    expect(installsText).not.toContain('no-windows');
+    expect(installsText).not.toContain('(root)');
+    expect(installsText).not.toContain('teapot');
+    expect(document.getElementById('admin-analytics-counts')?.textContent).toBe('5 funnel · 5 installs');
+  });
+
+  it('switches between real, 404/probe and all filters', async () => {
+    setInstallsFilter('real');
+    mountAnalytics();
+    mockPayload(mixedPayload());
+    await renderAnalytics(analyticsStrings(), 30);
+    const realBtn = document.querySelector('[data-installs-filter="real"]') as HTMLButtonElement;
+    const probesBtn = document.querySelector('[data-installs-filter="probes"]') as HTMLButtonElement;
+    const allBtn = document.querySelector('[data-installs-filter="all"]') as HTMLButtonElement;
+    expect(realBtn.getAttribute('aria-current')).toBe('true');
+
+    probesBtn.click();
+    let text = document.getElementById('admin-analytics-installs')?.textContent ?? '';
+    expect(text).toContain('404 · unknown-tool');
+    expect(text).toContain('404 · no-windows');
+    expect(text).not.toContain('302 · redirect');
+    expect(text).not.toContain('302 · root');
+    expect(probesBtn.getAttribute('aria-current')).toBe('true');
+    expect(realBtn.getAttribute('aria-current')).toBeNull();
+
+    allBtn.click();
+    text = document.getElementById('admin-analytics-installs')?.textContent ?? '';
+    expect(text).toContain('302 · redirect');
+    expect(text).toContain('404 · unknown-tool');
+    expect(text).toContain('404 · no-windows');
+    expect(text).toContain('302 · root');
+    expect(text).toContain('teapot');
+    expect(allBtn.getAttribute('aria-current')).toBe('true');
+
+    // The glance keeps counting real redirects only, whatever the filter.
+    expect(document.getElementById('admin-analytics-counts')?.textContent).toBe('5 funnel · 5 installs');
+  });
+
+  it('labels every analytics cell for the mobile stacked cards', async () => {
+    setInstallsFilter('all');
+    mountAnalytics();
+    mockPayload(mixedPayload());
+    await renderAnalytics(analyticsStrings(), 30);
+    const cells = document.querySelectorAll('#admin-analytics-funnel td, #admin-analytics-installs td');
+    expect(cells.length).toBeGreaterThan(0);
+    const labels = new Set<string>();
+    cells.forEach((td) => {
+      const label = (td as HTMLElement).dataset['label'] ?? (td as HTMLElement).getAttribute('data-label');
+      expect(label).toBeTruthy();
+      if (label) labels.add(label);
+    });
+    for (const expected of ['Event', 'Page', 'Source', 'Medium', 'Campaign', 'Count', 'Tool', 'Client', 'Status']) {
+      expect(labels.has(expected)).toBe(true);
+    }
   });
 });

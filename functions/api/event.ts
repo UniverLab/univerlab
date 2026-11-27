@@ -27,6 +27,7 @@ const ALLOWED_EVENTS = new Set([
   'workbench_visit',
   'booking_click',
   'whatsapp_click',
+  'page_view',
 ]);
 
 /** Bodies stay tiny: event name, tool, path and four short UTM fields. */

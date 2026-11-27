@@ -105,6 +105,11 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
       data-th-tool={a.thTool}
       data-th-client={a.thClient}
       data-th-count={a.thCount}
+      data-th-page={a.thPage}
+      data-th-status={a.thStatus}
+      data-analytics-filter-real={a.analyticsFilterReal}
+      data-analytics-filter-probes={a.analyticsFilterProbes}
+      data-analytics-filter-all={a.analyticsFilterAll}
       data-analytics-client-installer={a.analyticsClientInstaller}
       data-analytics-client-browser={a.analyticsClientBrowser}
       data-analytics-client-other={a.analyticsClientOther}
@@ -119,14 +124,19 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
       <h3>{a.analyticsFunnelTitle}</h3>
       <table class="sign-table admin-table" id="admin-analytics-funnel-table" hidden>
         <thead>
-          <tr><th>{a.thEvent}</th><th>{a.thSource}</th><th>{a.thMedium}</th><th>{a.thCampaign}</th><th>{a.thCount}</th></tr>
+          <tr><th>{a.thEvent}</th><th>{a.thPage}</th><th>{a.thSource}</th><th>{a.thMedium}</th><th>{a.thCampaign}</th><th>{a.thCount}</th></tr>
         </thead>
         <tbody id="admin-analytics-funnel"></tbody>
       </table>
       <h3>{a.analyticsInstallsTitle}</h3>
+      <p class="admin-upload-buttons" id="admin-analytics-installs-filters">
+        <button type="button" class="sign-btn-secondary" data-installs-filter="real" aria-current="true">{a.analyticsFilterReal}</button>
+        <button type="button" class="sign-btn-secondary" data-installs-filter="probes">{a.analyticsFilterProbes}</button>
+        <button type="button" class="sign-btn-secondary" data-installs-filter="all">{a.analyticsFilterAll}</button>
+      </p>
       <table class="sign-table admin-table" id="admin-analytics-installs-table" hidden>
         <thead>
-          <tr><th>{a.thTool}</th><th>{a.thClient}</th><th>{a.thCount}</th></tr>
+          <tr><th>{a.thTool}</th><th>{a.thClient}</th><th>{a.thStatus}</th><th>{a.thCount}</th></tr>
         </thead>
         <tbody id="admin-analytics-installs"></tbody>
       </table>
@@ -273,6 +283,11 @@ const bookingApi = import.meta.env.PUBLIC_BOOKING_API || 'https://booking.univer
         thTool: an?.dataset['thTool'] ?? '',
         thClient: an?.dataset['thClient'] ?? '',
         thCount: an?.dataset['thCount'] ?? '',
+        thPage: an?.dataset['thPage'] ?? '',
+        thStatus: an?.dataset['thStatus'] ?? '',
+        analyticsFilterReal: an?.dataset['analyticsFilterReal'] ?? '',
+        analyticsFilterProbes: an?.dataset['analyticsFilterProbes'] ?? '',
+        analyticsFilterAll: an?.dataset['analyticsFilterAll'] ?? '',
         analyticsClientInstaller: an?.dataset['analyticsClientInstaller'] ?? '',
         analyticsClientBrowser: an?.dataset['analyticsClientBrowser'] ?? '',
         analyticsClientOther: an?.dataset['analyticsClientOther'] ?? '',
