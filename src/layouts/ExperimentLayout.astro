@@ -15,8 +15,8 @@ import { startSolLabel } from '../lib/mission-time';
 import { iconSvg } from '../lib/icon-svg';
 import { copy } from '../lib/icons';
 
-interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; hideMachine?: boolean; }
-const { id, hideGithub = false, hideDemo = false, hideMachine = false } = Astro.props;
+interface Props { id: ExperimentId; hideGithub?: boolean; hideDemo?: boolean; hideMachine?: boolean; faqItems?: [string, string][]; }
+const { id, hideGithub = false, hideDemo = false, hideMachine = false, faqItems } = Astro.props;
 const exp = byId(id);
 const lang = getLang(Astro.url);
 const t = useTranslations(lang);
@@ -61,12 +61,18 @@ const breadcrumbSchema = {
   ],
 };
 
-// FAQPage schema for rich snippets when experiments have FAQs.
-const faqSchema = e.faq && e.faq.length > 0
+// FAQPage schema for rich snippets when experiments have FAQs. Most
+// experiments carry an array-shaped `e.faq`; facetmedia carries
+// `{ title, items }` and passes its resolved items as `faqItems`.
+type FaqShape = [string, string][] | { title: string; items: [string, string][] };
+const expFaq = e.faq as FaqShape | undefined;
+const faqEntries: [string, string][] =
+  faqItems ?? (Array.isArray(expFaq) ? expFaq : expFaq?.items ?? []);
+const faqSchema = faqEntries.length > 0
   ? {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: e.faq.map(([question, answer]) => ({
+      mainEntity: faqEntries.map(([question, answer]) => ({
         '@type': 'Question',
         name: question,
         acceptedAnswer: {

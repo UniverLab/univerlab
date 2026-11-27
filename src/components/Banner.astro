@@ -8,10 +8,11 @@
 // CLIs). Sometype Mono — the site mono — may have different block-glyph widths
 // (not measured), so descenders (g, p, y, t, f) could look shifted if we reuse
 // --font-mono here.
-import { banners } from '../lib/banners';
+import { banners, narrowBanners } from '../lib/banners';
 interface Props { id: string; color: string; }
 const { id, color } = Astro.props;
 const art = banners[id]?.replace(/^\r?\n/, '');
+const narrowArt = narrowBanners[id]?.replace(/^\r?\n/, '');
 
 // Canopy's teal gradient — the five stops of harness-canopy's
 // `BANNER_GRADIENT` (src/shared/banner.rs), light at the top to dark at the
@@ -38,7 +39,12 @@ const gradColor = (i: number) => {
 };
 ---
 {art && (
-  useGradient ? (
+  narrowArt ? (
+    <>
+      <pre class="banner banner-wide" style={`--c: ${color}`} aria-hidden="true" translate="no"><code>{art}</code></pre>
+      <pre class="banner banner-narrow" style={`--c: ${color}`} aria-hidden="true" translate="no"><code>{narrowArt}</code></pre>
+    </>
+  ) : useGradient ? (
     <pre class="banner gradient" aria-hidden="true" translate="no"><code>{lines.map((line, i) => (
         <span class="gline" style={`color: ${gradColor(i)}`}>{line}</span>
       ))}</code></pre>
@@ -110,6 +116,11 @@ const gradColor = (i: number) => {
      guards above are what make clipping impossible. */
   @media (max-width: 40rem) {
     .banner { font-size: clamp(2.5px, 1.35vw, 6px); }
+  }
+  .banner-narrow { display: none; }
+  @media (max-width: 47.99rem) {
+    .banner-wide { display: none; }
+    .banner-narrow { display: block; font-size: clamp(4px, 2.1vw, 8.5px); }
   }
   .banner::-webkit-scrollbar { display: none; }
   .banner code {

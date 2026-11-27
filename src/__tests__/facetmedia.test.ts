@@ -5,6 +5,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { byId } from '../lib/experiments';
+import { banners, narrowBanners } from '../lib/banners';
+import { facetFaqItems, type FacetCapability } from '../lib/catalogs';
 import { en } from '../i18n/en';
 import { es } from '../i18n/es';
 
@@ -39,7 +41,7 @@ describe('facetmedia EXP-009', () => {
     for (const dict of [enFm, esFm]) {
       expect(dict.capabilities.columns).toHaveLength(6);
       expect(dict.verbs.items).toHaveLength(6);
-      expect(dict.faq.items).toHaveLength(7);
+      expect(dict.faq.items).toHaveLength(8);
     }
     // Summaries and facet labels live in the registry now, not in the site.
     for (const dict of [enFm, esFm]) {
@@ -113,7 +115,7 @@ describe('facetmedia EXP-009', () => {
     expect(VIEW).toContain('{e.subproject.body}');
   });
 
-  it('asks the seven agreed questions in order, in both languages', () => {
+  it('asks the eight agreed questions in order, in both languages', () => {
     expect(enFm.faq.items.map(([q]) => q)).toEqual([
       'What does facet actually do?',
       'Can I use it yet?',
@@ -122,6 +124,7 @@ describe('facetmedia EXP-009', () => {
       'How do I know the output is right?',
       'Who decides how it looks or sounds?',
       'Do I need a GPU? And who accepts the licences?',
+      'How does publishing work? Is it safe?',
     ]);
     expect(esFm.faq.items.map(([q]) => q)).toEqual([
       '¿Qué hace facet, en concreto?',
@@ -131,6 +134,7 @@ describe('facetmedia EXP-009', () => {
       '¿Cómo sé que lo que salió está bien?',
       '¿Quién decide cómo se ve o cómo suena?',
       '¿Necesita GPU? ¿Y quién acepta las licencias?',
+      '¿Cómo funciona publicar? ¿Es seguro?',
     ]);
   });
 
@@ -144,12 +148,22 @@ describe('facetmedia EXP-009', () => {
     expect(en[4]).toContain('<code>.facet.json</code>');
     expect(en[4]).toContain('<code>facet check</code>');
     expect(en[6]).toContain('<code>facet license accept</code>');
+    expect(en[7]).toContain('<code>facet auth login</code>');
+    expect(en[7]).toContain('<code>facet secret set</code>');
+    expect(en[7]).toContain('<code>--dry-run</code>');
+    expect(en[7]).toContain('<code>--yes</code>');
+    expect(en[7]).toContain('<code>.post.json</code>');
     expect(es[1]).toContain('<code>uv tool install facetmedia</code>');
     expect(es[3]).toContain('<code>--json</code>');
     expect(es[3]).toContain('<code>facet skill</code>');
     expect(es[4]).toContain('<code>.facet.json</code>');
     expect(es[4]).toContain('<code>facet check</code>');
     expect(es[6]).toContain('<code>facet license accept</code>');
+    expect(es[7]).toContain('<code>facet auth login</code>');
+    expect(es[7]).toContain('<code>facet secret set</code>');
+    expect(es[7]).toContain('<code>--dry-run</code>');
+    expect(es[7]).toContain('<code>--yes</code>');
+    expect(es[7]).toContain('<code>.post.json</code>');
   });
 
   it('opens on an All tab listing every capability, then one tab per facet', () => {
@@ -309,5 +323,110 @@ describe('facetmedia EXP-009', () => {
       expect(items[1][1]).toContain('WSL2');
       expect(items[1][1]).toContain('<code>wsl --install</code>');
     }
+  });
+
+  it('carries no stale beta or hardcoded-count copy', () => {
+    const copy = [
+      enFm.release,
+      esFm.release,
+      ...enFm.faq.items.flat(),
+      ...esFm.faq.items.flat(),
+    ].join('\n');
+    for (const stale of [
+      '0.1.0b1',
+      'not on PyPI',
+      'todavía no está en PyPI',
+      'internal beta',
+      'beta interna',
+      '7 facets, 23 packages',
+      '7 facetas, con 23 paquetes',
+      '43 capabilities',
+      '43 capacidades',
+      '6 of the 23',
+      '6 de los 23',
+    ]) {
+      expect(copy).not.toContain(stale);
+    }
+    expect(enFm.release).toBe('Beta · available via uv');
+    expect(esFm.release).toBe('Beta · disponible vía uv');
+  });
+
+  it('names the publish facet and leaves the counts to the catalog', () => {
+    expect(enFm.faq.items[2][1]).toContain('publish and CAD');
+    expect(enFm.faq.items[2][1]).toContain('{catalogCounts}');
+    expect(enFm.faq.items[6][1]).toContain('{gpuCounts}');
+    expect(esFm.faq.items[2][1]).toContain('publicación y CAD');
+    expect(esFm.faq.items[2][1]).toContain('{catalogCounts}');
+    expect(esFm.faq.items[6][1]).toContain('{gpuCounts}');
+  });
+
+  it('interpolates live catalog counts and falls back cleanly without the registry', () => {
+    const caps = [
+      { id: 'a.one', tool: 'A', kind: 'k', summary: 's', facet: 'image' },
+      { id: 'a.two', tool: 'A', kind: 'k', summary: 's', facet: 'video', gpu: true },
+      { id: 'b.one', tool: 'B', kind: 'k', summary: 's', facet: 'image' },
+    ] as FacetCapability[];
+    const en = facetFaqItems(
+      [['q', 'Today there are {catalogCounts}. {gpuCounts} use a GPU.']],
+      caps,
+      'en',
+    );
+    expect(en[0][1]).toBe(
+      'Today there are 2 facets, with 2 packages and 3 capabilities. Only 1 of the 2 packages use a GPU.',
+    );
+    const es = facetFaqItems(
+      [['q', 'Hoy son {catalogCounts}. {gpuCounts} usan GPU.']],
+      caps,
+      'es',
+    );
+    expect(es[0][1]).toBe(
+      'Hoy son 2 facetas, con 2 paquetes y 3 capacidades. Solo 1 de los 2 paquetes usan GPU.',
+    );
+    for (const lang of ['en', 'es']) {
+      const fallback = facetFaqItems([['q', 'Today {catalogCounts} / {gpuCounts}. Hoy {catalogCounts} / {gpuCounts}.']], [], lang);
+      expect(fallback[0][1]).not.toContain('{catalogCounts}');
+      expect(fallback[0][1]).not.toContain('{gpuCounts}');
+    }
+  });
+
+  it('serves the official narrow ansiltr4 banner on phones, wide DOS Rebel on desktop', () => {
+    // The narrow art is verbatim the project's official narrow banner.
+    expect(narrowBanners.facetmedia).toBe(
+      '\n ▄▀▄                        █    █▄ ▄█           ▀█    ▀\n▄█▄   ▀▀▀▄   ▄▀▀▀▄  ▄▀▀▀▄  ▀█▀▀  █ ▀ █  ▄▀▀▀▄   ▄▄█   ▀█   ▀▀▀▄\n █    ▄▀▀█   █   ▄  █▀▀▀▀   █ ▄  █   █  █▀▀▀▀  █  █    █   ▄▀▀█\n▀▀▀    ▀▀ ▀   ▀▀▀    ▀▀▀     ▀   ▀   ▀   ▀▀▀    ▀▀ ▀  ▀▀▀   ▀▀ ▀\n',
+    );
+    // The wide art is untouched and still the widest surface on the site.
+    expect(banners.facetmedia).not.toBe(narrowBanners.facetmedia);
+    expect(Math.max(...banners.facetmedia.split('\n').map((l) => [...l].length))).toBeGreaterThan(90);
+    // No other experiment gains a narrow banner.
+    expect(Object.keys(narrowBanners)).toEqual(['facetmedia']);
+    // Banner.astro renders both pres for ids with narrow art.
+    expect(BANNER).toContain('banner-wide');
+    expect(BANNER).toContain('banner-narrow');
+    expect(BANNER).toContain('narrowBanners');
+    expect(BANNER).toContain('narrowArt');
+  });
+
+  it('swaps to the narrow banner below 48rem at a size that fits a 390px phone', () => {
+    const query = BANNER.slice(BANNER.indexOf('@media (max-width: 47.99rem)'));
+    expect(query).toContain('.banner-wide { display: none; }');
+    expect(query).toMatch(/\.banner-narrow \{ display: block; font-size: clamp\([\d.]+px, [\d.]+vw, [\d.]+px\); \}/);
+    const vw = Number(query.match(/\.banner-narrow \{ display: block; font-size: clamp\([\d.]+px, ([\d.]+)vw, [\d.]+px\); \}/)?.[1]);
+    expect(vw).toBeGreaterThan(0);
+    const cols = Math.max(...narrowBanners.facetmedia.split('\n').map((l) => [...l].length));
+    const px = 390;
+    const size = Math.min(8.5, Math.max(4, px * (vw / 100)));
+    expect(cols * 0.6023 * size).toBeLessThan(px - 64);
+    // The desktop <=40rem base rule is untouched.
+    expect(BANNER).toContain('@media (max-width: 40rem)');
+  });
+
+  it('emits FAQPage JSON-LD for facetmedia without breaking array-shaped faqs', () => {
+    const LAYOUT = readFileSync(resolve(__dirname, '../layouts/ExperimentLayout.astro'), 'utf8');
+    expect(LAYOUT).toContain('faqItems?: [string, string][]');
+    expect(LAYOUT).toContain("'@type': 'FAQPage'");
+    expect(LAYOUT).toContain('faqItems ?? (Array.isArray(expFaq) ? expFaq : expFaq?.items');
+    expect(VIEW).toContain('facetFaqItems(e.faq.items, caps, lang)');
+    expect(VIEW).toContain('faqItems={resolvedFaq}');
+    expect(VIEW).toContain('resolvedFaq.map(');
   });
 });
